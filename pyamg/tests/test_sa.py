@@ -56,6 +56,7 @@ class TestSA(TestCase):
                 S_result = sa_strong_connections(A,epsilon)
                 assert_almost_equal(S_result.todense(),S_expected.todense())
                 #assert_array_equal(sparsity(S_result).todense(),sparsity(S_expected).todense())
+                # TODO make this more efficient
 
         ##check simple block examples
         #A = csr_matrix(arange(16).reshape(4,4))

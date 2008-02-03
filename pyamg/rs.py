@@ -1,9 +1,11 @@
+from numpy import empty_like
+
 from scipy.sparse import csr_matrix,isspmatrix_csr
 
 from multilevel import multilevel_solver
 import multigridtools
 
-__all__ = ['ruge_stuben_solver','rs_strong_connections','rs_interpolation']
+__all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
@@ -22,7 +24,7 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
     Rs = []
 
     while len(As) < max_levels  and A.shape[0] > max_coarse:
-        P = rs_interpolation(A)
+        P = rs_prolongator(A)
         R = P.T.tocsr()
 
         A = R * A * P     #galerkin operator
@@ -44,11 +46,17 @@ def rs_strong_connections(A,theta):
     """
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
-    Sp,Sj,Sx = multigridtools.rs_strong_connections(A.shape[0],theta,A.indptr,A.indices,A.data)
+    Sp = empty_like(A.indptr)
+    Sj = empty_like(A.indices)
+    Sx = empty_like(A.data)
+
+    multigridtools.rs_strong_connections( A.shape[0], theta, 
+            A.indptr, A.indices, A.data, Sp,Sj,Sx)
+
     return csr_matrix((Sx,Sj,Sp),shape=A.shape)
 
 
-def rs_interpolation(A,theta=0.25):
+def rs_prolongator(A,theta=0.25):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
     S = rs_strong_connections(A,theta)

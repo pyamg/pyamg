@@ -59,12 +59,10 @@ def sa_get_aggregates(*args):
 
 def rs_strong_connections(*args):
   """
-    rs_strong_connections(int n_row, float theta, int Ap, int Aj, float Ax, std::vector<(int)> Sp, 
-        std::vector<(int)> Sj, 
-        std::vector<(float)> Sx)
+    rs_strong_connections(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
+        int Sj, float Sx)
     rs_strong_connections(int n_row, double theta, int Ap, int Aj, double Ax, 
-        std::vector<(int)> Sp, std::vector<(int)> Sj, 
-        std::vector<(double)> Sx)
+        int Sp, int Sj, double Sx)
     """
   return _multigridtools.rs_strong_connections(*args)
 

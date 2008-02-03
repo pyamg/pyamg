@@ -13,35 +13,51 @@
 enum NodeType {U_NODE,  C_NODE, F_NODE};
 
 
+/*
+ *
+ * Return a strength of connection matrix using the method of Ruge and Stuben
+ *
+ *    An off-diagonal entry A[i.j] is a strong connection iff
+ *
+ *            -A[i,j] >= theta * max( -A[i,k] )   where k != i
+ *
+ *  
+ */          
+
 template<class I, class T>
 void rs_strong_connections(const I n_row,
                            const T theta,
                            const I Ap[], const I Aj[], const T Ax[],
-                           std::vector<I> * Sp, std::vector<I> * Sj, std::vector<T> * Sx){
-
-    //Sp,Sj form a CSR representation where the i-th row contains
-    //the indices of all the strong connections from node i
-    Sp->push_back(0);
+                                 I Sp[],       I Sj[],       T Sx[])
+{
+    I nnz = 0;
+    Sp[0] = 0;
 
     //Compute lambdas for each node
     for(I i = 0; i < n_row; i++){
-        T min_offdiagonal = 0.0;
+        T min_offdiagonal = std::numeric_limits<T>::max();
 
         I row_start = Ap[i];
         I row_end   = Ap[i+1];
+
         for(I jj = row_start; jj < row_end; jj++){
-            min_offdiagonal = std::min(min_offdiagonal,Ax[jj]); //assumes diagonal is positive!
+            if(Aj[jj] != i){
+                min_offdiagonal = std::min(min_offdiagonal,Ax[jj]);
+            }
         }
 
         T threshold = theta*min_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
             if(Ax[jj] < threshold){
-                Sj->push_back(Aj[jj]);
-                Sx->push_back(Ax[jj]);
+                if(Aj[jj] != i){
+                    Sj[nnz] = Aj[jj];
+                    Sx[nnz] = Ax[jj];
+                    nnz++;
+                }
             }
         }
 
-        Sp->push_back(Sj->size());
+        Sp[i+1] = nnz;
     }
 }
 

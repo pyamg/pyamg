@@ -104,12 +104,18 @@
   */
 %define I_INPLACE_ARRAY1( ctype )
 %apply ctype * INPLACE_ARRAY {
-  ctype Aj [ ]
+  ctype Aj [ ],
+  ctype Sp [ ],
+  ctype Sj [ ],
+  ctype Tp [ ],
+  ctype Tj [ ]
 };
 %enddef
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply ctype * INPLACE_ARRAY {
+  ctype   Sx [ ],
+  ctype   Tx [ ],
   ctype    x [ ],
   ctype temp [ ]
 };
