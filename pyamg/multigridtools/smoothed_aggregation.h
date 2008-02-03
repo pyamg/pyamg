@@ -45,7 +45,7 @@ void sa_strong_connections(const I n_row,
 
             if(i == j){continue;}  //skip diagonal
 
-            //  |A(i,j)| < epsilon * sqrt(|A(i,i)|*|A(j,j)|) 
+            //  |A(i,j)| >= epsilon * sqrt(|A(i,i)|*|A(j,j)|) 
             if(Aij*Aij >= eps_Aii * diags[j]){    
                 Sj[nnz] =   j;
                 Sx[nnz] = Aij;
@@ -168,6 +168,7 @@ I sa_get_aggregates(const I n_row,
     for(I i = 0; i < n_row; i++){
         Bj[i] = std::abs(Bj[i]); //flip negative Agg#s
     }
+    // now Bj[n] == n_row means i-th node has not been aggregated
 
 
     //Pass #3
