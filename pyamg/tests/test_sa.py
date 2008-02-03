@@ -1,19 +1,11 @@
-try:
-    from sets import Set
-    set = Set
-except:
-    pass
-
 from scipy.testing import *
-from numpy import sqrt,empty,ones,arange,array_split,eye,array, \
-                  zeros,diag,zeros_like,diff,matrix,hstack,vstack
+
+import numpy
+from numpy import sqrt, empty, ones, arange, array_split, array, \
+                  zeros, zeros_like, diff, matrix, vstack
 from numpy.linalg import norm
 from scipy import rand
-from scipy.sparse import spdiags,csr_matrix,lil_matrix, \
-                         isspmatrix_csr,isspmatrix_csc,isspmatrix_coo, \
-                         isspmatrix_lil
-import numpy
-
+from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 
 import pyamg
 from pyamg.sa import *
@@ -52,11 +44,11 @@ class TestSA(TestCase):
     def test_sa_strong_connections(self):
         for A in self.cases:
             for epsilon in [0.0,0.1,0.5,1.0,10.0]:
-                S_expected = reference_sa_strong_connections(A,epsilon)
-                S_result = sa_strong_connections(A,epsilon)
-                assert_almost_equal(S_result.todense(),S_expected.todense())
-                #assert_array_equal(sparsity(S_result).todense(),sparsity(S_expected).todense())
-                # TODO make this more efficient
+                expected = reference_sa_strong_connections(A,epsilon)
+                result = sa_strong_connections(A,epsilon)
+
+                assert_equal( result.nnz,       expected.nnz)
+                assert_equal( result.todense(), expected.todense())
 
         ##check simple block examples
         #A = csr_matrix(arange(16).reshape(4,4))
@@ -76,11 +68,12 @@ class TestSA(TestCase):
         #assert_array_equal(S_result.todense(),S_expected)
 
     def test_sa_standard_aggregation(self):
-        for C in self.cases:
-            S_expected = reference_sa_standard_aggregation(C)
+        for A in self.cases:
+            S = sa_standard_aggregation(A)
+            expected = reference_sa_standard_aggregation(S)
+            result   = sa_standard_aggregation(S)
 
-            S_result   = sa_standard_aggregation(C)
-            assert_array_equal(S_result.todense(),S_expected.todense())
+            assert_array_equal(result.todense(),expected.todense())
 
 
 
@@ -220,16 +213,33 @@ class TestSASolverPerformance(TestCase):
 ##   reference implementations for unittests  ##
 ################################################
 def reference_sa_strong_connections(A,epsilon):
-    A_coo = A.tocoo()
-    S = lil_matrix(A.shape)
+    #if epsilon == 0:
+    #    return A
+    
+    D = abs(A.diagonal())
 
-    for (i,j,v) in zip(A_coo.row,A_coo.col,A_coo.data):
-        if i == j or abs(v) >= epsilon*sqrt(abs(A[i,i])*abs(A[j,j])):
-            S[i,j] += v
-        else:
-            S[i,i] += v
+    S = coo_matrix(A)
 
-    return S
+    mask  = S.row != S.col
+    mask &= abs(S.data) >= epsilon * sqrt(D[S.row] * D[S.col])
+
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
+    return S.tocsr()
+
+#def reference_sa_filtered_matrix(A,epsilon):
+#    A_coo = A.tocoo()
+#    S = lil_matrix(A.shape)
+#
+#    for (i,j,v) in zip(A_coo.row,A_coo.col,A_coo.data):
+#        if i == j or abs(v) >= epsilon*sqrt(abs(A[i,i])*abs(A[j,j])):
+#            S[i,j] += v
+#        else:
+#            S[i,i] += v
+#
+#    return S
 
 
 # note that this method only tests the current implementation, not

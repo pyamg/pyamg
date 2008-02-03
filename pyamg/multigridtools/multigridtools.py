@@ -53,7 +53,7 @@ C_NODE = _multigridtools.C_NODE
 F_NODE = _multigridtools.F_NODE
 
 def sa_get_aggregates(*args):
-  """sa_get_aggregates(int n_row, int Ap, int Aj, std::vector<(int)> Bj)"""
+  """sa_get_aggregates(int n_row, int Ap, int Aj, int Bj) -> int"""
   return _multigridtools.sa_get_aggregates(*args)
 
 
@@ -80,11 +80,9 @@ def rs_interpolation(*args):
 def sa_strong_connections(*args):
   """
     sa_strong_connections(int n_row, float epsilon, int Ap, int Aj, float Ax, 
-        std::vector<(int)> Sp, std::vector<(int)> Sj, 
-        std::vector<(float)> Sx)
+        int Sp, int Sj, float Sx)
     sa_strong_connections(int n_row, double epsilon, int Ap, int Aj, double Ax, 
-        std::vector<(int)> Sp, std::vector<(int)> Sj, 
-        std::vector<(double)> Sx)
+        int Sp, int Sj, double Sx)
     """
   return _multigridtools.sa_strong_connections(*args)
 

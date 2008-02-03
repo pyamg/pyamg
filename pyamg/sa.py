@@ -1,6 +1,8 @@
 """Functions for Smoothed Aggregation AMG"""
 
-from numpy import array, arange, ones, zeros, sqrt, asarray, empty, diff
+from numpy import array, arange, ones, zeros, sqrt, asarray, \
+        empty, empty_like, diff
+
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 
 import multigridtools
@@ -8,9 +10,9 @@ from multilevel import multilevel_solver
 from utils import diag_sparse, approximate_spectral_radius, \
                   symmetric_rescaling, scale_columns
 
-__all__ = ['smoothed_aggregation_solver',
-        'sa_filtered_matrix','sa_strong_connections','sa_standard_aggregation',
-        'sa_smoothed_prolongator','sa_fit_candidates']
+__all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
+        'sa_strong_connections', 'sa_standard_aggregation',
+        'sa_smoothed_prolongator', 'sa_fit_candidates']
 
 
 
@@ -27,6 +29,7 @@ def sa_filtered_matrix(A,epsilon):
 
     if isspmatrix_csr(A): 
         #TODO rework this
+        raise NotImplementedError,'blocks not handled yet'
         Sp,Sj,Sx = multigridtools.sa_strong_connections(A.shape[0],epsilon,A.indptr,A.indices,A.data)
         return csr_matrix((Sx,Sj,Sp),shape=A.shape)
     elif ispmatrix_bsr(A):
@@ -60,21 +63,34 @@ def sa_filtered_matrix(A,epsilon):
 
     return A_filtered
 
-def sa_strong_connections(A,epsilon=0):
-    """Compute a strength of connection matrix C
+def sa_strong_connections(A, epsilon=0):
+    """Return the standard SA strength of connection matrix for A
+    
+    An off-diagonal connection A[i,j] is strong iff
 
-        C[i,j] = 1 if abs(A[i,j]) >= epsilon * abs(A[i,i] * A[j,j])
-        C[i,j] = 0 otherwise
+        |A[i,j]| >= epsilon * sqrt( |A[i,i]| * |A[j,j]| )
+
+    References:
+        Vanek, P. and Mandel, J. and Brezina, M., 
+        "Algebraic Multigrid by Smoothed Aggregation for 
+         Second and Fourth Order Elliptic Problems", 
+        Computing, vol. 56, no. 3, pp. 179--196, 1996.
 
     """
+    #TODO describe case of blocks
 
     if isspmatrix_csr(A):
-        if epsilon == 0:
-            return A
-        else:
-            fn = multigridtools.sa_strong_connections
-            Sp,Sj,Sx = fn(A.shape[0],epsilon,A.indptr,A.indices,A.data)
-            return csr_matrix((Sx,Sj,Sp),A.shape)
+        #if epsilon == 0:
+        #    return A
+        
+        Sp = empty_like(A.indptr)
+        Sj = empty_like(A.indices)
+        Sx = empty_like(A.data)
+
+        fn = multigridtools.sa_strong_connections
+        fn(A.shape[0], epsilon, A.indptr, A.indices, A.data, Sp, Sj, Sx)
+        
+        return csr_matrix((Sx,Sj,Sp),A.shape)
 
     elif isspmatrix_bsr(A):
         M,N = A.shape
@@ -100,12 +116,19 @@ def sa_standard_aggregation(C):
     from a strength of connection matrix C
     """
     if isspmatrix_csr(C): 
+        index_type = C.indptr.dtype
+        num_rows   = C.shape[0]
+
+        Tj = empty( num_rows, dtype=index_type ) #stores the aggregate #s
+       
+        fn = multigridtools.sa_get_aggregates
+
+        num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
+
+        Tp = arange( num_rows+1, dtype=index_type)
+        Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
         
-        Pj = multigridtools.sa_get_aggregates(C.shape[0],C.indptr,C.indices)
-        Pp = arange(len(Pj)+1)
-        Px = ones(len(Pj)) #TODO replace this with something else?
-        
-        return csr_matrix((Px,Pj,Pp))
+        return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
     else:
         raise TypeError('expected csr_matrix') 
 

@@ -3107,23 +3107,21 @@ SWIGINTERN PyObject *_wrap_sa_get_aggregates(PyObject *SWIGUNUSEDPARM(self), PyO
   int arg1 ;
   int *arg2 ;
   int *arg3 ;
-  std::vector<int > *arg4 = (std::vector<int > *) 0 ;
+  int *arg4 ;
+  int result;
   int val1 ;
   int ecode1 = 0 ;
   PyArrayObject *array2 = NULL ;
   int is_new_object2 ;
   PyArrayObject *array3 = NULL ;
   int is_new_object3 ;
-  std::vector<int > *tmp4 ;
+  PyArrayObject *temp4 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
   
-  {
-    tmp4 = new std::vector<int>(); 
-    arg4 = tmp4; 
-  }
-  if (!PyArg_ParseTuple(args,(char *)"OOO:sa_get_aggregates",&obj0,&obj1,&obj2)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:sa_get_aggregates",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sa_get_aggregates" "', argument " "1"" of type '" "int""'");
@@ -3149,15 +3147,13 @@ SWIGINTERN PyObject *_wrap_sa_get_aggregates(PyObject *SWIGUNUSEDPARM(self), PyO
     
     arg3 = (int*) array3->data;
   }
-  sa_get_aggregates<int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
-  resultobj = SWIG_Py_Void();
   {
-    int length = (arg4)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_INT); 
-    memcpy(PyArray_DATA(obj),&((*(arg4))[0]),sizeof(int)*length);	 
-    delete arg4; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
+    temp4 = obj_to_array_no_conversion(obj3,PyArray_INT);
+    if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
+    arg4 = (int*) array_data(temp4);
   }
+  result = (int)sa_get_aggregates<int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
   }
@@ -4127,9 +4123,9 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_1(PyObject *SWIGUNUSEDPAR
   int *arg3 ;
   int *arg4 ;
   float *arg5 ;
-  std::vector<int > *arg6 = (std::vector<int > *) 0 ;
-  std::vector<int > *arg7 = (std::vector<int > *) 0 ;
-  std::vector<float > *arg8 = (std::vector<float > *) 0 ;
+  int *arg6 ;
+  int *arg7 ;
+  float *arg8 ;
   int val1 ;
   int ecode1 = 0 ;
   float val2 ;
@@ -4140,28 +4136,19 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_1(PyObject *SWIGUNUSEDPAR
   int is_new_object4 ;
   PyArrayObject *array5 = NULL ;
   int is_new_object5 ;
-  std::vector<int > *tmp6 ;
-  std::vector<int > *tmp7 ;
-  std::vector<float > *tmp8 ;
+  PyArrayObject *temp6 = NULL ;
+  PyArrayObject *temp7 = NULL ;
+  PyArrayObject *temp8 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
   
-  {
-    tmp6 = new std::vector<int>(); 
-    arg6 = tmp6; 
-  }
-  {
-    tmp7 = new std::vector<int>(); 
-    arg7 = tmp7; 
-  }
-  {
-    tmp8 = new std::vector<float>(); 
-    arg8 = tmp8; 
-  }
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:sa_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:sa_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sa_strong_connections" "', argument " "1"" of type '" "int""'");
@@ -4202,29 +4189,23 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_1(PyObject *SWIGUNUSEDPAR
     
     arg5 = (float*) array5->data;
   }
+  {
+    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
+    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
+    arg6 = (int*) array_data(temp6);
+  }
+  {
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
+  }
+  {
+    temp8 = obj_to_array_no_conversion(obj7,PyArray_FLOAT);
+    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
+    arg8 = (float*) array_data(temp8);
+  }
   sa_strong_connections<int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
-  {
-    int length = (arg6)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_INT); 
-    memcpy(PyArray_DATA(obj),&((*(arg6))[0]),sizeof(int)*length);	 
-    delete arg6; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
-  {
-    int length = (arg7)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_INT); 
-    memcpy(PyArray_DATA(obj),&((*(arg7))[0]),sizeof(int)*length);	 
-    delete arg7; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
-  {
-    int length = (arg8)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_FLOAT); 
-    memcpy(PyArray_DATA(obj),&((*(arg8))[0]),sizeof(float)*length);	 
-    delete arg8; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
   }
@@ -4256,9 +4237,9 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_2(PyObject *SWIGUNUSEDPAR
   int *arg3 ;
   int *arg4 ;
   double *arg5 ;
-  std::vector<int > *arg6 = (std::vector<int > *) 0 ;
-  std::vector<int > *arg7 = (std::vector<int > *) 0 ;
-  std::vector<double > *arg8 = (std::vector<double > *) 0 ;
+  int *arg6 ;
+  int *arg7 ;
+  double *arg8 ;
   int val1 ;
   int ecode1 = 0 ;
   double val2 ;
@@ -4269,28 +4250,19 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_2(PyObject *SWIGUNUSEDPAR
   int is_new_object4 ;
   PyArrayObject *array5 = NULL ;
   int is_new_object5 ;
-  std::vector<int > *tmp6 ;
-  std::vector<int > *tmp7 ;
-  std::vector<double > *tmp8 ;
+  PyArrayObject *temp6 = NULL ;
+  PyArrayObject *temp7 = NULL ;
+  PyArrayObject *temp8 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
   
-  {
-    tmp6 = new std::vector<int>(); 
-    arg6 = tmp6; 
-  }
-  {
-    tmp7 = new std::vector<int>(); 
-    arg7 = tmp7; 
-  }
-  {
-    tmp8 = new std::vector<double>(); 
-    arg8 = tmp8; 
-  }
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:sa_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:sa_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "sa_strong_connections" "', argument " "1"" of type '" "int""'");
@@ -4331,29 +4303,23 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections__SWIG_2(PyObject *SWIGUNUSEDPAR
     
     arg5 = (double*) array5->data;
   }
+  {
+    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
+    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
+    arg6 = (int*) array_data(temp6);
+  }
+  {
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
+  }
+  {
+    temp8 = obj_to_array_no_conversion(obj7,PyArray_DOUBLE);
+    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
+    arg8 = (double*) array_data(temp8);
+  }
   sa_strong_connections<int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
-  {
-    int length = (arg6)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_INT); 
-    memcpy(PyArray_DATA(obj),&((*(arg6))[0]),sizeof(int)*length);	 
-    delete arg6; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
-  {
-    int length = (arg7)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_INT); 
-    memcpy(PyArray_DATA(obj),&((*(arg7))[0]),sizeof(int)*length);	 
-    delete arg7; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
-  {
-    int length = (arg8)->size(); 
-    PyObject *obj = PyArray_FromDims(1, &length,PyArray_DOUBLE); 
-    memcpy(PyArray_DATA(obj),&((*(arg8))[0]),sizeof(double)*length);	 
-    delete arg8; 
-    resultobj = helper_appendToTuple( resultobj, (PyObject *)obj ); 
-  }
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
   }
@@ -4380,15 +4346,15 @@ fail:
 
 SWIGINTERN PyObject *_wrap_sa_strong_connections(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[6];
+  PyObject *argv[9];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 5); ii++) {
+  for (ii = 0; (ii < argc) && (ii < 8); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 5) {
+  if (argc == 8) {
     int _v;
     {
       int res = SWIG_AsVal_int(argv[0], NULL);
@@ -4412,14 +4378,29 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections(PyObject *self, PyObject *args)
               _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_FLOAT)) ? 1 : 0;
             }
             if (_v) {
-              return _wrap_sa_strong_connections__SWIG_1(self, args);
+              {
+                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
+              }
+              if (_v) {
+                {
+                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
+                }
+                if (_v) {
+                  {
+                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_FLOAT)) ? 1 : 0;
+                  }
+                  if (_v) {
+                    return _wrap_sa_strong_connections__SWIG_1(self, args);
+                  }
+                }
+              }
             }
           }
         }
       }
     }
   }
-  if (argc == 5) {
+  if (argc == 8) {
     int _v;
     {
       int res = SWIG_AsVal_int(argv[0], NULL);
@@ -4443,7 +4424,22 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections(PyObject *self, PyObject *args)
               _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_DOUBLE)) ? 1 : 0;
             }
             if (_v) {
-              return _wrap_sa_strong_connections__SWIG_2(self, args);
+              {
+                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
+              }
+              if (_v) {
+                {
+                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
+                }
+                if (_v) {
+                  {
+                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_DOUBLE)) ? 1 : 0;
+                  }
+                  if (_v) {
+                    return _wrap_sa_strong_connections__SWIG_2(self, args);
+                  }
+                }
+              }
             }
           }
         }
@@ -4452,7 +4448,7 @@ SWIGINTERN PyObject *_wrap_sa_strong_connections(PyObject *self, PyObject *args)
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'sa_strong_connections'.\n  Possible C/C++ prototypes are:\n""    sa_strong_connections<(int,float)>(int const,float const,int const [],int const [],float const [],std::vector<int > *,std::vector<int > *,std::vector<float > *)\n""    sa_strong_connections<(int,double)>(int const,double const,int const [],int const [],double const [],std::vector<int > *,std::vector<int > *,std::vector<double > *)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'sa_strong_connections'.\n  Possible C/C++ prototypes are:\n""    sa_strong_connections<(int,float)>(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n""    sa_strong_connections<(int,double)>(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
   return NULL;
 }
 
@@ -5639,7 +5635,7 @@ fail:
 
 
 static PyMethodDef SwigMethods[] = {
-	 { (char *)"sa_get_aggregates", _wrap_sa_get_aggregates, METH_VARARGS, (char *)"sa_get_aggregates(int n_row, int Ap, int Aj, std::vector<(int)> Bj)"},
+	 { (char *)"sa_get_aggregates", _wrap_sa_get_aggregates, METH_VARARGS, (char *)"sa_get_aggregates(int n_row, int Ap, int Aj, int Bj) -> int"},
 	 { (char *)"rs_strong_connections", _wrap_rs_strong_connections, METH_VARARGS, (char *)"\n"
 		"rs_strong_connections(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"
 		"    int Sj, float Sx)\n"
@@ -5656,11 +5652,9 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"sa_strong_connections", _wrap_sa_strong_connections, METH_VARARGS, (char *)"\n"
 		"sa_strong_connections(int n_row, float epsilon, int Ap, int Aj, float Ax, \n"
-		"    std::vector<(int)> Sp, std::vector<(int)> Sj, \n"
-		"    std::vector<(float)> Sx)\n"
+		"    int Sp, int Sj, float Sx)\n"
 		"sa_strong_connections(int n_row, double epsilon, int Ap, int Aj, double Ax, \n"
-		"    std::vector<(int)> Sp, std::vector<(int)> Sj, \n"
-		"    std::vector<(double)> Sx)\n"
+		"    int Sp, int Sj, double Sx)\n"
 		""},
 	 { (char *)"block_gauss_seidel", _wrap_block_gauss_seidel, METH_VARARGS, (char *)"\n"
 		"block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, \n"
