@@ -1,0 +1,10 @@
+# Run with the following command:
+#svn -R propset svn:ignore -F .svnignore .
+*.pyc
+*.bak
+*.so
+*.swp
+dist
+build
+__svn_version__.py
+
