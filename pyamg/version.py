@@ -9,7 +9,7 @@ if not release:
 
     if os.path.isfile(svn_version_file):
         import imp
-        svn = imp.load_module('scipy.__svn_version__',
+        svn = imp.load_module('pyamg.__svn_version__',
                               open(svn_version_file),
                               svn_version_file,
                               ('.py','U',1))
