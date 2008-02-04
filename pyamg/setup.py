@@ -22,6 +22,9 @@ def configuration(parent_package='',top_path=None):
     config.add_extension('_multigridtools',
                          sources=sources,
                          include_dirs=['multigridtools'])
+
+    config.make_svn_version_py()  # installs __svn_version__.py
+    config.make_config_py()
     return config
 
 if __name__ == '__main__':
