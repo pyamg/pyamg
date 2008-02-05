@@ -1,22 +1,23 @@
-from numpy import empty_like
+from numpy import empty, empty_like
 
 from scipy.sparse import csr_matrix,isspmatrix_csr
 
 from multilevel import multilevel_solver
 import multigridtools
 
-__all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator']
+__all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
+        'rs_cf_splitting']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
     """
     Create a multilevel solver using Ruge-Stuben coarsening (Classical AMG)
 
-        References:
-            "Multigrid"
-                Trottenberg, U., C. W. Oosterlee, and Anton Schuller.
-                San Diego: Academic Press, 2001.
-                Appendix A
+    References:
+        Trottenberg, U., C. W. Oosterlee, and Anton Schuller.
+        "Multigrid"
+        San Diego: Academic Press, 2001.
+        Appendix A
 
     """
     As = [A]
@@ -54,6 +55,23 @@ def rs_strong_connections(A,theta):
             A.indptr, A.indices, A.data, Sp,Sj,Sx)
 
     return csr_matrix((Sx,Sj,Sp),shape=A.shape)
+
+def rs_cf_splitting(S):
+    """Coarse-Fine splitting for strength of connection matrix S
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    T = S.T.tocsr()  #transpose S for efficient column access
+
+    splitting = empty( S.shape[0], dtype=S.indptr.dtype )
+
+    multigridtools.rs_cf_splitting(S.shape[0],
+            S.indptr, S.indices,  
+            T.indptr, T.indices, 
+            splitting)
+
+    return splitting
 
 
 def rs_prolongator(A,theta=0.25):

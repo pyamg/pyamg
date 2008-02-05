@@ -48,13 +48,17 @@ except AttributeError:
 del types
 
 
-U_NODE = _multigridtools.U_NODE
-C_NODE = _multigridtools.C_NODE
 F_NODE = _multigridtools.F_NODE
+C_NODE = _multigridtools.C_NODE
+U_NODE = _multigridtools.U_NODE
 
 def sa_get_aggregates(*args):
   """sa_get_aggregates(int n_row, int Ap, int Aj, int Bj) -> int"""
   return _multigridtools.sa_get_aggregates(*args)
+
+def rs_cf_splitting(*args):
+  """rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"""
+  return _multigridtools.rs_cf_splitting(*args)
 
 
 def rs_strong_connections(*args):

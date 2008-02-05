@@ -9,14 +9,31 @@ from pyamg.gallery import poisson
 from pyamg.rs import * 
 
 
-class TestStrengthOfConnection(TestCase):
-    def test_rs_strong_connections(self):
-        cases = []
+class TestRugeStubenFunctions(TestCase):
+    def setUp(self):
+        self.cases = []
 
         # random matrices
         numpy.random.seed(0)
         for N in [2,3,5]:
-            cases.append( csr_matrix(-rand(N,N)) )
+            self.cases.append( csr_matrix(rand(N,N)) )
+
+        # poisson problems in 1D and 2D
+        for N in [2,3,5,7,10,11,19]:
+            self.cases.append( poisson( (N,), format='csr') )
+        for N in [2,3,5,7,10,11]:
+            self.cases.append( poisson( (N,N), format='csr') )
+    
+    def test_rs_strong_connections(self):
+        for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
+            for A in self.cases:
+                result   = rs_strong_connections( A, theta )
+                expected = reference_rs_strong_connections( A, theta )
+                assert_equal( result.nnz, expected.nnz )
+                assert_equal( result.todense(), expected.todense() )
+
+    def test_rs_cf_splitting(self):
+        cases = []
 
         # poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
@@ -24,13 +41,45 @@ class TestStrengthOfConnection(TestCase):
         for N in [2,3,5,7,10,11]:
             cases.append( poisson( (N,N), format='csr') )
         
-        for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
-            for A in cases:
-                result   = rs_strong_connections( A, theta )
-                expected = reference_rs_strong_connections( A, theta )
-                assert_equal( result.nnz, expected.nnz )
-                assert_equal( result.todense(), expected.todense() )
-    
+        for A in cases:
+            S = rs_strong_connections( A, 0.0 )
+
+            splitting = rs_cf_splitting( S )
+
+            assert( splitting.min() >= 0 )     #could be all 1s
+            assert_equal( splitting.max(), 1 ) 
+
+            S.data[:] = 1
+
+            # check that all F-nodes are strongly connected to a C-node
+            assert( (splitting + S*splitting).min() > 0 )
+
+            # check that all strong connections S[i,j] satisfy either:
+            # (0) i is a C-node
+            # (1) j is a C-node
+            # (2) k is a C-node and both i and j are are strongly connected to k
+            
+            X = S.tocoo()
+
+            # remove C->F edges (i.e. S[i,j] where (0) holds )
+            mask = splitting[X.row] == 0
+            X.row  = X.row[mask]
+            X.col  = X.col[mask]
+            X.data = X.data[mask]
+
+            # remove F->C edges (i.e. S[i,j] where (1) holds )
+            mask = splitting[X.col] == 0 
+            X.row  = X.row[mask]
+            X.col  = X.col[mask] 
+            X.data = X.data[mask]
+
+            # X now consists of strong F->F edges only
+            
+            # (S * S.T)[i,j] is the # of C nodes on which both i and j 
+            # strongly depend (i.e. the number of k's where (2) holds)
+            assert( ((S*S.T) - X).data.min() > 0 )
+   
+
 
 class TestRugeStubenSolver(TestCase):
     def test_poisson(self):

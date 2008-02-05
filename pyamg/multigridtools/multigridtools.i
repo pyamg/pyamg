@@ -111,7 +111,8 @@
   ctype Sp [ ],
   ctype Sj [ ],
   ctype Tp [ ],
-  ctype Tj [ ]
+  ctype Tj [ ],
+  ctype splitting[]
 };
 %enddef
 
@@ -125,6 +126,9 @@
 };
 %enddef
 
+/*%apply char * INPLACE_ARRAY {
+    char splitting []
+};*/
 
 
 /*
@@ -145,10 +149,10 @@ T_INPLACE_ARRAY1( ctype )
 /*
  * Create all desired index and data types here
  */
-DECLARE_INDEX_TYPE( int       )
+DECLARE_INDEX_TYPE( int )
 
-DECLARE_DATA_TYPE( float               )
-DECLARE_DATA_TYPE( double              )
+DECLARE_DATA_TYPE( float  )
+DECLARE_DATA_TYPE( double )
 
 
 %include "ruge_stuben.h"
@@ -176,6 +180,7 @@ DECLARE_DATA_TYPE( double              )
  
  
 INSTANTIATE_INDEX(sa_get_aggregates)
+INSTANTIATE_INDEX(rs_cf_splitting)
 
 INSTANTIATE_BOTH(rs_strong_connections)
 INSTANTIATE_BOTH(rs_interpolation)
