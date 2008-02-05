@@ -5,6 +5,9 @@ from numpy import array, arange, ones, zeros, sqrt, asarray, \
 
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 
+from sa_ode_strong_connections import sa_ode_strong_connections
+from sa_energy_min import sa_energy_min
+
 import multigridtools
 from multilevel import multilevel_solver
 from utils import diag_sparse, approximate_spectral_radius, \
