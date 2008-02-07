@@ -30,8 +30,9 @@ class multilevel_solver:
 
         total_nnz =  sum([A.nnz for A in self.As])
 
+        output += '  level   unknowns     nonzeros\n'
         for n,A in enumerate(self.As):
-            output += '   [level %2d]  unknowns: %10d  nnz: %5.2f%%\n' % (n,A.shape[1],(100*float(A.nnz)/float(total_nnz)))
+            output += '   %2d   %10d   %10d [%5.2f%%]\n' % (n,A.shape[1],A.nnz,(100*float(A.nnz)/float(total_nnz)))
 
         return output
 
