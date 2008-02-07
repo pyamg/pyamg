@@ -1,6 +1,7 @@
 from scipy.testing import *
 
 import numpy
+from numpy import ravel, ones, concatenate, cumsum
 from scipy import rand
 from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 
@@ -75,12 +76,16 @@ class TestRugeStubenFunctions(TestCase):
    
     def test_direct_prolongator(self):
         for A in self.cases:
-            S = rs_strong_connections( A, 0.0 )
 
+            S = rs_strong_connections( A, 0.0 )
             splitting = rs_cf_splitting( S )
 
-            P = rs_direct_prolongator(A,S,splitting)
+            result   = rs_direct_interpolation(A,S,splitting)                
+            expected = reference_rs_direct_interpolation( A, S, splitting )
 
+            assert_almost_equal( result.todense(), expected.todense() )
+
+            
 
 class TestRugeStubenSolver(TestCase):
     def test_poisson(self):
@@ -138,6 +143,59 @@ def reference_rs_strong_connections(A,theta):
    
     S = coo_matrix( (V,(I,J)), shape=A.shape).tocsr()
     return S
+
+def reference_rs_direct_interpolation(A,S,splitting):
+
+    A = coo_matrix(A)
+    S = coo_matrix(S)  
+
+    #strong C points
+    c_mask = splitting[S.col] == 1
+    C_s = coo_matrix( (S.data[c_mask],(S.row[c_mask],S.col[c_mask])), shape=S.shape)
+
+    #strong F points
+    f_mask = ~c_mask
+    F_s = coo_matrix( (S.data[f_mask],(S.row[f_mask],S.col[f_mask])), shape=S.shape)
+
+    # split A in to + and -
+    mask = (A.data > 0) & (A.row != A.col)
+    A_pos = coo_matrix( (A.data[mask],(A.row[mask],A.col[mask])), shape=A.shape)
+    mask = (A.data < 0) & (A.row != A.col)
+    A_neg = coo_matrix( (A.data[mask],(A.row[mask],A.col[mask])), shape=A.shape)
+
+    # split C_S in to + and -
+    mask = C_s.data > 0
+    C_s_pos = coo_matrix( (C_s.data[mask],(C_s.row[mask],C_s.col[mask])), shape=A.shape)
+    mask = ~mask
+    C_s_neg = coo_matrix( (C_s.data[mask],(C_s.row[mask],C_s.col[mask])), shape=A.shape)
+
+    sum_strong_pos = ravel(C_s_pos.sum(axis=1))
+    sum_strong_neg = ravel(C_s_neg.sum(axis=1))
+
+    sum_all_pos = ravel(A_pos.sum(axis=1))
+    sum_all_neg = ravel(A_neg.sum(axis=1))
+
+    diag = A.diagonal()
+
+    alpha = sum_all_neg / sum_strong_neg
+    beta  = sum_all_pos / sum_strong_pos
+
+    mask = sum_strong_pos == 0
+    diag[mask] += sum_all_pos[mask]
+    beta[mask] = 0
+
+    C_s_neg.data *= -alpha[C_s_neg.row]/diag[C_s_neg.row]
+    C_s_pos.data *= -beta[C_s_pos.row]/diag[C_s_pos.row]
+    
+    C_rows = splitting.nonzero()[0] 
+    C_inject = coo_matrix( (ones(sum(splitting)),(C_rows,C_rows)), shape=A.shape)
+    
+    P = C_s_neg.tocsr() + C_s_pos.tocsr() + C_inject.tocsr()
+
+    map = concatenate(([0],cumsum(splitting)))
+    P = csr_matrix( (P.data,map[P.indices],P.indptr), shape=(P.shape[0],map[-1]))
+
+    return P
 
 
 if __name__ == '__main__':

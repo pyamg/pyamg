@@ -185,7 +185,6 @@ INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 
 INSTANTIATE_BOTH(rs_strong_connections)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
-INSTANTIATE_BOTH(rs_interpolation)
 INSTANTIATE_BOTH(sa_strong_connections)
 
 INSTANTIATE_BOTH(block_gauss_seidel)

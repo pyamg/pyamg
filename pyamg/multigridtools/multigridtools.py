@@ -85,17 +85,6 @@ def rs_direct_interpolation_pass2(*args):
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
 
-def rs_interpolation(*args):
-  """
-    rs_interpolation(int n_nodes, int Ap, int Aj, float Ax, int Sp, int Sj, 
-        float Sx, int Tp, int Tj, float Tx, std::vector<(int)> Bp, 
-        std::vector<(int)> Bj, std::vector<(float)> Bx)
-    rs_interpolation(int n_nodes, int Ap, int Aj, double Ax, int Sp, int Sj, 
-        double Sx, int Tp, int Tj, double Tx, std::vector<(int)> Bp, 
-        std::vector<(int)> Bj, std::vector<(double)> Bx)
-    """
-  return _multigridtools.rs_interpolation(*args)
-
 def sa_strong_connections(*args):
   """
     sa_strong_connections(int n_row, float epsilon, int Ap, int Aj, float Ax, 

@@ -6,7 +6,7 @@ from multilevel import multilevel_solver
 import multigridtools
 
 __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
-        'rs_cf_splitting', 'rs_direct_prolongator']
+        'rs_cf_splitting', 'rs_direct_interpolation']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
@@ -74,7 +74,7 @@ def rs_cf_splitting(S):
     return splitting
 
 
-def rs_direct_prolongator(A,S,splitting):
+def rs_direct_interpolation(A,S,splitting):
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
     Pp = empty_like( A.indptr )
@@ -102,7 +102,7 @@ def rs_prolongator(A,theta=0.25):
 
     splitting = rs_cf_splitting(S)
 
-    return rs_direct_prolongator(A,S,splitting)
+    return rs_direct_interpolation(A,S,splitting)
 
     #T = S.T.tocsr()  #transpose S for efficient column access
 
