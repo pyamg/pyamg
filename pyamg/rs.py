@@ -6,7 +6,7 @@ from multilevel import multilevel_solver
 import multigridtools
 
 __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
-        'rs_cf_splitting']
+        'rs_cf_splitting', 'rs_direct_prolongator']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
@@ -74,16 +74,41 @@ def rs_cf_splitting(S):
     return splitting
 
 
+def rs_direct_prolongator(A,S,splitting):
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    Pp = empty_like( A.indptr )
+
+    multigridtools.rs_direct_interpolation_pass1( A.shape[0],
+            S.indptr, S.indices, splitting,  Pp)
+
+    nnz = Pp[-1]
+    Pj = empty( nnz, dtype=Pp.dtype )
+    Px = empty( nnz, dtype=A.dtype )
+
+    multigridtools.rs_direct_interpolation_pass2( A.shape[0],
+            A.indptr, A.indices, A.data,
+            S.indptr, S.indices, S.data,
+            splitting,
+            Pp,       Pj,        Px)
+
+    return csr_matrix( (Px,Pj,Pp) )
+
+
 def rs_prolongator(A,theta=0.25):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
     S = rs_strong_connections(A,theta)
 
-    T = S.T.tocsr()  #transpose S for efficient column access
+    splitting = rs_cf_splitting(S)
 
-    Ip,Ij,Ix = multigridtools.rs_interpolation(A.shape[0],\
-                                               A.indptr,A.indices,A.data,\
-                                               S.indptr,S.indices,S.data,\
-                                               T.indptr,T.indices,T.data)
+    return rs_direct_prolongator(A,S,splitting)
 
-    return csr_matrix((Ix,Ij,Ip))
+    #T = S.T.tocsr()  #transpose S for efficient column access
+
+    #Ip,Ij,Ix = multigridtools.rs_interpolation(A.shape[0],\
+    #                                           A.indptr,A.indices,A.data,\
+    #                                           S.indptr,S.indices,S.data,\
+    #                                           T.indptr,T.indices,T.data)
+
+    #return csr_matrix((Ix,Ij,Ip))

@@ -67,8 +67,9 @@ void rs_strong_connections(const I n_row,
 
 template<class I>
 void rs_cf_splitting(const I n_nodes,
-        const I Sp[], const I Sj[], const I Tp[], const I Tj[], 
-              I splitting[])
+                     const I Sp[], const I Sj[], 
+                     const I Tp[], const I Tj[], 
+                           I splitting[])
 {
     std::vector<I> lambda(n_nodes,0);
 
@@ -188,7 +189,224 @@ void rs_cf_splitting(const I n_nodes,
     }
 }
 
+/*
+ *   Produce the Ruge-Stuben prolongator using "Direct Interpolation"
+ *
+ *
+ *   The first pass uses the strength of connection matrix 'S' 
+ *   and C/F splitting to compute the row pointer for the prolongator.
+ *
+ *   The second pass fills in the nonzero entries of the prolongator
+ *
+ *   Reference:
+ *      Page 479 of "Multigrid"
+ *
+ */      
+template<class I>
+void rs_direct_interpolation_pass1(const I n_nodes,
+                                   const I Sp[], const I Sj[],
+                                   const I splitting[],
+                                         I Bp[])
+{
+    I nnz = 0;
+    Bp[0] = 0;
+    for(I i = 0; i < n_nodes; i++){
+        if( splitting[i] == C_NODE ){
+            nnz++;
+        } else {
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if (splitting[Sj[jj]] == C_NODE)
+                    nnz++;
+            }
+        }
+        Bp[i+1] = nnz;
+    }
+}
 
+
+template<class I, class T>
+void rs_direct_interpolation_pass2(const I n_nodes,
+                                   const I Ap[], const I Aj[], const T Ax[],
+                                   const I Sp[], const I Sj[], const T Sx[],
+                                   const I splitting[],
+                                   const I Bp[],       I Bj[],       T Bx[])
+{
+
+    for(I i = 0; i < n_nodes; i++){
+        if(splitting[i] == C_NODE){
+            Bj[Bp[i]] = i;
+            Bx[Bp[i]] = 1;
+        } else {
+            T sum_strong_pos = 0, sum_strong_neg = 0;
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if (splitting[Sj[jj]] == C_NODE){
+                    if (Sx[jj] < 0)
+                        sum_strong_neg += Sx[jj];
+                    else
+                        sum_strong_pos += Sx[jj];
+                }
+            }
+
+            T sum_all_pos = 0, sum_all_neg = 0;
+            T diag = 0;
+            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+                if (Aj[jj] == i){
+                    diag += Ax[jj];
+                } else {
+                    if (Ax[jj] < 0)
+                        sum_all_neg += Ax[jj];
+                    else
+                        sum_all_pos += Ax[jj];
+                }
+            }
+
+            T alpha = sum_all_neg / sum_strong_neg;
+            T beta  = sum_all_pos / sum_strong_pos;
+
+            if (sum_strong_pos == 0){
+                diag += sum_all_pos;
+                beta = 0;
+            }
+
+            T neg_coeff = -alpha/diag;
+            T pos_coeff = -beta/diag;
+
+            I nnz = Bp[i];
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if (splitting[Sj[jj]] == C_NODE){
+                    Bj[nnz] = Sj[jj];
+                    if (Sx[jj] < 0)
+                        Bx[nnz] = neg_coeff * Sx[jj];
+                    else
+                        Bx[nnz] = pos_coeff * Sx[jj];
+                    nnz++;
+                }
+            }
+        }
+    }
+
+
+    std::vector<I> map(n_nodes);
+    for(I i = 0, sum = 0; i < n_nodes; i++){
+        map[i]  = sum;
+        sum    += splitting[i];
+    }
+    for(I i = 0; i < Bp[n_nodes]; i++){
+        Bj[i] = map[Bj[i]];
+    }
+}
+
+
+
+
+//template<class I, class T>
+//void rs_standard_interpolation(const I n_nodes,
+//                               const I Ap[], const I Aj[], const T Ax[],
+//                               const I Sp[], const I Sj[], const T Sx[],
+//                               const I Tp[], const I Tj[], const T Tx[],
+//                                     I Bp[],       I Bj[],       T Bx[])
+//{
+//
+//    //Now construct interpolation operator
+//    std::vector<T>    d_k(n_nodes,0);
+//    std::vector<bool> C_i(n_nodes,0);
+//
+//    Bp->push_back(0);
+//    for(I i = 0; i < n_nodes; i++){
+//        if(NodeSets[i] == C_NODE){
+//            //interpolate directly
+//            Bj->push_back(i);
+//            Bx->push_back(1);      
+//            Bp->push_back(Bj->size());
+//        } else {
+//            //F_NODE
+//
+//            //Step 4
+//            T d_i = 0; //denominator for this row
+//            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ d_i += Ax[jj]; }
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ d_i -= Sx[jj]; }
+//
+//            //Create C_i, initialize d_k
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//                I j = Sj[jj];
+//                if(NodeSets[j] == C_NODE){
+//                    C_i[j] = true;
+//                    d_k[j] = Sx[jj];
+//                }
+//            }
+//
+//            bool Sj_intersects_Ci = true; //in the case that i has no F-neighbors
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ //for j in D^s_i
+//                I    j = Sj[jj];
+//                T   a_ij = Sx[jj];
+//                T   a_jl = 0;
+//
+//                if(NodeSets[j] != F_NODE){continue;}
+//
+//                //Step 5
+//                Sj_intersects_Ci = false;
+//
+//                //compute sum a_jl
+//                for(I ll = Sp[j]; ll < Sp[j+1]; ll++){
+//                    if(C_i[Sj[ll]]){
+//                        Sj_intersects_Ci = true;
+//                        a_jl += Sx[ll];
+//                    }	    
+//                }
+//
+//                if(!Sj_intersects_Ci){ break; }
+//
+//                for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
+//                    I   k = Sj[kk];
+//                    T  a_jk = Sx[kk];
+//                    if(C_i[k]){
+//                        d_k[k] += a_ij*a_jk / a_jl;
+//                    }	    
+//                }
+//            }
+//
+//            //Step 6
+//            if(Sj_intersects_Ci){
+//                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//                    I j = Sj[jj];
+//                    if(NodeSets[j] == C_NODE){
+//                        Bj->push_back(j);
+//                        Bx->push_back(-d_k[j]/d_i);      
+//                    }
+//                }	
+//                Bp->push_back(Bj->size());
+//            } else { //make i a C_NODE
+//                NodeSets[i] = C_NODE;
+//                Bj->push_back(i);
+//                Bx->push_back(1);      
+//                Bp->push_back(Bj->size());
+//            }
+//
+//
+//            //Clear C_i,d_k
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//                I j = Sj[jj];
+//                C_i[j] = false;
+//                d_k[j] = 0;
+//            }
+//
+//        }
+//
+//    }
+//
+//    //for each c-node, determine its index in the coarser lvl
+//    std::vector<I> cnode_index(n_nodes,-1);
+//    I n_cnodes = 0;
+//    for(I i = 0; i < n_nodes; i++){
+//        if(NodeSets[i] == C_NODE){
+//            cnode_index[i] = n_cnodes++;
+//        }
+//    }
+//    //map old C indices to coarse indices
+//    for(typename std::vector<I>::iterator iter = Bj->begin(); iter != Bj->end(); iter++){
+//        *iter = cnode_index[*iter];
+//    }
+//}
 
 
 template<class I, class T>

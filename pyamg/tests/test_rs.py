@@ -33,15 +33,8 @@ class TestRugeStubenFunctions(TestCase):
                 assert_equal( result.todense(), expected.todense() )
 
     def test_rs_cf_splitting(self):
-        cases = []
-
-        # poisson problems in 1D and 2D
-        for N in [2,3,5,7,10,11,19]:
-            cases.append( poisson( (N,), format='csr') )
-        for N in [2,3,5,7,10,11]:
-            cases.append( poisson( (N,N), format='csr') )
         
-        for A in cases:
+        for A in self.cases:
             S = rs_strong_connections( A, 0.0 )
 
             splitting = rs_cf_splitting( S )
@@ -77,8 +70,16 @@ class TestRugeStubenFunctions(TestCase):
             
             # (S * S.T)[i,j] is the # of C nodes on which both i and j 
             # strongly depend (i.e. the number of k's where (2) holds)
-            assert( ((S*S.T) - X).data.min() > 0 )
+            Y = (S*S.T) - X
+            assert( Y.nnz == 0 or Y.data.min() > 0 )
    
+    def test_direct_prolongator(self):
+        for A in self.cases:
+            S = rs_strong_connections( A, 0.0 )
+
+            splitting = rs_cf_splitting( S )
+
+            P = rs_direct_prolongator(A,S,splitting)
 
 
 class TestRugeStubenSolver(TestCase):
@@ -97,13 +98,13 @@ class TestRugeStubenSolver(TestCase):
             x = rand(A.shape[0])
             b = A*rand(A.shape[0]) #zeros_like(x)
 
-            ml = ruge_stuben_solver(A)
+            ml = ruge_stuben_solver(A, max_coarse=50)
 
-            x_sol,residuals = ml.solve(b,x0=x,maxiter=20,tol=1e-12,return_residuals=True)
+            x_sol,residuals = ml.solve(b, x0=x, maxiter=20, tol=1e-12, return_residuals=True)
 
             avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
             
-            assert(avg_convergence_ratio < 0.10)
+            assert(avg_convergence_ratio < 0.20)
 
 
 

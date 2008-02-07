@@ -42,7 +42,7 @@ def configuration(parent_package='',top_path=None):
                        quiet=True)
 
     config.add_subpackage('pyamg')
-    config.add_data_files(('pyamg','*.txt'))
+    #config.add_data_files(('pyamg','*.txt'))
 
     config.get_version('pyamg/version.py') # sets config.version
 

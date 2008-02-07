@@ -60,6 +60,10 @@ def rs_cf_splitting(*args):
   """rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"""
   return _multigridtools.rs_cf_splitting(*args)
 
+def rs_direct_interpolation_pass1(*args):
+  """rs_direct_interpolation_pass1(int n_nodes, int Sp, int Sj, int splitting, int Bp)"""
+  return _multigridtools.rs_direct_interpolation_pass1(*args)
+
 
 def rs_strong_connections(*args):
   """
@@ -69,6 +73,17 @@ def rs_strong_connections(*args):
         int Sp, int Sj, double Sx)
     """
   return _multigridtools.rs_strong_connections(*args)
+
+def rs_direct_interpolation_pass2(*args):
+  """
+    rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, float Ax, int Sp, int Sj, 
+        float Sx, int splitting, int Bp, int Bj, 
+        float Bx)
+    rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, double Ax, int Sp, int Sj, 
+        double Sx, int splitting, int Bp, int Bj, 
+        double Bx)
+    """
+  return _multigridtools.rs_direct_interpolation_pass2(*args)
 
 def rs_interpolation(*args):
   """
