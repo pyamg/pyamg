@@ -7,7 +7,7 @@ from numpy import array, ones, zeros, mat, sqrt
 from scipy import rand
 from scipy.sparse import csr_matrix, bsr_matrix
 from scipy.splinalg import spsolve
-from scipy.splinalg import cg
+from scipy.splinalg import cg, gmres, bicgstab
 from pyamg.sa import smoothed_aggregation_solver
 from pyamg.utils import read_coord, Coord2RBM
 from scipy.io import loadmat
@@ -24,8 +24,10 @@ ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
 #---------OGroup Mat's
 #----------------------Diffusion Type
+#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_961.mat')).get('A'))
+#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p2_ref2.mat')).get('A'))
 #Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_961.mat')).get('A'))
-#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_961.mat')).get('A'))
+#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_3969.mat')).get('A'))
 
 #Bmat = mat(ones((Amat.shape[0],1)))
 
@@ -35,20 +37,20 @@ ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
 #----------------------Elasticity
 #----------------------Must also load coordinates and then convert coordinates to rigid body modes 
-#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Matrix_Bar_p1_ref0.mat')).get('A'), blocksize=(3,3))
-#coords = ogroup_dir + 'matrices/elasticity/IronBar/Coords_Bar_p1_ref0.txt'
+Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Matrix_Bar_p1_ref0.mat')).get('A'), blocksize=(3,3))
+coords = ogroup_dir + 'matrices/elasticity/IronBar/Coords_Bar_p1_ref0.txt'
 
-Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Matrix_Tripod_p1_ref0.mat')).get('A'), blocksize=(3,3))
-coords = ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Coords_Tripod_p1_ref0.txt'
+#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Matrix_Tripod_p2_ref0.mat')).get('A'), blocksize=(3,3))
+#coords = ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Coords_Tripod_p2_ref0.txt'
 
-#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Matrix_Tripod_p1_ref0.mat')).get('A'), blocksize=(3,3))
-#coords = ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Coords_Tripod_p1_ref0.txt'
+#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Matrix_Tripod_p1_ref2.mat')).get('A'), blocksize=(3,3))
+#coords = ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Coords_Tripod_p1_ref2.txt'
 
 X,Y,Z = read_coord(coords)
 Bmat = Coord2RBM(Amat.shape[0]/Amat.blocksize[0], Amat.blocksize[0], X, Y, Z)
 
 #Random, just for kicks...
-#Bmat = mat(rand(Amat.shape[0],3))
+#Bmat = mat(rand(Amat.shape[0],6))
 
 
 #------------------------------------- Solver Parameters ------------------------------------------------

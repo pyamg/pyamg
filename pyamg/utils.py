@@ -3,7 +3,7 @@ __all__ =['approximate_spectral_radius','infinity_norm','diag_sparse',
 
 import numpy
 import scipy
-from numpy import fromfile, ascontiguousarray, mat
+from numpy import fromfile, ascontiguousarray, mat, int32
 from scipy import ravel, arange, concatenate, tile, asarray, sqrt, diff, \
                   rand, zeros, ones, empty, asmatrix, dot
 from scipy.linalg import norm, eigvals
@@ -446,30 +446,37 @@ def BSR_Row_WriteVect(A, i, x):
 	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
 	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
-def BSR_Row_AddVect(A, i, x):
-#	Input:	A:	Matrix assumed to be in BSR format
-#		i:	row number
-#		x:	Array of values to overwrite nonzeros in row i of A
+def BSR_Get_Colindices(A):
+#	Input:	A:	BSR matrix from whom you want absolute column indices
 #
-#	Output:	A:	The nonzeros in row i of A have been
-#			added with the entries from x.  x must be same
-#			length as nonzeros of row i.  This is guaranteed
-#			when this routine is used with vectors derived form
-#			Get_BSR_Row
+#	Output: colindices:	List of arrays that is (num_nodes=A.rows/A.blocksize[0]) long.
+#				Each entry holds that node's column indices, assuming the block 
+#				is perfectly dense
 	
-	blocksize = A.blocksize[0]
-	BlockIndx = i/blocksize
-	rowstart = A.indptr[BlockIndx]
-	rowend = A.indptr[BlockIndx+1]
-	localRowIndx = i%blocksize
-	
-	#Numpy occasionally seems to be written by idiot small children.  This line fixes one
-	#	of the idiotic things about the array/matrix setup.  Sometimes I really wish
-	#	for the Matlab matrix "slicing" interface rather than this.
-	x = x.__array__().reshape( (max(x.shape),) )
+	RowsPerBlock = A.blocksize[0]
+	ColsPerBlock = A.blocksize[1]
+	nRows = A.shape[0]
+	colindices = []
 
-	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
-	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] += x
+	i = 0
+	while(i < nRows):
+		BlockIndx = i/RowsPerBlock
+		rowstart = A.indptr[BlockIndx]
+		rowend = A.indptr[BlockIndx+1]
+		length = rowend - rowstart
+		indys = zeros(length*ColsPerBlock, dtype=int32)
+
+		counter = 0
+		for j in range(rowstart, rowend):
+			coloffset = ColsPerBlock*A.indices[j]
+			indys[counter:(counter+ColsPerBlock)] = range(coloffset, coloffset+ColsPerBlock)
+			counter = counter + ColsPerBlock
+	
+		colindices.append(indys)
+	
+		i += RowsPerBlock
+
+	return colindices
 
 ###################################################################################################
 
