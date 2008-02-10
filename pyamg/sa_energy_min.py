@@ -151,7 +151,7 @@ def sa_energy_min(A, T, Atilde, B, SPD=True, num_its=4, min_tol=1e-8, file_outpu
 	if(not(csrflag)):
 		#UnAmal returns a BSR matrix, so the mat-mat will be a BSR mat-mat.  Unfortunately, 
 		#	we also need column indices for Sparsity_Pattern
-		Sparsity_Pattern = UnAmal(Atilde, numPDEs).__abs__()*T.__abs__()
+		Sparsity_Pattern = UnAmal(Atilde, numPDEs, numPDEs).__abs__()*T.__abs__()
 		Sparsity_Pattern.data[:,:,:] = 1.0
 		Sparsity_Pattern.sort_indices()
 		colindices = BSR_Get_Colindices(Sparsity_Pattern)

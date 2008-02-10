@@ -16,7 +16,7 @@ import time
 
 ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
-#----------------------------------------- Matrices and Nullspace Vectors-----------------------------------------------------
+#----------------------------------------- Matrices -----------------------------------------------------
 #---------Gallery Mat
 #size = 16
 #Amat = csr_matrix(poisson((size,size)))
@@ -24,34 +24,28 @@ ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
 #---------OGroup Mat's
 #----------------------Diffusion Type
-#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_961.mat')).get('A'))
-#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p2_ref2.mat')).get('A'))
-#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_961.mat')).get('A'))
-#Amat = csr_matrix((loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_3969.mat')).get('A'))
-
-#Bmat = mat(ones((Amat.shape[0],1)))
-
-#Random, just for kicks...
-#Bmat = mat(rand(Amat.shape[0],2))
+#data = loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_961.mat')
+#data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_961.mat')
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_3969.mat')
 
 
 #----------------------Elasticity
 #----------------------Must also load coordinates and then convert coordinates to rigid body modes 
-Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Matrix_Bar_p1_ref0.mat')).get('A'), blocksize=(3,3))
-coords = ogroup_dir + 'matrices/elasticity/IronBar/Coords_Bar_p1_ref0.txt'
+#data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Tripod_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Bar_p2_ref0.mat')
+data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Tripod_p1_ref0.mat')
 
-#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Matrix_Tripod_p2_ref0.mat')).get('A'), blocksize=(3,3))
-#coords = ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Coords_Tripod_p2_ref0.txt'
 
-#Amat = bsr_matrix((loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Matrix_Tripod_p1_ref2.mat')).get('A'), blocksize=(3,3))
-#coords = ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Coords_Tripod_p1_ref2.txt'
-
-X,Y,Z = read_coord(coords)
-Bmat = Coord2RBM(Amat.shape[0]/Amat.blocksize[0], Amat.blocksize[0], X, Y, Z)
+#------------------------------------- Nullspace Vectors -----------------------------------------------
+Bmat = data['B']
+if(Bmat.shape[1] > 1):
+	Amat = bsr_matrix(data['A'], blocksize=(3,3) ) 
+else:
+	Amat = csr_matrix(data['A'])
 
 #Random, just for kicks...
 #Bmat = mat(rand(Amat.shape[0],6))
-
 
 #------------------------------------- Solver Parameters ------------------------------------------------
 RHS = mat(rand(Amat.shape[0],1))

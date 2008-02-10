@@ -245,14 +245,15 @@ def vstack_csr(A,B):
 #					JBS Utils			 	 	     #
 ##############################################################################################
 
-def UnAmal(A,blocksize):
+def UnAmal(A, RowsPerBlock, ColsPerBlock):
 	#Input:	 A:		Amalmagated matrix, assumed to be in CSR format
-	#	 blocksize:	Block size of unamalgamted matrix
+	#	 RowsPerBlock &	
+	#	 ColsPerBlock   Give A blocks of size (RowsPerBlock, ColsPerBlock)	
 	#
 	#Output: A_UnAmal:	BSR matrix that is essentially a Kronecker product of 
 	#			A and ones((blocksize,blocksize))
-	data = ones( (A.indices.shape[0], blocksize, blocksize) )
-	return bsr_matrix((data, A.indices, A.indptr), shape=(blocksize*A.shape[0], blocksize*A.shape[1]) )
+	data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
+	return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
 
 def read_coord(filename):
 	#Input:		filename:	File of x,y,z coordinates.  Formatting of file must be
