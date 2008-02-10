@@ -24,22 +24,22 @@ ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
 #---------OGroup Mat's
 #----------------------Diffusion Type
-#data = loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_961.mat')
+#data = loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p1_ref1.mat')
-#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_961.mat')
-#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_3969.mat')
-
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_p1_ref1.mat')
 
 #----------------------Elasticity
 #----------------------Must also load coordinates and then convert coordinates to rigid body modes 
-#data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Tripod_p1_ref1.mat')
-#data = loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Bar_p2_ref0.mat')
-data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Tripod_p1_ref0.mat')
+#data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Tripod_p1_ref0.mat')
+data = loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Bar_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Tripod_p1_ref0.mat')
 
 
 #------------------------------------- Nullspace Vectors -----------------------------------------------
-Bmat = data['B']
-if(Bmat.shape[1] > 1):
+Bmat = mat(data['B'])
+Bmat = Bmat.reshape( (max(Bmat.shape), min(Bmat.shape)) )
+if(min(Bmat.shape) > 1):
 	Amat = bsr_matrix(data['A'], blocksize=(3,3) ) 
 else:
 	Amat = csr_matrix(data['A'])
@@ -58,7 +58,7 @@ solver_return_residuals=True
 k = 2
 t = 1.0
 proj_type =  "l2"      # "D_A" or "l2" projection used in strength measure
-epsilon = 4.0
+epsilon = 20.0
 file_output = False
 
 #-----------------------------  Energy Minimization Routine Parameters ---------------------------------
