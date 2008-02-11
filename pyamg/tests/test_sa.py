@@ -184,7 +184,7 @@ class TestSASolverPerformance(TestCase):
             assert(avg_convergence_ratio < 0.3)
 
     def test_DAD(self):
-        A = poisson( (200,200), format='csr' )        
+        A = poisson( (50,50), format='csr' )        
 
         x = rand(A.shape[0])
         b = rand(A.shape[0])
@@ -198,7 +198,7 @@ class TestSASolverPerformance(TestCase):
  
         #TODO force 2 level method and check that result is the same
  
-        sa = smoothed_aggregation_solver(D*A*D, D_inv * B, max_levels=2)
+        sa = smoothed_aggregation_solver(D*A*D, D_inv * B, max_coarse=1, max_levels=2)
  
         x_sol,residuals = sa.solve(b,x0=x,maxiter=10,tol=1e-12,return_residuals=True)
  
