@@ -25,14 +25,14 @@ ogroup_dir = "/home/jacob/Desktop/ogroup/"
 #---------OGroup Mat's
 #----------------------Diffusion Type
 #data = loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_p1_ref1.mat')
-#data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p1_ref1.mat')
+data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_p1_ref1.mat')
 
 #----------------------Elasticity
 #----------------------Must also load coordinates and then convert coordinates to rigid body modes 
 #data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_4ptTet/Tripod_p1_ref0.mat')
-data = loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Bar_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/elasticity/IronBar/Bar_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/elasticity/Tripod_10ptTet/Tripod_p1_ref0.mat')
 
 

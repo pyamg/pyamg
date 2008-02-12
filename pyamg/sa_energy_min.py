@@ -21,6 +21,7 @@ def Satisfy_Constraints_CSR(U, Sparsity_Pattern, B, BtBinv):
 
 	UB = U*mat(B)
 
+
 	#Project out U's components in span(B) row-wise
 	for i in range(Nfine):
 		rowstart = Sparsity_Pattern.indptr[i]
@@ -58,25 +59,29 @@ def Satisfy_Constraints_BSR(U, Sparsity_Pattern, B, BtBinv, colindices):
 	Nfine = U.shape[0]
 	RowsPerBlock = U.blocksize[0]
 	ColsPerBlock = U.blocksize[1]
+	Nnodes = Nfine/RowsPerBlock
 
 	UB = U*mat(B)
 
-	for i in range(Nfine):
-		#assume integer division truncates
-		BlockIndx = i/RowsPerBlock
-		rowstart = Sparsity_Pattern.indptr[BlockIndx]
-		rowend = Sparsity_Pattern.indptr[BlockIndx+1]
-		length = rowend - rowstart
-		localRowIndx = i%RowsPerBlock
-		colindx = colindices[BlockIndx]
+	rowoffset = 0
+	for i in range(Nnodes):
+		rowstart = Sparsity_Pattern.indptr[i]
+		rowend = Sparsity_Pattern.indptr[i+1]
+		colindx = colindices[i]
+		length = len(colindx)
+		numBlocks = rowend-rowstart
 		
 		if(length != 0):
+			
 			Bi = B[colindx,:]
-			UBi = UB[i,:]
+			UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
+			update_local = (Bi*(BtBinv[i]*UBi.T))
 
-			update_local = (Bi*(BtBinv[BlockIndx]*UBi.T))
+			#Write node's values 
+			for j in range(RowsPerBlock):
+				Sparsity_Pattern.data[rowstart:rowend, j, :] = update_local[:,j].reshape(numBlocks, ColsPerBlock)
 
-			Sparsity_Pattern.data[rowstart:rowend, localRowIndx, :] = update_local.reshape(length, ColsPerBlock)
+		rowoffset += RowsPerBlock
 
 	#Now add in changes from Sparsity_Pattern to U.  We don't write U directly in the above loop,
 	#	because its possible, once in a blue moon, to have the sparsity pattern of U be a subset
