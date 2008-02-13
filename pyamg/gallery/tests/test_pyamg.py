@@ -9,7 +9,6 @@ from scipy.sparse import csr_matrix, bsr_matrix
 from scipy.splinalg import spsolve
 from scipy.splinalg import cg, gmres, bicgstab
 from pyamg.sa import smoothed_aggregation_solver
-from pyamg.utils import read_coord, Coord2RBM
 from scipy.io import loadmat
 from pylab import semilogy, title, xlabel, ylabel, legend, show
 import time
