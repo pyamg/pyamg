@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <cmath>
 
-//#define DEBUG
+#define DEBUG
 
 template<class I, class T>
 void sa_strong_connections(const I n_row, 
@@ -56,75 +56,24 @@ void sa_strong_connections(const I n_row,
     }
 }
 
-//template<class I, class T>
-//void sa_strong_connections(const I n_row,
-//        const T epsilon,
-//        const I Ap[], const I Aj[], const T Ax[],
-//        std::vector<I> * Sp, std::vector<I> * Sj, std::vector<T> * Sx){
-//    //Sp,Sj form a CSR representation where the i-th row contains
-//    //the indices of all the strong connections from node i
-//    Sp->push_back(0);
-//
-//    //compute diagonal values
-//    std::vector<T> diags(n_row,T(0));
-//    for(I i = 0; i < n_row; i++){
-//        I row_start = Ap[i];
-//        I row_end   = Ap[i+1];
-//        for(I jj = row_start; jj < row_end; jj++){
-//            if(Aj[jj] == i){
-//                diags[i] = Ax[jj];
-//                break;
-//            }
-//        }    
-//    }
-//
-//#ifdef DEBUG
-//    for(I i = 0; i < n_row; i++){ assert(diags[i] > 0); }
-//#endif
-//
-//    for(I i = 0; i < n_row; i++){
-//        I row_start = Ap[i];
-//        I row_end   = Ap[i+1];
-//
-//        T eps_Aii = epsilon*epsilon*diags[i];
-//
-//        T weak_sum = 0.0;
-//
-//        for(I jj = row_start; jj < row_end; jj++){
-//            const I   j = Aj[jj];
-//            const T Aij = Ax[jj];
-//
-//            if(i == j){continue;} //skip diagonal until end of row
-//
-//            //  |A(i,j)| < epsilon * sqrt(|A(i,i)|*|A(j,j)|) 
-//            if(Aij*Aij >= std::abs(eps_Aii * diags[j])){    
-//                Sj->push_back(j);
-//                Sx->push_back(Aij);
-//            } else {
-//                weak_sum += Aij;
-//            }
-//        }
-//        //Add modified diagonal entry
-//        Sj->push_back(i);
-//        Sx->push_back(diags[i] + weak_sum); //filtered matrix
-//
-//        Sp->push_back(Sj->size());
-//    }
-//}
 
+    
+    
 template <class I>
 I sa_get_aggregates(const I n_row,
                     const I Ap[], const I Aj[],
                           I Bj[])
 {
     // Bj[n] == -n_row means i-th node has not been aggregated
-    std::fill(Bj, Bj+n_row, -n_row);
+    std::fill(Bj, Bj+n_row, -1);
+
+    std::vector<bool> aggregated(n_row, false);
 
     I num_aggregates = 0;
 
     //Pass #1
     for(I i = 0; i < n_row; i++){
-        if(Bj[i] >= 0){ continue; } //already marked
+        if(aggregated[i]){ continue; } //already marked
 
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
@@ -132,7 +81,7 @@ I sa_get_aggregates(const I n_row,
         //Determine whether all neighbors of this node are free (not already aggregates)
         bool free_neighborhood = true;
         for(I jj = row_start; jj < row_end; jj++){
-            if(Bj[Aj[jj]] >= 0){
+            if( aggregated[Aj[jj]] ){
                 free_neighborhood = false;
                 break;
             }
@@ -141,9 +90,12 @@ I sa_get_aggregates(const I n_row,
         if(!free_neighborhood){ continue; } //bail out
 
         //Make an aggregate out of this node and its strong neigbors
-        Bj[i] = num_aggregates;
+        Bj[i]         = num_aggregates;
+        aggregated[i] = true;
         for(I jj = row_start; jj < row_end; jj++){
-            Bj[Aj[jj]] = num_aggregates;
+            const I j = Aj[jj];
+            Bj[j]         = num_aggregates;
+            aggregated[j] = true;
         }
         num_aggregates++;
     }
@@ -151,29 +103,24 @@ I sa_get_aggregates(const I n_row,
 
     //Pass #2
     for(I i = 0; i < n_row; i++){
-        if(Bj[i] >= 0){ continue; } //already marked
+        if(aggregated[i]){ continue; } //already marked
 
-        const I row_start = Ap[i];
-        const I row_end   = Ap[i+1];
-
-        for(I jj = row_start; jj < row_end; jj++){
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
         
-            if(Bj[j] >= 0){
-                Bj[i] = -Bj[j]; //use -Agg# for newly added nodes
+            if(aggregated[j]){
+                Bj[i] = Bj[j];
                 break;
             }
-        }    
-    }
-    for(I i = 0; i < n_row; i++){
-        Bj[i] = std::abs(Bj[i]); //flip negative Agg#s
-    }
-    // now Bj[n] == n_row means i-th node has not been aggregated
 
+        }   
+    }
+
+    // now Bj[n] == -1 means i-th node has not been aggregated
 
     //Pass #3
     for(I i = 0; i < n_row; i++){
-        if(Bj[i] != n_row){ continue; } //already marked
+        if(Bj[i] != -1){ continue; } //already marked
 
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
@@ -183,7 +130,7 @@ I sa_get_aggregates(const I n_row,
         for(I jj = row_start; jj < row_end; jj++){
             const I j = Aj[jj];
 
-            if(Bj[j] == n_row){ //unmarked neighbors
+            if(Bj[j] != -1){ //unmarked neighbors
                 Bj[j] = num_aggregates;
             }
         }  

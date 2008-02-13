@@ -42,7 +42,7 @@ void rs_strong_connections(const I n_row,
 
         T threshold = theta*min_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
-            if(Ax[jj] < threshold){
+            if(Ax[jj] <= threshold){
                 if(Aj[jj] != i){
                     Sj[nnz] = Aj[jj];
                     Sx[nnz] = Ax[jj];

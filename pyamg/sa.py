@@ -118,7 +118,11 @@ def sa_standard_aggregation(C):
     """Compute the sparsity pattern of the tentative prolongator 
     from a strength of connection matrix C
     """
+
     if isspmatrix_csr(C): 
+        if C.shape[0] != C.shape[1]:
+            raise ValueError('expected square matrix')
+
         index_type = C.indptr.dtype
         num_rows   = C.shape[0]
 

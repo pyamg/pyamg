@@ -10,20 +10,8 @@ from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 import pyamg
 from pyamg.sa import *
 from pyamg.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity
+from pyamg.gallery import poisson, linear_elasticity, load_example
 
-#def sparsity(A):
-#    A = A.copy()
-#
-#    if isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_coo(A):
-#        A.data[:] = 1
-#    elif isspmatrix_lil:
-#        for row in A.data:
-#            row[:] = [1]*len(row)
-#    else:
-#        raise ValueError,'expected csr,csc,coo, or lil'
-#
-#    return A
 
 class TestSA(TestCase):
     def setUp(self):
@@ -40,6 +28,11 @@ class TestSA(TestCase):
         for N in [2,3,5,7,10,11]:
             self.cases.append( poisson( (N,N), format='csr') )
 
+        for name in ['knot','airfoil','bar']:
+            ex = load_example(name)
+            self.cases.append( ex['A'].tocsr() )
+        
+        self.cases = [ load_example('bar')['A'].tocsr() ]
 
     def test_sa_strong_connections(self):
         for A in self.cases:
@@ -69,11 +62,12 @@ class TestSA(TestCase):
 
     def test_sa_standard_aggregation(self):
         for A in self.cases:
-            S = sa_standard_aggregation(A)
+            S = sa_strong_connections(A)
+            
             expected = reference_sa_standard_aggregation(S)
             result   = sa_standard_aggregation(S)
 
-            assert_array_equal(result.todense(),expected.todense())
+            assert_equal( (result - expected).nnz, 0 )
 
 
 
