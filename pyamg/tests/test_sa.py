@@ -5,7 +5,7 @@ from numpy import sqrt, empty, ones, arange, array_split, array, \
                   zeros, zeros_like, diff, matrix, vstack
 from numpy.linalg import norm
 from scipy import rand
-from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
+from scipy.sparse import csr_matrix, lil_matrix, coo_matrix, spdiags
 
 import pyamg
 from pyamg.sa import *
@@ -68,8 +68,12 @@ class TestSA(TestCase):
             result   = sa_standard_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
-
-
+    
+        # S is diagonal - should lump all DoFs together
+        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
+        result = sa_standard_aggregation(S)
+        expected = matrix([[1],[1],[1],[1]])
+        assert_equal(result.todense(),expected)
 
 #    def test_user_aggregation(self):
 #        """check that the sa_interpolation accepts user-defined aggregates"""

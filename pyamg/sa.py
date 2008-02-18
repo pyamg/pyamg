@@ -134,6 +134,13 @@ def sa_standard_aggregation(C):
 
         Tp = arange( num_rows+1, dtype=index_type)
         Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
+
+
+        if num_aggregates == num_rows:
+            #aggregation didn't reduce the DoFs
+            num_aggregates = 1
+            Tj[:] = 0
+            return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
         
         return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
     else:
