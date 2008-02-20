@@ -11,7 +11,7 @@
 #include "ruge_stuben.h"
 #include "smoothed_aggregation.h"
 #include "relaxation.h"
-
+#include "graph.h"
 %}
 
 %feature("autodoc", "1");
@@ -104,15 +104,16 @@
   */
 %define I_INPLACE_ARRAY1( ctype )
 %apply ctype * INPLACE_ARRAY {
-  ctype Ap [ ],
-  ctype Aj [ ],
-  ctype Bp [ ],
-  ctype Bj [ ],
-  ctype Sp [ ],
-  ctype Sj [ ],
-  ctype Tp [ ],
-  ctype Tj [ ],
-  ctype splitting[]
+  ctype Ap [],
+  ctype Aj [],
+  ctype Bp [],
+  ctype Bj [],
+  ctype Sp [],
+  ctype Sj [],
+  ctype Tp [],
+  ctype Tj [],
+  ctype  x [],
+  ctype splitting []
 };
 %enddef
 
@@ -158,7 +159,7 @@ DECLARE_DATA_TYPE( double )
 %include "ruge_stuben.h"
 %include "smoothed_aggregation.h"
 %include "relaxation.h"
-
+%include "graph.h"
  /*
   * Order may be important here, list float before double
   */
@@ -190,4 +191,7 @@ INSTANTIATE_BOTH(sa_strong_connections)
 INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
 INSTANTIATE_BOTH(jacobi)
+
+%template(maximal_independent_set)   maximal_independent_set<int,int>;
+%template(vertex_coloring_mis)       vertex_coloring_mis<int,int>;
 
