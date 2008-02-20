@@ -9,13 +9,21 @@ from scipy.io import loadmat, savemat
 #	Helper function for the energy minimization prolongator generation routine
 
 def Satisfy_Constraints_CSR(U, Sparsity_Pattern, B, BtBinv):
-#	Input:	U:			CSR Matrix to operate on
-#		Sparsity_Pattern: 	Sparsity pattern to enforce
-#		B:			Near nullspace vectors
-#		BtBinv: 		Local inv(B'*B) matrices for each dof, i.  
-#		
-#	Output:	Updated U, so that U*B = 0.  Update is computed by orthogonall (in 2-norm)
-#		projecting out the components of span(B) in U in a row-wise fashion
+    """Update U to satisfy U*B = 0
+
+	Input
+    =====
+        U                   CSR Matrix to operate on
+	    Sparsity_Pattern  	Sparsity pattern to enforce
+	    B 			        Near nullspace vectors
+	    BtBinv  		    Local inv(B'*B) matrices for each dof, i.  
+		
+	Output
+    ======
+        Updated U, so that U*B = 0.  Update is computed by orthogonal (in 2-norm)
+        projecting out the components of span(B) in U in a row-wise fashion
+
+    """
 
 	Nfine = U.shape[0]
 
@@ -45,16 +53,25 @@ def Satisfy_Constraints_CSR(U, Sparsity_Pattern, B, BtBinv):
 
 
 def Satisfy_Constraints_BSR(U, Sparsity_Pattern, B, BtBinv, colindices):
-#	Input:	U:		BSR Matrix to operate on
-#		Sparsity_Pattern: 	Sparsity pattern to enforce
-#		B:		Near nullspace vectors
-#		BtBinv: 	Local inv(B'*B) matrices for each dof, i.  
-#		colindices:	List indexed by node that returns column indices for 		
-#				all dof's in that node.  Assumes that each block is perfectly dense.
-#				The below code does assure this perfect denseness.				
-#
-#	Output:	Updated U, so that U*B = 0.  Update is computed by orthogonall (in 2-norm)
-#		projecting out the components of span(B) in U in a row-wise fashion
+    """Update U to satisfy U*B = 0
+
+	Input
+    =====
+        U                   BSR Matrix to operate on
+        Sparsity_Pattern  	Sparsity pattern to enforce
+        B 			        Near nullspace vectors
+        BtBinv  		    Local inv(B'*B) matrices for each dof, i.  
+        colindices      	List indexed by node that returns column indices for 		
+             				all dof's in that node.  Assumes that each block is 
+                            perfectly dense.  The below code does assure this 
+                            perfect denseness.				
+		
+	Output
+    ======
+        Updated U, so that U*B = 0.  Update is computed by orthogonal (in 2-norm)
+        projecting out the components of span(B) in U in a row-wise fashion
+
+    """
 
 	Nfine = U.shape[0]
 	RowsPerBlock = U.blocksize[0]
@@ -95,19 +112,29 @@ def Satisfy_Constraints_BSR(U, Sparsity_Pattern, B, BtBinv, colindices):
 
 
 def sa_energy_min(A, T, Atilde, B, SPD=True, num_its=4, min_tol=1e-8, file_output=False):
-#	Input:	A:		Current operator at this level, could be CSR or BSR
-#		Atilde: 	Strength of connection matrix
-#		T:		Tentative Prolongator.  If A is nxn, then T is nxm, which m<n.  Must be BSR.
-#					Ideally, the row_blocksize is the same as A's block size.
-#		B:		Near nullspace modes for coarse grid.  If T is nxm, then B is mxk, for k near nullspace modes.
-#		SPD:		Booolean denoting symmetric positive-definiteness
-#		num_its:	Number of energy minimization steps to apply to the prolongator
-#		min_tol:	Minimization tolerance
-#		file_output:  	Optional diagnostic file output of matrices
-#
-#
-#	Output:	P:	Prolongator with energy minimized according to the algorithm from Mandel's
-# 			Paper, "Energy Optimization of Algebraic Multigrid Bases."
+    """Minimize the energy of the coarse basis functions (columns of T)
+
+
+	Input
+    =====
+        A       	   Current operator at this level, could be CSR or BSR
+		T   		   Tentative Prolongator.  If A is nxn, then T is nxm, which m<n.  
+                       Must be BSR. Ideally, the row_blocksize is the same as A's block size.
+		Atilde  	   Strength of connection matrix
+		B   		   Near nullspace modes for coarse grid.  If T is nxm, then B is mxk, 
+                       for k near nullspace modes.
+		SPD 		   Booolean denoting symmetric positive-definiteness
+		num_its 	   Number of energy minimization steps to apply to the prolongator
+		min_tol 	   Minimization tolerance
+		file_output    Optional diagnostic file output of matrices
+
+
+	Output
+    ======
+        P    Prolongator with energy minimized according to the algorithm from Mandel's
+ 			 Paper, "Energy Optimization of Algebraic Multigrid Bases."
+    
+    """
 	
 	#====================================================================
 	#Test Inputs
