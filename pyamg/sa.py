@@ -186,13 +186,14 @@ def sa_fit_candidates(AggOp,B,tol=1e-10):
 
         #normalize X
         col_norms = bsr_matrix((X.data**2,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() #same as diagonal of X.T * X
-        mask = col_norms < col_thresholds   # set small basis functions to 0
+        mask = col_norms <= col_thresholds   # set small basis functions to 0
 
         col_norms = sqrt(col_norms)
         col_norms[mask] = 0
         R[:,i,i] = col_norms
         col_norms = 1.0/col_norms
         col_norms[mask] = 0
+
         scale_columns(X,col_norms,copy=False)
 
         candidate_matrices.append(X)
