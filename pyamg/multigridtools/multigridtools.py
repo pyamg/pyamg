@@ -64,9 +64,19 @@ def rs_direct_interpolation_pass1(*args):
   """rs_direct_interpolation_pass1(int n_nodes, int Sp, int Sj, int splitting, int Bp)"""
   return _multigridtools.rs_direct_interpolation_pass1(*args)
 
-def maximal_independent_set(*args):
-  """maximal_independent_set(int num_rows, int Ap, int Aj, int K, int x) -> int"""
-  return _multigridtools.maximal_independent_set(*args)
+def maximal_independent_set_serial(*args):
+  """
+    maximal_independent_set_serial(int num_rows, int Ap, int Aj, int active, int C, int F, 
+        int x) -> int
+    """
+  return _multigridtools.maximal_independent_set_serial(*args)
+
+def maximal_independent_set_parallel(*args):
+  """
+    maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 
+        int x, double y) -> int
+    """
+  return _multigridtools.maximal_independent_set_parallel(*args)
 
 def vertex_coloring_mis(*args):
   """vertex_coloring_mis(int num_rows, int Ap, int Aj, int x) -> int"""

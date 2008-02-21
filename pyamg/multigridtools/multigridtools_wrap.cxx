@@ -5717,13 +5717,15 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_maximal_independent_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_maximal_independent_set_serial(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int *arg2 ;
   int *arg3 ;
   int arg4 ;
-  int *arg5 ;
+  int arg5 ;
+  int arg6 ;
+  int *arg7 ;
   int result;
   int val1 ;
   int ecode1 = 0 ;
@@ -5733,17 +5735,23 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set(PyObject *SWIGUNUSEDPARM(self
   int is_new_object3 ;
   int val4 ;
   int ecode4 = 0 ;
-  PyArrayObject *temp5 = NULL ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  PyArrayObject *temp7 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:maximal_independent_set",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:maximal_independent_set_serial",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximal_independent_set" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximal_independent_set_serial" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   {
@@ -5768,15 +5776,25 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set(PyObject *SWIGUNUSEDPARM(self
   }
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "maximal_independent_set" "', argument " "4"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "maximal_independent_set_serial" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "maximal_independent_set_serial" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "maximal_independent_set_serial" "', argument " "6"" of type '" "int""'");
+  } 
+  arg6 = static_cast< int >(val6);
   {
-    temp5 = obj_to_array_no_conversion(obj4,PyArray_INT);
-    if (!temp5  || !require_contiguous(temp5) || !require_native(temp5)) SWIG_fail;
-    arg5 = (int*) array_data(temp5);
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
   }
-  result = (int)maximal_independent_set<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5);
+  result = (int)maximal_independent_set_serial<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -5791,6 +5809,123 @@ fail:
   }
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximal_independent_set_parallel(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  int arg5 ;
+  int arg6 ;
+  int *arg7 ;
+  double *arg8 ;
+  int result;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int is_new_object2 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  PyArrayObject *temp7 = NULL ;
+  PyArrayObject *array8 = NULL ;
+  int is_new_object8 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:maximal_independent_set_parallel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximal_independent_set_parallel" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array2 = obj_to_array_contiguous_allow_conversion(obj1, PyArray_INT, &is_new_object2);
+    if (!array2 || !require_dimensions(array2,1) || !require_size(array2,size,1)
+      || !require_contiguous(array2)   || !require_native(array2)) SWIG_fail;
+    
+    arg2 = (int*) array2->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (int*) array3->data;
+  }
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "maximal_independent_set_parallel" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "maximal_independent_set_parallel" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "maximal_independent_set_parallel" "', argument " "6"" of type '" "int""'");
+  } 
+  arg6 = static_cast< int >(val6);
+  {
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array8 = obj_to_array_contiguous_allow_conversion(obj7, PyArray_DOUBLE, &is_new_object8);
+    if (!array8 || !require_dimensions(array8,1) || !require_size(array8,size,1)
+      || !require_contiguous(array8)   || !require_native(array8)) SWIG_fail;
+    
+    arg8 = (double*) array8->data;
+  }
+  result = (int)maximal_independent_set_parallel<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7,(double const (*))arg8);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  {
+    if (is_new_object2 && array2) Py_DECREF(array2);
+  }
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object8 && array8) Py_DECREF(array8);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object2 && array2) Py_DECREF(array2);
+  }
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object8 && array8) Py_DECREF(array8);
   }
   return NULL;
 }
@@ -5910,7 +6045,14 @@ static PyMethodDef SwigMethods[] = {
 		"    int row_start, int row_stop, int row_step, \n"
 		"    double omega)\n"
 		""},
-	 { (char *)"maximal_independent_set", _wrap_maximal_independent_set, METH_VARARGS, (char *)"maximal_independent_set(int num_rows, int Ap, int Aj, int K, int x) -> int"},
+	 { (char *)"maximal_independent_set_serial", _wrap_maximal_independent_set_serial, METH_VARARGS, (char *)"\n"
+		"maximal_independent_set_serial(int num_rows, int Ap, int Aj, int active, int C, int F, \n"
+		"    int x) -> int\n"
+		""},
+	 { (char *)"maximal_independent_set_parallel", _wrap_maximal_independent_set_parallel, METH_VARARGS, (char *)"\n"
+		"maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, \n"
+		"    int x, double y) -> int\n"
+		""},
 	 { (char *)"vertex_coloring_mis", _wrap_vertex_coloring_mis, METH_VARARGS, (char *)"vertex_coloring_mis(int num_rows, int Ap, int Aj, int x) -> int"},
 	 { NULL, NULL, 0, NULL }
 };

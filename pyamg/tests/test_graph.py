@@ -40,15 +40,16 @@ class TestGraph(TestCase):
         # test that method works with diagonal entries
         assert_equal( maximal_independent_set(eye(2)), [1, 1] )
 
-        for G in self.cases:
-            mis = maximal_independent_set(G)
-            
-            # no MIS vertices joined by an edge
-            if G.nnz > 0:
-                assert( (mis[G.row] + mis[G.col]).max() <= 1 )
+        for algo in ['serial','parallel']:
+            for G in self.cases:
+                mis = maximal_independent_set(G, algo=algo)
+                
+                # no MIS vertices joined by an edge
+                if G.nnz > 0:
+                    assert( (mis[G.row] + mis[G.col]).max() <= 1 )
 
-            # all non-set vertices have set neighbor
-            assert( (mis + G*mis).min() == 1 )
+                # all non-set vertices have set neighbor
+                assert( (mis + G*mis).min() == 1 )
     
     def test_vertex_coloring(self):
         # test that method works with diagonal entries
@@ -56,14 +57,15 @@ class TestGraph(TestCase):
         assert_equal( vertex_coloring(eye(3)), [0,0,0] )
         assert_equal( sorted(vertex_coloring(ones((3,3)))), [0,1,2] )
 
-        for G in self.cases:
-            c = vertex_coloring(G)
+        for algo in ['serial','parallel']:
+            for G in self.cases:
+                c = vertex_coloring(G, algo=algo)
 
-            # no colors joined by an edge
-            assert( (c[G.row] != c[G.col]).all() )
+                # no colors joined by an edge
+                assert( (c[G.row] != c[G.col]).all() )
 
-            # all colors up to K occur at least once
-            assert( (bincount(c) > 0).all() )
+                # all colors up to K occur at least once
+                assert( (bincount(c) > 0).all() )
 
 
 if __name__ == '__main__':

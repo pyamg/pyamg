@@ -113,6 +113,7 @@
   ctype Tp [],
   ctype Tj [],
   ctype  x [],
+  ctype  y [],
   ctype splitting []
 };
 %enddef
@@ -123,6 +124,7 @@
   ctype   Sx [ ],
   ctype   Tx [ ],
   ctype    x [ ],
+  ctype    y [ ],
   ctype temp [ ]
 };
 %enddef
@@ -192,6 +194,7 @@ INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
 INSTANTIATE_BOTH(jacobi)
 
-%template(maximal_independent_set)   maximal_independent_set<int,int>;
-%template(vertex_coloring_mis)       vertex_coloring_mis<int,int>;
+%template(maximal_independent_set_serial)   maximal_independent_set_serial<int,int>;
+%template(maximal_independent_set_parallel) maximal_independent_set_parallel<int,int,double>;
+%template(vertex_coloring_mis)              vertex_coloring_mis<int,int>;
 
