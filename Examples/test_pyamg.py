@@ -4,27 +4,38 @@
 #Import libraries
 #from scipy import *
 from numpy import array, ones, zeros, mat, sqrt
-from scipy import rand
+from scipy import rand, mat
 from scipy.sparse import csr_matrix, bsr_matrix
 from scipy.splinalg import spsolve
 from scipy.splinalg import cg, gmres, bicgstab
 from pyamg.sa import smoothed_aggregation_solver
+from pyamg.gallery import *
 from scipy.io import loadmat
 from pylab import semilogy, title, xlabel, ylabel, legend, show
 import time
 
+#Local directory where library matrices reside
 ogroup_dir = "/home/jacob/Desktop/ogroup/"
 
 #----------------------------------------- Matrices -----------------------------------------------------
-#---------Gallery Mat
-#size = 16
-#Amat = csr_matrix(poisson((size,size)))
+#---------Gallery Mats
+#---------------------Standard 2D Finite Difference Laplacian
+#size = 16; 
+#data = {'A' : csr_matrix(poisson((size,size)))}
+#data['B'] = ones((data['A'].shape[0],1))
+
+#--------------------Stored Pregenerated Examples
+#data = load_example('airfoil')
+#data = load_example('knot')
+data = load_example('bar')
 
 
 #---------OGroup Mat's
 #----------------------Diffusion Type
 #data = loadmat(ogroup_dir + 'matrices/ConvDiff/recirc_visc_200_p1_ref1.mat')
-data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/Airfoil/Airfoil_p2_ref0.mat')
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Isotropic_p1_ref1.mat')
+#data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi8_Ani_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/RotatedPi4_Ani_p1_ref1.mat')
 #data = loadmat(ogroup_dir + 'matrices/Q1_Diffusion/Horizontal_Weak_Ani_p1_ref1.mat')
 
@@ -57,7 +68,7 @@ solver_return_residuals=True
 k = 2
 t = 1.0
 proj_type =  "l2"      # "D_A" or "l2" projection used in strength measure
-epsilon = 20.0
+epsilon = 12.0
 file_output = False
 
 #-----------------------------  Energy Minimization Routine Parameters ---------------------------------
@@ -93,7 +104,7 @@ def Calc_NormResidual(x, b, A, rvec):
 	#	order of magnitude or more slower than just calculating the 2-norm directly.  What the hell
 	#	does Python do????
 	indys = rvec.nonzero()[0]
-	r = b - ((A*x).reshape(b.shape))
+	r = mat(b - ((A*x).reshape(b.shape)) )
 	rvec[indys.max()+1] = sqrt(r.T*r)[0,0]
 
 r = zeros(solver_maxit+1)

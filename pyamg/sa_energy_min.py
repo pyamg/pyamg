@@ -1,7 +1,7 @@
 from numpy import array, zeros, matrix, mat
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 from scipy.linalg import svd, norm
-#from pyamg.sa import spdiags
+import pyamg
 from pyamg.utils import UnAmal, BSR_Get_Colindices
 from scipy.io import loadmat, savemat
 
@@ -151,6 +151,11 @@ def sa_energy_min(A, T, Atilde, B, SPD=True, num_its=4, min_tol=1e-8, file_outpu
     	raise TypeError("sa_energy_min routine requires a BSR tentative prolongator.  Aborting.\n")
     if( not(csrflag) and (T.blocksize[0] != A.blocksize[0]) ):
     	print "Warning, T's row-blocksize should be the same as A's blocksize.\n"
+    if( (T.nnz == 0) or (Atilde.nnz == 0) or (A.nnz == 0) ):
+	print "Error in sa_energy_min(..).  A, T or Atilde has no nonzeros on a level.  Calling Default Prolongator Smoother\n"
+	T = pyamg.sa.sa_smoothed_prolongator(A,T)
+	return T
+
     #====================================================================
     
     
@@ -304,6 +309,10 @@ def sa_energy_min(A, T, Atilde, B, SPD=True, num_its=4, min_tol=1e-8, file_outpu
     	R = Satisfy_Constraints_CSR(R, Sparsity_Pattern, B, BtBinv)
     else:
     	R = Satisfy_Constraints_BSR(R, Sparsity_Pattern, B, BtBinv, colindices)
+    if(R.nnz == 0 ):
+	print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
+	T = pyamg.sa.sa_smoothed_prolongator(A,T)
+	return T
     
     #Calculate max norm of the residual
     resid = max(R.data.flatten().__abs__())

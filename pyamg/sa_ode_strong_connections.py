@@ -123,7 +123,6 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 	del Dinv_A
 	#====================================================================
 	
-	
 	#---Efficiency--- TODO:  Calculate Atilde^k only at the sparsity of A^T, restricting the nonzero pattern
 	#			 of A^T so that col i only retains the nonzeros that are of the same PDE as i.
 	#			 However, this will require specialized C routine.  Perhaps look
@@ -138,6 +137,16 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 		savemat('Amat', { 'Amat' : A.toarray() } ) 
 		savemat('Atilderaw', { 'Atilderaw' : Atilde.toarray() } ) 
 	
+	#====================================================================
+	#Optional, BSR_* routines are currently slower than converting from BSR to CSR, running
+	#	the strength algorithm and then converting back to BSR
+
+	if(convert and not(csrflag)):
+		Atilde = Atilde.tocsr()
+		Atilde.eliminate_zeros()
+		csrflag = True
+	
+
 	#====================================================================
 	#Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
 	#  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
@@ -181,14 +190,6 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 		Atilde = Atilde.multiply(mask)
 		Atilde.eliminate_zeros()
 		del mask
-	#====================================================================
-	#Optional, BSR_* routines are currently slower than converting from BSR to CSR, running
-	#	the strength algorithm and then converting back to BSR
-
-	if(convert and not(csrflag)):
-		Atilde = Atilde.tocsr()
-		Atilde.eliminate_zeros()
-		csrflag = True
 	
 	#====================================================================
 	# Calculate strength based on constrained min problem of 
