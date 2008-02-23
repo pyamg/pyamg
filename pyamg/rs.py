@@ -1,6 +1,6 @@
 from numpy import empty, empty_like
 
-from scipy.sparse import csr_matrix,isspmatrix_csr
+from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from multilevel import multilevel_solver
 import multigridtools
@@ -9,7 +9,7 @@ __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
         'rs_cf_splitting', 'rs_direct_interpolation']
 
 
-def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
+def ruge_stuben_solver(A, max_levels=10, max_coarse=500, cf='RS'):
     """
     Create a multilevel solver using Ruge-Stuben coarsening (Classical AMG)
 
@@ -25,7 +25,7 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500):
     Rs = []
 
     while len(As) < max_levels  and A.shape[0] > max_coarse:
-        P = rs_prolongator(A)
+        P = rs_prolongator(A, cf=cf)
         R = P.T.tocsr()
 
         A = R * A * P     #galerkin operator
@@ -58,13 +58,15 @@ def rs_strong_connections(A,theta):
 
 def rs_cf_splitting(S):
     """Coarse-Fine splitting for strength of connection matrix S
+    using the standard (serial) Ruge-Stuben algorithm
+
     """
 
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
-    splitting = empty( S.shape[0], dtype=S.indptr.dtype )
+    splitting = empty( S.shape[0], dtype='intc' )
 
     multigridtools.rs_cf_splitting(S.shape[0],
             S.indptr, S.indices,  
@@ -95,12 +97,19 @@ def rs_direct_interpolation(A,S,splitting):
     return csr_matrix( (Px,Pj,Pp) )
 
 
-def rs_prolongator(A,theta=0.25):
+
+def rs_prolongator(A, theta=0.25, cf='RS'):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
     S = rs_strong_connections(A,theta)
 
-    splitting = rs_cf_splitting(S)
+    if cf == 'RS':
+        splitting = rs_cf_splitting(S)
+    elif cf in ['PMISc']:
+        import split
+        splitting = getattr(split,cf)(S)
+    else:
+        raise ValueError('unknown C/F splitting method (%s)' % cf)
 
     return rs_direct_interpolation(A,S,splitting)
 

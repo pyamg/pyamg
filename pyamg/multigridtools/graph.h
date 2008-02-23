@@ -76,6 +76,9 @@ I maximal_independent_set_serial(const I num_rows,
  *       F         - value used to mark MIS vertices       (output)
  *      x[]        - state of each vertex
  *      y[]        - random values for each vertex
+ *      max_iters  - maximum number of iterations 
+ *                   by default max_iters=-1 and no limit 
+ *                   is imposed
  *  
  *  Returns:
  *      The number of nodes in the MIS.
@@ -95,14 +98,15 @@ I maximal_independent_set_parallel(const I num_rows,
                                    const T  C,
                                    const T  F,
                                          T  x[],
-                                   const R  y[])
+                                   const R  y[],
+                                   const I  max_iters=-1)
 {
     I N = 0;
     I num_iters = 0;
 
     bool work = true;
 
-    while(work){
+    while(work && (max_iters == -1 || num_iters < max_iters)){
         work = false;
 
         num_iters++;

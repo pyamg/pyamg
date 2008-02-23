@@ -71,13 +71,6 @@ def maximal_independent_set_serial(*args):
     """
   return _multigridtools.maximal_independent_set_serial(*args)
 
-def maximal_independent_set_parallel(*args):
-  """
-    maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 
-        int x, double y) -> int
-    """
-  return _multigridtools.maximal_independent_set_parallel(*args)
-
 def vertex_coloring_mis(*args):
   """vertex_coloring_mis(int num_rows, int Ap, int Aj, int x) -> int"""
   return _multigridtools.vertex_coloring_mis(*args)
@@ -140,4 +133,13 @@ def jacobi(*args):
         double omega)
     """
   return _multigridtools.jacobi(*args)
+
+def maximal_independent_set_parallel(*args):
+  """
+    maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 
+        int x, double y, int max_iters=-1) -> int
+    maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 
+        int x, double y) -> int
+    """
+  return _multigridtools.maximal_independent_set_parallel(*args)
 
