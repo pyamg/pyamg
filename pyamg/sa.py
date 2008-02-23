@@ -136,7 +136,7 @@ def sa_standard_aggregation(C):
         Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
 
 
-        if num_aggregates == num_rows:
+        if num_aggregates >= (0.95*num_rows):
             #aggregation didn't reduce the DoFs
             num_aggregates = 1
             Tj[:] = 0

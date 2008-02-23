@@ -34,6 +34,9 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 	#B must be in mat format, this isn't a deep copy...so OK
 	Bmat = mat(B)
 
+	#Amat must be devoid of 0's
+	A.eliminate_zeros()
+
 	#====================================================================
 	# Handle preliminaries for the algorithm
 	
@@ -150,10 +153,10 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 				for j in range(rowstart, rowend):
 					if( (mask.indices[j] % numPDEs) != current_pde):
 						mask.data[j] = 0.0;
-		#Apply mask to Atilde
-		mask.eliminate_zeros()
+		#Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
 		mask.data[:] = 1.0
 		Atilde = Atilde.multiply(mask)
+		Atilde.eliminate_zeros()
 		del mask
 	else:
 		#If BSR matrix
@@ -163,15 +166,21 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 		#	Enforce mask by doing an element-wise multiplication between A and the mask.  
 		mask = A.copy()
 		numBlocks = mask.data.shape[0]
-		mask_local = eye(numPDEs, numPDEs)
-		for i in range(numBlocks):
-			mask.data[i,:,:] *= mask_local
-			rows, cols = mask.data[i,:,:].nonzero()
-			mask.data[i,rows,cols] = 1.0
-		
+		if(numPDEs > 1):
+			mask_local = eye(numPDEs, numPDEs)
+			for i in range(numBlocks):
+				mask.data[i,:,:] *= mask_local
+				rows, cols = mask.data[i,:,:].nonzero()
+				mask.data[i,rows,cols] = 1.0
+			del mask_local
+		else:
+			for i in range(numBlocks):
+				rows, cols = mask.data[i,:,:].nonzero()
+				mask.data[i,rows,cols] = 1.0
+
 		Atilde = Atilde.multiply(mask)
+		Atilde.eliminate_zeros()
 		del mask
-		del mask_local
 	#====================================================================
 	#Optional, BSR_* routines are currently slower than converting from BSR to CSR, running
 	#	the strength algorithm and then converting back to BSR
@@ -202,57 +211,79 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 	# mathematically equivalent to the longer constrained min. problem
 
 	if(NullDim == 1):
-		#Use shortcut to solve constrained min problem if B is a column vector
-		for i in range(dimen):
+		# Use shortcut to solve constrained min problem if B is only a vector
+		# Strength(i,j) = | 1 - (z(i)/b(i))/(z(j)/b(j)) |
+		# These ratios can be calculated by diagonal row and column scalings
 		
-			#Check input
-			if(B.__eq__(0.0).any()):
-				raise ValueError("Near nullspace vector has a zero.  Please fix.")
+		#Create necessary Diagonal matrices
+		DAtilde = Atilde.diagonal();
+		DAtildeDivB = spdiags( [DAtilde.__array__()/Bmat.__array__().reshape(DAtilde.shape)], [0], dimen, dimen, format = 'csr')
+		DiagB = spdiags( [Bmat.__array__().flatten()], [0], dimen, dimen, format = 'csr')
+		
+		#If Atilde is BSR, convert the Diagonal matrices to BSR
+		if(not(csrflag)):
+			DAtildeDivB = bsr_matrix(DAtildeDivB, blocksize=Atilde.blocksize)
+			DiagB = bsr_matrix(DiagB, blocksize=Atilde.blocksize)
 
-			if(csrflag):	
-				#Get rowptrs and col indices from Atilde
+		#Calculate Approximation ratio
+		if(csrflag):
+			Atilde.data = 1.0/Atilde.data
+		else:
+			numBlocks = Atilde.data.shape[0]
+			for i in range(numBlocks):
+				rows, cols = Atilde.data[i,:,:].nonzero()
+				Atilde.data[i,rows,cols] = 1.0/Atilde.data[i,rows,cols]
+
+		Atilde = DAtildeDivB*Atilde
+		Atilde = Atilde*DiagB
+
+		#Find negative ratios to be dropped later
+		indys = Atilde.data.__lt__(0.0).nonzero()
+
+		#Calculate Approximation error
+		if(csrflag):
+			Atilde.data = abs( 1.0 - Atilde.data)
+		else:
+			indys2 = Atilde.data.nonzero()
+			Atilde.data[indys2] = abs( 1.0 - Atilde.data[indys2])
+
+		#Drop negative ratios by making them Large
+		Atilde.data[indys] = 1e100
+
+		#If BSR matrix, must make sure that diagonal has no zeros.
+		#Seeing as there is no setdiag that works for BSR, we'll make do with a hack
+		#It doesn't matter what the values are on the diagonal.
+		if(not(csrflag)):
+			Atilde = Atilde + DiagB
+
+		#Apply drop tolerance
+		for i in range(dimen):
+
+			if(csrflag):
 				rowstart = Atilde.indptr[i]
 				rowend = Atilde.indptr[i+1]
-				length = rowend - rowstart
-				colindx = Atilde.indices[rowstart:rowend]
-				zi = mat(Atilde.data[rowstart:rowend]).T
-			else:	
-				#Extracting the nonzeros and their indices 
-				#	in row i of BSR matrix, A, requires more work
+				zi = Atilde.data[rowstart:rowend]
+				iInRow = Atilde.indices[rowstart:rowend].searchsorted(i)
+			else:
 				zi, colindx = BSR_Get_Row(Atilde, i)
-				length = colindx.shape[0]
-			
-			#Find row i's position in colindx, matrix must have sorted column indices.
-			iInRow = colindx.searchsorted(i)
-
-			#Grab relevant part of B
-			Bi = Bmat[colindx,0]
-
-			#Calculate approximation ratio and drop negatives by making them large
-			#	Efficiency TODO -- would this be faster in a loop?  Experiments say no.
-			#------ zi[iInRow] shouldn't be small here, but a small Bi[iInRow] or a small Bi 
-			#	anywhere could make for an ill-conditioned calculation.
-			zi = (zi[iInRow]/Bi[iInRow,0])/(zi/Bi)
-			indys = ascontiguousarray(zi).__lt__(0.0).nonzero()[0]
-			zi[indys] = 1e100
-		
-			#Calculate Relative Approximation Error
-			zi = (1.0 - zi).__abs__()
-		
-			#Calc drop tolerance based on best off-diag approx error and then apply
-			zi[iInRow] = 1e100
+				zi = array(zi)
+				iInRow = colindx.searchsorted(i)	
+				
+			#Calculate drop-tol.  Ignore diagonal by making it very large
+			zi[iInRow] = 1e5
 			drop_tol = zi.min()*epsilon
+
 			if(file_output == True):
-				zi = zi.__lt__(drop_tol).__array__()*zi.__array__()
+				zi = zi.__lt__(drop_tol)*zi
+				zi[iInRow] = 1.0
 			else:
-				zi = zi.__lt__(drop_tol).__array__()
-			zi[iInRow,0] = 1.0
-	
-			#Write strength entries to Atilde
-			if(csrflag):
-				Atilde.data[rowstart:rowend] = zi.T
+				zi = zi.__lt__(drop_tol)
+				zi[iInRow] = 1.0
+					
+			if(csrflag):		
+				Atilde.data[rowstart:rowend] = zi
 			else:
-				BSR_Row_WriteVect(Atilde, i, zi)
+				BSR_Row_WriteVect(Atilde, i, zi)	
 
 	else:
 		# Solve constrained min problem directly
@@ -341,7 +372,7 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 				zi = zihat/zi
 				
 				#Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
-				#	ratio there large.
+				#	ratio large.
 				#	Efficiency TODO -- would this be faster in a loop?  Experiments say no.
 				zi[indys] = 1e100
 
@@ -354,7 +385,7 @@ def sa_ode_strong_connections(A, B, epsilon=4.0, t=1.0, k=2, proj_type="l2", fil
 				zi = (1.0 - zi).__abs__()
 		
 				#Calc drop tolerance based on best off-diag approx error and then apply
-				zi[iInRow] = 1e100
+				zi[iInRow] = 1e5
 				drop_tol = zi.min()*epsilon
 				if(file_output == True):
 					zi = zi.__lt__(drop_tol).__array__()*zi.__array__()

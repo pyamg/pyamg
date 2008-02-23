@@ -131,7 +131,7 @@ def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100,
             B = hstack((B,x))
         As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
-    return multilevel_solver(As,Ps)
+    return multilevel_solver(As,Ps), Bs
 
 def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation):
     if aggregation is not None:
