@@ -7,6 +7,7 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
+from numpy import uint8
 
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
@@ -30,8 +31,9 @@ Plus...
 
 """
 
-def mgviz(A, Vert, E2V, Agg, plot_type='primal',
-        vtk_name='tmp_agg_plot.vtu', mesh_type='tri'):
+def mgviz():
+#def mgviz(A, Vert, E2V, Agg, plot_type='primal',
+#        vtk_name='tmp_agg_plot.vtu', mesh_type='tri'):
     """Create .vtu files for use in Paraview
 
     Assumptions: 
@@ -48,11 +50,28 @@ def mgviz(A, Vert, E2V, Agg, plot_type='primal',
          Nel = # of elements in the mesh
         Nagg = # of aggregates
      """
+    E=array([[1,2,5],
+             [2,6,5],
+             [3,6,2],
+             [3,7,6],
+             [3,4,7],
+             [7,4,8],
+             [4,9,8]])
+
+    V=array([[0,0],
+             [1,0],
+             [2,0],
+             [3,0],
+             [0,1],
+             [1,1],
+             [2,1],
+             [3,1],
+             [4,1]])
+    print E
 
 def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=None):
     # TODO : I/O error checking
     # TODO : add checks for array sizes
-    # TODO : is there a way to stream printing directly from a numpy array?
     # TODO : add poly data structures (2,4,6,7 below)
     #
     # Verts: Npts x 3 (if 2, then expanded by 0)
@@ -124,17 +143,19 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     #------------------------------------------------------------------
     FID.writelines('      <Points>\n')
     FID.writelines('        <DataArray type=\"Float32\" Name=\"vertices\" NumberOfComponents=\"3\" format=\"ascii\">\n')
-    for j in range(0,Npts):
-        xyz = (Verts[j,0],Verts[j,1],Verts[j,2])
-        FID.writelines('%15.15f %15.15f %15.15f\n' % xyz)
+    Verts.tofile(FID,' ') # prints Verts row-wise
+    #for j in range(0,Npts):
+    #    xyz = (Verts[j,0],Verts[j,1],Verts[j,2])
+    #    FID.writelines('%15.15f %15.15f %15.15f\n' % xyz)
+    FID.writelines('\n')
     FID.writelines('        </DataArray>\n')
     FID.writelines('      </Points>\n')
     #------------------------------------------------------------------
     #------------------------------------------------------------------
     FID.writelines('      <Cells>\n')
     FID.writelines('        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n')
-    cell_offset = zeros((Ncells,1)) # offsets are zero indexed
-    cell_type   = zeros((Ncells,1))
+    cell_offset = zeros((Ncells,1),dtype=uint8) # offsets are zero indexed
+    cell_type   = zeros((Ncells,1),dtype=uint8)
     k=0
     for j in range(1,15):
         key='%d'%j
@@ -149,20 +170,24 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
                     cell_type[k]=j
                     cell_offset[k]=offset
                     k+=1
-                    for i2 in range(0,offset):
-                        FID.writelines('%d ' % (Cells[key][i1,i2]-index_base))
-                    FID.writelines('\n');
+                #    for i2 in range(0,offset):
+                #        FID.writelines('%d ' % (Cells[key][i1,i2]-index_base))
+                (Cells[key]-1).tofile(FID, ' ')
+                FID.writelines('\n');
     FID.writelines('        </DataArray>\n')
     FID.writelines('        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n')
-    total_offset=0
-    for k in range(0,Ncells):
-        total_offset+=cell_offset[k]
-        FID.writelines('%d ' % total_offset)
+    cell_offset=cell_offset.cumsum()
+    cell_offset.tofile(FID,' ') # prints ints to file
     FID.writelines('\n');
+    #total_offset=0
+    #for k in range(0,Ncells):
+    #    total_offset+=cell_offset[k]
+    #    FID.writelines('%d ' % total_offset)
     FID.writelines('        </DataArray>\n')
     FID.writelines('        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n')
-    for k in range(0,Ncells):
-        FID.writelines('%d ' % cell_type[k])
+    cell_type.tofile(FID,' ') # prints ints to file
+    #for k in range(0,Ncells):
+    #    FID.writelines('%d ' % cell_type[k])
     FID.writelines('\n')
     FID.writelines('        </DataArray>\n')
     FID.writelines('      </Cells>\n')
@@ -175,8 +200,9 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
         Nfields = pdata.shape[1]
         for j in range(0,Nfields):
             FID.writelines('        <DataArray type=\"Float32\" Name=\"pfield%d\" format=\"ascii\">\n' % (j+1))
-            for i in range(0,Npts):
-                FID.writelines('%15.15f ' % pdata[i,j])
+            pdata[:,j].tofile(FID,' ') # print floats to file
+            #for i in range(0,Npts):
+            #    FID.writelines('%15.15f ' % pdata[i,j])
             FID.writelines('\n')
             FID.writelines('        </DataArray>\n')
     FID.writelines('      </PointData>\n')
@@ -195,8 +221,9 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
                 elif (vtk_cell_info[j-1] != None) and (cdata[k][key] != None):
                     # non-Poly data
                     FID.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
-                    for i1 in range(0,cdata[k][key].shape[0]):
-                        FID.writelines('%15.15f ' % (cdata[k][key][i1,0]))
+                    cdata[k][key].tofile(FID,' ')
+                    #for i1 in range(0,cdata[k][key].shape[0]):
+                    #    FID.writelines('%15.15f ' % (cdata[k][key][i1,0]))
                     FID.writelines('\n')
                     FID.writelines('        </DataArray>\n')
     FID.writelines('      </CellData>\n')
