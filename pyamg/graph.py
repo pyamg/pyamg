@@ -132,7 +132,7 @@ def bellman_ford(G, seeds, maxiter=None):
     if maxiter is not None and maxiter < 0:
         raise ValueError('maxiter must be positive')
 
-    seeds = asarray(seeds)
+    seeds = asarray(seeds, dtype='intc')
 
     distances        = empty( N, dtype=G.dtype )
     distances[:]     = max_value(G.dtype)

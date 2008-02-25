@@ -1,7 +1,7 @@
 from scipy.testing import *
 
 import numpy
-from numpy import ones, eye, zeros, bincount, empty
+from numpy import ones, eye, zeros, bincount, empty, asarray
 from scipy import rand
 from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 
@@ -103,7 +103,9 @@ from pyamg.graph import max_value
 def reference_bellman_ford(G,seeds):
     G = G.tocoo()
     N = G.shape[0]
-    
+   
+    seeds = asarray(seeds, dtype='intc')
+
     distances        = empty( N, dtype=G.dtype )
     distances[:]     = max_value(G.dtype)
     distances[seeds] = 0
