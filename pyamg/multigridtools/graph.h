@@ -42,22 +42,16 @@ I maximal_independent_set_serial(const I num_rows,
     for(I i = 0; i < num_rows; i++){
         if(x[i] != active) continue;
 
-        const I row_start = Ap[i];
-        const I row_end   = Ap[i+1];
+        x[i] = C;
+        N++;
 
-        I jj;
-        for(jj = row_start; jj < row_end; jj++){
-            if(x[Aj[jj]] == C) {
-                x[i] = F;
-                break;
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            if(x[j] == active) {
+                x[j] = F;
             }
         }
 
-        if(jj == row_end){
-            //no MIS neighbors
-            N++;
-            x[i] = C;
-        }
     }
 
     return N;
