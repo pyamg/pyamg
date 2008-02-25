@@ -56,6 +56,7 @@
     const ctype Yx [ ],
     const ctype  x [ ],
     const ctype  y [ ],
+    const ctype  z [ ],
     const ctype  b [ ]    
 };
 %enddef
@@ -114,6 +115,7 @@
   ctype Tj [],
   ctype  x [],
   ctype  y [],
+  ctype  z [],
   ctype splitting []
 };
 %enddef
@@ -125,6 +127,7 @@
   ctype   Tx [ ],
   ctype    x [ ],
   ctype    y [ ],
+  ctype    z [ ],
   ctype temp [ ]
 };
 %enddef
@@ -154,6 +157,7 @@ T_INPLACE_ARRAY1( ctype )
  */
 DECLARE_INDEX_TYPE( int )
 
+DECLARE_DATA_TYPE( int    )
 DECLARE_DATA_TYPE( float  )
 DECLARE_DATA_TYPE( double )
 
@@ -180,6 +184,12 @@ DECLARE_DATA_TYPE( double )
 %template(f_name)   f_name<float>;
 %template(f_name)   f_name<double>;
 %enddef
+
+%define INSTANTIATE_BOTH2( f_name )
+%template(f_name)   f_name<int,int>;
+%template(f_name)   f_name<int,float>;
+%template(f_name)   f_name<int,double>;
+%enddef
  
  
 INSTANTIATE_INDEX(sa_get_aggregates)
@@ -197,4 +207,7 @@ INSTANTIATE_BOTH(jacobi)
 %template(maximal_independent_set_serial)   maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel) maximal_independent_set_parallel<int,int,double>;
 %template(vertex_coloring_mis)              vertex_coloring_mis<int,int>;
+
+INSTANTIATE_BOTH2(bellman_ford)
+INSTANTIATE_BOTH2(lloyd_cluster)
 

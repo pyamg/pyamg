@@ -143,3 +143,23 @@ def maximal_independent_set_parallel(*args):
     """
   return _multigridtools.maximal_independent_set_parallel(*args)
 
+def bellman_ford(*args):
+  """
+    bellman_ford(int num_rows, int Ap, int Aj, int Ax, int x, int y)
+    bellman_ford(int num_rows, int Ap, int Aj, float Ax, float x, int y)
+    bellman_ford(int num_rows, int Ap, int Aj, double Ax, double x, 
+        int y)
+    """
+  return _multigridtools.bellman_ford(*args)
+
+def lloyd_cluster(*args):
+  """
+    lloyd_cluster(int num_rows, int Ap, int Aj, int Ax, int num_seeds, 
+        int x, int y, int z)
+    lloyd_cluster(int num_rows, int Ap, int Aj, float Ax, int num_seeds, 
+        float x, int y, int z)
+    lloyd_cluster(int num_rows, int Ap, int Aj, double Ax, int num_seeds, 
+        double x, int y, int z)
+    """
+  return _multigridtools.lloyd_cluster(*args)
+

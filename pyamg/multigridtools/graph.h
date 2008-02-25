@@ -178,5 +178,95 @@ T vertex_coloring_mis(const I num_rows,
 }
 
 
+    
+template<class I, class T>
+void bellman_ford(const I num_rows,
+                  const I Ap[], 
+                  const I Aj[], 
+                  const T Ax[],
+                        T  x[],
+                        I  y[])
+{
+    for(I i = 0; i < num_rows; i++){
+        T xi = x[i];
+        I yi = y[i];
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            const T d = Ax[jj] + x[j];
+            if(d < xi){
+                xi = d;
+                yi = y[j];
+            }
+        }
+        x[i] = xi;
+        y[i] = yi;
+    }
+}
+
+// x[num_rows]     - distance to nearest seed
+// y[num_rows]     - cluster membership
+// z[num_centers]  - cluster centers
+template<class I, class T>
+void lloyd_cluster(const I num_rows,
+                   const I Ap[], 
+                   const I Aj[], 
+                   const T Ax[],
+                   const I num_seeds,
+                         T  x[],
+                         I  y[],
+                         I  z[])
+{
+    for(I i = 0; i < num_rows; i++){
+        x[i] = std::numeric_limits<T>::max();
+        y[i] = -1;
+    }
+    for(I i = 0; i < num_seeds; i++){
+        I seed = z[i];
+        x[seed] = 0;
+        y[seed] = i;
+    }
+
+    std::vector<T> old_distances(num_rows);
+
+    // propagate distances outward
+    do{
+        std::copy(x, x+num_rows, old_distances.begin());
+        bellman_ford(num_rows, Ap, Aj, Ax, x, y);
+    } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
+
+    //find boundaries
+    for(I i = 0; i < num_rows; i++){
+        x[i] = std::numeric_limits<T>::max();
+    }
+    for(I i = 0; i < num_rows; i++){
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            I j = Aj[jj];
+            if( y[i] != y[j] ){
+                x[i] = 0;
+                break;
+            }
+        }
+    }
+
+    // propagate distances inward
+    do{
+        std::copy(x, x+num_rows, old_distances.begin());
+        bellman_ford(num_rows, Ap, Aj, Ax, x, y);
+    } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
+
+
+    // compute new centers
+    for(I i = 0; i < num_rows; i++){
+        const I cluster = y[i];
+
+        if (cluster == -1) //node belongs to no cluster
+            continue;
+        
+        assert(cluster > 0 && cluster < num_seeds);
+        if( x[z[cluster]] < x[i] )
+            z[cluster] = i;
+    }
+}
+
 #endif
 
