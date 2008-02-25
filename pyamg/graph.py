@@ -148,12 +148,9 @@ def bellman_ford(G, seeds, maxiter=None):
     while maxiter is None or iter < maxiter:
         old_distances[:] = distances
 
-        try:
-            multigridtools.bellman_ford( N, G.indptr, G.indices, G.data,
-                                     distances, nearest_seed)
-        except:
-            import pdb
-            pdb.set_trace()
+        multigridtools.bellman_ford( N, G.indptr, G.indices, G.data,
+                                    distances, nearest_seed)
+        
         if (old_distances == distances).all():
             break
 

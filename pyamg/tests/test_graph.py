@@ -74,12 +74,13 @@ class TestGraph(TestCase):
 
         for G in self.cases:
             G.data = rand(G.nnz)
-            
-            for n_seeds in [1, 2, 5, 10, G.shape[0]]:
-                if n_seeds > G.shape[0]: 
+            N = G.shape[0]
+
+            for n_seeds in [ N/20, N/10, N-2, N]:
+                if n_seeds > G.shape[0] or n_seeds < 1: 
                     continue
     
-                seeds = numpy.random.permutation(G.shape[0])[:n_seeds]
+                seeds = numpy.random.permutation(N)[:n_seeds]
                 D_expected,S_expected = reference_bellman_ford(G, seeds) 
                 D_result,S_result     = bellman_ford(G, seeds)
     
@@ -114,16 +115,18 @@ def reference_bellman_ford(G,seeds):
     nearest_seed[:]     = -1
     nearest_seed[seeds] = seeds
 
-    work = True
-
-    while work:
-        work = False
+    while True:
+        update = False
 
         for (i,j,v) in zip(G.row,G.col,G.data):
+
             if distances[j] + v < distances[i]:
-                work = True
+                update = True
                 distances[i]    = distances[j] + v
                 nearest_seed[i] = nearest_seed[j]
+
+        if not update:
+            break
 
     return (distances, nearest_seed) 
 
