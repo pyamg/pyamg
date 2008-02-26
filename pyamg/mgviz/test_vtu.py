@@ -19,7 +19,10 @@ ex = load_example('airfoil')
 E2V  = ex['elements']
 Vert = ex['vertices']
 Cells = {'5':E2V}
+
 cdata = ({'5':random.random((E2V.shape[0],1))}, {'5':2*random.random((E2V.shape[0],1))})
-pdata=concatenate((random.random((Vert.shape[0],1)),2*random.random((Vert.shape[0],1))),1)
+data = zeros((Vert.shape[0],1))
+data[5:10]=1
+pdata=concatenate((random.random((Vert.shape[0],1)),data),1)
 
 write_vtu(Vert,Cells,'airfoil.vtu',None,pdata,cdata)
