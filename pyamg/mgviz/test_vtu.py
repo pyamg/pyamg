@@ -2,8 +2,6 @@
 
 import os
 from scipy import rand, array
-from scipy.linalg import norm
-from scipy.splinalg import cg
 from scipy.io import loadmat
 from pyamg import smoothed_aggregation_solver
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
