@@ -9,7 +9,7 @@ __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
         'rs_cf_splitting', 'rs_direct_interpolation']
 
 
-def ruge_stuben_solver(A, max_levels=10, max_coarse=500, cf='RS'):
+def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, cf='RS'):
     """
     Create a multilevel solver using Ruge-Stuben coarsening (Classical AMG)
 
@@ -25,7 +25,7 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500, cf='RS'):
     Rs = []
 
     while len(As) < max_levels  and A.shape[0] > max_coarse:
-        P = rs_prolongator(A, cf=cf)
+        P = rs_prolongator(A, theta=theta, cf=cf)
         R = P.T.tocsr()
 
         A = R * A * P     #galerkin operator
