@@ -11,6 +11,8 @@ from numpy import uint8, kron, arange
 
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
+from pyamg.graph import vertex_coloring
+
 import warnings
 
 """Coarse grid visualization
@@ -31,7 +33,7 @@ Plus...
 
 """
 
-def mgviz(Vert, E2V, Agg, plot_type='primal',
+def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
           vtk_name='tmp_agg_plot.vtu', mesh_type='tri'):
     """Create .vtu files for use in Paraview
 
@@ -54,14 +56,23 @@ def mgviz(Vert, E2V, Agg, plot_type='primal',
     # points: basic
     #         works for aggregation and classical AMG
     if plot_type=='points':
+        colors = None
+        if A!=None:
+            G=Agg * A * Agg.transpose()
+            #colors = vertex_coloring(G, algo='serial')
+            colors = vertex_coloring(G, algo='parallel')
+            colors = Agg.transpose() * colors
         Ncolors = 12
         Npts = Vert.shape[0]
         Nagg = Agg.shape[0]
         pdata = zeros((Npts,1))
         Agg = Agg.tocoo()
 
-        for j in range(0,len(Agg.row)):
-            pdata[Agg.col[j]] = Agg.row[j] % Ncolors
+        if colors==None:
+            for j in range(0,len(Agg.row)):
+                pdata[Agg.col[j]] = Agg.row[j] % Ncolors
+        else:
+            pdata=colors.reshape((Npts,1))
 
         if mesh_type=='tri':
             Cells = {'5':E2V}
@@ -88,10 +99,12 @@ def mgviz(Vert, E2V, Agg, plot_type='primal',
         mask = C3.data==3
         E3 = C3.col[mask]
 
+
         E2V3=E2V[E3,:]
         Nel3=E2V3.shape[0]
+        colors = ones((Nel3,1))
         Cells = {'5':E2V3}
-        cdata = ({'5':ones((E2V3.shape[0],1))}), # make sure it's a tuple
+        cdata = ({'5':colors}), # make sure it's a tuple
         write_vtu(Verts=Vert,Cells=Cells,vtk_name=vtk_name,index_base=None,pdata=None,cdata=cdata)
 
 def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=None):

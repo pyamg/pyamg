@@ -32,13 +32,9 @@ if test==1:
     Vert = ex['vertices']
     Agg = aggex['aggregates']
 
-    print Agg.shape
-    print Vert.shape
-    print E2V.shape
-
     # visualize the aggregates two different ways
-    mgviz(Vert,E2V,Agg,plot_type='points',vtk_name='Airfoil_aggs_points.vtu',mesh_type='tri')
-    mgviz(Vert,E2V,Agg,plot_type='primal',vtk_name='Airfoil_aggs_primal.vtu',mesh_type='tri')
+    mgviz(A=ex['A'],Vert=Vert,E2V=E2V,Agg=Agg,plot_type='points',vtk_name='Airfoil_aggs_points.vtu',mesh_type='tri')
+    mgviz(A=ex['A'],Vert=Vert,E2V=E2V,Agg=Agg,plot_type='primal',vtk_name='Airfoil_aggs_primal.vtu',mesh_type='tri')
 
     # visualize the mesh easily
     Cells = {'5':E2V}
@@ -69,8 +65,8 @@ if test==2:
     Agg=csr_matrix((data,(row,col)),shape=(3,9))
 
     # visualize the aggregates two different ways
-    mgviz(Vert,E2V,Agg,plot_type='points',vtk_name='test_agg_points.vtu',mesh_type='tri')
-    mgviz(Vert,E2V,Agg,plot_type='primal',vtk_name='test_agg_priaml.vtu',mesh_type='tri')
+    mgviz(A=None,Vert=Vert,E2V=E2V,Agg=Agg,plot_type='points',vtk_name='test_agg_points.vtu',mesh_type='tri')
+    mgviz(A=None,Vert=Vert,E2V=E2V,Agg=Agg,plot_type='primal',vtk_name='test_agg_priaml.vtu',mesh_type='tri')
 
     # visualize the mesh easily
     Cells = {'5':E2V}
