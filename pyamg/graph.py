@@ -165,7 +165,7 @@ def lloyd_cluster(G, seeds, maxiter=None):
     G = asgraph(G)
     N = G.shape[0]
     
-    #interpret centers argument
+    #interpret seeds argument
     if isscalar(seeds):
         seeds = numpy.random.permutation(N)[:seeds]
     

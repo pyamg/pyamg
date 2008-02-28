@@ -6,9 +6,9 @@ from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ra
 from numpy.linalg import norm
 
 from scipy.sparse import csc_matrix
-from scipy.splinalg import spsolve
+from scipy.sparse.linalg import spsolve, splu
 
-from relaxation import gauss_seidel,jacobi,sor
+from relaxation import gauss_seidel, jacobi, sor
 from utils import symmetric_rescaling, diag_sparse
 
 
@@ -164,7 +164,7 @@ def coarse_grid_solver(solver):
     elif solver == 'splu':
         def solve(self,A,b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.splinalg.dsolve.splu( csc_matrix(A) )
+                self.LU = splu( csc_matrix(A) )
             return self.LU.solve( ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
