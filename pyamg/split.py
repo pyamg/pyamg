@@ -4,12 +4,20 @@ Overview
 --------
 
 A C/F splitting is a partitioning of the nodes of a strength of 
-connection matrix into sets of C (coarse) and F (fine) nodes.
-The C nodes will be promoted to the coarser grid while the F nodes
-are retained on the finer grid.  Ideally, the C nodes, which represent
-the coarse-level unknowns, should be far fewer in number than the F nodes.
+connection matrix (denoted S) into sets of C (coarse) and F (fine) nodes.
+The C-nodes will be promoted to the coarser grid while the F-nodes
+are retained on the finer grid.  Ideally, the C-nodes, which represent
+the coarse-level unknowns, should be far fewer in number than the F-nodes.
 Furthermore, algebraically smooth error must be well-approximated by
 the coarse level degrees of freedom.
+
+
+Representation
+--------------
+
+C/F splitting is represented by an array with ones for all the C-nodes
+and zeros for the F-nodes.
+
 
 C/F Splitting Methods
 ---------------------
@@ -17,33 +25,38 @@ C/F Splitting Methods
 RS : Original Ruge-Stuben method
     - Produces good C/F splittings but is inherently serial.  
     - May produce AMG hierarchies with relatively high operator complexities.
+    - See References [1,4]
 
-PMIS: Parallel Maximal Independent Set
+PMIS: Parallel Modified Independent Set 
     - Very fast construction with low operator complexity.  
     - Convergence can deteriorate with increasing problem 
       size on structured meshes.  
     - Uses method similar to Luby's Maximal Independent Set algorithm.
+    - See References [1,3]
 
-PMISc: Parallel Maximal Independent Set in Color
+PMISc: Parallel Modified Independent Set in Color
     - Fast construction with low operator complexity.  
     - Better scalability than PMIS on structured meshes.
     - Augments random weights with a (graph) vertex coloring
+    - See References [1]
       
-CLJP: Clearly-Luby-Jones-Plassmann
+CLJP: Clearly-Luby-Jones-Plassmann [1,2]
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Convergence can deteriorate with increasing problem 
       size on structured meshes.  
+    - See References [1,2]
 
-CLJP: Clearly-Luby-Jones-Plassmann in Color
+CLJP: Clearly-Luby-Jones-Plassmann in Color [1]
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Better scalability than CLJP on structured meshes.
+    - See References [1]
     
 
 Summary
 -------
 
 In general, methods that use a graph coloring perform better on 
-structured meshes.  Unstructured meshes do not appear to benefit 
+structured meshes[1].  Unstructured meshes do not appear to benefit 
 substaintially from coloring.
 
     ========  ========  ========  ==========  
@@ -55,15 +68,29 @@ substaintially from coloring.
       CLJP      yes        no      moderate         
       CLJPc     yes       yes      moderate
     ========  ========  ========  ==========
-
     
 
 References
 ----------
 
-    David M. Alber and Luke N. Olson
+    [1] David M. Alber and Luke N. Olson
     "Parallel coarse-grid selection"
-    Numerical Linear Algebra with Applications 2007; 14:611-643
+    Numerical Linear Algebra with Applications 2007; 14:611-643.
+
+    [2] Cleary AJ, Falgout RD, Henson VE, Jones JE. 
+    "Coarse-grid selection for parallel algebraic multigrid"
+    Proceedings of the 5th International Symposium on Solving Irregularly 
+    Structured Problems in Parallel. Springer: Berlin, 1998; 104–115.
+
+    [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+    "Reducing complexity in parallel algebraic multigrid preconditioners" 
+    SIAM Journal on Matrix Analysis and Applications 2006; 27:1019–1039.
+
+    [4] Ruge JW, Stuben K. 
+    "Algebraic multigrid (AMG)"
+    In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
+    SIAM: Philadelphia, PA, 1987; 73–130.
+    
 
 """
 
@@ -74,7 +101,53 @@ from graph import vertex_coloring
 
 import multigridtools
 
-__all__ = ['PMISc', 'CLJPc']
+__all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']
+
+def RS(S):
+    """Compute a C/F splitting using Ruge-Stuben coarsening
+    """
+    raise NotImplementedError
+
+def PMIS(S):
+    """C/F splitting using the Parallel Modified Independent Set method
+
+    """
+    weights,G,S,T = preprocess(S,False)
+    return MIS(G, weights)
+
+def PMISc(S):
+    """C/F splitting using Parallel Modified Independent Set (in color)
+
+    PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
+    random weights with weights determined by a vertex coloring.
+
+    """
+    weights,G,S,T = preprocess(S,True)
+    return MIS(G, weights)
+     
+
+def CLJP(S):
+    """Compute a C/F splitting using the parallel CLJP algorithm
+    """
+    raise NotImplementedError
+
+
+def CLJPc(S):
+    """Compute a C/F splitting using the parallel CLJP-c algorithm
+    
+    CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
+    random weights with weights determined by a vertex coloring.
+
+    """
+    raise NotImplementedError
+
+
+#############################
+## Helper functions
+#############################
+
+def CLJP_update_weights(weights,G,S,T,D):
+    raise NotImplementedError
 
 def preprocess(S, use_color):
     """Common preprocess for splitting functions
@@ -116,6 +189,7 @@ def preprocess(S, use_color):
 
     return (weights,G,S,T)
 
+
 def MIS(G, weights, maxiter=None):
     """compute an idependent set in parallel with given weights"""
 
@@ -134,36 +208,6 @@ def MIS(G, weights, maxiter=None):
 
     return mis
 
-
-
-def PMISc(S):
-    """C/F splitting using the parallel MIS algorithm in color
-
-    PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
-    random weights with weights determined by a vertex coloring.
-
-    """
-
-    weights,G,S,T = preprocess(S,True)
-    return MIS(G, weights)
-     
-    
-
-def CLJP_update_weights(weights,G,S,T,D):
-    raise NotImplementedError
-
-
-def CLJPc(S):
-    """Compute a C/F splitting using the parallel CLJP-c algorithm
-    
-    CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
-    random weights with weights determined by a vertex coloring.
-
-    """
-
-    weights,G,S,T = preprocess(S,True)
-
-    raise NotImplementedError
 
 
 
