@@ -6,7 +6,7 @@ from multilevel import multilevel_solver
 import multigridtools
 
 __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
-        'rs_cf_splitting', 'rs_direct_interpolation']
+        'rs_direct_interpolation']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):

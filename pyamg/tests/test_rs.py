@@ -8,7 +8,7 @@ from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 from pyamg.gallery import poisson, load_example
 
 from pyamg.rs import * 
-
+from pyamg import split
 
 class TestRugeStubenFunctions(TestCase):
     def setUp(self):
@@ -37,11 +37,11 @@ class TestRugeStubenFunctions(TestCase):
                 assert_equal( result.nnz, expected.nnz )
                 assert_equal( result.todense(), expected.todense() )
 
-    def test_rs_cf_splitting(self):
+    def test_RS_splitting(self):
         for A in self.cases:
             S = rs_strong_connections( A, 0.0 )
 
-            splitting = rs_cf_splitting( S )
+            splitting = split.RS( S )
 
             assert( splitting.min() >= 0 )     #could be all 1s
             assert_equal( splitting.max(), 1 ) 
@@ -82,7 +82,7 @@ class TestRugeStubenFunctions(TestCase):
         for A in self.cases:
 
             S = rs_strong_connections( A, 0.0 )
-            splitting = rs_cf_splitting( S )
+            splitting = split.RS( S )
 
             result   = rs_direct_interpolation(A,S,splitting)                
             expected = reference_rs_direct_interpolation( A, S, splitting )
