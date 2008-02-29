@@ -9,9 +9,22 @@ __all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
         'rs_cf_splitting', 'rs_direct_interpolation']
 
 
-def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, cf='RS'):
-    """
-    Create a multilevel solver using Ruge-Stuben coarsening (Classical AMG)
+def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
+    """Create a multilevel solver using Ruge-Stuben AMG (Classical AMG)
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Square matrix in CSR or BSR format
+    max_levels: {integer} : default 10
+        Maximum number of levels to be used in the multilevel solver.
+    max_coarse: {integer} : default 500
+        Maximum number of variables permitted on the coarse grid.
+    theta : {float} : default 0.25
+        Strength of connection parameter
+    CF : {string} : default 'RS'
+        Method used for coarse grid selection (C/F splitting)
+        Supported methods are RS, PMIS, PMISc, CLJP, and CLJPc
 
     References:
         Trottenberg, U., C. W. Oosterlee, and Anton Schuller.
@@ -25,7 +38,7 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, cf='RS'):
     Rs = []
 
     while len(As) < max_levels  and A.shape[0] > max_coarse:
-        P = rs_prolongator(A, theta=theta, cf=cf)
+        P = rs_prolongator(A, theta=theta, CF=CF)
         R = P.T.tocsr()
 
         A = R * A * P     #galerkin operator
@@ -56,24 +69,6 @@ def rs_strong_connections(A,theta):
 
     return csr_matrix((Sx,Sj,Sp),shape=A.shape)
 
-def rs_cf_splitting(S):
-    """Coarse-Fine splitting for strength of connection matrix S
-    using the standard (serial) Ruge-Stuben algorithm
-
-    """
-
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
-
-    T = S.T.tocsr()  #transpose S for efficient column access
-
-    splitting = empty( S.shape[0], dtype='intc' )
-
-    multigridtools.rs_cf_splitting(S.shape[0],
-            S.indptr, S.indices,  
-            T.indptr, T.indices, 
-            splitting)
-
-    return splitting
 
 
 def rs_direct_interpolation(A,S,splitting):
@@ -98,18 +93,16 @@ def rs_direct_interpolation(A,S,splitting):
 
 
 
-def rs_prolongator(A, theta=0.25, cf='RS'):
+def rs_prolongator(A, theta=0.25, CF='RS'):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
     S = rs_strong_connections(A,theta)
 
-    if cf == 'RS':
-        splitting = rs_cf_splitting(S)
-    elif cf in ['PMISc']:
+    if CF in [ 'RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']:
         import split
-        splitting = getattr(split,cf)(S)
+        splitting = getattr(split,CF)(S)
     else:
-        raise ValueError('unknown C/F splitting method (%s)' % cf)
+        raise ValueError('unknown C/F splitting method (%s)' % CF)
 
     return rs_direct_interpolation(A,S,splitting)
 

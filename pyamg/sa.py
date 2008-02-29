@@ -286,17 +286,18 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
                                 solver = multilevel_solver, **kwargs):
     """Create a multilevel solver using Smoothed Aggregation (SA)
 
-    *Parameters*:
+    Parameters
+    ----------
 
-        A : {csr_matrix, bsr_matrix}
-            Square matrix in CSR or BSR format
-        B : {None, array_like}
-            Near-nullspace candidates stored in the columns of an NxK array.
-            The default value B=None is equivalent to B=ones((N,1))
-        max_levels: {integer} : default 10
-            Maximum number of levels to be used in the multilevel solver.
-        max_coarse: {integer} : default 500
-            Maximum number of variables permitted on the coarse grid.
+    A : {csr_matrix, bsr_matrix}
+        Square matrix in CSR or BSR format
+    B : {None, array_like}
+        Near-nullspace candidates stored in the columns of an NxK array.
+        The default value B=None is equivalent to B=ones((N,1))
+    max_levels: {integer} : default 10
+        Maximum number of levels to be used in the multilevel solver.
+    max_coarse: {integer} : default 500
+        Maximum number of variables permitted on the coarse grid.
     
     *Optional Parameters*:
         strength : strength of connection method

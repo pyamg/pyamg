@@ -106,6 +106,19 @@ __all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']
 def RS(S):
     """Compute a C/F splitting using Ruge-Stuben coarsening
     """
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    T = S.T.tocsr()  #transpose S for efficient column access
+
+    splitting = empty( S.shape[0], dtype='intc' )
+
+    multigridtools.rs_cf_splitting(S.shape[0],
+            S.indptr, S.indices,  
+            T.indptr, T.indices, 
+            splitting)
+
+    return splitting
+
     raise NotImplementedError
 
 def PMIS(S):
@@ -181,7 +194,7 @@ def preprocess(S, use_color):
     #weights -= T.diagonal()          # discount self loops
 
     if use_color:
-        coloring = vertex_coloring(G)
+        coloring = vertex_coloring(G)  #TODO use better parallel coloring
         num_colors = coloring.max() + 1
         weights  = weights + (rand(len(weights)) + coloring)/num_colors
     else:
