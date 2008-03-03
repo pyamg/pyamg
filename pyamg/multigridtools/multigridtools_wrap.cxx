@@ -6246,6 +6246,96 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_vertex_coloring_jones_plassmann(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int *arg3 ;
+  int *arg4 ;
+  double *arg5 ;
+  int result;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int is_new_object2 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  PyArrayObject *temp4 = NULL ;
+  PyArrayObject *array5 = NULL ;
+  int is_new_object5 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:vertex_coloring_jones_plassmann",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "vertex_coloring_jones_plassmann" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array2 = obj_to_array_contiguous_allow_conversion(obj1, PyArray_INT, &is_new_object2);
+    if (!array2 || !require_dimensions(array2,1) || !require_size(array2,size,1)
+      || !require_contiguous(array2)   || !require_native(array2)) SWIG_fail;
+    
+    arg2 = (int*) array2->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (int*) array3->data;
+  }
+  {
+    temp4 = obj_to_array_no_conversion(obj3,PyArray_INT);
+    if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
+    arg4 = (int*) array_data(temp4);
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array5 = obj_to_array_contiguous_allow_conversion(obj4, PyArray_DOUBLE, &is_new_object5);
+    if (!array5 || !require_dimensions(array5,1) || !require_size(array5,size,1)
+      || !require_contiguous(array5)   || !require_native(array5)) SWIG_fail;
+    
+    arg5 = (double*) array5->data;
+  }
+  result = (int)vertex_coloring_jones_plassmann<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  {
+    if (is_new_object2 && array2) Py_DECREF(array2);
+  }
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object2 && array2) Py_DECREF(array2);
+  }
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_bellman_ford__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -7211,6 +7301,7 @@ static PyMethodDef SwigMethods[] = {
 		"    int x, double y) -> int\n"
 		""},
 	 { (char *)"vertex_coloring_mis", _wrap_vertex_coloring_mis, METH_VARARGS, (char *)"vertex_coloring_mis(int num_rows, int Ap, int Aj, int x) -> int"},
+	 { (char *)"vertex_coloring_jones_plassmann", _wrap_vertex_coloring_jones_plassmann, METH_VARARGS, (char *)"vertex_coloring_jones_plassmann(int num_rows, int Ap, int Aj, int x, double y) -> int"},
 	 { (char *)"bellman_ford", _wrap_bellman_ford, METH_VARARGS, (char *)"\n"
 		"bellman_ford(int num_rows, int Ap, int Aj, int Ax, int x, int y)\n"
 		"bellman_ford(int num_rows, int Ap, int Aj, float Ax, float x, int y)\n"

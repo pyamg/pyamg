@@ -119,29 +119,30 @@ def RS(S):
 
     return splitting
 
-    raise NotImplementedError
 
 def PMIS(S):
     """C/F splitting using the Parallel Modified Independent Set method
 
     """
-    weights,G,S,T = preprocess(S,False)
+    weights,G,S,T = preprocess(S)
     return MIS(G, weights)
 
-def PMISc(S):
+def PMISc(S,method='JP'):
     """C/F splitting using Parallel Modified Independent Set (in color)
 
     PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
     random weights with weights determined by a vertex coloring.
 
     """
-    weights,G,S,T = preprocess(S,True)
+    weights,G,S,T = preprocess(S, coloring_method=method)
     return MIS(G, weights)
      
 
 def CLJP(S):
     """Compute a C/F splitting using the parallel CLJP algorithm
     """
+    #weights,G,S,T = preprocess(S)
+    #weights += diff(G.indptr)
     raise NotImplementedError
 
 
@@ -162,7 +163,7 @@ def CLJPc(S):
 def CLJP_update_weights(weights,G,S,T,D):
     raise NotImplementedError
 
-def preprocess(S, use_color):
+def preprocess(S, coloring_method = None):
     """Common preprocess for splitting functions
     
     Performs the following operations:
@@ -193,12 +194,12 @@ def preprocess(S, use_color):
     weights   = ravel(T.sum(axis=1))  # initial weights
     #weights -= T.diagonal()          # discount self loops
 
-    if use_color:
-        coloring = vertex_coloring(G)  #TODO use better parallel coloring
+    if coloring_method is None:
+        weights  = weights + rand(len(weights))
+    else:
+        coloring = vertex_coloring(G,coloring_method)  #TODO use better parallel coloring
         num_colors = coloring.max() + 1
         weights  = weights + (rand(len(weights)) + coloring)/num_colors
-    else:
-        weights  = weights + rand(len(weights))
 
     return (weights,G,S,T)
 

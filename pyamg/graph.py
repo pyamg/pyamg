@@ -72,16 +72,17 @@ def maximal_independent_set(G, algo='serial'):
     return mis
 
 
-def vertex_coloring(G, algo='serial'):
+def vertex_coloring(G, method='MIS'):
     """Compute a vertex coloring of a graph 
 
     Parameters
     ----------
-        G    - symmetric matrix (e.g. csr_matrix or csc_matrix)
-        algo - {'serial', 'parallel'}
-                Algorithm used to compute the MIS:
-                    serial   - greedy serial algorithm
-                    parallel - variant of Luby's parallel MIS algorithm
+        G      - symmetric matrix (e.g. csr_matrix or csc_matrix)
+        method - {string}
+            Algorithm used to compute the vertex coloring:
+                'MIS' - Maximal Independent Set
+                'JP'  - Jones-Plassmann (parallel)
+                'LDF' - Largest Degree First (parallel)
 
     Returns
     -------
@@ -97,33 +98,17 @@ def vertex_coloring(G, algo='serial'):
     N = G.shape[0]
     
     coloring    = empty(N, dtype='intc')
-    coloring[:] = -1
 
-    if algo == 'serial':
-        def mis(K):
-            return multigridtools.maximal_independent_set_serial(
-                    N, G.indptr, G.indices, -1 - K, K, -2 - K, coloring)
-    elif algo == 'parallel':
-        rand_vals = rand(N)
-        def mis(K):
-            return multigridtools.maximal_independent_set_parallel(
-                    N, G.indptr, G.indices, 
-                    -1 - K, K, -2 - K, 
-                    coloring, rand_vals)
+    if method == 'MIS':
+        fn = multigridtools.vertex_coloring_mis
+        fn(N, G.indptr, G.indices, coloring)
+    elif method == 'JP':
+        fn = multigridtools.vertex_coloring_jones_plassmann
+        fn(N, G.indptr, G.indices, coloring, rand(N) )
     else:
-        raise ValueError('unknown algorithm (%s)' % algo)
-
-    count = 0  # number of colored vertices 
-    gamma = 0  # number of colors
-
-    # color each MIS with a different color 
-    # until all vertices are colored
-    while count < N:
-        count += mis(gamma)
-        gamma += 1
+        raise ValueError('unknown method (%s)' % method)
 
     return coloring
-
 
 def bellman_ford(G, seeds, maxiter=None):
     G = asgraph(G)

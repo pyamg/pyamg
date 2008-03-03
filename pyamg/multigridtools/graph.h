@@ -177,6 +177,57 @@ T vertex_coloring_mis(const I num_rows,
     return K;
 }
 
+template<class I, class T>
+void vertex_coloring_first_fit(const I num_rows,
+                               const I Ap[], 
+                               const I Aj[], 
+                                     T  x[],
+                                const T  K)
+{
+    for(I i = 0; i < num_rows; i++){
+        if(x[i] != K) continue;
+        std::vector<bool> mask(K,false);
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            if(  i == j  ) continue; //ignore diagonal
+            if( x[j] < 0 ) continue; //ignore uncolored vertices
+            mask[x[j]] = true;
+        }
+        x[i] = std::find(mask.begin(), mask.end(), false) - mask.begin();            
+    }
+}
+
+template<class I, class T, class R>
+T vertex_coloring_jones_plassmann(const I num_rows,
+                                  const I Ap[], 
+                                  const I Aj[], 
+                                        T  x[],
+                                  const R  y[])
+{
+    std::vector<R> weights(num_rows);
+    
+    std::fill( x, x + num_rows, -1);
+
+    for(I i = 0; i < num_rows; i++){
+        weights[i] = (Ap[i+1] - Ap[i]) + y[i];
+    }
+
+    I N = 0;
+    T K = 0; //iteration number
+
+    while(N < num_rows){
+        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,&weights[0],1);
+        for(I i = 0; i < num_rows; i++){
+            if(x[i] == -2)
+                x[i] = -1;
+        }
+        vertex_coloring_first_fit(num_rows,Ap,Aj,x,K);
+        K++;
+    }
+
+    return K;
+}
+
 
     
 template<class I, class T>

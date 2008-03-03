@@ -8,6 +8,20 @@ from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import *
 
+def assert_is_mis(G,mis):
+    # no MIS vertices joined by an edge
+    if G.nnz > 0:
+        assert( (mis[G.row] + mis[G.col]).max() <= 1 )
+    # all non-set vertices have set neighbor
+    assert( (mis + G*mis).min() == 1 )
+
+def assert_is_vertex_coloring(G,c):
+    # no colors joined by an edge
+    assert( (c[G.row] != c[G.col]).all() )
+    # all colors up to K occur at least once
+    assert( (bincount(c) > 0).all() )
+
+
 class TestGraph(TestCase):
     def setUp(self):
         cases = []
@@ -45,13 +59,8 @@ class TestGraph(TestCase):
         for algo in ['serial','parallel']:
             for G in self.cases:
                 mis = maximal_independent_set(G, algo=algo)
-                
-                # no MIS vertices joined by an edge
-                if G.nnz > 0:
-                    assert( (mis[G.row] + mis[G.col]).max() <= 1 )
-
-                # all non-set vertices have set neighbor
-                assert( (mis + G*mis).min() == 1 )
+    
+                assert_is_mis(G,mis)
     
     def test_vertex_coloring(self):
         # test that method works with diagonal entries
@@ -59,15 +68,10 @@ class TestGraph(TestCase):
         assert_equal( vertex_coloring(eye(3)), [0,0,0] )
         assert_equal( sorted(vertex_coloring(ones((3,3)))), [0,1,2] )
 
-        for algo in ['serial','parallel']:
+        for method in ['MIS','JP']:
             for G in self.cases:
-                c = vertex_coloring(G, algo=algo)
-
-                # no colors joined by an edge
-                assert( (c[G.row] != c[G.col]).all() )
-
-                # all colors up to K occur at least once
-                assert( (bincount(c) > 0).all() )
+                c = vertex_coloring(G, method=method)
+                assert_is_vertex_coloring(G,c)
 
     def test_bellman_ford(self):
         numpy.random.seed(0)
