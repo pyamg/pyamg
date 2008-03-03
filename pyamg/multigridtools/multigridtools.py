@@ -79,6 +79,10 @@ def vertex_coloring_jones_plassmann(*args):
   """vertex_coloring_jones_plassmann(int num_rows, int Ap, int Aj, int x, double y) -> int"""
   return _multigridtools.vertex_coloring_jones_plassmann(*args)
 
+def vertex_coloring_LDF(*args):
+  """vertex_coloring_LDF(int num_rows, int Ap, int Aj, int x, double y) -> int"""
+  return _multigridtools.vertex_coloring_LDF(*args)
+
 
 def rs_strong_connections(*args):
   """

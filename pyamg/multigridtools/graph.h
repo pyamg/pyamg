@@ -197,26 +197,46 @@ void vertex_coloring_first_fit(const I num_rows,
     }
 }
 
+
+
+/*
+ * Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
+ *
+ *  Parameters   
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      x[]        - color of each vertex
+ *      y[]        - initial random values for each vertex
+ *
+ *  Notes:
+ *      Arrays x and y will be overwritten
+ *
+ *  References:
+ *      Mark T. Jones and Paul E. Plassmann
+ *      A Parallel Graph Coloring Heuristic
+ *      SIAM Journal on Scientific Computing 14:3 (1993) 654--669
+ *      http://citeseer.ist.psu.edu/jones92parallel.html
+ *      
+ */
 template<class I, class T, class R>
 T vertex_coloring_jones_plassmann(const I num_rows,
                                   const I Ap[], 
                                   const I Aj[], 
                                         T  x[],
-                                  const R  y[])
+                                        R  y[])
 {
-    std::vector<R> weights(num_rows);
-    
     std::fill( x, x + num_rows, -1);
 
     for(I i = 0; i < num_rows; i++){
-        weights[i] = (Ap[i+1] - Ap[i]) + y[i];
+        y[i] += Ap[i+1] - Ap[i];
     }
 
     I N = 0;
     T K = 0; //iteration number
 
     while(N < num_rows){
-        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,&weights[0],1);
+        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,y,1);
         for(I i = 0; i < num_rows; i++){
             if(x[i] == -2)
                 x[i] = -1;
@@ -228,6 +248,59 @@ T vertex_coloring_jones_plassmann(const I num_rows,
     return K;
 }
 
+
+/*
+ * Compute a vertex coloring of a graph using the parallel 
+ * Largest-Degree-First (LDF) algorithm
+ *
+ *  Parameters   
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      x[]        - color of each vertex
+ *      y[]        - initial random values for each vertex
+ *
+ *   References:
+ *     TODO 
+ */
+template<class I, class T, class R>
+T vertex_coloring_LDF(const I num_rows,
+                      const I Ap[], 
+                      const I Aj[], 
+                            T  x[],
+                      const R  y[])
+{
+    std::fill( x, x + num_rows, -1);
+
+    std::vector<R> weights(num_rows);
+
+    I N = 0;
+    T K = 0; //iteration number
+
+    while(N < num_rows){
+        // weight is # edges in induced subgraph + random value
+        for(I i = 0; i < num_rows; i++){
+            if(x[i] != -1) continue;
+            I num_neighbors = 0;
+            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+                I j = Aj[jj];
+                if(x[j] == -1 && i != j)
+                    num_neighbors++;
+            }
+            weights[i] = y[i] + num_neighbors;
+        }
+
+        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,&weights[0],1);
+        for(I i = 0; i < num_rows; i++){
+            if(x[i] == -2)
+                x[i] = -1;
+        }
+        vertex_coloring_first_fit(num_rows,Ap,Aj,x,K);
+        K++;
+    }
+
+    return K;
+}
 
     
 template<class I, class T>

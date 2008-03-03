@@ -1,12 +1,13 @@
 from scipy.testing import *
 
 import numpy
-from numpy import ones, eye, zeros, bincount, empty, asarray
+from numpy import ones, eye, zeros, bincount, empty, asarray, array
 from scipy import rand
 from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import *
+from pyamg import multigridtools
 
 def assert_is_mis(G,mis):
     # no MIS vertices joined by an edge
@@ -68,10 +69,53 @@ class TestGraph(TestCase):
         assert_equal( vertex_coloring(eye(3)), [0,0,0] )
         assert_equal( sorted(vertex_coloring(ones((3,3)))), [0,1,2] )
 
-        for method in ['MIS','JP']:
+        for method in ['MIS','JP','LDF']:
             for G in self.cases:
                 c = vertex_coloring(G, method=method)
                 assert_is_vertex_coloring(G,c)
+    
+    def test_vertex_coloring_JP(self):
+        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        coloring = empty(5, dtype='intc')
+
+        #      3---4
+        #    / | / |
+        #  0---1---2
+        G = array([[ 0, 1, 0, 1, 0],
+                   [ 1, 0, 1, 1, 1],
+                   [ 0, 1, 0, 0, 1],
+                   [ 1, 1, 0, 0, 1],
+                   [ 0, 1, 1, 1, 0]])
+        G = csr_matrix(G) 
+
+        assert_equal( (G - G.T).nnz, 0) # make sure graph is symmetric
+
+        fn = multigridtools.vertex_coloring_jones_plassmann
+        fn(G.shape[0], G.indptr, G.indices, coloring, weights)
+
+        assert_equal( coloring, [2, 0, 1, 1, 2] )
+
+    def test_vertex_coloring_LDF(self):
+        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        coloring = empty(5, dtype='intc')
+
+        #      3---4
+        #    / | / |
+        #  0---1---2
+        G = array([[ 0, 1, 0, 1, 0],
+                   [ 1, 0, 1, 1, 1],
+                   [ 0, 1, 0, 0, 1],
+                   [ 1, 1, 0, 0, 1],
+                   [ 0, 1, 1, 1, 0]])
+        G = csr_matrix(G) 
+
+        assert_equal( (G - G.T).nnz, 0) # make sure graph is symmetric
+
+        fn = multigridtools.vertex_coloring_LDF
+        fn(G.shape[0], G.indptr, G.indices, coloring, weights)
+
+        assert_equal( coloring, [2, 0, 1, 1, 2] )
+
 
     def test_bellman_ford(self):
         numpy.random.seed(0)

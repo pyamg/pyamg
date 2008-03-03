@@ -208,6 +208,7 @@ INSTANTIATE_BOTH(jacobi)
 %template(maximal_independent_set_parallel) maximal_independent_set_parallel<int,int,double>;
 %template(vertex_coloring_mis)              vertex_coloring_mis<int,int>;
 %template(vertex_coloring_jones_plassmann)  vertex_coloring_jones_plassmann<int,int,double>;
+%template(vertex_coloring_LDF)              vertex_coloring_LDF<int,int,double>;
 
 INSTANTIATE_BOTH2(bellman_ford)
 INSTANTIATE_BOTH2(lloyd_cluster)

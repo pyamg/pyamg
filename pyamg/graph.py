@@ -82,7 +82,7 @@ def vertex_coloring(G, method='MIS'):
             Algorithm used to compute the vertex coloring:
                 'MIS' - Maximal Independent Set
                 'JP'  - Jones-Plassmann (parallel)
-                'LDF' - Largest Degree First (parallel)
+                'LDF' - Largest-Degree-First (parallel)
 
     Returns
     -------
@@ -104,6 +104,9 @@ def vertex_coloring(G, method='MIS'):
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = multigridtools.vertex_coloring_jones_plassmann
+        fn(N, G.indptr, G.indices, coloring, rand(N) )
+    elif method == 'LDF':
+        fn = multigridtools.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, rand(N) )
     else:
         raise ValueError('unknown method (%s)' % method)
