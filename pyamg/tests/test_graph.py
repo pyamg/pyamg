@@ -74,49 +74,6 @@ class TestGraph(TestCase):
                 c = vertex_coloring(G, method=method)
                 assert_is_vertex_coloring(G,c)
     
-    def test_vertex_coloring_JP(self):
-        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
-        coloring = empty(5, dtype='intc')
-
-        #      3---4
-        #    / | / |
-        #  0---1---2
-        G = array([[ 0, 1, 0, 1, 0],
-                   [ 1, 0, 1, 1, 1],
-                   [ 0, 1, 0, 0, 1],
-                   [ 1, 1, 0, 0, 1],
-                   [ 0, 1, 1, 1, 0]])
-        G = csr_matrix(G) 
-
-        assert_equal( (G - G.T).nnz, 0) # make sure graph is symmetric
-
-        fn = multigridtools.vertex_coloring_jones_plassmann
-        fn(G.shape[0], G.indptr, G.indices, coloring, weights)
-
-        assert_equal( coloring, [2, 0, 1, 1, 2] )
-
-    def test_vertex_coloring_LDF(self):
-        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
-        coloring = empty(5, dtype='intc')
-
-        #      3---4
-        #    / | / |
-        #  0---1---2
-        G = array([[ 0, 1, 0, 1, 0],
-                   [ 1, 0, 1, 1, 1],
-                   [ 0, 1, 0, 0, 1],
-                   [ 1, 1, 0, 0, 1],
-                   [ 0, 1, 1, 1, 0]])
-        G = csr_matrix(G) 
-
-        assert_equal( (G - G.T).nnz, 0) # make sure graph is symmetric
-
-        fn = multigridtools.vertex_coloring_LDF
-        fn(G.shape[0], G.indptr, G.indices, coloring, weights)
-
-        assert_equal( coloring, [2, 0, 1, 1, 2] )
-
-
     def test_bellman_ford(self):
         numpy.random.seed(0)
 
@@ -146,7 +103,59 @@ class TestGraph(TestCase):
                     continue
     
                 distances,clusters,centers = lloyd_cluster(G, n_seeds)
-    
+
+
+class TestVertexColorings(TestCase):
+    def setUp(self):
+        #      3---4
+        #    / | / |
+        #  0---1---2
+        G0 = array([[ 0, 1, 0, 1, 0],
+                    [ 1, 0, 1, 1, 1],
+                    [ 0, 1, 0, 0, 1],
+                    [ 1, 1, 0, 0, 1],
+                    [ 0, 1, 1, 1, 0]])
+        self.G0 = csr_matrix(G0) 
+        assert_equal( (self.G0 - self.G0.T).nnz, 0) # make sure graph is symmetric
+
+        #  2        5
+        #  | \    / | 
+        #  0--1--3--4
+        G1 = array([[ 0, 1, 1, 0, 0, 0],
+                    [ 1, 0, 1, 1, 0, 0],
+                    [ 1, 1, 0, 0, 0, 0],
+                    [ 0, 1, 0, 0, 1, 1],
+                    [ 0, 0, 0, 1, 0, 1],
+                    [ 0, 0, 0, 1, 1, 0]])
+        self.G1 = csr_matrix(G1) 
+        assert_equal( (self.G1 - self.G1.T).nnz, 0) # make sure graph is symmetric
+
+    def test_vertex_coloring_JP(self):
+        fn = multigridtools.vertex_coloring_jones_plassmann
+
+        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        coloring = empty(5, dtype='intc')
+        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring, weights)
+        assert_equal( coloring, [2, 0, 1, 1, 2] )
+        
+        weights  = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
+        coloring = empty(6, dtype='intc')
+        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring, weights)
+        assert_equal( coloring, [2, 0, 1, 1, 2, 0] )
+
+    def test_vertex_coloring_LDF(self):
+        fn = multigridtools.vertex_coloring_LDF
+
+        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        coloring = empty(5, dtype='intc')
+        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring, weights)
+        assert_equal( coloring, [2, 0, 1, 1, 2] )
+
+        weights  = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
+        coloring = empty(6, dtype='intc')
+        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring, weights)
+        assert_equal( coloring, [2, 0, 1, 2, 1, 0] )
+
 
 from pyamg.graph import max_value
 def reference_bellman_ford(G,seeds):
