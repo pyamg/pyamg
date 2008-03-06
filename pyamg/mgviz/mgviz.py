@@ -59,8 +59,8 @@ def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
         colors = None
         if A!=None:
             G=Agg * A * Agg.transpose()
-            #colors = vertex_coloring(G, algo='serial')
-            colors = vertex_coloring(G, algo='parallel')
+            #colors = vertex_coloring(G, method='MIS')
+            colors = vertex_coloring(G, method='LDF')
             colors = Agg.transpose() * colors
         Ncolors = 12
         Npts = Vert.shape[0]
