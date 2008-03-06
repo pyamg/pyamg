@@ -108,45 +108,48 @@ def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
         write_vtu(Verts=Vert,Cells=Cells,vtk_name=vtk_name,index_base=None,pdata=None,cdata=cdata)
 
 def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=None):
-    # TODO : I/O error checking
-    # TODO : add checks for array sizes
-    # TODO : add poly data structures (2,4,6,7 below)
-    #
-    # Verts: Npts x 3 (if 2, then expanded by 0)
-    #        list of (x,y,z) point coordinates
-    # Cells: Dictionary of with the keys
-    #   keys:  info:
-    #   -----  -------------------------------------
-    #       1  VTK_VERTEX:         1 point        2d
-    #       2  VTK_POLY_VERTEX:    n points       2d
-    #       3  VTK_LINE:           2 points       2d
-    #       4  VTK_POLY_LINE:      n+1 points     2d
-    #       5  VTK_TRIANGLE:       3 points       2d
-    #       6  VTK_TRIANGLE_STRIP: n+2 points     2d
-    #       7  VTK_POLYGON:        n points       2d
-    #       8  VTK_PIXEL:          4 points       2d
-    #       9  VTK_QUAD:           4 points       2d
-    #       10 VTK_TETRA:          4 points       3d
-    #       11 VTK_VOXEL:          8 points       3d
-    #       12 VTK_HEXAHEDRON:     8 points       3d
-    #       13 VTK_WEDGE:          6 points       3d
-    #       14 VTK_PYRAMID:        5 points       3d
-    #    
-    #    e.g. Cells = ['1':None,'2':None,'3':None,'4':None,'5':E2V,.....]
-    #
-    #    Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
-    #
-    #    Poly data stored in Nx1 numpy array
-    #    [Ncell I1 d1 d2 d3 ... dI1 I2 d1 d2 d3 ... dI2 I3 ... ... dINcell]
-    #    Each I1 must be >=3
-    #
-    #    index_base can override, what is found in check.  put 0 or 1 usually
-    #
-    #    pdata = Npts x Nfields
-    #
-    #    cdata = list of dictionaries in the form of Cells
-    #
-    #                1  2     3  4     5  6     7     8  9 10 11 12 13 14
+    """
+    TODO : I/O error checking
+    TODO : add checks for array sizes
+    TODO : add poly data structures (2,4,6,7 below)
+    
+    Verts: Npts x 3 (if 2, then expanded by 0)
+           list of (x,y,z) point coordinates
+    Cells: Dictionary of with the keys
+      keys:  info:
+      -----  -------------------------------------
+          1  VTK_VERTEX:         1 point        2d
+          2  VTK_POLY_VERTEX:    n points       2d
+          3  VTK_LINE:           2 points       2d
+          4  VTK_POLY_LINE:      n+1 points     2d
+          5  VTK_TRIANGLE:       3 points       2d
+          6  VTK_TRIANGLE_STRIP: n+2 points     2d
+          7  VTK_POLYGON:        n points       2d
+          8  VTK_PIXEL:          4 points       2d
+          9  VTK_QUAD:           4 points       2d
+          10 VTK_TETRA:          4 points       3d
+          11 VTK_VOXEL:          8 points       3d
+          12 VTK_HEXAHEDRON:     8 points       3d
+          13 VTK_WEDGE:          6 points       3d
+          14 VTK_PYRAMID:        5 points       3d
+       
+       e.g. Cells = ['1':None,'2':None,'3':None,'4':None,'5':E2V,.....]
+    
+       Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
+    
+       Poly data stored in Nx1 numpy array
+       [Ncell I1 d1 d2 d3 ... dI1 I2 d1 d2 d3 ... dI2 I3 ... ... dINcell]
+       Each I1 must be >=3
+    
+       index_base can override, what is found in check.  put 0 or 1 usually
+    
+       pdata = Npts x Nfields
+    
+       cdata = list of dictionaries in the form of Cells
+    
+                   1  2     3  4     5  6     7     8  9 10 11 12 13 14
+    """
+
     vtk_cell_info = [1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
     Npts,dim   = Verts.shape
@@ -156,20 +159,20 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     Ncells = 0
     idx_min = 1
     for j in range(1,15):
-        key='%d'%j
+        key = '%d' % j
         if Cells.has_key(key):
             if (vtk_cell_info[j-1] == None) and (Cells[key] != None):
                 # Poly data
                 Ncells += Cells[key][0,0]
                 idx_min=min(idx_min,Cells[key].min())
-                raise NotImplementedError,'Poly Data not implemented yet'
+                raise NotImplementedError('Poly Data not implemented yet')
             elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
                 # non-Poly data
                 Ncells += Cells[key].shape[0]
                 idx_min=min(idx_min,Cells[key].min())
 
-    if index_base==None:
-        if abs(idx_min)>0:
+    if index_base == None:
+        if abs(idx_min) > 0:
             warnings.warn('Found data with 1-based index.  Attempting to adjust.  Override with index_base')
         index_base=idx_min
                 
@@ -181,7 +184,9 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     #------------------------------------------------------------------
     FID.writelines('      <Points>\n')
     FID.writelines('        <DataArray type=\"Float32\" Name=\"vertices\" NumberOfComponents=\"3\" format=\"ascii\">\n')
+
     Verts.tofile(FID,' ') # prints Verts row-wise
+    
     #for j in range(0,Npts):
     #    xyz = (Verts[j,0],Verts[j,1],Verts[j,2])
     #    FID.writelines('%15.15f %15.15f %15.15f\n' % xyz)
@@ -196,11 +201,11 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     cell_type   = zeros((Ncells,1),dtype=uint8)
     k=0
     for j in range(1,15):
-        key='%d'%j
+        key = '%d' % j
         if Cells.has_key(key):
             if (vtk_cell_info[j-1] == None) and (Cells[key] != None):
                 # Poly data
-                raise NotImplementedError,'Poly Data not implemented yet'
+                raise NotImplementedError('Poly Data not implemented yet')
             elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
                 # non-Poly data
                 offset=Cells[key].shape[1]
