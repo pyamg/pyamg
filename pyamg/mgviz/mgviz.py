@@ -4,6 +4,7 @@ This will use the XML VTK format for unstructured meshes, .vtu
 
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
+
 __all__ = ['mgviz','write_vtu']
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
@@ -15,43 +16,78 @@ from pyamg.graph import vertex_coloring
 
 import warnings
 
-"""Coarse grid visualization
 
-There are three views of the aggregates:
-    1. primal: nodes are collected and lines and triangles are grouped.  This
-    has the benefit of clear separation between colored entities (aggregates)
-    and blank space
-    2. dual: aggregates are viewed through the dual mesh.  This has the benefit
-    of filling the whole domain and aggregation through rounder (good) or long
-    (bad) aggregates.
-    3. points: just color different point different colors.  This works also
-    with classical AMG
-
-Plus...
-    1. non-conforming aggregate view: shrink triangles toward baricenter
-    2. high-order aggregate view: ?
-
+def mgviz(Vert, E2V, Agg, mesh_type,
+          plot_type='primal', 
+          vtk_name='tmp_agg_plot.vtu'):
 """
+    Coarse grid visualization: create .vtu files for use in Paraview
+    Usage
+    =====
+        - mgviz(Vert, E2V, Agg, mesh_type, [plot_type], [vtk_name])
 
-def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
-          vtk_name='tmp_agg_plot.vtu', mesh_type='tri'):
-    """Create .vtu files for use in Paraview
+    Input
+    =====
+             Vert   = N x 2 coordinate list
+              E2V   = Nel x 3 triangular Element-Vertex list
+              Agg   = N x Nagg sparse matrix for the aggregate-vertex relationship
+        mesh_type   = type of elements: tri, quad, tet, hex (all 3d)
 
-    Assumptions: 
-           A = d*N x d*N sparse matrix (not needed yet)
-        Vert = N+M x 2 coordinate list
-         E2V = Nel x 3 triangular Element-Vertex list
-         Agg = N x Nagg sparse matrix
-   plot_type = primal or dual or points
-    vtk_name = prefix for the .vtu file
-   mesh_type = type of elements: tri, quad, tet, hex (all 3d)
-           d = # of variables 
-           N = # of vertices in the mesh represented in A
-           M = additional (Dirichelet) nodes removed from A
-         Nel = # of elements in the mesh
-        Nagg = # of aggregates
+        plot_type   = primal or dual or points
+         vtk_name   = .vtu filename
+
+    Output
+    ======
+        vtk_name  = .vtu file for use in paraview (xml 0.1 format)
+
+    Notation
+    ========
+                d = # of variables 
+                N = # of vertices in the mesh represented in A
+             Ndof = # of dof = dN
+              Nel = # of elements in the mesh
+         Nelnodes = # of nodes per element (3 for triangle for example)
+             Nagg = # of aggregates
+
+    Notes
+    =====
+        There are three views of the aggregates:
+        1. primal:  nodes are collected and lines and triangles are grouped.  This
+                    has the benefit of clear separation between colored entities (aggregates)
+                    and blank space
+        2. dual:    aggregates are viewed through the dual mesh.  This has the benefit
+                    of filling the whole domain and aggregation through rounder (good) or long
+                    (bad) aggregates.
+        3. points:  just color different point different colors.  This works also
+                    with classical AMG
+
+        And in different settings:
+        1. non-conforming:  shrink triangles toward baricenter
+        2. high-order:      view aggregates individually 
+
+    Examples
+    ========
+
+    TODO
+    ====
+    - add error checks
+    - add support for vector problems: A = dN x dN
+
      """
 
+    d = 1
+    N = Vert.shape[0]
+    Ndof = N
+    Nel = E2V.shape[0]
+    Nelnodes = E2V.shape[1]
+    Nagg = Agg.shape[0]
+
+    spE2V = 
+    data = ones((Nel*Nelnodes,1),dtype=uint8).ravel()
+    col  = E2V.ravel()-1
+    row  = kron( arange(0,Nel),ones((1,Nelnodes),dtype=uint8) ).ravel()
+    spE  = csr_matrix( (data,(row,col)), shape=(Nel,Ndof) )
+    
     # ------------------
     # points: basic
     #         works for aggregation and classical AMG
@@ -63,16 +99,14 @@ def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
             colors = vertex_coloring(G, method='LDF')
             colors = Agg.transpose() * colors
         Ncolors = 12
-        Npts = Vert.shape[0]
-        Nagg = Agg.shape[0]
-        pdata = zeros((Npts,1))
+        pdata = zeros((Ndof,1))
         Agg = Agg.tocoo()
 
         if colors==None:
             for j in range(0,len(Agg.row)):
                 pdata[Agg.col[j]] = Agg.row[j] % Ncolors
         else:
-            pdata=colors.reshape((Npts,1))
+            pdata=colors.reshape((Ndof,1))
 
         if mesh_type=='tri':
             Cells = {'5':E2V}
@@ -86,13 +120,6 @@ def mgviz(A=None,Vert=None, E2V=None, Agg=None, plot_type='primal',
         write_vtu(Verts=Vert,Cells=Cells,vtk_name=vtk_name,index_base=None,pdata=pdata)
 
     if plot_type=='primal':
-        Npts     = Vert.shape[0]
-        Nel      = E2V.shape[0]
-        Nelnodes = E2V.shape[1]
-        data = ones((Nel*Nelnodes,1),dtype=uint8).ravel()
-        col  = E2V.ravel()-1
-        row  = kron( arange(0,Nel),ones((1,Nelnodes),dtype=uint8) ).ravel()
-        spE  = csr_matrix( (data,(row,col)), shape=(Nel,Npts) )
         
         C3 = Agg * spE.transpose()
         C3 = C3.tocoo()
@@ -113,7 +140,7 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     TODO : add checks for array sizes
     TODO : add poly data structures (2,4,6,7 below)
     
-    Verts: Npts x 3 (if 2, then expanded by 0)
+    Verts: Ndof x 3 (if 2, then expanded by 0)
            list of (x,y,z) point coordinates
     Cells: Dictionary of with the keys
       keys:  info:
@@ -143,7 +170,7 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     
        index_base can override, what is found in check.  put 0 or 1 usually
     
-       pdata = Npts x Nfields
+       pdata = Ndof x Nfields
     
        cdata = list of dictionaries in the form of Cells
     
@@ -152,9 +179,9 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
 
     vtk_cell_info = [1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
-    Npts,dim   = Verts.shape
+    Ndof,dim   = Verts.shape
     if dim==2:
-        Verts = concatenate((Verts,zeros((Npts,1))),1)
+        Verts = concatenate((Verts,zeros((Ndof,1))),1)
 
     Ncells = 0
     idx_min = 1
@@ -180,14 +207,14 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     FID.writelines('<?xml version=\"1.0\"?>\n')
     FID.writelines('<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n')
     FID.writelines('  <UnstructuredGrid>\n')
-    FID.writelines('    <Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n' % (Npts,Ncells))
+    FID.writelines('    <Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n' % (Ndof,Ncells))
     #------------------------------------------------------------------
     FID.writelines('      <Points>\n')
     FID.writelines('        <DataArray type=\"Float32\" Name=\"vertices\" NumberOfComponents=\"3\" format=\"ascii\">\n')
 
     Verts.tofile(FID,' ') # prints Verts row-wise
     
-    #for j in range(0,Npts):
+    #for j in range(0,Ndof):
     #    xyz = (Verts[j,0],Verts[j,1],Verts[j,2])
     #    FID.writelines('%15.15f %15.15f %15.15f\n' % xyz)
     FID.writelines('\n')
@@ -238,13 +265,13 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
     #------------------------------------------------------------------
     FID.writelines('      <PointData>\n')
     if pdata!=None:
-        if pdata.shape[0]!=Npts:
+        if pdata.shape[0]!=Ndof:
             raise ValueError, 'dimension of pdata must be of length = # of vertices'
         Nfields = pdata.shape[1]
         for j in range(0,Nfields):
             FID.writelines('        <DataArray type=\"Float32\" Name=\"pfield%d\" format=\"ascii\">\n' % (j+1))
             pdata[:,j].tofile(FID,' ') # print floats to file
-            #for i in range(0,Npts):
+            #for i in range(0,Ndof):
             #    FID.writelines('%15.15f ' % pdata[i,j])
             FID.writelines('\n')
             FID.writelines('        </DataArray>\n')
