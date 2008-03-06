@@ -1,13 +1,13 @@
 clear;
 
-S = 30;  % # of samples around each boundary
+S = 50;                     % # of samples around each boundary
 DO_INVERSE = true;
 
 warning off;
 I=imread('PyAMG.png');
 BW = im2bw(I);              %convert to Black & White
 if DO_INVERSE
-    BW = ~BW;                   %invert image
+    BW = ~BW;               %invert image
 end
 
 subplot(2,2,1); imshow(I);
@@ -91,7 +91,7 @@ fclose(FID);
 
 % now run "./triangle -q -p Z.poly" to run a conforming Delaunay triang
 %
-unix('./triangle -q -p Z.poly');
+unix('./triangle -q -p -a2 Z.poly');
 %unix('./showme Z.1.ele');
 
 % now parse Z.1.node and Z.1.ele
@@ -108,3 +108,10 @@ tmp=fscanf(FID,'%d',3);
 tri = fscanf(FID,'%d %d %d %d',[4 inf]);
 tri=tri(2:4,:)';
 subplot(2,2,4),trimesh(tri,fX,fY,'Color','k');
+
+
+% write out results
+elements = tri - 1;
+vertices = [fX,fY];
+
+save 'pyamg.mat' elements vertices;

@@ -7,47 +7,44 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 
 __all__ = ['mgviz','write_vtu']
 
+import warnings
+
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
 from numpy import uint8, kron, arange
 
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.graph import vertex_coloring
 
-import warnings
 
+def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
+    """Coarse grid visualization: create .vtu files for use in Paraview
 
-def mgviz(Vert, E2V, Agg, mesh_type,
-          plot_type='primal', 
-          vtk_name='tmp_agg_plot.vtu'):
-"""
-    Coarse grid visualization: create .vtu files for use in Paraview
     Usage
     =====
-        - mgviz(Vert, E2V, Agg, mesh_type, [plot_type], [vtk_name])
+        - mgviz(file_name, Vert, E2V, Agg, mesh_type, [A], [plot_type])
 
     Input
     =====
-             Vert   = N x 2 coordinate list
-              E2V   = Nel x 3 triangular Element-Vertex list
-              Agg   = N x Nagg sparse matrix for the aggregate-vertex relationship
-        mesh_type   = type of elements: tri, quad, tet, hex (all 3d)
-
-        plot_type   = primal or dual or points
-         vtk_name   = .vtu filename
+        file_name  : .vtu filename
+        Vert       : coordinate array (N x D)
+        E2V        : element index array (Nel x Nelnodes)
+        Agg        : sparse matrix for the aggregate-vertex relationship (N x Nagg)  
+        mesh_type  : type of elements: tri, quad, tet, hex (all 3d)
+        plot_type  : primal or dual or points
 
     Output
     ======
-        vtk_name  = .vtu file for use in paraview (xml 0.1 format)
-
+        Writes data to .vtu file for use in paraview (xml 0.1 format)
+    
     Notation
     ========
-                d = # of variables 
-                N = # of vertices in the mesh represented in A
-             Ndof = # of dof = dN
-              Nel = # of elements in the mesh
-         Nelnodes = # of nodes per element (3 for triangle for example)
-             Nagg = # of aggregates
+        D         : dimension of coordinate space
+        N         : # of vertices in the mesh represented in A
+        Ndof      : # of dof
+        Nel       : # of elements in the mesh
+        Nelnodes  : # of nodes per element (e.g. 3 for triangle)
+        Nagg      : # of aggregates
 
     Notes
     =====
@@ -62,7 +59,7 @@ def mgviz(Vert, E2V, Agg, mesh_type,
                     with classical AMG
 
         And in different settings:
-        1. non-conforming:  shrink triangles toward baricenter
+        1. non-conforming:  shrink triangles toward barycenter
         2. high-order:      view aggregates individually 
 
     Examples
@@ -75,66 +72,64 @@ def mgviz(Vert, E2V, Agg, mesh_type,
 
      """
 
-    d = 1
-    N = Vert.shape[0]
-    Ndof = N
-    Nel = E2V.shape[0]
+    N        = Vert.shape[0]
+    Ndof     = N
+    Nel      = E2V.shape[0]
     Nelnodes = E2V.shape[1]
-    Nagg = Agg.shape[0]
+    Nagg     = Agg.shape[0]
+    Ncolors  = 12
+        
+    if E2V.min() != 0:
+        warnings.warn('element indices begin at %d' % E2V.min() )
 
-    spE2V = 
-    data = ones((Nel*Nelnodes,1),dtype=uint8).ravel()
-    col  = E2V.ravel()-1
-    row  = kron( arange(0,Nel),ones((1,Nelnodes),dtype=uint8) ).ravel()
-    spE  = csr_matrix( (data,(row,col)), shape=(Nel,Ndof) )
-    
     # ------------------
     # points: basic
     #         works for aggregation and classical AMG
     if plot_type=='points':
-        colors = None
-        if A!=None:
-            G=Agg * A * Agg.transpose()
-            #colors = vertex_coloring(G, method='MIS')
+
+        if A is not None:
+            # color aggregates with vertex coloring
+            G = Agg.T * abs(A) * Agg
             colors = vertex_coloring(G, method='LDF')
-            colors = Agg.transpose() * colors
-        Ncolors = 12
-        pdata = zeros((Ndof,1))
-        Agg = Agg.tocoo()
-
-        if colors==None:
-            for j in range(0,len(Agg.row)):
-                pdata[Agg.col[j]] = Agg.row[j] % Ncolors
+            pdata = Agg * colors  # extend aggregate colors to vertices
+            pdata = pdata.reshape((Ndof,1))
         else:
-            pdata=colors.reshape((Ndof,1))
+            # color aggregates in sequence
+            Agg   = coo_matrix(A)
+            pdata = zeros((Ndof,1))
+            pdata[Agg.col] = Agg.row % Ncolors
 
-        if mesh_type=='tri':
-            Cells = {'5':E2V}
-        elif mesh_type=='quad':
-            Cells = {'9':E2V}
-        elif mesh_type=='tet':
-            Cells = {'10':E2V}
-        elif mesh_type=='hex':
-            Cells = {'12':E2V}
+        if mesh_type == 'tri':
+            Cells = { '5': E2V }
+        elif mesh_type == 'quad':
+            Cells = { '9': E2V }
+        elif mesh_type == 'tet':
+            Cells = {'10': E2V }
+        elif mesh_type == 'hex':
+            Cells = {'12': E2V }
+        else:
+            raise ValueError('unknown mesh_type=%s' % mesh_type)
 
-        write_vtu(Verts=Vert,Cells=Cells,vtk_name=vtk_name,index_base=None,pdata=pdata)
+        write_vtu( Verts=Vert, Cells=Cells, file_name=file_name, pdata=pdata)
 
-    if plot_type=='primal':
-        
-        C3 = Agg * spE.transpose()
-        C3 = C3.tocoo()
-        mask = C3.data==3
-        E3 = C3.col[mask]
+    if plot_type == 'primal':
+        Npts     = Vert.shape[0]
+        Nel      = E2V.shape[0]
+        Nelnodes = E2V.shape[1]
 
+        # mask[i] == True if all vertices in element i belong to the same aggregate
+        ElementAggs = Agg.indices[E2V]
+        mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
 
-        E2V3=E2V[E3,:]
-        Nel3=E2V3.shape[0]
+        E2V3 = E2V[mask,:]
+        Nel3 = E2V3.shape[0]
+
         colors = ones((Nel3,1))
-        Cells = {'5':E2V3}
-        cdata = ({'5':colors}), # make sure it's a tuple
-        write_vtu(Verts=Vert,Cells=Cells,vtk_name=vtk_name,index_base=None,pdata=None,cdata=cdata)
+        Cells  =  {'5':E2V3}
+        cdata  = ({'5':colors},) # make sure it's a tuple
+        write_vtu(Verts=Vert,Cells=Cells,file_name=file_name,pdata=None,cdata=cdata)
 
-def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=None):
+def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
     """
     TODO : I/O error checking
     TODO : add checks for array sizes
@@ -160,15 +155,13 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
           13 VTK_WEDGE:          6 points       3d
           14 VTK_PYRAMID:        5 points       3d
        
-       e.g. Cells = ['1':None,'2':None,'3':None,'4':None,'5':E2V,.....]
+       e.g. Cells = {'1':None,'2':None,'3':None,'4':None,'5':E2V,.....}
     
        Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
     
        Poly data stored in Nx1 numpy array
        [Ncell I1 d1 d2 d3 ... dI1 I2 d1 d2 d3 ... dI2 I3 ... ... dINcell]
        Each I1 must be >=3
-    
-       index_base can override, what is found in check.  put 0 or 1 usually
     
        pdata = Ndof x Nfields
     
@@ -191,19 +184,13 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
             if (vtk_cell_info[j-1] == None) and (Cells[key] != None):
                 # Poly data
                 Ncells += Cells[key][0,0]
-                idx_min=min(idx_min,Cells[key].min())
                 raise NotImplementedError('Poly Data not implemented yet')
             elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
                 # non-Poly data
                 Ncells += Cells[key].shape[0]
-                idx_min=min(idx_min,Cells[key].min())
 
-    if index_base == None:
-        if abs(idx_min) > 0:
-            warnings.warn('Found data with 1-based index.  Attempting to adjust.  Override with index_base')
-        index_base=idx_min
                 
-    FID = open(vtk_name,'w')
+    FID = open(file_name,'w')
     FID.writelines('<?xml version=\"1.0\"?>\n')
     FID.writelines('<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n')
     FID.writelines('  <UnstructuredGrid>\n')
@@ -240,24 +227,16 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
                     cell_type[k]=j
                     cell_offset[k]=offset
                     k+=1
-                #    for i2 in range(0,offset):
-                #        FID.writelines('%d ' % (Cells[key][i1,i2]-index_base))
-                (Cells[key]-1).tofile(FID, ' ')
+                Cells[key].tofile(FID, ' ')
                 FID.writelines('\n');
     FID.writelines('        </DataArray>\n')
     FID.writelines('        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n')
     cell_offset=cell_offset.cumsum()
     cell_offset.tofile(FID,' ') # prints ints to file
     FID.writelines('\n');
-    #total_offset=0
-    #for k in range(0,Ncells):
-    #    total_offset+=cell_offset[k]
-    #    FID.writelines('%d ' % total_offset)
     FID.writelines('        </DataArray>\n')
     FID.writelines('        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n')
     cell_type.tofile(FID,' ') # prints ints to file
-    #for k in range(0,Ncells):
-    #    FID.writelines('%d ' % cell_type[k])
     FID.writelines('\n')
     FID.writelines('        </DataArray>\n')
     FID.writelines('      </Cells>\n')
@@ -271,8 +250,6 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
         for j in range(0,Nfields):
             FID.writelines('        <DataArray type=\"Float32\" Name=\"pfield%d\" format=\"ascii\">\n' % (j+1))
             pdata[:,j].tofile(FID,' ') # print floats to file
-            #for i in range(0,Ndof):
-            #    FID.writelines('%15.15f ' % pdata[i,j])
             FID.writelines('\n')
             FID.writelines('        </DataArray>\n')
     FID.writelines('      </PointData>\n')
@@ -293,8 +270,6 @@ def write_vtu(Verts,Cells,vtk_name='tmp.vtu',index_base=None,pdata=None,cdata=No
                         # non-Poly data
                         FID.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
                         cdata[k][key].tofile(FID,' ')
-                        #for i1 in range(0,cdata[k][key].shape[0]):
-                        #    FID.writelines('%15.15f ' % (cdata[k][key][i1,0]))
                         FID.writelines('\n')
                         FID.writelines('        </DataArray>\n')
     FID.writelines('      </CellData>\n')
