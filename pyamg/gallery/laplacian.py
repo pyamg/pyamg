@@ -1,3 +1,7 @@
+"""Discretizations of the Poisson problem"""
+
+__docformat__ = "restructuredtext en"
+
 __all__ = ['poisson']
 
 from scipy import arange, empty, intc, ravel, prod
@@ -10,13 +14,13 @@ def poisson( grid, spacing=None, dtype=float, format=None):
    
     
     Parameters
-    ==========
-        - grid : tuple
-            - grid dimensions e.g. (100,100)
+    ----------
+    grid : tuple of integers
+        grid dimensions e.g. (100,100)
 
 
     Examples
-    ========
+    --------
 
     >>> # 4 nodes in one dimension
     >>> poisson( (4,) ).todense()

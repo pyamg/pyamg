@@ -1,3 +1,7 @@
+"""Ruge-Stuben AMG (Classical AMG)"""
+
+__docformat__ = "restructuredtext en"
+
 from numpy import empty, empty_like
 
 from scipy.sparse import csr_matrix, isspmatrix_csr
@@ -54,9 +58,8 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
 def rs_strong_connections(A,theta):
     """Return a strength of connection matrix using the method of Ruge and Stuben
 
-        An off-diagonal entry A[i.j] is a strong connection iff
-
-                -A[i,j] >= theta * max( -A[i,k] )   where k != i
+    An off-diagonal entry A[i.j] is a strong connection iff
+        -A[i,j] >= theta * max( -A[i,k] )   where k != i
     """
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 

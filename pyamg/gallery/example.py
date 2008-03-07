@@ -1,5 +1,7 @@
 """Examples stored in files"""
 
+__docformat__ = "restructuredtext en"
+
 import os
 from fnmatch import fnmatch
 from glob import glob
@@ -39,18 +41,24 @@ example_names.sort()
 
 def load_example(name):
     """Load an example problem by name
-       
-    Each example is stored in a dictionary with one
-    or more of the following keys:
-        'A'        : sparse matrix
-        'B'        : near-nullspace candidates
-        'vertices' : dense array of nodal coordinates
-        'elements' : dense array of element indices
+
+    Parameters
+    ----------
+    name : string (e.g. 'airfoil')
+        Name of the example to load
+        
+    Notes
+    -----
+    Each example is stored in a dictionary with the following keys:
+        - 'A'        : sparse matrix
+        - 'B'        : near-nullspace candidates
+        - 'vertices' : dense array of nodal coordinates
+        - 'elements' : dense array of element indices
 
     Current example names are:%s
 
     Examples
-    ========
+    --------
     >>> from pyamg.gallery import load_example
     >>> ex = load_example('knot')
 

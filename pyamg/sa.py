@@ -1,5 +1,7 @@
 """Functions for Smoothed Aggregation AMG"""
 
+__docformat__ = "restructuredtext en"
+
 from numpy import array, arange, ones, zeros, sqrt, asarray, \
         empty, empty_like, diff
 
@@ -70,13 +72,12 @@ def sa_strong_connections(A, epsilon=0):
     """Return the standard SA strength of connection matrix for A
     
     An off-diagonal connection A[i,j] is strong iff
-
-        |A[i,j]| >= epsilon * sqrt( |A[i,i]| * |A[j,j]| )
+        abs(A[i,j]) >= epsilon * sqrt( abs(A[i,i] * A[j,j]) )
 
     References:
         Vanek, P. and Mandel, J. and Brezina, M., 
         "Algebraic Multigrid by Smoothed Aggregation for 
-         Second and Fourth Order Elliptic Problems", 
+        Second and Fourth Order Elliptic Problems", 
         Computing, vol. 56, no. 3, pp. 179--196, 1996.
 
     """
@@ -212,15 +213,15 @@ def sa_fit_candidates(AggOp,B,tol=1e-10):
 def sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0):
     """For a given matrix A and tentative prolongator T return the
     smoothed prolongator P
-
+    
         P = (I - omega/rho(S) S) * T
 
     where S is a Jacobi smoothing operator defined as follows:
-
         omega      - damping parameter
         rho(S)     - spectral radius of S (estimated)
         S          - inv(diag(A_filtered)) * A_filtered   (Jacobi smoother)
         A_filtered - sa_filtered_matrix(A,epsilon)
+
     """
 
     A_filtered = sa_filtered_matrix(A,epsilon) #use filtered matrix for anisotropic problems
@@ -299,20 +300,21 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
     max_coarse: {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
     
-    *Optional Parameters*:
-        strength : strength of connection method
-            Possible values are:
-                'standard' 
-                'ode'
-        
-        aggregate : aggregation method
-            Possible values are:
-                'standard'
-        
-        smooth : prolongation smoother
-            Possible values are:
-                'standard'
-                'energy_min'
+    Optional Parameters
+    -------------------
+    strength : strength of connection method
+        Possible values are:
+            'standard' 
+            'ode'
+    
+    aggregate : aggregation method
+        Possible values are:
+            'standard'
+    
+    smooth : prolongation smoother
+        Possible values are:
+            'standard'
+            'energy_min'
 
 
     Unused Parameters
@@ -333,10 +335,12 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
     *Example*:
         TODO
 
-    *References*:
+    References
+    ----------
+
+        Petr Vanek and Jan Mandel and Marian Brezina
         "Algebraic Multigrid by Smoothed Aggregation for Second and Fourth Order Elliptic Problems",
-            Petr Vanek and Jan Mandel and Marian Brezina
-            http://citeseer.ist.psu.edu/vanek96algebraic.html
+        http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
 

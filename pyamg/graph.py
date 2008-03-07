@@ -1,5 +1,7 @@
 """Algorithms related to Graphs"""
 
+__docformat__ = "restructuredtext en"
+
 import numpy
 from numpy import zeros, empty, asarray, empty_like, isscalar
 from scipy import rand
@@ -33,24 +35,26 @@ def maximal_independent_set(G, algo='serial'):
 
     Parameters
     ----------
-        G    - symmetric matrix (e.g. csr_matrix or csc_matrix)
-        algo - {'serial', 'parallel'}
-                Algorithm used to compute the MIS:
-                    serial   - greedy serial algorithm
-                    parallel - variant of Luby's parallel MIS algorithm
+    G    : symmetric matrix (e.g. csr_matrix or csc_matrix)
+        Matrix whose nonzero values represent a graph
+
+    algo : {'serial', 'parallel'}
+        Algorithm used to compute the MIS
+            * serial   : greedy serial algorithm
+            * parallel : variant of Luby's parallel MIS algorithm
 
     Returns
     -------
-        An array S where 
-            S[i] = 1 if vertex i is in the MIS
-            S[i] = 0 otherwise
+    An array S where 
+        S[i] = 1 if vertex i is in the MIS
+        S[i] = 0 otherwise
 
     Notes
     -----
-        Diagonal entries in the G (self loops) will be ignored.
-        
-        Luby's algorithm is significantly more expensive than the 
-        greedy serial algorithm.
+    Diagonal entries in the G (self loops) will be ignored.
+    
+    Luby's algorithm is significantly more expensive than the 
+    greedy serial algorithm.
 
     """
 
@@ -77,20 +81,22 @@ def vertex_coloring(G, method='MIS'):
 
     Parameters
     ----------
-        G      - symmetric matrix (e.g. csr_matrix or csc_matrix)
-        method - {string}
-            Algorithm used to compute the vertex coloring:
-                'MIS' - Maximal Independent Set
-                'JP'  - Jones-Plassmann (parallel)
-                'LDF' - Largest-Degree-First (parallel)
+    G      - symmetric matrix (e.g. csr_matrix or csc_matrix)
+        Matrix whose nonzero values represent a graph
+
+    method - {string}
+        Algorithm used to compute the vertex coloring:
+            * 'MIS' - Maximal Independent Set
+            * 'JP'  - Jones-Plassmann (parallel)
+            * 'LDF' - Largest-Degree-First (parallel)
 
     Returns
     -------
-        An array of vertex colors
+    An array of vertex colors (integers beginning at 0)
 
     Notes
     -----
-        Diagonal entries in the G (self loops) will be ignored.
+    Diagonal entries in the G (self loops) will be ignored.
 
     """
 

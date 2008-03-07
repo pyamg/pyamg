@@ -40,13 +40,13 @@ PMISc: Parallel Modified Independent Set in Color
     - Augments random weights with a (graph) vertex coloring
     - See References [1]
       
-CLJP: Clearly-Luby-Jones-Plassmann [1,2]
+CLJP: Clearly-Luby-Jones-Plassmann
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Convergence can deteriorate with increasing problem 
       size on structured meshes.  
     - See References [1,2]
 
-CLJP: Clearly-Luby-Jones-Plassmann in Color [1]
+CLJP: Clearly-Luby-Jones-Plassmann in Color
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Better scalability than CLJP on structured meshes.
     - See References [1]
@@ -80,16 +80,16 @@ References
     [2] Cleary AJ, Falgout RD, Henson VE, Jones JE. 
     "Coarse-grid selection for parallel algebraic multigrid"
     Proceedings of the 5th International Symposium on Solving Irregularly 
-    Structured Problems in Parallel. Springer: Berlin, 1998; 104–115.
+    Structured Problems in Parallel. Springer: Berlin, 1998; 104-115.
 
     [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
     "Reducing complexity in parallel algebraic multigrid preconditioners" 
-    SIAM Journal on Matrix Analysis and Applications 2006; 27:1019–1039.
+    SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
     [4] Ruge JW, Stuben K. 
     "Algebraic multigrid (AMG)"
     In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
-    SIAM: Philadelphia, PA, 1987; 73–130.
+    SIAM: Philadelphia, PA, 1987; 73-130.
     
 
 """
@@ -240,4 +240,5 @@ common_docstring = \
 
 """
 
+__docformat__ = "restructuredtext en"
 

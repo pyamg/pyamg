@@ -1,5 +1,7 @@
 """Linear Elasticity Examples"""
 
+__docformat__ = "restructuredtext en"
+
 __all__ = [ 'linear_elasticity' ]
 
 from scipy import array, matrix, ones, zeros, arange, empty, \
@@ -16,7 +18,7 @@ def linear_elasticity( grid, spacing=None, E=1e5, nu=0.3, format=None):
         raise NotImplemented,'no support for grid=%s' % str(grid)
 
 def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, format=None):
-    """ Q1 elements in 2 dimensions """
+    """Q1 elements in 2 dimensions"""
     X,Y = grid
     
     if X < 1 or Y < 1:
@@ -84,22 +86,29 @@ def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, form
 def stima4(vertices, lame, mu):
     """local stiffness matrix for two dimensional elasticity on a square element
 
-    Material Parameters:
-        - lame  : Lame's first parameter
-        - mu : shear modulus
+    Parameters
+    ----------
+    lame : Float
+        Lame's first parameter
+    mu   : Float 
+        shear modulus
 
-    Note:
-        Vertices should be listed in counter-clockwise order:
-            [3]----[2]
-             |      |
-             |      |
-            [0]----[1]
-        
-        Degrees of freedom are enumerated as follows:
-            [x=6,y=7]----[x=4,y=5]
-                |            |
-                |            |
-            [x=0,y=1]----[x=2,y=3]
+    Notes
+    -----
+    Vertices should be listed in counter-clockwise order::
+
+        [3]----[2]
+         |      |
+         |      |
+        [0]----[1]
+    
+    Degrees of freedom are enumerated as follows::
+
+        [x=6,y=7]----[x=4,y=5]
+            |            |
+            |            |
+        [x=0,y=1]----[x=2,y=3]
+
     """
 
     M    = lame + 2*mu # P-wave modulus
