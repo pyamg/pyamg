@@ -20,7 +20,7 @@ from mgviz import mgviz
 from pyamg.gallery import load_example
 from pyamg.sa import sa_standard_aggregation
 
-test=1
+test=0
 
 if test==0:
     ex = loadmat('../../Docs/logo/pyamg_s30a30.mat')

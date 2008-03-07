@@ -170,11 +170,14 @@ def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
                    1  2     3  4     5  6     7     8  9 10 11 12 13 14
     """
 
+    # number of indices per cell for each cell type
     vtk_cell_info = [1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
-    Ndof,dim   = Verts.shape
+    Ndof,dim = Verts.shape
     if dim==2:
-        Verts = concatenate((Verts,zeros((Ndof,1))),1)
+        # always use 3d coordinates (x,y) -> (x,y,0)
+        Verts = concatenate((Verts,zeros((Ndof,1))),1) 
+
 
     Ncells = 0
     idx_min = 1
@@ -195,21 +198,19 @@ def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
     FID.writelines('<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n')
     FID.writelines('  <UnstructuredGrid>\n')
     FID.writelines('    <Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n' % (Ndof,Ncells))
+    
     #------------------------------------------------------------------
     FID.writelines('      <Points>\n')
     FID.writelines('        <DataArray type=\"Float32\" Name=\"vertices\" NumberOfComponents=\"3\" format=\"ascii\">\n')
-
-    Verts.tofile(FID,' ') # prints Verts row-wise
-    
-    #for j in range(0,Ndof):
-    #    xyz = (Verts[j,0],Verts[j,1],Verts[j,2])
-    #    FID.writelines('%15.15f %15.15f %15.15f\n' % xyz)
+    Verts.tofile(FID, sep=' ') # prints Verts row-wise
     FID.writelines('\n')
     FID.writelines('        </DataArray>\n')
     FID.writelines('      </Points>\n')
     #------------------------------------------------------------------
+    
     #------------------------------------------------------------------
     FID.writelines('      <Cells>\n')
+    
     FID.writelines('        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n')
     cell_offset = zeros((Ncells,1),dtype=uint8) # offsets are zero indexed
     cell_type   = zeros((Ncells,1),dtype=uint8)
@@ -222,47 +223,56 @@ def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
                 raise NotImplementedError('Poly Data not implemented yet')
             elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
                 # non-Poly data
-                offset=Cells[key].shape[1]
-                for i1 in range(0,Cells[key].shape[0]):
-                    cell_type[k]=j
-                    cell_offset[k]=offset
-                    k+=1
-                Cells[key].tofile(FID, ' ')
+                cell_array = Cells[key]
+                offset     = cell_array.shape[1]
+                
+                cell_type  [k: k + cell_array.shape[0]] = j
+                cell_offset[k: k + cell_array.shape[0]] = offset
+                k += cell_array.shape[0]
+
+                cell_array.tofile(FID, sep=' ')  # array of cell connectivity data
                 FID.writelines('\n');
     FID.writelines('        </DataArray>\n')
+    
     FID.writelines('        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n')
     cell_offset=cell_offset.cumsum()
-    cell_offset.tofile(FID,' ') # prints ints to file
+    cell_offset.tofile(FID, sep=' ') # array of cell offsets (index of the end of each cell)
     FID.writelines('\n');
     FID.writelines('        </DataArray>\n')
+    
     FID.writelines('        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n')
-    cell_type.tofile(FID,' ') # prints ints to file
+    cell_type.tofile(FID, sep=' ')   # array of cell types (e.g. '3 3' for two VTK lines) 
     FID.writelines('\n')
     FID.writelines('        </DataArray>\n')
+    
     FID.writelines('      </Cells>\n')
     #------------------------------------------------------------------
+    
     #------------------------------------------------------------------
     FID.writelines('      <PointData>\n')
     if pdata!=None:
         if pdata.shape[0]!=Ndof:
-            raise ValueError, 'dimension of pdata must be of length = # of vertices'
+            raise ValueError('dimension of pdata must be of length = # of vertices')
         Nfields = pdata.shape[1]
         for j in range(0,Nfields):
             FID.writelines('        <DataArray type=\"Float32\" Name=\"pfield%d\" format=\"ascii\">\n' % (j+1))
-            pdata[:,j].tofile(FID,' ') # print floats to file
+            pdata[:,j].tofile(FID, sep=' ') # per vertex data
             FID.writelines('\n')
             FID.writelines('        </DataArray>\n')
     FID.writelines('      </PointData>\n')
+    #------------------------------------------------------------------
+
+    #------------------------------------------------------------------
     FID.writelines('      <CellData>\n')
     if cdata!=None:
         for k in range(0,len(cdata)):
             for j in range(1,15):
-                key='%d'%j
+                key= '%d' % j
                 if Cells.has_key(key):
                     if not cdata[k].has_key(key):
-                        raise ValueError, 'cdata needs to have the same dictionary form as Cells'
+                        raise ValueError('cdata needs to have the same dictionary form as Cells')
                     if cdata[k][key].shape[0] != Cells[key].shape[0]:
-                        raise ValueError, 'cdata needs to have the same dictionary number of as Cells'
+                        raise ValueError('cdata needs to have the same dictionary number of as Cells')
                     if (vtk_cell_info[j-1] == None) and (cdata[k][key] != None):
                         # Poly data
                         raise NotImplementedError,'Poly Data not implemented yet'
@@ -273,6 +283,8 @@ def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
                         FID.writelines('\n')
                         FID.writelines('        </DataArray>\n')
     FID.writelines('      </CellData>\n')
+    #------------------------------------------------------------------
+
     FID.writelines('    </Piece>\n')
     FID.writelines('  </UnstructuredGrid>\n')
     FID.writelines('</VTKFile>\n')
