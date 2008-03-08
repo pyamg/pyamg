@@ -289,3 +289,29 @@ def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
     FID.writelines('  </UnstructuredGrid>\n')
     FID.writelines('</VTKFile>\n')
     FID.close()
+    
+def write_mesh( Vert, E2V, file_name='tmp.vtu', mesh_type='tri',pdata=None, cdata=None):
+    """
+    Write mesh file for basic types of elements
+
+    Input
+    ====
+        file_name  : .vtu filename
+        Vert       : coordinate array (N x D)
+        E2V        : element index array (Nel x Nelnodes)
+        mesh_type  : type of elements: tri, quad, tet, hex (all 3d)
+        pdata      : data on vertices (N x Nfields)
+    """
+
+    if mesh_type == 'tri':
+        Cells = { '5': E2V }
+    elif mesh_type == 'quad':
+        Cells = { '9': E2V }
+    elif mesh_type == 'tet':
+        Cells = {'10': E2V }
+    elif mesh_type == 'hex':
+        Cells = {'12': E2V }
+    else:
+        raise ValueError('unknown mesh_type=%s' % mesh_type)
+
+    write_vtu( Verts=Vert, Cells=Cells, file_name=file_name, pdata=pdata)
