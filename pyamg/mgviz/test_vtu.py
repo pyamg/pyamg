@@ -5,48 +5,84 @@
 #from scipy.io import loadmat
 #from pyamg.gallery import load_example
 from scipy.testing import *
-from numpy import ones, zeros, linspace, kron, uint32
+import xml.parsers.expat
+from numpy import array, uint32
 from mgviz import write_vtu
 
 class TestWriteVtu(TestCase):
     def setUp(self):
-        nx=40
-        ny=30
-        Vert = zeros((nx*ny,2))
-        X = kron(ones((1,ny)),linspace(0,1,nx))
-        Y = kron(linspace(0,1,ny),ones((1,nx)))
-        Vert[:,0]=X
-        Vert[:,1]=Y
-        Nel = (nx-1)*(ny-1)*2
-        E2V = zeros((Nel,3),dtype=uint32)
-        k=0
-        for i in range(0,ny-1):
-            for j in range(0,nx-1):
-                E2V[k,:]   = [j+i*nx,j+1+(i+1)*nx,j+(i+1)*nx]
-                E2V[k+1,:] = [j+i*nx,(j+1)+i*nx,(j+1)+(i+1)*nx]
-                k+=2
-        print Vert
-        print E2V
-        Cells = {'5':E2V}
-        write_vtu(Vert,Cells,'test.vtu',None,None)
+        #cdata = ({'5':random.random((E2V.shape[0],1))}, {'5':2*random.random((E2V.shape[0],1))})
+        #data = zeros((Vert.shape[0],1))
+        #data[5:10]=1
+        #pdata=concatenate((random.random((Vert.shape[0],1)),data),1)
+        cases = []
+        class mesh:
+            file='test.vtu'
+            Vert=None
+            E2V=None
+            pdata=None
+            cdata=None
+        mesh=mesh()
+        mesh.file = 'test.vtu'
 
-    def test_default(self):
-        assert_equal( 1,1)
-    
+        # 1 triangle
+        mesh.Vert = array([[0.0,0.0],
+                           [0.0,1.0],
+                           [1.0,1.0]])
+        E2V = array([[0,2,1]],uint32)
+        mesh.Cells = {'5':E2V}
+        mesh.pdata = None
+        mesh.cdata = None
+        cases.append(mesh)
+        
+        # 2 triangles
+        mesh.Vert = array([[0.0,0.0],
+                           [1.0,0.0],
+                           [0.0,1.0],
+                           [1.0,1.0]])
+        E2V = array([[0,3,2],
+                     [0,1,3]],uint32)
+        mesh.Cells = {'5':E2V}
+        mesh.pdata = None
+        mesh.cdata = None
+        cases.append(mesh)
 
-#d = loadmat('Airfoil_p1_ref1.mat')
-#agg = loadmat('Airfoil_p1_ref1_aggs.mat')
+        # 8 triangles
+        mesh.Vert = array([[0.0,0.0],
+                           [1.0,0.0],
+                           [2.0,0.0],
+                           [0.0,1.0],
+                           [1.0,1.0],
+                           [2.0,1.0],
+                           [0.0,2.0],
+                           [1.0,2.0],
+                           [2.0,2.0]])
+        E2V = array([[0,4,3],
+                     [0,1,4],
+                     [1,5,4],
+                     [1,2,5],
+                     [3,7,6],
+                     [3,4,7],
+                     [4,8,7],
+                     [4,5,8]],uint32)
+        mesh.Cells = {'5':E2V}
+        mesh.pdata = None
+        mesh.cdata = None
+        cases.append(mesh)
 
-#ex = load_example('airfoil')
-#
-#E2V  = ex['elements']
-#Vert = ex['vertices']
-#
-#cdata = ({'5':random.random((E2V.shape[0],1))}, {'5':2*random.random((E2V.shape[0],1))})
-#data = zeros((Vert.shape[0],1))
-#data[5:10]=1
-#pdata=concatenate((random.random((Vert.shape[0],1)),data),1)
-#
+        self.cases=cases
+
+    def test_xml(self):
+        for mesh in self.cases:
+            try:
+                write_vtu(mesh.Vert,mesh.Cells,mesh.file,mesh.pdata,mesh.cdata)
+            except:
+                assert False, 'cannot write test.vtu'
+            try:
+                parser = xml.parsers.expat.ParserCreate()
+                parser.ParseFile(open(mesh.file, 'r'))
+            except Exception, ex:
+                assert False, 'problem: %s' % (ex)
 
 if __name__ == '__main__':
     nose.run(argv=['', __file__])
