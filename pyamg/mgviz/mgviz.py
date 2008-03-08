@@ -5,7 +5,7 @@ This will use the XML VTK format for unstructured meshes, .vtu
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
-__all__ = ['mgviz','write_vtu']
+__all__ = ['mgviz','write_vtu','write_mesh']
 
 import warnings
 
