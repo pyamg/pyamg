@@ -113,10 +113,8 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         write_vtu( Verts=Vert, Cells=Cells, file_name=file_name, pdata=pdata)
 
     if plot_type == 'primal':
-        Npts     = Vert.shape[0]
-        Nel      = E2V.shape[0]
-        Nelnodes = E2V.shape[1]
-
+        if Agg.getformat() is not 'csr':
+            Agg = Agg.tocsr()   # needed for .indices
         # mask[i] == True if all vertices in element i belong to the same aggregate
         ElementAggs = Agg.indices[E2V]
         mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
@@ -127,7 +125,7 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         colors = ones((Nel3,1))
         Cells  =  {'5':E2V3}
         cdata  = ({'5':colors},) # make sure it's a tuple
-        write_vtu(Verts=Vert,Cells=Cells,file_name=file_name,pdata=None,cdata=cdata)
+        write_vtu( Verts=Vert, Cells=Cells, file_name=file_name, pdata=None, cdata=cdata)
 
 def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
     """
