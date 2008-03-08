@@ -1,26 +1,17 @@
-from scipy.sparse import csr_matrix, isspmatrix_csr
-import warnings
-from mgviz import mgviz
-import os
-from scipy import rand, array
-from scipy.io import loadmat
-from pyamg import smoothed_aggregation_solver
-from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random, uint32
-from mgviz import mgviz, write_mesh
-from scipy.io import loadmat
-from pyamg import smoothed_aggregation_solver
-from pyamg.gallery import load_example
-from pyamg.sa import sa_standard_aggregation
-from pyamg.gallery import load_example
-from pyamg.sa import sa_standard_aggregation
 from scipy.testing import *
+
 from scipy.sparse import csr_matrix
-from numpy import array, ones, uint32
-from mgviz import mgviz
-from mgviz import write_vtu
+from scipy.io import loadmat
 
-test = 3
+from numpy import array, ones, zeros, uint32
 
+from pyamg import smoothed_aggregation_solver
+from pyamg.sa import sa_standard_aggregation
+from pyamg.gallery import load_example
+
+from mgviz import mgviz, write_mesh
+
+test = 2
 
 if test==0:
     """
