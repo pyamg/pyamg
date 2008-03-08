@@ -98,10 +98,10 @@ I maximal_independent_set_parallel(const I num_rows,
     I N = 0;
     I num_iters = 0;
 
-    bool work = true;
+    bool active_nodes = true;
 
-    while(work && (max_iters == -1 || num_iters < max_iters)){
-        work = false;
+    while(active_nodes && (max_iters == -1 || num_iters < max_iters)){
+        active_nodes = false;
 
         num_iters++;
         
@@ -110,8 +110,6 @@ I maximal_independent_set_parallel(const I num_rows,
 
             if(x[i] != active) continue;
             
-            work = true;
-
             const I row_start = Ap[i];
             const I row_end   = Ap[i+1];
     
@@ -143,6 +141,8 @@ I maximal_independent_set_parallel(const I num_rows,
                 }
                 N++;
                 x[i] = C;
+            } else {
+                active_nodes = true;
             }
         }
     } // end while
