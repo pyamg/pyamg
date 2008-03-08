@@ -95,9 +95,9 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
             pdata = pdata.reshape((Ndof,1))
         else:
             # color aggregates in sequence
-            Agg   = coo_matrix(A)
+            Agg   = coo_matrix(Agg)
             pdata = zeros((Ndof,1))
-            pdata[Agg.col] = Agg.row % Ncolors
+            pdata[Agg.row,0] = Agg.col % Ncolors
 
         if mesh_type == 'tri':
             Cells = { '5': E2V }

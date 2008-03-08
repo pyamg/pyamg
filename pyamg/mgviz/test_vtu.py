@@ -1,4 +1,5 @@
-""" Using the examples in the examples directory"""
+""" Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed
+xml."""
 
 from scipy.testing import *
 import xml.parsers.expat
@@ -9,13 +10,12 @@ class TestWriteVtu(TestCase):
     def setUp(self):
         cases = []
         class mesh:
-            file='test.vtu'
+            file_name='test.vtu'
             Vert=None
             E2V=None
             pdata=None
             cdata=None
         mesh=mesh()
-        mesh.file = 'test.vtu'
 
         # 1 triangle
         mesh.Vert = array([[0.0,0.0],
@@ -72,12 +72,12 @@ class TestWriteVtu(TestCase):
     def test_xml(self):
         for mesh in self.cases:
             try:
-                write_vtu(mesh.Vert,mesh.Cells,mesh.file,mesh.pdata,mesh.cdata)
+                write_vtu(mesh.Vert,mesh.Cells,mesh.file_name,mesh.pdata,mesh.cdata)
             except:
                 assert False, 'cannot write test.vtu'
             try:
                 parser = xml.parsers.expat.ParserCreate()
-                parser.ParseFile(open(mesh.file, 'r'))
+                parser.ParseFile(open(mesh.file_name, 'r'))
             except Exception, ex:
                 assert False, 'problem: %s' % (ex)
 
