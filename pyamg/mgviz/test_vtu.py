@@ -1,9 +1,5 @@
 """ Using the examples in the examples directory"""
 
-#import os
-#from scipy import rand, array
-#from scipy.io import loadmat
-#from pyamg.gallery import load_example
 from scipy.testing import *
 import xml.parsers.expat
 from numpy import array, uint32
@@ -11,10 +7,6 @@ from mgviz import write_vtu
 
 class TestWriteVtu(TestCase):
     def setUp(self):
-        #cdata = ({'5':random.random((E2V.shape[0],1))}, {'5':2*random.random((E2V.shape[0],1))})
-        #data = zeros((Vert.shape[0],1))
-        #data[5:10]=1
-        #pdata=concatenate((random.random((Vert.shape[0],1)),data),1)
         cases = []
         class mesh:
             file='test.vtu'
@@ -71,6 +63,11 @@ class TestWriteVtu(TestCase):
         cases.append(mesh)
 
         self.cases=cases
+
+        #cdata = ({'5':random.random((E2V.shape[0],1))}, {'5':2*random.random((E2V.shape[0],1))})
+        #data = zeros((Vert.shape[0],1))
+        #data[5:10]=1
+        #pdata=concatenate((random.random((Vert.shape[0],1)),data),1)
 
     def test_xml(self):
         for mesh in self.cases:
