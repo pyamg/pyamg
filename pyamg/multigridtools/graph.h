@@ -126,7 +126,7 @@ I maximal_independent_set_parallel(const I num_rows,
                     break;  
                 }
                 
-                if(x[j] == active){
+                if(xj == active){
                     const R yj = y[j];
                     if(yj > yi)
                         break;                     //neighbor is larger 
@@ -136,6 +136,11 @@ I maximal_independent_set_parallel(const I num_rows,
             }
    
             if(jj == row_end){
+                for(jj = row_start; jj < row_end; jj++){
+                    const I j  = Aj[jj];
+                    if(x[j] == active)
+                        x[j] = F;
+                }
                 N++;
                 x[i] = C;
             }
