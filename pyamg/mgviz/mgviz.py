@@ -113,8 +113,8 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         write_vtu( Verts=Vert, Cells=Cells, file_name=file_name, pdata=pdata)
 
     if plot_type == 'primal':
-        if Agg.getformat() is not 'csr':
-            Agg = Agg.tocsr()   # needed for .indices
+        Agg = csr_matrix(Agg)
+
         # mask[i] == True if all vertices in element i belong to the same aggregate
         ElementAggs = Agg.indices[E2V]
         mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
