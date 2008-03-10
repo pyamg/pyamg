@@ -58,7 +58,7 @@ def cr(S,method='concurrent',maxit=20):
         E = zeros((n,1))  # slowness measure
 
         # random iterations ---------------
-        for k in range(0,ntests)
+        for k in range(0,ntests):
 
             e  = 0.5*( 1 + random((n,1)))
             e[splitting>0] = 0
@@ -66,7 +66,7 @@ def cr(S,method='concurrent',maxit=20):
             enorm = norm(e)
 
             # relaxation iterations ---------------
-            for l in range(0,nrelax)
+            for l in range(0,nrelax):
 
                 if method == 'habituated':
                     gauss_seidel(A,e,zeros((n,1)),iterations=1)
