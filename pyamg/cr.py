@@ -4,29 +4,34 @@ from numpy.random import random
 from scipy.linalg import norm
 
 def cr(S,method='concurrent',maxit=20):
-    """
-    Usage
-    =====
+    """Compatible Relaxation
 
-    Input
-    =====
-        S      : sparse matrix (n x n) usually matrix A of Ax=b
-        method : concurrent or habituated
+    Parameters
+    ----------
+        S : csr_matrix
+            sparse matrix (n x n) usually matrix A of Ax=b
+        method : string
+            concurrent or habituated
+        maxit : int
+            maximum number of outer iterations
 
-    Output
-    ======
-        splitting : C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
+    Return
+    ------
+        splitting : array
+            C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
     
     Notes
-    =====
+    -----
         - Compatible relaxation: coarse set selection by relaxation as described in
             Livne, O.E., Coarsening by compatible relaxation.
             Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
+
         - concurrent: GS relaxation on F-points, leaving e_c = 0
+
         - habituated: full relaxation, setting e_c = 0
 
     Example
-    =======
+    -------
 
     """
     # parameters
@@ -113,30 +118,40 @@ def cr(S,method='concurrent',maxit=20):
     return splitting
 
 def binormalize( A, tol=1e-5, maxit=10):
-    """
+    """Binormalize matrix A
+
+    Attempt to create unit l_1 norm rows
+
     Usage
-    =====
+    -----
     B = binormalize( A, tol=1e-8, maxit=20 )
     n = A.shape[0]
     C = B.multiply(B)
     print C.sum(1) # check binormalization
 
-    Input
-    =====
-        A      : sparse matrix (n x n)
-        tol    : tolerance
-        x      : guess at the diagonal
-        maxit  : maximum number of iterations to try
+    Parameters
+    ----------
+        A : csr_matrix
+            sparse matrix (n x n)
+        tol : float
+            tolerance
+        x : array
+            guess at the diagonal
+        maxit : int
+            maximum number of iterations to try
 
-    Output
-    ======
-        d      : diagonal of D for use with B=DAD
+    Return
+    ------
+        C : csr_matrix
+            diagonally scaled A, C=DAD
          
     
     Notes
-    =====
+    -----
         - BIN Algorithm to binormalize a matrix following:
+
           Livne, Golub, Scaling by Binormalization, 2003
+
         - Goal: Scale A so that l_1 norm of the rows are equal to 1:
                 |\sum_{j=1}^N |b_{ij}| - 1| \leq tol
                 o B=DAD -> b_{ij}
@@ -144,7 +159,7 @@ def binormalize( A, tol=1e-5, maxit=10):
                 o algorithm is O(N log (1.0/tol))
 
     Example
-    =======
+    -------
 
     """
     if not isspmatrix(A): raise TypeError('expecting sparse matrix A')
@@ -202,14 +217,24 @@ def binormalize( A, tol=1e-5, maxit=10):
 
 
 def rowsum_stdev(x,beta):
-    """
+    """Compute row sum standard deviation
+
     Compute for approximation x, the std dev of the row sums
     s(x) = ( 1/n \sum_k  (x_k beta_k - betabar)^2 )^(1/2)
     with betabar = 1/n x'*beta
 
-    equation (7) in Livne/Golub
+    Parameters
+    ----------
+        x : array
+        beta : array
 
-    return s(x)/betabar
+    Notes
+    -----
+        equation (7) in Livne/Golub
+
+    return 
+    ------
+        s(x)/betabar : float
     """
     n=x.size
     betabar = (1.0/n) * dot(x,beta)
