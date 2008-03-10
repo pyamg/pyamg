@@ -6,6 +6,7 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
 __all__ = ['mgviz','write_vtu','write_mesh']
+__docformat__ = "restructuredtext en"
 
 import warnings
 
@@ -21,52 +22,74 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     """Coarse grid visualization: create .vtu files for use in Paraview
 
     Usage
-    =====
+    -----
         - mgviz(file_name, Vert, E2V, Agg, mesh_type, [A], [plot_type])
 
-    Input
-    =====
-        file_name  : .vtu filename
-        Vert       : coordinate array (N x D)
-        E2V        : element index array (Nel x Nelnodes)
-        Agg        : sparse matrix for the aggregate-vertex relationship (N x Nagg)  
-        mesh_type  : type of elements: tri, quad, tet, hex (all 3d)
-        plot_type  : primal or dual or points
+    Parameters
+    ----------
+        file_name : string
+            .vtu filename
+        Vert : array
+            coordinate array (N x D)
+        E2V : array
+            element index array (Nel x Nelnodes)
+        Agg : csr_matrix
+            sparse matrix for the aggregate-vertex relationship (N x Nagg)  
+        mesh_type : string
+            type of elements: tri, quad, tet, hex (all 3d)
+        plot_type : string
+            primal or dual or points
 
-    Output
-    ======
-        Writes data to .vtu file for use in paraview (xml 0.1 format)
+    Return
+    ------
+        - Writes data to .vtu file for use in paraview (xml 0.1 format)
     
     Notation
-    ========
-        D         : dimension of coordinate space
-        N         : # of vertices in the mesh represented in A
-        Ndof      : # of dof
-        Nel       : # of elements in the mesh
-        Nelnodes  : # of nodes per element (e.g. 3 for triangle)
-        Nagg      : # of aggregates
+    --------
+        D : 
+            dimension of coordinate space
+        N : 
+            # of vertices in the mesh represented in A
+        Ndof : 
+            # of dof
+        Nel : 
+            # of elements in the mesh
+        Nelnodes : 
+            # of nodes per element (e.g. 3 for triangle)
+        Nagg  : 
+            # of aggregates
 
     Notes
-    =====
+    -----
         There are three views of the aggregates:
-        1. primal:  nodes are collected and lines and triangles are grouped.  This
-                    has the benefit of clear separation between colored entities (aggregates)
-                    and blank space
-        2. dual:    aggregates are viewed through the dual mesh.  This has the benefit
-                    of filling the whole domain and aggregation through rounder (good) or long
-                    (bad) aggregates.
-        3. points:  just color different point different colors.  This works also
-                    with classical AMG
+
+        1. primal 
+            nodes are collected and lines and triangles are grouped.
+            This has the benefit of clear separation between colored entities
+            (aggregates) and blank space
+
+        2. dual 
+            aggregates are viewed through the dual mesh.  This has the 
+            benefit of filling the whole domain and aggregation through 
+            rounder (good) or long (bad) aggregates.
+
+        3. points 
+            just color different point different colors.  This works 
+            also with classical AMG
 
         And in different settings:
-        1. non-conforming:  shrink triangles toward barycenter
-        2. high-order:      view aggregates individually 
+
+        - non-conforming
+            shrink triangles toward barycenter
+
+        - high-order 
+            view aggregates individually 
 
     Examples
-    ========
+    --------
 
     TODO
-    ====
+    ----
     - add error checks
     - add support for vector problems: A = dN x dN
 
@@ -129,43 +152,62 @@ def mgviz(file_name, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
 def write_vtu( Verts, Cells, file_name='tmp.vtu', pdata=None, cdata=None):
     """
+    Write a .vtu file in xml format
+
+    Parameters
+    ----------
+    Verts: 
+        Ndof x 3 (if 2, then expanded by 0)
+        list of (x,y,z) point coordinates
+    Cells: 
+        Dictionary of with the keys
+
+    Return
+    ------
+        - writes a .vtu file for use in Paraview
+
+    Notes
+    -----
+        - Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
+    
+        - Poly data stored in Nx1 numpy array
+    
+        - [Ncell I1 d1 d2 d3 ... dI1 I2 d1 d2 d3 ... dI2 I3 ... ... dINcell]
+
+        - Each I1 must be >=3
+    
+        - pdata = Ndof x Nfields
+    
+        - cdata = list of dictionaries in the form of Cells
+
+    =====  =================== ============= ===
+    keys   type                n points      dim
+    =====  =================== ============= ===
+       1   VTK_VERTEX:         1 point        2d
+       2   VTK_POLY_VERTEX:    n points       2d
+       3   VTK_LINE:           2 points       2d
+       4   VTK_POLY_LINE:      n+1 points     2d
+       5   VTK_TRIANGLE:       3 points       2d
+       6   VTK_TRIANGLE_STRIP: n+2 points     2d
+       7   VTK_POLYGON:        n points       2d
+       8   VTK_PIXEL:          4 points       2d
+       9   VTK_QUAD:           4 points       2d
+       10  VTK_TETRA:          4 points       3d
+       11  VTK_VOXEL:          8 points       3d
+       12  VTK_HEXAHEDRON:     8 points       3d
+       13  VTK_WEDGE:          6 points       3d
+       14  VTK_PYRAMID:        5 points       3d
+    =====  =================== ============= ===
+       
+    Examples
+    --------
+    Cells = {'1':None,'2':None,'3':None,'4':None,'5':E2V,.....}
+    
+    TODO
+    ----
     TODO : I/O error checking
     TODO : add checks for array sizes
     TODO : add poly data structures (2,4,6,7 below)
-    
-    Verts: Ndof x 3 (if 2, then expanded by 0)
-           list of (x,y,z) point coordinates
-    Cells: Dictionary of with the keys
-      keys:  info:
-      -----  -------------------------------------
-          1  VTK_VERTEX:         1 point        2d
-          2  VTK_POLY_VERTEX:    n points       2d
-          3  VTK_LINE:           2 points       2d
-          4  VTK_POLY_LINE:      n+1 points     2d
-          5  VTK_TRIANGLE:       3 points       2d
-          6  VTK_TRIANGLE_STRIP: n+2 points     2d
-          7  VTK_POLYGON:        n points       2d
-          8  VTK_PIXEL:          4 points       2d
-          9  VTK_QUAD:           4 points       2d
-          10 VTK_TETRA:          4 points       3d
-          11 VTK_VOXEL:          8 points       3d
-          12 VTK_HEXAHEDRON:     8 points       3d
-          13 VTK_WEDGE:          6 points       3d
-          14 VTK_PYRAMID:        5 points       3d
-       
-       e.g. Cells = {'1':None,'2':None,'3':None,'4':None,'5':E2V,.....}
-    
-       Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
-    
-       Poly data stored in Nx1 numpy array
-       [Ncell I1 d1 d2 d3 ... dI1 I2 d1 d2 d3 ... dI2 I3 ... ... dINcell]
-       Each I1 must be >=3
-    
-       pdata = Ndof x Nfields
-    
-       cdata = list of dictionaries in the form of Cells
-    
-                   1  2     3  4     5  6     7     8  9 10 11 12 13 14
     """
 
     # number of indices per cell for each cell type
@@ -292,13 +334,22 @@ def write_mesh( Vert, E2V, file_name='tmp.vtu', mesh_type='tri',pdata=None, cdat
     """
     Write mesh file for basic types of elements
 
-    Input
-    ====
-        file_name  : .vtu filename
-        Vert       : coordinate array (N x D)
-        E2V        : element index array (Nel x Nelnodes)
-        mesh_type  : type of elements: tri, quad, tet, hex (all 3d)
-        pdata      : data on vertices (N x Nfields)
+    Parameters
+    ----------
+        file_name : string
+            .vtu filename
+        Vert : array
+            coordinate array (N x D)
+        E2V : array
+            element index array (Nel x Nelnodes)
+        mesh_type : string
+            type of elements: tri, quad, tet, hex (all 3d)
+        pdata : array
+            data on vertices (N x Nfields)
+
+    Return
+    ------
+        - writes a .vtu file for use in Paraview
     """
 
     if mesh_type == 'tri':
