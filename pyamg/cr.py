@@ -1,6 +1,7 @@
 from scipy.sparse import isspmatrix, csr_matrix
-from numpy import array, dot, multiply, power, sqrt, sum, ones, arange
+from numpy import array, dot, multiply, power, sqrt, sum, ones, arange, abs, inf
 from numpy.random import random
+from scipy.linalg import norm
 
 def cr(S,method='concurrent',maxit=20):
     """
@@ -28,35 +29,86 @@ def cr(S,method='concurrent',maxit=20):
     =======
 
     """
-    alpha_inc = 0.25
-    gamma = 1.5
+    # parameters
+    maxit = 10      # max number of outer iterations
+    ntests = 3      # number of random tests to do per iteration
+    nrelax = 4      # number of relaxation sweeps per test
+
+    smagic = 1      # parameter between 1 and 5 to account for fillin at the second level
+    gamma = 1.5     # cycle index.  use 1.5 for 2d
+
+
+    # initializaitons    
+    alpha = 0.0     # coarsening ratio
+    beta1 = inf     # quality criterion
+    n=S.shape[0]    # problem size
+    nC = 0          # number of current Coarse points
+    rhs = zeros(n,1); # rhs for Ae=0
 
     if not isspmatrix(S): raise TypeError('expecting sparse matrix A')
 
     A = binormalize(A)
     
-    # TODO  <-- works up to here
-    raise NotImplementedError, 'TODO:  not implemented beyond this point'
-
     splitting = empty( S.shape[0], dtype='uint8' )
    
-    e  = 0.5*( 1 + random((n,1)))
-    e[splitting>0]=0
-
+    # out iterations ---------------
     for m in range(0,maxit):
-        # perform relaxation
-        eold=e
-        e = 0.5*( 1 + random((n,1)))
-        e[splitting>0]=0
-        if method == 'habituated':
-            gauss_seidel(A,e,zeros((n,1)),iterations=4)
-            e[splitting>0]=0
-        elif method == 'concurrent':
-            raise NotImplementedError, 'not implemented: need an F-smoother'
 
-        # get quality
-        mu = norm(e)/norm(eold) 
-        mu = max([mu,0.1])
+        mu = 0.0        # convergence rate
+        E = zeros((n,1))  # slowness measure
+
+        # random iterations ---------------
+        for k in range(0,ntests)
+
+            e  = 0.5*( 1 + random((n,1)))
+            e[splitting>0] = 0
+
+            enorm = norm(e)
+
+            # relaxation iterations ---------------
+            for l in range(0,nrelax)
+
+                if method == 'habituated':
+                    gauss_seidel(A,e,zeros((n,1)),iterations=1)
+                    e[splitting>0]=0
+                elif method == 'concurrent':
+                    raise NotImplementedError, 'not implemented: need an F-smoother'
+
+                enorm_old = enorm
+                enorm     = norm(e)
+
+                if enorm <= 1e-14:
+                    # break out of loops
+                    ntests = k
+                    nrelax = l
+                    maxit = m
+            # end relax
+
+            # check slowness
+            E = where( abs(e)>E, abs(e), E )
+
+            # update convergence rate
+            mu = mu + enorm/enorm_old
+        # end random tests
+
+        # work
+        alpha = nC/n
+        W = (1 + (s-1)*gamma*alpha)/(1-gamma*alpha)
+        
+        # quality criterion
+        beta2 = beta1
+        beta1 = beta
+        beta = power(max([mu,0.1],1.0/W))
+        
+        # check if we're doing well
+        if (beta>beta1 and beta1>beta2) or m==(maxiters-1) or max(E)<1e-13:
+            return splitting
+
+        #
+        #
+        # TODO up to section 4.4 in Livne
+        raise NotImplementedError
+
 
     return splitting
 
@@ -74,7 +126,7 @@ def binormalize( A, tol=1e-5, maxit=10):
         A      : sparse matrix (n x n)
         tol    : tolerance
         x      : guess at the diagonal
-        maxti  : maximum number of iterations to try
+        maxit  : maximum number of iterations to try
 
     Output
     ======
