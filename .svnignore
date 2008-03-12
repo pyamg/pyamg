@@ -4,6 +4,7 @@
 *.bak
 *.so
 *.swp
+*.vtu
 dist
 build
 __svn_version__.py
