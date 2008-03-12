@@ -151,8 +151,9 @@ if test==3:
     mgviz(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
     mgviz(agg_file_name2, Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
 
-    # visualize the mesh easily
-    write_mesh(file_name, Vert, E2V, mesh_type='tri')
+    # visualize the mesh
+    fid = open(file_name,'w') #test with open file object
+    write_mesh(fid, Vert, E2V, mesh_type='tri')
 
 #if __name__ == '__main__':
 #    nose.run(argv=['', __file__])

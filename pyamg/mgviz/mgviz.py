@@ -122,18 +122,7 @@ def mgviz(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
             pdata = zeros((Ndof,1))
             pdata[Agg.row,0] = Agg.col % Ncolors
 
-        if mesh_type == 'tri':
-            Cells = { '5': E2V }
-        elif mesh_type == 'quad':
-            Cells = { '9': E2V }
-        elif mesh_type == 'tet':
-            Cells = {'10': E2V }
-        elif mesh_type == 'hex':
-            Cells = {'12': E2V }
-        else:
-            raise ValueError('unknown mesh_type=%s' % mesh_type)
-
-        write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata)
+        write_mesh(fid, Vert, E2V, mesh_type=mesh_type, pdata=pdata)
 
     if plot_type == 'primal':
         Agg = csr_matrix(Agg)
@@ -146,9 +135,7 @@ def mgviz(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         Nel3 = E2V3.shape[0]
 
         colors = ones((Nel3,1))
-        Cells  =  {'5':E2V3}
-        cdata  = ({'5':colors},) # make sure it's a tuple
-        write_vtu( fid, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata)
+        write_mesh(fid, Vert, E2V3, mesh_type=mesh_type, cdata=colors)
 
 def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     """
@@ -211,7 +198,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     """
 
     # number of indices per cell for each cell type
-    vtk_cell_info = [1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
+    vtk_cell_info = [-1, 1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
     Ndof,dim = Verts.shape
     if dim==2:
@@ -221,14 +208,13 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
 
     Ncells = 0
     idx_min = 1
-    for j in range(1,15):
-        key = '%d' % j
+    for key in range(1,15):
         if Cells.has_key(key):
-            if (vtk_cell_info[j-1] == None) and (Cells[key] != None):
+            if (vtk_cell_info[key] == None) and (Cells[key] != None):
                 # Poly data
                 Ncells += Cells[key][0,0]
                 raise NotImplementedError('Poly Data not implemented yet')
-            elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
+            elif (vtk_cell_info[key] != None) and (Cells[key] != None):
                 # non-Poly data
                 Ncells += Cells[key].shape[0]
 
@@ -256,18 +242,17 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     cell_offset = zeros((Ncells,1),dtype=uint8) # offsets are zero indexed
     cell_type   = zeros((Ncells,1),dtype=uint8)
     k=0
-    for j in range(1,15):
-        key = '%d' % j
-        if Cells.has_key(key):
-            if (vtk_cell_info[j-1] == None) and (Cells[key] != None):
+    for key in range(1,15):
+        if key in Cells:
+            if (vtk_cell_info[key] == None) and (Cells[key] != None):
                 # Poly data
                 raise NotImplementedError('Poly Data not implemented yet')
-            elif (vtk_cell_info[j-1] != None) and (Cells[key] != None):
+            elif (vtk_cell_info[key] != None) and (Cells[key] != None):
                 # non-Poly data
                 cell_array = Cells[key]
                 offset     = cell_array.shape[1]
                 
-                cell_type  [k: k + cell_array.shape[0]] = j
+                cell_type  [k: k + cell_array.shape[0]] = key
                 cell_offset[k: k + cell_array.shape[0]] = offset
                 k += cell_array.shape[0]
 
@@ -305,19 +290,18 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
 
     #------------------------------------------------------------------
     fid.writelines('      <CellData>\n')
-    if cdata!=None:
-        for k in range(0,len(cdata)):
-            for j in range(1,15):
-                key= '%d' % j
-                if Cells.has_key(key):
-                    if not cdata[k].has_key(key):
+    if cdata != None:
+        for k in range(0, len(cdata)):
+            for key in range(1,15):
+                if key in Cells:
+                    if key not in cdata[k]:
                         raise ValueError('cdata needs to have the same dictionary form as Cells')
                     if cdata[k][key].shape[0] != Cells[key].shape[0]:
                         raise ValueError('cdata needs to have the same dictionary number of as Cells')
-                    if (vtk_cell_info[j-1] == None) and (cdata[k][key] != None):
+                    if (vtk_cell_info[key] == None) and (cdata[k][key] != None):
                         # Poly data
                         raise NotImplementedError,'Poly Data not implemented yet'
-                    elif (vtk_cell_info[j-1] != None) and (cdata[k][key] != None):
+                    elif (vtk_cell_info[key] != None) and (cdata[k][key] != None):
                         # non-Poly data
                         fid.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
                         cdata[k][key].tofile(fid,' ')
@@ -348,6 +332,8 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
             type of elements: tri, quad, tet, hex (all 3d)
         pdata : array
             data on vertices (N x Nfields)
+        cdata : array
+            data on elements (Nel x Nfields)
 
     Return
     ------
@@ -355,14 +341,17 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
     """
 
     if mesh_type == 'tri':
-        Cells = { '5': E2V }
+        Cells = {  5: E2V }
     elif mesh_type == 'quad':
-        Cells = { '9': E2V }
+        Cells = {  9: E2V }
     elif mesh_type == 'tet':
-        Cells = {'10': E2V }
+        Cells = { 10: E2V }
     elif mesh_type == 'hex':
-        Cells = {'12': E2V }
+        Cells = { 12 : E2V }
     else:
         raise ValueError('unknown mesh_type=%s' % mesh_type)
 
-    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata)
+    if cdata is not None:
+        cdata = ( { Cells.keys()[0] : cdata }, )
+
+    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, cdata=cdata)
