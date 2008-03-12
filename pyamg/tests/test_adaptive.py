@@ -20,7 +20,7 @@ class TestAdaptiveSA(TestCase):
     def test_poisson(self):
         A = poisson( (100,100), format='csr' )
 
-        asa = adaptive_sa_solver(A, max_candidates = 1)
+        asa = adaptive_sa_solver(A, num_candidates = 1)
         sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
 
         b = rand(A.shape[0])
@@ -36,7 +36,7 @@ class TestAdaptiveSA(TestCase):
 #    def test_elasticity(self):
 #        A,B = linear_elasticity( (100,100), format='bsr' )
 #
-#        asa = adaptive_sa_solver(A, max_candidates = 3)
+#        asa = adaptive_sa_solver(A, num_candidates = 3)
 #        sa  = smoothed_aggregation_solver(A, B=B )
 #
 #        b = rand(A.shape[0])

@@ -49,38 +49,51 @@ def sa_hierarchy(A,B,AggOps):
     return As,Ps,Ts,Bs
 
 
-def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100, \
+def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, max_coarse=100, \
         epsilon=0.0, omega=4.0/3.0, symmetric=True, rescale=True,
         aggregation=None):
-    """Create a multilevel solver using Smoothed Aggregation (SA)
+    """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
-    *Parameters*:
 
-        A : {csr_matrix}
-            NxN matrix in CSR or BSR format
-        max_candidates : {integer} : default 1
-            Maximum number of near-nullspace candidates to generate.
-        mu : {integer} : default 5
-            Number of cycles used at each level of the adaptive setup phase.
-        max_levels: {integer} : default 10
-            Maximum number of levels to be used in the multilevel solver.
-        max_coarse: {integer} : default 500
-            Maximum number of variables permitted on the coarse grid.
-        epsilon: {float} : default 0.0
-            Strength of connection parameter used in aggregation.
-        omega: {float} : default 4.0/3.0
-            Damping parameter used in prolongator smoothing (0 < omega < 2)
-        symmetric: {boolean} : default True
-            True if A is symmetric, False otherwise
-        rescale: {boolean} : default True
-            If True, symmetrically rescale A by the diagonal
-            i.e. A -> D * A * D,  where D is diag(A)^-0.5
-        aggregation: {None, list of csr_matrix} : optional
-            List of csr_matrix objects that describe a user-defined
-            multilevel aggregation of the variables.
-            TODO ELABORATE
+    Parameters
+    ----------
 
-    *Notes*:
+    A : {csr_matrix, bsr_matrix}
+        Square matrix in CSR or BSR format
+    num_candidates : {integer} : default 1
+        Number of near-nullspace candidates to generate.
+    mu : {integer} : default 5
+        Number of cycles used at each level of the adaptive setup phase.
+
+    Optional Parameters
+    -------------------
+
+    improvement : {integer}
+        Number of times each candidate is improved
+    max_levels: {integer}
+        Maximum number of levels to be used in the multilevel solver.
+    max_coarse: {integer}
+        Maximum number of variables permitted on the coarse grid.
+    epsilon: {float}
+        Strength of connection parameter used in aggregation.
+    omega: {float} : default 4.0/3.0
+        Damping parameter used in prolongator smoothing (0 < omega < 2)
+    symmetric: {boolean} : default True
+        True if A is symmetric, False otherwise
+    rescale: {boolean} : default True
+        If True, symmetrically rescale A by the diagonal
+        i.e. A -> D * A * D,  where D is diag(A)^-0.5
+    aggregation: {sequence of csr_matrix objects}
+        List of csr_matrix objects that describe a user-defined
+        multilevel aggregation of the degrees of freedom.
+        For instance [ Agg0, Agg1 ] defines a three-level hierarchy
+        where the dimensions of A, Agg0 and Agg1 are compatible, i.e.
+        Agg0.shape[1] == A.shape[0] and Agg1.shape[1] == Agg0.shape[0].
+  
+                    
+
+    Notes
+    -----
         Unlike the standard Smoothed Aggregation (SA) method, adaptive SA
         does not require knowledge of near-nullspace candidate vectors.
         Instead, an adaptive procedure computes one or more candidates 
@@ -88,14 +101,17 @@ def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100,
         or the candidates have been invalidated due to changes to matrix A.
         
 
-    *Example*:
+    Example
+    -------
         TODO
 
-    *References*:
+    References
+    ----------
+
+        Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
         "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-            Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-            SIAM Review Volume 47 ,  Issue 2  (2005)
-            http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+        SIAM Review Volume 47 ,  Issue 2  (2005)
+        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
 
     """
     
@@ -113,7 +129,7 @@ def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100,
     #create SA using x here
     As,Ps,Ts,Bs = sa_hierarchy(A,x,AggOps)
 
-    for i in range(max_candidates - 1):
+    for i in range(num_candidates - 1):
         x = asa_general_setup_stage(As,Ps,Ts,Bs,AggOps,mu=mu)
         x /= norm(x)
 
@@ -121,8 +137,7 @@ def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100,
         As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
     #improve candidates?
-    if False:
-        print "improving candidates"
+    for i in range(improvement):
         B = Bs[0]
         for i in range(max_candidates):
             B = B[:,1:]
@@ -134,6 +149,10 @@ def adaptive_sa_solver(A, max_candidates=1, mu=5, max_levels=10, max_coarse=100,
     return multilevel_solver(As,Ps)
 
 def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation):
+    """Computes a complete aggregation and the first near-nullspace candidate
+
+
+    """
     if aggregation is not None:
         max_coarse = 0
         max_levels = len(aggregation) + 1

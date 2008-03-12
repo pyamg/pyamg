@@ -64,7 +64,7 @@ I sa_get_aggregates(const I n_row,
                     const I Ap[], const I Aj[],
                           I Bj[])
 {
-    // Bj[n] == -n_row means i-th node has not been aggregated
+    // Bj[n] == -1 means i-th node has not been aggregated
     std::fill(Bj, Bj+n_row, -1);
 
     std::vector<bool> aggregated(n_row, false);

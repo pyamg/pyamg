@@ -120,32 +120,31 @@ def sa_standard_aggregation(C):
     from a strength of connection matrix C
     """
 
-    if isspmatrix_csr(C): 
-        if C.shape[0] != C.shape[1]:
-            raise ValueError('expected square matrix')
-
-        index_type = C.indptr.dtype
-        num_rows   = C.shape[0]
-
-        Tj = empty( num_rows, dtype=index_type ) #stores the aggregate #s
-       
-        fn = multigridtools.sa_get_aggregates
-
-        num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
-
-        Tp = arange( num_rows+1, dtype=index_type)
-        Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
-
-
-        if num_aggregates >= (0.95*num_rows):
-            #aggregation didn't reduce the DoFs
-            num_aggregates = 1
-            Tj[:] = 0
-            return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
-        
-        return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
-    else:
+    if not isspmatrix_csr(C): 
         raise TypeError('expected csr_matrix') 
+
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('expected square matrix')
+
+    index_type = C.indptr.dtype
+    num_rows   = C.shape[0]
+
+    Tj = empty( num_rows, dtype=index_type ) #stores the aggregate #s
+    
+    fn = multigridtools.sa_get_aggregates
+
+    num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
+
+    Tp = arange( num_rows+1, dtype=index_type)
+    Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
+
+    if num_aggregates >= (0.95*num_rows):
+        #aggregation didn't reduce the DoFs
+        num_aggregates = 1
+        Tj[:] = 0
+        return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
+    
+    return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
 
 def sa_fit_candidates(AggOp,B,tol=1e-10):
     if not isspmatrix_csr(AggOp):
