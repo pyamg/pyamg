@@ -139,7 +139,7 @@ def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, 
     #improve candidates?
     for i in range(improvement):
         B = Bs[0]
-        for i in range(max_candidates):
+        for i in range(B.shape[1]):
             B = B[:,1:]
             As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
             x = asa_general_setup_stage(As,Ps,Ts,Bs,AggOps,mu)
@@ -183,7 +183,7 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
         else:
             W_l = aggregation[len(AggOps)]
         P_l,x = sa_fit_candidates(W_l,x)                   #step 4c
-        I_l   = sa_smoothed_prolongator(A_l,P_l)       #step 4d
+        I_l   = sa_smoothed_prolongator(A_l,P_l)           #step 4d
         A_l   = I_l.T.asformat(I_l.format) * A_l * I_l     #step 4e
         #TODO change variable names I_l -> P, P_l -> T
 

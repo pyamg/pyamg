@@ -5,7 +5,8 @@ __docformat__ = "restructuredtext en"
 from numpy import array, arange, ones, zeros, sqrt, asarray, \
         empty, empty_like, diff
 
-from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
+from scipy.sparse import csr_matrix, coo_matrix, \
+        isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 
 from sa_ode_strong_connections import sa_ode_strong_connections
 from sa_energy_min import sa_energy_min
