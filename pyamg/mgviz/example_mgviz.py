@@ -6,12 +6,12 @@ from scipy.io import loadmat
 from numpy import array, ones, zeros, uint32
 
 from pyamg import smoothed_aggregation_solver
-from pyamg.sa import sa_standard_aggregation
+from pyamg.sa import sa_standard_aggregation, sa_strong_connections
 from pyamg.gallery import load_example
 
 from mgviz import mgviz, write_mesh
 
-test = 3
+test = 2
 
 if test==0:
     """
@@ -124,7 +124,9 @@ if test==2:
     A    = ex['A']
     E2V  = ex['elements']
     Vert = ex['vertices']
-    Agg = aggex['aggregates']
+    C = sa_strong_connections(A.tocsr(), epsilon=0.25)
+    Agg  = sa_standard_aggregation(C.tocsr())
+    #Agg = aggex['aggregates']
 
     # visualize the aggregates two different ways
     mgviz(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')

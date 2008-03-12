@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
-from numpy import uint8, kron, arange
+from numpy import uint8, kron, arange, diff, c_, where
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -134,8 +134,23 @@ def mgviz(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         E2V3 = E2V[mask,:]
         Nel3 = E2V3.shape[0]
 
-        colors = ones((Nel3,1))
-        write_mesh(fid, Vert, E2V3, mesh_type=mesh_type, cdata=colors)
+        # 3 edges = 4 nodes.  find where the difference is 0 (bdy edge)
+        markedges = diff(c_[ElementAggs,ElementAggs[:,0]])
+        markedges[mask,:]=1
+        markedelements, markededges = where(markedges==0)
+
+        # now concatenate the edges (ie. first and next one (mod 3 index)
+        E2V2 = c_[[E2V[markedelements,markededges], 
+                   E2V[markedelements,(markededges+1)%3]]].T 
+        Nel2 = E2V2.shape[0]
+
+        colors2 = 2*ones((Nel2,1))  # color edges with twos
+        colors3 = 3*ones((Nel3,1))  # color triangles with threes
+
+        Cells  =  {3: E2V2, 5: E2V3}
+        cdata  = ({3: colors2, 5: colors3},) # make sure it's a tuple
+
+        write_vtu( fid, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata)
 
 def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     """
@@ -292,6 +307,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     fid.writelines('      <CellData>\n')
     if cdata != None:
         for k in range(0, len(cdata)):
+            fid.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
             for key in range(1,15):
                 if key in Cells:
                     if key not in cdata[k]:
@@ -303,10 +319,9 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
                         raise NotImplementedError,'Poly Data not implemented yet'
                     elif (vtk_cell_info[key] != None) and (cdata[k][key] != None):
                         # non-Poly data
-                        fid.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
                         cdata[k][key].tofile(fid,' ')
                         fid.writelines('\n')
-                        fid.writelines('        </DataArray>\n')
+            fid.writelines('        </DataArray>\n')
     fid.writelines('      </CellData>\n')
     #------------------------------------------------------------------
 
