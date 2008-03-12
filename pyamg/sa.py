@@ -135,16 +135,24 @@ def sa_standard_aggregation(C):
 
     num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
 
-    Tp = arange( num_rows+1, dtype=index_type)
-    Tx = ones(len(Tj),dtype='int8') #TODO replace this with something else?
+    if num_aggregates == 0:
+        return csr_matrix( (num_rows,1), dtype='int8' ) # all zero matrix
+    else:
+        shape = (num_rows, num_aggregates)
+        if Tj.min() == -1:
+            # some nodes not aggregated
+            mask = Tj != -1
+            row  = arange( num_rows, dtype=index_type )[mask]
+            col  = Tj[mask]
+            data = ones(len(col), dtype='int8')
+            return coo_matrix( (data,(row,col)), shape=shape).tocsr()
+        else:
+            # all nodes aggregated
+            Tp = arange( num_rows+1, dtype=index_type)
+            Tx = ones( len(Tj), dtype='int8')
+            return csr_matrix( (Tx,Tj,Tp), shape=shape)
 
-    if num_aggregates >= (0.95*num_rows):
-        #aggregation didn't reduce the DoFs
-        num_aggregates = 1
-        Tj[:] = 0
-        return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
-    
-    return csr_matrix((Tx,Tj,Tp),shape=(num_rows,num_aggregates))
+
 
 def sa_fit_candidates(AggOp,B,tol=1e-10):
     if not isspmatrix_csr(AggOp):

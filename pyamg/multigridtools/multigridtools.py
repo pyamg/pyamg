@@ -53,7 +53,7 @@ C_NODE = _multigridtools.C_NODE
 U_NODE = _multigridtools.U_NODE
 
 def sa_get_aggregates(*args):
-  """sa_get_aggregates(int n_row, int Ap, int Aj, int Bj) -> int"""
+  """sa_get_aggregates(int n_row, int Ap, int Aj, int x) -> int"""
   return _multigridtools.sa_get_aggregates(*args)
 
 def rs_cf_splitting(*args):

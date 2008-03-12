@@ -7372,7 +7372,7 @@ fail:
 
 
 static PyMethodDef SwigMethods[] = {
-	 { (char *)"sa_get_aggregates", _wrap_sa_get_aggregates, METH_VARARGS, (char *)"sa_get_aggregates(int n_row, int Ap, int Aj, int Bj) -> int"},
+	 { (char *)"sa_get_aggregates", _wrap_sa_get_aggregates, METH_VARARGS, (char *)"sa_get_aggregates(int n_row, int Ap, int Aj, int x) -> int"},
 	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"},
 	 { (char *)"rs_direct_interpolation_pass1", _wrap_rs_direct_interpolation_pass1, METH_VARARGS, (char *)"rs_direct_interpolation_pass1(int n_nodes, int Sp, int Sj, int splitting, int Bp)"},
 	 { (char *)"rs_strong_connections", _wrap_rs_strong_connections, METH_VARARGS, (char *)"\n"

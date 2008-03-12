@@ -57,91 +57,122 @@ void sa_strong_connections(const I n_row,
 }
 
 
-    
+/*
+ * Compute aggregates for a matrix A stored in CSR format
+ *
+ * Parameters:
+ *   n_row         - # of rows in A
+ *   Ap[n_row + 1] - CSR row pointer
+ *   Aj[nnz]       - CSR column indices
+ *    x[n_row]     - aggregate numbers for each node
+ *
+ * Returns:
+ *  The number of aggregates (== max(x[:]) + 1 )
+ *
+ * Notes:
+ *    It is assumed that A is symmetric.
+ *    A may contain diagonal entries (self loops)
+ *    Unaggregated nodes are marked with a -1
+ *    
+ */
     
 template <class I>
 I sa_get_aggregates(const I n_row,
-                    const I Ap[], const I Aj[],
-                          I Bj[])
+                    const I Ap[], 
+                    const I Aj[],
+                          I  x[])
 {
     // Bj[n] == -1 means i-th node has not been aggregated
-    std::fill(Bj, Bj+n_row, -1);
+    std::fill(x, x + n_row, 0);
 
-    std::vector<bool> aggregated(n_row, false);
-
-    I num_aggregates = 0;
+    I next_aggregate = 1; // number of aggregates + 1
 
     //Pass #1
     for(I i = 0; i < n_row; i++){
-        if(aggregated[i]){ continue; } //already marked
+        if(x[i]){ continue; } //already marked
 
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
 
         //Determine whether all neighbors of this node are free (not already aggregates)
-        bool free_neighborhood = true;
+        bool has_aggregated_neighbors = false;
+        bool has_neighbors            = false;
         for(I jj = row_start; jj < row_end; jj++){
-            if( aggregated[Aj[jj]] ){
-                free_neighborhood = false;
-                break;
+            const I j = Aj[jj];
+            if( i != j ){
+                has_neighbors = true;
+                if( x[j] ){
+                    has_aggregated_neighbors = true;
+                    break;
+                }
             }
         }    
 
-        if(!free_neighborhood){ continue; } //bail out
-
-        //Make an aggregate out of this node and its strong neigbors
-        Bj[i]         = num_aggregates;
-        aggregated[i] = true;
-        for(I jj = row_start; jj < row_end; jj++){
-            const I j = Aj[jj];
-            Bj[j]         = num_aggregates;
-            aggregated[j] = true;
+        if(!has_neighbors){
+            //isolated node, do not aggregate
+            x[i] = -n_row;
         }
-        num_aggregates++;
+        else if (!has_aggregated_neighbors){
+            //Make an aggregate out of this node and its neighbors
+            x[i] = next_aggregate;
+            for(I jj = row_start; jj < row_end; jj++){
+                x[Aj[jj]] = next_aggregate;
+            }
+            next_aggregate++;
+        }
     }
 
 
     //Pass #2
+    // Add unaggregated nodes to any neighboring aggregate
     for(I i = 0; i < n_row; i++){
-        if(aggregated[i]){ continue; } //already marked
+        if(x[i]){ continue; } //already marked
 
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
         
-            if(aggregated[j]){
-                Bj[i] = Bj[j];
+            const I xj = x[j];
+            if(xj > 0){
+                x[i] = -xj;
                 break;
             }
-
         }   
     }
-
-    // now Bj[n] == -1 means i-th node has not been aggregated
+   
+    next_aggregate--; 
 
     //Pass #3
     for(I i = 0; i < n_row; i++){
-        if(Bj[i] != -1){ continue; } //already marked
+        const I xi = x[i];
 
+        if(xi != 0){ 
+            // node i has been aggregated
+            if(xi > 0)
+                x[i] = xi - 1;
+            else if(xi == -n_row)
+                x[i] = -1;
+            else
+                x[i] = -xi - 1;
+            continue;
+        }
+
+        // node i has not been aggregated
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
 
-        Bj[i] = num_aggregates;
+        x[i] = next_aggregate;
 
         for(I jj = row_start; jj < row_end; jj++){
             const I j = Aj[jj];
 
-            if(Bj[j] != -1){ //unmarked neighbors
-                Bj[j] = num_aggregates;
+            if(x[j] == 0){ //unmarked neighbors
+                x[j] = next_aggregate;
             }
         }  
-        num_aggregates++;
+        next_aggregate++;
     }
 
-#ifdef DEBUG
-    for(I i = 0; i < n_row; i++){ assert(Bj[i] >= 0 && Bj[i] < num_aggregates); }
-#endif
-
-    return num_aggregates;
+    return next_aggregate; //number of aggregates
 }
 
 

@@ -69,10 +69,10 @@ class TestSA(TestCase):
 
             assert_equal( (result - expected).nnz, 0 )
     
-        # S is diagonal - should lump all DoFs together
+        # S is diagonal - no DoFs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
         result = sa_standard_aggregation(S)
-        expected = matrix([[1],[1],[1],[1]])
+        expected = matrix([[0],[0],[0],[0]])
         assert_equal(result.todense(),expected)
 
 #    def test_user_aggregation(self):
@@ -250,7 +250,7 @@ def reference_sa_standard_aggregation(C):
     R = set(range(n))
     j = 0
 
-    aggregates = empty(n,dtype=C.indices.dtype)
+    aggregates    = empty(n,dtype=C.indices.dtype)
     aggregates[:] = -1
 
     # Pass #1
