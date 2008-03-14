@@ -265,8 +265,3 @@ def p13d_local(vertices, lame, mu):
     return K
    
 
-V = array([[0,0,0],[1,0,0],[0,1,0],[0,0,1]])
-E = array([[0,1,2,3]])
-
-K = linear_elasticity_p1(V,E)
-
