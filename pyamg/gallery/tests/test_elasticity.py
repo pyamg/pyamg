@@ -8,23 +8,33 @@ from pyamg.gallery.elasticity import linear_elasticity, \
         q12d_local, p12d_local, p13d_local
 
 class TestLinearElasticityP1(TestCase):
-    def test_one_triangle(self):
+    def setUp(self):
+        cases = []
+
+        # one triangle
         V = array([[0,0],[1,0],[0,1]])
         E = array([[0,1,2]])
+        cases.append( (V,E) )
+        
+        # two triangles
+        V = array([[0,0],[1,0],[0,1],[1,1]])
+        E = array([[0,1,2],[1,3,2]])
+        cases.append( (V,E) )
 
-        A,B = linear_elasticity_p1(V,E)
-
-        # check that rigid body modes lie in nullspace
-        assert_almost_equal(A*B, 0*B)
-    
-    def test_one_tetrahedron(self):
+        # one tetrahedron
         V = array([[0,0,0],[1,0,0],[0,1,0],[0,0,1]])
         E = array([[0,1,2,3]])
+        cases.append( (V,E) )
 
-        A,B = linear_elasticity_p1(V,E)
+        self.cases = cases
 
-        # check that rigid body modes lie in nullspace
-        assert_almost_equal(A*B, 0*B)
+
+    def test_rigid_body_modes(self):
+        """check that rigid body modes lie in nullspace"""
+
+        for V,E in self.cases:
+            A,B = linear_elasticity_p1(V,E)
+            assert_almost_equal(A*B, 0*B)
 
 class TestLinearElasticityGrid(TestCase):
     def test_1x1(self):
