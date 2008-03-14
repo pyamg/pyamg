@@ -3,7 +3,8 @@ from scipy.testing import *
 from scipy import matrix, array
 from scipy.sparse import coo_matrix
 
-from pyamg.gallery.elasticity import linear_elasticity, stima4
+from pyamg.gallery.elasticity import linear_elasticity, \
+        q12d_local, p12d_local
 
 class TestLinearElasticity(TestCase):
     def test_1x1(self):
@@ -52,7 +53,7 @@ class TestLinearElasticity(TestCase):
         assert_almost_equal(B,B_expected)
 
 class TestLocalStiffnessMatrix(TestCase):
-    def test_stima4(self):
+    def test_q12d_local(self):
         L = matrix([[  4,  3, -4,  3, -2, -3,  2, -3],
                     [  3,  4, -3,  2, -3, -2,  3, -4],
                     [ -4, -3,  4, -3,  2,  3, -2,  3],
@@ -76,10 +77,9 @@ class TestLocalStiffnessMatrix(TestCase):
                            [ 1, 1],
                            [ 0, 1]])
         
-        assert_almost_equal( stima4(vertices, 1, 0) , L)
-        assert_almost_equal( stima4(vertices, 0, 1) , M)
-        assert_almost_equal( stima4(vertices, 1, 1) , L + M)
-           
+        assert_almost_equal(q12d_local(vertices, 1, 0) , L)
+        assert_almost_equal(q12d_local(vertices, 0, 1) , M)
+        assert_almost_equal(q12d_local(vertices, 1, 1) , L + M)
         
            
         L = matrix([[ 2,  3, -2,  3, -1, -3,  1, -3],
@@ -105,9 +105,45 @@ class TestLocalStiffnessMatrix(TestCase):
                            [ 2, 1],
                            [ 0, 1]])
         
-        assert_almost_equal( stima4(vertices, 1, 0) , L)
-        assert_almost_equal( stima4(vertices, 0, 1) , M)
-        assert_almost_equal( stima4(vertices, 1, 1) , L + M)
+        assert_almost_equal(q12d_local(vertices, 1, 0) , L)
+        assert_almost_equal(q12d_local(vertices, 0, 1) , M)
+        assert_almost_equal(q12d_local(vertices, 1, 1) , L + M)
+
+    def test_p12d_local(self):
+        L = array([[ 0.5,  0.5, -0.5,  0,   0,  -0.5], 
+                   [ 0.5,  0.5, -0.5,  0,   0,  -0.5],
+                   [-0.5, -0.5,  0.5,  0,   0,   0.5],
+                   [ 0. ,  0. ,  0. ,  0,   0,   0. ],
+                   [ 0. ,  0. ,  0. ,  0,   0,   0. ],
+                   [-0.5, -0.5,  0.5,  0,   0,   0.5]])
+
+        M = array([[ 1.5,  0.5, -1,  -0.5, -0.5,  0], 
+                   [ 0.5,  1.5,  0,  -0.5, -0.5, -1],
+                   [-1. ,  0. ,  1,   0. ,  0. ,  0],
+                   [-0.5, -0.5,  0,   0.5,  0.5,  0],
+                   [-0.5, -0.5,  0,   0.5,  0.5,  0],
+                   [ 0. , -1. ,  0,   0. ,  0. ,  1]])
+
+        V = array([[0,0],
+                   [1,0],
+                   [0,1]])
+
+        assert_almost_equal(p12d_local(V, 1, 0), L)
+        assert_almost_equal(p12d_local(V, 0, 1), M)
+        assert_almost_equal(p12d_local(V, 1, 1), L + M)
+       
+        # more general test
+        V = array([[0.137356377783359, 0.042667310003708],
+                   [1.107483961063919, 0.109422224983395],
+                   [0.169335451696327, 1.055274514490457]])
+        K = array([[ 2.73065573,  1.81050544, -2.42744817, -0.43828452, -0.30320756, -1.37222092],
+                   [ 1.81050544,  2.70104222, -1.43828452, -0.41203425, -0.37222092, -2.28900797],
+                   [-2.42744817, -1.43828452,  2.61567379, -0.06607114, -0.18822562,  1.50435566],
+                   [-0.43828452, -0.41203425, -0.06607114,  0.52563866,  0.50435566, -0.11360441],
+                   [-0.30320756, -0.37222092, -0.18822562,  0.50435566,  0.49143318, -0.13213474],
+                   [-1.37222092, -2.28900797,  1.50435566, -0.11360441, -0.13213474,  2.40261239]])
+
+        assert_almost_equal(p12d_local(V, 3, 1), K)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,15 @@
-"""Linear Elasticity Examples"""
+"""Constructs linear elasticity problems for first-order elements in 2D and 3D
+
+
+References
+----------
+
+    "Matlab implementation of the finite element method in elasticity"
+    Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263  
+    J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
+    http://www.math.hu-berlin.de/~cc/
+
+"""
 
 __docformat__ = "restructuredtext en"
 
@@ -6,7 +17,7 @@ __all__ = [ 'linear_elasticity' ]
 
 from scipy import array, matrix, ones, zeros, arange, empty, \
         hstack, vstack, tile, ravel, mgrid, concatenate, \
-        cumsum
+        cumsum, dot
 from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
    
@@ -41,7 +52,7 @@ def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, form
     lame = E * nu / ((1 + nu) * (1 - 2*nu)) # Lame's first parameter
     mu   = E / (2 + 2*nu)                   # shear modulus
     vertices = array([[0,0],[DX,0],[DX,DY],[0,DY]])
-    K = stima4(vertices, lame, mu ) 
+    K = q12d_local(vertices, lame, mu ) 
     
     nodes = arange( (X+1)*(Y+1) ).reshape(X+1,Y+1)
     LL = nodes[:-1,:-1]
@@ -83,7 +94,7 @@ def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, form
 
     return A.asformat(format),B 
 
-def stima4(vertices, lame, mu):
+def q12d_local(vertices, lame, mu):
     """local stiffness matrix for two dimensional elasticity on a square element
 
     Parameters
@@ -149,5 +160,21 @@ def stima4(vertices, lame, mu):
 
 
    
-   
-   
+
+def p12d_local(vertices, lame, mu):
+    assert(vertices.shape == (3,2))
+
+    A = vstack( (ones((1,3)),vertices.T))  
+    PhiGrad = inv(A)[:,1:] #gradients of basis functions
+    R = zeros((3,6))
+    R[ [[0],[2]], [0,2,4] ] = PhiGrad.T
+    R[ [[2],[1]], [1,3,5] ] = PhiGrad.T
+    C = mu*array([[2,0,0],[0,2,0],[0,0,1]]) + lame*array([[1,1,0],[1,1,0],[0,0,0]])
+    K = det(A)/2.0*dot(dot(R.T,C),R)
+    return K
+
+#V = array([[0,0],[1,0],[0,1]])
+#V = array([[0.137356377783359, 0.042667310003708],
+#           [1.107483961063919, 0.109422224983395],
+#           [0.169335451696327, 1.055274514490457]])
+#print stima3(V,3,1)
