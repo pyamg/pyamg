@@ -4,9 +4,29 @@ from scipy import matrix, array
 from scipy.sparse import coo_matrix
 
 from pyamg.gallery.elasticity import linear_elasticity, \
-        q12d_local, p12d_local
+        linear_elasticity_p1, \
+        q12d_local, p12d_local, p13d_local
 
-class TestLinearElasticity(TestCase):
+class TestLinearElasticityP1(TestCase):
+    def test_one_triangle(self):
+        V = array([[0,0],[1,0],[0,1]])
+        E = array([[0,1,2]])
+
+        A,B = linear_elasticity_p1(V,E)
+
+        # check that rigid body modes lie in nullspace
+        assert_almost_equal(A*B, 0*B)
+    
+    def test_one_tetrahedron(self):
+        V = array([[0,0,0],[1,0,0],[0,1,0],[0,0,1]])
+        E = array([[0,1,2,3]])
+
+        A,B = linear_elasticity_p1(V,E)
+
+        # check that rigid body modes lie in nullspace
+        assert_almost_equal(A*B, 0*B)
+
+class TestLinearElasticityGrid(TestCase):
     def test_1x1(self):
         A_expected = matrix ([[ 230769.23076923,       0.        ],
                               [      0.        ,  230769.23076923]])
@@ -145,6 +165,39 @@ class TestLocalStiffnessMatrix(TestCase):
 
         assert_almost_equal(p12d_local(V, 3, 1), K)
 
+
+    def test_p13d_local(self):
+        L = array([[ 1,  1,  1, -1,  0,  0,  0, -1,  0,  0,  0, -1.],
+                   [ 1,  1,  1, -1,  0,  0,  0, -1,  0,  0,  0, -1.],
+                   [ 1,  1,  1, -1,  0,  0,  0, -1,  0,  0,  0, -1.],
+                   [-1, -1, -1,  1,  0,  0,  0,  1,  0,  0,  0,  1.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [-1, -1, -1,  1,  0,  0,  0,  1,  0,  0,  0,  1.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0.],
+                   [-1, -1, -1,  1,  0,  0,  0,  1,  0,  0,  0,  1.]]) / 6.0
+
+        M = array([[ 4,  1,  1, -2, -1, -1, -1,  0,  0, -1,  0,  0],
+                   [ 1,  4,  1,  0, -1,  0, -1, -2, -1,  0, -1,  0],
+                   [ 1,  1,  4,  0,  0, -1,  0,  0, -1, -1, -1, -2],
+                   [-2,  0,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0],
+                   [-1, -1,  0,  0,  1,  0,  1,  0,  0,  0,  0,  0],
+                   [-1,  0, -1,  0,  0,  1,  0,  0,  0,  1,  0,  0],
+                   [-1, -1,  0,  0,  1,  0,  1,  0,  0,  0,  0,  0],
+                   [ 0, -2,  0,  0,  0,  0,  0,  2,  0,  0,  0,  0],
+                   [ 0, -1, -1,  0,  0,  0,  0,  0,  1,  0,  1,  0],
+                   [-1,  0, -1,  0,  0,  1,  0,  0,  0,  1,  0,  0],
+                   [ 0, -1, -1,  0,  0,  0,  0,  0,  1,  0,  1,  0],
+                   [ 0,  0, -2,  0,  0,  0,  0,  0,  0,  0,  0,  2]]) / 6.0
+
+        V = array([[0,0,0],[1,0,0],[0,1,0],[0,0,1]])
+
+        assert_almost_equal(p13d_local(V,1,0), L)
+        assert_almost_equal(p13d_local(V,0,1), M)
+        assert_almost_equal(p13d_local(V,1,1), L + M)
 
 if __name__ == '__main__':
     nose.run(argv=['', __file__])

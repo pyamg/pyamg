@@ -17,7 +17,7 @@ __all__ = [ 'linear_elasticity' ]
 
 from scipy import array, matrix, ones, zeros, arange, empty, \
         hstack, vstack, tile, ravel, mgrid, concatenate, \
-        cumsum, dot
+        cumsum, dot, eye, asarray
 from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
    
@@ -159,12 +159,83 @@ def q12d_local(vertices, lame, mu):
     return K
 
 
-   
+
+def linear_elasticity_p1( vertices, elements, E = 1e5, nu = 0.3, format=None):
+    """Q1 elements in 2 dimensions"""
+    
+    #compute local stiffness matrix
+    lame = E * nu / ((1 + nu) * (1 - 2*nu)) # Lame's first parameter
+    mu   = E / (2 + 2*nu)                   # shear modulus
+
+    vertices = asarray(vertices)
+    elements = asarray(elements)
+
+    D   = vertices.shape[1]    # spatial dimension
+    DoF = D*vertices.shape[0]  # number of degrees of freedom
+    NE  = elements.shape[0]    # number of elements
+
+    if elements.shape[1] != D + 1:
+        raise ValueError('dimension mismatch')
+
+    if D == 2:
+        local_K = p12d_local
+    elif D == 3:
+        local_K = p13d_local
+    else:
+        raise NotImplementedError('only dimension 2 and 3 are supported')
+
+    row = elements.repeat(D).reshape(-1,D)
+    row *= D
+    row += arange(D)
+    row = row.reshape(-1,D*(D+1)).repeat(D*(D+1), axis=0)
+    row = row.reshape(-1,D*(D+1),D*(D+1))
+    col = row.swapaxes(1,2)
+
+    data = empty( (NE, D*(D+1), D*(D+1)), dtype=float)
+
+    for i in xrange(NE):
+        element_indices  = elements[i,:]
+        element_vertices = vertices[element_indices,:]
+
+        data[i] = local_K(element_vertices, lame, mu)
+    
+    row  = row.ravel()
+    col  = col.ravel()
+    data = data.ravel()
+
+    A = coo_matrix( (data,(row,col)), shape=(DoF,DoF)).tocsr()  #sum duplicates
+    A = A.tobsr(blocksize=(D,D))
+
+    # compute rigid body modes
+    if D == 2:
+        B = zeros( (DoF,3) )
+        B[0::2,0] = 1              # vector field in x direction
+        B[1::2,1] = 1              # vector field in y direction
+
+        B[0::2,2] = -vertices[:,1] # rotation vector field (-y,x)
+        B[1::2,2] =  vertices[:,0]
+    else:
+        B = zeros( (DoF,6) )
+        B[0::3,0] = 1              # vector field in x direction
+        B[1::3,1] = 1              # vector field in y direction
+        B[2::3,2] = 1              # vector field in z direction
+
+        B[0::3,3] = -vertices[:,1] # rotation vector field (-y,x,0)
+        B[1::3,3] =  vertices[:,0] 
+        B[0::3,4] = -vertices[:,2] # rotation vector field (-z,0,x)
+        B[2::3,4] =  vertices[:,0] 
+        B[1::3,5] = -vertices[:,2] # rotation vector field (0,-z,y)
+        B[2::3,5] =  vertices[:,1] 
+
+    return A.asformat(format),B
+
+
 
 def p12d_local(vertices, lame, mu):
+    """local stiffness matrix for P1 elements in 2d"""
     assert(vertices.shape == (3,2))
 
-    A = vstack( (ones((1,3)),vertices.T))  
+    A = vstack( (ones((1,3)),vertices.T) )  
     PhiGrad = inv(A)[:,1:] #gradients of basis functions
     R = zeros((3,6))
     R[ [[0],[2]], [0,2,4] ] = PhiGrad.T
@@ -173,8 +244,29 @@ def p12d_local(vertices, lame, mu):
     K = det(A)/2.0*dot(dot(R.T,C),R)
     return K
 
-#V = array([[0,0],[1,0],[0,1]])
-#V = array([[0.137356377783359, 0.042667310003708],
-#           [1.107483961063919, 0.109422224983395],
-#           [0.169335451696327, 1.055274514490457]])
-#print stima3(V,3,1)
+
+def p13d_local(vertices, lame, mu):
+    """local stiffness matrix for P1 elements in 3d"""
+    assert(vertices.shape == (4,3))
+
+    A = vstack( (ones((1,4)),vertices.T) )
+    PhiGrad = inv(A)[:,1:] #gradients of basis functions
+    
+    R = zeros((6,12))
+    R[[0,3,4], 0::3] = PhiGrad.T
+    R[[3,1,5], 1::3] = PhiGrad.T
+    R[[4,5,2], 2::3] = PhiGrad.T
+    
+    C = zeros((6,6))
+    C[0:3,0:3] = lame + 2*mu*eye(3)
+    C[3:6,3:6] = mu*eye(3)
+    
+    K = det(A)/6*dot(dot(R.T,C),R)
+    return K
+   
+
+V = array([[0,0,0],[1,0,0],[0,1,0],[0,0,1]])
+E = array([[0,1,2,3]])
+
+K = linear_elasticity_p1(V,E)
+
