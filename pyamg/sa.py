@@ -14,7 +14,7 @@ from sa_energy_min import sa_energy_min
 import multigridtools
 from multilevel import multilevel_solver
 from utils import diag_sparse, approximate_spectral_radius, \
-                  symmetric_rescaling, scale_columns
+                  symmetric_rescaling, scale_columns, scale_rows
 
 __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
         'sa_strong_connections', 'sa_standard_aggregation',
@@ -239,7 +239,7 @@ def sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0):
     D_inv = 1.0 / D
     D_inv[D == 0] = 0
 
-    D_inv_A  = diag_sparse(D_inv) * A_filtered
+    D_inv_A = scale_rows(A, D_inv, copy=True)
     D_inv_A *= omega/approximate_spectral_radius(D_inv_A)
 
     # smooth tentative prolongator T

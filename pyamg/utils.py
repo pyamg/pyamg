@@ -95,13 +95,15 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
             # if upper 2x2 block of Hessenberg matrix H is almost symmetric,
             # and the user has not explicitly specified symmetric=False,
             # then switch to symmetric Lanczos algorithm
-            if symmetric is not False and j == 1:
-                if abs(H[1,0] - H[0,1]) < 1e-12:
-                    symmetric = True
-                    V = V[1:]
-                    H[1,0] = H[0,1]
-                    beta = H[2,1]
+            #if symmetric is not False and j == 1:
+            #    if abs(H[1,0] - H[0,1]) < 1e-12:
+            #        symmetric = True
+            #        V = V[1:]
+            #        H[1,0] = H[0,1]
+            #        beta = H[2,1]
     
+    #print "Approximated spectral radius in %d iterations" % (j + 1)
+
     return max([norm(x) for x in eigvals(H[:j+1,:j+1])])      
 
 
