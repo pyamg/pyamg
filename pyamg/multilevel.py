@@ -3,13 +3,14 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 import scipy
 import numpy
 from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ravel
-from numpy.linalg import norm
-
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve, splu
 
 from relaxation import gauss_seidel, jacobi, sor
 from utils import symmetric_rescaling, diag_sparse
+
+#from numpy.linalg import norm
+from utils import norm
 
 
 

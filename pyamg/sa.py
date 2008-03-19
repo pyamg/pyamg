@@ -340,7 +340,8 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
             multilevel aggregation of the variables.
             TODO ELABORATE
 
-    *Example*:
+    Example
+    -------
         TODO
 
     References

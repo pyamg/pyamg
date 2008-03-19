@@ -6,7 +6,6 @@ import numpy,scipy,scipy.sparse
 from numpy import sqrt, ravel, diff, zeros, zeros_like, inner, concatenate, \
                   asarray, hstack, ascontiguousarray, isinf, dot
 from numpy.random import randn, rand
-from scipy.linalg import norm
 from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 
 from relaxation import gauss_seidel
@@ -15,6 +14,8 @@ from utils import approximate_spectral_radius,hstack_csr,vstack_csr,diag_sparse
 from sa import sa_standard_aggregation, sa_smoothed_prolongator, \
         sa_fit_candidates, sa_strong_connections
 
+#from numpy.linalg import norm
+from utils import norm
 
 
 

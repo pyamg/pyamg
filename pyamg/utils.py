@@ -1,44 +1,74 @@
 __all__ =['approximate_spectral_radius','infinity_norm','diag_sparse',
-          'hstack_csr','vstack_csr']
+          'hstack_csr', 'vstack_csr', 'norm']
 
 import numpy
 import scipy
-from numpy import fromfile, ascontiguousarray, mat, int32
-from scipy import ravel, arange, concatenate, tile, asarray, sqrt, diff, \
-                  rand, zeros, ones, empty, asmatrix, dot
-from scipy.linalg import norm, eigvals
+from numpy import fromfile, ascontiguousarray, mat, int32, inner, dot, \
+                  ravel, arange, concatenate, tile, asarray, sqrt, diff, \
+                  zeros, ones, empty, asmatrix
+from scipy import rand                  
+from scipy.linalg import eigvals
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
+from scipy.sparse.linalg import eigen, eigen_symmetric
+
+def norm(x):
+    #currently 40x faster than scipy.linalg.norm(x)
+    x = ravel(x)
+    return sqrt(inner(x,x))
+
+
+#def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
+#    """approximate the spectral radius of a matrix
+#
+#    Parameters
+#    ----------
+#
+#    A : {dense or sparse matrix}
+#        E.g. csr_matrix, csc_matrix, ndarray, etc.
+#    tol : {scalar}
+#        Tolerance of approximation
+#    maxiter : {integer}
+#        Maximum number of iterations to perform
+#    symmetric : {boolean}
+#        True if A is symmetric, False otherwise (default)
+#
+#    Returns
+#    -------
+#        An approximation to the spectral radius of A
+#
+#    """
+#    if symmetric:
+#        method = eigen_symmetric
+#    else:
+#        method = eigen
+#    
+#    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter, return_eigenvectors=False) )
 
 
 def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
     """approximate the spectral radius of a matrix
 
-    *Parameters*:
-        A : dense or sparse matrix 
-            E.g. csr_matrix, csc_matrix, ndarray, etc.
+    Parameters
+    ----------
 
-        tol : {scalar}
-            Tolerance of approximation
-            Currently unused
+    A : {dense or sparse matrix}
+        E.g. csr_matrix, csc_matrix, ndarray, etc.
+    tol : {scalar}
+        Tolerance of approximation
+    maxiter : {integer}
+        Maximum number of iterations to perform
+    symmetric : {boolean}
+        True  - if A is symmetric
+                Lanczos iteration is used (more efficient)
+        False - if A is non-symmetric (default
+                Arnoldi iteration is used (less efficient)
 
-        maxiter : {integer}
-            Maximum number of iterations to perform
-
-        symmetric : {None,boolean}
-            True  - if A is symmetric
-                    Lanczos iteration is used (more efficient)
-            False - if A is non-symmetric
-                    Arnoldi iteration is used (less efficient)
-            None  - symmetry of A unknown
-                    Method chosen automatically (default)
-    *Returns*:
-        An approximation to the spectral radius of A (scalar value)
-
+    Returns
+    -------
+        An approximation to the spectral radius of A
     """
-    #from scipy.sandbox.arpack import eigen
-    #return norm(eigen(A, k=1, ncv=min(10,A.shape[0]), which='LM', tol=tol, return_eigenvectors=False))
    
     if not isspmatrix(A):
         A = asmatrix(A) #convert dense arrays to matrix type
@@ -58,9 +88,6 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
     H  = zeros((maxiter+1,maxiter))
     V = [v0]
 
-    #save past estimates
-    #estimates = []
-
     for j in range(maxiter):
         w = A * V[-1]
    
@@ -74,10 +101,11 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
             w -= alpha * V[-1]
             
             beta = norm(w)
+            H[j+1,j] = beta
+
             if (H[j+1,j] < 1e-10): break
             
             w /= beta
-            H[j+1,j] = beta
 
             V.append(w)
             V = V[-2:] #retain only last two vectors
@@ -97,6 +125,7 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
             # then switch to symmetric Lanczos algorithm
             #if symmetric is not False and j == 1:
             #    if abs(H[1,0] - H[0,1]) < 1e-12:
+            #        #print "using symmetric mode"
             #        symmetric = True
             #        V = V[1:]
             #        H[1,0] = H[0,1]

@@ -31,6 +31,16 @@ class TestUtils(TestCase):
             expected = max([norm(x) for x in eigvals(A)])
             assert_almost_equal( approximate_spectral_radius(A),   expected )
             assert_almost_equal( approximate_spectral_radius(Asp), expected )
+        
+        # try symmetric matrices
+        for A in cases:
+            A = A + A.transpose()
+            A = A.astype(float) 
+            Asp = csr_matrix(A)
+
+            expected = max([norm(x) for x in eigvals(A)])
+            assert_almost_equal( approximate_spectral_radius(A,symmetric=True),   expected )
+            assert_almost_equal( approximate_spectral_radius(Asp,symmetric=True), expected )
       
         #TODO test larger matrices
     
