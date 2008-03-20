@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""PyAMG: Algebraic Multigrid for Python
+"""PyAMG: Algebraic Multigrid Solvers in Python
 
-PyAMG is open-source software for solving large-scale 
-linear systems with algebraic multigrid.
+PyAMG is a library of Algebraic Multigrid (AMG) solvers 
+with a convenient Python interface.
 
 """
 
@@ -31,7 +31,7 @@ Operating System :: MacOS
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
-#os.environ['NO_SCIPY_IMPORT']='SciPy/setup.py'
+#os.environ['NO_PYAMG_IMPORT']='SciPy/setup.py'
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
