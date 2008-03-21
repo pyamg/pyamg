@@ -142,6 +142,15 @@ def jacobi(*args):
     """
   return _multigridtools.jacobi(*args)
 
+def gauss_seidel_indexed(*args):
+  """
+    gauss_seidel_indexed(int Ap, int Aj, float Ax, float x, float b, int Id, 
+        int row_start, int row_stop, int row_step)
+    gauss_seidel_indexed(int Ap, int Aj, double Ax, double x, double b, int Id, 
+        int row_start, int row_stop, int row_step)
+    """
+  return _multigridtools.gauss_seidel_indexed(*args)
+
 def maximal_independent_set_parallel(*args):
   """
     maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 

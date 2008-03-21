@@ -35,14 +35,15 @@
     const ctype Ai [ ],
     const ctype Aj [ ],
     const ctype Bp [ ],
-    const ctype Bi [ ],	
+    const ctype Bi [ ],
     const ctype Bj [ ],
     const ctype Sp [ ],
-    const ctype Si [ ],	
+    const ctype Si [ ],
     const ctype Sj [ ],
     const ctype Tp [ ],
-    const ctype Ti [ ],	
-    const ctype Tj [ ]
+    const ctype Ti [ ],
+    const ctype Tj [ ],
+    const ctype Id [ ]
 };
 %enddef
 
@@ -116,7 +117,8 @@
   ctype  x [],
   ctype  y [],
   ctype  z [],
-  ctype splitting []
+  ctype splitting [],
+  ctype Id []
 };
 %enddef
 
@@ -203,6 +205,7 @@ INSTANTIATE_BOTH(sa_strong_connections)
 INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
 INSTANTIATE_BOTH(jacobi)
+INSTANTIATE_BOTH(gauss_seidel_indexed)
 
 %template(maximal_independent_set_serial)   maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel) maximal_independent_set_parallel<int,int,double>;

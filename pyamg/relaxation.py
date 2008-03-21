@@ -172,3 +172,51 @@ def polynomial_smoother(A,x,b,coeffs):
         h = c*residual + A*h
 
     x += h
+
+def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
+    """
+    Perform Gauss-Seidel iteration on the linear system Ax=b
+
+     Input:
+         A - NxN csr_matrix
+         x - rank 1 ndarray of length N
+         b - rank 1 ndarray of length N
+     Optional:
+         iterations - number of iterations to perform (default: 1)
+         Id - index list to sweep over (default: None = all nodes)
+         sweep      - direction of sweep:
+                        'forward' (default), 'backward', or 'symmetric'
+    """
+
+    x = ravel(x) #TODO warn if not inplace
+    b = ravel(b)
+
+    if isspmatrix_csr(A):
+        pass
+    else:
+        warn('implicit conversion to CSR',SparseEfficiencyWarning)
+        A = csr_matrix(A)
+
+    if A.shape[0] != A.shape[1]:
+        raise ValueError,'expected square matrix'
+
+    if A.shape[1] != len(x) or len(x) != len(b):
+        raise ValueError,'unexpected number of unknowns'
+
+    if sweep == 'forward':
+        row_start,row_stop,row_step = 0,len(Id),1
+    elif sweep == 'backward':
+        row_start,row_stop,row_step = len(Id)-1,-1,-1 
+    elif sweep == 'symmetric':
+        for iter in xrange(iterations):
+            gauss_seidel(A,x,b,iterations=1,sweep='forward')
+            gauss_seidel(A,x,b,iterations=1,sweep='backward')
+        return
+    else:
+        raise ValueError,'valid sweep directions are \'forward\', \'backward\', and \'symmetric\''
+
+
+    for iter in xrange(iterations):
+        multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                                    x, b, Id,
+                                    row_start, row_stop, row_step)

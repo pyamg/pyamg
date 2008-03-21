@@ -123,6 +123,42 @@ void jacobi(const I Ap[],
     }
 }
 
+//
+// Guass Seidel Indexed will relax a specific index field Id
+//
+template<class I, class T>
+void gauss_seidel_indexed(const I Ap[], 
+                          const I Aj[], 
+                          const T Ax[],
+                                T  x[],
+                          const T  b[],
+                          const I Id[],
+                          const I row_start,
+                          const I row_stop,
+                          const I row_step)
+{
+  for(I i = row_start; i != row_stop; i += row_step) {
+    I i1 = Id[i];
+    I i2 = Id[i+1];
+    I start = Ap[i1];
+    I end   = Ap[i2];
+    T rsum  = 0;
+    T diag  = 0;
+
+    for(I jj = start; jj < end; ++jj){
+      I j = Aj[jj];
+      if (i1 == j){
+        diag = Ax[jj];
+      }
+      else{
+        rsum += Ax[jj]*x[j];
+      }
+    }
+
+    if (diag != 0){
+      x[i1] = (b[i1] - rsum)/diag;
+    }
+  }
+}
 
 #endif
-
