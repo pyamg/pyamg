@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
-from numpy import uint8, kron, arange, diff, c_, where
+from numpy import uint8, kron, arange, diff, c_, where, arange
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -97,13 +97,13 @@ def mgviz(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
     N        = Vert.shape[0]
     Ndof     = N
-    Nel      = E2V.shape[0]
-    Nelnodes = E2V.shape[1]
+    if E2V!=None:
+        Nel      = E2V.shape[0]
+        Nelnodes = E2V.shape[1]
+        if E2V.min() != 0:
+            warnings.warn('element indices begin at %d' % E2V.min() )
     Nagg     = Agg.shape[0]
     Ncolors  = 12
-        
-    if E2V.min() != 0:
-        warnings.warn('element indices begin at %d' % E2V.min() )
 
     # ------------------
     # points: basic
@@ -354,6 +354,8 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
     ------
         - writes a .vtu file for use in Paraview
     """
+    if E2V==None:
+        mesh_type='vertex'
 
     if mesh_type == 'tri':
         Cells = {  5: E2V }
@@ -363,6 +365,8 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
         Cells = { 10: E2V }
     elif mesh_type == 'hex':
         Cells = { 12 : E2V }
+    elif mesh_type=='vertex':
+        Cells = { 1: arange(0,Vert.shape[0]).reshape((Vert.shape[0],1))}
     else:
         raise ValueError('unknown mesh_type=%s' % mesh_type)
 
