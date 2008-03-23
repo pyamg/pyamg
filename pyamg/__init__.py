@@ -1,6 +1,5 @@
 "PyAMG: Algebraic Multigrid Solvers in Python"
 
-__all__ = ['test','__version__']
 
 from info import __doc__
 
@@ -18,6 +17,9 @@ from multilevel import *
 from rs import ruge_stuben_solver
 from sa import smoothed_aggregation_solver
 from gallery import *
+
+__all__ = filter(lambda s:not s.startswith('_'),dir())
+__all__ += ['test','__version__']
 
 
 from scipy.testing.pkgtester import Tester
