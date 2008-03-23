@@ -43,15 +43,34 @@ def stencil_grid(S, grid, format=None):
     return dia_matrix( (data,diags), shape=(N_v,N_v)).asformat(format)
 
 
-#S = array([-1,2,-1])
-#grid = (4,)
-S = array([[ 0,-1, 0],
-           [-1, 4,-1],
-           [ 0,-1, 0]])
-#S = array([[-1,-1,-1],
-#           [-1, 8,-1],
-#           [-1,-1,-1]])
-grid = (4,4)
+D = 3
+
+if D == 1:
+    # 1D Laplacian
+    S = array([-1,2,-1])
+    grid = (4,)
+
+if D == 2:
+    # 2D Laplacian
+    S = array([[ 0,-1, 0],
+               [-1, 4,-1],
+               [ 0,-1, 0]])
+    #S = array([[-1,-1,-1],
+    #           [-1, 8,-1],
+    #           [-1,-1,-1]])
+    grid = (4,4)
+
+if D == 3:
+    S = array([[[ 0, 0, 0],
+                [ 0,-1, 0],
+                [ 0, 0, 0]],
+               [[ 0,-1, 0],
+                [-1, 6,-1],
+                [ 0,-1, 0]],
+               [[ 0, 0, 0],  
+                [ 0,-1, 0],
+                [ 0, 0, 0]]])
+    grid = (3,4,5)               
 
 A = stencil_grid( S, grid )
 
