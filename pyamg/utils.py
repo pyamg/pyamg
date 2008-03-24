@@ -7,17 +7,17 @@ import scipy
 from numpy import fromfile, ascontiguousarray, mat, int32, inner, dot, \
                   ravel, arange, concatenate, tile, asarray, sqrt, diff, \
                   zeros, ones, empty, asmatrix
-from scipy import rand                  
+from scipy import rand, real                  
 from scipy.linalg import eigvals
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
-from scipy.sparse.linalg import eigen, eigen_symmetric
+from scipy.splinalg import eigen, eigen_symmetric
 
 def norm(x):
     #currently 40x faster than scipy.linalg.norm(x)
     x = ravel(x)
-    return sqrt(inner(x,x))
+    return real(sqrt(inner(x,x)))
 
 
 #def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
