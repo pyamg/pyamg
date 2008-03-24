@@ -1,9 +1,49 @@
-from scipy import *
+"""Construct sparse matrix from a local stencil"""
+
+__docformat__ = "restructuredtext en"
+
+from numpy import asarray, rank, prod, cumprod, zeros, vstack, unique, \
+        searchsorted
+
 from scipy.sparse import dia_matrix
 
 __all__ = ['stencil_grid']
 
 def stencil_grid(S, grid, format=None):
+    """Construct a sparse matrix form a local matrix stencil 
+    
+    Parameters
+    ----------
+    S : ndarray
+        matrix stencil stored in rank N array
+    grid : tuple
+        tuple containing the N grid dimensions
+    format : string
+        sparse matrix format to return, e.g. "csr", "coo", etc.
+
+    Returns
+    -------
+    Sparse matrix which represents the operator given by applying
+    stencil S at each vertex of a regular grid with given dimensions.
+
+    Notes
+    -----
+
+    The grid vertices are enumerated as arange(prod(grid)).reshape(grid).
+    This implies that the last grid dimension cycles fastest, while the 
+    first dimension cycles slowest.  For example, if grid=(2,3) then the
+    grid vertices are ordered as (0,0), (0,1), (0,2), (1,0), (1,1), (1,2).
+
+    This coincides with the ordering used by the NumPy functions 
+    ndenumerate() and mgrid().
+
+    Examples
+    --------
+
+    TODO
+
+    """
+
     S    = asarray(S)
     grid = tuple(grid)
 
@@ -22,6 +62,7 @@ def stencil_grid(S, grid, format=None):
     # diagonal offsets 
     diags = zeros(N_s, dtype=int)  
 
+    # compute index offset of each DoF within the stencil
     strides = cumprod( [1] + list(reversed(grid)) )[:-1]
     indices = S.nonzero()
     for i,s in zip(indices,S.shape):
@@ -33,6 +74,7 @@ def stencil_grid(S, grid, format=None):
 
     indices = vstack(indices).T
 
+    # zero boundary connections
     for index,diag in zip(indices,data):
         diag = diag.reshape(grid)
         for n,i in enumerate(index):

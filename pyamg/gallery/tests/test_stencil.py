@@ -6,8 +6,40 @@ from pyamg.gallery.laplacian import poisson
 from pyamg.gallery.stencil import *
 
 class TestStencil(TestCase):
+    def test_1d(self):
+        stencil = array([1,2,3])
+
+        result   = stencil_grid( stencil, (3,) ).todense()
+        expected = matrix([[2, 3, 0],
+                           [1, 2, 3],
+                           [0, 1, 2]])
+        assert_equal(result, expected)
+
+        stencil = array([1,2,3,4,5])
+        result   = stencil_grid( stencil, (5,) ).todense()
+        expected = matrix([[3, 4, 5, 0, 0],
+                           [2, 3, 4, 5, 0],
+                           [1, 2, 3, 4, 5],
+                           [0, 1, 2, 3, 4],
+                           [0, 0, 1, 2, 3]])
+        assert_equal(result, expected)
+
+    def test_2d(self):
+        stencil = array([[1,2,3],
+                         [4,5,6],
+                         [7,8,9]])
+
+        result   = stencil_grid( stencil, (2,3) ).todense()
+        expected = matrix([[5, 6, 0, 8, 9, 0],
+                           [4, 5, 6, 7, 8, 9],
+                           [0, 4, 5, 0, 7, 8],
+                           [2, 3, 0, 5, 6, 0],
+                           [1, 2, 3, 4, 5, 6],
+                           [0, 1, 2, 0, 4, 5]])
+        assert_equal(result, expected)
+
     def test_poisson1d(self):
-        stencil = array([-1, 2, -1])
+        stencil = array([-1, 2,-1])
 
         cases = []
         cases.append( ((1,),matrix([[2]])) )
