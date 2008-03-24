@@ -1,44 +1,52 @@
-from scipy.sparse import isspmatrix, csr_matrix
-from numpy import array, dot, multiply, power, sqrt, sum, ones, arange
-from numpy import abs, inf, ceil, zeros, where, bool
-from numpy.random import random
-from scipy.linalg import norm
-from pyamg.relaxation import gauss_seidel
+"""Compatible Relaxation"""
+
+__docformat__ = "restructuredtext en"
+
 #import time
 
-def cr(S,method='habituated'):
-    """Compatible Relaxation
+from numpy import array, dot, multiply, power, sqrt, sum, ones, arange, \
+        abs, inf, ceil, zeros, where, bool
+from numpy.random import random
+from scipy.linalg import norm
+from scipy.sparse import isspmatrix, csr_matrix
+
+from pyamg.relaxation import gauss_seidel
+
+__all__ = ['cr','binormalize']
+
+def cr(S, method='habituated'):
+    """Use Compatible Relaxation to compute a C/F splitting 
 
     Parameters
     ----------
-        S : csr_matrix
-            sparse matrix (n x n) usually matrix A of Ax=b
-        method : string
-            concurrent or habituated
-        maxit : int
-            maximum number of outer iterations
+    S : csr_matrix
+        sparse matrix (n x n) usually matrix A of Ax=b
+    method : {'habituated','concurrent'}
+        Method used during relaxation:
+            - concurrent: GS relaxation on F-points, leaving e_c = 0
+            - habituated: full relaxation, setting e_c = 0
+    maxiter : int
+        maximum number of outer iterations
 
     Return
     ------
-        splitting : array
-            C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
-    
-    Notes
-    -----
+    splitting : array
+        C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
+   
+
+    References
+    ----------
         - Compatible relaxation: coarse set selection by relaxation as described in
             Livne, O.E., Coarsening by compatible relaxation.
             Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
 
-        - concurrent: GS relaxation on F-points, leaving e_c = 0
-
-        - habituated: full relaxation, setting e_c = 0
 
     Example
     -------
 
     """
     # parameters (paper notation)
-    maxit = 20      # (lambda) max number of outer iterations
+    maxiter = 20    # (lambda) max number of outer iterations
     ntests = 3      # (nu) number of random tests to do per iteration
     nrelax = 4      # (eta) number of relaxation sweeps per test
 
@@ -65,7 +73,7 @@ def cr(S,method='habituated'):
     splitting = zeros( (S.shape[0],1), dtype='uint8' )
    
     # out iterations ---------------
-    for m in range(0,maxit):
+    for m in range(0,maxiter):
 
         #print "[m = %d"%m
         mu = 0.0        # convergence rate
@@ -99,7 +107,7 @@ def cr(S,method='habituated'):
                     # break out of loops
                     ntests = k
                     nrelax = l
-                    maxit = m
+                    maxiter = m
             # end relax
 
             # check slowness
@@ -121,7 +129,7 @@ def cr(S,method='habituated'):
         beta = power(max([mu, 0.1]), 1.0 / W)
         
         # check if we're doing well
-        if (beta>beta1 and beta1>beta2) or m==(maxit-1) or max(E)<1e-13:
+        if (beta>beta1 and beta1>beta2) or m==(maxiter-1) or max(E)<1e-13:
             return splitting.ravel()
 
         # now add points
@@ -170,28 +178,28 @@ def cr(S,method='habituated'):
 
     return splitting.ravel()
 
-def binormalize( A, tol=1e-5, maxit=10):
+def binormalize( A, tol=1e-5, maxiter=10):
     """Binormalize matrix A
 
     Attempt to create unit l_1 norm rows
 
     Usage
     -----
-    B = binormalize( A, tol=1e-8, maxit=20 )
+    B = binormalize( A, tol=1e-8, maxiter=20 )
     n = A.shape[0]
     C = B.multiply(B)
     print C.sum(1) # check binormalization
 
     Parameters
     ----------
-        A : csr_matrix
-            sparse matrix (n x n)
-        tol : float
-            tolerance
-        x : array
-            guess at the diagonal
-        maxit : int
-            maximum number of iterations to try
+    A : csr_matrix
+        sparse matrix (n x n)
+    tol : float
+        tolerance
+    x : array
+        guess at the diagonal
+    maxiter : int
+        maximum number of iterations to try
 
     Return
     ------
@@ -232,7 +240,7 @@ def binormalize( A, tol=1e-5, maxit=10):
 
     #3
     #t=0.0
-    while stdev>tol and it<maxit:
+    while stdev > tol and it < maxiter:
         for i in range(0,n):
             # solve equation x_i, keeping x_j's fixed
             # see equation (12)

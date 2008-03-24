@@ -30,7 +30,8 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, and CLJPc
 
-    References:
+    References
+    ----------
         Trottenberg, U., C. W. Oosterlee, and Anton Schuller.
         "Multigrid"
         San Diego: Academic Press, 2001.
@@ -70,7 +71,7 @@ def rs_strong_connections(A,theta):
     multigridtools.rs_strong_connections( A.shape[0], theta, 
             A.indptr, A.indices, A.data, Sp,Sj,Sx)
 
-    return csr_matrix((Sx,Sj,Sp),shape=A.shape)
+    return csr_matrix((Sx,Sj,Sp), shape=A.shape)
 
 
 
