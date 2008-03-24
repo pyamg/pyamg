@@ -4,8 +4,8 @@ from scipy.sparse import csr_matrix, spdiags, kron
 from pyamg.gallery.laplacian import *
 import cr
 import sys
-sys.path.append('./mgviz')
-from mgviz import mgviz
+sys.path.append('./vis')
+from vis import coarse_grid_vis
 
 def generate_from_stencil(sten,nx,ny):
 #    """
@@ -115,8 +115,8 @@ if test==3:
     data = ones((N,1)).ravel()
     Agg = csr_matrix( (data, (row, col)), shape=(N, 2))
 
-    mgviz('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
-    #mgviz('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='vertex', A=None, plot_type='points')
+    coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
+    #coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='vertex', A=None, plot_type='points')
 
 if test==1:
     n = 25
@@ -146,7 +146,7 @@ if test==1:
     data = ones((N,1)).ravel()
     Agg = csr_matrix( (data, (row, col)), shape=(N, 2))
 
-    mgviz('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
+    coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
 
 if test==2:
     n = 25
