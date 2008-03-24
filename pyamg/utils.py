@@ -1,5 +1,6 @@
 __all__ =['approximate_spectral_radius','infinity_norm','diag_sparse',
-          'hstack_csr', 'vstack_csr', 'norm']
+          'hstack_csr','vstack_csr', 'norm', 'UnAmal', 'Coord2RBM', 
+	  'BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect', 'BSR_Get_Colindices']
 
 import numpy
 import scipy
@@ -277,46 +278,42 @@ def vstack_csr(A,B):
 ##############################################################################################
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
-	#Input:	 A:		Amalmagated matrix, assumed to be in CSR format
-	#	 RowsPerBlock &	
-	#	 ColsPerBlock   Give A blocks of size (RowsPerBlock, ColsPerBlock)	
+	"""Unamalgamate a CSR A with blocks of 1's.  
+	Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock)
+
+	Input
+	=====
+	A			Amalmagated matrix, assumed to be in CSR format
+	RowsPerBlock &	
+	ColsPerBlock		Give A blocks of size (RowsPerBlock, ColsPerBlock)
+	
+	Output
+	======
+	A_UnAmal:		BSR matrix that is essentially a Kronecker product of 
+				A and ones(RowsPerBlock, ColsPerBlock
+
+	"""
+	#Input:	 	
 	#
-	#Output: A_UnAmal:	BSR matrix that is essentially a Kronecker product of 
-	#			A and ones((blocksize,blocksize))
+	#Output: 
 	data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
 	return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
 
-def read_coord(filename):
-	#Input:		filename:	File of x,y,z coordinates.  Formatting of file must be
-	#				<Begin File>
-	#				number_of_coordinates
-	#				x_1	y_1	z_1
-	#				x_2	y_2	z_2
-	#				...	...	...
-	#				x_n	y_n	z_n
-	#				<End File>
-	#
-	#Output:	X,Y,Z:		(number_of_coordinate  x  1) vectors containing the coordinates
-
-	fid = open(filename)
-
-	N      = int(fid.readline()) 
-
-	XYZ = fromfile(fid, sep=' ').reshape(-1,3)  # X,Y,Z in columns
-
-	X  = ascontiguousarray(XYZ[:,0], dtype='float')
-	Y  = ascontiguousarray(XYZ[:,1], dtype='float')
-	Z  = ascontiguousarray(XYZ[:,2], dtype='float')
-
-	return  X,Y,Z
-
-
 def Coord2RBM(numNodes, numPDEs, x, y, z):
-	#Input:		numNodes:	Number of nodes
-	#		numPDEs:	Number of dofs per node
-	#		x,y,z:		Coordinate vectors
-	#
-	#Output:	rbm:		Matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid body modes
+	"""Convert 2D or 3D coordinates into Rigid body modes for use as near nullspace modes in elasticity AMG solvers
+
+	Input
+	=====
+	numNodes	Number of nodes
+	numPDEs		Number of dofs per node
+	x,y,z		Coordinate vectors
+
+
+	Output
+	======
+	rbm:		Matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid body modes
+
+	"""
 
 	#check inputs
 	if(numPDEs == 1):
@@ -392,11 +389,19 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 ############################################################################################
 
 def BSR_Get_Row(A, i):
-#	Input:	A:	Matrix assumed to be in BSR format
-#		i:	row number
-#
-#	Output:	z:	 Actual nonzero values for row i
-#		colindx: Array of column indices for the nonzeros of row i
+	"""Return row i in BSR matrix A.  Only nonzero entries are returned
+
+	Input
+	=====
+	A	Matrix assumed to be in BSR format
+	i	row number
+
+	Output
+	======
+	z	 Actual nonzero values for row i
+		 colindx Array of column indices for the nonzeros of row i
+	
+	"""
 	
 	blocksize = A.blocksize[0]
 	BlockIndx = i/blocksize
@@ -421,15 +426,22 @@ def BSR_Get_Row(A, i):
 
 	return mat(z).T, colindx[0,:]
 
-def BSR_Row_WriteScalar(A, i, x):
-#	Input:	A:	Matrix assumed to be in BSR format
-#		i:	row number
-#		x:	scalar to overwrite nonzeros of row i in A
-#
-#	Output:	A:	x is a scalar and all nonzeros in row i of A 
-#			have been overwritten with x.  If x is a vector,
-#			the first length(x) nonzeros in row i of A have been
-#			overwritten with entries from x
+def BSR_Row_WriteScalar(A, i, x): 
+	"""Write a scalar at each nonzero location in row i of BSR matrix A
+
+	Input
+	=====
+	A	Matrix assumed to be in BSR format
+	i	row number
+	x	scalar to overwrite nonzeros of row i in A
+
+	Output
+	======
+	A	All nonzeros in row i of A have been overwritten with x.  
+		If x is a vector, the first length(x) nonzeros in row i 
+		of A have been overwritten with entries from x
+
+	"""
 	
 	blocksize = A.blocksize[0]
 	BlockIndx = i/blocksize
@@ -446,16 +458,25 @@ def BSR_Row_WriteScalar(A, i, x):
 	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
 
-def BSR_Row_WriteVect(A, i, x):
-#	Input:	A:	Matrix assumed to be in BSR format
-#		i:	row number
-#		x:	Array of values to overwrite nonzeros in row i of A
-#
-#	Output:	A:	The nonzeros in row i of A have been
-#			overwritten with entries from x.  x must be same
-#			length as nonzeros of row i.  This is guaranteed
-#			when this routine is used with vectors derived form
-#			Get_BSR_Row
+def BSR_Row_WriteVect(A, i, x): 
+	"""Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
+	   length(x) and nnz(A[i,:]) must be equivalent.
+
+	Input
+	=====
+	A	Matrix assumed to be in BSR format
+	i	row number
+	x	Array of values to overwrite nonzeros in row i of A
+
+	Output
+	======
+	A	The nonzeros in row i of A have been
+		overwritten with entries from x.  x must be same
+		length as nonzeros of row i.  This is guaranteed
+		when this routine is used with vectors derived form
+		Get_BSR_Row
+
+	"""
 	
 	blocksize = A.blocksize[0]
 	BlockIndx = i/blocksize
@@ -478,12 +499,20 @@ def BSR_Row_WriteVect(A, i, x):
 	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
 	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
-def BSR_Get_Colindices(A):
-#	Input:	A:	BSR matrix from whom you want absolute column indices
-#
-#	Output: colindices:	List of arrays that is (num_nodes=A.rows/A.blocksize[0]) long.
-#				Each entry holds that node's column indices, assuming the block 
-#				is perfectly dense
+def BSR_Get_Colindices(A): 
+	"""Get the absolute column indices of for all rows of BSR matrix, A.
+
+	Input
+	=====
+	A		BSR matrix from whom you want absolute column indices
+
+	Output
+	======
+	colindices	List of arrays that is (num_nodes=A.rows/A.blocksize[0]) long.
+			Each entry holds that node's column indices, assuming the block 
+			is perfectly dense
+
+	"""
 	
 	RowsPerBlock = A.blocksize[0]
 	ColsPerBlock = A.blocksize[1]
