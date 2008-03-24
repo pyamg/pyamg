@@ -1,6 +1,8 @@
 from scipy import *
 from scipy.sparse import dia_matrix
 
+__all__ = ['stencil_grid']
+
 def stencil_grid(S, grid, format=None):
     S    = asarray(S)
     grid = tuple(grid)
@@ -10,6 +12,9 @@ def stencil_grid(S, grid, format=None):
     
     if len(grid) != rank(S):
         raise ValueError('stencil rank must equal number of grid dimensions')
+    
+    if min(grid) < 1:
+        raise ValueError('grid dimensions must be positive')
     
     N_v = prod(grid)     # number of vertices in the mesh
     N_s = (S != 0).sum() # number of nonzero stencil entries
@@ -40,41 +45,60 @@ def stencil_grid(S, grid, format=None):
                 s[n] = slice(i,None)
                 diag[s] = 0
 
+    # remove diagonals that lie outside matrix
+    mask = abs(diags) < N_v
+    if not mask.all():
+        diags = diags[mask]
+        data  = data[mask]
+    
+    # sum duplicate diagonals
+    if len(unique(diags)) != len(diags):
+        new_diags = unique(diags)
+        new_data  = zeros( (len(new_diags),data.shape[1]), dtype=data.dtype)
+
+        for dia,dat in zip(diags,data):
+            n = searchsorted(new_diags,dia)
+            new_data[n,:] += dat
+        
+        diags = new_diags
+        data  = new_data
+
     return dia_matrix( (data,diags), shape=(N_v,N_v)).asformat(format)
 
 
-D = 3
-
-if D == 1:
-    # 1D Laplacian
-    S = array([-1,2,-1])
-    grid = (4,)
-
-if D == 2:
-    # 2D Laplacian
-    S = array([[ 0,-1, 0],
-               [-1, 4,-1],
-               [ 0,-1, 0]])
-    #S = array([[-1,-1,-1],
-    #           [-1, 8,-1],
-    #           [-1,-1,-1]])
-    grid = (4,4)
-
-if D == 3:
-    S = array([[[ 0, 0, 0],
-                [ 0,-1, 0],
-                [ 0, 0, 0]],
-               [[ 0,-1, 0],
-                [-1, 6,-1],
-                [ 0,-1, 0]],
-               [[ 0, 0, 0],  
-                [ 0,-1, 0],
-                [ 0, 0, 0]]])
-    grid = (3,4,5)               
-
-A = stencil_grid( S, grid )
-
-print A.todense()
+if __name__ == '__main__':
+    D = 2
+    
+    if D == 1:
+        # 1D Laplacian
+        S = array([-1,2,-1])
+        grid = (4,)
+    
+    if D == 2:
+        # 2D Laplacian
+        S = array([[ 0,-1, 0],
+                   [-1, 4,-1],
+                   [ 0,-1, 0]])
+        #S = array([[-1,-1,-1],
+        #           [-1, 8,-1],
+        #           [-1,-1,-1]])
+        grid = (2,1)
+    
+    if D == 3:
+        S = array([[[ 0, 0, 0],
+                    [ 0,-1, 0],
+                    [ 0, 0, 0]],
+                   [[ 0,-1, 0],
+                    [-1, 6,-1],
+                    [ 0,-1, 0]],
+                   [[ 0, 0, 0],  
+                    [ 0,-1, 0],
+                    [ 0, 0, 0]]])
+        grid = (3,4,5)               
+    
+    A = stencil_grid( S, grid )
+    
+    print A.todense()
 
 
 
