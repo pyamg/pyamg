@@ -1,4 +1,7 @@
-""" VTK output: meshes and multigrids views
+"""VTK output functions.
+
+Create coarse grid views and write meshes/primitives to .vtu files.  Use the
+XML VTK format for unstructured meshes (.vtu)
 
 This will use the XML VTK format for unstructured meshes, .vtu
 
@@ -10,8 +13,9 @@ __docformat__ = "restructuredtext en"
 
 import warnings
 
-from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, random
-from numpy import uint8, kron, arange, diff, c_, where, arange
+from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
+        random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
+        integer
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -21,31 +25,27 @@ from pyamg.graph import vertex_coloring
 def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     """Coarse grid visualization: create .vtu files for use in Paraview
 
-    Usage
-    -----
-        - coarse_grid_vis(file_name, Vert, E2V, Agg, mesh_type, [A], [plot_type])
-
     Parameters
     ----------
-        fid : string or open file-like object
+        fid : {string, file object}
             file to be written, e.g. 'mymesh.vtu'
-        Vert : array
+        Vert : {array}
             coordinate array (N x D)
-        E2V : array
+        E2V : {array}
             element index array (Nel x Nelnodes)
-        Agg : csr_matrix
+        Agg : {csr_matrix}
             sparse matrix for the aggregate-vertex relationship (N x Nagg)  
-        mesh_type : string
-            type of elements: tri, quad, tet, hex (all 3d)
-        plot_type : string
+        mesh_type : {string}
+            type of elements: vertex, tri, quad, tet, hex (all 3d)
+        plot_type : {string}
             primal or dual or points
 
-    Return
-    ------
+    Returns
+    -------
         - Writes data to .vtu file for use in paraview (xml 0.1 format)
     
-    Notation
-    --------
+    Notes
+    -----
         D : 
             dimension of coordinate space
         N : 
@@ -59,8 +59,6 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         Nagg  : 
             # of aggregates
 
-    Notes
-    -----
         There are three views of the aggregates:
 
         1. primal 
@@ -74,26 +72,78 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
             rounder (good) or long (bad) aggregates.
 
         3. points 
-            just color different point different colors.  This works 
-            also with classical AMG
+            simply color different points with different colors.  This works 
+            best with classical AMG
 
-        And in different settings:
-
-        - non-conforming
+        4. non-conforming
             shrink triangles toward barycenter
-
-        - high-order 
-            view aggregates individually 
 
     Examples
     --------
+    >>> file_name     = 'example_mesh.vtu'
+    >>> agg_file_name = 'example_agg.vtu'
+    >>> Vert = array([[0.0,0.0],
+                      [1.0,0.0],
+                      [2.0,0.0],
+                      [0.0,1.0],
+                      [1.0,1.0],
+                      [2.0,1.0],
+                      [0.0,2.0],
+                      [1.0,2.0],
+                      [2.0,2.0],
+                      [0.0,3.0],
+                      [1.0,3.0],
+                      [2.0,3.0]])
+    >>> E2V = array([[0,4,3],
+                     [0,1,4],
+                     [1,5,4],
+                     [1,2,5],
+                     [3,7,6],
+                     [3,4,7],
+                     [4,8,7],
+                     [4,5,8],
+                     [6,10,9],
+                     [6,7,10],
+                     [7,11,10],
+                     [7,8,11]],dtype=int)
+    >>> row = array([0,1,2,3,4,5,6,7,8,9,10,11])
+    >>> col = array([1,0,1,1,0,1,0,1,0,1,0, 1])
+    >>> data = ones((1,12),dtype=uint32).ravel()
+    >>> Agg = csr_matrix((data,(row,col)),shape=(12,2))
+    >>> coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='points')
+    >>> write_mesh(file_name, Vert, E2V, mesh_type='tri')
 
     TODO
     ----
-    - add error checks
+    - add the dual mesh
     - add support for vector problems: A = dN x dN
+    - add support for primal 3D
 
      """
+
+    #----------------------
+    if not issubdtype(Vert.dtype,float):
+        raise ValueError('Vert should be of type float')
+
+    if E2V!=None:
+        if not issubdtype(E2V.dtype,integer):
+            raise ValueError('E2V should be of type integer')
+
+    if Agg.shape[1] > Agg.shape[0]:
+        raise ValueError('Agg should be of size Npts x Nagg')
+
+    valid_mesh_types = ('vertex','tri','quad','tet','hex')
+    if mesh_type not in valid_mesh_types:
+        raise ValueError('mesh_type should be %s' % ' or '.join(valid_mesh_types))
+
+    if A!=None:
+        if (A.shape[0] != A.shape[1]) or (A.shape[0] != Agg.shape[0]):
+            raise ValueError('expected square matrix A and compatible with Agg')
+
+    valid_plot_types = ('points','primal','dual','dg')
+    if plot_type not in valid_plot_types:
+        raise ValueError('plot_type should be %s' % ' or '.join(valid_plot_types))
+    #----------------------
 
     N        = Vert.shape[0]
     Ndof     = N
@@ -103,11 +153,13 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         if E2V.min() != 0:
             warnings.warn('element indices begin at %d' % E2V.min() )
     Nagg     = Agg.shape[0]
-    Ncolors  = 12
+
+    Ncolors  = 8 # number of colors to use in the coloring algorithm
+
 
     # ------------------
-    # points: basic
-    #         works for aggregation and classical AMG
+    # points: basic (best for classical AMG)
+    #
     if plot_type=='points':
 
         if A is not None:
@@ -124,6 +176,9 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
         write_mesh(fid, Vert, E2V, mesh_type=mesh_type, pdata=pdata)
 
+    # ------------------
+    # primal: shows elements and edges in the aggregation (best for SA AMG)
+    #
     if plot_type == 'primal':
         Agg = csr_matrix(Agg)
 
@@ -152,6 +207,19 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
         write_vtu( fid, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata)
 
+    # ------------------
+    # dual: shows dual elemental aggregation
+    #
+    if plot_type == 'dual':
+        raise NotImplementedError('dual visualization not yet supported')
+    
+    # ------------------
+    # dg: shows elements and edges in the aggregation for non-conforming meshes
+    #
+    if plot_type == 'dg':
+        raise NotImplementedError('non-conforming elements not yet supported')
+
+
 def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     """
     Write a .vtu file in xml format
@@ -164,8 +232,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     Cells: 
         Dictionary of with the keys
 
-    Return
-    ------
+    Returns
+    -------
         - writes a .vtu file for use in Paraview
 
     Notes
@@ -207,9 +275,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     
     TODO
     ----
-    TODO : I/O error checking
-    TODO : add checks for array sizes
-    TODO : add poly data structures (2,4,6,7 below)
+        - I/O error checking
     """
 
     # number of indices per cell for each cell type
@@ -219,7 +285,6 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     if dim==2:
         # always use 3d coordinates (x,y) -> (x,y,0)
         Verts = concatenate((Verts,zeros((Ndof,1))),1) 
-
 
     Ncells = 0
     idx_min = 1
@@ -234,7 +299,10 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
                 Ncells += Cells[key].shape[0]
 
     if type(fid) is type(''):
-        fid = open(fid,'w')
+        try:
+            fid = open(fid,'w')
+        except IOError, (errno, strerror):
+            print ".vtu error (%s): %s" % (errno, strerror)
 
     fid.writelines('<?xml version=\"1.0\"?>\n')
     fid.writelines('<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n')
