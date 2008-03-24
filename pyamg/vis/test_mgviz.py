@@ -4,10 +4,10 @@ simple aggregation, respectively."""
 from scipy.testing import *
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
-from mgviz import mgviz
-from mgviz import write_vtu
+from vis import coarse_grid_vis
+from vis import write_vtu
 
-class TestMgviz(TestCase):
+class TestVis(TestCase):
     def setUp(self):
         self.file_name = 'test.vtu'
 
@@ -41,11 +41,11 @@ class TestMgviz(TestCase):
         data = ones((1,12),dtype=uint32).ravel()
         Agg = csr_matrix((data,(row,col)),shape=(12,2))
         try:
-            mgviz(file_name=self.file_name, 
-                    Vert=Vert, E2V=E2V, Agg=Agg,
-                    mesh_type='tri', A=None, plot_type='points')
+            coarse_grid_vis(file_name=self.file_name, 
+                            Vert=Vert, E2V=E2V, Agg=Agg,
+                            mesh_type='tri', A=None, plot_type='points')
         except:
-            assert False, 'cannot call points in mgviz correctly'
+            assert False, 'cannot call points in coarse_grid_vis correctly'
 
     def test_tri_primal(self):
         Vert = array([[0.0,0.0],
@@ -92,11 +92,11 @@ class TestMgviz(TestCase):
         data = ones((1,18),dtype=uint32).ravel()
         Agg=csr_matrix((data,(row,col)),shape=(18,5))
         try:
-            mgviz(file_name=self.file_name, 
-                    Vert=Vert, E2V=E2V, Agg=Agg,
-                    mesh_type='tri', A=None, plot_type='primal')
+            coarse_grid_vis(file_name=self.file_name, 
+                            Vert=Vert, E2V=E2V, Agg=Agg,
+                            mesh_type='tri', A=None, plot_type='primal')
         except:
-            assert False, 'cannot call primal in mgviz correctly'
+            assert False, 'cannot call primal in coarse_grid_vis correctly'
 
 if __name__ == '__main__':
     nose.run(argv=['', __file__])

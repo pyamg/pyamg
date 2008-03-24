@@ -5,7 +5,7 @@ This will use the XML VTK format for unstructured meshes, .vtu
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
-__all__ = ['mgviz','write_vtu','write_mesh']
+__all__ = ['coarse_grid_vis','write_vtu','write_mesh']
 __docformat__ = "restructuredtext en"
 
 import warnings
@@ -18,12 +18,12 @@ from scipy.sparse import csr_matrix, coo_matrix
 from pyamg.graph import vertex_coloring
 
 
-def mgviz(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
+def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     """Coarse grid visualization: create .vtu files for use in Paraview
 
     Usage
     -----
-        - mgviz(file_name, Vert, E2V, Agg, mesh_type, [A], [plot_type])
+        - coarse_grid_vis(file_name, Vert, E2V, Agg, mesh_type, [A], [plot_type])
 
     Parameters
     ----------

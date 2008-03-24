@@ -9,7 +9,7 @@ from pyamg import smoothed_aggregation_solver
 from pyamg.sa import sa_standard_aggregation, sa_strong_connections
 from pyamg.gallery import load_example
 
-from mgviz import mgviz, write_mesh
+from vis import coarse_grid_vis, write_mesh
 
 test = 2
 
@@ -49,7 +49,7 @@ if test==0:
     col = array([1,0,1,1,0,1,0,1,0,1,0, 1])
     data = ones((1,12),dtype=uint32).ravel()
     Agg = csr_matrix((data,(row,col)),shape=(12,2))
-    mgviz(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='points')
+    coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='points')
     write_mesh(file_name, Vert, E2V, mesh_type='tri')
     
 if test==1:
@@ -104,7 +104,7 @@ if test==1:
     col = array([0,1,3,0,1,1,3,0,0,1, 3, 4, 0, 0, 0, 2, 4, 4])
     data = ones((1,18),dtype=uint32).ravel()
     Agg=csr_matrix((data,(row,col)),shape=(18,5))
-    mgviz(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='primal')
+    coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='primal')
     write_mesh(file_name, Vert, E2V, mesh_type='tri')
 
 if test==2:
@@ -129,8 +129,8 @@ if test==2:
     #Agg = aggex['aggregates']
 
     # visualize the aggregates two different ways
-    mgviz(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
-    mgviz(agg_file_name2, Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
+    coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
+    coarse_grid_vis(agg_file_name2, Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
     write_mesh(file_name, Vert, E2V, mesh_type='tri')
 
 if test==3:
@@ -150,8 +150,8 @@ if test==3:
     Agg  = sa_standard_aggregation(A.tocsr())
 
     # visualize the aggregates two different ways
-    mgviz(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
-    mgviz(agg_file_name2, Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
+    coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
+    coarse_grid_vis(agg_file_name2, Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
 
     # visualize the mesh
     fid = open(file_name,'w') #test with open file object

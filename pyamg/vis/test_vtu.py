@@ -4,7 +4,7 @@ xml."""
 from scipy.testing import *
 import xml.parsers.expat
 from numpy import array, uint32
-from mgviz import write_vtu
+from vis import write_vtu
 
 class TestWriteVtu(TestCase):
     def setUp(self):
