@@ -183,7 +183,15 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         Agg = csr_matrix(Agg)
 
         # mask[i] == True if all vertices in element i belong to the same aggregate
-        ElementAggs = Agg.indices[E2V]
+        if len(Agg.indices)!=Agg.shape[0]:
+            # account for 0 rows.  mark them as solitary aggregates
+            full_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
+            full_aggs[full_aggs==1] = Agg.indices
+            full_aggs[full_aggs==0] = Agg.shape[1] + arange(0,Agg.shape[0]-Agg.nnz,dtype=int).ravel()
+            ElementAggs = full_aggs[E2V]
+        else:
+            ElementAggs = Agg.indices[E2V]
+
         mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
 
         E2V3 = E2V[mask,:]
@@ -226,11 +234,17 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
 
     Parameters
     ----------
-    Verts: 
-        Ndof x 3 (if 2, then expanded by 0)
-        list of (x,y,z) point coordinates
-    Cells: 
-        Dictionary of with the keys
+        fid : {string, file object}
+            file to be written, e.g. 'mymesh.vtu'
+        Verts : {array}
+            Ndof x 3 (if 2, then expanded by 0)
+            list of (x,y,z) point coordinates
+        Cells : {dictionary}
+            Dictionary of with the keys
+        pdata : {array}
+            Nfields of values for the vertices
+        cdata : {dictionary}
+            data for cell normals
 
     Returns
     -------
@@ -269,10 +283,6 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
        14  VTK_PYRAMID:        5 points       3d
     =====  =================== ============= ===
        
-    Examples
-    --------
-    Cells = {'1':None,'2':None,'3':None,'4':None,'5':E2V,.....}
-    
     TODO
     ----
         - I/O error checking
@@ -405,21 +415,21 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
 
     Parameters
     ----------
-        fid : string or open file-like object
+        fid : {string, file object}
             file to be written, e.g. 'mymesh.vtu'
-        Vert : array
+        Vert : {array}
             coordinate array (N x D)
-        E2V : array
+        E2V : {array}
             element index array (Nel x Nelnodes)
-        mesh_type : string
+        mesh_type : {string}
             type of elements: tri, quad, tet, hex (all 3d)
-        pdata : array
+        pdata : {array}
             data on vertices (N x Nfields)
-        cdata : array
+        cdata : {array}
             data on elements (Nel x Nfields)
 
-    Return
-    ------
+    Returns
+    -------
         - writes a .vtu file for use in Paraview
     """
     if E2V==None:
