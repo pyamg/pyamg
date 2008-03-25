@@ -12,7 +12,7 @@ from scipy.linalg import eigvals
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
-from scipy.splinalg import eigen, eigen_symmetric
+from scipy.sparse.linalg import eigen, eigen_symmetric
 
 def norm(x):
     #currently 40x faster than scipy.linalg.norm(x)
