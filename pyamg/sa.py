@@ -8,8 +8,8 @@ from numpy import array, arange, ones, zeros, sqrt, asarray, \
 from scipy.sparse import csr_matrix, coo_matrix, \
         isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 
-#from sa_ode_strong_connections import sa_ode_strong_connections
-#from sa_energy_min import sa_energy_min
+from sa_ode_strong_connections import sa_ode_strong_connections
+from sa_energy_min import sa_energy_min
 
 import multigridtools
 from multilevel import multilevel_solver
@@ -393,6 +393,9 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
         Rs.append(R)
         Ps.append(P)
 
+    #Check for all 0 coarse level.  Delete if found.
+    if(A.nnz == 0):
+    	As.pop(); Rs.pop(); Ps.pop();
 
     return solver(As,Ps,Rs=Rs,preprocess=pre,postprocess=post)
 
