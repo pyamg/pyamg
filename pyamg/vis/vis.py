@@ -15,7 +15,7 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean
+        integer, mean, sum
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -223,41 +223,91 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     
     # ------------------
     # dg: shows elements and edges in the aggregation for non-conforming meshes
-    #     first shrink the elements towards barycenter, then output to vtu as above
     #
     if plot_type == 'dg':
-    	#Assume 2D if last column of Vert is all zero
-	if(Vert[:,2].nonzero()[0].shape[0] == 0):
-		Dimen = 2
-	else:
-		Dimen = 3
-	shrink = 0.75
-
-	# Account for shared faces, for case that this is used to shrink a cont Gal mesh
-	#Vert = Vert[E2V.flatten(),:]
-	#Agg = Agg[E2V.flatten(),:]
-	#E2V = array(range(Vert.shape[0])).reshape(Vert.shape[0]/Nelnodes, Nelnodes)
-	#Nel = E2V.shape[0]
-	
-	#Assume 3D coordinates, even if z = 0
-	Bcenter = zeros((Nel, 3))
-
-	for i in range(Nel):
-		#Assumes first Dimen+1 nodes are verts for the simplex
-		verts_K = Vert[E2V[i,0:(Dimen+1)], :]
-		
-		#Calculate Barycenter of element i
-		Bcenter[i,:] = mean(verts_K, 0)
-		
-		#Shift vertices to barycenter
-		Vert[E2V[i,0:Dimen+1],:] = shrink*verts_K + (1-shrink)*kron(Bcenter[i,:], ones((Dimen+1,1)) )
-
-		# TODO Shift non vertices to barycenter with formula,
-		#	shrink*point_barycoords + (1-shrink)*barycenter
-	
+    	#Shrink each element in the mesh for nice plotting
+	E2V, Vert = shrink_elmts(E2V, Vert)					  
 
 	# plot_type = 'points' output to .vtu
 	coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A, plot_type='points')
+
+
+def shrink_elmts(E2V, Vert, shrink=0.75):
+    """
+    Shrink the elements in the mesh by factor "shrink" towards the barycenter
+    Only works for simplicial meshes
+
+    Parameters
+    ----------
+        Vert   : {array}
+               coordinate array (N x D)
+        E2V    : {array}
+               element index array (Nel x Nelnodes)
+        shrink : {scalar}
+               factor by which to move each element's points to each element's barycenter
+
+    Returns
+    -------
+        - Vert and E2V with Vert appropriately scaled
+    """
+    E2V = array(E2V)
+    Vert = array(Vert)
+    Nelnodes = E2V.shape[1]	
+    Nel = E2V.shape[0]
+
+    if(Vert.shape[1] == 2):
+	Dimen = 2
+    	#Determine if polynomial order is greater than 1
+    	if(Nelnodes > 3):
+    		nonlin = True
+    	else:
+    		nonlin = False
+    
+    elif(Vert[:,2].nonzero()[0].shape[0] == 0):   #Assume 2D if last column of Vert is all zero
+    	Dimen = 2
+    	#Determine if polynomial order is greater than 1
+    	if(Nelnodes > 3):
+    		nonlin = True
+    	else:
+    		nonlin = False
+    else:
+    	Dimen = 3
+    	#Determine if polynomial order of basis functions is greater than 1
+    	if(Nelnodes > 4):
+    		nonlin = True
+    	else:
+    		nonlin = False
+
+    #Shrink each element by this factor
+    shrink = 0.75 
+
+    # Account for shared faces, for case that this is used to shrink a cont Gal mesh
+    #Vert = Vert[E2V.flatten(),:]
+    #Agg = Agg[E2V.flatten(),:]
+    #E2V = array(range(Vert.shape[0])).reshape(Vert.shape[0]/Nelnodes, Nelnodes)
+    #Nel = E2V.shape[0]
+    
+    #Assume 3D coordinates, even if z = 0
+    Bcenter = zeros((Nel, 3))
+
+    for i in range(Nel):
+    	#Assumes first Dimen+1 nodes are verts for the simplex
+    	verts_K = Vert[E2V[i,0:(Dimen+1)], :]
+    	
+    	#Calculate Barycenter of element i
+    	Bcenter[i,:] = mean(verts_K, 0)
+    	
+    	#Shift vertices to barycenter
+    	Vert[E2V[i,0:Dimen+1],:] = shrink*verts_K + (1-shrink)*kron(Bcenter[i,:], ones((Dimen+1,1)) )
+
+    	if(nonlin):
+    		# Move non-vertices to barycenter with the same formula, namely
+    		#	shrink*point_barycoords + (1-shrink)*barycenter.
+    		Vert[ E2V[i, (Dimen+1):], :] = shrink*(Vert[ E2V[i, (Dimen+1):], :]) + \
+    			                       (1-shrink)*kron(Bcenter[i,:], ones((Dimen+1,1)) )
+    
+    return E2V, Vert
+
 
 
 def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):

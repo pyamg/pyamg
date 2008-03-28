@@ -10,7 +10,7 @@ from pyamg import smoothed_aggregation_solver
 from pyamg.sa import sa_standard_aggregation, sa_strong_connections
 from pyamg.gallery import load_example
 
-from vis import coarse_grid_vis, write_mesh
+from vis import coarse_grid_vis, write_mesh, shrink_elmts
 
 def example_vis(test=2):
     """Run different visualization examples"""
@@ -168,17 +168,18 @@ def example_vis(test=2):
         agg_file_name2 = 'example_dg_p1_primal_agg.vtu'
         ex = loadmat('./test_dg_p1.mat')
         A = ex['A']
-        E2V  = ex['DG_E']
-        Vert = ex['DG_V']
+        E2V  = ex['elements']
+        Vert = ex['vertices']
 	B = ex['B']
-        Agg  = sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")
+        Agg  = sa_standard_aggregation(csr_matrix(sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")))
 
         # visualize the aggregates 
         coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
 
         # visualize the mesh
         fid = open(file_name,'w') #test with open file object
-        write_mesh(fid, Vert, E2V, mesh_type='tri')
+	E2V, Vert = shrink_elmts(E2V, Vert)
+        write_mesh(fid, Vert, E2V[:,0:3], mesh_type='tri')
     
 
 if __name__ == '__main__':
