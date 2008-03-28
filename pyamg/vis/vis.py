@@ -15,7 +15,7 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer
+        integer, mean
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -223,10 +223,41 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     
     # ------------------
     # dg: shows elements and edges in the aggregation for non-conforming meshes
+    #     first shrink the elements towards barycenter, then output to vtu as above
     #
     if plot_type == 'dg':
-    	#Begun work JBS
-        raise NotImplementedError('non-conforming elements not yet supported')
+    	#Assume 2D if last column of Vert is all zero
+	if(Vert[:,2].nonzero()[0].shape[0] == 0):
+		Dimen = 2
+	else:
+		Dimen = 3
+	shrink = 0.75
+
+	# Account for shared faces, for case that this is used to shrink a cont Gal mesh
+	#Vert = Vert[E2V.flatten(),:]
+	#Agg = Agg[E2V.flatten(),:]
+	#E2V = array(range(Vert.shape[0])).reshape(Vert.shape[0]/Nelnodes, Nelnodes)
+	#Nel = E2V.shape[0]
+	
+	#Assume 3D coordinates, even if z = 0
+	Bcenter = zeros((Nel, 3))
+
+	for i in range(Nel):
+		#Assumes first Dimen+1 nodes are verts for the simplex
+		verts_K = Vert[E2V[i,0:(Dimen+1)], :]
+		
+		#Calculate Barycenter of element i
+		Bcenter[i,:] = mean(verts_K, 0)
+		
+		#Shift vertices to barycenter
+		Vert[E2V[i,0:Dimen+1],:] = shrink*verts_K + (1-shrink)*kron(Bcenter[i,:], ones((Dimen+1,1)) )
+
+		# TODO Shift non vertices to barycenter with formula,
+		#	shrink*point_barycoords + (1-shrink)*barycenter
+	
+
+	# plot_type = 'points' output to .vtu
+	coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A, plot_type='points')
 
 
 def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):

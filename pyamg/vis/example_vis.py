@@ -5,6 +5,7 @@ from scipy.io import loadmat
 
 from numpy import array, ones, zeros, uint32
 
+from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
 from pyamg import smoothed_aggregation_solver
 from pyamg.sa import sa_standard_aggregation, sa_strong_connections
 from pyamg.gallery import load_example
@@ -156,6 +157,29 @@ def example_vis(test=2):
         # visualize the mesh
         fid = open(file_name,'w') #test with open file object
         write_mesh(fid, Vert, E2V, mesh_type='tri')
+
+    if test==4:
+        """
+	DG p=1 case
+	"""
+
+        file_name      = 'example_dg_p1_mesh.vtu'
+        agg_file_name1 = 'example_dg_p1_points_agg.vtu'
+        agg_file_name2 = 'example_dg_p1_primal_agg.vtu'
+        ex = loadmat('./test_dg_p1.mat')
+        A = ex['A']
+        E2V  = ex['DG_E']
+        Vert = ex['DG_V']
+	B = ex['B']
+        Agg  = sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")
+
+        # visualize the aggregates 
+        coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
+
+        # visualize the mesh
+        fid = open(file_name,'w') #test with open file object
+        write_mesh(fid, Vert, E2V, mesh_type='tri')
+    
 
 if __name__ == '__main__':
     # small C/F splitting
