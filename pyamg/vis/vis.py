@@ -225,6 +225,7 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     # dg: shows elements and edges in the aggregation for non-conforming meshes
     #
     if plot_type == 'dg':
+    	#Begun work JBS
         raise NotImplementedError('non-conforming elements not yet supported')
 
 
