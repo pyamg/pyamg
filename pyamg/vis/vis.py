@@ -255,20 +255,19 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
     Nel = E2V.shape[0]
 
     if(Vert.shape[1] == 2):
-    Dimen = 2
+        Dimen = 2
         #Determine if polynomial order is greater than 1
         if(Nelnodes > 3):
             nonlin = True
-        num_non_verts = Nelnodes - 3
+            num_non_verts = Nelnodes - 3
         else:
             nonlin = False
-    
     elif(Vert[:,2].nonzero()[0].shape[0] == 0):   #Assume 2D if last column of Vert is all zero
         Dimen = 2
         #Determine if polynomial order is greater than 1
         if(Nelnodes > 3):
             nonlin = True
-        num_non_verts = Nelnodes - 3
+            num_non_verts = Nelnodes - 3
         else:
             nonlin = False
     else:
@@ -276,7 +275,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
         #Determine if polynomial order of basis functions is greater than 1
         if(Nelnodes > 4):
             nonlin = True
-        num_non_verts = Nelnodes - 4
+            num_non_verts = Nelnodes - 4
         else:
             nonlin = False
 
