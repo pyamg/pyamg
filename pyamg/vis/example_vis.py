@@ -120,8 +120,8 @@ def example_vis(test=2):
         agg_file_name1 = 'example_Airfoil_points_agg.vtu'
         agg_file_name2 = 'example_Airfoil_primal_agg.vtu'
 
-        ex    = loadmat('Airfoil_p1_ref1.mat')
-        aggex = loadmat('Airfoil_p1_ref1_aggs.mat')
+        ex    = loadmat('Airfoil.mat')
+        aggex = loadmat('Airfoil_aggs.mat')
 
         A    = ex['A']
         E2V  = ex['elements']
@@ -170,7 +170,7 @@ def example_vis(test=2):
         A = ex['A']
         E2V  = ex['elements']
         Vert = ex['vertices']
-	B = ex['B']
+        B = ex['B']
         Agg  = sa_standard_aggregation(csr_matrix(sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")))
 
         # visualize the aggregates 
@@ -178,7 +178,7 @@ def example_vis(test=2):
 
         # visualize the mesh
         fid = open(file_name,'w') #test with open file object
-	E2V, Vert = shrink_elmts(E2V, Vert)
+        E2V, Vert = shrink_elmts(E2V, Vert)
         write_mesh(fid, Vert, E2V[:,0:3], mesh_type='tri')
     
 
