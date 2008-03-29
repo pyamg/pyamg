@@ -27,17 +27,17 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
             element to node connectivity and a vertex list, respectively.
         prob_type : {string}
             'cg' denotes a continuous Galerkin mesh
-	    'dg' denotes a discontinous Galerkin mesh  
+            'dg' denotes a discontinous Galerkin mesh  
         str_type : {string}
             'ode' uses the sa_ode_strong_connections routine to determine strength of connections
-	    'classic' uses the classic strength measure
+            'classic' uses the classic strength measure
         ODE_epsilon : {scalar > 1.0}
             drop tolerance for the ode strength measure
         k : {integer}
             number of time steps for the ode strength measure
         proj_type : {string}
             'l2' uses l2 norm to solve minimization problem in ode strength measure
-	    'D_A' uses DA norm to solve minimization problem in ode strength measure
+            'D_A' uses DA norm to solve minimization problem in ode strength measure
         SA_epsilon : {scalar in [0,1]}
             drop tolerance for the scalar strength measure
     
@@ -62,7 +62,7 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
 
     #Determine if we are in 2 or 3 D
     if(Vert.shape[1] == 2):
-	Dimen = 2
+        Dimen = 2
     elif(Vert[:,2].nonzero()[0].shape[0] == 0):   #Assume 2D if last column of Vert is all zero
     	Dimen = 2
     else:
@@ -74,25 +74,26 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
     elif(str_type == 'classic'):
     	C = sa_strong_connections(A.tocsr(), epsilon=SA_epsilon)
     else:
-	raise ValueError('vis_aggs() only works for strength measures, str_type = [\'ode\' | \'classic\']')
+        raise ValueError('vis_aggs() only works for strength measures, str_type = [\'ode\' | \'classic\']')
+
     Agg  = sa_standard_aggregation(C.tocsr())
 
 
     if(prob_type == 'dg'):	
-	# visualize the aggregates 
-	coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
+        # visualize the aggregates 
+        coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
 	
-	# visualize the mesh
-	fid = open( (out_file_stem + "_mesh.vtu"), 'w') #test with open file object
-	E2V, Vert = shrink_elmts(E2V, Vert)
-	write_mesh(fid, Vert, E2V[:,0:(Dimen+1)], mesh_type='tri')
+        # visualize the mesh
+        fid = open( (out_file_stem + "_mesh.vtu"), 'w') #test with open file object
+        E2V, Vert = shrink_elmts(E2V, Vert)
+        write_mesh(fid, Vert, E2V[:,0:(Dimen+1)], mesh_type='tri')
     
     elif(prob_type == 'cg'):
-	# visualize the aggregates two different ways
-	coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
-	coarse_grid_vis( (out_file_stem + "_primal_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
-	write_mesh( (out_file_stem + "_mesh.vtu"), Vert, E2V, mesh_type='tri')
+        # visualize the aggregates two different ways
+        coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
+        coarse_grid_vis( (out_file_stem + "_primal_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='primal', mesh_type='tri')
+        write_mesh( (out_file_stem + "_mesh.vtu"), Vert, E2V, mesh_type='tri')
 
     else:
-	raise ValueError('vis_aggs() only works for prob_type = [\'dg\' | \'cg\']')
+        raise ValueError('vis_aggs() only works for prob_type = [\'dg\' | \'cg\']')
     

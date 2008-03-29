@@ -160,8 +160,8 @@ def example_vis(test=2):
 
     if test==4:
         """
-	DG p=1 case
-	"""
+        DG p=1 case
+        """
 
         file_name      = 'example_dg_p1_mesh.vtu'
         agg_file_name1 = 'example_dg_p1_points_agg.vtu'
@@ -194,3 +194,6 @@ if __name__ == '__main__':
     
     # PyAMG logo with standard SA
     example_vis(3)
+    
+    # DG example
+    example_vis(4)
