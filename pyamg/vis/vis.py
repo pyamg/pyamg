@@ -260,6 +260,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
     	#Determine if polynomial order is greater than 1
     	if(Nelnodes > 3):
     		nonlin = True
+		num_non_verts = Nelnodes - 3
     	else:
     		nonlin = False
     
@@ -268,6 +269,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
     	#Determine if polynomial order is greater than 1
     	if(Nelnodes > 3):
     		nonlin = True
+		num_non_verts = Nelnodes - 3
     	else:
     		nonlin = False
     else:
@@ -275,6 +277,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
     	#Determine if polynomial order of basis functions is greater than 1
     	if(Nelnodes > 4):
     		nonlin = True
+		num_non_verts = Nelnodes - 4
     	else:
     		nonlin = False
 
@@ -304,7 +307,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
     		# Move non-vertices to barycenter with the same formula, namely
     		#	shrink*point_barycoords + (1-shrink)*barycenter.
     		Vert[ E2V[i, (Dimen+1):], :] = shrink*(Vert[ E2V[i, (Dimen+1):], :]) + \
-    			                       (1-shrink)*kron(Bcenter[i,:], ones((Dimen+1,1)) )
+    			                       (1-shrink)*kron(Bcenter[i,:], ones((num_non_verts,1)) )
     
     return E2V, Vert
 
