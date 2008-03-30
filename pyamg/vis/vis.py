@@ -279,20 +279,17 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
         else:
             nonlin = False
 
-    #Shrink each element by this factor
-    shrink = 0.75 
-
     # Account for shared faces, for case that this is used to shrink a cont Gal mesh
     #Vert = Vert[E2V.flatten(),:]
     #Agg = Agg[E2V.flatten(),:]
     #E2V = array(range(Vert.shape[0])).reshape(Vert.shape[0]/Nelnodes, Nelnodes)
     #Nel = E2V.shape[0]
     
-    #Assume 3D coordinates, even if z = 0
-    Bcenter = zeros((Nel, 3))
+    #Store Barycenter for each element
+    Bcenter = zeros((Nel, Vert.shape[1]))
 
     for i in range(Nel):
-           #Assumes first Dimen+1 nodes are verts for the simplex
+        #Assumes first Dimen+1 nodes are verts for the simplex
         verts_K = Vert[E2V[i,0:(Dimen+1)], :]
         
         #Calculate Barycenter of element i

@@ -64,25 +64,25 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
     if(Vert.shape[1] == 2):
         Dimen = 2
     elif(Vert[:,2].nonzero()[0].shape[0] == 0):   #Assume 2D if last column of Vert is all zero
-    	Dimen = 2
+        Dimen = 2
     else:
-    	Dimen = 3
+        Dimen = 3
 
     #Calculate strength of connection and aggregation
     if(str_type == 'ode'):
-    	C = sa_ode_strong_connections(csr_matrix(A), B, epsilon=ODE_epsilon, k=k, proj_type=proj_type)
+        C = sa_ode_strong_connections(csr_matrix(A), B, epsilon=ODE_epsilon, k=k, proj_type=proj_type)
     elif(str_type == 'classic'):
-    	C = sa_strong_connections(A.tocsr(), epsilon=SA_epsilon)
+        C = sa_strong_connections(A.tocsr(), epsilon=SA_epsilon)
     else:
         raise ValueError('vis_aggs() only works for strength measures, str_type = [\'ode\' | \'classic\']')
 
     Agg  = sa_standard_aggregation(C.tocsr())
 
 
-    if(prob_type == 'dg'):	
+    if(prob_type == 'dg'):  
         # visualize the aggregates 
         coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
-	
+    
         # visualize the mesh
         fid = open( (out_file_stem + "_mesh.vtu"), 'w') #test with open file object
         E2V, Vert = shrink_elmts(E2V, Vert)
