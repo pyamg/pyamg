@@ -5,14 +5,13 @@ from scipy.io import loadmat
 
 from numpy import array, ones, zeros, uint32
 
-from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
 from pyamg import smoothed_aggregation_solver
 from pyamg.sa import sa_standard_aggregation, sa_strong_connections
 from pyamg.gallery import load_example
 
 from vis import coarse_grid_vis, write_mesh, shrink_elmts
 
-def example_vis(test=2):
+def example_vis(test=0):
     """Run different visualization examples"""
 
     if test==0:
@@ -171,6 +170,7 @@ def example_vis(test=2):
         E2V  = ex['elements']
         Vert = ex['vertices']
         B = ex['B']
+        from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
         Agg  = sa_standard_aggregation(csr_matrix(sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")))
 
         # visualize the aggregates 
@@ -196,4 +196,4 @@ if __name__ == '__main__':
     example_vis(3)
     
     # DG example
-    example_vis(4)
+    #example_vis(4)
