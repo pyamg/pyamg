@@ -406,8 +406,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     fid.writelines('<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n')
     fid.writelines('  <UnstructuredGrid>\n')
     fid.writelines('    <Piece NumberOfPoints=\"%d\" NumberOfCells=\"%d\">\n' % (Ndof,Ncells))
-    
-    #------------------------------------------------------------------
+    ###################################################################
+    # Vertex Coordinates
     fid.writelines('      <Points>\n')
     fid.writelines('        <DataArray type=\"Float32\" Name=\"vertices\" NumberOfComponents=\"3\" format=\"ascii\">\n')
     Verts.tofile(fid, sep=' ') # prints Verts row-wise
@@ -415,10 +415,10 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     fid.writelines('        </DataArray>\n')
     fid.writelines('      </Points>\n')
     #------------------------------------------------------------------
-    
-    #------------------------------------------------------------------
     fid.writelines('      <Cells>\n')
     
+    ###################################################################
+    # Element Connectivity
     fid.writelines('        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n')
     cell_offset = zeros((Ncells,1),dtype=uint8) # offsets are zero indexed
     cell_type   = zeros((Ncells,1),dtype=uint8)
@@ -459,7 +459,9 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     fid.writelines('      </Cells>\n')
     #------------------------------------------------------------------
     
-    #------------------------------------------------------------------
+
+    ###################################################################
+    # Point Data
     fid.writelines('      <PointData>\n')
     if pdata!=None:
         if pdata.shape[0]!=Ndof:
@@ -482,7 +484,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     fid.writelines('      </PointData>\n')
     #------------------------------------------------------------------
 
-    #------------------------------------------------------------------
+    ###################################################################
+    # Cell Data
     fid.writelines('      <CellData>\n')
     if cdata != None:
         for k in range(0, len(cdata)):
