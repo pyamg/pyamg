@@ -106,7 +106,9 @@ def example_vis(test=0):
         data = ones((1,18),dtype=uint32).ravel()
         Agg=csr_matrix((data,(row,col)),shape=(18,5))
         coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='primal')
-        write_mesh(file_name, Vert, E2V, mesh_type='tri')
+        pdata = 2 * ones((18,1))
+        pvdata = ones((54,1))
+        write_mesh(file_name, Vert, E2V, mesh_type='tri', pdata=pdata, pvdata=pvdata)
 
     if test==2:
         """
@@ -165,7 +167,7 @@ def example_vis(test=0):
         file_name      = 'example_dg_p1_mesh.vtu'
         agg_file_name1 = 'example_dg_p1_points_agg.vtu'
         agg_file_name2 = 'example_dg_p1_primal_agg.vtu'
-        ex = loadmat('./test_dg_p1.mat')
+        ex = loadmat('./test_dg_p6.mat')
         A = ex['A']
         E2V  = ex['elements']
         Vert = ex['vertices']

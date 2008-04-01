@@ -215,7 +215,8 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         Cells  =  {3: E2V2, 5: E2V3}
         cdata  = ({3: colors2, 5: colors3},) # make sure it's a tuple
 
-        write_vtu( fid, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata)
+        write_vtu( fid, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata, \
+                pvdata=None)
 
     # ------------------
     # dual: shows dual elemental aggregation
@@ -311,7 +312,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
 
 
 
-def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
+def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     """
     Write a .vtu file in xml format
 
@@ -328,6 +329,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
         Nfields of values for the vertices
     cdata : {dictionary}
         data for cell normals
+    pvdata : {array}
+        Nfields of values for 3 component vector data at the vertices
 
     Returns
     -------
@@ -346,6 +349,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
         - pdata = Ndof x Nfields
     
         - cdata = list of dictionaries in the form of Cells
+
+        - pvdata = 3*Ndof x Nfields
 
     =====  =================== ============= ===
     keys   type                n points      dim
@@ -461,6 +466,15 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
             pdata[:,j].tofile(fid, sep=' ') # per vertex data
             fid.writelines('\n')
             fid.writelines('        </DataArray>\n')
+    if pvdata!=None:
+        if pvdata.shape[0]!=3*Ndof:
+            raise ValueError('dimension of pvdata must be of length = 3*# of vertices')
+        Nfields = pvdata.shape[1]
+        for j in range(0,Nfields):
+            fid.writelines('        <DataArray type=\"Float32\" Name=\"pvfield%d\" NumberOfComponents=\"3\" format=\"ascii\">\n' % (j+1))
+            pvdata[:,j].tofile(fid, sep=' ') # per vertex data
+            fid.writelines('\n')
+            fid.writelines('        </DataArray>\n')
     fid.writelines('      </PointData>\n')
     #------------------------------------------------------------------
 
@@ -492,7 +506,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
     
     #fid.close()  #don't close file
     
-def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
+def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None, \
+        pvdata=None):
     """
     Write mesh file for basic types of elements
 
@@ -510,6 +525,8 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
         data on vertices (N x Nfields)
     cdata : {array}
         data on elements (Nel x Nfields)
+    pvdata : {array}
+        Nfields of values for 3 component vector data at the vertices
 
     Returns
     -------
@@ -535,6 +552,7 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
     if cdata is not None:
         cdata = ( { Cells.keys()[0] : cdata }, )
 
-    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, cdata=cdata)
+    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, cdata=cdata, \
+            pvdata=pvdata)
 
 
