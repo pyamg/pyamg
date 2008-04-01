@@ -432,7 +432,11 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
                 # non-Poly data
                 cell_array = Cells[key]
                 offset     = cell_array.shape[1]
-                
+            
+                if vtk_cell_info[key] != offset:
+                    raise ValueError('cell array has %d columns, expected %d' \
+                            % (offset, vtk_cell_info[key]) )
+
                 cell_type  [k: k + cell_array.shape[0]] = key
                 cell_offset[k: k + cell_array.shape[0]] = offset
                 k += cell_array.shape[0]
@@ -533,7 +537,7 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None, \
     writes a .vtu file for use in Paraview
 
     """
-    if E2V==None:
+    if E2V is None:
         mesh_type='vertex'
 
     if mesh_type == 'tri':
