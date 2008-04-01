@@ -27,18 +27,18 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
     Parameters
     ----------
-        fid : {string, file object}
-            file to be written, e.g. 'mymesh.vtu'
-        Vert : {array}
-            coordinate array (N x D)
-        E2V : {array}
-            element index array (Nel x Nelnodes)
-        Agg : {csr_matrix}
-            sparse matrix for the aggregate-vertex relationship (N x Nagg)  
-        mesh_type : {string}
-            type of elements: vertex, tri, quad, tet, hex (all 3d)
-        plot_type : {string}
-            primal or dual or points
+    fid : {string, file object}
+        file to be written, e.g. 'mymesh.vtu'
+    Vert : {array}
+        coordinate array (N x D)
+    E2V : {array}
+        element index array (Nel x Nelnodes)
+    Agg : {csr_matrix}
+        sparse matrix for the aggregate-vertex relationship (N x Nagg)  
+    mesh_type : {string}
+        type of elements: vertex, tri, quad, tet, hex (all 3d)
+    plot_type : {string}
+        primal or dual or points
 
     Returns
     -------
@@ -46,40 +46,42 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     
     Notes
     -----
-        D : 
-            dimension of coordinate space
-        N : 
-            # of vertices in the mesh represented in A
-        Ndof : 
-            # of dof
-        Nel : 
-            # of elements in the mesh
-        Nelnodes : 
-            # of nodes per element (e.g. 3 for triangle)
-        Nagg  : 
-            # of aggregates
+    D : 
+        dimension of coordinate space
+    N : 
+        # of vertices in the mesh represented in A
+    Ndof : 
+        # of dof
+    Nel : 
+        # of elements in the mesh
+    Nelnodes : 
+        # of nodes per element (e.g. 3 for triangle)
+    Nagg  : 
+        # of aggregates
 
-        There are three views of the aggregates:
+    There are three views of the aggregates:
 
-        1. primal 
-            nodes are collected and lines and triangles are grouped.
-            This has the benefit of clear separation between colored entities
-            (aggregates) and blank space
+    1. primal 
+        nodes are collected and lines and triangles are grouped.
+        This has the benefit of clear separation between colored entities
+        (aggregates) and blank space
 
-        2. dual 
-            aggregates are viewed through the dual mesh.  This has the 
-            benefit of filling the whole domain and aggregation through 
-            rounder (good) or long (bad) aggregates.
+    2. dual 
+        aggregates are viewed through the dual mesh.  This has the 
+        benefit of filling the whole domain and aggregation through 
+        rounder (good) or long (bad) aggregates.
 
-        3. points 
-            simply color different points with different colors.  This works 
-            best with classical AMG
+    3. points 
+        simply color different points with different colors.  This works 
+        best with classical AMG
 
-        4. non-conforming
-            shrink triangles toward barycenter
+    4. non-conforming
+        shrink triangles toward barycenter
+
 
     Examples
     --------
+
     >>> file_name     = 'example_mesh.vtu'
     >>> agg_file_name = 'example_agg.vtu'
     >>> Vert = array([[0.0,0.0],
@@ -125,7 +127,7 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     if not issubdtype(Vert.dtype,float):
         raise ValueError('Vert should be of type float')
 
-    if E2V!=None:
+    if E2V is not None:
         if not issubdtype(E2V.dtype,integer):
             raise ValueError('E2V should be of type integer')
 
@@ -136,7 +138,7 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     if mesh_type not in valid_mesh_types:
         raise ValueError('mesh_type should be %s' % ' or '.join(valid_mesh_types))
 
-    if A!=None:
+    if A is not None:
         if (A.shape[0] != A.shape[1]) or (A.shape[0] != Agg.shape[0]):
             raise ValueError('expected square matrix A and compatible with Agg')
 
@@ -147,12 +149,12 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
     N        = Vert.shape[0]
     Ndof     = N
-    if E2V!=None:
+    if E2V is not None:
         Nel      = E2V.shape[0]
         Nelnodes = E2V.shape[1]
         if E2V.min() != 0:
             warnings.warn('element indices begin at %d' % E2V.min() )
-    Nagg     = Agg.shape[0]
+    Nagg = Agg.shape[0]
 
     Ncolors  = 8 # number of colors to use in the coloring algorithm
 
@@ -238,16 +240,17 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
 
     Parameters
     ----------
-        Vert   : {array}
-               coordinate array (N x D)
-        E2V    : {array}
-               element index array (Nel x Nelnodes)
-        shrink : {scalar}
-               factor by which to move each element's points to each element's barycenter
+    Vert   : {array}
+           coordinate array (N x D)
+    E2V    : {array}
+           element index array (Nel x Nelnodes)
+    shrink : {scalar}
+           factor by which to move each element's points to each element's barycenter
 
     Returns
     -------
-        - Vert and E2V with Vert appropriately scaled
+    Vert and E2V with Vert appropriately scaled
+
     """
     E2V = array(E2V)
     Vert = array(Vert)
@@ -314,21 +317,21 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None):
 
     Parameters
     ----------
-        fid : {string, file object}
-            file to be written, e.g. 'mymesh.vtu'
-        Verts : {array}
-            Ndof x 3 (if 2, then expanded by 0)
-            list of (x,y,z) point coordinates
-        Cells : {dictionary}
-            Dictionary of with the keys
-        pdata : {array}
-            Nfields of values for the vertices
-        cdata : {dictionary}
-            data for cell normals
+    fid : {string, file object}
+        file to be written, e.g. 'mymesh.vtu'
+    Verts : {array}
+        Ndof x 3 (if 2, then expanded by 0)
+        list of (x,y,z) point coordinates
+    Cells : {dictionary}
+        Dictionary of with the keys
+    pdata : {array}
+        Nfields of values for the vertices
+    cdata : {dictionary}
+        data for cell normals
 
     Returns
     -------
-        - writes a .vtu file for use in Paraview
+     writes a .vtu file for use in Paraview
 
     Notes
     -----
@@ -495,22 +498,23 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
 
     Parameters
     ----------
-        fid : {string, file object}
-            file to be written, e.g. 'mymesh.vtu'
-        Vert : {array}
-            coordinate array (N x D)
-        E2V : {array}
-            element index array (Nel x Nelnodes)
-        mesh_type : {string}
-            type of elements: tri, quad, tet, hex (all 3d)
-        pdata : {array}
-            data on vertices (N x Nfields)
-        cdata : {array}
-            data on elements (Nel x Nfields)
+    fid : {string, file object}
+        file to be written, e.g. 'mymesh.vtu'
+    Vert : {array}
+        coordinate array (N x D)
+    E2V : {array}
+        element index array (Nel x Nelnodes)
+    mesh_type : {string}
+        type of elements: tri, quad, tet, hex (all 3d)
+    pdata : {array}
+        data on vertices (N x Nfields)
+    cdata : {array}
+        data on elements (Nel x Nfields)
 
     Returns
     -------
-        - writes a .vtu file for use in Paraview
+    writes a .vtu file for use in Paraview
+
     """
     if E2V==None:
         mesh_type='vertex'
@@ -532,3 +536,5 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None):
         cdata = ( { Cells.keys()[0] : cdata }, )
 
     write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, cdata=cdata)
+
+
