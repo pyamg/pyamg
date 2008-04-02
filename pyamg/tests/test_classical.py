@@ -6,9 +6,9 @@ from scipy import rand
 from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
-
-from pyamg.rs import * 
 from pyamg import split
+
+from pyamg.classical import * 
 
 class TestRugeStubenFunctions(TestCase):
     def setUp(self):

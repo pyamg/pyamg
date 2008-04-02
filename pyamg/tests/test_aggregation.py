@@ -8,9 +8,9 @@ from scipy import rand
 from scipy.sparse import csr_matrix, lil_matrix, coo_matrix, spdiags
 
 import pyamg
-from pyamg.sa import *
 from pyamg.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, load_example
+from pyamg.aggregation import *
 
 
 class TestSA(TestCase):

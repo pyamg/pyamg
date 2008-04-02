@@ -2,10 +2,12 @@
 xml."""
 
 import tempfile
+
 from scipy.testing import *
 import xml.parsers.expat
 from numpy import array, uint32
-from vis import write_vtu
+
+from pyamg.vis import write_vtu
 
 class TestWriteVtu(TestCase):
     def setUp(self):
@@ -72,11 +74,9 @@ class TestWriteVtu(TestCase):
 
     def test_xml(self):
         for mesh in self.cases:
-            try:
-                write_vtu(mesh.file_name, mesh.Vert, mesh.Cells, \
-                        pdata=mesh.pdata, cdata=mesh.cdata)
-            except:
-                assert False, 'cannot write test.vtu'
+            write_vtu(mesh.file_name, mesh.Vert, mesh.Cells, \
+                    pdata=mesh.pdata, cdata=mesh.cdata)
+
             try:
                 parser = xml.parsers.expat.ParserCreate()
                 parser.ParseFile(open(mesh.file_name, 'r'))

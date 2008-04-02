@@ -6,11 +6,9 @@ def configuration(parent_package='', top_path=None):
     import numpy
     from numpy.distutils.misc_util import Configuration
 
-    config = Configuration('gallery', parent_package, top_path)
+    config = Configuration('vis', parent_package, top_path)
 
     config.add_data_dir('tests')
-
-    config.add_data_dir('example_data')
 
     return config
 

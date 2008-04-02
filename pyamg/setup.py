@@ -1,28 +1,16 @@
 #!/usr/bin/env python
 
-from os.path import join
-import sys
-
 def configuration(parent_package='',top_path=None):
     import numpy
     from numpy.distutils.misc_util import Configuration
 
-    config = Configuration('pyamg',parent_package,top_path)
+    config = Configuration('pyamg', parent_package, top_path)
 
     config.add_subpackage('gallery')
     config.add_subpackage('vis')
+    config.add_subpackage('multigridtools')
 
     config.add_data_dir('tests')
-
-
-    #config.add_data_dir(join('tests','sample_data'))
-
-    # Adding a Python file as a "source" file for an extension is something of
-    # a hack, but it works to put it in the right place.
-    sources = [join('multigridtools', x) for x in ['multigridtools.py', 'multigridtools_wrap.cxx']]
-    config.add_extension('_multigridtools',
-                         sources=sources,
-                         include_dirs=['multigridtools'])
 
     config.make_svn_version_py()  # installs __svn_version__.py
     config.make_config_py()
