@@ -34,11 +34,11 @@ class TestSA(TestCase):
         
         self.cases = [ load_example('bar')['A'].tocsr() ]
 
-    def test_sa_strong_connections(self):
+    def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for epsilon in [0.0,0.1,0.5,1.0,10.0]:
-                expected = reference_sa_strong_connections(A,epsilon)
-                result = sa_strong_connections(A,epsilon)
+                expected = reference_symmetric_strength_of_connection(A,epsilon)
+                result   = symmetric_strength_of_connection(A,epsilon)
 
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
@@ -48,30 +48,30 @@ class TestSA(TestCase):
         #A = A + A.T
         #A = A.tobsr(blocksize=(2,2))
 
-        #S_result   = sa_standard_aggregation(A,epsilon=0.0)
+        #S_result   = standard_aggregation(A,epsilon=0.0)
         #S_expected = matrix([1,1]).T
         #assert_array_equal(S_result.todense(),S_expected)
 
-        #S_result   = sa_standard_aggregation(A,epsilon=0.5)
+        #S_result   = standard_aggregation(A,epsilon=0.5)
         #S_expected = matrix([1,1]).T
         #assert_array_equal(S_result.todense(),S_expected)
 
-        #S_result   = sa_standard_aggregation(A,epsilon=2.0)
+        #S_result   = standard_aggregation(A,epsilon=2.0)
         #S_expected = matrix([[1,0],[0,1]])
         #assert_array_equal(S_result.todense(),S_expected)
 
-    def test_sa_standard_aggregation(self):
+    def test_standard_aggregation(self):
         for A in self.cases:
-            S = sa_strong_connections(A)
+            S = symmetric_strength_of_connection(A)
             
-            expected = reference_sa_standard_aggregation(S)
-            result   = sa_standard_aggregation(S)
+            expected = reference_standard_aggregation(S)
+            result   = standard_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
     
         # S is diagonal - no DoFs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        result = sa_standard_aggregation(S)
+        result   = standard_aggregation(S)
         expected = matrix([[0],[0],[0],[0]])
         assert_equal(result.todense(),expected)
 
@@ -210,7 +210,7 @@ class TestSASolverPerformance(TestCase):
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
-def reference_sa_strong_connections(A,epsilon):
+def reference_symmetric_strength_of_connection(A,epsilon):
     #if epsilon == 0:
     #    return A
     
@@ -242,7 +242,7 @@ def reference_sa_strong_connections(A,epsilon):
 
 # note that this method only tests the current implementation, not
 # all possible implementations
-def reference_sa_standard_aggregation(C):
+def reference_standard_aggregation(C):
     S = array_split(C.indices,C.indptr[1:-1])
 
     n = C.shape[0]

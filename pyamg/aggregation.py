@@ -1,4 +1,4 @@
-"""Functions for Smoothed Aggregation AMG"""
+"""Support for Aggregation-based AMG"""
 
 __docformat__ = "restructuredtext en"
 
@@ -17,7 +17,7 @@ from utils import diag_sparse, approximate_spectral_radius, \
                   symmetric_rescaling, scale_columns, scale_rows
 
 __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
-        'sa_strong_connections', 'sa_standard_aggregation',
+        'symmetric_strength_of_connection', 'standard_aggregation',
         'sa_smoothed_prolongator', 'sa_fit_candidates']
 
 
@@ -36,7 +36,7 @@ def sa_filtered_matrix(A,epsilon):
     if isspmatrix_csr(A): 
         #TODO rework this
         raise NotImplementedError,'blocks not handled yet'
-        Sp,Sj,Sx = multigridtools.sa_strong_connections(A.shape[0],epsilon,A.indptr,A.indices,A.data)
+        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],epsilon,A.indptr,A.indices,A.data)
         return csr_matrix((Sx,Sj,Sp),shape=A.shape)
     elif ispmatrix_bsr(A):
         raise NotImplementedError,'blocks not handled yet'
@@ -58,7 +58,7 @@ def sa_filtered_matrix(A,epsilon):
 ##            #1-norms of blocks entries of A
 ##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
 ##
-##            S = sa_strong_connections(Block_A,epsilon)
+##            S = symmetric_strength_of_connection(Block_A,epsilon)
 ##            S.data[:] = 1
 ##
 ##            Mask = B * S * Bt
@@ -69,13 +69,14 @@ def sa_filtered_matrix(A,epsilon):
 
     return A_filtered
 
-def sa_strong_connections(A, epsilon=0):
-    """Return the standard SA strength of connection matrix for A
+def symmetric_strength_of_connection(A, epsilon=0):
+    """Compute a strength of connection matrix using the standard symmetric measure
     
     An off-diagonal connection A[i,j] is strong iff
         abs(A[i,j]) >= epsilon * sqrt( abs(A[i,i] * A[j,j]) )
 
-    References:
+    References
+    ----------
         Vanek, P. and Mandel, J. and Brezina, M., 
         "Algebraic Multigrid by Smoothed Aggregation for 
         Second and Fourth Order Elliptic Problems", 
@@ -92,7 +93,7 @@ def sa_strong_connections(A, epsilon=0):
         Sj = empty_like(A.indices)
         Sx = empty_like(A.data)
 
-        fn = multigridtools.sa_strong_connections
+        fn = multigridtools.symmetric_strength_of_connection
         fn(A.shape[0], epsilon, A.indptr, A.indices, A.data, Sp, Sj, Sx)
         
         return csr_matrix((Sx,Sj,Sp),A.shape)
@@ -102,7 +103,7 @@ def sa_strong_connections(A, epsilon=0):
         R,C = A.blocksize
 
         if R != C:
-            raise ValueError,'matrix must have square blocks'
+            raise ValueError('matrix must have square blocks')
 
         if epsilon == 0:
             data = ones( len(A.indices), dtype=A.dtype )
@@ -112,13 +113,27 @@ def sa_strong_connections(A, epsilon=0):
             # Frobenius norms of the blocks
             data = (A.data*A.data).reshape(-1,R*C).sum(axis=1) 
             A = csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
-            return sa_strong_connections(A,epsilon)
+            return symmetric_strength_of_connection(A,epsilon)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
 
-def sa_standard_aggregation(C):
-    """Compute the sparsity pattern of the tentative prolongator 
-    from a strength of connection matrix C
+def standard_aggregation(C):
+    """Compute the sparsity pattern of the tentative prolongator
+
+    Parameters
+    ----------
+    C : csr_matrix
+        strength of connection matrix
+
+    Returns
+    -------
+    T : csr_matrix
+        stores the sparsity pattern of the tentative prolongator
+
+
+    Example
+    -------
+    TODO e
     """
 
     if not isspmatrix_csr(C): 
@@ -132,7 +147,7 @@ def sa_standard_aggregation(C):
 
     Tj = empty( num_rows, dtype=index_type ) #stores the aggregate #s
     
-    fn = multigridtools.sa_get_aggregates
+    fn = multigridtools.standard_aggregation
 
     num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
 
@@ -155,7 +170,7 @@ def sa_standard_aggregation(C):
 
 
 
-def sa_fit_candidates(AggOp,B,tol=1e-10):
+def sa_fit_candidates(AggOp, B, tol=1e-10):
     if not isspmatrix_csr(AggOp):
         raise TypeError,'expected csr_matrix for argument AggOp'
 
@@ -259,7 +274,7 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
     # strength of connection
     fn, kwargs = unpack_arg(strength)
     if fn == 'standard':
-        C = sa_strong_connections(A,**kwargs)
+        C = symmetric_strength_of_connection(A,**kwargs)
     elif fn == 'ode':
         C = sa_ode_strong_connections(A,B,**kwargs)
     else:
@@ -268,7 +283,7 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
     # aggregation
     fn, kwargs = unpack_arg(aggregate)
     if fn == 'standard':
-        AggOp = sa_standard_aggregation(C,**kwargs)
+        AggOp = standard_aggregation(C,**kwargs)
     else:
         raise ValueError('unrecognized aggregation method' % fn )
 

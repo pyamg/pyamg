@@ -12,10 +12,10 @@
 #define DEBUG
 
 template<class I, class T>
-void sa_strong_connections(const I n_row, 
-                           const T epsilon,
-                           const I Ap[], const I Aj[], const T Ax[],
-                                 I Sp[],       I Sj[],       T Sx[])
+void symmetric_strength_of_connection(const I n_row, 
+                                      const T epsilon,
+                                      const I Ap[], const I Aj[], const T Ax[],
+                                            I Sp[],       I Sj[],       T Sx[])
 {
     //Sp,Sj form a CSR representation where the i-th row contains
     //the indices of all the strong connections from node i
@@ -77,10 +77,10 @@ void sa_strong_connections(const I n_row,
  */
     
 template <class I>
-I sa_get_aggregates(const I n_row,
-                    const I Ap[], 
-                    const I Aj[],
-                          I  x[])
+I standard_aggregation(const I n_row,
+                       const I Ap[], 
+                       const I Aj[],
+                             I  x[])
 {
     // Bj[n] == -1 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);

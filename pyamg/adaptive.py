@@ -11,8 +11,8 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 from relaxation import gauss_seidel
 from multilevel import multilevel_solver
 from utils import approximate_spectral_radius,hstack_csr,vstack_csr,diag_sparse
-from aggregation import sa_standard_aggregation, sa_smoothed_prolongator, \
-        sa_fit_candidates, sa_strong_connections
+from aggregation import standard_aggregation, sa_smoothed_prolongator, \
+        sa_fit_candidates, symmetric_strength_of_connection
 
 #from numpy.linalg import norm
 from utils import norm
@@ -179,8 +179,8 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
 
     while len(AggOps) + 1 < max_levels and A_l.shape[0] > max_coarse:
         if aggregation is None:
-            C_l = sa_strong_connections(A_l,epsilon)
-            W_l = sa_standard_aggregation(C_l) #step 4b
+            C_l = symmetric_strength_of_connection(A_l,epsilon)
+            W_l = standard_aggregation(C_l)                #step 4b
         else:
             W_l = aggregation[len(AggOps)]
         P_l,x = sa_fit_candidates(W_l,x)                   #step 4c

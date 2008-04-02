@@ -52,9 +52,9 @@ F_NODE = _multigridtools.F_NODE
 C_NODE = _multigridtools.C_NODE
 U_NODE = _multigridtools.U_NODE
 
-def sa_get_aggregates(*args):
-  """sa_get_aggregates(int n_row, int Ap, int Aj, int x) -> int"""
-  return _multigridtools.sa_get_aggregates(*args)
+def standard_aggregation(*args):
+  """standard_aggregation(int n_row, int Ap, int Aj, int x) -> int"""
+  return _multigridtools.standard_aggregation(*args)
 
 def rs_cf_splitting(*args):
   """rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"""
@@ -104,14 +104,14 @@ def rs_direct_interpolation_pass2(*args):
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
 
-def sa_strong_connections(*args):
+def symmetric_strength_of_connection(*args):
   """
-    sa_strong_connections(int n_row, float epsilon, int Ap, int Aj, float Ax, 
+    symmetric_strength_of_connection(int n_row, float epsilon, int Ap, int Aj, float Ax, 
         int Sp, int Sj, float Sx)
-    sa_strong_connections(int n_row, double epsilon, int Ap, int Aj, double Ax, 
+    symmetric_strength_of_connection(int n_row, double epsilon, int Ap, int Aj, double Ax, 
         int Sp, int Sj, double Sx)
     """
-  return _multigridtools.sa_strong_connections(*args)
+  return _multigridtools.symmetric_strength_of_connection(*args)
 
 def block_gauss_seidel(*args):
   """

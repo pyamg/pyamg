@@ -194,13 +194,13 @@ DECLARE_DATA_TYPE( double )
 %enddef
  
  
-INSTANTIATE_INDEX(sa_get_aggregates)
+INSTANTIATE_INDEX(standard_aggregation)
 INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 
 INSTANTIATE_BOTH(rs_strong_connections)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
-INSTANTIATE_BOTH(sa_strong_connections)
+INSTANTIATE_BOTH(symmetric_strength_of_connection)
 
 INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
