@@ -15,7 +15,7 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean, sum
+        integer, mean, sum, prod
 
 from scipy.sparse import csr_matrix, coo_matrix
 
@@ -169,12 +169,11 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
             G = Agg.T * abs(A) * Agg
             colors = vertex_coloring(G, method='LDF')
             pdata = Agg * colors  # extend aggregate colors to vertices
-            pdata = pdata.reshape((Ndof,1))
         else:
             # color aggregates in sequence
             Agg   = coo_matrix(Agg)
-            pdata = zeros((Ndof,1))
-            pdata[Agg.row,0] = Agg.col % Ncolors
+            pdata = zeros(Ndof)
+            pdata[Agg.row] = Agg.col % Ncolors
 
         write_mesh(fid, Vert, E2V, mesh_type=mesh_type, pdata=pdata)
 
@@ -183,8 +182,8 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     #
     if plot_type == 'primal':
         Agg = csr_matrix(Agg)
-
-        # mask[i] == True if all vertices in element i belong to the same aggregate
+    
+        # Find elements with all vertices in same aggregate
         if len(Agg.indices)!=Agg.shape[0]:
             # account for 0 rows.  mark them as solitary aggregates
             full_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
@@ -193,9 +192,9 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
             ElementAggs = full_aggs[E2V]
         else:
             ElementAggs = Agg.indices[E2V]
-
+        
+        # mask[i] == True if all vertices in element i belong to the same aggregate
         mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
-
         E2V3 = E2V[mask,:]
         Nel3 = E2V3.shape[0]
 
@@ -209,8 +208,8 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
                    E2V[markedelements,(markededges+1)%3]]].T 
         Nel2 = E2V2.shape[0]
 
-        colors2 = 2*ones((Nel2,1))  # color edges with twos
-        colors3 = 3*ones((Nel3,1))  # color triangles with threes
+        colors2 = 2*ones((1,Nel2))  # color edges with twos
+        colors3 = 3*ones((1,Nel3))  # color triangles with threes
 
         Cells  =  {3: E2V2, 5: E2V3}
         cdata  = ({3: colors2, 5: colors3},) # make sure it's a tuple
@@ -458,51 +457,62 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     
     fid.writelines('      </Cells>\n')
     #------------------------------------------------------------------
+
+    def write_vertex_data(fid, arr, shape_suffix, name_prefix):
+        max_rank = len(shape_suffix) + 1
+        if len(arr.shape) > max_rank:
+            raise ValueError('rank of %s must be <= %d' % (name_prefix,max_rank))
+        if arr.shape[-len(shape_suffix):] != shape_suffix:
+            raise ValueError('last dimensions of %s must be %s' % (name_prefix,shape_suffix) )
+        arr = arr.reshape( (-1,) + shape_suffix )
+        
+        if len(shape_suffix) == 1:
+            num_components = 1
+        else:
+            num_components = prod(shape_suffix[1:]) # does this work for tensors?
     
+        for n,row in enumerate(arr):
+            fid.writelines('        <DataArray type=\"Float32\" Name=\"%s%d\" NumberOfComponents=\"%d\" format=\"ascii\">\n' % (name_prefix,n+1,num_components))
+            arr.tofile(fid, sep=' ')
+            fid.writelines('\n')
+            fid.writelines('        </DataArray>\n')
+
 
     ###################################################################
-    # Point Data
+    # Vertex Data
     fid.writelines('      <PointData>\n')
     if pdata!=None:
-        if pdata.shape[0]!=Ndof:
-            raise ValueError('dimension of pdata must be of length = # of vertices')
-        Nfields = pdata.shape[1]
-        for j in range(0,Nfields):
-            fid.writelines('        <DataArray type=\"Float32\" Name=\"pfield%d\" format=\"ascii\">\n' % (j+1))
-            pdata[:,j].tofile(fid, sep=' ') # per vertex data
-            fid.writelines('\n')
-            fid.writelines('        </DataArray>\n')
+        write_vertex_data(fid,  pdata,  (Ndof,),  'pdata')  # per-vertex scalar data
     if pvdata!=None:
-        if pvdata.shape[0]!=3*Ndof:
-            raise ValueError('dimension of pvdata must be of length = 3*# of vertices')
-        Nfields = pvdata.shape[1]
-        for j in range(0,Nfields):
-            fid.writelines('        <DataArray type=\"Float32\" Name=\"pvfield%d\" NumberOfComponents=\"3\" format=\"ascii\">\n' % (j+1))
-            pvdata[:,j].tofile(fid, sep=' ') # per vertex data
-            fid.writelines('\n')
-            fid.writelines('        </DataArray>\n')
+        write_vertex_data(fid, pvdata, (Ndof,3), 'pvdata')  # per-vertex vector data
     fid.writelines('      </PointData>\n')
     #------------------------------------------------------------------
+
 
     ###################################################################
     # Cell Data
     fid.writelines('      <CellData>\n')
     if cdata != None:
-        for k in range(0, len(cdata)):
+        for k,cell_data in enumerate(cdata):
             fid.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
+
             for key in range(1,15):
-                if key in Cells:
-                    if key not in cdata[k]:
-                        raise ValueError('cdata needs to have the same dictionary form as Cells')
-                    if cdata[k][key].shape[0] != Cells[key].shape[0]:
-                        raise ValueError('cdata needs to have the same dictionary number of as Cells')
-                    if (vtk_cell_info[key] == None) and (cdata[k][key] != None):
-                        # Poly data
-                        raise NotImplementedError,'Poly Data not implemented yet'
-                    elif (vtk_cell_info[key] != None) and (cdata[k][key] != None):
-                        # non-Poly data
-                        cdata[k][key].tofile(fid,' ')
-                        fid.writelines('\n')
+                if key not in Cells: continue
+
+                if (vtk_cell_info[key] == None) and (cdata[k][key] != None):
+                    raise NotImplementedError('Poly Data not implemented yet')
+
+                if key not in cell_data:
+                    raise ValueError('cdata needs to have the same dictionary form as Cells')
+
+                if cell_data[key].size != Cells[key].shape[0]:
+                    raise ValueError('size of cdata must be equal to the number of Cells')
+
+                elif (vtk_cell_info[key] != None) and (cdata[k][key] != None):
+                    # non-Poly data
+                    cdata[k][key].tofile(fid,' ')
+                    fid.writelines('\n')
+
             fid.writelines('        </DataArray>\n')
     fid.writelines('      </CellData>\n')
     #------------------------------------------------------------------

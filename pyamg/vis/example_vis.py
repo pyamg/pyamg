@@ -106,8 +106,8 @@ def example_vis(test=0):
         data = ones((1,18),dtype=uint32).ravel()
         Agg=csr_matrix((data,(row,col)),shape=(18,5))
         coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='primal')
-        pdata = 2 * ones((18,1))
-        pvdata = ones((54,1))
+        pdata = 2 * ones(18)
+        pvdata = ones((18,3))
         write_mesh(file_name, Vert, E2V, mesh_type='tri', pdata=pdata, pvdata=pvdata)
 
     if test==2:
