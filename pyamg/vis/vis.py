@@ -311,7 +311,7 @@ def shrink_elmts(E2V, Vert, shrink=0.75):
 
 
 
-def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
+def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None):
     """
     Write a .vtu file in xml format
 
@@ -325,11 +325,13 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     Cells : {dictionary}
         Dictionary of with the keys
     pdata : {array}
-        Nfields of values for the vertices
-    cdata : {dictionary}
-        data for cell normals
+        Nfields x Ndof array of scalar values for the vertices
     pvdata : {array}
-        Nfields of values for 3 component vector data at the vertices
+        Nfields x Ndof x 3 array of vector values for the vertices
+    cdata : {dictionary}
+        scalar valued cell data
+    cvdata : {dictionary}
+        vector valued cell data
 
     Returns
     -------
@@ -433,8 +435,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
                 offset     = cell_array.shape[1]
             
                 if vtk_cell_info[key] != offset:
-                    raise ValueError('cell array has %d columns, expected %d' \
-                            % (offset, vtk_cell_info[key]) )
+                    raise ValueError('cell array has %d columns, expected %d' % (offset, vtk_cell_info[key]) )
 
                 cell_type  [k: k + cell_array.shape[0]] = key
                 cell_offset[k: k + cell_array.shape[0]] = offset
@@ -458,7 +459,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     fid.writelines('      </Cells>\n')
     #------------------------------------------------------------------
 
-    def write_vertex_data(fid, arr, shape_suffix, name_prefix):
+    def write_vertex_data(arr, shape_suffix, name_prefix):
+        """helper function for vertex data output"""
         max_rank = len(shape_suffix) + 1
         if len(arr.shape) > max_rank:
             raise ValueError('rank of %s must be <= %d' % (name_prefix,max_rank))
@@ -482,38 +484,45 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     # Vertex Data
     fid.writelines('      <PointData>\n')
     if pdata!=None:
-        write_vertex_data(fid,  pdata,  (Ndof,),  'pdata')  # per-vertex scalar data
+        write_vertex_data(pdata,  (Ndof,),  'pdata')  # per-vertex scalar data
     if pvdata!=None:
-        write_vertex_data(fid, pvdata, (Ndof,3), 'pvdata')  # per-vertex vector data
+        write_vertex_data(pvdata, (Ndof,3), 'pvdata')  # per-vertex vector data
     fid.writelines('      </PointData>\n')
     #------------------------------------------------------------------
 
+
+    def write_cell_data(data, shape_suffix, name_prefix):
+        components = prod( shape_suffix )
+
+        for k,cell_data in enumerate(data):
+            fid.writelines('        <DataArray type=\"Float32\" Name=\"%s%d\" NumberOfComponents=\"%d\" format=\"ascii\">\n' % (name_prefix,k+1,components))
+            for key in range(1,15):
+                if key not in Cells: continue
+
+                if vtk_cell_info[key] == None and cell_data[key] != None:
+                    raise NotImplementedError('Poly Data not implemented yet')
+
+                if key not in cell_data:
+                    raise ValueError('%s needs to have the same dictionary form as Cells' % name_prefix)
+
+                if components == 1:
+                    if cell_data[key].size != Cells[key].shape[0]:
+                        raise ValueError('size of %s must be equal to the number of Cells' % name_prefix)
+                else:
+                    if cell_data[key].shape != (Cells[key].shape[0],) + shape_suffix:
+                        raise ValueError('shape of %s must be equal to %s' % (name_prefix,('NumCells',) + shape_suffix) )
+
+                cell_data[key].tofile(fid,' ')
+                fid.writelines('\n')
+            fid.writelines('        </DataArray>\n')
 
     ###################################################################
     # Cell Data
     fid.writelines('      <CellData>\n')
     if cdata != None:
-        for k,cell_data in enumerate(cdata):
-            fid.writelines('        <DataArray type=\"Float32\" Name=\"cfield%d\" format=\"ascii\">\n' % (k+1))
-
-            for key in range(1,15):
-                if key not in Cells: continue
-
-                if (vtk_cell_info[key] == None) and (cdata[k][key] != None):
-                    raise NotImplementedError('Poly Data not implemented yet')
-
-                if key not in cell_data:
-                    raise ValueError('cdata needs to have the same dictionary form as Cells')
-
-                if cell_data[key].size != Cells[key].shape[0]:
-                    raise ValueError('size of cdata must be equal to the number of Cells')
-
-                elif (vtk_cell_info[key] != None) and (cdata[k][key] != None):
-                    # non-Poly data
-                    cdata[k][key].tofile(fid,' ')
-                    fid.writelines('\n')
-
-            fid.writelines('        </DataArray>\n')
+        write_cell_data(cdata,  (1,),  'cdata')
+    if cvdata != None:
+        write_cell_data(cvdata, (3,), 'cvdata')
     fid.writelines('      </CellData>\n')
     #------------------------------------------------------------------
 
@@ -523,8 +532,8 @@ def write_vtu( fid, Verts, Cells, pdata=None, cdata=None, pvdata=None):
     
     #fid.close()  #don't close file
     
-def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None, \
-        pvdata=None):
+def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, pvdata=None, \
+        cdata=None, cvdata=None):
     """
     Write mesh file for basic types of elements
 
@@ -539,11 +548,13 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None, \
     mesh_type : {string}
         type of elements: tri, quad, tet, hex (all 3d)
     pdata : {array}
-        data on vertices (N x Nfields)
-    cdata : {array}
-        data on elements (Nel x Nfields)
+        scalar data on vertices (Nfields x N)
     pvdata : {array}
-        Nfields of values for 3 component vector data at the vertices
+        vector data on vertices (Nfields x N x 3)
+    cdata : {array}
+        scalar data on cells (Nfields x Nel)
+    cvdata : {array}
+        vector data on cells (Nfields x Nel x 3)
 
     Returns
     -------
@@ -553,23 +564,25 @@ def write_mesh(fid, Vert, E2V, mesh_type='tri', pdata=None, cdata=None, \
     if E2V is None:
         mesh_type='vertex'
 
-    if mesh_type == 'tri':
-        Cells = {  5: E2V }
-    elif mesh_type == 'quad':
-        Cells = {  9: E2V }
-    elif mesh_type == 'tet':
-        Cells = { 10: E2V }
-    elif mesh_type == 'hex':
-        Cells = { 12 : E2V }
-    elif mesh_type=='vertex':
-        Cells = { 1: arange(0,Vert.shape[0]).reshape((Vert.shape[0],1))}
-    else:
+    map_type_to_key = {'tri' : 5, 'quad' : 9, 'tet' : 10, 'hex' : 12, 'vertex' : 1}
+
+    if mesh_type not in map_type_to_key:
         raise ValueError('unknown mesh_type=%s' % mesh_type)
+    
+    key = map_type_to_key[mesh_type]
+
+    if mesh_type=='vertex':
+        Cells = { key : arange(0,Vert.shape[0]).reshape((Vert.shape[0],1))}
+    else:
+        Cells = { key : E2V }
 
     if cdata is not None:
-        cdata = ( { Cells.keys()[0] : cdata }, )
+        cdata = [ { key: data} for data in cdata ]
+    
+    if cvdata is not None:
+        cvdata = [ { key: data} for data in cvdata ]
 
-    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, cdata=cdata, \
-            pvdata=pvdata)
+    write_vtu( fid, Verts=Vert, Cells=Cells, pdata=pdata, pvdata=pvdata, \
+            cdata=cdata, cvdata=cvdata)
 
 
