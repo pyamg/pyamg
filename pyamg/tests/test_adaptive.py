@@ -5,7 +5,7 @@ from scipy import rand
 from scipy.sparse import csr_matrix
 
 
-from pyamg.sa import sa_fit_candidates, smoothed_aggregation_solver
+from pyamg.aggregation import sa_fit_candidates, smoothed_aggregation_solver
 #from pyamg.adaptive import augment_candidates
 
 from pyamg.gallery import *

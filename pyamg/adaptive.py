@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 from relaxation import gauss_seidel
 from multilevel import multilevel_solver
 from utils import approximate_spectral_radius,hstack_csr,vstack_csr,diag_sparse
-from sa import sa_standard_aggregation, sa_smoothed_prolongator, \
+from aggregation import sa_standard_aggregation, sa_smoothed_prolongator, \
         sa_fit_candidates, sa_strong_connections
 
 #from numpy.linalg import norm

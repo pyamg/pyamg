@@ -1,6 +1,7 @@
 """ Try creating a point and primal aggregate view for a C/F splitting and
 simple aggregation, respectively."""
 
+import tempfile
 from scipy.testing import *
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
@@ -9,7 +10,7 @@ from vis import write_vtu
 
 class TestVis(TestCase):
     def setUp(self):
-        self.file_name = 'test.vtu'
+        self.file_name = tempfile.mktemp() #'test.vtu'
 
     def test_tri_points(self):
         Vert = array([[0.0,0.0],
@@ -40,12 +41,10 @@ class TestVis(TestCase):
         col = array([1,0,1,1,0,1,0,1,0,1,0, 1])
         data = ones((1,12),dtype=uint32).ravel()
         Agg = csr_matrix((data,(row,col)),shape=(12,2))
-        try:
-            coarse_grid_vis(file_name=self.file_name, 
-                            Vert=Vert, E2V=E2V, Agg=Agg,
-                            mesh_type='tri', A=None, plot_type='points')
-        except:
-            assert False, 'cannot call points in coarse_grid_vis correctly'
+
+        coarse_grid_vis(self.file_name, 
+                        Vert=Vert, E2V=E2V, Agg=Agg,
+                        mesh_type='tri', A=None, plot_type='points')
 
     def test_tri_primal(self):
         Vert = array([[0.0,0.0],
@@ -91,12 +90,10 @@ class TestVis(TestCase):
         col = array([0,1,3,0,1,1,3,0,0,1, 3, 4, 0, 0, 0, 2, 4, 4])
         data = ones((1,18),dtype=uint32).ravel()
         Agg=csr_matrix((data,(row,col)),shape=(18,5))
-        try:
-            coarse_grid_vis(file_name=self.file_name, 
-                            Vert=Vert, E2V=E2V, Agg=Agg,
-                            mesh_type='tri', A=None, plot_type='primal')
-        except:
-            assert False, 'cannot call primal in coarse_grid_vis correctly'
+
+        coarse_grid_vis(self.file_name, 
+                        Vert=Vert, E2V=E2V, Agg=Agg,
+                        mesh_type='tri', A=None, plot_type='primal')
 
 if __name__ == '__main__':
     nose.run(argv=['', __file__])

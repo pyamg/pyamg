@@ -1,6 +1,7 @@
 """ Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed
 xml."""
 
+import tempfile
 from scipy.testing import *
 import xml.parsers.expat
 from numpy import array, uint32
@@ -10,11 +11,11 @@ class TestWriteVtu(TestCase):
     def setUp(self):
         cases = []
         class mesh:
-            file_name='test.vtu'
-            Vert=None
-            E2V=None
-            pdata=None
-            cdata=None
+            file_name = tempfile.mktemp()
+            Vert  = None
+            E2V   = None
+            pdata = None
+            cdata = None
         mesh=mesh()
 
         # 1 triangle
@@ -72,7 +73,8 @@ class TestWriteVtu(TestCase):
     def test_xml(self):
         for mesh in self.cases:
             try:
-                write_vtu(mesh.Vert,mesh.Cells,mesh.file_name,mesh.pdata,mesh.cdata)
+                write_vtu(mesh.file_name, mesh.Vert, mesh.Cells, \
+                        pdata=mesh.pdata, cdata=mesh.cdata)
             except:
                 assert False, 'cannot write test.vtu'
             try:

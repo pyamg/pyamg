@@ -1,4 +1,4 @@
-"""Ruge-Stuben AMG (Classical AMG)"""
+"""Classical AMG methods (Ruge-Stuben AMG)"""
 
 __docformat__ = "restructuredtext en"
 
