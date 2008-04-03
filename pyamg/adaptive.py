@@ -50,9 +50,9 @@ def sa_hierarchy(A,B,AggOps):
     return As,Ps,Ts,Bs
 
 
-def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, max_coarse=100, \
-        epsilon=0.0, omega=4.0/3.0, symmetric=True, rescale=True,
-        aggregation=None):
+def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters=0, 
+        max_levels=10, max_coarse=100, epsilon=0.0, omega=4.0/3.0, symmetric=True, 
+        rescale=True,  aggregation=None):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
 
@@ -62,15 +62,16 @@ def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, 
     A : {csr_matrix, bsr_matrix}
         Square matrix in CSR or BSR format
     num_candidates : {integer} : default 1
-        Number of near-nullspace candidates to generate.
-    mu : {integer} : default 5
-        Number of cycles used at each level of the adaptive setup phase.
+        Number of near-nullspace candidates to generate
+    candidate_iters : {integer} : default 5
+        Number of smoothing passes/multigrid cycles used at each level of 
+        the adaptive setup phase
+    improvement_iters : {integer} : default 0
+        Number of times each candidate is improved
 
     Optional Parameters
     -------------------
 
-    improvement : {integer}
-        Number of times each candidate is improved
     max_levels: {integer}
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer}
@@ -119,37 +120,40 @@ def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, 
     if A.shape[0] <= max_coarse:
         return multilevel_solver( [A], [] )
 
-    #first candidate
-    x,AggOps = asa_initial_setup_stage(A, max_levels = max_levels, \
-            max_coarse = max_coarse, mu = mu, epsilon = epsilon, \
-            aggregation = aggregation )
+    ###
+    # develop first candidate
+    x,AggOps = initial_setup_stage(A, candidate_iters,
+            max_levels = max_levels, max_coarse = max_coarse, 
+            epsilon = epsilon, aggregation = aggregation )
 
     #TODO make fit_candidates work for small Bs
     x /= norm(x)
     
-    #create SA using x here
+    # create SA hierarchy using first candidate
     As,Ps,Ts,Bs = sa_hierarchy(A,x,AggOps)
 
+    ###
+    # develop additional candidates
     for i in range(num_candidates - 1):
-        x = asa_general_setup_stage(As,Ps,Ts,Bs,AggOps,mu=mu)
-        x /= norm(x)
-
+        x = general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters)
+        x /= norm(x)  #TODO fix in fit_candidates
         B = hstack((Bs[0],x))
         As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
-    #improve candidates?
-    for i in range(improvement):
+    ###
+    # improve candidates
+    for i in range(improvement_iters):
         B = Bs[0]
         for i in range(B.shape[1]):
             B = B[:,1:]
             As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
-            x = asa_general_setup_stage(As,Ps,Ts,Bs,AggOps,mu)
+            x = general_setup_stage(As,Ps,Ts,Bs,AggOps,mu)
             B = hstack((B,x))
         As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
     return multilevel_solver(As,Ps)
 
-def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation):
+def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, aggregation):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
@@ -159,7 +163,7 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
         max_levels = len(aggregation) + 1
 
     # aSA parameters
-    # mu      - number of test relaxation iterations
+    # candidate_iters - number of test relaxation iterations
     # epsilon - minimum acceptable relaxation convergence factor
 
     #step 1
@@ -167,8 +171,11 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
     x   = rand(A_l.shape[0],1) # TODO see why randn() fails here
     skip_f_to_i = False
 
+    def relax(A,x):
+        gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+
     #step 2
-    gauss_seidel(A_l, x, zeros_like(x), iterations=mu, sweep='symmetric')
+    relax(A_l,x)
 
     #step 3
     #TODO test convergence rate here
@@ -179,47 +186,47 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
 
     while len(AggOps) + 1 < max_levels and A_l.shape[0] > max_coarse:
         if aggregation is None:
-            C_l = symmetric_strength_of_connection(A_l,epsilon)
-            W_l = standard_aggregation(C_l)                #step 4b
+            C_l   = symmetric_strength_of_connection(A_l,epsilon)
+            AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
-            W_l = aggregation[len(AggOps)]
-        P_l,x = fit_candidates(W_l,x)                      #step 4c
-        I_l   = sa_smoothed_prolongator(A_l,P_l)           #step 4d
-        A_l   = I_l.T.asformat(I_l.format) * A_l * I_l     #step 4e
-        #TODO change variable names I_l -> P, P_l -> T
+            AggOp = aggregation[len(AggOps)]
+        T_l,x = fit_candidates(AggOp,x)                                        #step 4c
+        P_l   = sa_smoothed_prolongator(A_l,T_l)                               #step 4d
+        A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
 
-        AggOps.append(W_l)
-        Ps.append(I_l)
+        AggOps.append(AggOp)
+        Ps.append(P_l)
         As.append(A_l)
 
         if A_l.shape <= max_coarse:  break
 
         if not skip_f_to_i:
             x_hat = x.copy()                                                   #step 4g
-            gauss_seidel(A_l,x,zeros_like(x),iterations=mu,sweep='symmetric')  #step 4h
+            relax(A_l,x)                                                       #step 4h
             x_A_x = dot(x.T,A_l*x)
-            if (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/mu) < epsilon:             #step 4i
-                print "sufficient convergence, skipping"
+            err_ratio = (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/candidate_iters) 
+            if err_ratio < epsilon:                                            #step 4i
+                #print "sufficient convergence, skipping"
                 skip_f_to_i = True
                 if x_A_x == 0:
                     x = x_hat  #need to restore x
 
-    #update fine-level candidate
-    for A_l,I in reversed(zip(As[1:],Ps)):
-        gauss_seidel(A_l,x,zeros_like(x),iterations=mu,sweep='symmetric')         #TEST
-        x = I * x
-    gauss_seidel(A,x,zeros_like(x),iterations=mu,sweep='symmetric')         #TEST
+    # extend coarse-level candidate to the finest level
+    for A_l,P in reversed(zip(As[1:],Ps)):
+        relax(A_l,x)
+        x = P * x
+    relax(A,x)
 
     return x,AggOps  #first candidate,aggregation
 
 
-def asa_general_setup_stage(As, Ps, Ts, Bs, AggOps, mu):
+def general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters):
     A = As[0]
 
     x = rand(A.shape[0],1)
     b = zeros_like(x)
 
-    x = multilevel_solver(As,Ps).solve(b, x0=x, tol=1e-10, maxiter=mu)
+    x = multilevel_solver(As,Ps).solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)
 
     #TEST FOR CONVERGENCE HERE
 
@@ -254,11 +261,11 @@ def asa_general_setup_stage(As, Ps, Ts, Bs, AggOps, mu):
         solver = multilevel_solver( [A] + As[i+2:], [bridge] + Ps[i+2:] )
 
         x = R[:,-1].reshape(-1,1)
-        x = solver.solve(zeros_like(x), x0=x, tol=1e-8, maxiter=mu)
+        x = solver.solve(zeros_like(x), x0=x, tol=1e-8, maxiter=candidate_iters)
 
     for A,P in reversed(zip(temp_As,temp_Ps)):
         x = P * x
-        gauss_seidel(A,x,zeros_like(x),iterations=mu,sweep='symmetric')
+        gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
 
     return x
 
