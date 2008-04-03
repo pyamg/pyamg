@@ -171,6 +171,50 @@ def standard_aggregation(C):
 
 
 def fit_candidates(AggOp, B, tol=1e-10):
+    """Fit near-nullspace candidates to form the tentative prolongator
+
+    Parameters
+    ----------
+    AggOp : csr_matrix
+        Describes the sparsity pattern of the tentative prolongator.
+        Has dimension (#blocks, #aggregates)
+    B : array
+        The near-nullspace candidates stored in columnwise fashion.
+        Has dimension (#blocks * blocksize, #candidates)
+    tol : scalar
+        Threshold for eliminating local basis functions.
+        If after orthogonalization a local basis function Q[:,j] is small, 
+        i.e. ||Q[:,j]|| < tol, then Q[:,j] is set to zero.
+
+    Returns
+    -------
+    (Q,R) : (bsr_matrix,array)
+        The tentative prolongator Q is a sparse block matrix with dimensions 
+        (#blocks * blocksize, #aggregates * #candidates) formed by dense blocks
+        of size (blocksize, #candidates).  The coarse level candidates are 
+        stored in R which has dimensions (#blocksize * #aggregates, #blocksize).
+
+    Notes
+    -----
+        Assuming that each row of AggOp contains exactly one non-zero entry,
+        i.e. all unknowns belong to an aggregate, then Q and R statisfy the 
+        relationship B = Q*R.  In other words, the near-nullspace candidates
+        are represented exactly by the tentative prolongator.
+
+        If AggOp contains rows with no non-zero entries, then the range of the
+        tentative prolongator will not include those degrees of freedom. This
+        situation is illustrated in the examples below.
+
+    
+    Examples
+    --------
+
+    TODO: 
+        Show B=[1,1,1,1]^T
+        Show B=[[1,1,1,1],[0,1,2,3]]^T
+        Show B=[1,1,1,1]^T where AggOp has zero row
+
+    """
     if not isspmatrix_csr(AggOp):
         raise TypeError('expected csr_matrix for argument AggOp')
 
