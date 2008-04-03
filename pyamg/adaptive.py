@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 from relaxation import gauss_seidel
 from multilevel import multilevel_solver
 from utils import approximate_spectral_radius, diag_sparse
-from aggregation import standard_aggregation, sa_smoothed_prolongator, \
+from aggregation import standard_aggregation, jacobi_prolongation_smoother, \
         fit_candidates, symmetric_strength_of_connection
 
 #from numpy.linalg import norm
@@ -41,7 +41,7 @@ def sa_hierarchy(A,B,AggOps):
 
     for AggOp in AggOps:
         P,B = fit_candidates(AggOp,B)
-        I   = sa_smoothed_prolongator(A,P)
+        I   = jacobi_prolongation_smoother(A,P)
         A   = I.T.asformat(I.format) * A * I
         As.append(A)
         Ts.append(P)
@@ -193,7 +193,7 @@ def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, the
         else:
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-        P_l   = sa_smoothed_prolongator(A_l,T_l)                               #step 4d
+        P_l   = jacobi_prolongation_smoother(A_l,T_l)                               #step 4d
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
 
         AggOps.append(AggOp)
@@ -252,7 +252,7 @@ def general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters):
 
         T,R = fit_candidates(AggOps[i],B)
 
-        P = sa_smoothed_prolongator(A,T)
+        P = jacobi_prolongation_smoother(A,T)
         A = P.T.asformat(P.format) * A * P
 
         temp_Ps.append(P)
@@ -282,7 +282,7 @@ def general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters):
 #        for i in range(len(As) - 1):
 #            T,R = augment_candidates(AggOps[i], Ts[i], Bs[i+1], x)
 #
-#            P = sa_smoothed_prolongator(A,T)
+#            P = jacobi_prolongation_smoother(A,T)
 #            A = P.T.asformat(P.format) * A * P
 #
 #            new_As.append(A)

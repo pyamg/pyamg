@@ -87,7 +87,7 @@ class TestSA(TestCase):
 #            T,coarse_candidates_result = fit_candidates(AggOp,candidates)
 #
 #            P_result = sa_interpolation(A,candidates,omega=4.0/3.0,AggOp=AggOp)[0]
-#            P_expected = sa_smoothed_prolongator(A,T,theta=0.0,omega=4.0/3.0)
+#            P_expected = jacobi_prolongation_smoother(A, T, omega=4.0/3.0)
 #
 #            assert_almost_equal(P_result.todense(),P_expected.todense())
 

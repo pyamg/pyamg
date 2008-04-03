@@ -18,7 +18,7 @@ from utils import diag_sparse, approximate_spectral_radius, \
                   symmetric_rescaling, scale_columns, scale_rows
 
 __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
-        'standard_aggregation', 'sa_smoothed_prolongator', 'fit_candidates']
+        'standard_aggregation', 'jacobi_prolongation_smoother', 'fit_candidates']
 
 
 
@@ -230,37 +230,42 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     return Q,R
 
-def sa_smoothed_prolongator(A,T,theta=0.0,omega=4.0/3.0):
-    """For a given matrix A and tentative prolongator T return the
-    smoothed prolongator P
-    
-        P = (I - omega/rho(S) S) * T
+def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
+    """Jacobi prolongation smoother
+   
 
-    where S is a Jacobi smoothing operator defined as follows:
-        omega      - damping parameter
-        rho(S)     - spectral radius of S (estimated)
-        S          - inv(diag(A_filtered)) * A_filtered   (Jacobi smoother)
-        A_filtered - sa_filtered_matrix(A,theta)
+    Parameters
+    ----------
+    S : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix used for smoothing.  Typically, A or the
+        "filtered matrix" obtained from A by lumping weak connections
+        onto the diagonal of A.
+    T : {csr_matrix, bsr_matrix}
+        Tentative prolongator
+    omega : {scalar}
+        Damping parameter
+
+    Returns
+    -------
+    P : {csr_matrix, bsr_matrix}
+        Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) * T
+        where rho(S) is an approximation to the spectral radius of S.
 
     """
 
-    A_filtered = sa_filtered_matrix(A,theta) #use filtered matrix for anisotropic problems
-
-    # TODO use scale_rows()
-    D = A_filtered.diagonal()
+    D = S.diagonal()
     D_inv = 1.0 / D
     D_inv[D == 0] = 0
 
-    D_inv_A = scale_rows(A, D_inv, copy=True)
-    D_inv_A *= omega/approximate_spectral_radius(D_inv_A)
+    D_inv_S = scale_rows(S, D_inv, copy=True)
+    D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
 
-    # smooth tentative prolongator T
-    P = T - (D_inv_A*T)
+    P = T - (D_inv_S*T)
 
     return P
 
 
-def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='standard'):
+def prolongator(A, B, strength, aggregate, smooth):
 
     def unpack_arg(v):
         if isinstance(v,tuple):
@@ -270,10 +275,10 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
 
     # strength of connection
     fn, kwargs = unpack_arg(strength)
-    if fn == 'standard':
+    if fn == 'symmetric':
         C = symmetric_strength_of_connection(A,**kwargs)
     elif fn == 'ode':
-        C = sa_ode_strong_connections(A,B,**kwargs)
+        C = ode_strength_of_connection(A,B,**kwargs)
     else:
         raise ValueError('unrecognized strength of connection method: %s' % fn)
 
@@ -281,6 +286,8 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
     fn, kwargs = unpack_arg(aggregate)
     if fn == 'standard':
         AggOp = standard_aggregation(C,**kwargs)
+    elif fn == 'lloyd':
+        raise NotImplementedError('lloyd not yet supported')
     else:
         raise ValueError('unrecognized aggregation method' % fn )
 
@@ -289,10 +296,10 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
 
     # tentative prolongator smoother
     fn, kwargs = unpack_arg(smooth)
-    if fn == 'standard':
-        P = sa_smoothed_prolongator(A,T,**kwargs)
+    if fn == 'jacobi':
+        P = jacobi_prolongation_smoother(A,T,**kwargs)
     elif fn == 'energy_min':
-        P = sa_energy_min(A,T,C,B,**kwargs)
+        P = energy_min_prolongation_smoother(A,T,C,B,**kwargs)
     else:
         raise ValueError('unrecognized prolongation smoother method % ' % fn)
     
@@ -303,41 +310,42 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
 
 
 
-def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
-                                solver = multilevel_solver, **kwargs):
+def smoothed_aggregation_solver(A, B=None, strength='symmetric', 
+        aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
+        max_levels = 10, max_coarse = 500, cycle_opts=None):
     """Create a multilevel solver using Smoothed Aggregation (SA)
 
     Parameters
     ----------
-
     A : {csr_matrix, bsr_matrix}
-        Square matrix in CSR or BSR format
+        Sparse NxN matrix in CSR or BSR format
     B : {None, array_like}
         Near-nullspace candidates stored in the columns of an NxK array.
         The default value B=None is equivalent to B=ones((N,1))
-    max_levels: {integer} : default 10
+    strength : ['symmetric', 'classical', 'ode', None]
+        Method used to determine the strength of connection between unknowns
+        of the linear system.  Method-specific parameters may be passed in
+        using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
+        strength=None, all nonzero entries of the matrix are considered strong.
+    aggregate : ['standard', 'lloyd']
+        Method used to aggregate nodes.
+    smooth : ['jacobi', 'chebyshev', 'MLS', 'energy_min', None]
+        Method used to smoother used to smooth the tentative prolongator.
+    
+    General Parameters
+    ------------------
+    max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse: {integer} : default 500
+    max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    
-    Optional Parameters
-    -------------------
-    strength : strength of connection method
-        Possible values are:
-            'standard' 
-            'ode'
-    
-    aggregate : aggregation method
-        Possible values are:
-            'standard'
-    
-    smooth : prolongation smoother
-        Possible values are:
-            'standard'
-            'energy_min'
+    cycle_kwargs : {dict}
+        Parameters passed to multilevel_solver
+    TODO ADD PREPROCESSES            
+
 
 
     Unused Parameters
+    -----------------
         theta: {float} : default 0.0
             Strength of connection parameter used in aggregation.
         omega: {float} : default 4.0/3.0
@@ -359,7 +367,7 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
     References
     ----------
 
-        Petr Vanek and Jan Mandel and Marian Brezina
+        Petr Vanek, Jan Mandel and Marian Brezina
         "Algebraic Multigrid by Smoothed Aggregation for Second and Fourth Order Elliptic Problems",
         http://citeseer.ist.psu.edu/vanek96algebraic.html
 
@@ -374,9 +382,9 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
         raise ValueError('expected square matrix')
 
     if B is None:
-        B = ones((A.shape[0],1),dtype=A.dtype) # use constant vector
+        B = ones((A.shape[0],1), dtype=A.dtype) # use constant vector
     else:
-        B = asarray(B,dtype=A.dtype)
+        B = asarray(B, dtype=A.dtype)
 
     pre,post = None,None   #preprocess/postprocess
 
@@ -395,7 +403,7 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
     Rs = []
 
     while len(As) < max_levels and A.shape[0] > max_coarse:
-        P,B = sa_prolongator(A,B,**kwargs)
+        P,B = prolongator(A, B, strength=strength, aggregate=aggregate, smooth=smooth)
 
         R = P.T.asformat(P.format)
 
@@ -409,6 +417,6 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
     if(A.nnz == 0):
     	As.pop(); Rs.pop(); Ps.pop();
 
-    return solver(As,Ps,Rs=Rs,preprocess=pre,postprocess=post)
+    return multilevel_solver(As,Ps,Rs=Rs) #,preprocess=pre,postprocess=post)
 
 
