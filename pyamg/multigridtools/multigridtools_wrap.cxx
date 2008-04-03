@@ -3373,346 +3373,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_rs_strong_connections__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  float arg2 ;
-  int *arg3 ;
-  int *arg4 ;
-  float *arg5 ;
-  int *arg6 ;
-  int *arg7 ;
-  float *arg8 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  float val2 ;
-  int ecode2 = 0 ;
-  PyArrayObject *array3 = NULL ;
-  int is_new_object3 ;
-  PyArrayObject *array4 = NULL ;
-  int is_new_object4 ;
-  PyArrayObject *array5 = NULL ;
-  int is_new_object5 ;
-  PyArrayObject *temp6 = NULL ;
-  PyArrayObject *temp7 = NULL ;
-  PyArrayObject *temp8 = NULL ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rs_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_strong_connections" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_float(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rs_strong_connections" "', argument " "2"" of type '" "float""'");
-  } 
-  arg2 = static_cast< float >(val2);
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
-    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
-      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
-    
-    arg3 = (int*) array3->data;
-  }
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array4 = obj_to_array_contiguous_allow_conversion(obj3, PyArray_INT, &is_new_object4);
-    if (!array4 || !require_dimensions(array4,1) || !require_size(array4,size,1)
-      || !require_contiguous(array4)   || !require_native(array4)) SWIG_fail;
-    
-    arg4 = (int*) array4->data;
-  }
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array5 = obj_to_array_contiguous_allow_conversion(obj4, PyArray_FLOAT, &is_new_object5);
-    if (!array5 || !require_dimensions(array5,1) || !require_size(array5,size,1)
-      || !require_contiguous(array5)   || !require_native(array5)) SWIG_fail;
-    
-    arg5 = (float*) array5->data;
-  }
-  {
-    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
-    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
-    arg6 = (int*) array_data(temp6);
-  }
-  {
-    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
-    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
-    arg7 = (int*) array_data(temp7);
-  }
-  {
-    temp8 = obj_to_array_no_conversion(obj7,PyArray_FLOAT);
-    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
-    arg8 = (float*) array_data(temp8);
-  }
-  rs_strong_connections< int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
-  resultobj = SWIG_Py_Void();
-  {
-    if (is_new_object3 && array3) Py_DECREF(array3);
-  }
-  {
-    if (is_new_object4 && array4) Py_DECREF(array4);
-  }
-  {
-    if (is_new_object5 && array5) Py_DECREF(array5);
-  }
-  return resultobj;
-fail:
-  {
-    if (is_new_object3 && array3) Py_DECREF(array3);
-  }
-  {
-    if (is_new_object4 && array4) Py_DECREF(array4);
-  }
-  {
-    if (is_new_object5 && array5) Py_DECREF(array5);
-  }
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_rs_strong_connections__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  double arg2 ;
-  int *arg3 ;
-  int *arg4 ;
-  double *arg5 ;
-  int *arg6 ;
-  int *arg7 ;
-  double *arg8 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  double val2 ;
-  int ecode2 = 0 ;
-  PyArrayObject *array3 = NULL ;
-  int is_new_object3 ;
-  PyArrayObject *array4 = NULL ;
-  int is_new_object4 ;
-  PyArrayObject *array5 = NULL ;
-  int is_new_object5 ;
-  PyArrayObject *temp6 = NULL ;
-  PyArrayObject *temp7 = NULL ;
-  PyArrayObject *temp8 = NULL ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rs_strong_connections",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_strong_connections" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_double(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rs_strong_connections" "', argument " "2"" of type '" "double""'");
-  } 
-  arg2 = static_cast< double >(val2);
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
-    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
-      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
-    
-    arg3 = (int*) array3->data;
-  }
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array4 = obj_to_array_contiguous_allow_conversion(obj3, PyArray_INT, &is_new_object4);
-    if (!array4 || !require_dimensions(array4,1) || !require_size(array4,size,1)
-      || !require_contiguous(array4)   || !require_native(array4)) SWIG_fail;
-    
-    arg4 = (int*) array4->data;
-  }
-  {
-    npy_intp size[1] = {
-      -1
-    };
-    array5 = obj_to_array_contiguous_allow_conversion(obj4, PyArray_DOUBLE, &is_new_object5);
-    if (!array5 || !require_dimensions(array5,1) || !require_size(array5,size,1)
-      || !require_contiguous(array5)   || !require_native(array5)) SWIG_fail;
-    
-    arg5 = (double*) array5->data;
-  }
-  {
-    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
-    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
-    arg6 = (int*) array_data(temp6);
-  }
-  {
-    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
-    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
-    arg7 = (int*) array_data(temp7);
-  }
-  {
-    temp8 = obj_to_array_no_conversion(obj7,PyArray_DOUBLE);
-    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
-    arg8 = (double*) array_data(temp8);
-  }
-  rs_strong_connections< int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
-  resultobj = SWIG_Py_Void();
-  {
-    if (is_new_object3 && array3) Py_DECREF(array3);
-  }
-  {
-    if (is_new_object4 && array4) Py_DECREF(array4);
-  }
-  {
-    if (is_new_object5 && array5) Py_DECREF(array5);
-  }
-  return resultobj;
-fail:
-  {
-    if (is_new_object3 && array3) Py_DECREF(array3);
-  }
-  {
-    if (is_new_object4 && array4) Py_DECREF(array4);
-  }
-  {
-    if (is_new_object5 && array5) Py_DECREF(array5);
-  }
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_rs_strong_connections(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[9];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 8); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 8) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      {
-        int res = SWIG_AsVal_float(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        {
-          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_INT)) ? 1 : 0;
-        }
-        if (_v) {
-          {
-            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_INT)) ? 1 : 0;
-          }
-          if (_v) {
-            {
-              _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_FLOAT)) ? 1 : 0;
-            }
-            if (_v) {
-              {
-                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
-              }
-              if (_v) {
-                {
-                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
-                }
-                if (_v) {
-                  {
-                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_FLOAT)) ? 1 : 0;
-                  }
-                  if (_v) {
-                    return _wrap_rs_strong_connections__SWIG_1(self, args);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  if (argc == 8) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      {
-        int res = SWIG_AsVal_double(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        {
-          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_INT)) ? 1 : 0;
-        }
-        if (_v) {
-          {
-            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_INT)) ? 1 : 0;
-          }
-          if (_v) {
-            {
-              _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_DOUBLE)) ? 1 : 0;
-            }
-            if (_v) {
-              {
-                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
-              }
-              if (_v) {
-                {
-                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
-                }
-                if (_v) {
-                  {
-                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_DOUBLE)) ? 1 : 0;
-                  }
-                  if (_v) {
-                    return _wrap_rs_strong_connections__SWIG_2(self, args);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'rs_strong_connections'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    rs_strong_connections< int,float >(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n"
-    "    rs_strong_connections< int,double >(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -4219,6 +3879,346 @@ fail:
     "  Possible C/C++ prototypes are:\n"
     "    rs_direct_interpolation_pass2< int,float >(int const,int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],int [],float [])\n"
     "    rs_direct_interpolation_pass2< int,double >(int const,int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],int [],double [])\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  float arg2 ;
+  int *arg3 ;
+  int *arg4 ;
+  float *arg5 ;
+  int *arg6 ;
+  int *arg7 ;
+  float *arg8 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  PyArrayObject *array4 = NULL ;
+  int is_new_object4 ;
+  PyArrayObject *array5 = NULL ;
+  int is_new_object5 ;
+  PyArrayObject *temp6 = NULL ;
+  PyArrayObject *temp7 = NULL ;
+  PyArrayObject *temp8 = NULL ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (int*) array3->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array4 = obj_to_array_contiguous_allow_conversion(obj3, PyArray_INT, &is_new_object4);
+    if (!array4 || !require_dimensions(array4,1) || !require_size(array4,size,1)
+      || !require_contiguous(array4)   || !require_native(array4)) SWIG_fail;
+    
+    arg4 = (int*) array4->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array5 = obj_to_array_contiguous_allow_conversion(obj4, PyArray_FLOAT, &is_new_object5);
+    if (!array5 || !require_dimensions(array5,1) || !require_size(array5,size,1)
+      || !require_contiguous(array5)   || !require_native(array5)) SWIG_fail;
+    
+    arg5 = (float*) array5->data;
+  }
+  {
+    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
+    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
+    arg6 = (int*) array_data(temp6);
+  }
+  {
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
+  }
+  {
+    temp8 = obj_to_array_no_conversion(obj7,PyArray_FLOAT);
+    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
+    arg8 = (float*) array_data(temp8);
+  }
+  classical_strength_of_connection< int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object4 && array4) Py_DECREF(array4);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object4 && array4) Py_DECREF(array4);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double arg2 ;
+  int *arg3 ;
+  int *arg4 ;
+  double *arg5 ;
+  int *arg6 ;
+  int *arg7 ;
+  double *arg8 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  PyArrayObject *array4 = NULL ;
+  int is_new_object4 ;
+  PyArrayObject *array5 = NULL ;
+  int is_new_object5 ;
+  PyArrayObject *temp6 = NULL ;
+  PyArrayObject *temp7 = NULL ;
+  PyArrayObject *temp8 = NULL ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_INT, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (int*) array3->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array4 = obj_to_array_contiguous_allow_conversion(obj3, PyArray_INT, &is_new_object4);
+    if (!array4 || !require_dimensions(array4,1) || !require_size(array4,size,1)
+      || !require_contiguous(array4)   || !require_native(array4)) SWIG_fail;
+    
+    arg4 = (int*) array4->data;
+  }
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array5 = obj_to_array_contiguous_allow_conversion(obj4, PyArray_DOUBLE, &is_new_object5);
+    if (!array5 || !require_dimensions(array5,1) || !require_size(array5,size,1)
+      || !require_contiguous(array5)   || !require_native(array5)) SWIG_fail;
+    
+    arg5 = (double*) array5->data;
+  }
+  {
+    temp6 = obj_to_array_no_conversion(obj5,PyArray_INT);
+    if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
+    arg6 = (int*) array_data(temp6);
+  }
+  {
+    temp7 = obj_to_array_no_conversion(obj6,PyArray_INT);
+    if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
+    arg7 = (int*) array_data(temp7);
+  }
+  {
+    temp8 = obj_to_array_no_conversion(obj7,PyArray_DOUBLE);
+    if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
+    arg8 = (double*) array_data(temp8);
+  }
+  classical_strength_of_connection< int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object4 && array4) Py_DECREF(array4);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  {
+    if (is_new_object4 && array4) Py_DECREF(array4);
+  }
+  {
+    if (is_new_object5 && array5) Py_DECREF(array5);
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[9];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 8); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_float(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_INT)) ? 1 : 0;
+        }
+        if (_v) {
+          {
+            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_INT)) ? 1 : 0;
+          }
+          if (_v) {
+            {
+              _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_FLOAT)) ? 1 : 0;
+            }
+            if (_v) {
+              {
+                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
+              }
+              if (_v) {
+                {
+                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
+                }
+                if (_v) {
+                  {
+                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_FLOAT)) ? 1 : 0;
+                  }
+                  if (_v) {
+                    return _wrap_classical_strength_of_connection__SWIG_1(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_double(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_INT)) ? 1 : 0;
+        }
+        if (_v) {
+          {
+            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_INT)) ? 1 : 0;
+          }
+          if (_v) {
+            {
+              _v = (is_array(argv[4]) && PyArray_CanCastSafely(PyArray_TYPE(argv[4]),PyArray_DOUBLE)) ? 1 : 0;
+            }
+            if (_v) {
+              {
+                _v = (is_array(argv[5]) && PyArray_CanCastSafely(PyArray_TYPE(argv[5]),PyArray_INT)) ? 1 : 0;
+              }
+              if (_v) {
+                {
+                  _v = (is_array(argv[6]) && PyArray_CanCastSafely(PyArray_TYPE(argv[6]),PyArray_INT)) ? 1 : 0;
+                }
+                if (_v) {
+                  {
+                    _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_DOUBLE)) ? 1 : 0;
+                  }
+                  if (_v) {
+                    return _wrap_classical_strength_of_connection__SWIG_2(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'classical_strength_of_connection'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    classical_strength_of_connection< int,float >(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n"
+    "    classical_strength_of_connection< int,double >(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
   return NULL;
 }
 
@@ -7793,12 +7793,6 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"standard_aggregation", _wrap_standard_aggregation, METH_VARARGS, (char *)"standard_aggregation(int n_row, int Ap, int Aj, int x) -> int"},
 	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"},
 	 { (char *)"rs_direct_interpolation_pass1", _wrap_rs_direct_interpolation_pass1, METH_VARARGS, (char *)"rs_direct_interpolation_pass1(int n_nodes, int Sp, int Sj, int splitting, int Bp)"},
-	 { (char *)"rs_strong_connections", _wrap_rs_strong_connections, METH_VARARGS, (char *)"\n"
-		"rs_strong_connections(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"
-		"    int Sj, float Sx)\n"
-		"rs_strong_connections(int n_row, double theta, int Ap, int Aj, double Ax, \n"
-		"    int Sp, int Sj, double Sx)\n"
-		""},
 	 { (char *)"rs_direct_interpolation_pass2", _wrap_rs_direct_interpolation_pass2, METH_VARARGS, (char *)"\n"
 		"rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, float Ax, int Sp, int Sj, \n"
 		"    float Sx, int splitting, int Bp, int Bj, \n"
@@ -7806,6 +7800,12 @@ static PyMethodDef SwigMethods[] = {
 		"rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, double Ax, int Sp, int Sj, \n"
 		"    double Sx, int splitting, int Bp, int Bj, \n"
 		"    double Bx)\n"
+		""},
+	 { (char *)"classical_strength_of_connection", _wrap_classical_strength_of_connection, METH_VARARGS, (char *)"\n"
+		"classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"
+		"    int Sj, float Sx)\n"
+		"classical_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, \n"
+		"    int Sp, int Sj, double Sx)\n"
 		""},
 	 { (char *)"symmetric_strength_of_connection", _wrap_symmetric_strength_of_connection, METH_VARARGS, (char *)"\n"
 		"symmetric_strength_of_connection(int n_row, float epsilon, int Ap, int Aj, float Ax, \n"

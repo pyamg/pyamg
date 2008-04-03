@@ -1,6 +1,6 @@
 __all__ =['approximate_spectral_radius','infinity_norm','diag_sparse',
-          'hstack_csr','vstack_csr', 'norm', 'UnAmal', 'Coord2RBM', 
-	  'BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect', 'BSR_Get_Colindices']
+          'norm', 'UnAmal', 'Coord2RBM', 'BSR_Get_Row', 
+          'BSR_Row_WriteScalar', 'BSR_Row_WriteVect', 'BSR_Get_Colindices']
 
 import numpy
 import scipy
@@ -248,35 +248,6 @@ def symmetric_rescaling(A,copy=True):
     else:
         return symmetric_rescaling(csr_matrix(A))
 
-
-def hstack_csr(A,B):
-    if not isspmatrix(A) or not isspmatrix(B):
-        raise TypeError,'expected sparse matrix'
-
-    if A.shape[0] != B.shape[0]:
-        raise ValueError,'row dimensions must agree'
-
-    A = A.tocoo()
-    B = B.tocoo()
-    I = concatenate((A.row,B.row))
-    J = concatenate((A.col,B.col+A.shape[1]))
-    V = concatenate((A.data,B.data))
-    return coo_matrix((V,(I,J)),shape=(A.shape[0],A.shape[1]+B.shape[1])).tocsr()
-
-def vstack_csr(A,B):
-    #TODO OPTIMIZE THIS
-    if not isspmatrix(A) or not isspmatrix(B):
-        raise TypeError,'expected sparse matrix'
-
-    if A.shape[1] != B.shape[1]:
-        raise ValueError,'column dimensions must agree'
-
-    A = A.tocoo()
-    B = B.tocoo()
-    I = concatenate((A.row,B.row+A.shape[0]))
-    J = concatenate((A.col,B.col))
-    V = concatenate((A.data,B.data))
-    return coo_matrix((V,(I,J)),shape=(A.shape[0]+B.shape[0],A.shape[1])).tocsr()
 
 
 ##############################################################################################

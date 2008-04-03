@@ -10,6 +10,7 @@ from scipy.sparse import csr_matrix, lil_matrix, coo_matrix, spdiags
 import pyamg
 from pyamg.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, load_example
+from pyamg.strength import symmetric_strength_of_connection
 from pyamg.aggregation import *
 
 
@@ -31,18 +32,23 @@ class TestSA(TestCase):
         for name in ['knot','airfoil','bar']:
             ex = load_example(name)
             self.cases.append( ex['A'].tocsr() )
-        
-        self.cases = [ load_example('bar')['A'].tocsr() ]
 
-    def test_symmetric_strength_of_connection(self):
+
+    def test_standard_aggregation(self):
         for A in self.cases:
-            for epsilon in [0.0,0.1,0.5,1.0,10.0]:
-                expected = reference_symmetric_strength_of_connection(A,epsilon)
-                result   = symmetric_strength_of_connection(A,epsilon)
+            S = symmetric_strength_of_connection(A)
+            
+            expected = reference_standard_aggregation(S)
+            result   = standard_aggregation(S)
 
-                assert_equal( result.nnz,       expected.nnz)
-                assert_equal( result.todense(), expected.todense())
-
+            assert_equal( (result - expected).nnz, 0 )
+    
+        # S is diagonal - no DoFs aggregated
+        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
+        result   = standard_aggregation(S)
+        expected = matrix([[0],[0],[0],[0]])
+        assert_equal(result.todense(),expected)
+        
         ##check simple block examples
         #A = csr_matrix(arange(16).reshape(4,4))
         #A = A + A.T
@@ -59,21 +65,6 @@ class TestSA(TestCase):
         #S_result   = standard_aggregation(A,epsilon=2.0)
         #S_expected = matrix([[1,0],[0,1]])
         #assert_array_equal(S_result.todense(),S_expected)
-
-    def test_standard_aggregation(self):
-        for A in self.cases:
-            S = symmetric_strength_of_connection(A)
-            
-            expected = reference_standard_aggregation(S)
-            result   = standard_aggregation(S)
-
-            assert_equal( (result - expected).nnz, 0 )
-    
-        # S is diagonal - no DoFs aggregated
-        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        result   = standard_aggregation(S)
-        expected = matrix([[0],[0],[0],[0]])
-        assert_equal(result.todense(),expected)
 
 #    def test_user_aggregation(self):
 #        """check that the sa_interpolation accepts user-defined aggregates"""

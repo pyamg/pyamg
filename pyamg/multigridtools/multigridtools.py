@@ -84,15 +84,6 @@ def vertex_coloring_LDF(*args):
   return _multigridtools.vertex_coloring_LDF(*args)
 
 
-def rs_strong_connections(*args):
-  """
-    rs_strong_connections(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
-        int Sj, float Sx)
-    rs_strong_connections(int n_row, double theta, int Ap, int Aj, double Ax, 
-        int Sp, int Sj, double Sx)
-    """
-  return _multigridtools.rs_strong_connections(*args)
-
 def rs_direct_interpolation_pass2(*args):
   """
     rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, float Ax, int Sp, int Sj, 
@@ -103,6 +94,15 @@ def rs_direct_interpolation_pass2(*args):
         double Bx)
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
+
+def classical_strength_of_connection(*args):
+  """
+    classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
+        int Sj, float Sx)
+    classical_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, 
+        int Sp, int Sj, double Sx)
+    """
+  return _multigridtools.classical_strength_of_connection(*args)
 
 def symmetric_strength_of_connection(*args):
   """

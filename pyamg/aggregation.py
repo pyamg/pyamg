@@ -1,4 +1,4 @@
-"""Support for Aggregation-based AMG"""
+"""Support for aggregation-based AMG"""
 
 __docformat__ = "restructuredtext en"
 
@@ -13,12 +13,12 @@ from scipy.sparse import csr_matrix, coo_matrix, \
 
 import multigridtools
 from multilevel import multilevel_solver
+from strength import symmetric_strength_of_connection
 from utils import diag_sparse, approximate_spectral_radius, \
                   symmetric_rescaling, scale_columns, scale_rows
 
 __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
-        'symmetric_strength_of_connection', 'standard_aggregation',
-        'sa_smoothed_prolongator', 'fit_candidates']
+        'standard_aggregation', 'sa_smoothed_prolongator', 'fit_candidates']
 
 
 
@@ -69,53 +69,6 @@ def sa_filtered_matrix(A,epsilon):
 
     return A_filtered
 
-def symmetric_strength_of_connection(A, epsilon=0):
-    """Compute a strength of connection matrix using the standard symmetric measure
-    
-    An off-diagonal connection A[i,j] is strong iff
-        abs(A[i,j]) >= epsilon * sqrt( abs(A[i,i] * A[j,j]) )
-
-    References
-    ----------
-        Vanek, P. and Mandel, J. and Brezina, M., 
-        "Algebraic Multigrid by Smoothed Aggregation for 
-        Second and Fourth Order Elliptic Problems", 
-        Computing, vol. 56, no. 3, pp. 179--196, 1996.
-
-    """
-    #TODO describe case of blocks
-
-    if isspmatrix_csr(A):
-        #if epsilon == 0:
-        #    return A
-        
-        Sp = empty_like(A.indptr)
-        Sj = empty_like(A.indices)
-        Sx = empty_like(A.data)
-
-        fn = multigridtools.symmetric_strength_of_connection
-        fn(A.shape[0], epsilon, A.indptr, A.indices, A.data, Sp, Sj, Sx)
-        
-        return csr_matrix((Sx,Sj,Sp),A.shape)
-
-    elif isspmatrix_bsr(A):
-        M,N = A.shape
-        R,C = A.blocksize
-
-        if R != C:
-            raise ValueError('matrix must have square blocks')
-
-        if epsilon == 0:
-            data = ones( len(A.indices), dtype=A.dtype )
-            return csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
-        else:
-            # the strength of connection matrix is based on the 
-            # Frobenius norms of the blocks
-            data = (A.data*A.data).reshape(-1,R*C).sum(axis=1) 
-            A = csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
-            return symmetric_strength_of_connection(A,epsilon)
-    else:
-        raise TypeError('expected csr_matrix or bsr_matrix') 
 
 def standard_aggregation(C):
     """Compute the sparsity pattern of the tentative prolongator

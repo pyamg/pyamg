@@ -7,10 +7,10 @@ from numpy import empty, empty_like
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from multilevel import multilevel_solver
+from strength import classical_strength_of_connection
 import multigridtools
 
-__all__ = ['ruge_stuben_solver','rs_strong_connections','rs_prolongator',
-        'rs_direct_interpolation']
+__all__ = ['ruge_stuben_solver','rs_prolongator','rs_direct_interpolation']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
@@ -55,26 +55,6 @@ def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
     return multilevel_solver(As,Ps,Rs=Rs)
 
 
-
-def rs_strong_connections(A,theta):
-    """Return a strength of connection matrix using the method of Ruge and Stuben
-
-    An off-diagonal entry A[i.j] is a strong connection iff
-        -A[i,j] >= theta * max( -A[i,k] )   where k != i
-    """
-    if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
-
-    Sp = empty_like(A.indptr)
-    Sj = empty_like(A.indices)
-    Sx = empty_like(A.data)
-
-    multigridtools.rs_strong_connections( A.shape[0], theta, 
-            A.indptr, A.indices, A.data, Sp,Sj,Sx)
-
-    return csr_matrix((Sx,Sj,Sp), shape=A.shape)
-
-
-
 def rs_direct_interpolation(A,S,splitting):
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
@@ -96,11 +76,10 @@ def rs_direct_interpolation(A,S,splitting):
     return csr_matrix( (Px,Pj,Pp) )
 
 
-
 def rs_prolongator(A, theta=0.25, CF='RS'):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
-    S = rs_strong_connections(A,theta)
+    S = classical_strength_of_connection(A,theta)
 
     if CF in [ 'RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']:
         import split

@@ -19,10 +19,10 @@
  */          
 
 template<class I, class T>
-void rs_strong_connections(const I n_row,
-                           const T theta,
-                           const I Ap[], const I Aj[], const T Ax[],
-                                 I Sp[],       I Sj[],       T Sx[])
+void classical_strength_of_connection(const I n_row,
+                                      const T theta,
+                                      const I Ap[], const I Aj[], const T Ax[],
+                                            I Sp[],       I Sj[],       T Sx[])
 {
     I nnz = 0;
     Sp[0] = 0;

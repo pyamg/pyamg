@@ -6,6 +6,7 @@ from scipy import rand
 from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
+from pyamg.strength import classical_strength_of_connection
 from pyamg import split
 
 from pyamg.classical import * 
@@ -29,17 +30,9 @@ class TestRugeStubenFunctions(TestCase):
             ex = load_example(name)
             self.cases.append( ex['A'].tocsr() )
 
-    def test_rs_strong_connections(self):
-        for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
-            for A in self.cases:
-                result   = rs_strong_connections( A, theta )
-                expected = reference_rs_strong_connections( A, theta )
-                assert_equal( result.nnz, expected.nnz )
-                assert_equal( result.todense(), expected.todense() )
-
     def test_RS_splitting(self):
         for A in self.cases:
-            S = rs_strong_connections( A, 0.0 )
+            S = classical_strength_of_connection(A, 0.0)
 
             splitting = split.RS( S )
 
@@ -81,7 +74,7 @@ class TestRugeStubenFunctions(TestCase):
     def test_direct_prolongator(self):
         for A in self.cases:
 
-            S = rs_strong_connections( A, 0.0 )
+            S = classical_strength_of_connection(A, 0.0)
             splitting = split.RS( S )
 
             result   = rs_direct_interpolation(A,S,splitting)                
@@ -121,30 +114,6 @@ class TestRugeStubenSolver(TestCase):
 ##   reference implementations for unittests  ##
 ################################################
 
-def reference_rs_strong_connections(A,theta):
-    S = coo_matrix(A)
-    
-    # remove diagonals
-    mask = S.row != S.col
-
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
-    S.data = S.data[mask]
-  
-    min_offdiag    = numpy.empty(S.shape[0])
-    min_offdiag[:] = numpy.finfo(S.data.dtype).max
-
-    for i,v in zip(S.row,S.data):
-        min_offdiag[i] = min(min_offdiag[i],v)
-
-    # strong connections
-    mask = S.data <= (theta * min_offdiag[S.row])
-    
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
-    S.data = S.data[mask]
-    
-    return S.tocsr()
 
 def reference_rs_direct_interpolation(A,S,splitting):
 

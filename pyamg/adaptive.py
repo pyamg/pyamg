@@ -10,7 +10,7 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 
 from relaxation import gauss_seidel
 from multilevel import multilevel_solver
-from utils import approximate_spectral_radius,hstack_csr,vstack_csr,diag_sparse
+from utils import approximate_spectral_radius, diag_sparse
 from aggregation import standard_aggregation, sa_smoothed_prolongator, \
         fit_candidates, symmetric_strength_of_connection
 
