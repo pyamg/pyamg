@@ -6,7 +6,7 @@ from scipy.io import loadmat
 from numpy import array, ones, zeros, uint32
 
 from pyamg import smoothed_aggregation_solver
-from pyamg.sa import sa_standard_aggregation, sa_strong_connections
+from pyamg.sa import standard_aggregation, symmetric_strength_of_connection
 from pyamg.gallery import load_example
 
 from vis import coarse_grid_vis, write_mesh, shrink_elmts
@@ -127,8 +127,9 @@ def example_vis(test=0):
         A    = ex['A']
         E2V  = ex['elements']
         Vert = ex['vertices']
-        C = sa_strong_connections(A.tocsr(), epsilon=0.25)
-        Agg  = sa_standard_aggregation(C.tocsr())
+
+        C   = symmetric_strength_of_connection(A.tocsr(), theta=0.25)
+        Agg = standard_aggregation(C.tocsr())
 
         # visualize the aggregates two different ways
         coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
@@ -149,7 +150,7 @@ def example_vis(test=0):
         A = ex['A']
         E2V  = ex['elements']
         Vert = ex['vertices']
-        Agg  = sa_standard_aggregation(A.tocsr())
+        Agg  = standard_aggregation(A.tocsr())
 
         # visualize the aggregates two different ways
         coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='points', mesh_type='tri')
@@ -173,7 +174,7 @@ def example_vis(test=0):
         Vert = ex['vertices']
         B = ex['B']
         from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
-        Agg  = sa_standard_aggregation(csr_matrix(sa_ode_strong_connections(csr_matrix(A), B, epsilon=2.0, k=2, proj_type="l2")))
+        Agg  = standard_aggregation(csr_matrix(sa_ode_strong_connections(csr_matrix(A), B, theta=2.0, k=2, proj_type="l2")))
 
         # visualize the aggregates 
         coarse_grid_vis(agg_file_name1, Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')

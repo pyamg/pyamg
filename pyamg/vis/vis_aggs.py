@@ -9,13 +9,13 @@ __docformat__ = "restructuredtext en"
 import warnings
 
 from numpy import array, ones, zeros
-from pyamg.sa import sa_standard_aggregation, sa_strong_connections
+from pyamg.sa import standard_aggregation, symmetric_strength_of_connection
 from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
 from scipy.sparse import csr_matrix
 from scipy.io import loadmat
 from vis import coarse_grid_vis, write_mesh, shrink_elmts
 
-def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, proj_type="l2", SA_epsilon=0.1):
+def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_type="l2", SA_theta=0.1):
     """Coarse grid visualization: create .vtu files for use in Paraview
        Only implemented for simplices
 
@@ -31,14 +31,14 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
         str_type : {string}
             'ode' uses the sa_ode_strong_connections routine to determine strength of connections
             'classic' uses the classic strength measure
-        ODE_epsilon : {scalar > 1.0}
+        ODE_theta : {scalar > 1.0}
             drop tolerance for the ode strength measure
         k : {integer}
             number of time steps for the ode strength measure
         proj_type : {string}
             'l2' uses l2 norm to solve minimization problem in ode strength measure
             'D_A' uses DA norm to solve minimization problem in ode strength measure
-        SA_epsilon : {scalar in [0,1]}
+        SA_theta : {scalar in [0,1]}
             drop tolerance for the scalar strength measure
     
     Returns
@@ -70,9 +70,9 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
 
     #Calculate strength of connection and aggregation
     if(str_type == 'ode'):
-        C = sa_ode_strong_connections(csr_matrix(A), B, epsilon=ODE_epsilon, k=k, proj_type=proj_type)
+        C = sa_ode_strong_connections(csr_matrix(A), B, theta=ODE_theta, k=k, proj_type=proj_type)
     elif(str_type == 'classic'):
-        C = sa_strong_connections(A.tocsr(), epsilon=SA_epsilon)
+        C = symmetric_strength_of_connection(A.tocsr(), theta=SA_theta)
     else:
         raise ValueError('vis_aggs() only works for strength measures, str_type = [\'ode\' | \'classic\']')
 

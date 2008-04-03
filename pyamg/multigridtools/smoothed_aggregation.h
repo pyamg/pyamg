@@ -12,7 +12,7 @@
 
 template<class I, class T>
 void symmetric_strength_of_connection(const I n_row, 
-                                      const T epsilon,
+                                      const T theta,
                                       const I Ap[], const I Aj[], const T Ax[],
                                             I Sp[],       I Sj[],       T Sx[])
 {
@@ -36,7 +36,7 @@ void symmetric_strength_of_connection(const I n_row,
 
     for(I i = 0; i < n_row; i++){
 
-        T eps_Aii = epsilon*epsilon*diags[i];
+        T eps_Aii = theta*theta*diags[i];
 
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I   j = Aj[jj];
@@ -44,7 +44,7 @@ void symmetric_strength_of_connection(const I n_row,
 
             if(i == j){continue;}  //skip diagonal
 
-            //  |A(i,j)| >= epsilon * sqrt(|A(i,i)|*|A(j,j)|) 
+            //  |A(i,j)| >= theta * sqrt(|A(i,i)|*|A(j,j)|) 
             if(Aij*Aij >= eps_Aii * diags[j]){    
                 Sj[nnz] =   j;
                 Sx[nnz] = Aij;

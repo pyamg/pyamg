@@ -51,8 +51,8 @@ def sa_hierarchy(A,B,AggOps):
 
 
 def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters=0, 
-        max_levels=10, max_coarse=100, epsilon=0.0, omega=4.0/3.0, symmetric=True, 
-        rescale=True,  aggregation=None):
+        max_levels=10, max_coarse=100, epsilon=0.1, theta=0.0, omega=4.0/3.0,  
+        symmetric=True, rescale=True,  aggregation=None):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
 
@@ -76,7 +76,9 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer}
         Maximum number of variables permitted on the coarse grid.
-    epsilon: {float}
+    epsilon : {float} : default 0.10
+        Target convergence factor
+    theta: {float}
         Strength of connection parameter used in aggregation.
     omega: {float} : default 4.0/3.0
         Damping parameter used in prolongator smoothing (0 < omega < 2)
@@ -123,8 +125,8 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
     ###
     # develop first candidate
     x,AggOps = initial_setup_stage(A, candidate_iters,
-            max_levels = max_levels, max_coarse = max_coarse, 
-            epsilon = epsilon, aggregation = aggregation )
+            max_levels=max_levels, max_coarse=max_coarse, 
+            epsilon=epsilon, theta=theta, aggregation=aggregation )
 
     #TODO make fit_candidates work for small Bs
     x /= norm(x)
@@ -153,7 +155,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
 
     return multilevel_solver(As,Ps)
 
-def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, aggregation):
+def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, theta, aggregation):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
@@ -186,7 +188,7 @@ def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, agg
 
     while len(AggOps) + 1 < max_levels and A_l.shape[0] > max_coarse:
         if aggregation is None:
-            C_l   = symmetric_strength_of_connection(A_l,epsilon)
+            C_l   = symmetric_strength_of_connection(A_l,theta)
             AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
             AggOp = aggregation[len(AggOps)]

@@ -30,11 +30,11 @@ def classical_strength_of_connection(A,theta):
     return csr_matrix((Sx,Sj,Sp), shape=A.shape)
 
 
-def symmetric_strength_of_connection(A, epsilon=0):
+def symmetric_strength_of_connection(A, theta=0):
     """Compute a strength of connection matrix using the standard symmetric measure
     
     An off-diagonal connection A[i,j] is strong iff
-        abs(A[i,j]) >= epsilon * sqrt( abs(A[i,i] * A[j,j]) )
+        abs(A[i,j]) >= theta * sqrt( abs(A[i,i] * A[j,j]) )
 
     References
     ----------
@@ -47,7 +47,7 @@ def symmetric_strength_of_connection(A, epsilon=0):
     #TODO describe case of blocks
 
     if isspmatrix_csr(A):
-        #if epsilon == 0:
+        #if theta == 0:
         #    return A
         
         Sp = empty_like(A.indptr)
@@ -55,7 +55,7 @@ def symmetric_strength_of_connection(A, epsilon=0):
         Sx = empty_like(A.data)
 
         fn = multigridtools.symmetric_strength_of_connection
-        fn(A.shape[0], epsilon, A.indptr, A.indices, A.data, Sp, Sj, Sx)
+        fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
         
         return csr_matrix((Sx,Sj,Sp),A.shape)
 
@@ -66,7 +66,7 @@ def symmetric_strength_of_connection(A, epsilon=0):
         if R != C:
             raise ValueError('matrix must have square blocks')
 
-        if epsilon == 0:
+        if theta == 0:
             data = ones( len(A.indices), dtype=A.dtype )
             return csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
         else:
@@ -74,7 +74,7 @@ def symmetric_strength_of_connection(A, epsilon=0):
             # Frobenius norms of the blocks
             data = (A.data*A.data).reshape(-1,R*C).sum(axis=1) 
             A = csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
-            return symmetric_strength_of_connection(A,epsilon)
+            return symmetric_strength_of_connection(A, theta)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
 

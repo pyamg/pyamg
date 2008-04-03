@@ -68,7 +68,7 @@ solver_return_residuals=True
 k = 2
 t = 1.0
 proj_type =  "l2"      # "D_A" or "l2" projection used in strength measure
-epsilon = 12.0
+theta = 12.0
 file_output = False
 
 #-----------------------------  Energy Minimization Routine Parameters ---------------------------------
@@ -79,7 +79,7 @@ P_tol = 1e-8
 #------------------------------------- Build MG Hierarchy ------------------------------------------------
 start = time.time()
 sa = smoothed_aggregation_solver(Amat, B=Bmat, max_coarse=100, 
-				 strength=('ode', {'epsilon' : epsilon, 't' : t, 'k' : k, 'proj_type' : proj_type, 'file_output' : file_output}),
+				 strength=('ode', {'theta' : theta, 't' : t, 'k' : k, 'proj_type' : proj_type, 'file_output' : file_output}),
 				 smooth=('energy_min', {'SPD' : isSPD, 'num_its' : nits, 'min_tol' : P_tol, 'file_output' : file_output}))
 stop = time.time()
 print "Building AMG hierarchy took " + str(stop - start) + " seconds" 

@@ -54,15 +54,15 @@ class TestSA(TestCase):
         #A = A + A.T
         #A = A.tobsr(blocksize=(2,2))
 
-        #S_result   = standard_aggregation(A,epsilon=0.0)
+        #S_result   = standard_aggregation(A)
         #S_expected = matrix([1,1]).T
         #assert_array_equal(S_result.todense(),S_expected)
 
-        #S_result   = standard_aggregation(A,epsilon=0.5)
+        #S_result   = standard_aggregation(A)
         #S_expected = matrix([1,1]).T
         #assert_array_equal(S_result.todense(),S_expected)
 
-        #S_result   = standard_aggregation(A,epsilon=2.0)
+        #S_result   = standard_aggregation(A)
         #S_expected = matrix([[1,0],[0,1]])
         #assert_array_equal(S_result.todense(),S_expected)
 
@@ -87,7 +87,7 @@ class TestSA(TestCase):
 #            T,coarse_candidates_result = fit_candidates(AggOp,candidates)
 #
 #            P_result = sa_interpolation(A,candidates,omega=4.0/3.0,AggOp=AggOp)[0]
-#            P_expected = sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0)
+#            P_expected = sa_smoothed_prolongator(A,T,theta=0.0,omega=4.0/3.0)
 #
 #            assert_almost_equal(P_result.todense(),P_expected.todense())
 
@@ -201,29 +201,13 @@ class TestSASolverPerformance(TestCase):
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
-def reference_symmetric_strength_of_connection(A,epsilon):
-    #if epsilon == 0:
-    #    return A
-    
-    D = abs(A.diagonal())
 
-    S = coo_matrix(A)
-
-    mask  = S.row != S.col
-    mask &= abs(S.data) >= epsilon * sqrt(D[S.row] * D[S.col])
-
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
-    S.data = S.data[mask]
-
-    return S.tocsr()
-
-#def reference_sa_filtered_matrix(A,epsilon):
+#def reference_sa_filtered_matrix(A,theta):
 #    A_coo = A.tocoo()
 #    S = lil_matrix(A.shape)
 #
 #    for (i,j,v) in zip(A_coo.row,A_coo.col,A_coo.data):
-#        if i == j or abs(v) >= epsilon*sqrt(abs(A[i,i])*abs(A[j,j])):
+#        if i == j or abs(v) >= theta*sqrt(abs(A[i,i])*abs(A[j,j])):
 #            S[i,j] += v
 #        else:
 #            S[i,i] += v

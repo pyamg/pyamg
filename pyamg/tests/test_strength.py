@@ -29,18 +29,19 @@ class TestStrengthOfConnection(TestCase):
             self.cases.append( ex['A'].tocsr() )
 
     def test_classical_strength_of_connection(self):
-        for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
-            for A in self.cases:
+        for A in self.cases:
+            for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
                 result   = classical_strength_of_connection(A, theta)
                 expected = reference_classical_strength_of_connection(A, theta)
+                
                 assert_equal( result.nnz, expected.nnz )
                 assert_equal( result.todense(), expected.todense() )
 
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
-            for epsilon in [0.0, 0.1, 0.5, 1.0, 10.0]:
-                expected = reference_symmetric_strength_of_connection(A,epsilon)
-                result   = symmetric_strength_of_connection(A,epsilon)
+            for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
+                expected = reference_symmetric_strength_of_connection(A, theta)
+                result   = symmetric_strength_of_connection(A, theta)
 
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
@@ -50,7 +51,7 @@ class TestStrengthOfConnection(TestCase):
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
-def reference_classical_strength_of_connection(A,theta):
+def reference_classical_strength_of_connection(A, theta):
     S = coo_matrix(A)
     
     # remove diagonals
@@ -75,8 +76,8 @@ def reference_classical_strength_of_connection(A,theta):
     
     return S.tocsr()
 
-def reference_symmetric_strength_of_connection(A,epsilon):
-    #if epsilon == 0:
+def reference_symmetric_strength_of_connection(A, theta):
+    #if theta == 0:
     #    return A
     
     D = abs(A.diagonal())
@@ -84,7 +85,7 @@ def reference_symmetric_strength_of_connection(A,epsilon):
     S = coo_matrix(A)
 
     mask  = S.row != S.col
-    mask &= abs(S.data) >= epsilon * sqrt(D[S.row] * D[S.col])
+    mask &= abs(S.data) >= theta * sqrt(D[S.row] * D[S.col])
 
     S.row  = S.row[mask]
     S.col  = S.col[mask]

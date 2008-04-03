@@ -106,9 +106,9 @@ def classical_strength_of_connection(*args):
 
 def symmetric_strength_of_connection(*args):
   """
-    symmetric_strength_of_connection(int n_row, float epsilon, int Ap, int Aj, float Ax, 
-        int Sp, int Sj, float Sx)
-    symmetric_strength_of_connection(int n_row, double epsilon, int Ap, int Aj, double Ax, 
+    symmetric_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
+        int Sj, float Sx)
+    symmetric_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, 
         int Sp, int Sj, double Sx)
     """
   return _multigridtools.symmetric_strength_of_connection(*args)

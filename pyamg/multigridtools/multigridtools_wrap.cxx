@@ -7808,9 +7808,9 @@ static PyMethodDef SwigMethods[] = {
 		"    int Sp, int Sj, double Sx)\n"
 		""},
 	 { (char *)"symmetric_strength_of_connection", _wrap_symmetric_strength_of_connection, METH_VARARGS, (char *)"\n"
-		"symmetric_strength_of_connection(int n_row, float epsilon, int Ap, int Aj, float Ax, \n"
-		"    int Sp, int Sj, float Sx)\n"
-		"symmetric_strength_of_connection(int n_row, double epsilon, int Ap, int Aj, double Ax, \n"
+		"symmetric_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"
+		"    int Sj, float Sx)\n"
+		"symmetric_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, \n"
 		"    int Sp, int Sj, double Sx)\n"
 		""},
 	 { (char *)"block_gauss_seidel", _wrap_block_gauss_seidel, METH_VARARGS, (char *)"\n"

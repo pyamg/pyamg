@@ -22,26 +22,26 @@ __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
 
 
 
-def sa_filtered_matrix(A,epsilon):
+def sa_filtered_matrix(A,theta):
     """The filtered matrix is obtained from A by lumping all weak off-diagonal
     entries onto the diagonal.  Weak off-diagonals are determined by
-    the standard strength of connection measure using the parameter epsilon.
+    the standard strength of connection measure using the parameter theta.
 
-    In the case epsilon = 0.0, (i.e. no weak connections) A is returned.
+    In the case theta = 0.0, (i.e. no weak connections) A is returned.
     """
 
-    if epsilon == 0:
+    if theta == 0:
         return A
 
     if isspmatrix_csr(A): 
         #TODO rework this
         raise NotImplementedError,'blocks not handled yet'
-        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],epsilon,A.indptr,A.indices,A.data)
+        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
         return csr_matrix((Sx,Sj,Sp),shape=A.shape)
     elif ispmatrix_bsr(A):
         raise NotImplementedError,'blocks not handled yet'
     else:
-        return sa_filtered_matrix(csr_matrix(A),epsilon)
+        return sa_filtered_matrix(csr_matrix(A),theta)
 ##            #TODO subtract weak blocks from diagonal blocks?
 ##            num_dofs   = A.shape[0]
 ##            num_blocks = blocks.max() + 1
@@ -58,7 +58,7 @@ def sa_filtered_matrix(A,epsilon):
 ##            #1-norms of blocks entries of A
 ##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
 ##
-##            S = symmetric_strength_of_connection(Block_A,epsilon)
+##            S = symmetric_strength_of_connection(Block_A,theta)
 ##            S.data[:] = 1
 ##
 ##            Mask = B * S * Bt
@@ -230,7 +230,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     return Q,R
 
-def sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0):
+def sa_smoothed_prolongator(A,T,theta=0.0,omega=4.0/3.0):
     """For a given matrix A and tentative prolongator T return the
     smoothed prolongator P
     
@@ -240,11 +240,11 @@ def sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0):
         omega      - damping parameter
         rho(S)     - spectral radius of S (estimated)
         S          - inv(diag(A_filtered)) * A_filtered   (Jacobi smoother)
-        A_filtered - sa_filtered_matrix(A,epsilon)
+        A_filtered - sa_filtered_matrix(A,theta)
 
     """
 
-    A_filtered = sa_filtered_matrix(A,epsilon) #use filtered matrix for anisotropic problems
+    A_filtered = sa_filtered_matrix(A,theta) #use filtered matrix for anisotropic problems
 
     # TODO use scale_rows()
     D = A_filtered.diagonal()
@@ -338,7 +338,7 @@ def smoothed_aggregation_solver(A, B=None, max_levels = 10, max_coarse = 500,
 
 
     Unused Parameters
-        epsilon: {float} : default 0.0
+        theta: {float} : default 0.0
             Strength of connection parameter used in aggregation.
         omega: {float} : default 4.0/3.0
             Damping parameter used in prolongator smoothing (0 < omega < 2)
