@@ -18,7 +18,7 @@ from utils import diag_sparse, approximate_spectral_radius, \
 
 __all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
         'symmetric_strength_of_connection', 'standard_aggregation',
-        'sa_smoothed_prolongator', 'sa_fit_candidates']
+        'sa_smoothed_prolongator', 'fit_candidates']
 
 
 
@@ -170,18 +170,18 @@ def standard_aggregation(C):
 
 
 
-def sa_fit_candidates(AggOp, B, tol=1e-10):
+def fit_candidates(AggOp, B, tol=1e-10):
     if not isspmatrix_csr(AggOp):
-        raise TypeError,'expected csr_matrix for argument AggOp'
+        raise TypeError('expected csr_matrix for argument AggOp')
 
     if B.dtype != 'float32':
         B = asarray(B,dtype='float64')
 
     if len(B.shape) != 2:
-        raise ValueError,'expected rank 2 array for argument B'
+        raise ValueError('expected rank 2 array for argument B')
 
     if B.shape[0] % AggOp.shape[0] != 0:
-        raise ValueError,'dimensions of AggOp %s and B %s are incompatible' % (AggOp.shape, B.shape)
+        raise ValueError('dimensions of AggOp %s and B %s are incompatible' % (AggOp.shape, B.shape))
     
 
     K = B.shape[1] # number of near-nullspace candidates
@@ -288,7 +288,7 @@ def sa_prolongator(A, B, strength='standard', aggregate='standard', smooth='stan
         raise ValueError('unrecognized aggregation method' % fn )
 
     # tentative prolongator
-    T,B = sa_fit_candidates(AggOp,B)
+    T,B = fit_candidates(AggOp,B)
 
     # tentative prolongator smoother
     fn, kwargs = unpack_arg(smooth)

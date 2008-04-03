@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <cmath>
 
-#define DEBUG
 
 template<class I, class T>
 void symmetric_strength_of_connection(const I n_row, 

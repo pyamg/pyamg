@@ -4,9 +4,7 @@ from numpy import arange, ones, zeros, array, eye, vstack, diff
 from scipy import rand
 from scipy.sparse import csr_matrix
 
-
-from pyamg.aggregation import sa_fit_candidates, smoothed_aggregation_solver
-#from pyamg.adaptive import augment_candidates
+from pyamg.aggregation import smoothed_aggregation_solver
 
 from pyamg.gallery import *
 from pyamg.adaptive import *
@@ -84,9 +82,9 @@ class TestAdaptiveSA(TestCase):
 #            mask_candidate(AggOp,fine_candidates)
 #
 #            for i in range(1,fine_candidates.shape[1]):
-#                Q_expected,R_expected = sa_fit_candidates(AggOp,fine_candidates[:,:i+1])
+#                Q_expected,R_expected = fit_candidates(AggOp,fine_candidates[:,:i+1])
 #
-#                old_Q, old_R = sa_fit_candidates(AggOp,fine_candidates[:,:i])
+#                old_Q, old_R = fit_candidates(AggOp,fine_candidates[:,:i])
 #
 #                Q_result,R_result = augment_candidates(AggOp, old_Q, old_R, fine_candidates[:,[i]])
 #

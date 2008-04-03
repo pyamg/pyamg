@@ -9,6 +9,7 @@ from numpy import fromfile, ascontiguousarray, mat, int32, inner, dot, \
                   zeros, ones, empty, asmatrix
 from scipy import rand, real                  
 from scipy.linalg import eigvals
+from scipy.lib.blas import get_blas_funcs
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
@@ -18,6 +19,10 @@ def norm(x):
     #currently 40x faster than scipy.linalg.norm(x)
     x = ravel(x)
     return real(sqrt(inner(x,x)))
+
+def axpy(x,y,a=1.0):
+    fn = get_blas_funcs(['axpy'], [x,y])[0]
+    fn(x,y,a)
 
 
 #def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
@@ -99,7 +104,7 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
 
             alpha = dot(ravel(w),ravel(V[-1]))
             H[j,j] = alpha
-            w -= alpha * V[-1]
+            w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
             
             beta = norm(w)
             H[j+1,j] = beta
@@ -110,11 +115,12 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
 
             V.append(w)
             V = V[-2:] #retain only last two vectors
+
         else:
             #orthogonalize against Vs
             for i,v in enumerate(V):
                 H[i,j] = dot(ravel(w),ravel(v))
-                w -= H[i,j]*v
+                w -= H[i,j]*v #axpy(v,w,-H[i,j])
             H[j+1,j] = norm(w)
             if (H[j+1,j] < 1e-10): break
             

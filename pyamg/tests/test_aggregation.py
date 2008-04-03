@@ -93,7 +93,7 @@ class TestSA(TestCase):
 #        user_cases.append((A,AggOp,candidates))
 #
 #        for A,AggOp,candidates in user_cases:
-#            T,coarse_candidates_result = sa_fit_candidates(AggOp,candidates)
+#            T,coarse_candidates_result = fit_candidates(AggOp,candidates)
 #
 #            P_result = sa_interpolation(A,candidates,omega=4.0/3.0,AggOp=AggOp)[0]
 #            P_expected = sa_smoothed_prolongator(A,T,epsilon=0.0,omega=4.0/3.0)
@@ -147,7 +147,7 @@ class TestFitCandidates(TestCase):
         for AggOp,fine_candidates in self.cases:
             mask_candidate(AggOp,fine_candidates)
 
-            Q,coarse_candidates = sa_fit_candidates(AggOp,fine_candidates)
+            Q,coarse_candidates = fit_candidates(AggOp,fine_candidates)
 
             #each fine level candidate should be fit exactly
             assert_almost_equal(fine_candidates,Q*coarse_candidates)

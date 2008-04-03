@@ -12,7 +12,7 @@ from relaxation import gauss_seidel
 from multilevel import multilevel_solver
 from utils import approximate_spectral_radius,hstack_csr,vstack_csr,diag_sparse
 from aggregation import standard_aggregation, sa_smoothed_prolongator, \
-        sa_fit_candidates, symmetric_strength_of_connection
+        fit_candidates, symmetric_strength_of_connection
 
 #from numpy.linalg import norm
 from utils import norm
@@ -40,7 +40,7 @@ def sa_hierarchy(A,B,AggOps):
     Bs = [B]
 
     for AggOp in AggOps:
-        P,B = sa_fit_candidates(AggOp,B)
+        P,B = fit_candidates(AggOp,B)
         I   = sa_smoothed_prolongator(A,P)
         A   = I.T.asformat(I.format) * A * I
         As.append(A)
@@ -124,7 +124,7 @@ def adaptive_sa_solver(A, num_candidates=1, mu=5, improvement=0, max_levels=10, 
             max_coarse = max_coarse, mu = mu, epsilon = epsilon, \
             aggregation = aggregation )
 
-    #TODO make sa_fit_candidates work for small Bs
+    #TODO make fit_candidates work for small Bs
     x /= norm(x)
     
     #create SA using x here
@@ -183,7 +183,7 @@ def asa_initial_setup_stage(A, max_levels, max_coarse, mu, epsilon, aggregation)
             W_l = standard_aggregation(C_l)                #step 4b
         else:
             W_l = aggregation[len(AggOps)]
-        P_l,x = sa_fit_candidates(W_l,x)                   #step 4c
+        P_l,x = fit_candidates(W_l,x)                      #step 4c
         I_l   = sa_smoothed_prolongator(A_l,P_l)           #step 4d
         A_l   = I_l.T.asformat(I_l.format) * A_l * I_l     #step 4e
         #TODO change variable names I_l -> P, P_l -> T
@@ -241,7 +241,7 @@ def asa_general_setup_stage(As, Ps, Ts, Bs, AggOps, mu):
         B[:B_old.shape[0],:B_old.shape[1]] = B_old
         B[:,-1] = x.reshape(-1)
 
-        T,R = sa_fit_candidates(AggOps[i],B)
+        T,R = fit_candidates(AggOps[i],B)
 
         P = sa_smoothed_prolongator(A,T)
         A = P.T.asformat(P.format) * A * P
