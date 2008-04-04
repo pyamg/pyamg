@@ -7,7 +7,7 @@ from scipy.sparse import csr_matrix
 from pyamg.aggregation import smoothed_aggregation_solver
 
 from pyamg.gallery import *
-from pyamg.adaptive import *
+from pyamg.aggregation.adaptive import *
 
 
 class TestAdaptiveSA(TestCase):
