@@ -15,13 +15,18 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
-    def __init__(self, As, Ps, Rs=None, preprocess=None, postprocess=None, coarse_solver='splu'):
+    def __init__(self, As, Ps, Rs=None, preprocess=None, postprocess=None, \
+            presmoother =('gauss_seidel', {'symmetric':True}),
+            postsmoother=('gauss_seidel', {'symmetric':True}),
+            coarse_solver='splu'):
         self.As = As
         self.Ps = Ps
         self.preprocess  = preprocess
         self.postprocess = postprocess
 
         self.coarse_solver = coarse_grid_solver(coarse_solver)
+        self.presmoother  = presmoother
+        self.postsmoother = postsmoother
 
         if Rs is None:
             self.Rs = [P.T for P in self.Ps]
@@ -95,7 +100,7 @@ class multilevel_solver:
     def __solve(self,lvl,x,b):
         A = self.As[lvl]
 
-        self.presmoother(A,x,b)
+        self.presmooth(A,x,b)
 
         residual = b - A*x
 
@@ -109,13 +114,13 @@ class multilevel_solver:
 
         x += self.Ps[lvl] * coarse_x   #coarse grid correction
 
-        self.postsmoother(A,x,b)
+        self.postsmooth(A,x,b)
 
 
-    def presmoother(self,A,x,b):
+    def presmooth(self,A,x,b):
         gauss_seidel(A,x,b,iterations=1,sweep="symmetric")
 
-    def postsmoother(self,A,x,b):
+    def postsmooth(self,A,x,b):
         gauss_seidel(A,x,b,iterations=1,sweep="symmetric")
 
 
