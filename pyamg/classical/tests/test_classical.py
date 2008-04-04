@@ -7,9 +7,9 @@ from scipy.sparse import csr_matrix, lil_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
-from pyamg import split
 
-from pyamg.classical import * 
+from pyamg.classical import split
+from pyamg.classical.classical import ruge_stuben_solver, rs_direct_interpolation
 
 class TestRugeStubenFunctions(TestCase):
     def setUp(self):
@@ -84,7 +84,7 @@ class TestRugeStubenFunctions(TestCase):
 
             
 
-class TestRugeStubenSolver(TestCase):
+class TestSolverPerformance(TestCase):
     def test_poisson(self):
         cases = []
         

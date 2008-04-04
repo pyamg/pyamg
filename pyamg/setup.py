@@ -6,10 +6,11 @@ def configuration(parent_package='',top_path=None):
 
     config = Configuration('pyamg', parent_package, top_path)
 
-    config.add_subpackage('gallery')
-    config.add_subpackage('vis')
     config.add_subpackage('aggregation')
+    config.add_subpackage('classical')
+    config.add_subpackage('gallery')
     config.add_subpackage('multigridtools')
+    config.add_subpackage('vis')
 
     config.add_data_dir('tests')
 

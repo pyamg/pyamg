@@ -1,4 +1,4 @@
-"""Classical AMG methods (Ruge-Stuben AMG)"""
+"""Classical AMG (Ruge-Stuben AMG)"""
 
 __docformat__ = "restructuredtext en"
 
@@ -6,15 +6,15 @@ from numpy import empty, empty_like
 
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
-from multilevel import multilevel_solver
-from strength import classical_strength_of_connection
-import multigridtools
+from pyamg.multilevel import multilevel_solver
+from pyamg.strength import classical_strength_of_connection
+from pyamg import multigridtools
 
 __all__ = ['ruge_stuben_solver','rs_prolongator','rs_direct_interpolation']
 
 
 def ruge_stuben_solver(A, max_levels=10, max_coarse=500, theta=0.25, CF='RS'):
-    """Create a multilevel solver using Ruge-Stuben AMG (Classical AMG)
+    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
     Parameters
     ----------

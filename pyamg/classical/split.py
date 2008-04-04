@@ -97,9 +97,8 @@ References
 from scipy import ones, empty, rand, ravel
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
-from graph import vertex_coloring
-
-import multigridtools
+from pyamg.graph import vertex_coloring
+from pyamg import multigridtools
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']
 
