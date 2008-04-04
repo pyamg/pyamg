@@ -10,6 +10,34 @@ from pyamg.gallery import poisson, linear_elasticity
 
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
 
+class TestSetupParameters(TestCase):
+    """Test various SA setup options on small problems"""
+    def setUp(self):
+        self.cases = []
+
+        self.cases.append(( poisson( (200,),  format='csr'), None))
+        self.cases.append(( poisson( (20,20), format='csr'), None))
+        self.cases.append( linear_elasticity( (20,20), format='bsr') )
+
+    def test_convergence(self): 
+
+        for A,B in self.cases:
+            for strength in ['symmetric','ode']:
+                for smooth in ['jacobi','energy']:
+                    ml = smoothed_aggregation_solver(A, B, strength=strength, \
+                            smooth=smooth, max_coarse=10)
+
+                    numpy.random.seed(0) #make tests repeatable
+
+                    x = rand(A.shape[0])
+                    b = A*rand(A.shape[0])
+
+                    x_sol,residuals = ml.solve(b, x0=x, maxiter=20, tol=1e-10, return_residuals=True)
+                    avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+                    
+                    assert(avg_convergence_ratio < 0.4)
+
+
 
 class TestSolverPerformance(TestCase):
     def setUp(self):
