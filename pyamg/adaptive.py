@@ -1,7 +1,6 @@
-__all__ = ['adaptive_sa_solver']
+"""Adaptive Smoothed Aggregation"""
 
-
-import numpy,scipy,scipy.sparse
+__docformat__ = "restructuredtext en"
 
 from numpy import sqrt, ravel, diff, zeros, zeros_like, inner, concatenate, \
                   asarray, hstack, ascontiguousarray, isinf, dot
@@ -15,9 +14,11 @@ from utils import approximate_spectral_radius, diag_sparse
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.aggregation.aggregate import standard_aggregation
 from pyamg.aggregation.smooth import jacobi_prolongation_smoother
-from pyamg.aggregation.aggregation import fit_candidates
+from pyamg.aggregation.tentative import fit_candidates
 
 from utils import norm
+
+__all__ = ['adaptive_sa_solver']
 
 
 def sa_hierarchy(A,B,AggOps):
