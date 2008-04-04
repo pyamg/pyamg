@@ -8,12 +8,9 @@ from numpy import array, arange, ones, zeros, sqrt, asarray, \
 from scipy.sparse import csr_matrix, coo_matrix, \
         isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 
-#from sa_ode_strong_connections import sa_ode_strong_connections
-#from sa_energy_min import sa_energy_min
-
 from pyamg import multigridtools
 from pyamg.multilevel import multilevel_solver
-from pyamg.strength import symmetric_strength_of_connection
+from pyamg.strength import *
 from pyamg.utils import symmetric_rescaling, diag_sparse, scale_columns
 
 from aggregate import standard_aggregation
@@ -86,6 +83,8 @@ def prolongator(A, B, strength, aggregate, smooth):
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A,**kwargs)
+    elif fn == 'classical':
+        C = classical_strength_of_connection(A,B,**kwargs)
     elif fn == 'ode':
         C = ode_strength_of_connection(A,B,**kwargs)
     elif fn is None:
