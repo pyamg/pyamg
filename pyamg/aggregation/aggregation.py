@@ -10,12 +10,12 @@ from scipy.sparse import csr_matrix, coo_matrix, \
 
 from pyamg import multigridtools
 from pyamg.multilevel import multilevel_solver
-from pyamg.strength import *
 from pyamg.utils import symmetric_rescaling, diag_sparse, scale_columns
 
-from aggregate import standard_aggregation
+from pyamg.strength import *
+from aggregate import *
 from tentative import fit_candidates
-from smooth import jacobi_prolongation_smoother
+from smooth import *
 
 __all__ = ['smoothed_aggregation_solver']
 
@@ -108,8 +108,8 @@ def prolongator(A, B, strength, aggregate, smooth):
     fn, kwargs = unpack_arg(smooth)
     if fn == 'jacobi':
         P = jacobi_prolongation_smoother(A,T,**kwargs)
-    elif fn == 'energy_min':
-        P = energy_min_prolongation_smoother(A,T,C,B,**kwargs)
+    elif fn == 'energy':
+        P = energy_prolongation_smoother(A,T,C,B,**kwargs)
     elif fn is None:
         P = T
     else:
@@ -141,7 +141,7 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
         strength=None, all nonzero entries of the matrix are considered strong.
     aggregate : ['standard', 'lloyd']
         Method used to aggregate nodes.
-    smooth : ['jacobi', 'chebyshev', 'MLS', 'energy_min', None]
+    smooth : ['jacobi', 'chebyshev', 'MLS', 'energy', None]
         Method used to smoother used to smooth the tentative prolongator.
     
     General Parameters
