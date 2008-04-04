@@ -279,6 +279,8 @@ def prolongator(A, B, strength, aggregate, smooth):
         C = symmetric_strength_of_connection(A,**kwargs)
     elif fn == 'ode':
         C = ode_strength_of_connection(A,B,**kwargs)
+    elif fn is None:
+        C = A
     else:
         raise ValueError('unrecognized strength of connection method: %s' % fn)
 
@@ -300,6 +302,8 @@ def prolongator(A, B, strength, aggregate, smooth):
         P = jacobi_prolongation_smoother(A,T,**kwargs)
     elif fn == 'energy_min':
         P = energy_min_prolongation_smoother(A,T,C,B,**kwargs)
+    elif fn is None:
+        P = T
     else:
         raise ValueError('unrecognized prolongation smoother method % ' % fn)
     
@@ -359,6 +363,11 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
             List of csr_matrix objects that describe a user-defined
             multilevel aggregation of the variables.
             TODO ELABORATE
+
+    Notes
+    -----
+    TODO describe sequence of operations on each level
+    preprocess -> strength -> aggregate -> tentative -> smooth
 
     Example
     -------
