@@ -11,13 +11,13 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 from relaxation import gauss_seidel
 from multilevel import multilevel_solver
 from utils import approximate_spectral_radius, diag_sparse
-from aggregation import standard_aggregation, jacobi_prolongation_smoother, \
-        fit_candidates, symmetric_strength_of_connection
 
-#from numpy.linalg import norm
+from pyamg.strength import symmetric_strength_of_connection
+from pyamg.aggregation.aggregate import standard_aggregation
+from pyamg.aggregation.smooth import jacobi_prolongation_smoother
+from pyamg.aggregation.aggregation import fit_candidates
+
 from utils import norm
-
-
 
 
 def sa_hierarchy(A,B,AggOps):

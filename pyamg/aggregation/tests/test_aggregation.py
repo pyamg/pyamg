@@ -11,7 +11,9 @@ import pyamg
 from pyamg.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, load_example
 from pyamg.strength import symmetric_strength_of_connection
-from pyamg.aggregation import *
+
+from pyamg.aggregation.aggregation import smoothed_aggregation_solver, fit_candidates
+from pyamg.aggregation.aggregate import standard_aggregation
 
 
 class TestSA(TestCase):

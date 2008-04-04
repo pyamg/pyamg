@@ -11,15 +11,15 @@ from scipy.sparse import csr_matrix, coo_matrix, \
 #from sa_ode_strong_connections import sa_ode_strong_connections
 #from sa_energy_min import sa_energy_min
 
-import multigridtools
-from multilevel import multilevel_solver
-from strength import symmetric_strength_of_connection
-from utils import diag_sparse, approximate_spectral_radius, \
-                  symmetric_rescaling, scale_columns, scale_rows
+from pyamg import multigridtools
+from pyamg.multilevel import multilevel_solver
+from pyamg.strength import symmetric_strength_of_connection
+from pyamg.utils import symmetric_rescaling, diag_sparse, scale_columns
 
-__all__ = ['smoothed_aggregation_solver', 'sa_filtered_matrix',
-        'standard_aggregation', 'jacobi_prolongation_smoother', 'fit_candidates']
+from aggregate import standard_aggregation
+from smooth import jacobi_prolongation_smoother
 
+__all__ = ['smoothed_aggregation_solver', 'fit_candidates']
 
 
 def sa_filtered_matrix(A,theta):
@@ -69,57 +69,6 @@ def sa_filtered_matrix(A,theta):
 
     return A_filtered
 
-
-def standard_aggregation(C):
-    """Compute the sparsity pattern of the tentative prolongator
-
-    Parameters
-    ----------
-    C : csr_matrix
-        strength of connection matrix
-
-    Returns
-    -------
-    T : csr_matrix
-        stores the sparsity pattern of the tentative prolongator
-
-
-    Example
-    -------
-    TODO e
-    """
-
-    if not isspmatrix_csr(C): 
-        raise TypeError('expected csr_matrix') 
-
-    if C.shape[0] != C.shape[1]:
-        raise ValueError('expected square matrix')
-
-    index_type = C.indptr.dtype
-    num_rows   = C.shape[0]
-
-    Tj = empty( num_rows, dtype=index_type ) #stores the aggregate #s
-    
-    fn = multigridtools.standard_aggregation
-
-    num_aggregates = fn(num_rows,C.indptr,C.indices,Tj)
-
-    if num_aggregates == 0:
-        return csr_matrix( (num_rows,1), dtype='int8' ) # all zero matrix
-    else:
-        shape = (num_rows, num_aggregates)
-        if Tj.min() == -1:
-            # some nodes not aggregated
-            mask = Tj != -1
-            row  = arange( num_rows, dtype=index_type )[mask]
-            col  = Tj[mask]
-            data = ones(len(col), dtype='int8')
-            return coo_matrix( (data,(row,col)), shape=shape).tocsr()
-        else:
-            # all nodes aggregated
-            Tp = arange( num_rows+1, dtype=index_type)
-            Tx = ones( len(Tj), dtype='int8')
-            return csr_matrix( (Tx,Tj,Tp), shape=shape)
 
 
 
@@ -229,40 +178,6 @@ def fit_candidates(AggOp, B, tol=1e-10):
     R = R.reshape(-1,K)
 
     return Q,R
-
-def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
-    """Jacobi prolongation smoother
-   
-
-    Parameters
-    ----------
-    S : {csr_matrix, bsr_matrix}
-        Sparse NxN matrix used for smoothing.  Typically, A or the
-        "filtered matrix" obtained from A by lumping weak connections
-        onto the diagonal of A.
-    T : {csr_matrix, bsr_matrix}
-        Tentative prolongator
-    omega : {scalar}
-        Damping parameter
-
-    Returns
-    -------
-    P : {csr_matrix, bsr_matrix}
-        Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) * T
-        where rho(S) is an approximation to the spectral radius of S.
-
-    """
-
-    D = S.diagonal()
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0
-
-    D_inv_S = scale_rows(S, D_inv, copy=True)
-    D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
-
-    P = T - (D_inv_S*T)
-
-    return P
 
 
 def prolongator(A, B, strength, aggregate, smooth):
