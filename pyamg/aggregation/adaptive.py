@@ -192,7 +192,7 @@ def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, the
         else:
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-        P_l   = jacobi_prolongation_smoother(A_l,T_l)                               #step 4d
+        P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
 
         AggOps.append(AggOp)
@@ -269,85 +269,5 @@ def general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters):
         gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
 
     return x
-
-#    def __augment_cycle(self,As,Ps,Ts,Bs,AggOps,x):
-#        A = As[0]
-#
-#        new_As = [A]
-#        new_Ps = []
-#        new_Ts = []
-#        new_Bs = [ hstack((Bs[0],x)) ]
-#
-#        for i in range(len(As) - 1):
-#            T,R = augment_candidates(AggOps[i], Ts[i], Bs[i+1], x)
-#
-#            P = jacobi_prolongation_smoother(A,T)
-#            A = P.T.asformat(P.format) * A * P
-#
-#            new_As.append(A)
-#            new_Ps.append(P)
-#            new_Ts.append(T)
-#            new_Bs.append(R)
-#
-#            x = R[:,-1].reshape(-1,1)
-#
-#        return new_As,new_Ps,new_Ts,new_Bs
-
-
-#def augment_candidates(AggOp, old_Q, old_R, new_candidate):
-#    #TODO update P and A also
-#
-#    K = old_R.shape[1]
-#
-#    #determine blocksizes
-#    if new_candidate.shape[0] == old_Q.shape[0]:
-#        #then this is the first prolongator
-#        old_bs = (1,K)
-#        new_bs = (1,K+1)
-#    else:
-#        old_bs = (K,K)
-#        new_bs = (K+1,K+1)
-#
-#    #AggOp = expand_into_blocks(AggOp,new_bs[0],1).tocsr() #TODO switch to block matrix
-#
-#    # tentative prolongator
-#    Q_data = zeros( (AggOp.indptr[-1],) + new_bs)
-#    Q_data[:,:old_bs[0],:old_bs[1]] = old_Q.data.reshape((-1,) + old_bs)
-#
-#    # coarse candidates
-#    R = zeros((AggOp.shape[1],K+1,K+1))
-#    R[:,:K,:K] = old_R.reshape(-1,K,K)
-#
-#    c = new_candidate.reshape(-1)[diff(AggOp.indptr) == 1]  #eliminate DOFs that aggregation misses
-#    threshold = 1e-10 * abs(c).max()   # cutoff for small basis functions
-#
-#    X = bsr_matrix((c,AggOp.indices,AggOp.indptr),shape=AggOp.shape)
-#
-#    #orthogonalize X against previous
-#    for i in range(K):
-#        old_c = ascontiguousarray(Q_data[:,:,i].reshape(-1))
-#        D_AtX = csr_matrix((old_c*X.data,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() #same as diagonal of A.T * X
-#        R[:,i,K] = D_AtX
-#        X.data -= D_AtX[X.indices] * old_c
-#
-#    #normalize X
-#    D_XtX = csr_matrix((X.data**2,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() #same as diagonal of X.T * X
-#    col_norms = sqrt(D_XtX)
-#    mask = col_norms < threshold  # find small basis functions
-#    col_norms[mask] = 0           # and set them to zero
-#
-#    R[:,K,K] = col_norms      # store diagonal entry into R
-#
-#    col_norms = 1.0/col_norms
-#    col_norms[mask] = 0
-#    X.data *= col_norms[X.indices]
-#    Q_data[:,:,-1] = X.data.reshape(-1,new_bs[0])
-#
-#    Q_data = Q_data.reshape(-1)  #TODO BSR change
-#    R = R.reshape(-1,K+1)
-#
-#    Q = csr_matrix((Q_data,Q_indices,Q_indptr),shape=(AggOp.shape[0],(K+1)*AggOp.shape[1]))
-#
-#    return Q,R
 
 
