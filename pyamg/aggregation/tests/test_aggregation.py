@@ -10,33 +10,55 @@ from pyamg.gallery import poisson, linear_elasticity
 
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
 
-class TestSetupParameters(TestCase):
-    """Test various SA setup options on small problems"""
+class TestParameters(TestCase):
     def setUp(self):
         self.cases = []
 
-        self.cases.append(( poisson( (200,),  format='csr'), None))
-        self.cases.append(( poisson( (20,20), format='csr'), None))
-        self.cases.append( linear_elasticity( (20,20), format='bsr') )
+        self.cases.append(( poisson( (100,),  format='csr'), None))
+        self.cases.append(( poisson( (10,10), format='csr'), None))
+        self.cases.append( linear_elasticity( (10,10), format='bsr') )
 
-    def test_convergence(self): 
-
+    def run_cases(self, opts):
         for A,B in self.cases:
-            for strength in ['symmetric','ode']:
-                for smooth in ['jacobi','energy']:
-                    ml = smoothed_aggregation_solver(A, B, strength=strength, \
-                            smooth=smooth, max_coarse=10)
+            ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
 
-                    numpy.random.seed(0) #make tests repeatable
+            numpy.random.seed(0) #make tests repeatable
 
-                    x = rand(A.shape[0])
-                    b = A*rand(A.shape[0])
+            x = rand(A.shape[0])
+            b = A*rand(A.shape[0])
 
-                    x_sol,residuals = ml.solve(b, x0=x, maxiter=20, tol=1e-10, return_residuals=True)
-                    avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-                    
-                    assert(avg_convergence_ratio < 0.4)
+            x_sol,residuals = ml.solve(b, x0=x, maxiter=30, tol=1e-10, return_residuals=True)
+            convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+           
+            assert(convergence_ratio < 0.3)
 
+
+    def test_strength_of_connection(self): 
+        for strength in ['symmetric','ode']:
+            self.run_cases( {'strength' : strength} )
+    
+    def test_prolongation_smoother(self): 
+        for smooth in ['jacobi','energy']:
+            self.run_cases( {'smooth' : smooth} )
+
+    def test_smoothers(self): 
+        smoothers = []
+        smoothers.append('gauss_seidel')
+        smoothers.append('jacobi')
+        smoothers.append( ('gauss_seidel',{'sweep' : 'symmetric'}) )
+
+        for pre in smoothers:
+            for post in smoothers:
+                self.run_cases( {'presmoother' : pre, 'postsmoother' : post} )
+    
+    def test_coarse_grid_solvers(self): 
+        solvers = []
+        solvers.append('splu')
+        solvers.append('lu')
+        solvers.append( ('cg',{'tol' : '1e-10'}) )
+
+        for solver in solvers:
+            self.run_cases( {'coarse_grid_solver' : solver} )
 
 
 class TestSolverPerformance(TestCase):

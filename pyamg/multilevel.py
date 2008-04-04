@@ -1,4 +1,6 @@
-__all__ = ['multilevel_solver', 'coarse_grid_solver']
+"""Generic AMG solver"""
+
+__docformat__ = "restructuredtext en"
 
 import scipy
 import numpy
@@ -7,24 +9,19 @@ from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve, splu
 
 from relaxation import gauss_seidel, jacobi, sor
-from utils import symmetric_rescaling, diag_sparse
+from utils import symmetric_rescaling, diag_sparse, norm
 
-#from numpy.linalg import norm
-from utils import norm
-
+__all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
-    def __init__(self, As, Ps, Rs=None, preprocess=None, postprocess=None, coarse_solver=None):
+    def __init__(self, As, Ps, Rs=None, preprocess=None, postprocess=None, coarse_solver='splu'):
         self.As = As
         self.Ps = Ps
         self.preprocess  = preprocess
         self.postprocess = postprocess
 
-        if coarse_solver is None:
-            self.coarse_solver = coarse_grid_solver('splu')
-        else:
-            self.coarse_solver = coarse_solver
+        self.coarse_solver = coarse_grid_solver(coarse_solver)
 
         if Rs is None:
             self.Rs = [P.T for P in self.Ps]
@@ -124,23 +121,27 @@ class multilevel_solver:
 
 
 def coarse_grid_solver(solver):
-    """return coarse grid solver suitable for multilevel_solver
+    """Return a coarse grid solver suitable for multilevel_solver
     
     Parameters
-    ==========
-        solver: string
-            Sparse methods:
-                splu         : sparse LU solver
+    ----------
+    solver: string
+        Sparse direct methods:
+            splu         : sparse LU solver
+        Sparse iterative methods:
+            the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
+        Dense methods:
+            pinv     : pseudoinverse (QR)
+            pinv2    : pseudoinverse (SVD)
+            lu       : LU factorization 
+            cholesky : Cholesky factorization
 
-            Dense methods:
-                pinv     : pseudoinverse (dense) 
-                pinv2    : pseudoinverse (dense)
-                lu       : LU factorization (dense)
-                cholesky : Cholesky factorization (dense)
+    TODO add relaxation methods
 
     Examples
-    ========
+    --------
 
+    TODO
         
     """
     

@@ -99,7 +99,7 @@ def prolongator(A, B, strength, aggregate, smooth):
     elif fn == 'lloyd':
         raise NotImplementedError('lloyd not yet supported')
     else:
-        raise ValueError('unrecognized aggregation method' % fn )
+        raise ValueError('unrecognized aggregation method %s' % fn )
 
     # tentative prolongator
     T,B = fit_candidates(AggOp,B)
@@ -113,7 +113,7 @@ def prolongator(A, B, strength, aggregate, smooth):
     elif fn is None:
         P = T
     else:
-        raise ValueError('unrecognized prolongation smoother method % ' % fn)
+        raise ValueError('unrecognized prolongation smoother method %s' % fn)
     
     return P,B
 
@@ -124,11 +124,11 @@ def prolongator(A, B, strength, aggregate, smooth):
 
 def smoothed_aggregation_solver(A, B=None, strength='symmetric', 
         aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
-        max_levels = 10, max_coarse = 500, cycle_opts=None):
+        max_levels = 10, max_coarse = 500, **kwargs):
     """Create a multilevel solver using Smoothed Aggregation (SA)
 
-    Parameters
-    ----------
+    Setup Parameters
+    ----------------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix in CSR or BSR format
     B : {None, array_like}
@@ -143,39 +143,47 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
         Method used to aggregate nodes.
     smooth : ['jacobi', 'chebyshev', 'MLS', 'energy', None]
         Method used to smoother used to smooth the tentative prolongator.
-    
-    General Parameters
-    ------------------
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    cycle_kwargs : {dict}
-        Parameters passed to multilevel_solver
+    
     TODO ADD PREPROCESSES            
+    
+    Cycle Parameters
+    ----------------
+    cycle_type : ['V','W','F']
+        Structrure of multigrid cycle
+    presmoother  : ['gauss_seidel', 'jacobi', ... ]
+        Premoother used during multigrid cycling
+    postsmoother : ['gauss_seidel', 'jacobi', ... ]
+        Postmoother used during multigrid cycling
+    coarse_solver : ['splu','lu', ... ]
+        Solver used at the coarsest level of the MG hierarchy 
+
+    Cycle parameters are passed through as arguments to multilevel_solver.
+    Refer to pyamg.multilevel_solver for additional documentation.
+    
+
+    Notes
+    -----
+    TODO Distinguish betwenn setup and cycle parameters
+    TODO describe sequence of operations on each level
+    preprocess -> strength -> aggregate -> tentative -> smooth
 
 
 
     Unused Parameters
     -----------------
-        theta: {float} : default 0.0
-            Strength of connection parameter used in aggregation.
-        omega: {float} : default 4.0/3.0
-            Damping parameter used in prolongator smoothing (0 < omega < 2)
-        symmetric: {boolean} : default True
-            True if A is symmetric, False otherwise
-        rescale: {boolean} : default True
-            If True, symmetrically rescale A by the diagonal
-            i.e. A -> D * A * D,  where D is diag(A)^-0.5
-        aggregation: {None, list of csr_matrix} : optional
-            List of csr_matrix objects that describe a user-defined
-            multilevel aggregation of the variables.
-            TODO ELABORATE
+    symmetric: {boolean} : default True
+        True if A is symmetric, False otherwise
+    rescale: {boolean} : default True
+        If True, symmetrically rescale A by the diagonal
+        i.e. A -> D * A * D,  where D is diag(A)^-0.5
+    aggregation: {None, list of csr_matrix} : optional
+        List of csr_matrix objects that describe a user-defined
+        multilevel aggregation of the variables.
 
-    Notes
-    -----
-    TODO describe sequence of operations on each level
-    preprocess -> strength -> aggregate -> tentative -> smooth
 
     Example
     -------
@@ -202,7 +210,7 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
         B = ones((A.shape[0],1), dtype=A.dtype) # use constant vector
     else:
         B = asarray(B, dtype=A.dtype)
-
+    
     pre,post = None,None   #preprocess/postprocess
 
     #if rescale:
