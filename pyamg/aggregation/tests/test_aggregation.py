@@ -1,72 +1,16 @@
 from scipy.testing import *
 
 import numpy
-from numpy import sqrt, empty, ones, arange, array_split, array, \
-                  zeros, zeros_like, diff, matrix, vstack
-from numpy.linalg import norm
+from numpy import sqrt, ones, arange, array, diff, vstack
 from scipy import rand
-from scipy.sparse import csr_matrix, lil_matrix, coo_matrix, spdiags
+from scipy.sparse import csr_matrix
 
-import pyamg
 from pyamg.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity, load_example
-from pyamg.strength import symmetric_strength_of_connection
+from pyamg.gallery import poisson, linear_elasticity
 
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver, fit_candidates
-from pyamg.aggregation.aggregate import standard_aggregation
 
 
-class TestSA(TestCase):
-    def setUp(self):
-        self.cases = []
-
-        # random matrices
-        numpy.random.seed(0)
-        for N in [2,3,5]:
-            self.cases.append( csr_matrix(rand(N,N)) )
-
-        # poisson problems in 1D and 2D
-        for N in [2,3,5,7,10,11,19]:
-            self.cases.append( poisson( (N,), format='csr') )
-        for N in [2,3,5,7,10,11]:
-            self.cases.append( poisson( (N,N), format='csr') )
-
-        for name in ['knot','airfoil','bar']:
-            ex = load_example(name)
-            self.cases.append( ex['A'].tocsr() )
-
-
-    def test_standard_aggregation(self):
-        for A in self.cases:
-            S = symmetric_strength_of_connection(A)
-            
-            expected = reference_standard_aggregation(S)
-            result   = standard_aggregation(S)
-
-            assert_equal( (result - expected).nnz, 0 )
-    
-        # S is diagonal - no DoFs aggregated
-        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        result   = standard_aggregation(S)
-        expected = matrix([[0],[0],[0],[0]])
-        assert_equal(result.todense(),expected)
-        
-        ##check simple block examples
-        #A = csr_matrix(arange(16).reshape(4,4))
-        #A = A + A.T
-        #A = A.tobsr(blocksize=(2,2))
-
-        #S_result   = standard_aggregation(A)
-        #S_expected = matrix([1,1]).T
-        #assert_array_equal(S_result.todense(),S_expected)
-
-        #S_result   = standard_aggregation(A)
-        #S_expected = matrix([1,1]).T
-        #assert_array_equal(S_result.todense(),S_expected)
-
-        #S_result   = standard_aggregation(A)
-        #S_expected = matrix([[1,0],[0,1]])
-        #assert_array_equal(S_result.todense(),S_expected)
 
 #    def test_user_aggregation(self):
 #        """check that the sa_interpolation accepts user-defined aggregates"""
@@ -161,12 +105,12 @@ class TestSASolverPerformance(TestCase):
         """check that method converges at a reasonable rate"""
 
         for A,B in self.cases:
-            ml = smoothed_aggregation_solver(A,B,max_coarse=10,max_levels=10)
+            ml = smoothed_aggregation_solver(A, B, max_coarse=10)
 
             numpy.random.seed(0) #make tests repeatable
 
             x = rand(A.shape[0])
-            b = A*rand(A.shape[0]) #zeros_like(x)
+            b = A*rand(A.shape[0])
 
             x_sol,residuals = ml.solve(b,x0=x,maxiter=20,tol=1e-10,return_residuals=True)
 
@@ -196,78 +140,6 @@ class TestSASolverPerformance(TestCase):
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
         
         assert(avg_convergence_ratio < 0.25)
-
-
-
-
-################################################
-##   reference implementations for unittests  ##
-################################################
-
-#def reference_sa_filtered_matrix(A,theta):
-#    A_coo = A.tocoo()
-#    S = lil_matrix(A.shape)
-#
-#    for (i,j,v) in zip(A_coo.row,A_coo.col,A_coo.data):
-#        if i == j or abs(v) >= theta*sqrt(abs(A[i,i])*abs(A[j,j])):
-#            S[i,j] += v
-#        else:
-#            S[i,i] += v
-#
-#    return S
-
-
-# note that this method only tests the current implementation, not
-# all possible implementations
-def reference_standard_aggregation(C):
-    S = array_split(C.indices,C.indptr[1:-1])
-
-    n = C.shape[0]
-
-    R = set(range(n))
-    j = 0
-
-    aggregates    = empty(n,dtype=C.indices.dtype)
-    aggregates[:] = -1
-
-    # Pass #1
-    for i,row in enumerate(S):
-        Ni = set(row) | set([i])
-
-        if Ni.issubset(R):
-            R -= Ni
-            for x in Ni:
-                aggregates[x] = j
-            j += 1
-
-    # Pass #2
-    Old_R = R.copy()
-    for i,row in enumerate(S):
-        if i not in R: continue
-
-        for x in row:
-            if x not in Old_R:
-                aggregates[i] = aggregates[x]
-                R.remove(i)
-                break
-
-    # Pass #3
-    for i,row in enumerate(S):
-        if i not in R: continue
-        Ni = set(row) | set([i])
-
-        for x in Ni:
-            if x in R:
-                aggregates[x] = j
-            j += 1
-
-    assert(len(R) == 0)
-
-    Pj = aggregates
-    Pp = arange(n+1)
-    Px = ones(n)
-
-    return csr_matrix((Px,Pj,Pp))
 
 
 
