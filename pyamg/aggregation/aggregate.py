@@ -17,13 +17,36 @@ def standard_aggregation(C):
 
     Returns
     -------
-    T : csr_matrix
-        stores the sparsity pattern of the tentative prolongator
+    AggOp : csr_matrix
+        aggregation operator which determines the sparsity pattern 
+        of the tentative prolongator
 
+    Examples
+    --------
 
-    Example
-    -------
-    TODO SHOW SIMPLE CASES
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg import poisson
+    >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
+    >>> A.todense()
+    matrix([[ 2., -1.,  0.,  0.],
+            [-1.,  2., -1.,  0.],
+            [ 0., -1.,  2., -1.],
+            [ 0.,  0., -1.,  2.]])
+    >>> standard_aggregation(A).todense() # two aggregates
+    matrix([[1, 0],
+            [1, 0],
+            [0, 1],
+            [0, 1]], dtype=int8)
+    >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
+    >>> A.todense()                      # first vertex is isolated
+    matrix([[1, 0, 0],
+            [0, 1, 1],
+            [0, 1, 1]])
+    >>> standard_aggregation(A).todense() # one aggregate
+    matrix([[0],
+            [1],
+            [1]], dtype=int8)
+
     """
 
     if not isspmatrix_csr(C): 

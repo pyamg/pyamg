@@ -3,17 +3,18 @@ vis_aggs(...) when given a .mat file name
 with matrix, near nullspace, and mesh information, outputs .vtu 
 files to help visualize aggregates on the first coarse level.
 """
-__all__ = ['vis_aggs']
 __docformat__ = "restructuredtext en"
 
 import warnings
 
 from numpy import array, ones, zeros
-from pyamg.sa import standard_aggregation, symmetric_strength_of_connection
-from pyamg.sa_ode_strong_connections import sa_ode_strong_connections
+from pyamg.aggregation import standard_aggregation
+from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection
 from scipy.sparse import csr_matrix
 from scipy.io import loadmat
 from vis import coarse_grid_vis, write_mesh, shrink_elmts
+
+__all__ = ['vis_aggs']
 
 def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_type="l2", SA_theta=0.1):
     """Coarse grid visualization: create .vtu files for use in Paraview
@@ -21,25 +22,25 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_
 
     Parameters
     ----------
-        mat_file : {string}
-            path for a mat file storing a dictionary that contains
-            'A', 'B', 'elements' and 'vertices.  These are the matrix, near nullspace modes,
-            element to node connectivity and a vertex list, respectively.
-        prob_type : {string}
-            'cg' denotes a continuous Galerkin mesh
-            'dg' denotes a discontinous Galerkin mesh  
-        str_type : {string}
-            'ode' uses the sa_ode_strong_connections routine to determine strength of connections
-            'classic' uses the classic strength measure
-        ODE_theta : {scalar > 1.0}
-            drop tolerance for the ode strength measure
-        k : {integer}
-            number of time steps for the ode strength measure
-        proj_type : {string}
-            'l2' uses l2 norm to solve minimization problem in ode strength measure
-            'D_A' uses DA norm to solve minimization problem in ode strength measure
-        SA_theta : {scalar in [0,1]}
-            drop tolerance for the scalar strength measure
+    mat_file : {string}
+        path for a mat file storing a dictionary that contains
+        'A', 'B', 'elements' and 'vertices.  These are the matrix, near nullspace modes,
+        element to node connectivity and a vertex list, respectively.
+    prob_type : {string}
+        'cg' denotes a continuous Galerkin mesh
+        'dg' denotes a discontinous Galerkin mesh  
+    str_type : {string}
+        'ode' uses the sa_ode_strong_connections routine to determine strength of connections
+        'classic' uses the classic strength measure
+    ODE_theta : {scalar > 1.0}
+        drop tolerance for the ode strength measure
+    k : {integer}
+        number of time steps for the ode strength measure
+    proj_type : {string}
+        'l2' uses l2 norm to solve minimization problem in ode strength measure
+        'D_A' uses DA norm to solve minimization problem in ode strength measure
+    SA_theta : {scalar in [0,1]}
+        drop tolerance for the scalar strength measure
     
     Returns
     -------
@@ -47,7 +48,8 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_
     
     Examples
     --------
-    >>> vis_aggs(matfile='diffusion.mat', prob_type='cg', k=4)
+    #TODO add diffusion to gallery 
+    #>>> vis_aggs(matfile='diffusion.mat', prob_type='cg', k=4)
     """
     
     #parse mat_file to determine a suitable start to our output files

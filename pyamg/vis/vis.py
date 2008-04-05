@@ -8,8 +8,8 @@ This will use the XML VTK format for unstructured meshes, .vtu
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
-__all__ = ['coarse_grid_vis','write_vtu','write_mesh']
 __docformat__ = "restructuredtext en"
+
 
 import warnings
 
@@ -21,6 +21,7 @@ from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.graph import vertex_coloring
 
+__all__ = ['coarse_grid_vis', 'write_vtu', 'write_mesh']
 
 def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     """Coarse grid visualization: create .vtu files for use in Paraview
@@ -82,36 +83,38 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     Examples
     --------
 
+    >>> from numpy import array, ones
+    >>> from scipy.sparse import csr_matrix
     >>> file_name     = 'example_mesh.vtu'
     >>> agg_file_name = 'example_agg.vtu'
     >>> Vert = array([[0.0,0.0],
-                      [1.0,0.0],
-                      [2.0,0.0],
-                      [0.0,1.0],
-                      [1.0,1.0],
-                      [2.0,1.0],
-                      [0.0,2.0],
-                      [1.0,2.0],
-                      [2.0,2.0],
-                      [0.0,3.0],
-                      [1.0,3.0],
-                      [2.0,3.0]])
+    ...               [1.0,0.0],
+    ...               [2.0,0.0],
+    ...               [0.0,1.0],
+    ...               [1.0,1.0],
+    ...               [2.0,1.0],
+    ...               [0.0,2.0],
+    ...               [1.0,2.0],
+    ...               [2.0,2.0],
+    ...               [0.0,3.0],
+    ...               [1.0,3.0],
+    ...               [2.0,3.0]])
     >>> E2V = array([[0,4,3],
-                     [0,1,4],
-                     [1,5,4],
-                     [1,2,5],
-                     [3,7,6],
-                     [3,4,7],
-                     [4,8,7],
-                     [4,5,8],
-                     [6,10,9],
-                     [6,7,10],
-                     [7,11,10],
-                     [7,8,11]],dtype=int)
-    >>> row = array([0,1,2,3,4,5,6,7,8,9,10,11])
-    >>> col = array([1,0,1,1,0,1,0,1,0,1,0, 1])
-    >>> data = ones((1,12),dtype=uint32).ravel()
-    >>> Agg = csr_matrix((data,(row,col)),shape=(12,2))
+    ...              [0,1,4],
+    ...              [1,5,4],
+    ...              [1,2,5],
+    ...              [3,7,6],
+    ...              [3,4,7],
+    ...              [4,8,7],
+    ...              [4,5,8],
+    ...              [6,10,9],
+    ...              [6,7,10],
+    ...              [7,11,10],
+    ...              [7,8,11]])
+    >>> row  = array([0,1,2,3,4,5,6,7,8,9,10,11])
+    >>> col  = array([1,0,1,1,0,1,0,1,0,1,0, 1])
+    >>> data = ones((1,12),dtype='int').ravel()
+    >>> Agg  = csr_matrix((data,(row,col)), shape=(12,2)) 
     >>> coarse_grid_vis(agg_file_name, Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='tri', A=None, plot_type='points')
     >>> write_mesh(file_name, Vert, E2V, mesh_type='tri')
 
