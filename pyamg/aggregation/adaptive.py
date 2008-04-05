@@ -152,7 +152,22 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
             B = hstack((B,x))
         As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
-    return multilevel_solver(As,Ps)
+    #TODO use levels/smoothed_aggregation_solver throughout method
+    class asa_level:
+        pass
+
+    levels = []
+    for A,P,T,B,AggOp in zip(As[:-1],Ps,Ts,Bs,AggOps):
+        levels.append( asa_level() )
+        levels[-1].A = A
+        levels[-1].P = P
+        levels[-1].T = T
+        levels[-1].B = B
+        levels[-1].AggOp = AggOp
+    levels.append( asa_level() )
+    levels[-1].A = As[-1]
+
+    return multilevel_solver(levels)
 
 def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, theta, aggregation):
     """Computes a complete aggregation and the first near-nullspace candidate

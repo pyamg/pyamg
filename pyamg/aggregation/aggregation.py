@@ -92,6 +92,7 @@ def prolongator(A, B, strength, aggregate, smooth):
     else:
         raise ValueError('unrecognized strength of connection method: %s' % fn)
 
+
     # aggregation
     fn, kwargs = unpack_arg(aggregate)
     if fn == 'standard':
@@ -115,8 +116,7 @@ def prolongator(A, B, strength, aggregate, smooth):
     else:
         raise ValueError('unrecognized prolongation smoother method %s' % fn)
     
-    return P,B
-
+    return C,AggOp,T,B,P
 
 
 
@@ -223,25 +223,34 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
     #    def post(x):
     #        return D_sqrt_inv*x
 
-    As = [A]
-    Ps = []
-    Rs = []
+    class sa_level:
+        pass
 
-    while len(As) < max_levels and A.shape[0] > max_coarse:
-        P,B = prolongator(A, B, strength=strength, aggregate=aggregate, smooth=smooth)
+    levels = []
 
+    while len(levels) < max_levels and A.shape[0] > max_coarse:
+        levels.append( sa_level() )
+        levels[-1].A = A          # matrix
+        levels[-1].B = B          # near-nullspace candidates
+
+        C,AggOp,T,B,P = prolongator(A, B, strength=strength, \
+                                  aggregate=aggregate, smooth=smooth)
+        
         R = P.T.asformat(P.format)
 
-        A = R * A * P     #galerkin operator
+        levels[-1].C     = C       # strength of connection matrix
+        levels[-1].AggOp = AggOp   # aggregation operator
+        levels[-1].T     = T       # tentative prolongator
+        levels[-1].P     = P       # smoothed prolongator
+        levels[-1].R     = R       # transpose of smoothed prolongator
 
-        As.append(A)
-        Rs.append(R)
-        Ps.append(P)
+        A = R * A * P              # galerkin operator
+        
+    levels.append( sa_level() )
+    levels[-1].A = A
+    levels[-1].B = B
 
-    #Check for all 0 coarse level.  Delete if found.
-    if(A.nnz == 0):
-    	As.pop(); Rs.pop(); Ps.pop();
-
-    return multilevel_solver(As,Ps,Rs=Rs) #,preprocess=pre,postprocess=post)
+     #,preprocess=pre,postprocess=post)
+    return multilevel_solver(levels, **kwargs)
 
 

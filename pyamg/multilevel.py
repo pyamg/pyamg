@@ -15,12 +15,13 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
-    def __init__(self, As, Ps, Rs=None, preprocess=None, postprocess=None, \
+    def __init__(self, levels, preprocess=None, postprocess=None, \
             presmoother =('gauss_seidel', {'symmetric':True}),
             postsmoother=('gauss_seidel', {'symmetric':True}),
             coarse_solver='splu'):
-        self.As = As
-        self.Ps = Ps
+
+        self.levels = levels
+        
         self.preprocess  = preprocess
         self.postprocess = postprocess
 
@@ -28,33 +29,32 @@ class multilevel_solver:
         self.presmoother  = presmoother
         self.postsmoother = postsmoother
 
-        if Rs is None:
-            self.Rs = [P.T for P in self.Ps]
-        else:
-            self.Rs = Rs
+        for level in levels[:-1]:
+            if not hasattr(level, 'R'):
+                level.R = level.P.T
 
     def __repr__(self):
         output = 'multilevel_solver\n'
-        output += 'Number of Levels:     %d\n' % len(self.As)
+        output += 'Number of Levels:     %d\n'   % len(self.levels)
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
 
-        total_nnz =  sum([A.nnz for A in self.As])
+        total_nnz =  sum([level.A.nnz for levels in self.levels])
 
         output += '  level   unknowns     nonzeros\n'
-        for n,A in enumerate(self.As):
+        for n,level in enumerate(self.levels):
+            A = level.A
             output += '   %2d   %10d   %10d [%5.2f%%]\n' % (n,A.shape[1],A.nnz,(100*float(A.nnz)/float(total_nnz)))
 
         return output
 
     def operator_complexity(self):
         """number of nonzeros on all levels / number of nonzeros on the finest level"""
-        return sum([A.nnz for A in self.As])/float(self.As[0].nnz)
+        return sum([levels.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
         """number of unknowns on all levels / number of unknowns on the finest level"""
-        return sum([A.shape[0] for A in self.As])/float(self.As[0].shape[0])
-
+        return sum([levels.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
         return self.solve(b,maxiter=1)
@@ -73,11 +73,11 @@ class multilevel_solver:
             x,b = self.preprocess(x,b)
 
         #TODO change use of tol (relative tolerance) to agree with other iterative solvers
-        A = self.As[0]
+        A = self.levels[0].A
         residuals = [ norm(b-A*x) ]
 
         while len(residuals) <= maxiter and residuals[-1]/residuals[0] > tol:
-            if len(self.As) == 1:
+            if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A,b)
             else:
@@ -98,21 +98,22 @@ class multilevel_solver:
 
 
     def __solve(self,lvl,x,b):
-        A = self.As[lvl]
+
+        A = self.levels[lvl].A
 
         self.presmooth(A,x,b)
 
         residual = b - A*x
 
-        coarse_b = self.Rs[lvl] * residual
+        coarse_b = self.levels[lvl].R * residual
         coarse_x = zeros_like(coarse_b)
 
-        if lvl == len(self.As) - 2:
-            coarse_x[:] = self.coarse_solver(self.As[-1], coarse_b)
+        if lvl == len(self.levels) - 2:
+            coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
             self.__solve(lvl+1,coarse_x,coarse_b)
 
-        x += self.Ps[lvl] * coarse_x   #coarse grid correction
+        x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
         self.postsmooth(A,x,b)
 
@@ -124,7 +125,7 @@ class multilevel_solver:
         gauss_seidel(A,x,b,iterations=1,sweep="symmetric")
 
 
-
+#TODO support (solver,opts) format also
 def coarse_grid_solver(solver):
     """Return a coarse grid solver suitable for multilevel_solver
     
@@ -175,13 +176,14 @@ def coarse_grid_solver(solver):
             return self.LU.solve( ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
-        fn = getattr(scipy.linalg, solver)
+        fn = getattr(scipy.sparse.linalg.isolve, solver)
         def solve(self,A,b):
             return fn(A, b, tol=1e-12)[0]
          
     else:
-        raise ValueError,('unknown solver: %s' % solver)
+        raise ValueError,('unknown solver: %s' % fn)
        
+    #TODO handle case A.nnz == 0
 
     def wrapped_solve(self,A,b):
         # make sure x is same dimensions and type as b

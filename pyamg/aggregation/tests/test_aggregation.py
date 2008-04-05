@@ -51,14 +51,14 @@ class TestParameters(TestCase):
             for post in smoothers:
                 self.run_cases( {'presmoother' : pre, 'postsmoother' : post} )
     
-    def test_coarse_grid_solvers(self): 
+    def test_coarse_solvers(self): 
         solvers = []
         solvers.append('splu')
         solvers.append('lu')
-        solvers.append( ('cg',{'tol' : '1e-10'}) )
+        solvers.append('cg')
 
         for solver in solvers:
-            self.run_cases( {'coarse_grid_solver' : solver} )
+            self.run_cases( {'coarse_solver' : solver} )
 
 
 class TestSolverPerformance(TestCase):
