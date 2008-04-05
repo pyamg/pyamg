@@ -2,27 +2,32 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import empty, empty_like
-
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
-from pyamg.strength import classical_strength_of_connection
 from pyamg import multigridtools
 
-__all__ = ['ruge_stuben_solver','rs_direct_interpolation']
+from interpolate import *
+from pyamg.strength import *
+
+__all__ = ['ruge_stuben_solver']
 
 
-def ruge_stuben_solver(A, theta=0.25, CF='RS', 
-        max_levels=10, max_coarse=500, **kwargs):
+def ruge_stuben_solver(A, 
+                       strength=('classical',{'theta':0.25}), 
+                       CF='RS', 
+                       max_levels=10, max_coarse=500, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
-        Square matrix in CSR or BSR format
-    theta : {float} : default 0.25
-        Strength of connection parameter
+    A : csr_matrix
+        Square matrix in CSR format
+    strength : ['symmetric', 'classical', 'ode', None]
+        Method used to determine the strength of connection between unknowns
+        of the linear system.  Method-specific parameters may be passed in
+        using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
+        strength=None, all nonzero entries of the matrix are considered strong.
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, and CLJPc
@@ -46,13 +51,13 @@ def ruge_stuben_solver(A, theta=0.25, CF='RS',
     levels = []
     
     while len(levels) < max_levels  and A.shape[0] > max_coarse:
-        S,splitting,P = prolongator(A, theta=theta, CF=CF)
+        C,splitting,P = prolongator(A, strength=strength, CF=CF)
 
         R = P.T.tocsr()
 
         levels.append( rs_level() )
         levels[-1].A = A
-        levels[-1].S = S                  # strength of connection matrix
+        levels[-1].C = C                  # strength of connection matrix
         levels[-1].P = P                  # prolongation operator
         levels[-1].R = R                  # restriction operator
         levels[-1].spliting = splitting
@@ -64,40 +69,38 @@ def ruge_stuben_solver(A, theta=0.25, CF='RS',
 
     return multilevel_solver(levels, **kwargs)
 
-#TODO rename and move
-def rs_direct_interpolation(A,S,splitting):
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
-
-    Pp = empty_like( A.indptr )
-
-    multigridtools.rs_direct_interpolation_pass1( A.shape[0],
-            S.indptr, S.indices, splitting,  Pp)
-
-    nnz = Pp[-1]
-    Pj = empty( nnz, dtype=Pp.dtype )
-    Px = empty( nnz, dtype=A.dtype )
-
-    multigridtools.rs_direct_interpolation_pass2( A.shape[0],
-            A.indptr, A.indices, A.data,
-            S.indptr, S.indices, S.data,
-            splitting,
-            Pp,       Pj,        Px)
-
-    return csr_matrix( (Px,Pj,Pp) )
 
 
-def prolongator(A, theta, CF):
+def prolongator(A, strength, CF):
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
 
-    S = classical_strength_of_connection(A,theta)
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+
+    # strength of connection
+    fn, kwargs = unpack_arg(strength)
+    if fn == 'symmetric':
+        C = symmetric_strength_of_connection(A,**kwargs)
+    elif fn == 'classical':
+        C = classical_strength_of_connection(A,**kwargs)
+    elif fn == 'ode':
+        raise NotImplementedError('ode method not supported for Classical AMG')
+    elif fn is None:
+        C = A
+    else:
+        raise ValueError('unrecognized strength of connection method: %s' % fn)
+
 
     if CF in [ 'RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']:
         import split
-        splitting = getattr(split, CF)(S)
+        splitting = getattr(split, CF)(C)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
-    P = rs_direct_interpolation(A,S,splitting)
+    P = direct_interpolation(A,C,splitting)
 
-    return S,splitting,P
+    return C,splitting,P
 

@@ -20,110 +20,10 @@ from smooth import *
 __all__ = ['smoothed_aggregation_solver']
 
 
-def sa_filtered_matrix(A,theta):
-    """The filtered matrix is obtained from A by lumping all weak off-diagonal
-    entries onto the diagonal.  Weak off-diagonals are determined by
-    the standard strength of connection measure using the parameter theta.
-
-    In the case theta = 0.0, (i.e. no weak connections) A is returned.
-    """
-
-    if theta == 0:
-        return A
-
-    if isspmatrix_csr(A): 
-        #TODO rework this
-        raise NotImplementedError,'blocks not handled yet'
-        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
-        return csr_matrix((Sx,Sj,Sp),shape=A.shape)
-    elif ispmatrix_bsr(A):
-        raise NotImplementedError,'blocks not handled yet'
-    else:
-        return sa_filtered_matrix(csr_matrix(A),theta)
-##            #TODO subtract weak blocks from diagonal blocks?
-##            num_dofs   = A.shape[0]
-##            num_blocks = blocks.max() + 1
-##
-##            if num_dofs != len(blocks):
-##                raise ValueError,'improper block specification'
-##
-##            # for non-scalar problems, use pre-defined blocks in aggregation
-##            # the strength of connection matrix is based on the 1-norms of the blocks
-##
-##            B  = csr_matrix((ones(num_dofs),blocks,arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
-##            Bt = B.T.tocsr()
-##
-##            #1-norms of blocks entries of A
-##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
-##
-##            S = symmetric_strength_of_connection(Block_A,theta)
-##            S.data[:] = 1
-##
-##            Mask = B * S * Bt
-##
-##            A_strong = A ** Mask
-##            #A_weak   = A - A_strong
-##            A_filtered = A_strong
-
-    return A_filtered
-
-
-
-
-
-def prolongator(A, B, strength, aggregate, smooth):
-
-    def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
-        else:
-            return v,{}
-
-    # strength of connection
-    fn, kwargs = unpack_arg(strength)
-    if fn == 'symmetric':
-        C = symmetric_strength_of_connection(A,**kwargs)
-    elif fn == 'classical':
-        C = classical_strength_of_connection(A,B,**kwargs)
-    elif fn == 'ode':
-        C = ode_strength_of_connection(A,B,**kwargs)
-    elif fn is None:
-        C = A
-    else:
-        raise ValueError('unrecognized strength of connection method: %s' % fn)
-
-
-    # aggregation
-    fn, kwargs = unpack_arg(aggregate)
-    if fn == 'standard':
-        AggOp = standard_aggregation(C,**kwargs)
-    elif fn == 'lloyd':
-        raise NotImplementedError('lloyd not yet supported')
-    else:
-        raise ValueError('unrecognized aggregation method %s' % fn )
-
-    # tentative prolongator
-    T,B = fit_candidates(AggOp,B)
-
-    # tentative prolongator smoother
-    fn, kwargs = unpack_arg(smooth)
-    if fn == 'jacobi':
-        P = jacobi_prolongation_smoother(A,T,**kwargs)
-    elif fn == 'energy':
-        P = energy_prolongation_smoother(A,T,C,B,**kwargs)
-    elif fn is None:
-        P = T
-    else:
-        raise ValueError('unrecognized prolongation smoother method %s' % fn)
-    
-    return C,AggOp,T,B,P
-
-
-
-
-
-def smoothed_aggregation_solver(A, B=None, strength='symmetric', 
-        aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
+def smoothed_aggregation_solver(A, B=None, 
+        strength='symmetric', 
+        aggregate='standard', 
+        smooth=('jacobi', {'omega': 4.0/3.0}),
         max_levels = 10, max_coarse = 500, **kwargs):
     """Create a multilevel solver using Smoothed Aggregation (SA)
 
@@ -252,5 +152,108 @@ def smoothed_aggregation_solver(A, B=None, strength='symmetric',
 
      #,preprocess=pre,postprocess=post)
     return multilevel_solver(levels, **kwargs)
+
+
+def sa_filtered_matrix(A,theta):
+    """The filtered matrix is obtained from A by lumping all weak off-diagonal
+    entries onto the diagonal.  Weak off-diagonals are determined by
+    the standard strength of connection measure using the parameter theta.
+
+    In the case theta = 0.0, (i.e. no weak connections) A is returned.
+    """
+
+    if theta == 0:
+        return A
+
+    if isspmatrix_csr(A): 
+        #TODO rework this
+        raise NotImplementedError,'blocks not handled yet'
+        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
+        return csr_matrix((Sx,Sj,Sp),shape=A.shape)
+    elif ispmatrix_bsr(A):
+        raise NotImplementedError,'blocks not handled yet'
+    else:
+        return sa_filtered_matrix(csr_matrix(A),theta)
+##            #TODO subtract weak blocks from diagonal blocks?
+##            num_dofs   = A.shape[0]
+##            num_blocks = blocks.max() + 1
+##
+##            if num_dofs != len(blocks):
+##                raise ValueError,'improper block specification'
+##
+##            # for non-scalar problems, use pre-defined blocks in aggregation
+##            # the strength of connection matrix is based on the 1-norms of the blocks
+##
+##            B  = csr_matrix((ones(num_dofs),blocks,arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
+##            Bt = B.T.tocsr()
+##
+##            #1-norms of blocks entries of A
+##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
+##
+##            S = symmetric_strength_of_connection(Block_A,theta)
+##            S.data[:] = 1
+##
+##            Mask = B * S * Bt
+##
+##            A_strong = A ** Mask
+##            #A_weak   = A - A_strong
+##            A_filtered = A_strong
+
+    return A_filtered
+
+
+
+
+
+def prolongator(A, B, strength, aggregate, smooth):
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+
+    # strength of connection
+    fn, kwargs = unpack_arg(strength)
+    if fn == 'symmetric':
+        C = symmetric_strength_of_connection(A,**kwargs)
+    elif fn == 'classical':
+        C = classical_strength_of_connection(A,**kwargs)
+    elif fn == 'ode':
+        C = ode_strength_of_connection(A,B,**kwargs)
+    elif fn is None:
+        C = A
+    else:
+        raise ValueError('unrecognized strength of connection method: %s' % fn)
+
+
+    # aggregation
+    fn, kwargs = unpack_arg(aggregate)
+    if fn == 'standard':
+        AggOp = standard_aggregation(C,**kwargs)
+    elif fn == 'lloyd':
+        raise NotImplementedError('lloyd not yet supported')
+    else:
+        raise ValueError('unrecognized aggregation method %s' % fn )
+
+    # tentative prolongator
+    T,B = fit_candidates(AggOp,B)
+
+    # tentative prolongator smoother
+    fn, kwargs = unpack_arg(smooth)
+    if fn == 'jacobi':
+        P = jacobi_prolongation_smoother(A,T,**kwargs)
+    elif fn == 'energy':
+        P = energy_prolongation_smoother(A,T,C,B,**kwargs)
+    elif fn is None:
+        P = T
+    else:
+        raise ValueError('unrecognized prolongation smoother method %s' % fn)
+    
+    return C,AggOp,T,B,P
+
+
+
+
+
 
 

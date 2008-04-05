@@ -9,7 +9,8 @@ from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
 
 from pyamg.classical import split
-from pyamg.classical.classical import ruge_stuben_solver, rs_direct_interpolation
+from pyamg.classical.classical import ruge_stuben_solver
+from pyamg.classical.interpolate import direct_interpolation
 
 class TestRugeStubenFunctions(TestCase):
     def setUp(self):
@@ -71,14 +72,14 @@ class TestRugeStubenFunctions(TestCase):
             #Y = (S*S.T) - X
             #assert( Y.nnz == 0 or Y.data.min() > 0 )
    
-    def test_direct_prolongator(self):
+    def test_direct_interpolation(self):
         for A in self.cases:
 
             S = classical_strength_of_connection(A, 0.0)
             splitting = split.RS( S )
 
-            result   = rs_direct_interpolation(A,S,splitting)                
-            expected = reference_rs_direct_interpolation( A, S, splitting )
+            result   = direct_interpolation(A,S,splitting)                
+            expected = reference_direct_interpolation( A, S, splitting )
 
             assert_almost_equal( result.todense(), expected.todense() )
 
@@ -115,7 +116,7 @@ class TestSolverPerformance(TestCase):
 ################################################
 
 
-def reference_rs_direct_interpolation(A,S,splitting):
+def reference_direct_interpolation(A,S,splitting):
 
     A = coo_matrix(A)
     S = coo_matrix(S)  
