@@ -39,7 +39,7 @@ class multilevel_solver:
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
 
-        total_nnz =  sum([level.A.nnz for levels in self.levels])
+        total_nnz =  sum([level.A.nnz for level in self.levels])
 
         output += '  level   unknowns     nonzeros\n'
         for n,level in enumerate(self.levels):
@@ -50,11 +50,11 @@ class multilevel_solver:
 
     def operator_complexity(self):
         """number of nonzeros on all levels / number of nonzeros on the finest level"""
-        return sum([levels.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
+        return sum([level.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
         """number of unknowns on all levels / number of unknowns on the finest level"""
-        return sum([levels.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
+        return sum([level.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
         return self.solve(b,maxiter=1)
