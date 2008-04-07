@@ -12,6 +12,7 @@ from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel
 from pyamg.utils import approximate_spectral_radius, diag_sparse, norm
 
+from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
 from smooth import jacobi_prolongation_smoother
 from tentative import fit_candidates
@@ -50,8 +51,7 @@ def sa_hierarchy(A,B,AggOps):
 
 
 def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters=0, 
-        max_levels=10, max_coarse=100, epsilon=0.1, theta=0.0, omega=4.0/3.0,  
-        symmetric=True, rescale=True,  aggregation=None):
+        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
 
@@ -113,63 +113,38 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
 
         Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
         "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-        SIAM Review Volume 47 ,  Issue 2  (2005)
+        SIAM Review Volume 47,  Issue 2  (2005)
         http://www.cs.umn.edu/~maclach/research/aSA2.pdf
 
     """
     
-    if A.shape[0] <= max_coarse:
-        return multilevel_solver( [A], [] )
-
     ###
     # develop first candidate
-    x,AggOps = initial_setup_stage(A, candidate_iters,
-            max_levels=max_levels, max_coarse=max_coarse, 
-            epsilon=epsilon, theta=theta, aggregation=aggregation )
+    B,AggOps = initial_setup_stage(A, candidate_iters)
 
     #TODO make fit_candidates work for small Bs
-    x /= norm(x)
+    B /= norm(B)
     
-    # create SA hierarchy using first candidate
-    As,Ps,Ts,Bs = sa_hierarchy(A,x,AggOps)
-
     ###
     # develop additional candidates
     for i in range(num_candidates - 1):
-        x = general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters)
+        ml = smoothed_aggregation_solver(A, B=B, **kwargs)
+        x = general_setup_stage(ml, candidate_iters)
         x /= norm(x)  #TODO fix in fit_candidates
         B = hstack((Bs[0],x))
-        As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
     ###
     # improve candidates
     for i in range(improvement_iters):
-        B = Bs[0]
         for i in range(B.shape[1]):
             B = B[:,1:]
-            As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
-            x = general_setup_stage(As,Ps,Ts,Bs,AggOps,mu)
+            ml = smoothed_aggregation_solver(A, B=B, **kwargs)
+            x = general_setup_stage(ml, candidate_iters)
             B = hstack((B,x))
-        As,Ps,Ts,Bs = sa_hierarchy(A,B,AggOps)
 
-    #TODO use levels/smoothed_aggregation_solver throughout method
-    class asa_level:
-        pass
+    return smoothed_aggregation_solver(A, B=B, **kwargs)
 
-    levels = []
-    for A,P,T,B,AggOp in zip(As[:-1],Ps,Ts,Bs,AggOps):
-        levels.append( asa_level() )
-        levels[-1].A = A
-        levels[-1].P = P
-        levels[-1].T = T
-        levels[-1].B = B
-        levels[-1].AggOp = AggOp
-    levels.append( asa_level() )
-    levels[-1].A = As[-1]
-
-    return multilevel_solver(levels)
-
-def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, theta, aggregation):
+def initial_setup_stage(A, candidate_iters, max_levels=10, max_coarse=100, epsilon=4.0/3.0, theta=0, aggregation=None):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
@@ -236,7 +211,13 @@ def initial_setup_stage(A, candidate_iters, max_levels, max_coarse, epsilon, the
     return x,AggOps  #first candidate,aggregation
 
 
-def general_setup_stage(As, Ps, Ts, Bs, AggOps, candidate_iters):
+def general_setup_stage(ml, candidate_iters):
+    As = [lvl.A for lvl in ml.levels]
+    Bs = [lvl.B for lvl in ml.levels]
+    Ts = [lvl.T for lvl in ml.levels[:-1]]
+    Ps = [lvl.P for lvl in ml.levels[:-1]]
+    AggOps = [lvl.AggOp for lvl in ml.levels[:-1]]
+
     A = As[0]
 
     x = rand(A.shape[0],1)
