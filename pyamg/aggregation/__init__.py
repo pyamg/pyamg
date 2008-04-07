@@ -2,6 +2,7 @@
 
 #from info import __doc__
 
+from adaptive import *
 from aggregate import *
 from aggregation import *
 from tentative import *
