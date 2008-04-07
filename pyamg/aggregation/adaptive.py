@@ -39,12 +39,12 @@ def sa_hierarchy(A,B,AggOps):
     Bs = [B]
 
     for AggOp in AggOps:
-        P,B = fit_candidates(AggOp,B)
-        I   = jacobi_prolongation_smoother(A,P)
-        A   = I.T.asformat(I.format) * A * I
+        T,B = fit_candidates(AggOp,B)
+        P   = jacobi_prolongation_smoother(A,T)
+        A   = P.T.asformat(P.format) * A * P
         As.append(A)
         Ts.append(P)
-        Ps.append(I)
+        Ps.append(P)
         Bs.append(B)
     return As,Ps,Ts,Bs
 
