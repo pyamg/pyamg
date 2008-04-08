@@ -20,7 +20,10 @@ class TestFitCandidates(TestCase):
         self.cases.append((csr_matrix((ones(4),array([0,0,1,1]),arange(5)),shape=(4,2)), vstack((ones(4),arange(4))).T ))
         self.cases.append((csr_matrix((ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),shape=(9,3)), vstack((ones(9),arange(9))).T ))
         self.cases.append((csr_matrix((ones(9),array([0,0,1,1,2,2,3,3,3]),arange(10)),shape=(9,4)), vstack((ones(9),arange(9))).T ))
-       
+        # two candidates, small norms
+        self.cases.append((csr_matrix((ones(4),array([0,0,1,1]),arange(5)),shape=(4,2)), vstack((ones(4),1e-20*arange(4))).T ))
+        self.cases.append((csr_matrix((ones(4),array([0,0,1,1]),arange(5)),shape=(4,2)), 1e-20*vstack((ones(4),arange(4))).T ))
+
         # block aggregates, one candidate
         self.cases.append((csr_matrix((ones(3),array([0,1,1]),arange(4)),shape=(3,2)), ones((6,1)) ))
         self.cases.append((csr_matrix((ones(3),array([0,1,1]),arange(4)),shape=(3,2)), ones((9,1)) ))
@@ -42,8 +45,6 @@ class TestFitCandidates(TestCase):
         self.cases.append((csr_matrix((ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),shape=(9,4)), vstack((ones(9),arange(9))).T ))
 
     def test_all_cases(self):
-        """Test case where aggregation includes all fine nodes"""
-
         def mask_candidate(AggOp,candidates):
             #mask out all DOFs that are not included in the aggregation
             candidates[diff(AggOp.indptr) == 0,:] = 0

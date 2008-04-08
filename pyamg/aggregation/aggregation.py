@@ -127,12 +127,11 @@ def smoothed_aggregation_solver(A, B=None,
         pass
 
     levels = []
+    levels.append( sa_level() )
+    levels[-1].A = A          # matrix
+    levels[-1].B = B          # near-nullspace candidates
 
     while len(levels) < max_levels and A.shape[0] > max_coarse:
-        levels.append( sa_level() )
-        levels[-1].A = A          # matrix
-        levels[-1].B = B          # near-nullspace candidates
-
         C,AggOp,T,B,P = prolongator(A, B, strength=strength, \
                                   aggregate=aggregate, smooth=smooth)
         
@@ -146,11 +145,11 @@ def smoothed_aggregation_solver(A, B=None,
 
         A = R * A * P              # galerkin operator
         
-    levels.append( sa_level() )
-    levels[-1].A = A
-    levels[-1].B = B
-
-     #,preprocess=pre,postprocess=post)
+        levels.append( sa_level() )
+        levels[-1].A = A
+        levels[-1].B = B
+        
+    #,preprocess=pre,postprocess=post)
     return multilevel_solver(levels, **kwargs)
 
 

@@ -29,24 +29,25 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
         
-        assert( conv_asa < 1.1 * conv_sa ) #aSA shouldn't be any worse than SA
+        assert( conv_asa < 1.1 * conv_sa )
 
-#    def test_elasticity(self):
-#        A,B = linear_elasticity( (100,100), format='bsr' )
-#
-#        asa = adaptive_sa_solver(A, num_candidates = 3)
-#        sa  = smoothed_aggregation_solver(A, B=B )
-#
-#        b = rand(A.shape[0])
-#
-#        sol0,residuals0 = asa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
-#        sol1,residuals1 =  sa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
-#       
-#        conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
-#        conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
-#       
-#        print "ASA convergence",conv_asa
-#        assert( conv_asa < 1.1 * conv_sa ) #aSA shouldn't be any worse than SA
+    def test_elasticity(self):
+        A,B = linear_elasticity( (100,100), format='bsr' )
+
+        asa = adaptive_sa_solver(A, num_candidates = 3)
+        sa  = smoothed_aggregation_solver(A, B=B )
+
+        b = rand(A.shape[0])
+
+        sol0,residuals0 = asa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
+        sol1,residuals1 =  sa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
+       
+        conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
+        conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
+       
+        print "ASA convergence",conv_asa
+        print "SA convergence",conv_sa
+        assert( conv_asa < 1.1 * conv_sa ) 
         
 #class TestAugmentCandidates(TestCase):
 #    def setUp(self):
