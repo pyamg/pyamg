@@ -8,7 +8,7 @@ from scipy import arange, ones, zeros, array, allclose, zeros_like, \
 from scipy.linalg import solve
 
 from pyamg.gallery    import poisson
-from pyamg.relaxation import polynomial_smoother,gauss_seidel,jacobi
+from pyamg.relaxation import *
 
 class TestRelaxation(TestCase):
     def test_polynomial(self):
@@ -19,20 +19,20 @@ class TestRelaxation(TestCase):
         b  = zeros(N)
 
         r = (b - A*x0)
-        polynomial_smoother(A,x,b,[-1.0/3.0])
+        polynomial(A,x,b,[-1.0/3.0])
 
         assert_almost_equal(x,x0-1.0/3.0*r)
 
         x  = x0.copy()
-        polynomial_smoother(A,x,b,[0.2,-1])
+        polynomial(A,x,b,[0.2,-1])
         assert_almost_equal(x,x0 + 0.2*A*r - r)
 
         x  = x0.copy()
-        polynomial_smoother(A,x,b,[0.2,-1])
+        polynomial(A,x,b,[0.2,-1])
         assert_almost_equal(x,x0 + 0.2*A*r - r)
 
         x  = x0.copy()
-        polynomial_smoother(A,x,b,[-0.14285714,  1., -2.])
+        polynomial(A,x,b,[-0.14285714,  1., -2.])
         assert_almost_equal(x,x0 - 0.14285714*A*A*r + A*r - 2*r)
 
     def test_jacobi(self):

@@ -1,3 +1,7 @@
+"""Relaxation methods for linear systems"""
+
+__docformat__ = "restructuredtext en"
+
 from warnings import warn
 
 from numpy import empty_like, asarray, arange, ravel
@@ -6,7 +10,9 @@ import multigridtools
 from scipy.sparse import isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
 
+__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
 
+__all__ += ['gauss_seidel_indexed'] #TODO remove
 
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """Perform SOR iteration on the linear system Ax=b
@@ -160,7 +166,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                               omega)
 
 
-def polynomial_smoother(A, x, b, coeffs):
+def polynomial(A, x, b, coeffs):
     """Apply a polynomial smoother to the system Ax=b
 
 
@@ -263,3 +269,5 @@ def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
         multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
                                     x, b, Id,
                                     row_start, row_stop, row_step)
+
+
