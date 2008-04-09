@@ -1,6 +1,6 @@
-__all__ =['approximate_spectral_radius','infinity_norm','diag_sparse',
-          'norm', 'UnAmal', 'Coord2RBM', 'BSR_Get_Row', 
-          'BSR_Row_WriteScalar', 'BSR_Row_WriteVect', 'BSR_Get_Colindices']
+__all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse', 'norm']
+__all__ += ['UnAmal', 'Coord2RBM', 'BSR_Get_Row', 'BSR_Row_WriteScalar', 
+        'BSR_Row_WriteVect', 'BSR_Get_Colindices']
 
 import numpy
 import scipy
@@ -247,6 +247,30 @@ def symmetric_rescaling(A,copy=True):
 
     else:
         return symmetric_rescaling(csr_matrix(A))
+
+
+from functools import partial, update_wrapper
+def dispatcher(name_to_handle):
+    def dispatcher(arg):
+        if isinstance(arg,tuple):
+            fn,opts = arg[0],arg[1]
+        else:
+            fn,opts = arg,{}
+    
+        if fn in name_to_handle:
+            # convert string into function handle
+            fn = name_to_handle[fn] 
+        else:
+            # otherwise, assume fn is itself a function handle
+            pass
+            #TODO check that fn is callable
+    
+        wrapped = partial(fn, **opts)
+        update_wrapper(wrapped, fn)
+    
+        return wrapped
+
+    return dispatcher
 
 
 
@@ -517,42 +541,5 @@ def BSR_Get_Colindices(A):
 	return colindices
 
 ###################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

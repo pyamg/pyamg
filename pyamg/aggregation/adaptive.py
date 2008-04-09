@@ -123,7 +123,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
     for i in range(num_candidates - 1):
         ml = smoothed_aggregation_solver(A, B=B, **kwargs)
         x = general_setup_stage(ml, candidate_iters)
-        B = hstack((Bs[0],x))
+        B = hstack((B,x))
 
     ###
     # improve candidates
@@ -302,7 +302,19 @@ def general_setup_stage(ml, candidate_iters):
         bridge = make_bridge(Ps[i+1])
         x = R[:,-1].reshape(-1,1)
 
-        solver = multilevel_solver( [A] + As[i+2:], [bridge] + Ps[i+2:] )
+        def make_solver(Alist, Plist):
+            class lvl: pass
+            levels = []
+            for A,P in zip(Alist[:-1],Plist):
+                levels.append(lvl())
+                levels[-1].A = A
+                levels[-1].P = P
+            levels.append(lvl())
+            levels[-1].A = Alist[-1]
+            return levels            
+            
+        #solver = multilevel_solver([A] + As[i+2:], [bridge] + Ps[i+2:] ) 
+        solver = multilevel_solver( make_solver([A] + As[i+2:], [bridge] + Ps[i+2:]) )
 
         x = solver.solve(zeros_like(x), x0=x, tol=1e-8, maxiter=candidate_iters)
 

@@ -276,32 +276,6 @@ def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
                                     x, b, Id,
                                     row_start, row_stop, row_step)
 
-def unpack_arg(v):
-    if isinstance(v,tuple):
-        return v[0],v[1]
-    else:
-        return v,{}
 
-from functools import partial, update_wrapper
-def dispatch(arg):
-    fn,opts = unpack_arg(arg)
-
-    if fn in __all__:
-        # convert string into function handle
-        fn = eval(fn) 
-    else:
-        # otherwise, assume fn is itself a function handle
-        pass
-        #TODO check that fn is callable
-
-    wrapped = partial(fn, **opts)
-    update_wrapper(wrapped, fn)
-
-    return wrapped
-    def wrap(*args,**kwargs):
-        kwargs = kwargs.copy()
-        kwargs.update(opts)
-        fn(*args,**kwargs)
-            
-    return wrap
-
+from pyamg.utils import dispatcher
+dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

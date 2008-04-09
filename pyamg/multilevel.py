@@ -8,7 +8,8 @@ from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ra
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve, splu
 
-from pyamg import relaxation
+#from pyamg import relaxation
+from pyamg.relaxation import *
 from utils import symmetric_rescaling, diag_sparse, norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -119,12 +120,14 @@ class multilevel_solver:
 
 
     def presmooth(self,A,x,b):
-        fn = relaxation.dispatch(self.presmoother)
-        fn(A,x,b)
+        gauss_seidel(A, x, b, sweep='symmetric') 
+        #fn = relaxation.dispatch(self.presmoother)
+        #fn(A,x,b)
 
     def postsmooth(self,A,x,b):
-        fn = relaxation.dispatch(self.postsmoother)
-        fn(A,x,b)
+        gauss_seidel(A, x, b, sweep='symmetric') 
+        #fn = relaxation.dispatch(self.postsmoother)
+        #fn(A,x,b)
 
 
 #TODO support (solver,opts) format also

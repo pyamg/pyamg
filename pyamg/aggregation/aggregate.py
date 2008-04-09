@@ -7,6 +7,8 @@ from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr
 
 from pyamg import multigridtools
 
+__all__ = ['standard_aggregation']
+
 def standard_aggregation(C):
     """Compute the sparsity pattern of the tentative prolongator
 
@@ -80,4 +82,9 @@ def standard_aggregation(C):
             Tp = arange( num_rows+1, dtype=index_type)
             Tx = ones( len(Tj), dtype='int8')
             return csr_matrix( (Tx,Tj,Tp), shape=shape)
+
+
+from pyamg.utils import dispatcher
+name_to_handle = dict([ (fn[:-len('_aggregation')], eval(fn)) for fn in __all__]) 
+dispatch = dispatcher( name_to_handle )
 
