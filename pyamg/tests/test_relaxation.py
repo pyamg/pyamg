@@ -202,5 +202,20 @@ class TestRelaxation(TestCase):
         self.assert_(resid1 < 0.01 and resid2 < 0.01)
         self.assert_(allclose(resid1,resid2))
 
+class TestDispatch(TestCase):
+    def test_string(self):
+        from pyamg.relaxation import dispatch
+        
+        A = poisson( (4,), format='csr')
+        
+        cases = []
+        cases.append( 'gauss_seidel' )
+        cases.append( ('gauss_seidel',{'iterations':3}) )
+        
+        for case in cases:
+            fn = dispatch(case)
+            fn(A, ones(4), zeros(4))
+
+
 if __name__ == '__main__':
     nose.run(argv=['', __file__])

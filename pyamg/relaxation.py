@@ -11,7 +11,6 @@ from scipy.sparse import isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
-
 __all__ += ['gauss_seidel_indexed'] #TODO remove
 
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
@@ -21,9 +20,9 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
-    x : array
+    x : ndarray
         Approximate solution (length N)
-    b : array
+    b : ndarray
         Right-hand side (length N)
     omega : scalar
         Damping parameter
@@ -59,9 +58,9 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
-    x : array
+    x : ndarray
         Approximate solution (length N)
-    b : array
+    b : ndarray
         Right-hand side (length N)
     iterations : int
         Number of iterations to perform
@@ -85,7 +84,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         if R != C:
             raise ValueError('BSR blocks must be square')
     else:
-        warn('implicit conversion to CSR',SparseEfficiencyWarning)
+        warn('implicit conversion to CSR', SparseEfficiencyWarning)
         A = csr_matrix(A)
 
     if A.shape[0] != A.shape[1]:
@@ -132,9 +131,9 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
-    x : array
+    x : ndarray
         Approximate solution (length N)
-    b : array
+    b : ndarray
         Right-hand side (length N)
     omega : scalar
         Damping parameter
@@ -150,6 +149,13 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     """
     x = asarray(x).reshape(-1)
     b = asarray(b).reshape(-1)
+
+    if isspmatrix_csr(A):
+        pass
+    else:
+        warn('implicit conversion to CSR', SparseEfficiencyWarning)
+        A = csr_matrix(A)
+
 
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
@@ -174,9 +180,9 @@ def polynomial(A, x, b, coeffs):
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
-    x : array
+    x : ndarray
         Approximate solution (length N)
-    b : array
+    b : ndarray
         Right-hand side (length N)
     coeffs : {array_like}
         Coefficients of the polynomial.  See Notes section for details.
@@ -270,4 +276,32 @@ def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
                                     x, b, Id,
                                     row_start, row_stop, row_step)
 
+def unpack_arg(v):
+    if isinstance(v,tuple):
+        return v[0],v[1]
+    else:
+        return v,{}
+
+from functools import partial, update_wrapper
+def dispatch(arg):
+    fn,opts = unpack_arg(arg)
+
+    if fn in __all__:
+        # convert string into function handle
+        fn = eval(fn) 
+    else:
+        # otherwise, assume fn is itself a function handle
+        pass
+        #TODO check that fn is callable
+
+    wrapped = partial(fn, **opts)
+    update_wrapper(wrapped, fn)
+
+    return wrapped
+    def wrap(*args,**kwargs):
+        kwargs = kwargs.copy()
+        kwargs.update(opts)
+        fn(*args,**kwargs)
+            
+    return wrap
 

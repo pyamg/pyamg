@@ -29,8 +29,7 @@ class TestParameters(TestCase):
 
             x_sol,residuals = ml.solve(b, x0=x, maxiter=30, tol=1e-10, return_residuals=True)
             convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-           
-            assert(convergence_ratio < 0.3)
+            assert(convergence_ratio < 0.5)
 
 
     def test_strength_of_connection(self): 
@@ -44,7 +43,7 @@ class TestParameters(TestCase):
     def test_smoothers(self): 
         smoothers = []
         smoothers.append('gauss_seidel')
-        smoothers.append('jacobi')
+        smoothers.append( ('sor',{'omega':0.9}) )
         smoothers.append( ('gauss_seidel',{'sweep' : 'symmetric'}) )
 
         for pre in smoothers:

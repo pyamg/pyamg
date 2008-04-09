@@ -8,7 +8,7 @@ from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ra
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve, splu
 
-from relaxation import gauss_seidel, jacobi, sor
+from pyamg import relaxation
 from utils import symmetric_rescaling, diag_sparse, norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -16,8 +16,8 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 class multilevel_solver:
     def __init__(self, levels, preprocess=None, postprocess=None, \
-            presmoother =('gauss_seidel', {'symmetric':True}),
-            postsmoother=('gauss_seidel', {'symmetric':True}),
+            presmoother  = ('gauss_seidel', {'sweep':'symmetric'}),
+            postsmoother = ('gauss_seidel', {'sweep':'symmetric'}),
             coarse_solver='splu'):
 
         self.levels = levels
@@ -111,7 +111,7 @@ class multilevel_solver:
         if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
-            self.__solve(lvl+1,coarse_x,coarse_b)
+            self.__solve(lvl + 1, coarse_x, coarse_b)
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
@@ -119,10 +119,12 @@ class multilevel_solver:
 
 
     def presmooth(self,A,x,b):
-        gauss_seidel(A,x,b,iterations=1,sweep="symmetric")
+        fn = relaxation.dispatch(self.presmoother)
+        fn(A,x,b)
 
     def postsmooth(self,A,x,b):
-        gauss_seidel(A,x,b,iterations=1,sweep="symmetric")
+        fn = relaxation.dispatch(self.postsmoother)
+        fn(A,x,b)
 
 
 #TODO support (solver,opts) format also
