@@ -95,37 +95,28 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
     #assert( (Sparsity_Pattern.indptr ==  U.indptr).all() )
     #assert( (Sparsity_Pattern.indices ==  U.indices).all() )
     rowoffset = 0
+    
+    B = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
     for i in range(Nnodes):
-        rowstart = Sparsity_Pattern.indptr[i]
-        rowend = Sparsity_Pattern.indptr[i+1]
-        colindx = colindices[i]
-        length = len(colindx)
+        rowstart = U.indptr[i]
+        rowend   = U.indptr[i+1]
+        colindx  = colindices[i]
         numBlocks = rowend-rowstart
-       
-        B = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
 
         for n in range(numBlocks):
-            Bi  = B[Sparsity_Pattern.indices[rowstart + n]]
+            Bi  = B[U.indices[rowstart + n]]
             UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
             update_local = asarray(dot(Bi,dot(BtBinv[i],UBi.T)))
     
-            Sparsity_Pattern.data[rowstart + n] = update_local.T
-
-        
-        #if(length != 0):
-        #    Bi = B[colindx,:]
-        #    UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
-        #    update_local = asarray(Bi*(BtBinv[i]*UBi.T))
-    
-        #    Sparsity_Pattern.data[rowstart:rowend] = update_local.reshape(numBlocks, ColsPerBlock, RowsPerBlock).swapaxes(1,2)
+            U.data[rowstart + n] -= update_local.T
     
         rowoffset += RowsPerBlock
     
     #Now add in changes from Sparsity_Pattern to U.  We don't write U directly in the above loop,
     #   because its possible, once in a blue moon, to have the sparsity pattern of U be a subset
     #   of the pattern for Sparsity_Pattern.  This is more expensive, but more robust.
-    U = U - Sparsity_Pattern
-    Sparsity_Pattern.data[:,:,:] = 1.0
+    #U = U - Sparsity_Pattern
+    #Sparsity_Pattern.data[:,:,:] = 1.0
 
     #print "U\n",U.todense()
     return U
