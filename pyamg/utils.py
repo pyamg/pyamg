@@ -1,6 +1,6 @@
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse', 'norm']
 __all__ += ['UnAmal', 'Coord2RBM', 'BSR_Get_Row', 'BSR_Row_WriteScalar', 
-        'BSR_Row_WriteVect', 'BSR_Get_Colindices']
+        'BSR_Row_WriteVect' ]
 
 import numpy
 import scipy
@@ -485,9 +485,9 @@ def BSR_Row_WriteVect(A, i, x):
 	rowend = A.indptr[BlockIndx+1]
 	localRowIndx = i%blocksize
 	
-	#Numpy occasionally seems to be written by idiot small children.  This line fixes one
-	#	of the idiotic things about the array/matrix setup.  Sometimes I really wish
-	#	for the Matlab matrix "slicing" interface rather than this.
+	# This line fixes one of the idiotic things about the array/matrix setup.
+    # Sometimes I really wish for the Matlab matrix "slicing" interface rather 
+    # than this.
 	x = x.__array__().reshape( (max(x.shape),) )
 
 	#counter = 0
@@ -500,45 +500,6 @@ def BSR_Row_WriteVect(A, i, x):
 	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
 	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
-def BSR_Get_Colindices(A): 
-	"""Get the absolute column indices of for all rows of BSR matrix, A.
-
-	Input
-	=====
-	A		BSR matrix from whom you want absolute column indices
-
-	Output
-	======
-	colindices	List of arrays that is (num_nodes=A.rows/A.blocksize[0]) long.
-			Each entry holds that node's column indices, assuming the block 
-			is perfectly dense
-
-	"""
-	
-	RowsPerBlock = A.blocksize[0]
-	ColsPerBlock = A.blocksize[1]
-	nRows = A.shape[0]
-	colindices = []
-
-	i = 0
-	while(i < nRows):
-		BlockIndx = i/RowsPerBlock
-		rowstart = A.indptr[BlockIndx]
-		rowend = A.indptr[BlockIndx+1]
-		length = rowend - rowstart
-		indys = zeros(length*ColsPerBlock, dtype=int32)
-
-		counter = 0
-		for j in range(rowstart, rowend):
-			coloffset = ColsPerBlock*A.indices[j]
-			indys[counter:(counter+ColsPerBlock)] = range(coloffset, coloffset+ColsPerBlock)
-			counter = counter + ColsPerBlock
-	
-		colindices.append(indys)
-	
-		i += RowsPerBlock
-
-	return colindices
 
 ###################################################################################################
 

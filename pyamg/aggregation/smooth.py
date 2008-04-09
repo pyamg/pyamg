@@ -49,9 +49,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 from numpy import array, zeros, matrix, mat, asarray, dot, array_split
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 from scipy.linalg import svd, norm, pinv2
-import pyamg
-from pyamg.utils import UnAmal, BSR_Get_Colindices, BSR_Get_Row
-from scipy.io import loadmat, savemat
+from pyamg.utils import UnAmal
 
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine
@@ -96,7 +94,7 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
 ########################################################################################################
 
 
-def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol=1e-8, file_output=False):
+def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8):
     """Minimize the energy of the coarse basis functions (columns of T)
 
     Parameters
@@ -114,7 +112,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
         Booolean denoting symmetric positive-definiteness of A
     num_iters : integer
         Number of energy minimization steps to apply to the prolongator
-    min_tol : scalar
+    tol : scalar
         Minimization tolerance
     file_output : boolean
         Optional diagnostic file output of matrices
@@ -137,10 +135,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
     #====================================================================
     #Test Inputs
-    if num_iters < 0:
-        raise ValueError('num_iters must be > 0')
-    if min_tol > 1:
-        raise ValueError('min_tol must be <= 1') 
+    if maxiter < 0:
+        raise ValueError('maxiter must be > 0')
+    if tol > 1:
+        raise ValueError('tol must be <= 1') 
    
     if isspmatrix_csr(A):
         A = A.tobsr(blocksize=(1,1), copy=False)
@@ -192,17 +190,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     Sparsity_Pattern.data[:,:,:] = 1.0
     Sparsity_Pattern.sort_indices()
 
-    #====================================================================
-    #Optional file output for diagnostic purposes
-    if(file_output == True):
-        savemat('Sparsity_Pattern', { 'Sparsity_Pattern' : Sparsity_Pattern.toarray() } ) 
-        savemat('Amat', { 'Amat' : A.toarray() } ) 
-        savemat('Atilde', { 'Atilde' : Atilde.toarray() } )
-        savemat('P', { 'P' : T.toarray() } ) 
-        savemat('ParamsEnMin', {'nPDE' : numPDEs, 'Nits' : num_iters, 'SPD' : SPD } ) 
-        savemat('Bone', { 'Bone' : array(B) } )
-    #====================================================================
-    
     
     #====================================================================
     #Construct array of inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in 
@@ -246,7 +233,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     i = 0
     if SPD:
         #Apply CG
-        while i < num_iters and resid > min_tol:
+        while i < maxiter and resid > tol:
             #Apply diagonal preconditioner
             Z = scale_rows(R,Dinv)
     
@@ -281,7 +268,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
             
     else:
         #Apply min-res to the nonsymmetric system
-        while( (i < num_iters) and (resid > min_tol) ):
+        while i < maxiter and resid > tol:
     
             #P is the search direction, not the prolongator
             P = A*R
@@ -307,13 +294,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
             i += 1
             resid = max(R.data.flatten().__abs__())
             #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
-    #====================================================================
-    
-    
-    #====================================================================
-    #Optional file output for diagnostic purposes
-    if(file_output == True):
-        savemat('Ppyth', { 'Ppyth' : T.toarray() } ) 
     #====================================================================
     
     
