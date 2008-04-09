@@ -57,7 +57,7 @@ from scipy.io import loadmat, savemat
 #   Helper function for the energy minimization prolongator generation routine
 
 
-def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
+def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
     """Update U to satisfy U*B = 0
 
     Input
@@ -66,10 +66,6 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
     Sparsity_Pattern      Sparsity pattern to enforce
     B                     Near nullspace vectors
     BtBinv                Local inv(B'*B) matrices for each dof, i.  
-    colindices            List indexed by node that returns column indices for
-                          all dof's in that node.  Assumes that each block is 
-                          perfectly dense.  The below code does assure this 
-                          perfect denseness.
         
     Output
     ======
@@ -83,7 +79,7 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
     ColsPerBlock = U.blocksize[1]
     Nnodes = Nfine/RowsPerBlock
     
-    UB = U*mat(B)
+    UB = U*B
    
     from numpy import asarray, dot
     B = asarray(B)
@@ -171,11 +167,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     Nfine = T.shape[0]
     Ncoarse = T.shape[1]
     NullDim = B.shape[1]
-    if(csrflag):
-        numPDEs = 1
-    else:
-        #Number of PDEs per point is defined implicitly by block size
-        numPDEs = A.blocksize[0]
+    #Number of PDEs per point is defined implicitly by block size
+    numPDEs = A.blocksize[0]
     #====================================================================
     
     
@@ -199,14 +192,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     Sparsity_Pattern.data[:,:,:] = 1.0
     Sparsity_Pattern.sort_indices()
     colindices = BSR_Get_Colindices(Sparsity_Pattern)
-
-    ##TODO remove workaround
-    #from numpy import array_split
-    #temp = Sparsity_Pattern.tocsr()
-    #temp.sort_indices()
-    #colindices = array_split(temp.indices, temp.indptr[1:-1])
-
-    ##import pdb; pdb.set_trace()
+    #TODO eliminate colindices
 
 
     #====================================================================
@@ -228,8 +214,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     preall = zeros((NullDim,NullDim))
     RowsPerBlock = Sparsity_Pattern.blocksize[0]
     Nnodes = Nfine/RowsPerBlock
-    BtBinv = [matrix(preall,copy=True) for i in range(Nnodes)]
-    del preall
+    BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
     B = mat(B)
     for i in range(Nnodes):
         colindx = colindices[i]
@@ -246,7 +231,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
     #Enforce constraints on R.  First the sparsity pattern, then the nullspace vectors.
     R = R.multiply(Sparsity_Pattern)
-    Satisfy_Constraints(R, Sparsity_Pattern, B, BtBinv, colindices)
+    Satisfy_Constraints(R, Sparsity_Pattern, B, BtBinv)
 
     if R.nnz == 0:
         print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
@@ -282,7 +267,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
             #Calculate new direction and enforce constraints
             AP = A*P
             AP = AP.multiply(Sparsity_Pattern)
-            Satisfy_Constraints(AP, Sparsity_Pattern, B, BtBinv, colindices)
+            Satisfy_Constraints(AP, Sparsity_Pattern, B, BtBinv)
             
             #Frobenius innerproduct of (P, AP)
             alpha = newsum/(P.multiply(AP)).sum()
@@ -306,10 +291,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
             #Enforce constraints on P
             P = P.multiply(Sparsity_Pattern)
-            if(csrflag):
-                P = Satisfy_Constraints_CSR(P, Sparsity_Pattern, B, BtBinv)
-            else:
-                P = Satisfy_Constraints_BSR(P, Sparsity_Pattern, B, BtBinv, colindices)
+            Satisfy_Constraints_BSR(P, Sparsity_Pattern, B, BtBinv)
     
             #Frobenius innerproduct of (P, R)
             numer = (P.multiply(R)).sum()
