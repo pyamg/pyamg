@@ -46,7 +46,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import array, zeros, matrix, mat, asarray
+from numpy import array, zeros, matrix, mat, asarray, dot
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 from scipy.linalg import svd, norm, pinv2
 import pyamg
@@ -101,13 +101,23 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
         colindx = colindices[i]
         length = len(colindx)
         numBlocks = rowend-rowstart
-        
-        if(length != 0):
-            Bi = B[colindx,:]
+       
+        B = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
+
+        for n in range(numBlocks):
+            Bi  = B[Sparsity_Pattern.indices[rowstart + n]]
             UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
-            update_local = asarray(Bi*(BtBinv[i]*UBi.T))
+            update_local = asarray(dot(Bi,dot(BtBinv[i],UBi.T)))
     
-            Sparsity_Pattern.data[rowstart:rowend] = update_local.reshape(numBlocks, ColsPerBlock, RowsPerBlock).swapaxes(1,2)
+            Sparsity_Pattern.data[rowstart + n] = update_local.T
+
+        
+        #if(length != 0):
+        #    Bi = B[colindx,:]
+        #    UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
+        #    update_local = asarray(Bi*(BtBinv[i]*UBi.T))
+    
+        #    Sparsity_Pattern.data[rowstart:rowend] = update_local.reshape(numBlocks, ColsPerBlock, RowsPerBlock).swapaxes(1,2)
     
         rowoffset += RowsPerBlock
     
