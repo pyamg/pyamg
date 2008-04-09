@@ -76,12 +76,21 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
     projecting out the components of span(B) in U in a row-wise fashion
 
     """
+    
+    #print "U\n",U.todense()
+    #print "Sparsity_Pattern\n",Sparsity_Pattern.todense()
+    #print "B\n",B
+    #print "BtBinv\n",BtBinv
 
     Nfine = U.shape[0]
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
     Nnodes = Nfine/RowsPerBlock
-    
+   
+    #print repr(U)
+    #print "B",B.shape
+    #import pdb; pdb.set_trace()
+
     UB = U*mat(B)
     
     rowoffset = 0
@@ -108,6 +117,8 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
     #   of the pattern for Sparsity_Pattern.  This is more expensive, but more robust.
     U = U - Sparsity_Pattern
     Sparsity_Pattern.data[:,:,:] = 1.0
+
+    #print "U\n",U.todense()
     return U
 
 def Satisfy_ConstraintsNEW(U, Sparsity_Pattern, B, BtBinv):
@@ -127,6 +138,7 @@ def Satisfy_ConstraintsNEW(U, Sparsity_Pattern, B, BtBinv):
 
     """
 
+
     Nfine = U.shape[0]
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
@@ -144,6 +156,7 @@ def Satisfy_ConstraintsNEW(U, Sparsity_Pattern, B, BtBinv):
         i = rows[n]
         U.data[n] -= dot(dot(UB[i],BtBinv[i]),B[j])
 
+    
 
 ########################################################################################################
 
@@ -180,10 +193,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     References
     ----------
 
-        Mandel
-        "Energy Optimization of Algebraic Multigrid Bases."
-
-        TODO COMPLETE REF
+        Jan Mandel, Marian Brezina, and Petr Vanek
+        "Energy Optimization of Algebraic Multigrid Bases"
+        Computing 62, 205-228, 1999
+        http://dx.doi.org/10.1007/s006070050022
     
     """
     
@@ -382,4 +395,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
     return T
 
+if __name__ == '__main__':
+    U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
+    Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
+    B = array([[1],[1]])
+    BtBinv = [ array([[0.5]]), array([[0.5]]) ]
+    colindices = [ array([0,1]), array([0,1]) ]
 
+    Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+     
