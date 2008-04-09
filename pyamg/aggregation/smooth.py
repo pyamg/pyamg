@@ -46,7 +46,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import array, zeros, matrix, mat
+from numpy import array, zeros, matrix, mat, asarray
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 from scipy.linalg import svd, norm, pinv2
 import pyamg
@@ -77,20 +77,11 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
 
     """
     
-    #print "U\n",U.todense()
-    #print "Sparsity_Pattern\n",Sparsity_Pattern.todense()
-    #print "B\n",B
-    #print "BtBinv\n",BtBinv
-
     Nfine = U.shape[0]
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
     Nnodes = Nfine/RowsPerBlock
    
-    #print repr(U)
-    #print "B",B.shape
-    #import pdb; pdb.set_trace()
-
     UB = U*mat(B)
     
     rowoffset = 0
@@ -104,21 +95,12 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
         if(length != 0):
             Bi = B[colindx,:]
             UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
-            update_local = (Bi*(BtBinv[i]*UBi.T))
+            update_local = asarray(Bi*(BtBinv[i]*UBi.T))
     
-            #Write node's values 
-            for j in range(RowsPerBlock):
-                Sparsity_Pattern.data[rowstart:rowend, j, :] = update_local[:,j].reshape(numBlocks, ColsPerBlock)
-    
+            U.data[rowstart:rowend] -= update_local.reshape(numBlocks,ColsPerBlock,RowsPerBlock).swapaxes(1,2)
+
         rowoffset += RowsPerBlock
     
-    #Now add in changes from Sparsity_Pattern to U.  We don't write U directly in the above loop,
-    #   because its possible, once in a blue moon, to have the sparsity pattern of U be a subset
-    #   of the pattern for Sparsity_Pattern.  This is more expensive, but more robust.
-    U = U - Sparsity_Pattern
-    Sparsity_Pattern.data[:,:,:] = 1.0
-
-    #print "U\n",U.todense()
     return U
 
 def Satisfy_ConstraintsNEW(U, Sparsity_Pattern, B, BtBinv):
