@@ -46,7 +46,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import array, zeros, matrix, mat, asarray, dot
+from numpy import array, zeros, matrix, mat, asarray, dot, array_split
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 from scipy.linalg import svd, norm, pinv2
 import pyamg
@@ -184,7 +184,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
         #   at the zero rows of A will still be zero
         D[zero_rows] = 1.0
     Dinv = 1.0/D
-    
 
 
     #####UnAmal returns a BSR matrix, so the mat-mat will be a BSR mat-mat.  Unfortunately, 
@@ -192,9 +191,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     Sparsity_Pattern = UnAmal(abs(Atilde), numPDEs, numPDEs)*abs(T)
     Sparsity_Pattern.data[:,:,:] = 1.0
     Sparsity_Pattern.sort_indices()
-    colindices = BSR_Get_Colindices(Sparsity_Pattern)
-    #TODO eliminate colindices
-
 
     #====================================================================
     #Optional file output for diagnostic purposes
@@ -212,16 +208,16 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     #Construct array of inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in 
     #   Sparsity Pattern.  This array is used multiple times in the Satisfy_Constraints routine.
 
-    preall = zeros((NullDim,NullDim))
     RowsPerBlock = Sparsity_Pattern.blocksize[0]
     Nnodes = Nfine/RowsPerBlock
+
     BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
-    B = mat(B)
-    for i in range(Nnodes):
-        colindx = colindices[i]
-        if len(colindx) > 0:
-            Bi = B[colindx,:]
-            BtBinv[i] = pinv2(Bi.T*Bi)
+    Bblk = asarray(B).reshape(-1,NullDim,NullDim)
+    colindices = array_split(Sparsity_Pattern.indices,Sparsity_Pattern.indptr[1:-1])
+    for i,cols in enumerate(colindices):
+        if len(cols) > 0:
+            Bi = Bblk[cols].reshape(-1,NullDim)
+            BtBinv[i] = pinv2(dot(Bi.T,Bi))
     #====================================================================
     
     
@@ -315,13 +311,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
     
     #====================================================================
-    #Make sure T is in correct block format.
-    if(csrflag):
-        T = T.tobsr(blocksize=blocks)
-    #====================================================================
-    
-    
-    #====================================================================
     #Optional file output for diagnostic purposes
     if(file_output == True):
         savemat('Ppyth', { 'Ppyth' : T.toarray() } ) 
@@ -335,7 +324,6 @@ if __name__ == '__main__':
     Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
     B = array([[1],[1]])
     BtBinv = [ array([[0.5]]), array([[0.5]]) ]
-    colindices = [ array([0,1]), array([0,1]) ]
 
-    Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+    Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv)
      
