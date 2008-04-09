@@ -56,8 +56,61 @@ from scipy.io import loadmat, savemat
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine
 
+def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices):
+    """Update U to satisfy U*B = 0
 
-def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
+    Input
+    =====
+    U                     BSR Matrix to operate on
+    Sparsity_Pattern      Sparsity pattern to enforce
+    B                     Near nullspace vectors
+    BtBinv                Local inv(B'*B) matrices for each dof, i.  
+    colindices            List indexed by node that returns column indices for
+                          all dof's in that node.  Assumes that each block is 
+                          perfectly dense.  The below code does assure this 
+                          perfect denseness.
+        
+    Output
+    ======
+    Updated U, so that U*B = 0.  Update is computed by orthogonal (in 2-norm)
+    projecting out the components of span(B) in U in a row-wise fashion
+
+    """
+
+    Nfine = U.shape[0]
+    RowsPerBlock = U.blocksize[0]
+    ColsPerBlock = U.blocksize[1]
+    Nnodes = Nfine/RowsPerBlock
+    
+    UB = U*mat(B)
+    
+    rowoffset = 0
+    for i in range(Nnodes):
+        rowstart = Sparsity_Pattern.indptr[i]
+        rowend = Sparsity_Pattern.indptr[i+1]
+        colindx = colindices[i]
+        length = len(colindx)
+        numBlocks = rowend-rowstart
+        
+        if(length != 0):
+            Bi = B[colindx,:]
+            UBi = UB[rowoffset:(rowoffset+RowsPerBlock), :]
+            update_local = (Bi*(BtBinv[i]*UBi.T))
+    
+            #Write node's values 
+            for j in range(RowsPerBlock):
+                Sparsity_Pattern.data[rowstart:rowend, j, :] = update_local[:,j].reshape(numBlocks, ColsPerBlock)
+    
+        rowoffset += RowsPerBlock
+    
+    #Now add in changes from Sparsity_Pattern to U.  We don't write U directly in the above loop,
+    #   because its possible, once in a blue moon, to have the sparsity pattern of U be a subset
+    #   of the pattern for Sparsity_Pattern.  This is more expensive, but more robust.
+    U = U - Sparsity_Pattern
+    Sparsity_Pattern.data[:,:,:] = 1.0
+    return U
+
+def Satisfy_ConstraintsNEW(U, Sparsity_Pattern, B, BtBinv):
     """Update U to satisfy U*B = 0
 
     Input
@@ -231,7 +284,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
     #Enforce constraints on R.  First the sparsity pattern, then the nullspace vectors.
     R = R.multiply(Sparsity_Pattern)
-    Satisfy_Constraints(R, Sparsity_Pattern, B, BtBinv)
+    R = Satisfy_Constraints(R, Sparsity_Pattern, B, BtBinv, colindices)
 
     if R.nnz == 0:
         print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
@@ -267,7 +320,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
             #Calculate new direction and enforce constraints
             AP = A*P
             AP = AP.multiply(Sparsity_Pattern)
-            Satisfy_Constraints(AP, Sparsity_Pattern, B, BtBinv)
+            AP = Satisfy_Constraints(AP, Sparsity_Pattern, B, BtBinv, colindices)
             
             #Frobenius innerproduct of (P, AP)
             alpha = newsum/(P.multiply(AP)).sum()
@@ -291,7 +344,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, num_iters=4, min_tol
     
             #Enforce constraints on P
             P = P.multiply(Sparsity_Pattern)
-            Satisfy_Constraints_BSR(P, Sparsity_Pattern, B, BtBinv)
+            P = Satisfy_Constraints_BSR(P, Sparsity_Pattern, B, BtBinv, colindices)
     
             #Frobenius innerproduct of (P, R)
             numer = (P.multiply(R)).sum()
