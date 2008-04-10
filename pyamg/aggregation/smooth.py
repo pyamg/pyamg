@@ -46,9 +46,9 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import array, zeros, matrix, mat, asarray, dot, array_split
-from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
-from scipy.linalg import svd, norm, pinv2
+from numpy import zeros, asarray, dot, array_split
+from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
+from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
 
 ########################################################################################################
@@ -299,11 +299,3 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     
     return T
 
-if __name__ == '__main__':
-    U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
-    Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
-    B = array([[1],[1]])
-    BtBinv = [ array([[0.5]]), array([[0.5]]) ]
-
-    Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv)
-     
