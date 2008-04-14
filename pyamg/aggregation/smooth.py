@@ -46,7 +46,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import zeros, asarray, dot, array_split
+from numpy import zeros, asarray, dot, array_split, diff
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
@@ -110,14 +110,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
         k is the number of coarse candidate vectors.
     SPD : boolean
         Booolean denoting symmetric positive-definiteness of A
-    num_iters : integer
+    maxiter : integer
         Number of energy minimization steps to apply to the prolongator
     tol : scalar
         Minimization tolerance
-    file_output : boolean
-        Optional diagnostic file output of matrices
-
-
+   
     Returns
     -------
     P : {bsr_matrix}
@@ -175,9 +172,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     # Construct Dinv and Unamalgate Atilde if (numPDEs > 1)
     D = A.diagonal();
     if (D == 0).any():
-        zero_rows = (D == 0).nonzeros()[0]
+        zero_rows = (D == 0).nonzero()[0]
         if (diff(A.tocsr().indptr)[zero_rows] > 0).any():
-            raise ValueError('zero on diag(A) for nonzero row of A')
+            pass
+            #raise ValueError('zero on diag(A) for nonzero row of A')
         # Zeros on D represent 0 rows, so we can just set D to 1.0 at those locations and then Dinv*A 
         #   at the zero rows of A will still be zero
         D[zero_rows] = 1.0

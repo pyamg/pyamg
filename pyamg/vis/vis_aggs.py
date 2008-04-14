@@ -83,7 +83,7 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_
 
     if(prob_type == 'dg'):  
         # visualize the aggregates 
-        coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=A, plot_type='dg', mesh_type='tri')
+        coarse_grid_vis( (out_file_stem + "_points_aggs.vtu"), Vert, E2V, Agg, A=None, plot_type='dg', mesh_type='tri')
     
         # visualize the mesh
         fid = open( (out_file_stem + "_mesh.vtu"), 'w') #test with open file object
