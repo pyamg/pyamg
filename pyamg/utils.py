@@ -275,230 +275,228 @@ def dispatcher(name_to_handle):
 
 
 ##############################################################################################
-#					JBS Utils			 	 	     #
+#                                           JBS Utils                                        #
 ##############################################################################################
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
-	"""Unamalgamate a CSR A with blocks of 1's.  
-	Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock)
+    """Unamalgamate a CSR A with blocks of 1's.  
+    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock)
 
-	Input
-	=====
-	A			Amalmagated matrix, assumed to be in CSR format
-	RowsPerBlock &	
-	ColsPerBlock		Give A blocks of size (RowsPerBlock, ColsPerBlock)
-	
-	Output
-	======
-	A_UnAmal:		BSR matrix that is essentially a Kronecker product of 
-				A and ones(RowsPerBlock, ColsPerBlock
+    Input
+    =====
+    A                   Amalmagated matrix, assumed to be in CSR format
+    RowsPerBlock &
+    ColsPerBlock        Give A blocks of size (RowsPerBlock, ColsPerBlock)
+    
+    Output
+    ======
+    A_UnAmal:           BSR matrix that is essentially a Kronecker product of 
+                        A and ones(RowsPerBlock, ColsPerBlock
 
-	"""
-	#Input:	 	
-	#
-	#Output: 
-	data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
-	return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
+    """
+    data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
+    return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
 
 def Coord2RBM(numNodes, numPDEs, x, y, z):
-	"""Convert 2D or 3D coordinates into Rigid body modes for use as near nullspace modes in elasticity AMG solvers
+    """Convert 2D or 3D coordinates into Rigid body modes for use as near nullspace modes in elasticity AMG solvers
 
-	Input
-	=====
-	numNodes	Number of nodes
-	numPDEs		Number of dofs per node
-	x,y,z		Coordinate vectors
-
-
-	Output
-	======
-	rbm:		Matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid body modes
-
-	"""
-
-	#check inputs
-	if(numPDEs == 1):
-		numcols = 1
-	elif( (numPDEs == 3) or (numPDEs == 6) ):
-		numcols = 6
-	else:
-		raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per spatial location, i.e. numPDEs = [1 | 3 | 6].  You've entered " \
-				+ str(numPDEs) + "." )
-
-	if( (max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes) ):
-		raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes)) 
-
-	#if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
-	#	raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).") 
+    Input
+    =====
+    numNodes    Number of nodes
+    numPDEs     Number of dofs per node
+    x,y,z       Coordinate vectors
 
 
-	#preallocate rbm
-	rbm = mat(zeros((numNodes*numPDEs, numcols)))
-	
-	for node in range(numNodes):
-		dof = node*numPDEs
+    Output
+    ======
+    rbm:        Matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid body modes
 
-		if(numPDEs == 1):
-			rbm[node] = 1.0 
-	            
-		if(numPDEs == 6): 
-			for ii in range(3,6):		#lower half = [ 0 I ]
-				for jj in range(0,6):
-					if(ii == jj):
-						rbm[dof+ii, jj] = 1.0 
-					else: 
-						rbm[dof+ii, jj] = 0.0
+    """
 
-		if((numPDEs == 3) or (numPDEs == 6) ): 
-			for ii in range(0,3):		#upper left = [ I ]
-				for jj in range(0,3):
-					if(ii == jj):
-						rbm[dof+ii, jj] = 1.0 
-					else: 
-						rbm[dof+ii, jj] = 0.0
+    #check inputs
+    if(numPDEs == 1):
+        numcols = 1
+    elif( (numPDEs == 3) or (numPDEs == 6) ):
+        numcols = 6
+    else:
+        raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per spatial location, i.e. numPDEs = [1 | 3 | 6].  You've entered " \
+                + str(numPDEs) + "." )
 
-			for ii in range(0,3):		#upper right = [ Q ]
-				for jj in range(3,6):
-					if( ii == (jj-3) ):
-						rbm[dof+ii, jj] = 0.0
-					else:
-						if( (ii+jj) == 4):
-							rbm[dof+ii, jj] = z[node]
-						elif( (ii+jj) == 5 ): 
-							rbm[dof+ii, jj] = y[node]
-						elif( (ii+jj) == 6 ): 
-							rbm[dof+ii, jj] = x[node]
-		             			else:
-							rbm[dof+ii, jj] = 0.0
-			ii = 0 
-			jj = 5 
-			rbm[dof+ii, jj] *= -1.0
-	
-			ii = 1 
-			jj = 3 
-			rbm[dof+ii, jj] *= -1.0
-	
-			ii = 2 
-			jj = 4 
-			rbm[dof+ii, jj] *= -1.0
-	
-	return rbm
+    if( (max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes) ):
+        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes)) 
+
+    #if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
+    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).") 
+
+
+    #preallocate rbm
+    rbm = mat(zeros((numNodes*numPDEs, numcols)))
+    
+    for node in range(numNodes):
+        dof = node*numPDEs
+
+        if(numPDEs == 1):
+            rbm[node] = 1.0 
+                
+        if(numPDEs == 6): 
+            for ii in range(3,6):        #lower half = [ 0 I ]
+                for jj in range(0,6):
+                    if(ii == jj):
+                        rbm[dof+ii, jj] = 1.0 
+                    else: 
+                        rbm[dof+ii, jj] = 0.0
+
+        if((numPDEs == 3) or (numPDEs == 6) ): 
+            for ii in range(0,3):        #upper left = [ I ]
+                for jj in range(0,3):
+                    if(ii == jj):
+                        rbm[dof+ii, jj] = 1.0 
+                    else: 
+                        rbm[dof+ii, jj] = 0.0
+
+            for ii in range(0,3):        #upper right = [ Q ]
+                for jj in range(3,6):
+                    if( ii == (jj-3) ):
+                        rbm[dof+ii, jj] = 0.0
+                    else:
+                        if( (ii+jj) == 4):
+                            rbm[dof+ii, jj] = z[node]
+                        elif( (ii+jj) == 5 ): 
+                            rbm[dof+ii, jj] = y[node]
+                        elif( (ii+jj) == 6 ): 
+                            rbm[dof+ii, jj] = x[node]
+                        else:
+                            rbm[dof+ii, jj] = 0.0
+            
+            ii = 0 
+            jj = 5 
+            rbm[dof+ii, jj] *= -1.0
+    
+            ii = 1 
+            jj = 3 
+            rbm[dof+ii, jj] *= -1.0
+    
+            ii = 2 
+            jj = 4 
+            rbm[dof+ii, jj] *= -1.0
+    
+    return rbm
 
 
 ############################################################################################
-#			JBS --- Define BSR helper functions				   #
+#                    JBS --- Define BSR helper functions                                   #
 ############################################################################################
 
 def BSR_Get_Row(A, i):
-	"""Return row i in BSR matrix A.  Only nonzero entries are returned
+    """Return row i in BSR matrix A.  Only nonzero entries are returned
 
-	Input
-	=====
-	A	Matrix assumed to be in BSR format
-	i	row number
+    Input
+    =====
+    A   Matrix assumed to be in BSR format
+    i   row number
 
-	Output
-	======
-	z	 Actual nonzero values for row i
-		 colindx Array of column indices for the nonzeros of row i
-	
-	"""
-	
-	blocksize = A.blocksize[0]
-	BlockIndx = i/blocksize
-	rowstart = A.indptr[BlockIndx]
-	rowend = A.indptr[BlockIndx+1]
-	localRowIndx = i%blocksize
+    Output
+    ======
+    z   Actual nonzero values for row i
+        colindx Array of column indices for the nonzeros of row i
+    
+    """
+    
+    blocksize = A.blocksize[0]
+    BlockIndx = i/blocksize
+    rowstart = A.indptr[BlockIndx]
+    rowend = A.indptr[BlockIndx+1]
+    localRowIndx = i%blocksize
 
-	#Get z
-	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
-	z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
+    #Get z
+    indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
+    z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
 
 
-	colindx = zeros((1, z.__len__()), dtype=int32)
-	counter = 0
+    colindx = zeros((1, z.__len__()), dtype=int32)
+    counter = 0
 
-	for j in range(rowstart, rowend):
-		coloffset = blocksize*A.indices[j]
-		indys = A.data[j,localRowIndx,:].nonzero()[0]
-		increment = indys.shape[0]
-		colindx[0,counter:(counter+increment)] = coloffset + indys
-		counter += increment		
+    for j in range(rowstart, rowend):
+        coloffset = blocksize*A.indices[j]
+        indys = A.data[j,localRowIndx,:].nonzero()[0]
+        increment = indys.shape[0]
+        colindx[0,counter:(counter+increment)] = coloffset + indys
+        counter += increment
 
-	return mat(z).T, colindx[0,:]
+    return mat(z).T, colindx[0,:]
 
 def BSR_Row_WriteScalar(A, i, x): 
-	"""Write a scalar at each nonzero location in row i of BSR matrix A
+    """Write a scalar at each nonzero location in row i of BSR matrix A
 
-	Input
-	=====
-	A	Matrix assumed to be in BSR format
-	i	row number
-	x	scalar to overwrite nonzeros of row i in A
+    Input
+    =====
+    A   Matrix assumed to be in BSR format
+    i   row number
+    x   scalar to overwrite nonzeros of row i in A
 
-	Output
-	======
-	A	All nonzeros in row i of A have been overwritten with x.  
-		If x is a vector, the first length(x) nonzeros in row i 
-		of A have been overwritten with entries from x
+    Output
+    ======
+    A   All nonzeros in row i of A have been overwritten with x.  
+        If x is a vector, the first length(x) nonzeros in row i 
+        of A have been overwritten with entries from x
 
-	"""
-	
-	blocksize = A.blocksize[0]
-	BlockIndx = i/blocksize
-	rowstart = A.indptr[BlockIndx]
-	rowend = A.indptr[BlockIndx+1]
-	localRowIndx = i%blocksize
+    """
+    
+    blocksize = A.blocksize[0]
+    BlockIndx = i/blocksize
+    rowstart = A.indptr[BlockIndx]
+    rowend = A.indptr[BlockIndx+1]
+    localRowIndx = i%blocksize
 
-	#for j in range(rowstart, rowend):
-	#	indys = A.data[j,localRowIndx,:].nonzero()[0]
-	#	increment = indys.shape[0]
-	#	A.data[j,localRowIndx,indys] = x
-	
-	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
-	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
+    #for j in range(rowstart, rowend):
+    #   indys = A.data[j,localRowIndx,:].nonzero()[0]
+    #   increment = indys.shape[0]
+    #   A.data[j,localRowIndx,indys] = x
+    
+    indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
+    A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
 
 def BSR_Row_WriteVect(A, i, x): 
-	"""Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
-	   length(x) and nnz(A[i,:]) must be equivalent.
+    """Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
+       length(x) and nnz(A[i,:]) must be equivalent.
 
-	Input
-	=====
-	A	Matrix assumed to be in BSR format
-	i	row number
-	x	Array of values to overwrite nonzeros in row i of A
+    Input
+    =====
+    A   Matrix assumed to be in BSR format
+    i   row number
+    x   Array of values to overwrite nonzeros in row i of A
 
-	Output
-	======
-	A	The nonzeros in row i of A have been
-		overwritten with entries from x.  x must be same
-		length as nonzeros of row i.  This is guaranteed
-		when this routine is used with vectors derived form
-		Get_BSR_Row
+    Output
+    ======
+    A   The nonzeros in row i of A have been
+        overwritten with entries from x.  x must be same
+        length as nonzeros of row i.  This is guaranteed
+        when this routine is used with vectors derived form
+        Get_BSR_Row
 
-	"""
-	
-	blocksize = A.blocksize[0]
-	BlockIndx = i/blocksize
-	rowstart = A.indptr[BlockIndx]
-	rowend = A.indptr[BlockIndx+1]
-	localRowIndx = i%blocksize
-	
-	# This line fixes one of the idiotic things about the array/matrix setup.
+    """
+    
+    blocksize = A.blocksize[0]
+    BlockIndx = i/blocksize
+    rowstart = A.indptr[BlockIndx]
+    rowend = A.indptr[BlockIndx+1]
+    localRowIndx = i%blocksize
+    
+    # This line fixes one of the idiotic things about the array/matrix setup.
     # Sometimes I really wish for the Matlab matrix "slicing" interface rather 
     # than this.
-	x = x.__array__().reshape( (max(x.shape),) )
+    x = x.__array__().reshape( (max(x.shape),) )
 
-	#counter = 0
-	#for j in range(rowstart, rowend):
-	#	indys = A.data[j,localRowIndx,:].nonzero()[0]
-	#	increment = min(indys.shape[0], blocksize)
-	#	A.data[j,localRowIndx,indys] = x[counter:(counter+increment), 0]
-	#	counter += increment
+    #counter = 0
+    #for j in range(rowstart, rowend):
+    #   indys = A.data[j,localRowIndx,:].nonzero()[0]
+    #   increment = min(indys.shape[0], blocksize)
+    #   A.data[j,localRowIndx,indys] = x[counter:(counter+increment), 0]
+    #   counter += increment
 
-	indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
-	A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
+    indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
+    A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
 
 ###################################################################################################

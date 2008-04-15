@@ -16,7 +16,7 @@ from vis import coarse_grid_vis, write_mesh, shrink_elmts
 
 __all__ = ['vis_aggs']
 
-def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_type="l2", SA_theta=0.1):
+def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, proj_type="l2", SA_theta=0.1):
     """Coarse grid visualization: create .vtu files for use in Paraview
        Only implemented for simplices
 
@@ -30,9 +30,9 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_
         'cg' denotes a continuous Galerkin mesh
         'dg' denotes a discontinous Galerkin mesh  
     str_type : {string}
-        'ode' uses the sa_ode_strong_connections routine to determine strength of connections
+        'ode' uses the ode_strength_of_connection routine to determine strength of connections
         'classic' uses the classic strength measure
-    ODE_theta : {scalar > 1.0}
+    ODE_epsilon : {scalar > 1.0}
         drop tolerance for the ode strength measure
     k : {integer}
         number of time steps for the ode strength measure
@@ -70,15 +70,16 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_theta=2.0, k=2, proj_
     else:
         Dimen = 3
 
-    #Calculate strength of connection and aggregation
+    # Calculate strength of connection and aggregation 
+    # Note that the new pyamg hierarchy now stores C and Agg, so you can call viz based only on a hierarchy.
     if(str_type == 'ode'):
-        C = sa_ode_strong_connections(csr_matrix(A), B, theta=ODE_theta, k=k, proj_type=proj_type)
+        C = ode_strength_of_connection(csr_matrix(A), B, epsilon=ODE_epsilon, k=k, proj_type=proj_type)
     elif(str_type == 'classic'):
         C = symmetric_strength_of_connection(A.tocsr(), theta=SA_theta)
     else:
         raise ValueError('vis_aggs() only works for strength measures, str_type = [\'ode\' | \'classic\']')
 
-    Agg  = sa_standard_aggregation(C.tocsr())
+    Agg  = standard_aggregation(C.tocsr())
 
 
     if(prob_type == 'dg'):  

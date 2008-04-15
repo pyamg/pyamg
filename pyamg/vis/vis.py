@@ -233,8 +233,8 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         #Shrink each element in the mesh for nice plotting
         E2V, Vert = shrink_elmts(E2V, Vert)
 
-        # plot_type = 'points' output to .vtu
-        coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A, plot_type='points')
+        # plot_type = 'vertex' output to .vtu --- throw point list down on mesh, so E2V becomes Nx1 array
+        coarse_grid_vis(fid, Vert, array(range(N)).reshape(N,1), Agg, 'vertex', A=A, plot_type='points')
 
 def shrink_elmts(E2V, Vert, shrink=0.75):
     """
