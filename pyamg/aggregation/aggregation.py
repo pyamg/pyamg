@@ -39,8 +39,10 @@ def smoothed_aggregation_solver(A, B=None,
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
-    aggregate : ['standard', 'lloyd']
-        Method used to aggregate nodes.
+    aggregate : ['standard', 'lloyd', ('predefined',[csr_matrix, ...])]
+        Method used to aggregate nodes.  A predefined aggregation is specified 
+        with a sequence of csr_matrices that represent the aggregation operators
+        on each level of the hierarchy.
     smooth : ['jacobi', 'chebyshev', 'MLS', 'energy', None]
         Method used to smoother used to smooth the tentative prolongator.
     max_levels : {integer} : default 10
@@ -88,6 +90,7 @@ def smoothed_aggregation_solver(A, B=None,
     Example
     -------
         TODO
+        TODO show aggregate=('predefined',[AggOp1,AggOp2])
 
     References
     ----------
@@ -123,33 +126,20 @@ def smoothed_aggregation_solver(A, B=None,
     #    def post(x):
     #        return D_sqrt_inv*x
 
-    class sa_level:
-        pass
+    if isinstance(aggregate,tuple) and aggregate[0] == 'predefined':
+        # predefined aggregation operators
+        max_levels = len(aggregate[1]) + 1
+        max_coarse = 0
+
 
     levels = []
-    levels.append( sa_level() )
+    levels.append( multilevel_solver.level() )
     levels[-1].A = A          # matrix
     levels[-1].B = B          # near-nullspace candidates
 
-    while len(levels) < max_levels and A.shape[0] > max_coarse:
-        C,AggOp,T,B,P = prolongator(A, B, strength=strength, \
-                                  aggregate=aggregate, smooth=smooth)
+    while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
+        extend_hierarchy(levels, strength=strength, aggregate=aggregate, smooth=smooth)
         
-        R = P.T.asformat(P.format)
-
-        levels[-1].C     = C       # strength of connection matrix
-        levels[-1].AggOp = AggOp   # aggregation operator
-        levels[-1].T     = T       # tentative prolongator
-        levels[-1].P     = P       # smoothed prolongator
-        levels[-1].R     = R       # transpose of smoothed prolongator
-
-        A = R * A * P              # galerkin operator
-        
-        levels.append( sa_level() )
-        levels[-1].A = A
-        levels[-1].B = B
-        
-    #,preprocess=pre,postprocess=post)
     return multilevel_solver(levels, **kwargs)
 
 
@@ -166,11 +156,11 @@ def sa_filtered_matrix(A,theta):
 
     if isspmatrix_csr(A): 
         #TODO rework this
-        raise NotImplementedError,'blocks not handled yet'
+        raise NotImplementedError('blocks not handled yet')
         Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
         return csr_matrix((Sx,Sj,Sp),shape=A.shape)
     elif ispmatrix_bsr(A):
-        raise NotImplementedError,'blocks not handled yet'
+        raise NotImplementedError('blocks not handled yet')
     else:
         return sa_filtered_matrix(csr_matrix(A),theta)
 ##            #TODO subtract weak blocks from diagonal blocks?
@@ -204,52 +194,73 @@ def sa_filtered_matrix(A,theta):
 
 
 
-def prolongator(A, B, strength, aggregate, smooth):
+def extend_hierarchy(levels, strength, aggregate, smooth):
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
         else:
             return v,{}
 
+    A = levels[-1].A
+    B = levels[-1].B
+
+    ##
     # strength of connection
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
-        C = symmetric_strength_of_connection(A,**kwargs)
+        C = symmetric_strength_of_connection(A, **kwargs)
     elif fn == 'classical':
-        C = classical_strength_of_connection(A,**kwargs)
+        C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'ode':
-        C = ode_strength_of_connection(A,B,**kwargs)
+        C = ode_strength_of_connection(A, B, **kwargs)
     elif fn is None:
         C = A
     else:
-        raise ValueError('unrecognized strength of connection method: %s' % fn)
+        raise ValueError('unrecognized strength of connection method: %s' % str(fn))
 
-
+    ##
     # aggregation
     fn, kwargs = unpack_arg(aggregate)
     if fn == 'standard':
-        AggOp = standard_aggregation(C,**kwargs)
+        AggOp = standard_aggregation(C, **kwargs)
     elif fn == 'lloyd':
         raise NotImplementedError('lloyd not yet supported')
+    elif fn == 'predefined':
+        AggOp = aggregate[1][len(levels) - 1]
     else:
-        raise ValueError('unrecognized aggregation method %s' % fn )
+        raise ValueError('unrecognized aggregation method %s' % str(fn))
 
+    ##
     # tentative prolongator
     T,B = fit_candidates(AggOp,B)
 
+    ##
     # tentative prolongator smoother
     fn, kwargs = unpack_arg(smooth)
     if fn == 'jacobi':
-        P = jacobi_prolongation_smoother(A,T,**kwargs)
+        P = jacobi_prolongation_smoother(A, T, **kwargs)
     elif fn == 'energy':
-        P = energy_prolongation_smoother(A,T,C,B,**kwargs)
+        P = energy_prolongation_smoother(A, T, C, B, **kwargs)
     elif fn is None:
         P = T
     else:
-        raise ValueError('unrecognized prolongation smoother method %s' % fn)
-    
-    return C,AggOp,T,B,P
+        raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
+   
 
+    
+    R = P.T.asformat(P.format)
+
+    levels[-1].C     = C       # strength of connection matrix
+    levels[-1].AggOp = AggOp   # aggregation operator
+    levels[-1].T     = T       # tentative prolongator
+    levels[-1].P     = P       # smoothed prolongator
+    levels[-1].R     = R       # restriction operator 
+
+    A = R * A * P              # galerkin operator
+    
+    levels.append( multilevel_solver.level() )
+    levels[-1].A = A
+    levels[-1].B = B
 
 
 

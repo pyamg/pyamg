@@ -16,6 +16,9 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
+    class level:
+        pass
+
     def __init__(self, levels, preprocess=None, postprocess=None, \
             presmoother  = ('gauss_seidel', {'sweep':'symmetric'}),
             postsmoother = ('gauss_seidel', {'sweep':'symmetric'}),
