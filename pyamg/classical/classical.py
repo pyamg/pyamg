@@ -51,7 +51,7 @@ def ruge_stuben_solver(A,
     levels[-1].A = csr_matrix(A)
     
     while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength=strength, CF=CF)
+        extend_hierarchy(levels, strength, CF)
 
     return multilevel_solver(levels, **kwargs)
 

@@ -82,9 +82,13 @@ def smoothed_aggregation_solver(A, B=None,
     rescale: {boolean} : default True
         If True, symmetrically rescale A by the diagonal
         i.e. A -> D * A * D,  where D is diag(A)^-0.5
-    aggregation: {None, list of csr_matrix} : optional
+    aggregation: {sequence of csr_matrix objects}
         List of csr_matrix objects that describe a user-defined
-        multilevel aggregation of the variables.
+        multilevel aggregation of the degrees of freedom.
+        For instance [ Agg0, Agg1 ] defines a three-level hierarchy
+        where the dimensions of A, Agg0 and Agg1 are compatible, i.e.
+        Agg0.shape[1] == A.shape[0] and Agg1.shape[1] == Agg0.shape[0].
+  
 
 
     Example
@@ -138,7 +142,7 @@ def smoothed_aggregation_solver(A, B=None,
     levels[-1].B = B          # near-nullspace candidates
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength=strength, aggregate=aggregate, smooth=smooth)
+        extend_hierarchy(levels, strength, aggregate, smooth)
         
     return multilevel_solver(levels, **kwargs)
 

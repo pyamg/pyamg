@@ -10,7 +10,6 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel
-from pyamg.utils import approximate_spectral_radius, diag_sparse, norm
 
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
@@ -50,8 +49,10 @@ def sa_hierarchy(A,B,AggOps):
     return As,Ps,Ts,Bs
 
 
-def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters=0, 
-        epsilon=0.1, **kwargs):
+def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, 
+        improvement_iters=0, epsilon=0.1,
+        max_levels=10, max_coarse=100, aggregation=None,
+        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
 
@@ -116,7 +117,8 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, improvement_iters
     
     ###
     # develop first candidate
-    B = initial_setup_stage(A, candidate_iters)
+    B = initial_setup_stage(A, candidate_iters, epsilon, 
+            max_levels, max_coarse, aggregation)
 
     ###
     # develop additional candidates
@@ -192,7 +194,7 @@ def relax_candidate(A, x, candidate_iters, **kwargs):
 
 
 
-def initial_setup_stage(A, candidate_iters, epsilon=0.1, max_levels=10, max_coarse=100, theta=0, aggregation=None):
+def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, aggregation):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
@@ -225,7 +227,7 @@ def initial_setup_stage(A, candidate_iters, epsilon=0.1, max_levels=10, max_coar
 
     while len(AggOps) + 1 < max_levels and A_l.shape[0] > max_coarse:
         if aggregation is None:
-            C_l   = symmetric_strength_of_connection(A_l,theta)
+            C_l   = symmetric_strength_of_connection(A_l)
             AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
             AggOp = aggregation[len(AggOps)]
