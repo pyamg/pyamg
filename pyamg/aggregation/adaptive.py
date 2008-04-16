@@ -138,6 +138,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
 
     return smoothed_aggregation_solver(A, B=B, **kwargs)
 
+
 def relax_candidate(A, x, candidate_iters, **kwargs):
     opts = kwargs.copy()
     opts['max_levels']    = 1
@@ -150,49 +151,6 @@ def relax_candidate(A, x, candidate_iters, **kwargs):
         ml.postsmooth(A,x,b)
    
    
-#def initial_setup_stage2(A, candidate_iters, epsilon, **kwargs):
-#
-#    x = rand(A.shape[0],1)
-#
-#    while True:
-#        x_hat = x.copy()
-#        relax(A, x, candidate_iters, **kwargs)
-#        x_A_x = dot(x.T,A_l*x)
-#        err_ratio = (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/candidate_iters) 
-#        if err_ratio < epsilon:                                            #step 4i
-#
-#            ml = smoothed_aggregation_solver(A, B=x, **kwargs)
-#        AggOp = aggregation[len(AggOps)]
-#        T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-#        P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
-#        A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
-#
-#        AggOps.append(AggOp)
-#        Ps.append(P_l)
-#        As.append(A_l)
-#
-#        if A_l.shape <= max_coarse:  break
-#
-#        if not skip_f_to_i:
-#            x_hat = x.copy()                                                   #step 4g
-#            relax(A_l,x)                                                       #step 4h
-#            x_A_x = dot(x.T,A_l*x)
-#            err_ratio = (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/candidate_iters) 
-#            if err_ratio < epsilon:                                            #step 4i
-#                #print "sufficient convergence, skipping"
-#                skip_f_to_i = True
-#                if x_A_x == 0:
-#                    x = x_hat  #need to restore x
-#
-#    # extend coarse-level candidate to the finest level
-#    for A_l,P in reversed(zip(As[1:],Ps)):
-#        relax(A_l,x)
-#        x = P * x
-#    relax(A,x)
-#
-#    return x  #first candidate
-
-
 
 def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, aggregation):
     """Computes a complete aggregation and the first near-nullspace candidate
@@ -262,23 +220,14 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
 
 
 def general_setup_stage(ml, candidate_iters):
-    As = [lvl.A for lvl in ml.levels]
-    Bs = [lvl.B for lvl in ml.levels]
-    Ts = [lvl.T for lvl in ml.levels[:-1]]
-    Ps = [lvl.P for lvl in ml.levels[:-1]]
-    AggOps = [lvl.AggOp for lvl in ml.levels[:-1]]
+    levels = ml.levels
 
-    A = As[0]
-
-    x = rand(A.shape[0],1)
+    x = rand(levels[0].A.shape[0],1)
     b = zeros_like(x)
 
     x = ml.solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)
 
     #TEST FOR CONVERGENCE HERE
-
-    temp_Ps = []
-    temp_As = [A]
 
     def make_bridge(P):
         M,N  = P.shape
@@ -288,40 +237,32 @@ def general_setup_stage(ml, candidate_iters):
         data[:,:-1,:] = P.data
         return bsr_matrix( (data, P.indices, P.indptr), shape=( (K+1)*(M/K), N) )
 
-    for i in range(len(As) - 2):
-        B_old = Bs[i]
+    def expand_candidates(B_old,x):
         B = zeros( (x.shape[0], B_old.shape[1] + 1), dtype=x.dtype)
 
         B[:B_old.shape[0],:B_old.shape[1]] = B_old
         B[:,-1] = x.reshape(-1)
+        return B
 
-        # now use SA to make 1 level 
-        T,R = fit_candidates(AggOps[i],B)
-        P = jacobi_prolongation_smoother(A,T)
-        A = P.T.asformat(P.format) * A * P
-        temp_Ps.append(P)
-        temp_As.append(A)
-        bridge = make_bridge(Ps[i+1])
+    for i in range(len(ml.levels) - 2):
+        # add candidate to B
+        B = expand_candidates(levels[i].B,x)
+
+        T,R = fit_candidates(levels[i].AggOp,B)
         x = R[:,-1].reshape(-1,1)
 
-        def make_solver(Alist, Plist):
-            levels = []
-            for A,P in zip(Alist[:-1],Plist):
-                levels.append( multilevel_solver.level())
-                levels[-1].A = A
-                levels[-1].P = P
-            levels.append( multilevel_solver.level())
-            levels[-1].A = Alist[-1]
-            return levels            
-            
-        #solver = multilevel_solver([A] + As[i+2:], [bridge] + Ps[i+2:] ) 
-        solver = multilevel_solver( make_solver([A] + As[i+2:], [bridge] + Ps[i+2:]) )
+        levels[i].P   = jacobi_prolongation_smoother(levels[i].A,T)
+        levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
+        levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
+        levels[i+1].P = make_bridge(levels[i+1].P) 
+        levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
 
+        solver = multilevel_solver(levels[i+1:])
         x = solver.solve(zeros_like(x), x0=x, tol=1e-8, maxiter=candidate_iters)
 
-    for A,P in reversed(zip(temp_As,temp_Ps)):
-        x = P * x
-        gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+    for lvl in reversed(levels[:-2]):
+        x = lvl.P * x
+        gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
 
     return x
 
