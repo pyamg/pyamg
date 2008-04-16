@@ -19,35 +19,6 @@ from tentative import fit_candidates
 __all__ = ['adaptive_sa_solver']
 
 
-def sa_hierarchy(A,B,AggOps):
-    """
-    Construct multilevel hierarchy using Smoothed Aggregation
-        Inputs:
-          A  - matrix
-          B  - fine-level near nullspace candidates be approximated
-
-        Ouputs:
-          (As,Ps,Ts,Bs) - tuple of lists
-                  - As -  
-                  - Ps - smoothed prolongators
-                  - Ts - tentative prolongators
-                  - Bs - near nullspace candidates
-    """
-    As = [A]
-    Ps = []
-    Ts = []
-    Bs = [B]
-
-    for AggOp in AggOps:
-        T,B = fit_candidates(AggOp,B)
-        P   = jacobi_prolongation_smoother(A,T)
-        A   = P.T.asformat(P.format) * A * P
-        As.append(A)
-        Ts.append(P)
-        Ps.append(P)
-        Bs.append(B)
-    return As,Ps,Ts,Bs
-
 
 def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, 
         improvement_iters=0, epsilon=0.1,
@@ -117,8 +88,10 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     
     ###
     # develop first candidate
-    B = initial_setup_stage(A, candidate_iters, epsilon, 
+    B,AggOps = initial_setup_stage(A, candidate_iters, epsilon, 
             max_levels, max_coarse, aggregation)
+
+    kwargs['aggregate'] = ('predefined',AggOps)
 
     ###
     # develop additional candidates
@@ -216,7 +189,7 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
         x = P * x
     relax(A,x)
 
-    return x  #first candidate
+    return x,AggOps  #first candidate
 
 
 def general_setup_stage(ml, candidate_iters):

@@ -17,7 +17,7 @@ class TestMultilevel(TestCase):
        
         # method should be almost exact for small matrices
         for A in cases:
-            for solver in ['splu','pinv','pinv2','lu','cholesky']:
+            for solver in ['splu','pinv','pinv2','lu','cholesky','cg']:
                 s = coarse_grid_solver(solver)
 
                 b = arange(A.shape[0],dtype=A.dtype)

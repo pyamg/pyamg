@@ -107,7 +107,7 @@ class TestSolverPerformance(TestCase):
         x_sol,residuals = sa.solve(b,x0=x,maxiter=10,tol=1e-12,return_residuals=True)
  
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        
+        print avg_convergence_ratio 
         assert(avg_convergence_ratio < 0.25)
 
 

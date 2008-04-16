@@ -6,7 +6,6 @@ import scipy
 import numpy
 from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ravel
 from scipy.sparse import csc_matrix
-from scipy.sparse.linalg import spsolve, splu
 
 #from pyamg import relaxation
 from pyamg.relaxation import *
@@ -180,7 +179,7 @@ def coarse_grid_solver(solver):
     elif solver == 'splu':
         def solve(self,A,b):
             if not hasattr(self, 'LU'):
-                self.LU = splu( csc_matrix(A) )
+                self.LU = scipy.sparse.linalg.splu( csc_matrix(A) )
             return self.LU.solve( ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
