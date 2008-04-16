@@ -303,13 +303,12 @@ def general_setup_stage(ml, candidate_iters):
         x = R[:,-1].reshape(-1,1)
 
         def make_solver(Alist, Plist):
-            class lvl: pass
             levels = []
             for A,P in zip(Alist[:-1],Plist):
-                levels.append(lvl())
+                levels.append( multilevel_solver.level())
                 levels[-1].A = A
                 levels[-1].P = P
-            levels.append(lvl())
+            levels.append( multilevel_solver.level())
             levels[-1].A = Alist[-1]
             return levels            
             

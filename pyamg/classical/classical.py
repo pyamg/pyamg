@@ -45,40 +45,26 @@ def ruge_stuben_solver(A,
 
     """
 
-    class rs_level:
-        pass
 
-    levels = []
+    levels = [ multilevel_solver.level() ]
+
+    levels[-1].A = csr_matrix(A)
     
-    while len(levels) < max_levels  and A.shape[0] > max_coarse:
-        C,splitting,P = prolongator(A, strength=strength, CF=CF)
-
-        R = P.T.tocsr()
-
-        levels.append( rs_level() )
-        levels[-1].A = A
-        levels[-1].C = C                  # strength of connection matrix
-        levels[-1].P = P                  # prolongation operator
-        levels[-1].R = R                  # restriction operator
-        levels[-1].spliting = splitting
-
-        A = R * A * P                     #galerkin operator
-
-    levels.append( rs_level() )
-    levels[-1].A = A
+    while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
+        extend_hierarchy(levels, strength=strength, CF=CF)
 
     return multilevel_solver(levels, **kwargs)
 
 
 
-def prolongator(A, strength, CF):
-    if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
-
+def extend_hierarchy(levels, strength, CF):
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
         else:
             return v,{}
+    
+    A = levels[-1].A
 
     # strength of connection
     fn, kwargs = unpack_arg(strength)
@@ -100,7 +86,18 @@ def prolongator(A, strength, CF):
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
-    P = direct_interpolation(A,C,splitting)
+    P = direct_interpolation(A, C, splitting)
 
-    return C,splitting,P
+
+    R = P.T.tocsr()
+
+    levels[-1].C = C                  # strength of connection matrix
+    levels[-1].P = P                  # prolongation operator
+    levels[-1].R = R                  # restriction operator
+    levels[-1].spliting = splitting   # C/F splitting
+
+    levels.append( multilevel_solver.level() )
+
+    A = R * A * P                     #galerkin operator
+    levels[-1].A = A
 
