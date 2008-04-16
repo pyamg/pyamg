@@ -187,7 +187,11 @@ def coarse_grid_solver(solver):
         fn = getattr(scipy.sparse.linalg.isolve, solver)
         def solve(self,A,b):
             return fn(A, b, tol=1e-12)[0]
-         
+
+    elif solver is None:         
+        # Identity
+        def solve(self,A,b):
+            return b
     else:
         raise ValueError,('unknown solver: %s' % fn)
        
