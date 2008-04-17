@@ -7,7 +7,7 @@ from pyamg.utils import approximate_spectral_radius, scale_rows
 __all__ = ['jacobi_prolongation_smoother', 'energy_prolongation_smoother']
 
 
-def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
+def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     """Jacobi prolongation smoother
    
     Parameters
@@ -36,7 +36,9 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
     D_inv_S = scale_rows(S, D_inv, copy=True)
     D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
 
-    P = T - (D_inv_S*T)
+    P = T
+    for i in range(degree):
+        P = P - (D_inv_S*P)
 
     return P
 
