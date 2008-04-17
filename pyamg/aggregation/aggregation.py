@@ -228,7 +228,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     if fn == 'standard':
         AggOp = standard_aggregation(C, **kwargs)
     elif fn == 'lloyd':
-        raise NotImplementedError('lloyd not yet supported')
+        AggOp = lloyd_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = aggregate[1][len(levels) - 1]
     else:

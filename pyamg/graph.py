@@ -155,7 +155,22 @@ def bellman_ford(G, seeds, maxiter=None):
 
 
          
-def lloyd_cluster(G, seeds, maxiter=None):
+def lloyd_cluster(G, seeds, maxiter=10):
+    """Perform Lloyd clustering on graph with weighted edges
+
+    Parameters
+    ----------
+    G : csr_matrix or csc_matrix
+        A sparse NxN matrix where each nonzero entry G[i,j] is the distance 
+        between nodes i and j
+    seeds : {int, array}
+        If seeds is an integer, then its value determines the number of clusters.
+        Otherwise, seeds is an array of unique integers between 0 and N-1 that
+        will be used as the initial seeds for clustering.
+    maxiter : int
+        The maximum number of iterations to perform. 
+
+    """
     G = asgraph(G)
     N = G.shape[0]
     
@@ -176,11 +191,15 @@ def lloyd_cluster(G, seeds, maxiter=None):
     clusters  = empty( N, dtype='intc')
     distances = empty( N, dtype=G.dtype)
     
-    #while True:
-    for i in range(10):
+    for i in range(maxiter):
+        last_seeds = seeds.copy()
+
         multigridtools.lloyd_cluster(N, G.indptr, G.indices, G.data, \
                 len(seeds), distances, clusters, seeds)
 
+        if (seeds == last_seeds).all():
+            break
+    
     return (distances, clusters, seeds)
 
 

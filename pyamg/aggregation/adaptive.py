@@ -112,7 +112,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     return smoothed_aggregation_solver(A, B=B, **kwargs)
 
 
-def relax_candidate(A, x, candidate_iters, **kwargs):
+def relax_candidate(A, x, candidate_iters):
     opts = kwargs.copy()
     opts['max_levels']    = 1
     opts['coarse_solver'] = None
@@ -231,7 +231,7 @@ def general_setup_stage(ml, candidate_iters):
         levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
 
         solver = multilevel_solver(levels[i+1:])
-        x = solver.solve(zeros_like(x), x0=x, tol=1e-8, maxiter=candidate_iters)
+        x = solver.solve(zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
 
     for lvl in reversed(levels[:-2]):
         x = lvl.P * x

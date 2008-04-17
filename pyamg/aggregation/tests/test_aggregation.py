@@ -29,12 +29,16 @@ class TestParameters(TestCase):
 
             x_sol,residuals = ml.solve(b, x0=x, maxiter=30, tol=1e-10, return_residuals=True)
             convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-            assert(convergence_ratio < 0.5)
+            assert(convergence_ratio < 0.9)
 
 
     def test_strength_of_connection(self): 
         for strength in ['symmetric','ode']:
             self.run_cases( {'strength' : strength} )
+    
+    def test_aggregation_method(self): 
+        for aggregate in ['standard','lloyd']:
+            self.run_cases( {'aggregate' : aggregate} )
     
     def test_prolongation_smoother(self): 
         for smooth in ['jacobi','energy']:
@@ -101,13 +105,12 @@ class TestSolverPerformance(TestCase):
         B = ones((A.shape[0],1))
  
         #TODO force 2 level method and check that result is the same
- 
-        sa = smoothed_aggregation_solver(D*A*D, D_inv * B, max_coarse=1, max_levels=2)
- 
+        kwargs = {'max_coarse' : 1, 'max_levels' : 2, 'coarse_solver' : 'splu'}
+
+        sa = smoothed_aggregation_solver(D*A*D, D_inv * B, **kwargs)
         x_sol,residuals = sa.solve(b,x0=x,maxiter=10,tol=1e-12,return_residuals=True)
- 
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        print avg_convergence_ratio 
+
         assert(avg_convergence_ratio < 0.25)
 
 

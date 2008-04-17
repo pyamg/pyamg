@@ -21,7 +21,7 @@ class multilevel_solver:
     def __init__(self, levels, preprocess=None, postprocess=None, \
             presmoother  = ('gauss_seidel', {'sweep':'symmetric'}),
             postsmoother = ('gauss_seidel', {'sweep':'symmetric'}),
-            coarse_solver='splu'):
+            coarse_solver='pinv2'):
 
         self.levels = levels
         
@@ -190,7 +190,7 @@ def coarse_grid_solver(solver):
     elif solver is None:         
         # Identity
         def solve(self,A,b):
-            return b
+            return 0*b
     else:
         raise ValueError,('unknown solver: %s' % fn)
        
