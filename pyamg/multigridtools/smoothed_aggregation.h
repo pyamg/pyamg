@@ -307,54 +307,6 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
 }
 
 
-//template<class T>
-//void sa_smoother(const int n_row,
-//		 const T   omega,
-//		 const int Ap[], const int Aj[], const T Ax[],
-//		 const int Sp[], const int Sj[], const T Sx[],
-//		 std::vector<int> * Bp, std::vector<int> * Bj, std::vector<T> * Bx){
-//
-//
-//  //compute filtered diagonal
-//  std::vector<T> diags(n_row,0);
-//  
-//  for(int i = 0; i < n_row; i++){
-//    int row_start = Ap[i];
-//    int row_end   = Ap[i+1];
-//    for(int jj = row_start; jj < row_end; jj++){
-//      diags[i] += Ax[jj];
-//    }    
-//  }
-//  for(int i = 0; i < n_row; i++){
-//    int row_start = Sp[i];
-//    int row_end   = Sp[i+1];
-//    for(int jj = row_start; jj < row_end; jj++){
-//      diags[i] -= Sx[jj];
-//    }    
-//  }
-//  
-//#ifdef DEBUG
-//  for(int i = 0; i < n_row; i++){ assert(diags[i] > 0); }
-//#endif
-//
-//
-//  //compute omega Jacobi smoother
-//  Bp->push_back(0);
-//  for(int i = 0; i < n_row; i++){
-//    int row_start = Sp[i];
-//    int row_end   = Sp[i+1];
-//    const T row_scale = -omega/diags[i];
-//
-//    Bx->push_back(1.0);
-//    Bj->push_back( i );
-//    
-//    for(int jj = row_start; jj < row_end; jj++){
-//      Bx->push_back(row_scale*Sx[jj]);
-//      Bj->push_back(Sj[jj]);
-//    }    
-//    Bp->push_back(Bj->size());
-//  }
-//}
 
 
 
