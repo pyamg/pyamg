@@ -7,7 +7,7 @@ from pyamg.utils import approximate_spectral_radius, scale_rows
 __all__ = ['jacobi_prolongation_smoother', 'energy_prolongation_smoother']
 
 
-def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
+def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     """Jacobi prolongation smoother
    
     Parameters
@@ -36,7 +36,9 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
     D_inv_S = scale_rows(S, D_inv, copy=True)
     D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
 
-    P = T - (D_inv_S*T)
+    P = T
+    for i in range(degree):
+        P = P - (D_inv_S*P)
 
     return P
 
@@ -78,13 +80,15 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
     num_block_rows = U.shape[0]/RowsPerBlock
 
     UB = U*B
-   
 
     B  = ravel(asarray(B).reshape(-1,ColsPerBlock,B.shape[1]))
     UB = ravel(asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1]))
      
     #Apply constraints
-    pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock,ColsPerBlock,num_blocks,num_block_rows,B,UB,ravel(BtBinv),U.indptr,U.indices,ravel(U.data))
+    pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
+            num_blocks, num_block_rows, 
+            B, UB, ravel(BtBinv), 
+            U.indptr, U.indices, ravel(U.data))
         
     return U
 
