@@ -21,7 +21,7 @@ from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.graph import vertex_coloring
 
-__all__ = ['coarse_grid_vis', 'write_vtu', 'write_mesh']
+__all__ = ['coarse_grid_vis', 'write_vtu', 'write_mesh', 'shrink_elmts']
 
 def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     """Coarse grid visualization: create .vtu files for use in Paraview

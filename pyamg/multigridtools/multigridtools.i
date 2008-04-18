@@ -12,6 +12,7 @@
 #include "smoothed_aggregation.h"
 #include "relaxation.h"
 #include "graph.h"
+#include "ode_strength.h"
 %}
 
 %feature("autodoc", "1");
@@ -168,6 +169,7 @@ DECLARE_DATA_TYPE( double )
 %include "smoothed_aggregation.h"
 %include "relaxation.h"
 %include "graph.h"
+%include "ode_strength.h"
  /*
   * Order may be important here, list float before double
   */
@@ -198,9 +200,11 @@ INSTANTIATE_INDEX(standard_aggregation)
 INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
+INSTANTIATE_BOTH(satisfy_constraints_helper)
 
 INSTANTIATE_BOTH(classical_strength_of_connection)
 INSTANTIATE_BOTH(symmetric_strength_of_connection)
+INSTANTIATE_BOTH(apply_distance_filter)
 
 INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)

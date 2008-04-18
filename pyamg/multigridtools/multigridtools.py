@@ -95,6 +95,17 @@ def rs_direct_interpolation_pass2(*args):
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
 
+def satisfy_constraints_helper(*args):
+  """
+    satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
+        int num_block_rows, float x, float y, float z, 
+        int Sp, int Sj, float Sx)
+    satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
+        int num_block_rows, double x, double y, double z, 
+        int Sp, int Sj, double Sx)
+    """
+  return _multigridtools.satisfy_constraints_helper(*args)
+
 def classical_strength_of_connection(*args):
   """
     classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
@@ -112,6 +123,13 @@ def symmetric_strength_of_connection(*args):
         int Sp, int Sj, double Sx)
     """
   return _multigridtools.symmetric_strength_of_connection(*args)
+
+def apply_distance_filter(*args):
+  """
+    apply_distance_filter(int n_row, float epsilon, int Sp, int Sj, float Sx)
+    apply_distance_filter(int n_row, double epsilon, int Sp, int Sj, double Sx)
+    """
+  return _multigridtools.apply_distance_filter(*args)
 
 def block_gauss_seidel(*args):
   """

@@ -7,7 +7,7 @@ from pyamg.utils import approximate_spectral_radius, scale_rows
 __all__ = ['jacobi_prolongation_smoother', 'energy_prolongation_smoother']
 
 
-def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+def jacobi_prolongation_smoother(S, T, omega=4.0/3.0):
     """Jacobi prolongation smoother
    
     Parameters
@@ -36,9 +36,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     D_inv_S = scale_rows(S, D_inv, copy=True)
     D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
 
-    P = T
-    for i in range(degree):
-        P = P - (D_inv_S*P)
+    P = T - (D_inv_S*T)
 
     return P
 
@@ -48,10 +46,11 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import zeros, asarray, dot, array_split, diff
+from numpy import zeros, asarray, dot, array_split, diff, ravel
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
+import pyamg.multigridtools
 
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine
@@ -68,27 +67,25 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
         
     Output
     ======
-    Updated U, so that U*B = 0.  Update is computed by orthogonal (in 2-norm)
+    Updated U, so that U*B = 0.  Update is computed by orthogonally (in 2-norm)
     projecting out the components of span(B) in U in a row-wise fashion
 
     """
     
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
+    num_blocks = U.indices.shape[0]
+    num_block_rows = U.shape[0]/RowsPerBlock
 
     UB = U*B
    
-    rows = csr_matrix((U.indices,U.indices,U.indptr), shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
 
-    B  = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
-    UB = asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1])
+    B  = ravel(asarray(B).reshape(-1,ColsPerBlock,B.shape[1]))
+    UB = ravel(asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1]))
+     
+    #Apply constraints
+    pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock,ColsPerBlock,num_blocks,num_block_rows,B,UB,ravel(BtBinv),U.indptr,U.indices,ravel(U.data))
         
-    for n,j in enumerate(U.indices):
-        i = rows[n]
-        Bi  = B[j]
-        UBi = UB[i]
-        U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.T))
-    
     return U
 
     
@@ -100,7 +97,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     """Minimize the energy of the coarse basis functions (columns of T)
 
     Parameters
-    ----------
+    ----------:if expand("%") == ""|browse confirm w|else|confirm w|endif
+
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
     T : {bsr_matrix}

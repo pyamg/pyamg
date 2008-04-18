@@ -236,10 +236,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #            sparse mat-mat-mult.  This could be the easiest thing to do.
         
     #====================================================================
-    # Now that the mat-mat part is done, convert to CSR, as this is much faster.
+    # Now that the mat-mat part is done, convert to CSR, as this is much faster 
+    #   than dealing with BSR matrices natively
     if not csrflag:
         Atilde = Atilde.tocsr()
-        I = I.tocsr()
         Atilde.eliminate_zeros()
     
     #====================================================================
@@ -259,9 +259,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         my_pde = repeat(my_pde, row_length)
         mask.data[ mod(mask.indices, numPDEs) != my_pde ] = 0.0
         del row_length, my_pde
+        mask.eliminate_zeros()
 
     #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
-    mask.eliminate_zeros()
     mask.data[:] = 1.0
     Atilde = Atilde.multiply(mask)
     Atilde.eliminate_zeros()
@@ -310,22 +310,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde.data = abs( 1.0 - Atilde.data)
 
         #Apply drop tolerance.
-        #   Must make sure that Atilde has no zeros on the diagonal, so add the identity.
-        #   It doesn't matter what the values are on the diagonal.
-        Atilde = Atilde + I
-        for i in range(dimen):
-
-            rowstart = Atilde.indptr[i]
-            rowend = Atilde.indptr[i+1]
-            zi = Atilde.data[rowstart:rowend]
-            iInRow = Atilde.indices[rowstart:rowend].searchsorted(i)
-                
-            #Calculate and apply drop-tol.  Ignore diagonal by making it very large
-            zi[iInRow] = 1e5
-            drop_tol = min(zi)*epsilon
-            zi[zi > drop_tol] = 0.0
-            zi[iInRow] = 1.0
-            Atilde.data[rowstart:rowend] = zi
+        multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
 
     else:
         # Solve constrained min problem directly
@@ -410,6 +395,4 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
                              Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
 
     return Atilde
-
-
 
