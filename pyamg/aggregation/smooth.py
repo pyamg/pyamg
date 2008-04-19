@@ -48,7 +48,7 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import zeros, asarray, dot, array_split, diff, ravel
+from numpy import zeros, asarray, dot, array_split, diff, ravel, asarray
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
@@ -197,16 +197,21 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     #Construct array of inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in 
     #   Sparsity Pattern.  This array is used multiple times in the Satisfy_Constraints routine.
 
+    ColsPerBlock = Sparsity_Pattern.blocksize[1]
     RowsPerBlock = Sparsity_Pattern.blocksize[0]
     Nnodes = Nfine/RowsPerBlock
 
     BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
-    Bblk = asarray(B).reshape(-1,NullDim,NullDim)
-    colindices = array_split(Sparsity_Pattern.indices,Sparsity_Pattern.indptr[1:-1])
-    for i,cols in enumerate(colindices):
-        if len(cols) > 0:
-            Bi = Bblk[cols].reshape(-1,NullDim)
-            BtBinv[i] = pinv2(dot(Bi.T,Bi))
+    BsqCols = sum(range(NullDim+1))
+    Bsq = zeros((Ncoarse,BsqCols))
+    counter = 0
+    for i in range(NullDim):
+        for j in range(i,NullDim):
+            Bsq[:,counter] = asarray(B[:,i])*asarray(B[:,j])
+            counter = counter + 1
+    
+    pyamg.multigridtools.invert_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
+        BsqCols, ravel(asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
     #====================================================================
     
     

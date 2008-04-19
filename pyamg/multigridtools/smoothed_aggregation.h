@@ -9,7 +9,16 @@
 #include <assert.h>
 #include <cmath>
 
+// *gelss calculates the min norm solution, using the SVD, 
+//   of a rectangular matrix A and possibly multiple RHS's
+extern "C" void  dgelss_(int* M,      int* N,     int* NRHS, double* A,     int* LDA, 
+                        double* B,    int* LDB,   double* S, double* RCOND, int* RANK, 
+                        double* WORK, int* LWORK, int* INFO );
 
+extern "C" void  sgelss_(int* M,      int* N,     int* NRHS, double* A,     int* LDA, 
+                        double* B,    int* LDB,   double* S, double* RCOND, int* RANK, 
+                        double* WORK, int* LWORK, int* INFO );
+ 
 template<class I, class T>
 void symmetric_strength_of_connection(const I n_row, 
                                       const T theta,
@@ -263,6 +272,21 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  *      UBi = UB[i]
  *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.T))
  *
+ * Parameters:
+ *  RowsPerBlock     rows per block in the BSR matrix, S
+ *  ColsPerBlock     cols per block in the BSR matrix, S
+ *  num_blocks       number of stored blocks in Sx
+ *  num_block_rows   S.shape[0]/RowsPerBlock
+ *  x                Near-nullspace vectors, B
+ *  y                S*B
+ *  z                BtBinv
+ *  Sp,Sj,Sx         BSR matrix, S, that is the update to the prolongator
+ *  
+ * Returns:
+ *  Sx is modified such that S*B = 0
+ *
+ * Notes:
+ *  
  */          
 
 template<class I, class T>
@@ -306,8 +330,182 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
 
 }
 
+/*
+ * Compute pseudo_inverse(A)*B ==> B
+ *
+ * Parameters:
+ * Ax      -  Matrix to invert             (column major)
+ * Bx      -  RHS (possibly multiple)      (column major)
+ * Sx      -  Vector of singular values         
+ * x       -  Workspace
+ *
+ * Arows  -  rows(A)
+ * Acols  -  cols(A)
+ * Bcols  -  cols(B)
+ * xdim   -  size of x in double words
+ *
+ * Returns:
+ *   pinv(A)*B ==> S
+ *
+ * Notes:
+ *    Not fully implemented, 
+ *    - No error checking on inputs (presumably LAPACK does that)
+ *
+ */
+
+void svd_solve(double * Ax, int Arows, int Acols, double * Bx, int Bcols, double * Sx, double * x, int xdim)
+{
+    //set up unused parameters
+    double RCOND = -1.0;         // Uses machine epsilon instead of the condition 
+                                 // number when calculating singular value drop-tol
+    int RANK;
+    int INFO;
+    
+    dgelss_(&(Arows), &(Acols),  &(Bcols),   Ax,    &(Arows),  
+               Bx,    &(Acols),     Sx,    &(RCOND), &(RANK), 
+               x,    &(xdim),   &(INFO) );
+
+    if(INFO != 0)
+    {   std::cerr << "svd_solve failed with dgelss giving flag: " << INFO << '\n'; }
+}
+/*void svd_solve(float * Ax, int Arows, int Acols, float * Bx, int Bcols, float * Sx, float * x, int xdim)
+{
+    //set up unused parameters
+    float RCOND = -1.0;         // Uses machine epsilon instead of the condition 
+                            // number when calculating singular value drop-tol
+    int RANK;
+    int INFO;
+    
+    sgelss_(&(Arows), &(Acols),  &(Bcols),   Ax,    &(Arows),  
+               Bx,    &(Acols),     Sx,    &(RCOND), &(RANK), 
+                x,    &(xdim),   &(INFO) );
+
+    if(INFO != 0)
+    {   std::cout << "svd_solve failed with sgelss giving flag: " << INFO << '\n'; }
+
+}
+*/
+
+/*
+ * Helper routine for energy_prolongation_smoother
+ * Calculates the following python code:
+ *
+ *  Bblk = asarray(B).reshape(-1,NullDim,NullDim)
+ *  colindices = array_split(Sparsity_Pattern.indices,Sparsity_Pattern.indptr[1:-1])
+ *  for i,cols in enumerate(colindices):
+ *      if len(cols) > 0:
+ *      Bi = Bblk[cols].reshape(-1,NullDim)
+ *      BtBinv[i] = pinv2(dot(Bi.T,Bi))
+ *
+ * Parameters:
+ *   NullDim      Number of near nullspace vectors
+ *   Nnodes       Number of nodes, i.e. block rows in BSR matrix, S
+ *   ColsPerBlock Columns per block in S
+ *   b            In row-major form, this is B-squared, i.e. it 
+ *                is each column of B multiplied against each 
+ *                other column of B.  For a Nx3 B,
+ *                b[:,0] = B[:,0]*B[:,0]
+ *                b[:,1] = B[:,0]*B[:,1]
+ *                b[:,2] = B[:,0]*B[:,2]
+ *                b[:,3] = B[:,1]*B[:,1]
+ *                b[:,4] = B[:,1]*B[:,2]
+ *                b[:,5] = B[:,2]*B[:,2]
+ *   BsqCols      sum(range(NullDim+1)), i.e. number of columns in b
+ *   x            BtBinv (output).  Should be zeros upon entry
+ *   Sp,Sj        BSR indptr and indices members for matrix, S
+ *
+ * Returns:
+ *  BtBinv      BtBinv[i] = pseudo_invers(B_i^T*B_i), where
+ *              B_i is B[colindices,:], colindices = all the nonzero
+ *              column indices for block row i in S
+ */          
+
+//template<class I, class T>
+void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock, 
+                const double b[],  const int BsqCols,       double     x[], 
+                const int Sp[],    const int Sj[])
+{
+    //Rename to something more familiar
+    const double * Bsq = b;
+    double * BtBinv = x;
+    
+    //Declare workspace
+    int NullDimLoc = NullDim;
+    int NullDimPone = NullDim+1;
+    int NullDimSq = NullDim*NullDim;
+    int colstart,i,j,k,m,n,colend,BtBcounter,BsqCounter,rowstart,rowend, counter;
+    int BtBinvcounter=0;
+    double BtB[NullDimSq];
+    double elmt_bsq;
+    int work_size = 5*NullDim + 10;
+    double work[work_size];
+    double sing_vals[NullDim];
+    double blockinverse[NullDimSq];
+    double identity[NullDimSq];
+    
+    //Build an identity matrix in col major format for the Fortran routine called in svd_solve
+    for(i = 0; i < NullDimSq; i++)
+    {   identity[i] = 0.0;}
+    for(i = 0; i < NullDimSq; i+= NullDimPone)
+    {   identity[i] = 1.0;}
 
 
+    //Loop over each row
+    for(i = 0; i < Nnodes; i++)
+    {
+        rowstart = Sp[i];
+        rowend = Sp[i+1];
+        for(k = 0; k < NullDimSq; k++)
+        {   BtB[k] = 0.0; }
+        
+        //Loop over row i in order to calculate B_i^T*B_i, where B_i is B 
+        // with the rows restricted only to the nonzero column indices of row i of S
+        for(j = rowstart; j < rowend; j++)
+        {
+            // Calculate absolute column index start and stop 
+            //  for block column j of BSR matrix, S
+            colstart = Sj[j]*ColsPerBlock;
+            colend = colstart + ColsPerBlock;
 
+            //Loop over each absolute column index, k, of block column, j
+            for(k = colstart; k < colend; k++)
+            {          
+                // Do work in computing Diagonal of  BtB  
+                BtBcounter = 0; BsqCounter = k*BsqCols;
+                for(m = 0; m < NullDim; m++)
+                {
+                    BtB[BtBcounter] += Bsq[BsqCounter];
+                    BtBcounter += NullDimPone;
+                    BsqCounter += (NullDim - m);
+                }
+                // Do work in computing offdiagonals of BtB, noting that BtB is symmetric
+                BsqCounter = k*BsqCols;
+                for(m = 0; m < NullDim; m++)
+                {
+                    counter = 1;
+                    for(n = m+1; n < NullDim; n++)
+                    {
+                        elmt_bsq = Bsq[BsqCounter + counter];
+                        BtB[m*NullDim + n] += elmt_bsq;
+                        BtB[n*NullDim + m] += elmt_bsq;
+                        counter ++;
+                    }
+                    BsqCounter += (NullDim - m);
+                }
+            } // end k loop
+        } // end j loop
+
+        // pseudo_inverse(BtB) ==> blockinverse
+        for(k = 0; k < NullDimSq; k++)
+        {   blockinverse[k] = identity[k]; }
+        svd_solve(&(BtB[0]), NullDimLoc, NullDimLoc, &(blockinverse[0]), NullDimLoc, &(sing_vals[0]), &(work[0]), work_size);
+          
+        // Write result to output vector
+        for(k = 0; k < NullDimSq; k++)
+        {   BtBinv[BtBinvcounter + k] = blockinverse[k]; }
+        BtBinvcounter += NullDimSq;
+
+    } // end i loop
+}
 
 #endif

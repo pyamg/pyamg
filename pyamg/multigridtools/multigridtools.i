@@ -50,6 +50,10 @@
 
 %define T_IN_ARRAY1( ctype )
 %apply ctype * IN_ARRAY1 {
+          ctype* Ax,
+          ctype* Bx,
+          ctype* Sx,
+          ctype* x,
     const ctype Ax [ ],
     const ctype Bx [ ],
     const ctype Sx [ ],
@@ -201,6 +205,7 @@ INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 INSTANTIATE_BOTH(satisfy_constraints_helper)
+INSTANTIATE_BOTH(gemm)
 
 INSTANTIATE_BOTH(classical_strength_of_connection)
 INSTANTIATE_BOTH(symmetric_strength_of_connection)
