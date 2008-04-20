@@ -9,15 +9,7 @@
 #include <assert.h>
 #include <cmath>
 
-// *gelss calculates the min norm solution, using the SVD, 
-//   of a rectangular matrix A and possibly multiple RHS's
-extern "C" void  dgelss_(int* M,      int* N,     int* NRHS, double* A,     int* LDA, 
-                        double* B,    int* LDB,   double* S, double* RCOND, int* RANK, 
-                        double* WORK, int* LWORK, int* INFO );
-
-extern "C" void  sgelss_(int* M,      int* N,     int* NRHS, double* A,     int* LDA, 
-                        double* B,    int* LDB,   double* S, double* RCOND, int* RANK, 
-                        double* WORK, int* LWORK, int* INFO );
+#include "linalg.h"
  
 template<class I, class T>
 void symmetric_strength_of_connection(const I n_row, 
@@ -184,80 +176,6 @@ I standard_aggregation(const I n_row,
 }
 
 /*
- * Compute A*B ==> S
- *
- * Parameters:
- * A      -  Left operand in row major
- * B      -  Right operand in column major
- * S      -  A*B, in row-major
- * Atrans -  Whether to transpose A before multiply
- * Btrans -  Whether to transpose B before multiply
- * Strans -  Whether to transpose S after multiply, Outputted in row-major         
- *
- * Returns:
- *  S = A*B
- *
- * Notes:
- *    Not fully implemented, 
- *    - Atrans and Btrans not implemented
- *    - No error checking on inputs
- *
- */
-
-template<class I, class T>
-void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans, 
-          const T Bx[], const I Brows, const I Bcols, const char Btrans, 
-          T Sx[], const I Srows, const I Scols, const char Strans)
-{
-    //Add checks for dimensions, but leaving them out speeds things up
-    //Add functionality for transposes
-
-    if(Strans == 'T')
-    {
-        I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
-        for(I i = 0; i < Arows; i++)
-        {
-            s_counter = i;
-            b_counter = 0; 
-            for(I j = 0; j < Bcols; j++)
-            {
-                Sx[s_counter] = 0.0;
-                a_counter = a_start;
-                for(I k = 0; k < Brows; k++)
-                {
-                    //S[i,j] += Ax[i,k]*B[k,j]
-                    Sx[s_counter] += Ax[a_counter]*Bx[b_counter];
-                    a_counter++; b_counter++;
-                }
-                s_counter+=Scols;
-            }
-            a_start += Acols;
-        }
-    }
-    else if(Strans == 'F')
-    {
-        I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
-        for(I i = 0; i < Arows; i++)
-        {
-            b_counter = 0; 
-            for(I j = 0; j < Bcols; j++)
-            {
-                Sx[s_counter] = 0.0;
-                a_counter = a_start;
-                for(I k = 0; k < Brows; k++)
-                {
-                    //S[i,j] += A[i,k]*B[k,j]
-                    Sx[s_counter] += Ax[a_counter]*Bx[b_counter];
-                    a_counter++; b_counter++;
-                }
-                s_counter++;
-            }
-            a_start += Acols;
-        }
-    }
-}
-
-/*
  * Helper routine for satisfy_constraints routine called 
  *     by energy_prolongation_smoother(...) in smooth.py
  * This implements the python code:
@@ -330,61 +248,6 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
 
 }
 
-/*
- * Compute pseudo_inverse(A)*B ==> B
- *
- * Parameters:
- * Ax      -  Matrix to invert             (column major)
- * Bx      -  RHS (possibly multiple)      (column major)
- * Sx      -  Vector of singular values         
- * x       -  Workspace
- *
- * Arows  -  rows(A)
- * Acols  -  cols(A)
- * Bcols  -  cols(B)
- * xdim   -  size of x in double words
- *
- * Returns:
- *   pinv(A)*B ==> S
- *
- * Notes:
- *    Not fully implemented, 
- *    - No error checking on inputs (presumably LAPACK does that)
- *
- */
-
-void svd_solve(double * Ax, int Arows, int Acols, double * Bx, int Bcols, double * Sx, double * x, int xdim)
-{
-    //set up unused parameters
-    double RCOND = -1.0;         // Uses machine epsilon instead of the condition 
-                                 // number when calculating singular value drop-tol
-    int RANK;
-    int INFO;
-    
-    dgelss_(&(Arows), &(Acols),  &(Bcols),   Ax,    &(Arows),  
-               Bx,    &(Acols),     Sx,    &(RCOND), &(RANK), 
-               x,    &(xdim),   &(INFO) );
-
-    if(INFO != 0)
-    {   std::cerr << "svd_solve failed with dgelss giving flag: " << INFO << '\n'; }
-}
-/*void svd_solve(float * Ax, int Arows, int Acols, float * Bx, int Bcols, float * Sx, float * x, int xdim)
-{
-    //set up unused parameters
-    float RCOND = -1.0;         // Uses machine epsilon instead of the condition 
-                            // number when calculating singular value drop-tol
-    int RANK;
-    int INFO;
-    
-    sgelss_(&(Arows), &(Acols),  &(Bcols),   Ax,    &(Arows),  
-               Bx,    &(Acols),     Sx,    &(RCOND), &(RANK), 
-                x,    &(xdim),   &(INFO) );
-
-    if(INFO != 0)
-    {   std::cout << "svd_solve failed with sgelss giving flag: " << INFO << '\n'; }
-
-}
-*/
 
 /*
  * Helper routine for energy_prolongation_smoother
@@ -420,72 +283,69 @@ void svd_solve(double * Ax, int Arows, int Acols, double * Bx, int Bcols, double
  *              column indices for block row i in S
  */          
 
-//template<class I, class T>
-void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock, 
-                const double b[],  const int BsqCols,       double     x[], 
-                const int Sp[],    const int Sj[])
+template<class I, class T>
+void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock, 
+                const T b[],     const I BsqCols, T x[], 
+                const I Sp[],    const I Sj[])
 {
     //Rename to something more familiar
-    const double * Bsq = b;
-    double * BtBinv = x;
+    const T * Bsq = b;
+    T * BtBinv = x;
     
     //Declare workspace
-    int NullDimLoc  = NullDim;
-    int NullDimPone = NullDim+1;
-    int NullDimSq   = NullDim*NullDim;
-    int BtBinvcounter = 0;
-    int work_size = 5*NullDim + 10;
+    const I NullDimLoc = NullDim;
+    const I NullDimSq  = NullDim*NullDim;
+    const I work_size  = 5*NullDim + 10;
 
-    double * BtB          = new double[NullDimSq];
-    double * work         = new double[work_size];
-    double * sing_vals    = new double[NullDim];
-    double * blockinverse = new double[NullDimSq];
-    double * identity     = new double[NullDimSq];
+    T * BtB       = new T[NullDimSq];
+    T * work      = new T[work_size];
+    T * sing_vals = new T[NullDim];
+    T * identity  = new T[NullDimSq];
     
     //Build an identity matrix in col major format for the Fortran routine called in svd_solve
-    for(int i = 0; i < NullDimSq; i++)
+    for(I i = 0; i < NullDimSq; i++)
     {   identity[i] = 0.0;}
-    for(int i = 0; i < NullDimSq; i+= NullDimPone)
+    for(I i = 0; i < NullDimSq; i+= NullDim + 1)
     {   identity[i] = 1.0;}
 
 
     //Loop over each row
-    for(int i = 0; i < Nnodes; i++)
+    for(I i = 0; i < Nnodes; i++)
     {
-        int rowstart = Sp[i];
-        int rowend   = Sp[i+1];
-        for(int k = 0; k < NullDimSq; k++)
+        const I rowstart = Sp[i];
+        const I rowend   = Sp[i+1];
+        for(I k = 0; k < NullDimSq; k++)
         {   BtB[k] = 0.0; }
         
         //Loop over row i in order to calculate B_i^T*B_i, where B_i is B 
         // with the rows restricted only to the nonzero column indices of row i of S
-        for(int j = rowstart; j < rowend; j++)
+        for(I j = rowstart; j < rowend; j++)
         {
             // Calculate absolute column index start and stop 
             //  for block column j of BSR matrix, S
-            int colstart = Sj[j]*ColsPerBlock;
-            int colend   = colstart + ColsPerBlock;
+            const I colstart = Sj[j]*ColsPerBlock;
+            const I colend   = colstart + ColsPerBlock;
 
             //Loop over each absolute column index, k, of block column, j
-            for(int k = colstart; k < colend; k++)
+            for(I k = colstart; k < colend; k++)
             {          
                 // Do work in computing Diagonal of  BtB  
-                int BtBcounter = 0; 
-                int BsqCounter = k*BsqCols;
-                for(int m = 0; m < NullDim; m++)
+                I BtBcounter = 0; 
+                I BsqCounter = k*BsqCols;
+                for(I m = 0; m < NullDim; m++)
                 {
                     BtB[BtBcounter] += Bsq[BsqCounter];
-                    BtBcounter += NullDimPone;
+                    BtBcounter += NullDim + 1;
                     BsqCounter += (NullDim - m);
                 }
                 // Do work in computing offdiagonals of BtB, noting that BtB is symmetric
                 BsqCounter = k*BsqCols;
-                for(int m = 0; m < NullDim; m++)
+                for(I m = 0; m < NullDim; m++)
                 {
-                    int counter = 1;
-                    for(int n = m+1; n < NullDim; n++)
+                    I counter = 1;
+                    for(I n = m+1; n < NullDim; n++)
                     {
-                        double elmt_bsq = Bsq[BsqCounter + counter];
+                        T elmt_bsq = Bsq[BsqCounter + counter];
                         BtB[m*NullDim + n] += elmt_bsq;
                         BtB[n*NullDim + m] += elmt_bsq;
                         counter ++;
@@ -496,22 +356,18 @@ void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock,
         } // end j loop
 
         // pseudo_inverse(BtB) ==> blockinverse
-        for(int k = 0; k < NullDimSq; k++)
+        // since BtB is symmetric theres no need to convert to row major
+        T * blockinverse = BtBinv + i*NullDimSq; //pseudoinverse output
+        for(I k = 0; k < NullDimSq; k++)
         {   blockinverse[k] = identity[k]; }
-        svd_solve(BtB, NullDimLoc, NullDimLoc, blockinverse, NullDimLoc, sing_vals, work, work_size);
+        svd_solve(BtB, (int) NullDimLoc, (int) NullDimLoc, blockinverse, (int) NullDimLoc, sing_vals, work, (int) work_size);
           
-        // Write result to output vector
-        for(int k = 0; k < NullDimSq; k++)
-        {   BtBinv[BtBinvcounter + k] = blockinverse[k]; }
-        BtBinvcounter += NullDimSq;
 
     } // end i loop
-
 
     delete[] BtB; 
     delete[] work;
     delete[] sing_vals; 
-    delete[] blockinverse;
     delete[] identity;
 }
 

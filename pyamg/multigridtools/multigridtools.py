@@ -52,36 +52,6 @@ F_NODE = _multigridtools.F_NODE
 C_NODE = _multigridtools.C_NODE
 U_NODE = _multigridtools.U_NODE
 
-def dgelss_(*args):
-  """
-    dgelss_(int M, int N, int NRHS, double A, int LDA, double B, 
-        int LDB, double S, double RCOND, int RANK, 
-        double WORK, int LWORK, int INFO)
-    """
-  return _multigridtools.dgelss_(*args)
-
-def sgelss_(*args):
-  """
-    sgelss_(int M, int N, int NRHS, double A, int LDA, double B, 
-        int LDB, double S, double RCOND, int RANK, 
-        double WORK, int LWORK, int INFO)
-    """
-  return _multigridtools.sgelss_(*args)
-
-def svd_solve(*args):
-  """
-    svd_solve(double Ax, int Arows, int Acols, double Bx, int Bcols, 
-        double Sx, double x, int xdim)
-    """
-  return _multigridtools.svd_solve(*args)
-
-def invert_BtB(*args):
-  """
-    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, 
-        int BsqCols, double x, int Sp, int Sj)
-    """
-  return _multigridtools.invert_BtB(*args)
-
 def standard_aggregation(*args):
   """standard_aggregation(int n_row, int Ap, int Aj, int x) -> int"""
   return _multigridtools.standard_aggregation(*args)
@@ -136,16 +106,14 @@ def satisfy_constraints_helper(*args):
     """
   return _multigridtools.satisfy_constraints_helper(*args)
 
-def gemm(*args):
+def invert_BtB(*args):
   """
-    gemm(float Ax, int Arows, int Acols, char Atrans, float Bx, 
-        int Brows, int Bcols, char Btrans, float Sx, 
-        int Srows, int Scols, char Strans)
-    gemm(double Ax, int Arows, int Acols, char Atrans, double Bx, 
-        int Brows, int Bcols, char Btrans, double Sx, 
-        int Srows, int Scols, char Strans)
+    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, float b, 
+        int BsqCols, float x, int Sp, int Sj)
+    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, 
+        int BsqCols, double x, int Sp, int Sj)
     """
-  return _multigridtools.gemm(*args)
+  return _multigridtools.invert_BtB(*args)
 
 def classical_strength_of_connection(*args):
   """
