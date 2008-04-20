@@ -430,49 +430,49 @@ void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock,
     double * BtBinv = x;
     
     //Declare workspace
-    int NullDimLoc = NullDim;
+    int NullDimLoc  = NullDim;
     int NullDimPone = NullDim+1;
-    int NullDimSq = NullDim*NullDim;
-    int colstart,i,j,k,m,n,colend,BtBcounter,BsqCounter,rowstart,rowend, counter;
-    int BtBinvcounter=0;
-    double BtB[NullDimSq];
-    double elmt_bsq;
+    int NullDimSq   = NullDim*NullDim;
+    int BtBinvcounter = 0;
     int work_size = 5*NullDim + 10;
-    double work[work_size];
-    double sing_vals[NullDim];
-    double blockinverse[NullDimSq];
-    double identity[NullDimSq];
+
+    double * BtB          = new double[NullDimSq];
+    double * work         = new double[work_size];
+    double * sing_vals    = new double[NullDim];
+    double * blockinverse = new double[NullDimSq];
+    double * identity     = new double[NullDimSq];
     
     //Build an identity matrix in col major format for the Fortran routine called in svd_solve
-    for(i = 0; i < NullDimSq; i++)
+    for(int i = 0; i < NullDimSq; i++)
     {   identity[i] = 0.0;}
-    for(i = 0; i < NullDimSq; i+= NullDimPone)
+    for(int i = 0; i < NullDimSq; i+= NullDimPone)
     {   identity[i] = 1.0;}
 
 
     //Loop over each row
-    for(i = 0; i < Nnodes; i++)
+    for(int i = 0; i < Nnodes; i++)
     {
-        rowstart = Sp[i];
-        rowend = Sp[i+1];
-        for(k = 0; k < NullDimSq; k++)
+        int rowstart = Sp[i];
+        int rowend   = Sp[i+1];
+        for(int k = 0; k < NullDimSq; k++)
         {   BtB[k] = 0.0; }
         
         //Loop over row i in order to calculate B_i^T*B_i, where B_i is B 
         // with the rows restricted only to the nonzero column indices of row i of S
-        for(j = rowstart; j < rowend; j++)
+        for(int j = rowstart; j < rowend; j++)
         {
             // Calculate absolute column index start and stop 
             //  for block column j of BSR matrix, S
-            colstart = Sj[j]*ColsPerBlock;
-            colend = colstart + ColsPerBlock;
+            int colstart = Sj[j]*ColsPerBlock;
+            int colend   = colstart + ColsPerBlock;
 
             //Loop over each absolute column index, k, of block column, j
-            for(k = colstart; k < colend; k++)
+            for(int k = colstart; k < colend; k++)
             {          
                 // Do work in computing Diagonal of  BtB  
-                BtBcounter = 0; BsqCounter = k*BsqCols;
-                for(m = 0; m < NullDim; m++)
+                int BtBcounter = 0; 
+                int BsqCounter = k*BsqCols;
+                for(int m = 0; m < NullDim; m++)
                 {
                     BtB[BtBcounter] += Bsq[BsqCounter];
                     BtBcounter += NullDimPone;
@@ -480,12 +480,12 @@ void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock,
                 }
                 // Do work in computing offdiagonals of BtB, noting that BtB is symmetric
                 BsqCounter = k*BsqCols;
-                for(m = 0; m < NullDim; m++)
+                for(int m = 0; m < NullDim; m++)
                 {
-                    counter = 1;
-                    for(n = m+1; n < NullDim; n++)
+                    int counter = 1;
+                    for(int n = m+1; n < NullDim; n++)
                     {
-                        elmt_bsq = Bsq[BsqCounter + counter];
+                        double elmt_bsq = Bsq[BsqCounter + counter];
                         BtB[m*NullDim + n] += elmt_bsq;
                         BtB[n*NullDim + m] += elmt_bsq;
                         counter ++;
@@ -496,16 +496,23 @@ void invert_BtB(const int NullDim, const int Nnodes,  const int ColsPerBlock,
         } // end j loop
 
         // pseudo_inverse(BtB) ==> blockinverse
-        for(k = 0; k < NullDimSq; k++)
+        for(int k = 0; k < NullDimSq; k++)
         {   blockinverse[k] = identity[k]; }
-        svd_solve(&(BtB[0]), NullDimLoc, NullDimLoc, &(blockinverse[0]), NullDimLoc, &(sing_vals[0]), &(work[0]), work_size);
+        svd_solve(BtB, NullDimLoc, NullDimLoc, blockinverse, NullDimLoc, sing_vals, work, work_size);
           
         // Write result to output vector
-        for(k = 0; k < NullDimSq; k++)
+        for(int k = 0; k < NullDimSq; k++)
         {   BtBinv[BtBinvcounter + k] = blockinverse[k]; }
         BtBinvcounter += NullDimSq;
 
     } // end i loop
+
+
+    delete[] BtB; 
+    delete[] work;
+    delete[] sing_vals; 
+    delete[] blockinverse;
+    delete[] identity;
 }
 
 #endif
