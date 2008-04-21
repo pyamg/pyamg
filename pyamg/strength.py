@@ -86,6 +86,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr,
 import scipy.sparse
 from scipy.linalg import pinv2
 from pyamg.utils import approximate_spectral_radius, scale_rows
+import time
 
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """Construct an AMG strength of connection matrix using an ODE based inspiration.
@@ -160,11 +161,14 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     else:
         numPDEs = A.blocksize[0]
     
+    #Use csr version of A as a sparsity mask later
+    mask = A.copy().tocsr()
+
     #Get spectral radius of Dinv*A, this is the time step size for the ODE 
     D = A.diagonal();
     if (D == 0).any():
         zero_rows = (D == 0).nonzero()[0]
-        if (diff(A.tocsr().indptr)[zero_rows] > 0).any():
+        if (diff(mask.indptr)[zero_rows] > 0).any():
             pass
             #raise ValueError('zero on diag(A) for nonzero row of A')
         # Zeros on D represent 0 rows, so we can just set D to 1.0 at those locations and then Dinv*A 
@@ -247,10 +251,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
     #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
     #  in the same PDE as i. 
-
-    mask = A.copy()
-    if not csrflag:
-        mask = mask.tocsr()
 
     #Only consider strength at dofs from your PDE.  Use mask to enforce this by zeroing out
     #   all entries in Atilde that aren't from your PDE.
@@ -345,15 +345,18 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     Atilde.eliminate_zeros()
 
 
-    #If converted BSR to CSR, convert back
+    # If converted BSR to CSR, convert back and return amalgamated matrix, 
+    #   i.e. the sparsity structure of the blocks of Atild
     if not csrflag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
-
-    #If BSR matrix, we return amalgamated matrix, i.e. the sparsity structure of the blocks of Atilde
-    if not csrflag :
+        
+        n_blocks = Atilde.indices.shape[0]
+        blocksize = Atilde.blocksize[0]*Atilde.blocksize[1]
+        CSRdata = zeros((n_blocks,))
+        multigridtools.min_blocks(n_blocks, blocksize, ravel(asarray(Atilde.data)), CSRdata)
         #Atilde = csr_matrix((data, row, col), shape=(*,*))
-        Atilde = csr_matrix((array([ Atilde.data[i,:,:][Atilde.data[i,:,:].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
-                             Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
-
+        Atilde = csr_matrix((CSRdata, Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+    
+    
     return Atilde
 

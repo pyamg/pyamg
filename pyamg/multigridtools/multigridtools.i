@@ -207,6 +207,7 @@ INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
 INSTANTIATE_BOTH(satisfy_constraints_helper)
 INSTANTIATE_BOTH(invert_BtB)
+INSTANTIATE_BOTH(min_blocks)
 
 INSTANTIATE_BOTH(classical_strength_of_connection)
 INSTANTIATE_BOTH(symmetric_strength_of_connection)

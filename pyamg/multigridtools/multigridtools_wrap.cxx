@@ -4654,6 +4654,191 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_min_blocks__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  float *arg3 ;
+  float *arg4 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  PyArrayObject *temp4 = NULL ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:min_blocks",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "min_blocks" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "min_blocks" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_FLOAT, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (float*) array3->data;
+  }
+  {
+    temp4 = obj_to_array_no_conversion(obj3,PyArray_FLOAT);
+    if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
+    arg4 = (float*) array_data(temp4);
+  }
+  min_blocks<int,float >(arg1,arg2,(float const (*))arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_min_blocks__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  double *arg3 ;
+  double *arg4 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int is_new_object3 ;
+  PyArrayObject *temp4 = NULL ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:min_blocks",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "min_blocks" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "min_blocks" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array3 = obj_to_array_contiguous_allow_conversion(obj2, PyArray_DOUBLE, &is_new_object3);
+    if (!array3 || !require_dimensions(array3,1) || !require_size(array3,size,1)
+      || !require_contiguous(array3)   || !require_native(array3)) SWIG_fail;
+    
+    arg3 = (double*) array3->data;
+  }
+  {
+    temp4 = obj_to_array_no_conversion(obj3,PyArray_DOUBLE);
+    if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
+    arg4 = (double*) array_data(temp4);
+  }
+  min_blocks<int,double >(arg1,arg2,(double const (*))arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object3 && array3) Py_DECREF(array3);
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_min_blocks(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[5];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_FLOAT)) ? 1 : 0;
+        }
+        if (_v) {
+          {
+            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_FLOAT)) ? 1 : 0;
+          }
+          if (_v) {
+            return _wrap_min_blocks__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = (is_array(argv[2]) && PyArray_CanCastSafely(PyArray_TYPE(argv[2]),PyArray_DOUBLE)) ? 1 : 0;
+        }
+        if (_v) {
+          {
+            _v = (is_array(argv[3]) && PyArray_CanCastSafely(PyArray_TYPE(argv[3]),PyArray_DOUBLE)) ? 1 : 0;
+          }
+          if (_v) {
+            return _wrap_min_blocks__SWIG_2(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'min_blocks'.\n  Possible C/C++ prototypes are:\n""    min_blocks<(int,float)>(int const,int const,float const [],float [])\n""    min_blocks<(int,double)>(int const,int const,double const [],double [])\n");
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -9206,6 +9391,10 @@ static PyMethodDef SwigMethods[] = {
 		"    int BsqCols, float x, int Sp, int Sj)\n"
 		"invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, \n"
 		"    int BsqCols, double x, int Sp, int Sj)\n"
+		""},
+	 { (char *)"min_blocks", _wrap_min_blocks, METH_VARARGS, (char *)"\n"
+		"min_blocks(int n_blocks, int blocksize, float Sx, float Tx)\n"
+		"min_blocks(int n_blocks, int blocksize, double Sx, double Tx)\n"
 		""},
 	 { (char *)"classical_strength_of_connection", _wrap_classical_strength_of_connection, METH_VARARGS, (char *)"\n"
 		"classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"

@@ -68,6 +68,47 @@ void apply_distance_filter(const I n_row,
 
 /*
  *
+ *  Given a BSR matrice's data structure, return a linear array of length 
+ *  num_blocks, which holds each block's smallest, nonzero, entry
+ *  
+ * Parameters:
+ *   n_blocks       Number of blocks in matrix, S
+ *   blocksize      Size of each block
+ *   Sx             Block data structure of BSR matrix, S
+ *   Ax             Linear array of length n_blocks, which will hold the 
+ *                      smallest nonzero element of each block in Sx
+ *
+ * Returns:
+ *   Tx             Tx[i] holds the minimum nonzero of block i of S
+ *
+ */          
+
+template<class I, class T>
+void min_blocks(const I n_blocks, const I blocksize, 
+                const T Sx[],     T Tx[])
+{
+    I blockptr = 0;
+
+    //Loop over blocks
+    for(I i = 0; i < n_blocks; i++)
+    {
+        T current_min = std::numeric_limits<T>::max();
+        
+        //Find min for this block
+        for(I j = blockptr; j < (blockptr + blocksize); j++)
+        {
+            if( (Sx[j] != 0.0) && (Sx[j] < current_min) )
+            {   current_min = Sx[j]; }
+        }
+        
+        blockptr += blocksize;
+        Tx[i] = current_min;
+    }    
+}
+
+
+/*
+ *
  * Given Strength of connection matrix, Atilde, calculate strength based on 
  * constrained min problem of 
  *    min( z - B*x ), such that

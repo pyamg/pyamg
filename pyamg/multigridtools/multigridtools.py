@@ -115,6 +115,13 @@ def invert_BtB(*args):
     """
   return _multigridtools.invert_BtB(*args)
 
+def min_blocks(*args):
+  """
+    min_blocks(int n_blocks, int blocksize, float Sx, float Tx)
+    min_blocks(int n_blocks, int blocksize, double Sx, double Tx)
+    """
+  return _multigridtools.min_blocks(*args)
+
 def classical_strength_of_connection(*args):
   """
     classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 
