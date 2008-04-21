@@ -185,9 +185,13 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     #
     if plot_type == 'primal':
         Agg = csr_matrix(Agg)
+
+        if E2V.max() >= Agg.shape[0]:
+            # remove elements with dirichlet BCs
+            E2V = E2V[E2V.max(axis=1) < Agg.shape[0]]
     
         # Find elements with all vertices in same aggregate
-        if len(Agg.indices)!=Agg.shape[0]:
+        if len(Agg.indices) != Agg.shape[0]:
             # account for 0 rows.  mark them as solitary aggregates
             full_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
             full_aggs[full_aggs==1] = Agg.indices
