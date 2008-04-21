@@ -140,6 +140,15 @@ def apply_distance_filter(*args):
     """
   return _multigridtools.apply_distance_filter(*args)
 
+def ode_strength_helper(*args):
+  """
+    ode_strength_helper(float Sx, int Sp, int Sj, int nrows, float x, float y, 
+        float b, int BDBCols, int NullDim)
+    ode_strength_helper(double Sx, int Sp, int Sj, int nrows, double x, double y, 
+        double b, int BDBCols, int NullDim)
+    """
+  return _multigridtools.ode_strength_helper(*args)
+
 def block_gauss_seidel(*args):
   """
     block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 

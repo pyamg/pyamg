@@ -104,7 +104,7 @@ extern "C" void  sgelss_(int* M,      int* N,     int* NRHS, float* A,     int* 
  * xdim   -  size of x in double words
  *
  * Returns:
- *   pinv(A)*B ==> S
+ *   pinv(A)*B ==> B
  *
  * Notes:
  *    Not fully implemented, 

@@ -81,7 +81,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
 
 
-from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat
+from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, inf, asarray
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
 import scipy.sparse
 from scipy.linalg import pinv2
@@ -161,7 +161,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         numPDEs = A.blocksize[0]
     
     #Get spectral radius of Dinv*A, this is the time step size for the ODE 
-    #   ---Efficiency--- TODO:  use wrapper around A instead of explicitly forming Dinv_A
     D = A.diagonal();
     if (D == 0).any():
         zero_rows = (D == 0).nonzero()[0]
@@ -182,6 +181,8 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Dmat = spdiags( [D], [0], dimen, dimen, format = 'csr')
         DB = Dmat*Bmat
         del Dmat
+    else:
+        DB = Bmat
     #====================================================================
     
     
@@ -303,86 +304,46 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde = DAtildeDivB*Atilde
         Atilde = Atilde*DiagB
 
-        #Drop negative ratios by making them LARGE
-        Atilde.data[ Atilde.data < 0.0 ] = 1e100
+        #Find negative ratios
+        neg_ratios =  (Atilde.data < 0.0)
 
         #Calculate Approximation error
         Atilde.data = abs( 1.0 - Atilde.data)
+        
+        #Drop negative ratios
+        Atilde.data[neg_ratios] = 0.0
 
-        #Apply drop tolerance.
-        multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
+        # Set diagonal to 1.0, as each point is perfectly strongly connected to itself.
+        I = scipy.sparse.eye(dimen, dimen, format="csr")
+        I.data -= Atilde.diagonal()
+        Atilde = Atilde + I
 
     else:
-        # Solve constrained min problem directly
-        LHS = mat(zeros((NullDim+1, NullDim+1)))
-        RHS = mat(zeros((NullDim+1, 1)))
-        
-        for i in range(dimen):
-            
-            #Get rowptrs and col indices from Atilde
-            rowstart = Atilde.indptr[i]
-            rowend = Atilde.indptr[i+1]
-            length = rowend - rowstart
-            colindx = Atilde.indices[rowstart:rowend]
-            
-            #Find row i's position in colindx, matrix must have sorted column indices.
-            iInRow = colindx.searchsorted(i)
-        
-            if length <= NullDim:
-                #Do nothing, because the number of nullspace vectors will  
-                #be able to perfectly approximate this row of Atilde.
-                Atilde.data[rowstart:rowend] = 1.0
-            else:
-                #Grab out what we want from Atilde, B,  DB and put into zi, Bi and DAi
-                zi = mat(Atilde.data[rowstart:rowend]).T
+        # For use in computing local B_i^T*B, precompute the dot-* of 
+        #   each column of B with each other column.  We also scale by 2.0 
+        #   to account for BDB's eventual use in a constrained minimization problem
+        BDBCols = sum(range(NullDim+1))
+        BDB = zeros((dimen,BDBCols))
+        counter = 0
+        for i in range(NullDim):
+            for j in range(i,NullDim):
+                BDB[:,counter] = 2.0*asarray(B[:,i])*ravel(asarray(DB[:,j]))
+                counter = counter + 1        
                 
-                Bi = Bmat[colindx,:]
-                if proj_type == "D_A":
-                    DBi = DB[colindx,:]
-                else:
-                    DBi = Bi
+        # Use constrained min problem to define strength
+        multigridtools.ode_strength_helper(Atilde.data,        Atilde.indptr,    Atilde.indices, 
+                                           Atilde.shape[0],    ravel(asarray(B)), ravel(asarray(DB.T)), 
+                                           ravel(asarray(BDB)), BDBCols,           NullDim)
         
-                #Construct constrained min problem
-                LHS[0:NullDim, 0:NullDim] = 2.0*Bi.T*DBi
-                LHS[0:NullDim, NullDim] = DBi[iInRow,:].T   
-                LHS[NullDim, 0:NullDim] = Bi[iInRow,:]
-                RHS[0:NullDim,0] = 2.0*DBi.T*zi
-                RHS[NullDim,0] = zi[iInRow]
-
-                #Calc Soln to Min Problem
-                x = mat(pinv2(LHS))*RHS
-
-                #Calc best constrained approximation to zi with span(Bi).  
-                zihat = Bi*x[:-1]
-        
-                #Find spots where zihat is approx 0 and zi isn't.
-                indys1 = (abs( ravel(zihat)) < 1e-8).nonzero()[0]
-                indys2 = (abs( ravel(zi)   ) < 1e-8).nonzero()[0]
-                indys = setdiff1d(indys1,indys2)
-
-                #Calculate approximation ratio 
-                zi = zihat/zi
-                
-                #Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
-                #   ratio large.
-                zi[indys] = 1e100
-
-                #Drop negative ratios by making them large
-                zi[zi < 0.0] = 1e100
-                
-                #Calculate Relative Approximation Error
-                zi = abs(1.0 - zi)
-
-                #Calculate and applydrop-tol.  Ignore diagonal by making it very large
-                zi[iInRow] = 1e5
-                drop_tol = min(zi)*epsilon
-                zi[zi > drop_tol] = 0.0
-                zi[iInRow] = 1.0
-                Atilde.data[rowstart:rowend] = ravel(zi)
-    
     #===================================================================
-    # Clean up, and return Atilde
+    
+    #Apply drop tolerance
+    if epsilon != inf:
+        Atilde.eliminate_zeros()
+        multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
+    
     Atilde.eliminate_zeros()
+
 
     #If converted BSR to CSR, convert back
     if not csrflag:

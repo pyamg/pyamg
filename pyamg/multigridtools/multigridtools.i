@@ -211,6 +211,7 @@ INSTANTIATE_BOTH(invert_BtB)
 INSTANTIATE_BOTH(classical_strength_of_connection)
 INSTANTIATE_BOTH(symmetric_strength_of_connection)
 INSTANTIATE_BOTH(apply_distance_filter)
+INSTANTIATE_BOTH(ode_strength_helper)
 
 INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
