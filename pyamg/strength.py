@@ -86,7 +86,6 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr,
 import scipy.sparse
 from scipy.linalg import pinv2
 from pyamg.utils import approximate_spectral_radius, scale_rows
-import time
 
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """Construct an AMG strength of connection matrix using an ODE based inspiration.
@@ -327,7 +326,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         counter = 0
         for i in range(NullDim):
             for j in range(i,NullDim):
-                BDB[:,counter] = 2.0*asarray(B[:,i])*ravel(asarray(DB[:,j]))
+                BDB[:,counter] = 2.0*ravel(asarray(B[:,i]))*ravel(asarray(DB[:,j]))
                 counter = counter + 1        
                 
         # Use constrained min problem to define strength
