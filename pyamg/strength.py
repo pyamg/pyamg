@@ -137,37 +137,38 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         raise ValueError("number of time steps must be > 0")
     if proj_type not in ['l2', 'D_A']:
         raise VaueError("proj_type must be 'l2' or 'D_A'")
-       
-    #B must be in mat format, this isn't a deep copy...so OK
+    if (not isspmatrix_csr(A)) and (not isspmatrix_bsr(A)):
+        raise TypeError("expected csr_matrix or bsr_matrix") 
+    
+    #====================================================================
+    # Format A and B correctly.
+    #B must be in mat format, this isn't a deep copy
     Bmat = mat(B)
 
-    #Amat must be devoid of 0's and have sorted indices
-    A.sort_indices()
+    # Amat must be in CSR format, be devoid of 0's and have sorted indices
+    # Number of PDEs per point is defined implicitly by block size
+    if not isspmatrix_csr(A):
+       csrflag = False
+       numPDEs = A.blocksize[0]
+       A = A.tocsr()
+    else:
+        csrflag = True
+        numPDEs = 1
+
     A.eliminate_zeros()
+    A.sort_indices()
 
     #====================================================================
     # Handle preliminaries for the algorithm
     
     dimen = A.shape[1]
     NullDim = Bmat.shape[1]
-    csrflag = isspmatrix_csr(A)
-    if (not csrflag) and (isspmatrix_bsr(A) == False):
-        raise TypeError("expected csr_matrix or bsr_matrix")
-    
-    #number of PDEs per point is defined implicitly by block size
-    if csrflag:
-        numPDEs = 1
-    else:
-        numPDEs = A.blocksize[0]
-    
-    #Use csr version of A as a sparsity mask later
-    mask = A.copy().tocsr()
-
+        
     #Get spectral radius of Dinv*A, this is the time step size for the ODE 
     D = A.diagonal();
     if (D == 0).any():
         zero_rows = (D == 0).nonzero()[0]
-        if (diff(mask.indptr)[zero_rows] > 0).any():
+        if (diff(A.indptr)[zero_rows] > 0).any():
             pass
             #raise ValueError('zero on diag(A) for nonzero row of A')
         # Zeros on D represent 0 rows, so we can just set D to 1.0 at those locations and then Dinv*A 
@@ -192,20 +193,14 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #====================================================================
     # Calculate (Atilde^k)^T in two steps.  
     #
-    # We want to later access columns of Atilde^k, hence we calculate (Atilde^k)^T so 
-    # that columns will be accessed efficiently w.r.t. the CSR format
+    # In order to later access columns of Atilde^k, we calculate (Atilde^k)^T 
+    # in CSR format so that columns will be accessed efficiently
     
     # First Step.  Calculate (Atilde^p)^T = (Atilde^T)^p, where p is the largest power of two <= k, 
     p = 2;
-
-    if csrflag:    #Maintain CSR format of A in Atilde
-        I = scipy.sparse.eye(dimen, dimen, format="csr")
-        Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
-        Atilde = Atilde.T.tocsr()
-    else:       #Maintain BSR format of A in Atilde
-        I = bsr_matrix(scipy.sparse.eye(dimen, dimen, format='bsr'),blocksize=A.blocksize)
-        Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
-        Atilde = Atilde.T
+    I = scipy.sparse.eye(dimen, dimen, format="csr")
+    Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
+    Atilde = Atilde.T.tocsr()
 
     while p <= k:
         Atilde = Atilde*Atilde
@@ -217,10 +212,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         print "The most efficient time stepping for the ODE Strength Method"\
               " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
 
-        if csrflag:
-            JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T.tocsr()
-        else:
-            JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T
+        JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T.tocsr()
         while p < k:
             Atilde = Atilde*JacobiStep
             p = p+1
@@ -238,19 +230,14 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #            However, this will require specialized C routine.  Perhaps look
     #            at mat-mult routines that first precompute the sparsity pattern for
     #            sparse mat-mat-mult.  This could be the easiest thing to do.
-        
-    #====================================================================
-    # Now that the mat-mat part is done, convert to CSR, as this is much faster 
-    #   than dealing with BSR matrices natively
-    if not csrflag:
-        Atilde = Atilde.tocsr()
-        Atilde.eliminate_zeros()
-    
+           
     #====================================================================
     #Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
     #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
     #  in the same PDE as i. 
-
+    
+    mask = A.copy()
+    
     #Only consider strength at dofs from your PDE.  Use mask to enforce this by zeroing out
     #   all entries in Atilde that aren't from your PDE.
     if numPDEs > 1:
@@ -345,7 +332,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
 
     # If converted BSR to CSR, convert back and return amalgamated matrix, 
-    #   i.e. the sparsity structure of the blocks of Atild
+    #   i.e. the sparsity structure of the blocks of Atilde
     if not csrflag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
         

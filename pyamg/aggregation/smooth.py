@@ -207,7 +207,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     counter = 0
     for i in range(NullDim):
         for j in range(i,NullDim):
-            Bsq[:,counter] = asarray(B[:,i])*asarray(B[:,j])
+            Bsq[:,counter] = ravel(asarray(B[:,i]))*ravel(asarray(B[:,j]))
             counter = counter + 1
     
     pyamg.multigridtools.invert_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
