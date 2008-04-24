@@ -482,7 +482,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
     
         for n,row in enumerate(arr):
             fid.writelines('        <DataArray type=\"Float32\" Name=\"%s%d\" NumberOfComponents=\"%d\" format=\"ascii\">\n' % (name_prefix,n+1,num_components))
-            arr.tofile(fid, sep=' ')
+            row.tofile(fid, sep=' ')
             fid.writelines('\n')
             fid.writelines('        </DataArray>\n')
 
