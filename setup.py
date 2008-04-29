@@ -44,7 +44,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('pyamg')
     #config.add_data_files(('pyamg','*.txt'))
 
-    config.get_version('pyamg/version.py') # sets config.version
+    config.get_version(os.path.join('pyamg','version.py')) # sets config.version
 
     return config
 
