@@ -277,5 +277,5 @@ def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
                                     row_start, row_stop, row_step)
 
 
-from pyamg.utils import dispatcher
-dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )
+#from pyamg.utils import dispatcher
+#dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

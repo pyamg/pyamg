@@ -150,7 +150,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
 
 
-from pyamg.utils import dispatcher
-name_to_handle = dict([ (fn[:-len('_aggregation')], eval(fn)) for fn in __all__]) 
-dispatch = dispatcher( name_to_handle )
+#from pyamg.utils import dispatcher
+#name_to_handle = dict([ (fn[:-len('_aggregation')], eval(fn)) for fn in __all__]) 
+#dispatch = dispatcher( name_to_handle )
 
