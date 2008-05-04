@@ -4,11 +4,49 @@ __docformat__ = "restructuredtext en"
 
 from pyamg.utils import approximate_spectral_radius, scale_rows
 
-__all__ = ['jacobi_prolongation_smoother', 'energy_prolongation_smoother']
+__all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
+        'energy_prolongation_smoother']
 
 
 def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     """Jacobi prolongation smoother
+   
+    Parameters
+    ----------
+    S : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix used for smoothing.  Typically, A or the
+        "filtered matrix" obtained from A by lumping weak connections
+        onto the diagonal of A.
+    T : {csr_matrix, bsr_matrix}
+        Tentative prolongator
+    omega : {scalar}
+        Damping parameter
+
+    Returns
+    -------
+    P : {csr_matrix, bsr_matrix}
+        Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) * T
+        where K = diag(S)^-1 * S and rho(K) is an approximation to the 
+        spectral radius of K.
+
+    """
+
+    D = S.diagonal()
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0
+
+    D_inv_S = scale_rows(S, D_inv, copy=True)
+    D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
+
+    P = T
+    for i in range(degree):
+        P = P - (D_inv_S*P)
+
+    return P
+
+
+def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+    """Richardson prolongation smoother
    
     Parameters
     ----------
@@ -29,19 +67,13 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     """
 
-    D = S.diagonal()
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0
-
-    D_inv_S = scale_rows(S, D_inv, copy=True)
-    D_inv_S *= omega/approximate_spectral_radius(D_inv_S)
+    weight = omega/approximate_spectral_radius(S)
 
     P = T
     for i in range(degree):
-        P = P - (D_inv_S*P)
+        P = P - weight*(S*P)
 
     return P
-
 
 
 

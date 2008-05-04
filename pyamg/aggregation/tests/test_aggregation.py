@@ -41,7 +41,7 @@ class TestParameters(TestCase):
             self.run_cases( {'aggregate' : aggregate} )
     
     def test_prolongation_smoother(self): 
-        for smooth in ['jacobi','energy']:
+        for smooth in ['jacobi','richardson','energy']:
             self.run_cases( {'smooth' : smooth} )
 
     def test_smoothers(self): 

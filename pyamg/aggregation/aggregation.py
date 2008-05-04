@@ -243,6 +243,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     fn, kwargs = unpack_arg(smooth)
     if fn == 'jacobi':
         P = jacobi_prolongation_smoother(A, T, **kwargs)
+    elif fn == 'richardson':
+        P = richardson_prolongation_smoother(A, T, **kwargs)
     elif fn == 'energy':
         P = energy_prolongation_smoother(A, T, C, B, **kwargs)
     elif fn is None:
