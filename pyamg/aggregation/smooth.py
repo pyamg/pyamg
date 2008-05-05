@@ -89,13 +89,12 @@ import pyamg.multigridtools
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine
 
-def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
+def Satisfy_Constraints(U, B, BtBinv):
     """Update U to satisfy U*B = 0
 
     Input
     =====
     U                     BSR Matrix to operate on
-    Sparsity_Pattern      Sparsity pattern to enforce
     B                     Near nullspace vectors
     BtBinv                Local inv(B'*B) matrices for each dof, i.  
         
@@ -129,11 +128,11 @@ def Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv):
 ########################################################################################################
 
 
-def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8):
+def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8, degree=1):
     """Minimize the energy of the coarse basis functions (columns of T)
 
     Parameters
-    ----------:if expand("%") == ""|browse confirm w|else|confirm w|endif
+    ----------
 
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
@@ -220,7 +219,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
 
     #####UnAmal returns a BSR matrix, so the mat-mat will be a BSR mat-mat.  Unfortunately, 
     #####   we also need column indices for Sparsity_Pattern
-    Sparsity_Pattern = UnAmal(abs(Atilde), numPDEs, numPDEs)*abs(T)
+    #TODO replace large matmat with smaller matmat, then expand
+    Sparsity_Pattern = abs(T)
+    Sparsity_Pattern.data[:] = 1
+    X = UnAmal(Atilde, numPDEs, numPDEs)
+    for i in range(degree):
+        Sparsity_Pattern = X * Sparsity_Pattern + Sparsity_Pattern
     Sparsity_Pattern.data[:,:,:] = 1.0
     Sparsity_Pattern.sort_indices()
 
@@ -250,11 +254,14 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     #====================================================================
     #Prepare for Energy Minimization
     #Calculate initial residual
-    R = -A*T
+    R = -A*T  #TODO profile against R = A*T, R *= -1
     
     #Enforce constraints on R.  First the sparsity pattern, then the nullspace vectors.
     R = R.multiply(Sparsity_Pattern)
-    Satisfy_Constraints(R, Sparsity_Pattern, B, BtBinv)
+    if R.nnz < Sparsity_Pattern.nnz:
+        # ugly hack to give R the same sparsity pattern as Sparsity_Pattern
+        R = R + 1e-100*Sparsity_Pattern 
+    Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
         print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
@@ -274,7 +281,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
         #Apply CG
         while i < maxiter and resid > tol:
             #Apply diagonal preconditioner
-            Z = scale_rows(R,Dinv)
+            Z = scale_rows(R, Dinv)
     
             #Frobenius innerproduct of (R,Z) = sum(rk.*zk)
             newsum = (R.multiply(Z)).sum()
@@ -290,7 +297,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
             #Calculate new direction and enforce constraints
             AP = A*P
             AP = AP.multiply(Sparsity_Pattern)
-            Satisfy_Constraints(AP, Sparsity_Pattern, B, BtBinv)
+            if AP.nnz < Sparsity_Pattern.nnz:
+                # ugly hack to give AP the same sparsity pattern as Sparsity_Pattern
+                AP = AP + 1e-100*Sparsity_Pattern
+            Satisfy_Constraints(AP, B, BtBinv)
             
             #Frobenius innerproduct of (P, AP)
             alpha = newsum/(P.multiply(AP)).sum()
@@ -314,7 +324,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8)
     
             #Enforce constraints on P
             P = P.multiply(Sparsity_Pattern)
-            Satisfy_Constraints(P, Sparsity_Pattern, B, BtBinv)
+            if P.nnz < Sparsity_Pattern.nnz:
+                # ugly hack to give P the same sparsity pattern as Sparsity_Pattern
+                P = P + 1e-100*Sparsity_Pattern
+            Satisfy_Constraints(P, B, BtBinv)
     
             #Frobenius innerproduct of (P, R)
             numer = (P.multiply(R)).sum()

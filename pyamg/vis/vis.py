@@ -166,16 +166,16 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
     # points: basic (best for classical AMG)
     #
     if plot_type=='points':
+        pdata = zeros(Ndof)
 
         if A is not None:
             # color aggregates with vertex coloring
             G = Agg.T * abs(A) * Agg
             colors = vertex_coloring(G, method='LDF')
-            pdata = Agg * colors  # extend aggregate colors to vertices
+            pdata[:Agg.shape[0]] = Agg * colors  # extend aggregate colors to vertices
         else:
             # color aggregates in sequence
             Agg   = coo_matrix(Agg)
-            pdata = zeros(Ndof)
             pdata[Agg.row] = Agg.col % Ncolors
 
         write_mesh(fid, Vert, E2V, mesh_type=mesh_type, pdata=pdata)

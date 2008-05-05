@@ -1,4 +1,5 @@
-__all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse', 'norm']
+__all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse',
+        'norm', 'profile_solver']
 __all__ += ['UnAmal', 'Coord2RBM', 'BSR_Get_Row', 'BSR_Row_WriteScalar', 
         'BSR_Row_WriteVect' ]
 
@@ -142,6 +143,21 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
 
     return max([norm(x) for x in eigvals(H[:j+1,:j+1])])      
 
+
+def profile_solver(ml, accel=None, **kwargs):
+    A = ml.levels[0].A
+    b = A * rand(A.shape[0],1)
+
+    if accel is None:
+        x_sol, residuals = ml.solve(b, return_residuals=True, **kwargs)
+    else:
+        residuals = []
+        def callback(x):
+            residuals.append( norm(ravel(b) - ravel(A*x)) )
+        A.psolve = ml.psolve
+        accel(A, b, callback=callback, **kwargs)
+
+    return asarray(residuals)
 
 
 def infinity_norm(A):

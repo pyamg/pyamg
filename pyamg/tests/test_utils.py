@@ -112,6 +112,22 @@ class TestUtils(TestCase):
             assert_almost_equal((D_sqrt_inv*A*D_sqrt_inv).todense(), DAD.todense())
 
 
+    def test_profile_solver(self):
+        from scipy.sparse.linalg import cg
+        from pyamg.gallery import poisson
+        from pyamg.aggregation import smoothed_aggregation_solver
+
+        A = poisson((100,100), format='csr')
+        ml = smoothed_aggregation_solver(A)
+
+        opts = []
+        opts.append( {} )
+        opts.append( {'accel' : cg } )
+        opts.append( {'accel' : cg, 'tol' : 1e-10 } )
+
+        for kwargs in opts:
+            residuals = profile_solver(ml, **kwargs)
+
 
 if __name__ == '__main__':
     nose.run(argv=['', __file__])

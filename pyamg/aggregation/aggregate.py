@@ -101,6 +101,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
             'abs'  : G[i,j] = abs(C[i,j])
             'inv'  : G[i,j] = 1.0/abs(C[i,j])
             'same' : G[i,j] = C[i,j]
+            'sub'  : G[i,j] = C[i,j] - min(C)
     maxiter : int
         Maximum number of iterations to perform
 
@@ -130,8 +131,12 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         data = 1.0/abs(C.data)
     elif distance is 'same':
         data = C.data
+    elif distance is 'min':
+        data = C.data - C.data.min()
     else:
         raise ValueError('unrecognized value distance=%s' % distance)
+
+    assert(data.min() >= 0)
 
     G = C.__class__((data,C.indices,C.indptr),shape=C.shape)
 

@@ -245,7 +245,6 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
             {   Sx[j*block_size + k] -= Update[k]; }
         }
     }
-
 }
 
 

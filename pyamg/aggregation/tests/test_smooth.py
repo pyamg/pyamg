@@ -24,12 +24,20 @@ class TestEnergyMin(TestCase):
         X = load_example('airfoil')
         cases.append((X['A'].tocsr(),X['B']))
 
+        opts = []
+        opts.append( {} )
+        opts.append( {'maxiter' : 3} )
+        opts.append( {'SPD' : False} )
+        opts.append( {'degree' : 2} )
+        opts.append( {'SPD' : False, 'degree' : 2} )
+
         for A,B in cases:
-            ml = smoothed_aggregation_solver(A, B=B, max_coarse=1, max_levels=2, smooth='energy')
-            P = ml.levels[0].P
-            B = ml.levels[0].B
-            R = ml.levels[1].B
-            assert_almost_equal(P*R, B)
+            for kwargs in opts:
+                ml = smoothed_aggregation_solver(A, B=B, max_coarse=1, max_levels=2, smooth=('energy',kwargs) )
+                P = ml.levels[0].P
+                B = ml.levels[0].B
+                R = ml.levels[1].B
+                assert_almost_equal(P*R, B)
 
 
         
