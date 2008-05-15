@@ -80,7 +80,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import zeros, asarray, dot, array_split, diff, ravel, asarray
+from numpy import zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
@@ -220,12 +220,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     #####UnAmal returns a BSR matrix, so the mat-mat will be a BSR mat-mat.  Unfortunately, 
     #####   we also need column indices for Sparsity_Pattern
     #TODO replace large matmat with smaller matmat, then expand
-    Sparsity_Pattern = abs(T)
-    Sparsity_Pattern.data[:] = 1
+    T.sort_indices()
+    Sparsity_Pattern = bsr_matrix( (ones_like(T.data), T.indices, T.indptr), shape=T.shape)
     X = UnAmal(Atilde, numPDEs, numPDEs)
     for i in range(degree):
-        Sparsity_Pattern = X * Sparsity_Pattern + Sparsity_Pattern
-    Sparsity_Pattern.data[:,:,:] = 1.0
+        Sparsity_Pattern = X * Sparsity_Pattern 
+    Sparsity_Pattern.data[:] = 1.0
     Sparsity_Pattern.sort_indices()
 
     
