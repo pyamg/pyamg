@@ -2,6 +2,7 @@ from scipy.testing import *
 
 import numpy
 from numpy import ones, eye, zeros, bincount, empty, asarray, array
+from numpy.random import seed
 from scipy import rand
 from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 
@@ -9,7 +10,22 @@ from pyamg.gallery import poisson, load_example
 from pyamg.graph import *
 from pyamg import multigridtools
 
+def canonical_graph(G):
+    # convert to expected format
+    # - remove diagonal entries
+    # - all nonzero values = 1
+    G = coo_matrix(G)
+    
+    mask = G.row != G.col
+    G.row     = G.row[mask]
+    G.col     = G.col[mask]
+    G.data    = G.data[mask]
+    G.data[:] = 1
+    return G
+
 def assert_is_mis(G,mis):
+    G = canonical_graph(G)
+
     # no MIS vertices joined by an edge
     if G.nnz > 0:
         assert( (mis[G.row] + mis[G.col]).max() <= 1 )
@@ -17,6 +33,8 @@ def assert_is_mis(G,mis):
     assert( (mis + G*mis).min() == 1 )
 
 def assert_is_vertex_coloring(G,c):
+    G = canonical_graph(G)
+
     # no colors joined by an edge
     assert( (c[G.row] != c[G.col]).all() )
     # all colors up to K occur at least once
@@ -26,6 +44,11 @@ def assert_is_vertex_coloring(G,c):
 class TestGraph(TestCase):
     def setUp(self):
         cases = []
+        seed(0)
+
+        for i in range(5):
+            A = rand(8,8) > 0.5
+            cases.append( canonical_graph(A + A.T).astype(float) )
 
         cases.append( zeros((1,1)) )
         cases.append( zeros((2,2)) )
@@ -38,18 +61,7 @@ class TestGraph(TestCase):
         for name in ['airfoil','bar','knot']:
             cases.append( load_example(name)['A'] )
 
-        cases = [ coo_matrix(G) for G in cases ]
-
-        # convert to expected format
-        # - remove diagonal entries
-        # - all nonzero values = 1
-        for G in cases:
-            mask = G.row != G.col
-            
-            G.row     = G.row[mask]
-            G.col     = G.col[mask]
-            G.data    = G.data[mask]
-            G.data[:] = 1
+        cases = [ canonical_graph(G) for G in cases ]
 
         self.cases = cases        
 
@@ -60,8 +72,15 @@ class TestGraph(TestCase):
         for algo in ['serial','parallel']:
             for G in self.cases:
                 mis = maximal_independent_set(G, algo=algo)
-    
                 assert_is_mis(G,mis)
+        
+        for G in self.cases:
+            for k in [1,2,3,4]:
+                mis = maximal_independent_set(G, k=k)
+                if k > 1:
+                    G = (G + eye(G.shape[0]))**k
+                    G = canonical_graph(G)
+                assert_is_mis(G, mis)
     
     def test_vertex_coloring(self):
         # test that method works with diagonal entries

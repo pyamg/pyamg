@@ -30,7 +30,7 @@ def asgraph(G):
     return G
 
 
-def maximal_independent_set(G, algo='serial'):
+def maximal_independent_set(G, algo='serial', k=None):
     """Compute a maximal independent vertex set for a graph
 
     Parameters
@@ -64,14 +64,19 @@ def maximal_independent_set(G, algo='serial'):
     mis = empty(N, dtype='intc')
     mis[:] = -1
 
-    if algo == 'serial':
-        fn = multigridtools.maximal_independent_set_serial
-        fn(N, G.indptr, G.indices, -1, 1, 0, mis)
-    elif algo == 'parallel':
-        fn = multigridtools.maximal_independent_set_parallel
-        fn(N, G.indptr, G.indices, -1, 1, 0, mis, rand(N))
+    if k is None:
+        if algo == 'serial':
+            fn = multigridtools.maximal_independent_set_serial
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis)
+        elif algo == 'parallel':
+            fn = multigridtools.maximal_independent_set_parallel
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, rand(N))
+        else:
+            raise ValueError('unknown algorithm (%s)' % algo)
     else:
-        raise ValueError('unknown algorithm (%s)' % algo)
+        fn = multigridtools.maximal_independent_set_k_parallel
+        fn(N, G.indptr, G.indices, k, mis, rand(N)) 
+
 
     return mis
 

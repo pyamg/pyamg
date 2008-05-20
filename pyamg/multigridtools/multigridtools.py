@@ -203,6 +203,14 @@ def maximal_independent_set_parallel(*args):
     """
   return _multigridtools.maximal_independent_set_parallel(*args)
 
+def maximal_independent_set_k_parallel(*args):
+  """
+    maximal_independent_set_k_parallel(int num_rows, int Ap, int Aj, int k, int x, double y, 
+        int max_iters=-1)
+    maximal_independent_set_k_parallel(int num_rows, int Ap, int Aj, int k, int x, double y)
+    """
+  return _multigridtools.maximal_independent_set_k_parallel(*args)
+
 def bellman_ford(*args):
   """
     bellman_ford(int num_rows, int Ap, int Aj, int Ax, int x, int y)

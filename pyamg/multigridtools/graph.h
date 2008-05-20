@@ -187,7 +187,7 @@ void vertex_coloring_first_fit(const I num_rows,
                                const I Ap[], 
                                const I Aj[], 
                                      T  x[],
-                                const T  K)
+                               const T  K)
 {
     for(I i = 0; i < num_rows; i++){
         if(x[i] != K) continue;
@@ -397,5 +397,111 @@ void lloyd_cluster(const I num_rows,
     }
 }
 
+
+
+template<typename IndexType, typename ValueType>
+void csr_propagate_max(const IndexType  num_rows,
+                       const IndexType  Ap[], 
+                       const IndexType  Aj[],
+                       const IndexType  i_keys[],
+                             IndexType  o_keys[],
+                       const ValueType  i_vals[],
+                             ValueType  o_vals[])
+{
+    for(IndexType i = 0; i < num_rows; i++){
+
+        IndexType k_max = i_keys[i];
+        ValueType v_max = i_vals[i];
+
+        for(IndexType jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const IndexType j   = Aj[jj];
+            const IndexType k_j = i_keys[j];
+            const ValueType v_j = i_vals[j];
+
+            if( k_j == k_max ) continue;
+            if( v_j < v_max ) continue;
+            if( v_j > v_max || k_j > k_max ){
+                k_max = k_j;
+                v_max = v_j;
+            }
+        }
+
+        o_keys[i] = k_max;
+        o_vals[i] = v_max;
+    }
+}
+
+
+template<class I, class T, class R>
+void maximal_independent_set_k_parallel(const I num_rows,
+                                        const I Ap[], 
+                                        const I Aj[],
+                                        const I  k,
+                                              T  x[],
+                                        const R  y[],
+                                        const I  max_iters=-1)
+{
+    std::vector<I> active(num_rows,1);
+
+    std::vector<I> i_keys(num_rows);
+    std::vector<I> o_keys(num_rows);
+    std::vector<R> i_vals(num_rows); 
+    std::vector<R> o_vals(num_rows); 
+
+    for(I i = 0; i < num_rows; i++){
+        i_keys[i] = i;
+        i_vals[i] = y[i];
+        x[i] = 0;
+    }
+
+    for(I iter = 0; max_iters == -1 || iter < max_iters; iter++){
+        for(I i = 0; i < k; i++){
+            csr_propagate_max(num_rows, Ap, Aj, &(i_keys[0]), &(o_keys[0]), &(i_vals[0]), &(o_vals[0]));
+            std::swap(i_keys, o_keys);
+            std::swap(i_vals, o_vals);
+        }
+
+        for(I i = 0; i < num_rows; i++){
+            if( i_keys[i] == i && active[i]){
+                x[i] = 1; // i is a MIS-k node
+            } 
+            
+            i_keys[i] = i;
+            i_vals[i] = x[i];
+        }
+       
+        I rank = 0;
+        //while(rank < k && 2*(k - rank) > k){
+        //    csr_propagate_max(num_rows, Ap, Aj, &(i_keys[0]), &(o_keys[0]), &(i_vals[0]), &(o_vals[0]));
+        //    std::swap(i_keys, o_keys);
+        //    std::swap(i_vals, o_vals);
+        //    rank++;
+        //}
+        
+        while(rank < k){
+            csr_propagate_max(num_rows, Ap, Aj, &(i_keys[0]), &(o_keys[0]), &(i_vals[0]), &(o_vals[0]));
+            std::swap(i_keys, o_keys);
+            std::swap(i_vals, o_vals);
+            rank++;
+        }
+
+        bool work_left = false;
+
+        for(I i = 0; i < num_rows; i++){
+            if(i_vals[i] == 1){
+                active[i] = 0;
+                i_vals[i] = -1;
+            } else {
+                i_vals[i] = y[i];
+                work_left = true;
+            } 
+            i_keys[i] = i;
+        }
+
+        if( !work_left )
+            return;
+    }
+
+}
 #endif
 

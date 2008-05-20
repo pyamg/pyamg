@@ -219,11 +219,12 @@ INSTANTIATE_BOTH(gauss_seidel)
 INSTANTIATE_BOTH(jacobi)
 INSTANTIATE_BOTH(gauss_seidel_indexed)
 
-%template(maximal_independent_set_serial)   maximal_independent_set_serial<int,int>;
-%template(maximal_independent_set_parallel) maximal_independent_set_parallel<int,int,double>;
-%template(vertex_coloring_mis)              vertex_coloring_mis<int,int>;
-%template(vertex_coloring_jones_plassmann)  vertex_coloring_jones_plassmann<int,int,double>;
-%template(vertex_coloring_LDF)              vertex_coloring_LDF<int,int,double>;
+%template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
+%template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;
+%template(maximal_independent_set_k_parallel) maximal_independent_set_k_parallel<int,int,double>;
+%template(vertex_coloring_mis)                vertex_coloring_mis<int,int>;
+%template(vertex_coloring_jones_plassmann)    vertex_coloring_jones_plassmann<int,int,double>;
+%template(vertex_coloring_LDF)                vertex_coloring_LDF<int,int,double>;
 
 INSTANTIATE_BOTH2(bellman_ford)
 INSTANTIATE_BOTH2(lloyd_cluster)
