@@ -13,7 +13,7 @@ from pyamg.relaxation import gauss_seidel
 
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
-from smooth import jacobi_prolongation_smoother
+from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother
 from tentative import fit_candidates
 
 __all__ = ['adaptive_sa_solver']
@@ -164,6 +164,7 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
         P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
+        #P_l   = energy_prolongation_smoother(A_l, T_l, C_l, x)
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
 
         AggOps.append(AggOp)
