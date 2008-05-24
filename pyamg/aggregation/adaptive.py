@@ -2,10 +2,10 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import sqrt, ravel, diff, zeros, zeros_like, inner, concatenate, \
+from numpy import sqrt, ravel, diff, zeros, ones, zeros_like, inner, concatenate, \
                   asarray, hstack, ascontiguousarray, isinf, dot
 from numpy.random import randn, rand
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix
+from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
@@ -161,10 +161,16 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
             C_l   = symmetric_strength_of_connection(A_l)
             AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
+            if isspmatrix_csr(A_l):
+                C_l = A_l
+            else:
+                M = A_l.shape[0]/A_l.blocksize[0]
+                N = A_l.shape[1]/A_l.blocksize[1]
+                C_l = csr_matrix( (ones(A_l.indices.shape), A_l.indices, A_l.indptr), (M,N))
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-        P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
-        #P_l   = energy_prolongation_smoother(A_l, T_l, C_l, x)
+        #P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
+        P_l   = energy_prolongation_smoother(A_l, T_l, C_l, x)
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
 
         AggOps.append(AggOp)
@@ -225,7 +231,7 @@ def general_setup_stage(ml, candidate_iters):
         T,R = fit_candidates(levels[i].AggOp,B)
         x = R[:,-1].reshape(-1,1)
 
-        levels[i].P   = jacobi_prolongation_smoother(levels[i].A,T)
+        levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
         levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
         levels[i+1].P = make_bridge(levels[i+1].P) 
