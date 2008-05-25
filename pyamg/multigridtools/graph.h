@@ -441,7 +441,7 @@ void maximal_independent_set_k_parallel(const I num_rows,
                                         const R  y[],
                                         const I  max_iters=-1)
 {
-    std::vector<I> active(num_rows,1);
+    std::vector<bool> active(num_rows,true);
 
     std::vector<I> i_keys(num_rows);
     std::vector<I> o_keys(num_rows);
@@ -489,7 +489,7 @@ void maximal_independent_set_k_parallel(const I num_rows,
 
         for(I i = 0; i < num_rows; i++){
             if(i_vals[i] == 1){
-                active[i] = 0;
+                active[i] =  false;
                 i_vals[i] = -1;
             } else {
                 i_vals[i] = y[i];
