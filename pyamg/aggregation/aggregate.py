@@ -142,7 +142,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
     num_seeds = int(min( max(ratio*G.shape[0],1), G.shape[0] ))
 
-    distances, clusters, seeds = lloyd_cluster( G, num_seeds )
+    distances, clusters, seeds = lloyd_cluster( G, num_seeds, maxiter=maxiter )
 
     row  = (clusters >= 0).nonzero()[0]
     col  = clusters[row]
