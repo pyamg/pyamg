@@ -161,18 +161,15 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
             C_l   = symmetric_strength_of_connection(A_l)
             AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
-            if isspmatrix_csr(A_l):
-                C_l = A_l
-            else:
-                M = A_l.shape[0]/A_l.blocksize[0]
-                N = A_l.shape[1]/A_l.blocksize[1]
-                C_l = csr_matrix( (ones(A_l.indices.shape), A_l.indices, A_l.indptr), (M,N))
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
         #P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
-        P_l   = energy_prolongation_smoother(A_l, T_l, C_l, x)
+        P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
+        #if len(AggOps) == 0:
+        #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=2)
+        #else:
+        #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
-
         AggOps.append(AggOp)
         Ps.append(P_l)
         As.append(A_l)
@@ -185,7 +182,7 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
             x_A_x = dot(x.T,A_l*x)
             err_ratio = (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/candidate_iters) 
             if err_ratio < epsilon:                                            #step 4i
-                #print "sufficient convergence, skipping"
+                print "sufficient convergence, skipping"
                 skip_f_to_i = True
                 if x_A_x == 0:
                     x = x_hat  #need to restore x
@@ -231,7 +228,12 @@ def general_setup_stage(ml, candidate_iters):
         T,R = fit_candidates(levels[i].AggOp,B)
         x = R[:,-1].reshape(-1,1)
 
-        levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
+        #levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
+        levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
+        #if i == 0:
+        #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=2)
+        #else:
+        #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
         levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
         levels[i+1].P = make_bridge(levels[i+1].P) 

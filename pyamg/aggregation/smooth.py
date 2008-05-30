@@ -80,7 +80,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like
+from numpy import ones, zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 from pyamg.utils import UnAmal
@@ -178,6 +178,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         pass
     else:
         raise TypeError("A must be csr_matrix or bsr_matrix")
+
+    if Atilde is None:
+        Atilde = csr_matrix( (ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
 
     if not isspmatrix_csr(Atilde):
         raise TypeError("Atilde must be csr_matrix")
