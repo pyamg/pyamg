@@ -96,6 +96,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     ###
     # develop additional candidates
     for i in range(num_candidates - 1):
+        ml = None
         ml = smoothed_aggregation_solver(A, B=B, **kwargs)
         x = general_setup_stage(ml, candidate_iters)
         B = hstack((B,x))
@@ -105,10 +106,12 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     for i in range(improvement_iters):
         for i in range(B.shape[1]):
             B = B[:,1:]
+            ml = None
             ml = smoothed_aggregation_solver(A, B=B, **kwargs)
             x = general_setup_stage(ml, candidate_iters)
             B = hstack((B,x))
 
+    ml = None
     return smoothed_aggregation_solver(A, B=B, **kwargs)
 
 
