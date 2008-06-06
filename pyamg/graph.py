@@ -182,8 +182,8 @@ def lloyd_cluster(G, seeds, maxiter=10):
     #interpret seeds argument
     if isscalar(seeds):
         seeds = numpy.random.permutation(N)[:seeds]
-    
-    seeds = asarray(seeds,dtype='intc')
+    else: 
+        seeds = asarray(seeds, dtype='intc', copy=True)
 
     if len(seeds) < 1:
         raise ValueError('at least one seed is required')
