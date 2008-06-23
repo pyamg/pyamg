@@ -276,11 +276,14 @@ def symmetric_rescaling(A,copy=True):
 #        if fn in name_to_handle:
 #            # convert string into function handle
 #            fn = name_to_handle[fn] 
-#        else:
-#            # otherwise, assume fn is itself a function handle
+#        #elif isinstance(fn, type(ones)):
+#        #    pass     
+#        elif callable(fn):
+#            # if fn is itself a function handle
 #            pass
-#            #TODO check that fn is callable
-#    
+#        else:
+#            raise TypeError('Expected function')
+#
 #        wrapped = partial(fn, **opts)
 #        update_wrapper(wrapped, fn)
 #    

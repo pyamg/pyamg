@@ -120,14 +120,37 @@ class multilevel_solver:
 
         self.postsmooth(A,x,b)
 
-
     def presmooth(self,A,x,b):
-        gauss_seidel(A, x, b, sweep='symmetric') 
+        def unpack_arg(v):
+            if isinstance(v,tuple):
+                return v[0],v[1]
+            else:
+                return v,{}
+
+        fn, kwargs = unpack_arg(self.presmoother)
+        if fn == 'gauss_seidel':
+            gauss_seidel(A, x, b, **kwargs)
+        elif fn == 'kaczmarz_gauss_seidel':
+            kaczmarz_gauss_seidel(A, x, b, **kwargs)
+        else:
+            raise TypeError('Unrecognized presmoother')
         #fn = relaxation.dispatch(self.presmoother)
         #fn(A,x,b)
 
     def postsmooth(self,A,x,b):
-        gauss_seidel(A, x, b, sweep='symmetric') 
+        def unpack_arg(v):
+            if isinstance(v,tuple):
+                return v[0],v[1]
+            else:
+                return v,{}
+        
+        fn, kwargs = unpack_arg(self.presmoother)
+        if fn == 'gauss_seidel':
+            gauss_seidel(A, x, b, **kwargs)
+        elif fn == 'kaczmarz_gauss_seidel':
+            kaczmarz_gauss_seidel(A, x, b, **kwargs)
+        else:
+            raise TypeError('Unrecognized postsmoother')
         #fn = relaxation.dispatch(self.postsmoother)
         #fn(A,x,b)
 

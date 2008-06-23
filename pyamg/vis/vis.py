@@ -15,10 +15,10 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean, sum, prod
+        integer, mean, sum, prod, ravel, hstack, invert, repeat
 
-from scipy.sparse import csr_matrix, coo_matrix
-
+from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
+from scikits import delaunay
 from pyamg.graph import vertex_coloring
 
 __all__ = ['coarse_grid_vis', 'write_vtu', 'write_mesh', 'shrink_elmts']
@@ -238,7 +238,95 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
         E2V, Vert = shrink_elmts(E2V, Vert)
 
         # plot_type = 'vertex' output to .vtu --- throw point list down on mesh, so E2V becomes Nx1 array
-        coarse_grid_vis(fid, Vert, array(range(N)).reshape(N,1), Agg, 'vertex', A=A, plot_type='points')
+        filename = fid + "_point-aggs.vtu"
+        if A is not None:
+            # color aggregates with vertex coloring
+            G = Agg.T * abs(A) * Agg
+            colors = vertex_coloring(G, method='LDF')
+            pdata = Agg * colors  # extend aggregate colors to vertices
+        else:
+            # color aggregates in sequence
+            Agg   = coo_matrix(Agg)
+            pdata = zeros(Ndof)
+            colors = array(range(Agg.shape[1])) % Ncolors
+            pdata[Agg.row] = Agg.col % Ncolors
+
+        write_mesh(filename, Vert, array(range(N)).reshape(N,1), mesh_type='vertex', pdata=pdata)
+
+        
+        # plot_type = 'primal', using a global Delaunay triangulation of the shrunken mesh,
+        #   we visualize the aggregates as if the global Delaunay triangulation defined a Continuous Galerkin
+        #   mesh upon which our aggregates are defined.
+        #circum_cent, edges, tri_pts, tri_nbs = delaunay.delaunay(Vert[:,0], Vert[:,1])
+        #coarse_grid_vis(filename, Vert, tri_pts, Agg, A=A, plot_type='primal', mesh_type='tri')
+        filename = fid + "_primal-aggs.vtu"
+
+        # Do a local Delaunay triangulation for each aggregate, and throw that down as an element in a new mesh
+        Agg = csc_matrix(Agg)
+        for i in range(Agg.shape[1]):
+            rowstart = Agg.indptr[i]
+            rowend = Agg.indptr[i+1]
+            #The nonzeros in column i of Agg define the dofs in Agg i
+            members = Agg.indices[rowstart:rowend]
+            if max(members.shape) > 2:
+                circum_cent, edges, tri_pts, tri_nbs = delaunay.delaunay(Vert[members,0], Vert[members,1])
+                if i == 0:
+                    E2Vnew = ravel(members[ravel(tri_pts)])
+                    colors_new = ravel(repeat(colors[i], tri_pts.shape[0]))
+                else:    
+                    E2Vnew = hstack( (E2Vnew, ravel(members[ravel(tri_pts)]) ) )
+                    colors_new = hstack( (colors_new, ravel(repeat(colors[i], tri_pts.shape[0]))) ) 
+
+            if max(members.shape) == 2:
+                #create a dummy element, so that only a line is drawn between these two points in paraview
+                if i == 0:
+                    E2Vnew = array([0,members[0],members[1]])
+                    colors_new = array([colors[i]])
+                else:
+                    E2Vnew = hstack( (E2Vnew, array([0,members[0],members[1]]) ) )
+                    colors_new = hstack( (colors_new, colors[i]) )
+
+        #Begin Primal plotting
+        E2V = E2Vnew.reshape(-1,3)
+        Agg = csr_matrix(Agg)
+
+        if E2V.max() >= Agg.shape[0]:
+            # remove elements with dirichlet BCs
+            E2V = E2V[E2V.max(axis=1) < Agg.shape[0]]
+    
+        # Find elements with all vertices in same aggregate
+        if len(Agg.indices) != Agg.shape[0]:
+            # account for 0 rows.  mark them as solitary aggregates
+            full_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
+            full_aggs[full_aggs==1] = Agg.indices
+            full_aggs[full_aggs==0] = Agg.shape[1] + arange(0,Agg.shape[0]-Agg.nnz,dtype=int).ravel()
+            ElementAggs = full_aggs[E2V]
+        else:
+            ElementAggs = Agg.indices[E2V]
+        
+        # mask[i] == True if all vertices in element i belong to the same aggregate
+        mask = (ElementAggs[:,:-1] == ElementAggs[:,1:]).all(axis=1)
+        E2V3 = E2V[mask,:]
+        Nel3 = E2V3.shape[0]
+
+        # 3 edges = 4 nodes.  find where the difference is 0 (bdy edge)
+        markedges = diff(c_[ElementAggs,ElementAggs[:,0]])
+        markedges[mask,:]=1
+        markedelements, markededges = where(markedges==0)
+
+        # now concatenate the edges (ie. first and next one (mod 3 index)
+        E2V2 = c_[[E2V[markedelements,markededges], 
+                   E2V[markedelements,(markededges+1)%3]]].T 
+        Nel2 = E2V2.shape[0]
+
+        colors2 = colors_new[markedelements]  #2*ones((1,Nel2))  # color edges with twos
+        colors3 = colors_new[mask]  #3*ones((1,Nel3))  # color triangles with threes
+
+        Cells  =  {3: E2V2, 5: E2V3}
+        cdata  = ({3: colors2, 5: colors3},) # make sure it's a tuple
+
+        write_vtu(filename, Verts=Vert, Cells=Cells, pdata=None, cdata=cdata, pvdata=None)
+
 
 def shrink_elmts(E2V, Vert, shrink=0.75):
     """

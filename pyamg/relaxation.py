@@ -4,13 +4,13 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from numpy import empty_like, asarray, arange, ravel
+from numpy import empty_like, asarray, arange, ravel, ones_like, zeros
 
 import multigridtools
 from scipy.sparse import isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
 
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
+__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
 __all__ += ['gauss_seidel_indexed'] #TODO remove
 
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
@@ -72,8 +72,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     Nothing, x will be modified in place.
 
     """
+    
     #TODO add support for block GS on BSR format
-
     x = ravel(x) #TODO warn if not inplace
     b = ravel(b)
 
@@ -275,6 +275,161 @@ def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
         multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
                                     x, b, Id,
                                     row_start, row_stop, row_step)
+
+def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
+    """Perform Kaczmarz Jacobi iterations on the linear system A A^T x = A^Tb
+
+    
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    omega : scalar
+        Damping parameter
+    iterations : int
+        Number of iterations to perform
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+   
+    """
+    x = asarray(x).reshape(-1)
+    b = asarray(b).reshape(-1)
+    
+    sweep = slice(None)
+    (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
+    
+    if isspmatrix_csr(A):
+        pass
+    elif isspmatrix_bsr(A):
+        if A.blocksize == (1,1):
+            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
+        else: 
+            warn('implicit conversion to CSR', SparseEfficiencyWarning)
+            A = csr_matrix(A)
+    else:
+        warn('implicit conversion to CSR', SparseEfficiencyWarning)
+        A = csr_matrix(A)
+    
+    temp = zeros(x.shape)
+    AsqRowsum = (A.multiply(A))*ones_like(x)
+    for i in range(iterations):
+        delta = ravel(asarray((b - A*x))/asarray(AsqRowsum))
+        multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
+                                       x, b, delta, temp, row_start,
+                                       row_stop, row_step, omega)  
+
+def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
+    """Perform Kaczmarz Richardson iterations on the linear system A A^T x = A^Tb
+
+    
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    omega : scalar
+        Damping parameter
+    iterations : int
+        Number of iterations to perform
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+   
+    """
+    #from pyamg.utils import approximate_spectral_radius
+    #rho = approximate_spectral_radius(A)
+    #omega = omega/(rho*rho)
+
+    x = asarray(x).reshape(-1)
+    b = asarray(b).reshape(-1)
+    
+    sweep = slice(None)
+    (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
+    
+    if isspmatrix_csr(A):
+        pass
+    elif isspmatrix_bsr(A):
+        if A.blocksize == (1,1):
+            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
+        else: 
+            warn('implicit conversion to CSR', SparseEfficiencyWarning)
+            A = csr_matrix(A)
+    else:
+        warn('implicit conversion to CSR', SparseEfficiencyWarning)
+        A = csr_matrix(A)
+    
+    temp = zeros(x.shape)
+    for i in range(iterations):
+        delta = ravel(asarray((b - A*x)))
+        multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
+                                           x, b, delta, temp, row_start,
+                                           row_stop, row_step, omega)
+
+def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
+    """Perform Kaczmarz GaussSeidel iterations on the linear system A A^T x = A^Tb
+
+    
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : { ndarray }
+        Approximate solution (length N)
+    b : { ndarray }
+        Right-hand side (length N)
+    iterations : { int }
+        Number of iterations to perform
+    sweep : { string }
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+   
+    """
+    
+    x = asarray(x).reshape(-1)
+    b = asarray(b).reshape(-1)
+    
+
+    if sweep == 'forward':
+        row_start,row_stop,row_step = 0,len(x),1
+    elif sweep == 'backward':
+        row_start,row_stop,row_step = len(x)-1,-1,-1 
+    elif sweep == 'symmetric':
+        for iter in xrange(iterations):
+            kaczmarz_gauss_seidel(A,x,b,iterations=1,sweep='forward')
+            kaczmarz_gauss_seidel(A,x,b,iterations=1,sweep='backward')
+        return
+    else:
+        raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
+
+    if isspmatrix_csr(A):
+        pass
+    elif isspmatrix_bsr(A):
+        if A.blocksize == (1,1):
+            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
+        else: 
+            warn('implicit conversion to CSR', SparseEfficiencyWarning)
+            A = csr_matrix(A)
+    else:
+        warn('implicit conversion to CSR', SparseEfficiencyWarning)
+        A = csr_matrix(A)
+        
+    AsqRowsum = (A.multiply(A))*ones_like(x)
+    for i in range(iterations):
+        multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
+                                           x, b, row_start,
+                                           row_stop, row_step, AsqRowsum)
 
 
 #from pyamg.utils import dispatcher

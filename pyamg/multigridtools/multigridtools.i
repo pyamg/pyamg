@@ -218,6 +218,8 @@ INSTANTIATE_BOTH(block_gauss_seidel)
 INSTANTIATE_BOTH(gauss_seidel)
 INSTANTIATE_BOTH(jacobi)
 INSTANTIATE_BOTH(gauss_seidel_indexed)
+INSTANTIATE_BOTH(kaczmarz_jacobi)
+INSTANTIATE_BOTH(kaczmarz_gauss_seidel)
 
 %template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;

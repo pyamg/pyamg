@@ -43,8 +43,8 @@ def smoothed_aggregation_solver(A, B=None,
         Method used to aggregate nodes.  A predefined aggregation is specified 
         with a sequence of csr_matrices that represent the aggregation operators
         on each level of the hierarchy.
-    smooth : ['jacobi', 'chebyshev', 'MLS', 'energy', None]
-        Method used to smoother used to smooth the tentative prolongator.
+    smooth : ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
+        Method used used to smooth the tentative prolongator.
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
@@ -247,6 +247,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
         P = richardson_prolongation_smoother(A, T, **kwargs)
     elif fn == 'energy':
         P = energy_prolongation_smoother(A, T, C, B, **kwargs)
+    elif fn == 'kaczmarz_richardson':
+        P = kaczmarz_richardson_prolongation_smoother(A, T, **kwargs)
+    elif fn == 'kaczmarz_jacobi':
+        P = kaczmarz_jacobi_prolongation_smoother(A, T, **kwargs)
     elif fn is None:
         P = T
     else:

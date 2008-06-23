@@ -2,10 +2,12 @@
 
 __docformat__ = "restructuredtext en"
 
+from numpy import ones
 from pyamg.utils import approximate_spectral_radius, scale_rows
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
-        'energy_prolongation_smoother']
+        'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
+        'kaczmarz_jacobi_prolongation_smoother']
 
 
 def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
@@ -75,7 +77,79 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     return P
 
+def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+    """Jacobi prolongation smoother for the normal equations (i.e. Kaczmarz)
+   
+    Parameters
+    ----------
+    S : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix used for smoothing.  Typically, A or the
+        "filtered matrix" obtained from A by lumping weak connections
+        onto the diagonal of A.
+    T : {csr_matrix, bsr_matrix}
+        Tentative prolongator
+    omega : {scalar}
+        Damping parameter
 
+    Returns
+    -------
+    P : {csr_matrix, bsr_matrix}
+        Smoothed (final) prolongator
+    """
+
+    # Use the square of the spectral radius of Dinv*S as 
+    # the Jacobi weight, as opposed to explicitly forming S*S.T
+    D = S.diagonal()
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0
+    D_inv_S = scale_rows(S, D_inv, copy=True)
+    rho = approximate_spectral_radius(D_inv_S)
+    omega = omega/(rho*rho) 
+
+    # Form Dinv for S*S.T
+    D = (S.multiply(S))*ones((S.shape[0],1))
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0
+    D_inv_S = scale_rows(S, D_inv, copy=True)
+
+    P = T
+    ST = S.T
+    for i in range(degree):
+        P = P - omega*(ST*(D_inv_S*P))
+
+    return P
+
+def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+    """Richardson prolongation smoother for the normal equations (i.e. Kaczmarz)
+   
+    Parameters
+    ----------
+    S : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix used for smoothing.  Typically, A or the
+        "filtered matrix" obtained from A by lumping weak connections
+        onto the diagonal of A.
+    T : {csr_matrix, bsr_matrix}
+        Tentative prolongator
+    omega : {scalar}
+        Damping parameter
+
+    Returns
+    -------
+    P : {csr_matrix, bsr_matrix}
+        Smoothed (final) prolongator 
+    """
+
+    # Use the square of the spectral radius of Dinv*S as 
+    # the Jacobi weight, as opposed to explicitly forming S*S.T
+    rho = approximate_spectral_radius(S)
+    omega = omega/(rho*rho) 
+
+    P = T
+    ST = S.T
+    for i in range(degree):
+        P = P - omega*(ST*(S*P))
+
+    return P
 
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
@@ -220,8 +294,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     Dinv = 1.0/D
 
 
-    #####UnAmal returns a BSR matrix, so the mat-mat will be a BSR mat-mat.  Unfortunately, 
-    #####   we also need column indices for Sparsity_Pattern
+    # UnAmal returns a BSR matrix, so the mat-mat will be between BSR mats. 
     #TODO replace large matmat with smaller matmat, then expand
     T.sort_indices()
     Sparsity_Pattern = bsr_matrix( (ones_like(T.data), T.indices, T.indptr), shape=T.shape)

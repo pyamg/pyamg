@@ -194,6 +194,26 @@ def gauss_seidel_indexed(*args):
     """
   return _multigridtools.gauss_seidel_indexed(*args)
 
+def kaczmarz_jacobi(*args):
+  """
+    kaczmarz_jacobi(int Ap, int Aj, float Ax, float x, float b, float Tx, 
+        float temp, int row_start, int row_stop, int row_step, 
+        float omega)
+    kaczmarz_jacobi(int Ap, int Aj, double Ax, double x, double b, double Tx, 
+        double temp, int row_start, int row_stop, 
+        int row_step, double omega)
+    """
+  return _multigridtools.kaczmarz_jacobi(*args)
+
+def kaczmarz_gauss_seidel(*args):
+  """
+    kaczmarz_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
+        int row_stop, int row_step, float Tx)
+    kaczmarz_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
+        int row_stop, int row_step, double Tx)
+    """
+  return _multigridtools.kaczmarz_gauss_seidel(*args)
+
 def maximal_independent_set_parallel(*args):
   """
     maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 

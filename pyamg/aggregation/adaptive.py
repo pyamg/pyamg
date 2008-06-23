@@ -9,11 +9,13 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
-from pyamg.relaxation import gauss_seidel
+from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
+import pyamg.relaxation
 
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
-from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother
+from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother, \
+     kaczmarz_richardson_prolongation_smoother, kaczmarz_jacobi_prolongation_smoother
 from tentative import fit_candidates
 
 __all__ = ['adaptive_sa_solver']
@@ -23,6 +25,8 @@ __all__ = ['adaptive_sa_solver']
 def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, 
         improvement_iters=0, epsilon=0.1,
         max_levels=10, max_coarse=100, aggregation=None,
+        prepostsmoother=('gauss_seidel', {'sweep':'symmetric'}),
+        smooth=('energy', {'degree' : 1}),
         **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
@@ -41,7 +45,12 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
         Number of times each candidate is improved
     epsilon : {float} : default 0.10
         Target convergence factor
-
+    prepostsmoother : {string or dict} 
+        Pre- and post-smoother used in the adaptive method
+    smooth : {string or dict }
+        ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
+        Method used used to smooth the tentative prolongator.
+    
     Optional Parameters
     -------------------
 
@@ -89,14 +98,16 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     ###
     # develop first candidate
     B,AggOps = initial_setup_stage(A, candidate_iters, epsilon, 
-            max_levels, max_coarse, aggregation)
+            max_levels, max_coarse, aggregation, prepostsmoother, smooth)
 
     kwargs['aggregate'] = ('predefined',AggOps)
 
     ###
     # develop additional candidates
     for i in range(num_candidates - 1):
-        x = general_setup_stage( smoothed_aggregation_solver(A, B=B, **kwargs), candidate_iters)
+        x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+                                                            postsmoother=prepostsmoother, smooth=smooth, **kwargs), 
+                                candidate_iters, prepostsmoother, smooth)
         B = hstack((B,x))
 
     ###
@@ -104,18 +115,23 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     for i in range(improvement_iters):
         for i in range(B.shape[1]):
             B = B[:,1:]
-            x = general_setup_stage( smoothed_aggregation_solver(A, B=B, **kwargs), candidate_iters)
+            x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+                                                                 postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
+                                     candidate_iters, prepostsmoother, smooth)
             B = hstack((B,x))
 
-    return smoothed_aggregation_solver(A, B=B, **kwargs)
+    return smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+                                       postsmoother=prepostsmoother, smooth=smooth,**kwargs)
 
 
-def relax_candidate(A, x, candidate_iters):
+def relax_candidate(A, x, candidate_iters, prepostsmoother, smooth):
+#Currently this fcn is not called anywhere, can this be removed?  
     opts = kwargs.copy()
     opts['max_levels']    = 1
     opts['coarse_solver'] = None
 
-    ml = smoothed_aggregation_solver(A, **opts)
+    ml = smoothed_aggregation_solver(A, presmoother=prepostsmoother, 
+                                     postsmoother=prepostsmoother, smooth=smooth,**opts)
 
     for i in range(candidate_iters):
         ml.presmooth(A,x,b)
@@ -123,11 +139,17 @@ def relax_candidate(A, x, candidate_iters):
    
    
 
-def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, aggregation):
+def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, aggregation, prepostsmoother, smooth):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
     """
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+
     if aggregation is not None:
         max_coarse = 0
         max_levels = len(aggregation) + 1
@@ -142,8 +164,20 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
     skip_f_to_i = False
 
     def relax(A,x):
-        gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        def unpack_arg(v):
+            if isinstance(v,tuple):
+                return v[0],v[1]
+            else:
+                return v,{}
 
+        fn, kwargs = unpack_arg(prepostsmoother)
+        if fn == 'gauss_seidel':
+            gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'kaczmarz_gauss_seidel':
+            kaczmarz_gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        else:
+            raise TypeError('Unrecognized smoother')
+    
     #step 2
     relax(A_l,x)
 
@@ -161,12 +195,29 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
         else:
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-        #P_l   = jacobi_prolongation_smoother(A_l,T_l)                          #step 4d
-        P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
-        #if len(AggOps) == 0:
-        #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=2)
-        #else:
-        #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
+        
+        if False:                                                              #step 4d
+            #P_l   = jacobi_prolongation_smoother(A_l,T_l)                          
+            P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
+            #if len(AggOps) == 0:
+            #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=2)
+            #else:
+            #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
+        else: 
+            fn, kwargs = unpack_arg(smooth)
+            if fn == 'jacobi':
+                P_l = jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+            elif fn == 'richardson':
+                P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
+            elif fn == 'energy':
+                P_l = energy_prolongation_smoother(A_l, T_l, None, x, **kwargs)
+            elif fn == 'kaczmarz_richardson':
+                P_l = kaczmarz_richardson_prolongation_smoother(A_l, T_l, **kwargs)
+            elif fn == 'kaczmarz_jacobi':
+                P_l = kaczmarz_jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+            else:
+                raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
+
         A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
         AggOps.append(AggOp)
         Ps.append(P_l)
@@ -194,7 +245,14 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
     return x,AggOps  #first candidate
 
 
-def general_setup_stage(ml, candidate_iters):
+def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
+         
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+    
     levels = ml.levels
 
     x = rand(levels[0].A.shape[0],1)
@@ -225,25 +283,55 @@ def general_setup_stage(ml, candidate_iters):
 
         T,R = fit_candidates(levels[i].AggOp,B)
         x = R[:,-1].reshape(-1,1)
-
-        #levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
-        levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
-        #if i == 0:
-        #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=2)
-        #else:
-        #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
+        
+        if False:
+            #levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
+            levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
+            #if i == 0:
+            #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=2)
+            #else:
+            #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
+        else: 
+            fn, kwargs = unpack_arg(smooth)
+            if fn == 'jacobi':
+                levels[i].P = jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+            elif fn == 'richardson':
+                levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
+            elif fn == 'energy':
+                levels[i].P = energy_prolongation_smoother(levels[i].A, T, None, R, **kwargs)
+            elif fn == 'kaczmarz_richardson':
+                levels[i].P = kaczmarz_richardson_prolongation_smoother(levels[i].A, T, **kwargs)
+            elif fn == 'kaczmarz_jacobi':
+                levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+            else:
+                raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
+        
         levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
         levels[i+1].P = make_bridge(levels[i+1].P) 
         levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
 
-        solver = multilevel_solver(levels[i+1:])
+        solver = multilevel_solver(levels[i+1:], presmoother=prepostsmoother, postsmoother=prepostsmoother)
         x = solver.solve(zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
 
+
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+    
+    fn, kwargs = unpack_arg(prepostsmoother)
     for lvl in reversed(levels[:-2]):
         x = lvl.P * x
-        gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        if fn == 'gauss_seidel':
+            gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'kaczmarz_gauss_seidel':
+            kaczmarz_gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        else:
+            raise TypeError('Unrecognized smoother')
 
+    
     return x
 
 

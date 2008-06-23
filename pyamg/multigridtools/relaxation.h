@@ -161,4 +161,72 @@ void gauss_seidel_indexed(const I Ap[],
   }
 }
 
+//
+// weighted-Jacobi on the normal equations, i.e. Kaczmarz type iteration
+//
+template<class I, class T>
+void kaczmarz_jacobi(const I Ap[], 
+                     const I Aj[], 
+                     const T Ax[],
+                           T  x[],
+                     const T  b[],
+                     const T Tx[],
+                           T temp[],
+                     const I row_start,
+                     const I row_stop,
+                     const I row_step,
+                     const T omega)
+{
+    //rename
+    const T * delta = Tx;
+    
+    for(I i = row_start; i < row_stop; i+=row_step)
+    {   temp[i] = 0.0; }
+
+    for(I i = row_start; i < row_stop; i+=row_step)
+    {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        for(I j = start; j < end; j++)
+        {   temp[Aj[j]] += omega*Ax[j]*delta[i]; }
+    }
+
+    for(I i = row_start; i < row_stop; i+=row_step)
+    {   x[i] += temp[i]; }
+}
+
+//
+// Gauss Seidel on the normal equations, i.e. Kaczmarz type iteration
+//
+template<class I, class T>
+void kaczmarz_gauss_seidel(const I Ap[], 
+                     const I Aj[], 
+                     const T Ax[],
+                           T  x[],
+                     const T  b[],
+                     const I row_start,
+                     const I row_stop,
+                     const I row_step,
+                     const T Tx[])
+{
+    //rename
+    const T * AsqRowSum = Tx;
+    
+    for(I i = row_start; i != row_stop; i+=row_step)
+    {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        
+        //First calculate "delta", the scaled residual term
+        T delta = 0.0;
+        for(I j = start; j < end; j++)
+        {   delta += Ax[j]*x[Aj[j]]; }
+        delta = (b[i] - delta)/AsqRowSum[i];
+
+        for(I j = start; j < end; j++)
+        {   x[Aj[j]] += Ax[j]*delta; }
+    }
+
+}
+
 #endif
