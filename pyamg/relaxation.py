@@ -126,7 +126,6 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 def jacobi(A, x, b, iterations=1, omega=1.0):
     """Perform Jacobi iteration on the linear system Ax=b
 
-    
     Parameters
     ----------
     A : {csr_matrix, bsr_matrix}
@@ -228,7 +227,7 @@ def polynomial(A, x, b, coeffs):
 
 
 #TODO unify indexed with normal GS
-def gauss_seidel_indexed(A,x,b,iterations=1,Id=None,sweep='forward'):
+def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
     """
     Perform Gauss-Seidel iteration on the linear system Ax=b
 

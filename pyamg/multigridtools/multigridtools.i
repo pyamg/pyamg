@@ -63,7 +63,8 @@
     const ctype  x [ ],
     const ctype  y [ ],
     const ctype  z [ ],
-    const ctype  b [ ]    
+    const ctype  b [ ],
+    const ctype  B [ ]    
 };
 %enddef
 
@@ -123,15 +124,20 @@
   ctype  y [],
   ctype  z [],
   ctype splitting [],
+  ctype order [],
+  ctype level [],
+  ctype components [],
   ctype Id []
 };
 %enddef
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply ctype * INPLACE_ARRAY {
+  ctype   Ax [ ],
   ctype   Bx [ ],
   ctype   Sx [ ],
   ctype   Tx [ ],
+  ctype    R [ ],
   ctype    x [ ],
   ctype    y [ ],
   ctype    z [ ],
@@ -205,6 +211,8 @@ INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
+INSTANTIATE_BOTH(fit_candidates)
+
 INSTANTIATE_BOTH(satisfy_constraints_helper)
 INSTANTIATE_BOTH(invert_BtB)
 INSTANTIATE_BOTH(min_blocks)
@@ -227,6 +235,9 @@ INSTANTIATE_BOTH(kaczmarz_gauss_seidel)
 %template(vertex_coloring_mis)                vertex_coloring_mis<int,int>;
 %template(vertex_coloring_jones_plassmann)    vertex_coloring_jones_plassmann<int,int,double>;
 %template(vertex_coloring_LDF)                vertex_coloring_LDF<int,int,double>;
+
+INSTANTIATE_INDEX(breadth_first_search)
+INSTANTIATE_INDEX(connected_components)
 
 INSTANTIATE_BOTH2(bellman_ford)
 INSTANTIATE_BOTH2(lloyd_cluster)

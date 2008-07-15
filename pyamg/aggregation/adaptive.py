@@ -160,7 +160,7 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
 
     #step 1
     A_l = A
-    x   = rand(A_l.shape[0],1) # TODO see why randn() fails here
+    x   = randn(A_l.shape[0],1) # TODO see why randn() fails here
     skip_f_to_i = False
 
     def relax(A,x):
@@ -255,7 +255,7 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
     
     levels = ml.levels
 
-    x = rand(levels[0].A.shape[0],1)
+    x = randn(levels[0].A.shape[0],1)
     b = zeros_like(x)
 
     x = ml.solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)

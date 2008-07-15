@@ -175,6 +175,130 @@ I standard_aggregation(const I n_row,
     return next_aggregate; //number of aggregates
 }
 
+
+
+template <class I, class T>
+void fit_candidates(const I n_row,
+                    const I n_col,
+                    const I   K1,
+                    const I   K2,
+                    const I Ap[], 
+                    const I Ai[],
+                          T Ax[],
+                    const T  B[],
+                          T  R[],
+                    const T  tol)
+{
+    std::fill(R, R + (n_col*K2*K2), 0);
+
+
+    const I BS = K1*K2; //blocksize
+
+    //Copy blocks into Ax
+    for(I j = 0; j < n_col; j++){
+        T * Ax_start = Ax + BS * Ap[j];
+
+        for(I ii = Ap[j]; ii < Ap[j+1]; ii++){
+            const T * B_start = B + BS*Ai[ii];
+            const T * B_end   = B_start + BS;
+            std::copy(B_start, B_end, Ax_start);
+            Ax_start += BS;
+        }
+    }
+
+    
+    //orthonormalize columns
+    for(I j = 0; j < n_col; j++){
+        const I col_start  = Ap[j];
+        const I col_end    = Ap[j+1];
+
+        T * Ax_start = Ax + BS * col_start;
+        T * Ax_end   = Ax + BS * col_end;
+        T * R_start  = R  + j * K2 * K2;
+        
+        for(I bj = 0; bj < K2; bj++){
+            //compute norm of block column
+            T norm = 0;
+
+            {
+                T * Ax_col = Ax_start + bj;
+                while(Ax_col < Ax_end){
+                    norm   += (*Ax_col) * (*Ax_col);
+                    Ax_col += K2;
+                }
+                norm = sqrt(norm);
+            }
+            
+            const T threshold = tol * norm;
+    
+            //orthogonalize against previous columns
+            for(I bi = 0; bi < bj; bi++){
+
+                //compute dot product with column
+                T dot_prod = 0;
+
+                {
+                    T * Ax_bi = Ax_start + bi;
+                    T * Ax_bj = Ax_start + bj;
+                    while(Ax_bi < Ax_end){
+                        dot_prod += (*Ax_bi) * (*Ax_bj);
+                        Ax_bi    += K2;
+                        Ax_bj    += K2;
+                    }
+                }
+
+                // orthogonalize against previous column
+                {
+                    T * Ax_bi = Ax_start + bi;
+                    T * Ax_bj = Ax_start + bj;
+                    while(Ax_bi < Ax_end){
+                        *Ax_bj -= dot_prod * (*Ax_bi);
+                        Ax_bi  += K2;
+                        Ax_bj  += K2;
+                    }
+                }
+                
+                R_start[K2 * bi + bj] = dot_prod;
+            }
+
+
+            //compute norm of block column
+            norm = 0;
+
+            {
+                T * Ax_bj = Ax_start + bj;
+                while(Ax_bj < Ax_end){
+                    norm  += (*Ax_bj) * (*Ax_bj);
+                    Ax_bj += K2;
+                }
+                norm = sqrt(norm);
+            }
+           
+
+            //normalize column if norm > threshold
+            //otherwise set column to 0
+            T scale;
+            if(norm > threshold){
+                scale = 1.0/norm;
+                R_start[K2 * bj + bj] = norm;
+            } else {
+                scale = 0;
+                R_start[K2 * bj + bj] = 0;
+            }
+            {
+                T * Ax_bj = Ax_start + bj;
+                while(Ax_bj < Ax_end){
+                    *Ax_bj *= scale;
+                    Ax_bj  += K2;
+                }
+            }
+
+
+        }
+    }
+}
+
+
 /*
  * Helper routine for satisfy_constraints routine called 
  *     by energy_prolongation_smoother(...) in smooth.py

@@ -83,6 +83,14 @@ def vertex_coloring_LDF(*args):
   """vertex_coloring_LDF(int num_rows, int Ap, int Aj, int x, double y) -> int"""
   return _multigridtools.vertex_coloring_LDF(*args)
 
+def breadth_first_search(*args):
+  """breadth_first_search(int Ap, int Aj, int seed, int order, int level)"""
+  return _multigridtools.breadth_first_search(*args)
+
+def connected_components(*args):
+  """connected_components(int num_nodes, int Ap, int Aj, int components)"""
+  return _multigridtools.connected_components(*args)
+
 
 def rs_direct_interpolation_pass2(*args):
   """
@@ -94,6 +102,15 @@ def rs_direct_interpolation_pass2(*args):
         double Bx)
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
+
+def fit_candidates(*args):
+  """
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        float Ax, float B, float R, float tol)
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        double Ax, double B, double R, double tol)
+    """
+  return _multigridtools.fit_candidates(*args)
 
 def satisfy_constraints_helper(*args):
   """

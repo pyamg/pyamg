@@ -2,9 +2,11 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import zeros, sqrt, asarray, empty, diff
-from scipy.sparse import isspmatrix_csr, bsr_matrix
+from numpy import asarray, empty, arange
+from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix
+
 from pyamg.utils import scale_columns
+from pyamg import multigridtools
 
 __all__ = ['fit_candidates']
 
@@ -44,19 +46,68 @@ def fit_candidates(AggOp, B, tol=1e-10):
         tentative prolongator will not include those degrees of freedom. This
         situation is illustrated in the examples below.
 
-    
     Examples
     --------
-
-    TODO: 
-        Show B=[1,1,1,1]^T
-        Show B=[[1,1,1,1],[0,1,2,3]]^T
-        Show B=[1,1,1,1]^T where AggOp has zero row
-
+    >>> from scipy.sparse import csr_matrix
+    >>> # four nodes divided into two aggregates
+    ... AggOp = csr_matrix( [[1,0],
+    ...                      [1,0],
+    ...                      [0,1],
+    ...                      [0,1]] )
+    >>> # B contains one candidate, the constant vector
+    ... B = [[1],
+    ...      [1],
+    ...      [1],
+    ...      [1]]
+    >>> Q,R = fit_candidates(AggOp, B)
+    >>> Q.todense()
+    matrix([[ 0.70710678,  0.        ],
+            [ 0.70710678,  0.        ],
+            [ 0.        ,  0.70710678],
+            [ 0.        ,  0.70710678]])
+    >>> R
+    array([[ 1.41421356],
+           [ 1.41421356]])
+    >>> # Two candidates, the constant vector and a linear function
+    ... B = [[1,0],
+    ...      [1,1],
+    ...      [1,2],
+    ...      [1,3]]
+    >>> Q,R = fit_candidates(AggOp, B)
+    >>> Q.todense()
+    matrix([[ 0.70710678, -0.70710678,  0.        ,  0.        ],
+            [ 0.70710678,  0.70710678,  0.        ,  0.        ],
+            [ 0.        ,  0.        ,  0.70710678, -0.70710678],
+            [ 0.        ,  0.        ,  0.70710678,  0.70710678]])
+    >>> R
+    array([[ 1.41421356,  0.70710678],
+           [ 0.        ,  0.70710678],
+           [ 1.41421356,  3.53553391],
+           [ 0.        ,  0.70710678]])
+    >>> # aggregation excludes the third node
+    ... AggOp = csr_matrix( [[1,0],
+    ...                      [1,0],
+    ...                      [0,0],
+    ...                      [0,1]] )
+    >>> B = [[1],
+    ...      [1],
+    ...      [1],
+    ...      [1]]
+    >>> Q,R = fit_candidates(AggOp, B)
+    >>> Q.todense()
+    matrix([[ 0.70710678,  0.        ],
+            [ 0.70710678,  0.        ],
+            [ 0.        ,  0.        ],
+            [ 0.        ,  1.        ]])
+    >>> R
+    array([[ 1.41421356],
+           [ 1.        ]])
+ 
     """
     if not isspmatrix_csr(AggOp):
         raise TypeError('expected csr_matrix for argument AggOp')
 
+    B = asarray(B)
     if B.dtype != 'float32':
         B = asarray(B,dtype='float64')
 
@@ -66,54 +117,26 @@ def fit_candidates(AggOp, B, tol=1e-10):
     if B.shape[0] % AggOp.shape[0] != 0:
         raise ValueError('dimensions of AggOp %s and B %s are incompatible' % (AggOp.shape, B.shape))
     
-
-    K = B.shape[1] # number of near-nullspace candidates
-    blocksize = B.shape[0] / AggOp.shape[0]
-
     N_fine,N_coarse = AggOp.shape
 
-    R = zeros((N_coarse,K,K), dtype=B.dtype) #storage for coarse candidates
+    K1 = B.shape[0] / N_fine  # DoF per supernode (e.g. 3 for 3d vectors)
+    K2 = B.shape[1]           # candidates
 
-    candidate_matrices = []
+    R = empty((N_coarse,K2,K2), dtype=B.dtype)   # coarse candidates
+    Qx = empty((AggOp.nnz,K1,K2), dtype=B.dtype) # BSR data array
+    
+    AggOp_csc = AggOp.tocsc()
+    
+    fn = multigridtools.fit_candidates 
+    fn(N_fine, N_coarse, K1, K2, \
+            AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(), \
+            B.ravel(), R.ravel(), tol)
 
-    for i in range(K):
-        c = B[:,i]
-        c = c.reshape(-1,blocksize,1)[diff(AggOp.indptr) == 1]     # eliminate DOFs that aggregation misses
-
-        X = bsr_matrix( (c, AggOp.indices, AggOp.indptr), \
-                shape=(blocksize*N_fine, N_coarse) )
-
-        col_thresholds = tol * bsr_matrix((X.data**2,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() 
-
-        #orthogonalize X against previous
-        for j,A in enumerate(candidate_matrices):
-            D_AtX = bsr_matrix((A.data*X.data,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() #same as diagonal of A.T * X
-            R[:,j,i] = D_AtX
-            X.data -= scale_columns(A,D_AtX).data
-
-        #normalize X
-        col_norms = bsr_matrix((X.data**2,X.indices,X.indptr),shape=X.shape).sum(axis=0).A.flatten() #same as diagonal of X.T * X
-        mask = col_norms <= col_thresholds   # set small basis functions to 0
-
-        col_norms = sqrt(col_norms)
-        col_norms[mask] = 0
-        R[:,i,i] = col_norms
-        col_norms = 1.0/col_norms
-        col_norms[mask] = 0
-
-        scale_columns(X,col_norms,copy=False)
-
-        candidate_matrices.append(X)
-
-    Q_indptr  = AggOp.indptr
-    Q_indices = AggOp.indices
-    Q_data = empty((AggOp.nnz,blocksize,K)) #if AggOp includes all nodes, then this is (N_fine * K)
-    for i,X in enumerate(candidate_matrices):
-        Q_data[:,:,i] = X.data.reshape(-1,blocksize)
-    Q = bsr_matrix((Q_data,Q_indices,Q_indptr),shape=(blocksize*N_fine,K*N_coarse))
-
-    R = R.reshape(-1,K)
+    #TODO replace with BSC matrix here
+    Q = bsr_matrix( (Qx.swapaxes(1,2).copy(), AggOp_csc.indices, AggOp_csc.indptr), shape=(K2*N_coarse,K1*N_fine)) 
+    Q = Q.T.tobsr()
+    R = R.reshape(-1,K2)
 
     return Q,R
-
+    
 

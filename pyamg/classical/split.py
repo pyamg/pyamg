@@ -46,7 +46,7 @@ CLJP: Clearly-Luby-Jones-Plassmann
       size on structured meshes.  
     - See References [1,2]
 
-CLJP: Clearly-Luby-Jones-Plassmann in Color
+CLJP-c: Clearly-Luby-Jones-Plassmann in Color
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Better scalability than CLJP on structured meshes.
     - See References [1]
@@ -55,9 +55,9 @@ CLJP: Clearly-Luby-Jones-Plassmann in Color
 Summary
 -------
 
-In general, methods that use a graph coloring perform better on 
-structured meshes[1].  Unstructured meshes do not appear to benefit 
-substaintially from coloring.
+In general, methods that use a graph coloring perform better on structured 
+meshes [1].  Unstructured meshes do not appear to benefit substaintially 
+from coloring.
 
     ========  ========  ========  ==========  
      method   parallel  in color     cost    
@@ -126,7 +126,7 @@ def PMIS(S):
     weights,G,S,T = preprocess(S)
     return MIS(G, weights)
 
-def PMISc(S,method='JP'):
+def PMISc(S, method='JP'):
     """C/F splitting using Parallel Modified Independent Set (in color)
 
     PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
@@ -196,7 +196,7 @@ def preprocess(S, coloring_method = None):
     if coloring_method is None:
         weights  = weights + rand(len(weights))
     else:
-        coloring = vertex_coloring(G,coloring_method)  #TODO use better parallel coloring
+        coloring = vertex_coloring(G, coloring_method)  #TODO use better parallel coloring
         num_colors = coloring.max() + 1
         weights  = weights + (rand(len(weights)) + coloring)/num_colors
 

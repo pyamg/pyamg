@@ -9,12 +9,15 @@
 
 /*
  *
- * Return a strength of connection matrix using the method of Ruge and Stuben
+ * Return a strength of connection matrix using the classical 
+ * strength of connection measure by Ruge and Stuben.
  *
- *    An off-diagonal entry A[i.j] is a strong connection iff
- *
- *            -A[i,j] >= theta * max( -A[i,k] )   where k != i
- *
+ * Specifically, an off-diagonal entry A[i.j] is a strong 
+ * connection if:
+ *  
+ *      -A[i,j] >= theta * max( -A[i,k] )   where k != i
+ * 
+ * Otherwise, the connection is weak.
  *  
  */          
 
@@ -27,12 +30,11 @@ void classical_strength_of_connection(const I n_row,
     I nnz = 0;
     Sp[0] = 0;
 
-    //Compute lambdas for each node
     for(I i = 0; i < n_row; i++){
         T min_offdiagonal = std::numeric_limits<T>::max();
 
-        I row_start = Ap[i];
-        I row_end   = Ap[i+1];
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
 
         for(I jj = row_start; jj < row_end; jj++){
             if(Aj[jj] != i){
@@ -56,7 +58,6 @@ void classical_strength_of_connection(const I n_row,
 }
 
 
-#define NodeType char
 #define F_NODE 0
 #define C_NODE 1
 #define U_NODE 2
@@ -306,6 +307,8 @@ void rs_standard_interpolation(const I n_nodes,
     // TODO
 }
 
+
+//#define NodeType char
 // // The following function closely approximates the
 // // method described in the 1987 Ruge-Stuben paper
 //

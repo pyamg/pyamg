@@ -176,6 +176,140 @@ class TestVertexColorings(TestCase):
         assert_equal( coloring, [2, 0, 1, 2, 1, 0] )
 
 
+
+def test_breadth_first_search():
+    from pyamg.graph import breadth_first_search
+
+    BFS = breadth_first_search
+
+    G = csr_matrix([[0,1,0,0],
+                    [1,0,1,0],
+                    [0,1,0,1],
+                    [0,0,1,0]])
+
+    assert_equal(BFS(G,0)[1], [0,1,2,3])
+    assert_equal(BFS(G,1)[1], [1,0,1,2])
+    assert_equal(BFS(G,2)[1], [2,1,0,1])
+    assert_equal(BFS(G,3)[1], [3,2,1,0])
+
+    G = csr_matrix([[0,1,0,0],
+                    [1,0,1,0],
+                    [0,1,0,0],
+                    [0,0,0,0]])
+
+    assert_equal(BFS(G,0)[1], [ 0, 1, 2,-1])
+    assert_equal(BFS(G,1)[1], [ 1, 0, 1,-1])
+    assert_equal(BFS(G,2)[1], [ 2, 1, 0,-1])
+    assert_equal(BFS(G,3)[1], [-1,-1,-1, 0])
+
+
+def test_connected_components():
+
+    cases = []
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,1,0],
+                              [0,1,0,1],
+                              [0,0,1,0]]) )
+
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,0,0],
+                              [0,0,0,1],
+                              [0,0,1,0]]) )
+    
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0]]) )
+    
+    cases.append( csr_matrix([[0,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0]]) )
+
+    #  2        5
+    #  | \    / | 
+    #  0--1--3--4
+    cases.append( csr_matrix([[ 0, 1, 1, 0, 0, 0],
+                              [ 1, 0, 1, 1, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 1, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+    
+    #  2        5
+    #  | \    / | 
+    #  0  1--3--4
+    cases.append( csr_matrix([[ 0, 0, 1, 0, 0, 0],
+                              [ 0, 0, 1, 1, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 1, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+
+    #  2        5
+    #  | \    / | 
+    #  0--1  3--4
+    cases.append( csr_matrix([[ 0, 1, 1, 0, 0, 0],
+                              [ 1, 0, 1, 0, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 0, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+
+
+
+    #######################################
+    # Compare to reference implementation #
+    #######################################
+
+    for G in cases:
+        result = connected_components(G)
+
+        assert_equal(result.min(), 0)
+        
+        def array_to_set_of_sets(arr):
+            """convert array to set of sets format"""
+            D = {}
+            for i in set(arr):
+                D[i] = set()
+            for n,i in enumerate(arr):
+                D[i].add(n)
+            return set([frozenset(s) for s in D.values()])
+        
+        result = array_to_set_of_sets(result)
+        expected = reference_connected_components(G)
+
+        assert_equal(result, expected)
+
+        
+
+#############################
+# reference implementations #
+#############################
+
+def reference_connected_components(G):
+    G = G.tocsr()
+    N = G.shape[0]
+
+    def DFS(i, G, component, visited):
+        if i not in visited:
+            component.add(i)
+            visited.add(i)
+            for j in G.indices[G.indptr[i]:G.indptr[i+1]]:
+                DFS(j, G, component, visited)
+    
+
+    num_components = 0
+    visited = set()
+    components = set()
+    for i in range(N):
+        if i not in visited:
+            component = set()
+            DFS(i, G, component, visited)
+            components.add(frozenset(component))
+
+    return components            
+
 from pyamg.graph import max_value
 def reference_bellman_ford(G,seeds):
     G = G.tocoo()
@@ -208,4 +342,5 @@ def reference_bellman_ford(G,seeds):
 
 
 if __name__ == '__main__':
+    import nose
     nose.run(argv=['', __file__])

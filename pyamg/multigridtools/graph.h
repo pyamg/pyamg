@@ -503,5 +503,86 @@ void maximal_independent_set_k_parallel(const I num_rows,
     }
 
 }
+
+
+// level must be initialized to -1!
+template <class I>
+void breadth_first_search(const I Ap[], 
+                          const I Aj[],
+                          const I seed,
+                                I order[],
+                                I level[])
+{
+    // initialize seed
+    order[0]    = seed;
+    level[seed] = 0;
+   
+    I N = 1;
+    I level_begin = 0;
+    I level_end   = N;
+
+    I current_level = 1;
+
+    while(level_begin < level_end){
+        // for each node of the last level
+        for(I ii = level_begin; ii < level_end; ii++){
+            const I i = order[ii];
+
+            // add all unmarked neighbors to the queue
+            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+                const I j = Aj[jj];
+                if(level[j] == -1){
+                    order[N] = j;
+                    level[j] = current_level;
+                    N++;
+                }
+            }
+
+        }
+
+        level_begin = level_end;
+        level_end   = N;
+        current_level++;
+    }
+
+}
+
+
+template <class I>
+void connected_components_helper(const I Ap[], 
+                                 const I Aj[],
+                                 const I i,
+                                 const I component,
+                                       I components[])
+{
+    components[i] = component;
+
+    for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+        const I j = Aj[jj];
+        if(components[j] == -1){
+            connected_components_helper(Ap, Aj, j, component, components);
+        }
+    }
+}
+
+template <class I>
+void connected_components(const I num_nodes,
+                          const I Ap[], 
+                          const I Aj[],
+                                I components[])
+{
+    std::fill(components, components + num_nodes, -1);
+
+    I component = 0;
+
+    for(I i = 0; i < num_nodes; i++){
+        if(components[i] == -1){
+            connected_components_helper(Ap, Aj, i, component, components);
+            component++;
+        }
+    }
+
+}
+
 #endif
 

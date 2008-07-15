@@ -10,7 +10,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_csc
 import multigridtools
 
 __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford', \
-           'lloyd_cluster']
+           'lloyd_cluster', 'connected_components']
 
 
 def max_value(datatype):
@@ -35,8 +35,8 @@ def maximal_independent_set(G, algo='serial', k=None):
 
     Parameters
     ----------
-    G    : symmetric matrix (e.g. csr_matrix or csc_matrix)
-        Matrix whose nonzero values represent a graph
+    G : symmetric matrix, preferably in sparse CSR or CSC format
+        The nonzeros of G represent the edges of an undirected graph.
 
     algo : {'serial', 'parallel'}
         Algorithm used to compute the MIS
@@ -86,10 +86,9 @@ def vertex_coloring(G, method='MIS'):
 
     Parameters
     ----------
-    G      - symmetric matrix (e.g. csr_matrix or csc_matrix)
-        Matrix whose nonzero values represent a graph
-
-    method - {string}
+    G : symmetric matrix, preferably in sparse CSR or CSC format
+        The nonzeros of G represent the edges of an undirected graph.
+    method : {string}
         Algorithm used to compute the vertex coloring:
             * 'MIS' - Maximal Independent Set
             * 'JP'  - Jones-Plassmann (parallel)
@@ -207,4 +206,64 @@ def lloyd_cluster(G, seeds, maxiter=10):
     
     return (distances, clusters, seeds)
 
+
+def breadth_first_search(G, seed):
+    G = asgraph(G)
+    N = G.shape[0]
+
+    #Check symmetry?
+
+    order = empty(N, G.indptr.dtype)
+    level = empty(N, G.indptr.dtype)
+    level[:] = -1
+
+    BFS = multigridtools.breadth_first_search
+    BFS(G.indptr, G.indices, int(seed), order, level)
+
+    return order,level
+
+def connected_components(G):
+    """Compute the connected components of a graph
+
+    The connected components of a graph G, which is represented by a 
+    symmetric sparse matrix, are labeled with the integers 0,1,..(K-1) where 
+    K is the number of components.
+
+    Parameters
+    ----------
+    G : symmetric matrix, preferably in sparse CSR or CSC format
+        The nonzeros of G represent the edges of an undirected graph.
+
+    Returns
+    -------
+    components : ndarray
+        An array of component labels for each vertex of the graph.
+
+    Notes
+    -----
+    If the nonzero structure of G is not symmetric, then the 
+    result is undefined.
+
+    Examples
+    --------
+    >>> connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    array([0, 0, 0])
+    >>> connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    array([0, 0, 1])
+    >>> connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    array([0, 1, 2])
+    >>> connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    array([0, 0, 1, 1])
+
+    """    
+    G = asgraph(G)
+    N = G.shape[0]
+
+    #Check symmetry?
+    components = empty(N, G.indptr.dtype)
+    
+    fn = multigridtools.connected_components
+    fn(N, G.indptr, G.indices, components)
+
+    return components
 
