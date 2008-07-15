@@ -18,7 +18,6 @@ from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         integer, mean, sum, prod, ravel, hstack, invert, repeat
 
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
-from scikits import delaunay
 from pyamg.graph import vertex_coloring
 
 __all__ = ['coarse_grid_vis', 'write_vtu', 'write_mesh', 'shrink_elmts']
@@ -253,6 +252,7 @@ def coarse_grid_vis(fid, Vert, E2V, Agg, mesh_type, A=None, plot_type='primal'):
 
         write_mesh(filename, Vert, array(range(N)).reshape(N,1), mesh_type='vertex', pdata=pdata)
 
+        from scikits import delaunay
         
         # plot_type = 'primal', using a global Delaunay triangulation of the shrunken mesh,
         #   we visualize the aggregates as if the global Delaunay triangulation defined a Continuous Galerkin
