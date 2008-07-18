@@ -47,7 +47,7 @@ class TestParameters(TestCase):
     def test_smoothers(self): 
         smoothers = []
         smoothers.append('gauss_seidel')
-        smoothers.append( ('sor',{'omega':0.9}) )
+        #smoothers.append( ('sor',{'omega':0.9}) )
         smoothers.append( ('gauss_seidel',{'sweep' : 'symmetric'}) )
 
         for pre in smoothers:
