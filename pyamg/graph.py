@@ -181,6 +181,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     #interpret seeds argument
     if isscalar(seeds):
         seeds = numpy.random.permutation(N)[:seeds]
+        seeds = seeds.astype('intc')
     else: 
         seeds = asarray(seeds, dtype='intc', copy=True)
 
