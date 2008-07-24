@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 from numpy import sqrt
@@ -94,5 +94,3 @@ def reference_symmetric_strength_of_connection(A, theta):
     return S.tocsr()
 
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

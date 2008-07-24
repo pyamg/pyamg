@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 from numpy import ones, eye, zeros, bincount, empty, asarray, array
@@ -341,6 +341,3 @@ def reference_bellman_ford(G,seeds):
     return (distances, nearest_seed) 
 
 
-if __name__ == '__main__':
-    import nose
-    nose.run(argv=['', __file__])

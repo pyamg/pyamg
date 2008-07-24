@@ -9,5 +9,5 @@ from tentative import *
 from smooth import *
 
 __all__ = filter(lambda s:not s.startswith('_'),dir())
-from scipy.testing.pkgtester import Tester
+from pyamg.testing import Tester
 test = Tester().test

@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from scipy import matrix
 
@@ -47,5 +47,3 @@ class TestPoisson(TestCase):
         for grid,expected in cases:
             assert_equal( poisson(grid).todense(), expected )
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

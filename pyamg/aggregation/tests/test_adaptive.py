@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from numpy import arange, ones, zeros, array, eye, vstack, diff
 from scipy import rand
@@ -98,5 +98,3 @@ class TestAdaptiveSA(TestCase):
 #                assert_almost_equal(Q_result*(Q_result.T*fine_candidates[:,:i+1]),fine_candidates[:,:i+1])
 #
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

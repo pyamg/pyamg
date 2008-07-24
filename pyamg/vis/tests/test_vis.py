@@ -1,10 +1,11 @@
 """ Try creating a point and primal aggregate view for a C/F splitting and
 simple aggregation, respectively."""
 
+from pyamg.testing import *
+
 import tempfile
 import os
 
-from scipy.testing import *
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
 
@@ -106,5 +107,3 @@ class TestVis(TestCase):
                         Vert=Vert, E2V=E2V, Agg=Agg,
                         mesh_type='tri', A=None, plot_type='primal')
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

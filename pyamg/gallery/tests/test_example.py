@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from pyamg.gallery.example import *
 
@@ -16,5 +16,3 @@ class TestExample(TestCase):
         assert_equal( vertices.shape, (240,3) )
         assert_equal( elements.shape, (480,3) )
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

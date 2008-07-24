@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from numpy import ones, arange, array, diff, vstack
 from scipy.sparse import csr_matrix
@@ -58,7 +58,4 @@ class TestFitCandidates(TestCase):
             assert_almost_equal(fine_candidates,Q*coarse_candidates)
             assert_almost_equal(Q*(Q.T*fine_candidates),fine_candidates)
 
-
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])
 

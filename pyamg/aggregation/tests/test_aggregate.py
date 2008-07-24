@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 from numpy import array, ones, arange, empty, array_split
@@ -102,8 +102,4 @@ def reference_standard_aggregation(C):
 
     return csr_matrix((Px,Pj,Pp))
 
-
-
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])
 

@@ -11,6 +11,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('gallery')
     config.add_subpackage('multigridtools')
     config.add_subpackage('vis')
+    config.add_subpackage('testing')
 
     config.add_data_dir('tests')
 

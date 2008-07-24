@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from numpy import matrix, array, diag, arange
 from scipy import rand
@@ -30,5 +30,3 @@ class TestMultilevel(TestCase):
                 assert_almost_equal( A*x, b)
 
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

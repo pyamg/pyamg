@@ -23,7 +23,7 @@ __all__ = filter(lambda s:not s.startswith('_'),dir())
 __all__ += ['test','__version__']
 
 
-from scipy.testing.pkgtester import Tester
+from pyamg.testing import Tester
 test = Tester().test
 bench = Tester().bench
 __doc__ += """

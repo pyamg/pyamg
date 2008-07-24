@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 from numpy import sqrt, ones, arange, array
@@ -113,7 +113,4 @@ class TestSolverPerformance(TestCase):
 
         assert(avg_convergence_ratio < 0.25)
 
-
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])
 

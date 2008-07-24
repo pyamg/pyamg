@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from numpy import array, zeros, ones, mat
 from scipy.linalg import pinv2

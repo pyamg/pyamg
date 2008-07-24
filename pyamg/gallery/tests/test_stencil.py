@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from scipy import matrix, array
 
@@ -132,5 +132,3 @@ class TestStencil(TestCase):
             result = stencil_grid(stencil, grid).todense()
             assert_equal(result, expected)
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

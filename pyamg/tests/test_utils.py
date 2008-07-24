@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from numpy import matrix, array, diag, zeros, sqrt
 from scipy import rand
@@ -129,5 +129,3 @@ class TestUtils(TestCase):
             residuals = profile_solver(ml, **kwargs)
 
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

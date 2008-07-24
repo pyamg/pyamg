@@ -1,9 +1,10 @@
 """ Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed
 xml."""
 
+from pyamg.testing import *
+
 import tempfile
 
-from scipy.testing import *
 import xml.parsers.expat
 from numpy import array, uint32
 
@@ -83,5 +84,3 @@ class TestWriteVtu(TestCase):
             except Exception, ex:
                 assert False, 'problem: %s' % (ex)
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 import scipy
@@ -217,5 +217,3 @@ class TestRelaxation(TestCase):
 #            fn(A, ones(4), zeros(4))
 
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

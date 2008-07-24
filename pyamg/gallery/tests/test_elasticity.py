@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 from scipy import matrix, array
 from scipy.sparse import coo_matrix
@@ -209,5 +209,3 @@ class TestLocalStiffnessMatrix(TestCase):
         assert_almost_equal(p13d_local(V,0,1), M)
         assert_almost_equal(p13d_local(V,1,1), L + M)
 
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])

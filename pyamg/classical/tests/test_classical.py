@@ -1,4 +1,4 @@
-from scipy.testing import *
+from pyamg.testing import *
 
 import numpy
 from numpy import ravel, ones, concatenate, cumsum, zeros
