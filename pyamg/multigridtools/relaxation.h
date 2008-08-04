@@ -138,16 +138,15 @@ void gauss_seidel_indexed(const I Ap[],
                           const I row_step)
 {
   for(I i = row_start; i != row_stop; i += row_step) {
-    I i1 = Id[i];
-    I i2 = Id[i+1];
-    I start = Ap[i1];
-    I end   = Ap[i2];
+    I inew = Id[i];
+    I start = Ap[inew];
+    I end   = Ap[inew+1];
     T rsum  = 0;
     T diag  = 0;
 
     for(I jj = start; jj < end; ++jj){
       I j = Aj[jj];
-      if (i1 == j){
+      if (inew == j){
         diag = Ax[jj];
       }
       else{
@@ -156,7 +155,7 @@ void gauss_seidel_indexed(const I Ap[],
     }
 
     if (diag != 0){
-      x[i1] = (b[i1] - rsum)/diag;
+      x[inew] = (b[inew] - rsum)/diag;
     }
   }
 }

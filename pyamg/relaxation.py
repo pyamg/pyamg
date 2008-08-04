@@ -257,23 +257,28 @@ def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
     if A.shape[1] != len(x) or len(x) != len(b):
         raise ValueError,'unexpected number of unknowns'
 
+    # Id==none is the same as standard gauss-seidel
+    if Id==None:
+        gauss_seidel(A, x, b, iterations, sweep)
+        return
+
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(Id),1
     elif sweep == 'backward':
         row_start,row_stop,row_step = len(Id)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            gauss_seidel(A,x,b,iterations=1,sweep='forward')
-            gauss_seidel(A,x,b,iterations=1,sweep='backward')
+            gauss_seidel_indexed(A,x,b,iterations=1,Id=Id,sweep='forward')
+            gauss_seidel_indexed(A,x,b,iterations=1,Id=Id,sweep='backward')
         return
     else:
         raise ValueError,'valid sweep directions are \'forward\', \'backward\', and \'symmetric\''
 
-
     for iter in xrange(iterations):
-        multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
-                                    x, b, Id,
-                                    row_start, row_stop, row_step)
+        multigridtools.gauss_seidel_indexed(
+                            A.indptr, A.indices, A.data,
+                            x, b, Id,
+                            row_start, row_stop, row_step)
 
 def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     """Perform Kaczmarz Jacobi iterations on the linear system A A^T x = A^Tb
