@@ -147,7 +147,7 @@ template <typename T> T SwigValueInit() {
 
 /* This should only be incremented when either the layout of swig_type_info changes,
    or for whatever reason, the runtime changes incompatibly */
-#define SWIG_RUNTIME_VERSION "3"
+#define SWIG_RUNTIME_VERSION "4"
 
 /* define SWIG_TYPE_TABLE_NAME as "SWIG_TYPE_TABLE" */
 #ifdef SWIG_TYPE_TABLE
@@ -182,6 +182,7 @@ template <typename T> T SwigValueInit() {
 
 /* Flags for pointer conversions */
 #define SWIG_POINTER_DISOWN        0x1
+#define SWIG_CAST_NEW_MEMORY       0x2
 
 /* Flags for new pointer objects */
 #define SWIG_POINTER_OWN           0x1
@@ -322,7 +323,7 @@ SWIGINTERNINLINE int SWIG_CheckState(int r) {
 extern "C" {
 #endif
 
-typedef void *(*swig_converter_func)(void *);
+typedef void *(*swig_converter_func)(void *, int *);
 typedef struct swig_type_info *(*swig_dycast_func)(void **);
 
 /* Structure to store information on one type */
@@ -452,8 +453,8 @@ SWIG_TypeCheckStruct(swig_type_info *from, swig_type_info *into) {
   Cast a pointer up an inheritance hierarchy
 */
 SWIGRUNTIMEINLINE void *
-SWIG_TypeCast(swig_cast_info *ty, void *ptr) {
-  return ((!ty) || (!ty->converter)) ? ptr : (*ty->converter)(ptr);
+SWIG_TypeCast(swig_cast_info *ty, void *ptr, int *newmemory) {
+  return ((!ty) || (!ty->converter)) ? ptr : (*ty->converter)(ptr, newmemory);
 }
 
 /* 
@@ -877,7 +878,7 @@ SWIG_Python_AddErrorMsg(const char* mesg)
     Py_DECREF(old_str);
     Py_DECREF(value);
   } else {
-    PyErr_Format(PyExc_RuntimeError, mesg);
+    PyErr_SetString(PyExc_RuntimeError, mesg);
   }
 }
 
@@ -1437,7 +1438,7 @@ PySwigObject_dealloc(PyObject *v)
 {
   PySwigObject *sobj = (PySwigObject *) v;
   PyObject *next = sobj->next;
-  if (sobj->own) {
+  if (sobj->own == SWIG_POINTER_OWN) {
     swig_type_info *ty = sobj->ty;
     PySwigClientData *data = ty ? (PySwigClientData *) ty->clientdata : 0;
     PyObject *destroy = data ? data->destroy : 0;
@@ -1966,7 +1967,7 @@ SWIG_Python_GetSwigThis(PyObject *pyobj)
 
 SWIGRUNTIME int
 SWIG_Python_AcquirePtr(PyObject *obj, int own) {
-  if (own) {
+  if (own == SWIG_POINTER_OWN) {
     PySwigObject *sobj = SWIG_Python_GetSwigThis(obj);
     if (sobj) {
       int oldown = sobj->own;
@@ -1987,6 +1988,8 @@ SWIG_Python_ConvertPtrAndOwn(PyObject *obj, void **ptr, swig_type_info *ty, int 
     return SWIG_OK;
   } else {
     PySwigObject *sobj = SWIG_Python_GetSwigThis(obj);
+    if (own)
+      *own = 0;
     while (sobj) {
       void *vptr = sobj->ptr;
       if (ty) {
@@ -2000,7 +2003,15 @@ SWIG_Python_ConvertPtrAndOwn(PyObject *obj, void **ptr, swig_type_info *ty, int 
 	  if (!tc) {
 	    sobj = (PySwigObject *)sobj->next;
 	  } else {
-	    if (ptr) *ptr = SWIG_TypeCast(tc,vptr);
+	    if (ptr) {
+              int newmemory = 0;
+              *ptr = SWIG_TypeCast(tc,vptr,&newmemory);
+              if (newmemory == SWIG_CAST_NEW_MEMORY) {
+                assert(own);
+                if (own)
+                  *own = *own | SWIG_CAST_NEW_MEMORY;
+              }
+            }
 	    break;
 	  }
 	}
@@ -2010,7 +2021,8 @@ SWIG_Python_ConvertPtrAndOwn(PyObject *obj, void **ptr, swig_type_info *ty, int 
       }
     }
     if (sobj) {
-      if (own) *own = sobj->own;
+      if (own)
+        *own = *own | sobj->own;
       if (flags & SWIG_POINTER_DISOWN) {
 	sobj->own = 0;
       }
@@ -2075,8 +2087,13 @@ SWIG_Python_ConvertFunctionPtr(PyObject *obj, void **ptr, swig_type_info *ty) {
     }
     if (ty) {
       swig_cast_info *tc = SWIG_TypeCheck(desc,ty);
-      if (!tc) return SWIG_ERROR;
-      *ptr = SWIG_TypeCast(tc,vptr);
+      if (tc) {
+        int newmemory = 0;
+        *ptr = SWIG_TypeCast(tc,vptr,&newmemory);
+        assert(!newmemory); /* newmemory handling not yet implemented */
+      } else {
+        return SWIG_ERROR;
+      }
     } else {
       *ptr = vptr;
     }
@@ -3151,7 +3168,7 @@ SWIGINTERN PyObject *_wrap_standard_aggregation(PyObject *SWIGUNUSEDPARM(self), 
     if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
     arg4 = (int*) array_data(temp4);
   }
-  result = (int)standard_aggregation<int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
+  result = (int)standard_aggregation< int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -3248,7 +3265,7 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
     if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
     arg6 = (int*) array_data(temp6);
   }
-  rs_cf_splitting<int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,(int const (*))arg5,arg6);
+  rs_cf_splitting< int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,(int const (*))arg5,arg6);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -3337,7 +3354,7 @@ SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass1(PyObject *SWIGUNUSEDPAR
     if (!temp5  || !require_contiguous(temp5) || !require_native(temp5)) SWIG_fail;
     arg5 = (int*) array_data(temp5);
   }
-  rs_direct_interpolation_pass1<int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5);
+  rs_direct_interpolation_pass1< int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -3492,7 +3509,7 @@ SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2__SWIG_1(PyObject *SWIGU
     if (!temp11  || !require_contiguous(temp11) || !require_native(temp11)) SWIG_fail;
     arg11 = (float*) array_data(temp11);
   }
-  rs_direct_interpolation_pass2<int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,(int const (*))arg5,(int const (*))arg6,(float const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10,arg11);
+  rs_direct_interpolation_pass2< int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,(int const (*))arg5,(int const (*))arg6,(float const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10,arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -3677,7 +3694,7 @@ SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2__SWIG_2(PyObject *SWIGU
     if (!temp11  || !require_contiguous(temp11) || !require_native(temp11)) SWIG_fail;
     arg11 = (double*) array_data(temp11);
   }
-  rs_direct_interpolation_pass2<int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,(int const (*))arg5,(int const (*))arg6,(double const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10,arg11);
+  rs_direct_interpolation_pass2< int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,(int const (*))arg5,(int const (*))arg6,(double const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10,arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -3859,7 +3876,10 @@ SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2(PyObject *self, PyObjec
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'rs_direct_interpolation_pass2'.\n  Possible C/C++ prototypes are:\n""    rs_direct_interpolation_pass2<(int,float)>(int const,int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],int [],float [])\n""    rs_direct_interpolation_pass2<(int,double)>(int const,int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],int [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'rs_direct_interpolation_pass2'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    rs_direct_interpolation_pass2< int,float >(int const,int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],int [],float [])\n"
+    "    rs_direct_interpolation_pass2< int,double >(int const,int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],int [],double [])\n");
   return NULL;
 }
 
@@ -4386,7 +4406,7 @@ SWIGINTERN PyObject *_wrap_satisfy_constraints_helper__SWIG_1(PyObject *SWIGUNUS
     if (!temp10  || !require_contiguous(temp10) || !require_native(temp10)) SWIG_fail;
     arg10 = (float*) array_data(temp10);
   }
-  satisfy_constraints_helper<int,float >(arg1,arg2,arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10);
+  satisfy_constraints_helper< int,float >(arg1,arg2,arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object5 && array5) Py_DECREF(array5);
@@ -4542,7 +4562,7 @@ SWIGINTERN PyObject *_wrap_satisfy_constraints_helper__SWIG_2(PyObject *SWIGUNUS
     if (!temp10  || !require_contiguous(temp10) || !require_native(temp10)) SWIG_fail;
     arg10 = (double*) array_data(temp10);
   }
-  satisfy_constraints_helper<int,double >(arg1,arg2,arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10);
+  satisfy_constraints_helper< int,double >(arg1,arg2,arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,(int const (*))arg8,(int const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object5 && array5) Py_DECREF(array5);
@@ -4708,7 +4728,10 @@ SWIGINTERN PyObject *_wrap_satisfy_constraints_helper(PyObject *self, PyObject *
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'satisfy_constraints_helper'.\n  Possible C/C++ prototypes are:\n""    satisfy_constraints_helper<(int,float)>(int const,int const,int const,int const,float const [],float const [],float const [],int const [],int const [],float [])\n""    satisfy_constraints_helper<(int,double)>(int const,int const,int const,int const,double const [],double const [],double const [],int const [],int const [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'satisfy_constraints_helper'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    satisfy_constraints_helper< int,float >(int const,int const,int const,int const,float const [],float const [],float const [],int const [],int const [],float [])\n"
+    "    satisfy_constraints_helper< int,double >(int const,int const,int const,int const,double const [],double const [],double const [],int const [],int const [],double [])\n");
   return NULL;
 }
 
@@ -4803,7 +4826,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,float >(arg1,arg2,arg3,(float const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  invert_BtB< int,float >(arg1,arg2,arg3,(float const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) Py_DECREF(array4);
@@ -4919,7 +4942,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,double >(arg1,arg2,arg3,(double const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  invert_BtB< int,double >(arg1,arg2,arg3,(double const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) Py_DECREF(array4);
@@ -5053,7 +5076,10 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'invert_BtB'.\n  Possible C/C++ prototypes are:\n""    invert_BtB<(int,float)>(int const,int const,int const,float const [],int const,float [],int const [],int const [])\n""    invert_BtB<(int,double)>(int const,int const,int const,double const [],int const,double [],int const [],int const [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'invert_BtB'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    invert_BtB< int,float >(int const,int const,int const,float const [],int const,float [],int const [],int const [])\n"
+    "    invert_BtB< int,double >(int const,int const,int const,double const [],int const,double [],int const [],int const [])\n");
   return NULL;
 }
 
@@ -5102,7 +5128,7 @@ SWIGINTERN PyObject *_wrap_min_blocks__SWIG_1(PyObject *SWIGUNUSEDPARM(self), Py
     if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
     arg4 = (float*) array_data(temp4);
   }
-  min_blocks<int,float >(arg1,arg2,(float const (*))arg3,arg4);
+  min_blocks< int,float >(arg1,arg2,(float const (*))arg3,arg4);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5160,7 +5186,7 @@ SWIGINTERN PyObject *_wrap_min_blocks__SWIG_2(PyObject *SWIGUNUSEDPARM(self), Py
     if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
     arg4 = (double*) array_data(temp4);
   }
-  min_blocks<int,double >(arg1,arg2,(double const (*))arg3,arg4);
+  min_blocks< int,double >(arg1,arg2,(double const (*))arg3,arg4);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5238,7 +5264,10 @@ SWIGINTERN PyObject *_wrap_min_blocks(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'min_blocks'.\n  Possible C/C++ prototypes are:\n""    min_blocks<(int,float)>(int const,int const,float const [],float [])\n""    min_blocks<(int,double)>(int const,int const,double const [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'min_blocks'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    min_blocks< int,float >(int const,int const,float const [],float [])\n"
+    "    min_blocks< int,double >(int const,int const,double const [],double [])\n");
   return NULL;
 }
 
@@ -5331,7 +5360,7 @@ SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_1(PyObject *SW
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (float*) array_data(temp8);
   }
-  classical_strength_of_connection<int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
+  classical_strength_of_connection< int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5445,7 +5474,7 @@ SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_2(PyObject *SW
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (double*) array_data(temp8);
   }
-  classical_strength_of_connection<int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
+  classical_strength_of_connection< int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5575,7 +5604,10 @@ SWIGINTERN PyObject *_wrap_classical_strength_of_connection(PyObject *self, PyOb
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'classical_strength_of_connection'.\n  Possible C/C++ prototypes are:\n""    classical_strength_of_connection<(int,float)>(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n""    classical_strength_of_connection<(int,double)>(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'classical_strength_of_connection'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    classical_strength_of_connection< int,float >(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n"
+    "    classical_strength_of_connection< int,double >(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
   return NULL;
 }
 
@@ -5668,7 +5700,7 @@ SWIGINTERN PyObject *_wrap_symmetric_strength_of_connection__SWIG_1(PyObject *SW
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (float*) array_data(temp8);
   }
-  symmetric_strength_of_connection<int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
+  symmetric_strength_of_connection< int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(float const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5782,7 +5814,7 @@ SWIGINTERN PyObject *_wrap_symmetric_strength_of_connection__SWIG_2(PyObject *SW
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (double*) array_data(temp8);
   }
-  symmetric_strength_of_connection<int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
+  symmetric_strength_of_connection< int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,(double const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -5912,7 +5944,10 @@ SWIGINTERN PyObject *_wrap_symmetric_strength_of_connection(PyObject *self, PyOb
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'symmetric_strength_of_connection'.\n  Possible C/C++ prototypes are:\n""    symmetric_strength_of_connection<(int,float)>(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n""    symmetric_strength_of_connection<(int,double)>(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'symmetric_strength_of_connection'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    symmetric_strength_of_connection< int,float >(int const,float const,int const [],int const [],float const [],int [],int [],float [])\n"
+    "    symmetric_strength_of_connection< int,double >(int const,double const,int const [],int const [],double const [],int [],int [],double [])\n");
   return NULL;
 }
 
@@ -5975,7 +6010,7 @@ SWIGINTERN PyObject *_wrap_apply_distance_filter__SWIG_1(PyObject *SWIGUNUSEDPAR
     if (!temp5  || !require_contiguous(temp5) || !require_native(temp5)) SWIG_fail;
     arg5 = (float*) array_data(temp5);
   }
-  apply_distance_filter<int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,arg5);
+  apply_distance_filter< int,float >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,arg5);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -6053,7 +6088,7 @@ SWIGINTERN PyObject *_wrap_apply_distance_filter__SWIG_2(PyObject *SWIGUNUSEDPAR
     if (!temp5  || !require_contiguous(temp5) || !require_native(temp5)) SWIG_fail;
     arg5 = (double*) array_data(temp5);
   }
-  apply_distance_filter<int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,arg5);
+  apply_distance_filter< int,double >(arg1,arg2,(int const (*))arg3,(int const (*))arg4,arg5);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object3 && array3) Py_DECREF(array3);
@@ -6147,7 +6182,10 @@ SWIGINTERN PyObject *_wrap_apply_distance_filter(PyObject *self, PyObject *args)
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'apply_distance_filter'.\n  Possible C/C++ prototypes are:\n""    apply_distance_filter<(int,float)>(int const,float const,int const [],int const [],float [])\n""    apply_distance_filter<(int,double)>(int const,double const,int const [],int const [],double [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'apply_distance_filter'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    apply_distance_filter< int,float >(int const,float const,int const [],int const [],float [])\n"
+    "    apply_distance_filter< int,double >(int const,double const,int const [],int const [],double [])\n");
   return NULL;
 }
 
@@ -6261,7 +6299,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  ode_strength_helper<int,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,arg8,arg9);
+  ode_strength_helper< int,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -6408,7 +6446,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  ode_strength_helper<int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,arg8,arg9);
+  ode_strength_helper< int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -6562,7 +6600,10 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'ode_strength_helper'.\n  Possible C/C++ prototypes are:\n""    ode_strength_helper<(int,float)>(float [],int const [],int const [],int const,float const [],float const [],float const [],int const,int const)\n""    ode_strength_helper<(int,double)>(double [],int const [],int const [],int const,double const [],double const [],double const [],int const,int const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'ode_strength_helper'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    ode_strength_helper< int,float >(float [],int const [],int const [],int const,float const [],float const [],float const [],int const,int const)\n"
+    "    ode_strength_helper< int,double >(double [],int const [],int const [],int const,double const [],double const [],double const [],int const,int const)\n");
   return NULL;
 }
 
@@ -6671,7 +6712,7 @@ SWIGINTERN PyObject *_wrap_block_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "block_gauss_seidel" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  block_gauss_seidel<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9);
+  block_gauss_seidel< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -6807,7 +6848,7 @@ SWIGINTERN PyObject *_wrap_block_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "block_gauss_seidel" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  block_gauss_seidel<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9);
+  block_gauss_seidel< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -6957,7 +6998,10 @@ SWIGINTERN PyObject *_wrap_block_gauss_seidel(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'block_gauss_seidel'.\n  Possible C/C++ prototypes are:\n""    block_gauss_seidel<(int,float)>(int const [],int const [],float const [],float [],float const [],int const,int const,int const,int const)\n""    block_gauss_seidel<(int,double)>(int const [],int const [],double const [],double [],double const [],int const,int const,int const,int const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'block_gauss_seidel'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    block_gauss_seidel< int,float >(int const [],int const [],float const [],float [],float const [],int const,int const,int const,int const)\n"
+    "    block_gauss_seidel< int,double >(int const [],int const [],double const [],double [],double const [],int const,int const,int const,int const)\n");
   return NULL;
 }
 
@@ -7057,7 +7101,7 @@ SWIGINTERN PyObject *_wrap_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self), 
     SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
-  gauss_seidel<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8);
+  gauss_seidel< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -7184,7 +7228,7 @@ SWIGINTERN PyObject *_wrap_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self), 
     SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
-  gauss_seidel<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8);
+  gauss_seidel< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -7322,7 +7366,10 @@ SWIGINTERN PyObject *_wrap_gauss_seidel(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel'.\n  Possible C/C++ prototypes are:\n""    gauss_seidel<(int,float)>(int const [],int const [],float const [],float [],float const [],int const,int const,int const)\n""    gauss_seidel<(int,double)>(int const [],int const [],double const [],double [],double const [],int const,int const,int const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    gauss_seidel< int,float >(int const [],int const [],float const [],float [],float const [],int const,int const,int const)\n"
+    "    gauss_seidel< int,double >(int const [],int const [],double const [],double [],double const [],int const,int const,int const)\n");
   return NULL;
 }
 
@@ -7439,7 +7486,7 @@ SWIGINTERN PyObject *_wrap_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObje
     SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi" "', argument " "10"" of type '" "float""'");
   } 
   arg10 = static_cast< float >(val10);
-  jacobi<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9,arg10);
+  jacobi< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -7583,7 +7630,7 @@ SWIGINTERN PyObject *_wrap_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObje
     SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  jacobi<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9,arg10);
+  jacobi< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -7743,7 +7790,10 @@ SWIGINTERN PyObject *_wrap_jacobi(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'jacobi'.\n  Possible C/C++ prototypes are:\n""    jacobi<(int,float)>(int const [],int const [],float const [],float [],float const [],float [],int const,int const,int const,float const)\n""    jacobi<(int,double)>(int const [],int const [],double const [],double [],double const [],double [],int const,int const,int const,double const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'jacobi'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    jacobi< int,float >(int const [],int const [],float const [],float [],float const [],float [],int const,int const,int const,float const)\n"
+    "    jacobi< int,double >(int const [],int const [],double const [],double [],double const [],double [],int const,int const,int const,double const)\n");
   return NULL;
 }
 
@@ -7857,7 +7907,7 @@ SWIGINTERN PyObject *_wrap_gauss_seidel_indexed__SWIG_1(PyObject *SWIGUNUSEDPARM
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "gauss_seidel_indexed" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  gauss_seidel_indexed<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(int const (*))arg6,arg7,arg8,arg9);
+  gauss_seidel_indexed< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(int const (*))arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -8004,7 +8054,7 @@ SWIGINTERN PyObject *_wrap_gauss_seidel_indexed__SWIG_2(PyObject *SWIGUNUSEDPARM
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "gauss_seidel_indexed" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  gauss_seidel_indexed<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(int const (*))arg6,arg7,arg8,arg9);
+  gauss_seidel_indexed< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(int const (*))arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -8158,7 +8208,10 @@ SWIGINTERN PyObject *_wrap_gauss_seidel_indexed(PyObject *self, PyObject *args) 
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel_indexed'.\n  Possible C/C++ prototypes are:\n""    gauss_seidel_indexed<(int,float)>(int const [],int const [],float const [],float [],float const [],int const [],int const,int const,int const)\n""    gauss_seidel_indexed<(int,double)>(int const [],int const [],double const [],double [],double const [],int const [],int const,int const,int const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel_indexed'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    gauss_seidel_indexed< int,float >(int const [],int const [],float const [],float [],float const [],int const [],int const,int const,int const)\n"
+    "    gauss_seidel_indexed< int,double >(int const [],int const [],double const [],double [],double const [],int const [],int const,int const,int const)\n");
   return NULL;
 }
 
@@ -8289,7 +8342,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "kaczmarz_jacobi" "', argument " "11"" of type '" "float""'");
   } 
   arg11 = static_cast< float >(val11);
-  kaczmarz_jacobi<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,arg7,arg8,arg9,arg10,arg11);
+  kaczmarz_jacobi< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,arg7,arg8,arg9,arg10,arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -8453,7 +8506,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self
     SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "kaczmarz_jacobi" "', argument " "11"" of type '" "double""'");
   } 
   arg11 = static_cast< double >(val11);
-  kaczmarz_jacobi<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,arg7,arg8,arg9,arg10,arg11);
+  kaczmarz_jacobi< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,arg7,arg8,arg9,arg10,arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -8629,7 +8682,10 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_jacobi'.\n  Possible C/C++ prototypes are:\n""    kaczmarz_jacobi<(int,float)>(int const [],int const [],float const [],float [],float const [],float const [],float [],int const,int const,int const,float const)\n""    kaczmarz_jacobi<(int,double)>(int const [],int const [],double const [],double [],double const [],double const [],double [],int const,int const,int const,double const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_jacobi'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    kaczmarz_jacobi< int,float >(int const [],int const [],float const [],float [],float const [],float const [],float [],int const,int const,int const,float const)\n"
+    "    kaczmarz_jacobi< int,double >(int const [],int const [],double const [],double [],double const [],double const [],double [],int const,int const,int const,double const)\n");
   return NULL;
 }
 
@@ -8743,7 +8799,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
     
     arg9 = (float*) array9->data;
   }
-  kaczmarz_gauss_seidel<int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,(float const (*))arg9);
+  kaczmarz_gauss_seidel< int,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,(float const (*))arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -8890,7 +8946,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
     
     arg9 = (double*) array9->data;
   }
-  kaczmarz_gauss_seidel<int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,(double const (*))arg9);
+  kaczmarz_gauss_seidel< int,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,(double const (*))arg9);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) Py_DECREF(array1);
@@ -9044,7 +9100,10 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_gauss_seidel'.\n  Possible C/C++ prototypes are:\n""    kaczmarz_gauss_seidel<(int,float)>(int const [],int const [],float const [],float [],float const [],int const,int const,int const,float const [])\n""    kaczmarz_gauss_seidel<(int,double)>(int const [],int const [],double const [],double [],double const [],int const,int const,int const,double const [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_gauss_seidel'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    kaczmarz_gauss_seidel< int,float >(int const [],int const [],float const [],float [],float const [],int const,int const,int const,float const [])\n"
+    "    kaczmarz_gauss_seidel< int,double >(int const [],int const [],double const [],double [],double const [],int const,int const,int const,double const [])\n");
   return NULL;
 }
 
@@ -9126,7 +9185,7 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_serial(PyObject *SWIGUNUSEDPA
     if (!temp7  || !require_contiguous(temp7) || !require_native(temp7)) SWIG_fail;
     arg7 = (int*) array_data(temp7);
   }
-  result = (int)maximal_independent_set_serial<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7);
+  result = (int)maximal_independent_set_serial< int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9246,7 +9305,7 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_parallel__SWIG_2(PyObject *SW
     SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "maximal_independent_set_parallel" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
-  result = (int)maximal_independent_set_parallel<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7,(double const (*))arg8,arg9);
+  result = (int)maximal_independent_set_parallel< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7,(double const (*))arg8,arg9);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9363,7 +9422,7 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_parallel__SWIG_3(PyObject *SW
     
     arg8 = (double*) array8->data;
   }
-  result = (int)maximal_independent_set_parallel<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7,(double const (*))arg8);
+  result = (int)maximal_independent_set_parallel< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,arg6,arg7,(double const (*))arg8);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9503,7 +9562,10 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_parallel(PyObject *self, PyOb
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'maximal_independent_set_parallel'.\n  Possible C/C++ prototypes are:\n""    maximal_independent_set_parallel<(int,int,double)>(int const,int const [],int const [],int const,int const,int const,int [],double const [],int const)\n""    maximal_independent_set_parallel<(int,int,double)>(int const,int const [],int const [],int const,int const,int const,int [],double const [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'maximal_independent_set_parallel'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    maximal_independent_set_parallel< int,int,double >(int const,int const [],int const [],int const,int const,int const,int [],double const [],int const)\n"
+    "    maximal_independent_set_parallel< int,int,double >(int const,int const [],int const [],int const,int const,int const,int [],double const [])\n");
   return NULL;
 }
 
@@ -9589,7 +9651,7 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_k_parallel__SWIG_2(PyObject *
     SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "maximal_independent_set_k_parallel" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
-  maximal_independent_set_k_parallel<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,(double const (*))arg6,arg7);
+  maximal_independent_set_k_parallel< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,(double const (*))arg6,arg7);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9687,7 +9749,7 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_k_parallel__SWIG_3(PyObject *
     
     arg6 = (double*) array6->data;
   }
-  maximal_independent_set_k_parallel<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,(double const (*))arg6);
+  maximal_independent_set_k_parallel< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5,(double const (*))arg6);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9803,7 +9865,10 @@ SWIGINTERN PyObject *_wrap_maximal_independent_set_k_parallel(PyObject *self, Py
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'maximal_independent_set_k_parallel'.\n  Possible C/C++ prototypes are:\n""    maximal_independent_set_k_parallel<(int,int,double)>(int const,int const [],int const [],int const,int [],double const [],int const)\n""    maximal_independent_set_k_parallel<(int,int,double)>(int const,int const [],int const [],int const,int [],double const [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'maximal_independent_set_k_parallel'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    maximal_independent_set_k_parallel< int,int,double >(int const,int const [],int const [],int const,int [],double const [],int const)\n"
+    "    maximal_independent_set_k_parallel< int,int,double >(int const,int const [],int const [],int const,int [],double const [])\n");
   return NULL;
 }
 
@@ -9858,7 +9923,7 @@ SWIGINTERN PyObject *_wrap_vertex_coloring_mis(PyObject *SWIGUNUSEDPARM(self), P
     if (!temp4  || !require_contiguous(temp4) || !require_native(temp4)) SWIG_fail;
     arg4 = (int*) array_data(temp4);
   }
-  result = (int)vertex_coloring_mis<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
+  result = (int)vertex_coloring_mis< int,int >(arg1,(int const (*))arg2,(int const (*))arg3,arg4);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -9936,7 +10001,7 @@ SWIGINTERN PyObject *_wrap_vertex_coloring_jones_plassmann(PyObject *SWIGUNUSEDP
     if (!temp5  || !require_contiguous(temp5) || !require_native(temp5)) SWIG_fail;
     arg5 = (double*) array_data(temp5);
   }
-  result = (int)vertex_coloring_jones_plassmann<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5);
+  result = (int)vertex_coloring_jones_plassmann< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,arg5);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10020,7 +10085,7 @@ SWIGINTERN PyObject *_wrap_vertex_coloring_LDF(PyObject *SWIGUNUSEDPARM(self), P
     
     arg5 = (double*) array5->data;
   }
-  result = (int)vertex_coloring_LDF<int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5);
+  result = (int)vertex_coloring_LDF< int,int,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5);
   resultobj = SWIG_From_int(static_cast< int >(result));
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10263,7 +10328,7 @@ SWIGINTERN PyObject *_wrap_bellman_ford__SWIG_1(PyObject *SWIGUNUSEDPARM(self), 
     if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
     arg6 = (int*) array_data(temp6);
   }
-  bellman_ford<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5,arg6);
+  bellman_ford< int,int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5,arg6);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10360,7 +10425,7 @@ SWIGINTERN PyObject *_wrap_bellman_ford__SWIG_2(PyObject *SWIGUNUSEDPARM(self), 
     if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
     arg6 = (int*) array_data(temp6);
   }
-  bellman_ford<int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,arg5,arg6);
+  bellman_ford< int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,arg5,arg6);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10457,7 +10522,7 @@ SWIGINTERN PyObject *_wrap_bellman_ford__SWIG_3(PyObject *SWIGUNUSEDPARM(self), 
     if (!temp6  || !require_contiguous(temp6) || !require_native(temp6)) SWIG_fail;
     arg6 = (int*) array_data(temp6);
   }
-  bellman_ford<int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,arg5,arg6);
+  bellman_ford< int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,arg5,arg6);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10600,7 +10665,11 @@ SWIGINTERN PyObject *_wrap_bellman_ford(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'bellman_ford'.\n  Possible C/C++ prototypes are:\n""    bellman_ford<(int,int)>(int const,int const [],int const [],int const [],int [],int [])\n""    bellman_ford<(int,float)>(int const,int const [],int const [],float const [],float [],int [])\n""    bellman_ford<(int,double)>(int const,int const [],int const [],double const [],double [],int [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'bellman_ford'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    bellman_ford< int,int >(int const,int const [],int const [],int const [],int [],int [])\n"
+    "    bellman_ford< int,float >(int const,int const [],int const [],float const [],float [],int [])\n"
+    "    bellman_ford< int,double >(int const,int const [],int const [],double const [],double [],int [])\n");
   return NULL;
 }
 
@@ -10693,7 +10762,7 @@ SWIGINTERN PyObject *_wrap_lloyd_cluster__SWIG_1(PyObject *SWIGUNUSEDPARM(self),
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (int*) array_data(temp8);
   }
-  lloyd_cluster<int,int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5,arg6,arg7,arg8);
+  lloyd_cluster< int,int >(arg1,(int const (*))arg2,(int const (*))arg3,(int const (*))arg4,arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10807,7 +10876,7 @@ SWIGINTERN PyObject *_wrap_lloyd_cluster__SWIG_2(PyObject *SWIGUNUSEDPARM(self),
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (int*) array_data(temp8);
   }
-  lloyd_cluster<int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,arg5,arg6,arg7,arg8);
+  lloyd_cluster< int,float >(arg1,(int const (*))arg2,(int const (*))arg3,(float const (*))arg4,arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -10921,7 +10990,7 @@ SWIGINTERN PyObject *_wrap_lloyd_cluster__SWIG_3(PyObject *SWIGUNUSEDPARM(self),
     if (!temp8  || !require_contiguous(temp8) || !require_native(temp8)) SWIG_fail;
     arg8 = (int*) array_data(temp8);
   }
-  lloyd_cluster<int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,arg5,arg6,arg7,arg8);
+  lloyd_cluster< int,double >(arg1,(int const (*))arg2,(int const (*))arg3,(double const (*))arg4,arg5,arg6,arg7,arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) Py_DECREF(array2);
@@ -11097,7 +11166,11 @@ SWIGINTERN PyObject *_wrap_lloyd_cluster(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'lloyd_cluster'.\n  Possible C/C++ prototypes are:\n""    lloyd_cluster<(int,int)>(int const,int const [],int const [],int const [],int const,int [],int [],int [])\n""    lloyd_cluster<(int,float)>(int const,int const [],int const [],float const [],int const,float [],int [],int [])\n""    lloyd_cluster<(int,double)>(int const,int const [],int const [],double const [],int const,double [],int [],int [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'lloyd_cluster'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    lloyd_cluster< int,int >(int const,int const [],int const [],int const [],int const,int [],int [],int [])\n"
+    "    lloyd_cluster< int,float >(int const,int const [],int const [],float const [],int const,float [],int [],int [])\n"
+    "    lloyd_cluster< int,double >(int const,int const [],int const [],double const [],int const,double [],int [],int [])\n");
   return NULL;
 }
 
@@ -11318,7 +11391,7 @@ SWIGRUNTIME void
 SWIG_InitializeModule(void *clientdata) {
   size_t i;
   swig_module_info *module_head, *iter;
-  int found;
+  int found, init;
   
   clientdata = clientdata;
   
@@ -11328,6 +11401,9 @@ SWIG_InitializeModule(void *clientdata) {
     swig_module.type_initial = swig_type_initial;
     swig_module.cast_initial = swig_cast_initial;
     swig_module.next = &swig_module;
+    init = 1;
+  } else {
+    init = 0;
   }
   
   /* Try and load any already created modules */
@@ -11355,6 +11431,12 @@ SWIG_InitializeModule(void *clientdata) {
     swig_module.next = module_head->next;
     module_head->next = &swig_module;
   }
+  
+  /* When multiple interpeters are used, a module could have already been initialized in
+       a different interpreter, but not yet have a pointer in this interpreter.
+       In this case, we do not want to continue adding types... everything should be
+       set up already */
+  if (init == 0) return;
   
   /* Now work on filling in swig_module.types */
 #ifdef SWIGRUNTIME_DEBUG

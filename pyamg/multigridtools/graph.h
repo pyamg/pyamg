@@ -250,7 +250,7 @@ T vertex_coloring_jones_plassmann(const I num_rows,
         K++;
     }
 
-    return K;
+    return *std::max_element(x, x + num_rows);
 }
 
 
@@ -304,7 +304,7 @@ T vertex_coloring_LDF(const I num_rows,
         K++;
     }
 
-    return K;
+    return *std::max_element(x, x + num_rows);
 }
 
     
