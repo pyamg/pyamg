@@ -183,12 +183,6 @@ DECLARE_DATA_TYPE( double )
  /*
   * Order may be important here, list float before double
   */
-
-%define INSTANTIATE_BOTH( f_name )
-%template(f_name)   f_name<int,float>;
-%template(f_name)   f_name<int,double>;
-/* 64-bit indices would go here */
-%enddef
  
 %define INSTANTIATE_INDEX( f_name )
 %template(f_name)   f_name<int>;
@@ -199,7 +193,12 @@ DECLARE_DATA_TYPE( double )
 %template(f_name)   f_name<double>;
 %enddef
 
-%define INSTANTIATE_BOTH2( f_name )
+%define INSTANTIATE_BOTH( f_name )
+%template(f_name)   f_name<int,float>;
+%template(f_name)   f_name<int,double>;
+%enddef
+
+%define INSTANTIATE_ALL( f_name )
 %template(f_name)   f_name<int,int>;
 %template(f_name)   f_name<int,float>;
 %template(f_name)   f_name<int,double>;
@@ -239,6 +238,6 @@ INSTANTIATE_BOTH(kaczmarz_gauss_seidel)
 INSTANTIATE_INDEX(breadth_first_search)
 INSTANTIATE_INDEX(connected_components)
 
-INSTANTIATE_BOTH2(bellman_ford)
-INSTANTIATE_BOTH2(lloyd_cluster)
+INSTANTIATE_ALL(bellman_ford)
+INSTANTIATE_ALL(lloyd_cluster)
 

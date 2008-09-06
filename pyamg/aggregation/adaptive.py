@@ -113,7 +113,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     ###
     # improve candidates
     for i in range(improvement_iters):
-        for i in range(B.shape[1]):
+        for j in range(B.shape[1]):
             B = B[:,1:]
             x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
                                                                  postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
@@ -124,18 +124,18 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
                                        postsmoother=prepostsmoother, smooth=smooth,**kwargs)
 
 
-def relax_candidate(A, x, candidate_iters, prepostsmoother, smooth):
-#Currently this fcn is not called anywhere, can this be removed?  
-    opts = kwargs.copy()
-    opts['max_levels']    = 1
-    opts['coarse_solver'] = None
-
-    ml = smoothed_aggregation_solver(A, presmoother=prepostsmoother, 
-                                     postsmoother=prepostsmoother, smooth=smooth,**opts)
-
-    for i in range(candidate_iters):
-        ml.presmooth(A,x,b)
-        ml.postsmooth(A,x,b)
+#def relax_candidate(A, x, candidate_iters, prepostsmoother, smooth):
+#    #Currently this fcn is not called anywhere, can this be removed?  
+#    opts = kwargs.copy()
+#    opts['max_levels']    = 1
+#    opts['coarse_solver'] = None
+#
+#    ml = smoothed_aggregation_solver(A, presmoother=prepostsmoother, 
+#                                     postsmoother=prepostsmoother, smooth=smooth,**opts)
+#
+#    for i in range(candidate_iters):
+#        ml.presmooth(A,x,b)
+#        ml.postsmooth(A,x,b)
    
    
 

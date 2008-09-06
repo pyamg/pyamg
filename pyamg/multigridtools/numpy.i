@@ -383,7 +383,7 @@ PyObject *helper_appendToTuple( PyObject *where, PyObject *what ) {
   $1 = (type*) array->data;
 }
 %typemap(freearg) type*  IN_ARRAY1 {
-  if (is_new_object$argnum && array$argnum) Py_DECREF(array$argnum);
+  if (is_new_object$argnum && array$argnum) { Py_DECREF(array$argnum); }
 }
 %enddef
 
@@ -401,7 +401,7 @@ PyObject *helper_appendToTuple( PyObject *where, PyObject *what ) {
   $1 = (type*) array->data;
 }
 %typemap(freearg) (type* IN_ARRAY2) {
-  if (is_new_object$argnum && array$argnum) Py_DECREF(array$argnum);
+  if (is_new_object$argnum && array$argnum) { Py_DECREF(array$argnum); }
 }
 %enddef
 
@@ -522,9 +522,9 @@ PyObject *helper_appendToTuple( PyObject *where, PyObject *what ) {
   $1 = tmp; 
 }; 
 %typemap( argout ) std::vector<ctype>* array_argout { 
-  int length = ($1)->size(); 
-  PyObject *obj = PyArray_FromDims(1, &length, ##atype); 
-  memcpy(PyArray_DATA(obj),&((*($1))[0]),sizeof(ctype)*length);	 
+  npy_intp length = ($1)->size(); 
+  PyObject *obj = PyArray_SimpleNew(1, &length, ##atype); 
+  memcpy(PyArray_DATA(obj), &((*($1))[0]), sizeof(ctype)*length);
   delete $1; 
   $result = helper_appendToTuple( $result, (PyObject *)obj ); 
 }; 
