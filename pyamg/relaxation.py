@@ -282,7 +282,7 @@ def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
 
 def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     """Perform Kaczmarz Jacobi iterations on the linear system A A^T x = A^Tb
-
+       (Also known as Cimmino relaxation)
     
     Parameters
     ----------
@@ -300,7 +300,20 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     Returns
     -------
     Nothing, x will be modified in place.
-   
+
+    References
+    ----------
+
+    Brandt, Ta'asan.  
+    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+
+    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+
+    Cimmino. La ricerca scientifica ser. II 1. 
+    Pubbliz. dell'Inst. pre le Appl. del Calculo 34, 326-333, 1938.
+    
     """
     x = asarray(x).reshape(-1)
     b = asarray(b).reshape(-1)
@@ -321,13 +334,17 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
         A = csr_matrix(A)
     
     temp = zeros(x.shape)
-    AsqRowsum = (A.multiply(A))*ones_like(x)
+    # D for A*A.T
+    D = (A.multiply(A))*ones_like(x)
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0.0
+    
     for i in range(iterations):
-        delta = ravel(asarray((b - A*x))/asarray(AsqRowsum))
+        delta = ravel(asarray((b - A*x))*asarray(D_inv))
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
-
+    
 def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     """Perform Kaczmarz Richardson iterations on the linear system A A^T x = A^Tb
 
@@ -348,7 +365,17 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     Returns
     -------
     Nothing, x will be modified in place.
-   
+    
+    References
+    ----------
+
+    Brandt, Ta'asan.  
+    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+
+    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+ 
     """
     #from pyamg.utils import approximate_spectral_radius
     #rho = approximate_spectral_radius(A)
@@ -398,7 +425,18 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     Returns
     -------
     Nothing, x will be modified in place.
-   
+    
+    References
+    ----------
+
+    Brandt, Ta'asan.  
+    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+
+    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+ 
+ 
     """
     
     x = asarray(x).reshape(-1)
@@ -429,12 +467,15 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         warn('implicit conversion to CSR', SparseEfficiencyWarning)
         A = csr_matrix(A)
         
-    AsqRowsum = (A.multiply(A))*ones_like(x)
+    # D for A*A.T
+    D = (A.multiply(A))*ones_like(x)
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0.0
+    
     for i in range(iterations):
         multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
                                            x, b, row_start,
-                                           row_stop, row_step, AsqRowsum)
-
+                                           row_stop, row_step, ravel(D_inv))
 
 #from pyamg.utils import dispatcher
 #dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

@@ -209,7 +209,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
                      const T Tx[])
 {
     //rename
-    const T * AsqRowSum = Tx;
+    const T * D_inv = Tx;
     
     for(I i = row_start; i != row_stop; i+=row_step)
     {
@@ -220,7 +220,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
         T delta = 0.0;
         for(I j = start; j < end; j++)
         {   delta += Ax[j]*x[Aj[j]]; }
-        delta = (b[i] - delta)/AsqRowSum[i];
+        delta = (b[i] - delta)*D_inv[i];
 
         for(I j = start; j < end; j++)
         {   x[Aj[j]] += Ax[j]*delta; }

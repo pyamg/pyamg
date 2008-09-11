@@ -7,7 +7,7 @@ import numpy
 import scipy
 from numpy import fromfile, ascontiguousarray, mat, int32, inner, dot, \
                   ravel, arange, concatenate, tile, asarray, sqrt, diff, \
-                  zeros, ones, empty, asmatrix
+                  zeros, ones, empty, asmatrix, array
 from scipy import rand, real                  
 from scipy.linalg import eigvals
 from scipy.lib.blas import get_blas_funcs
@@ -77,7 +77,7 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
         An approximation to the spectral radius of A
     """
    
-    if not isspmatrix(A):
+    if type(A) == type( array([0.0]) ):
         A = asmatrix(A) #convert dense arrays to matrix type
     
     if A.shape[0] != A.shape[1]:

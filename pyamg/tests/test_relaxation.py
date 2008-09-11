@@ -4,7 +4,7 @@ import numpy
 import scipy
 from scipy.sparse import spdiags, csr_matrix
 from scipy import arange, ones, zeros, array, allclose, zeros_like, \
-        tril, diag, triu, rand, asmatrix
+        tril, diag, triu, rand, asmatrix, mat
 from scipy.linalg import solve
 
 from pyamg.gallery    import poisson
@@ -201,6 +201,223 @@ class TestRelaxation(TestCase):
         resid2 = numpy.linalg.norm(A*x,2)
         self.assert_(resid1 < 0.01 and resid2 < 0.01)
         self.assert_(allclose(resid1,resid2))
+
+    def test_kaczmarz_jacobi(self):
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_jacobi(A,x,b)
+        assert_almost_equal(x,array([0]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = zeros(N)
+        b = arange(N).astype(numpy.float64)
+        kaczmarz_jacobi(A,x,b)
+        assert_almost_equal(x,array([-1./6., -1./15., 19./30.]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_jacobi(A,x,b)
+        assert_almost_equal(x,array([2./5., 7./5., 4./5.]))
+
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10])
+        kaczmarz_jacobi(A,x,b)
+        assert_almost_equal(x,array([5]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10,20,30])
+        kaczmarz_jacobi(A,x,b)
+        assert_almost_equal(x,array([16./15., 1./15., (9 + 7./15.) ]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        x_copy = x.copy()
+        b = array([10,20,30])
+        kaczmarz_jacobi(A,x,b,omega=1.0/3.0)
+        assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([16./15., 1./15., (9 + 7./15.) ]))
+
+    def test_kaczmarz_richardson(self):
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_richardson(A,x,b)
+        assert_almost_equal(x,array([0.]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = zeros(N)
+        b = arange(N).astype(numpy.float64)
+        kaczmarz_richardson(A,x,b)
+        assert_almost_equal(x,array([-1., 0., 3.]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_richardson(A,x,b)
+        assert_almost_equal(x,array([2., 3., -4.]))
+
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10])
+        kaczmarz_richardson(A,x,b)
+        assert_almost_equal(x,array([20.]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10,20,30])
+        kaczmarz_richardson(A,x,b)
+        assert_almost_equal(x,array([2., 3., 36.]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        x_copy = x.copy()
+        b = array([10,20,30])
+        kaczmarz_richardson(A,x,b,omega=1.0/3.0)
+        assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([2., 3., 36.]))
+
+    def test_kaczmarz_gauss_seidel_bsr(self):
+        cases = []
+
+        for N in [1,2,3,4,5,6,10]:
+            A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr()
+            
+            divisors = [ n for n in range(1,N+1) if N % n == 0 ]
+
+            x_csr = arange(N).astype(numpy.float64)
+            b = x_csr**2
+            kaczmarz_gauss_seidel(A,x_csr,b)
+
+            for D in divisors:
+                B = A.tobsr(blocksize=(D,D))
+                x_bsr = arange(N).astype(numpy.float64)
+                kaczmarz_gauss_seidel(B,x_bsr,b)
+                assert_almost_equal(x_bsr,x_csr)
+               
+    def test_kaczmarz_gauss_seidel_new(self):
+        scipy.random.seed(0)
+
+        cases = []
+        cases.append( poisson( (4,), format='csr' ) )
+        cases.append( poisson( (4,4), format='csr' ) )
+
+        temp = asmatrix( rand(4,4) )
+        cases.append( csr_matrix( temp.T * temp) )
+
+        # reference implementation
+        def gold(A,x,b,iterations,sweep):
+            A = mat(A.todense())
+            AA = A*A.T
+
+            L = tril(AA,k=0)
+            U = triu(AA,k=0)
+
+            for i in range(iterations):
+                if sweep == 'forward':
+                    x = x + A.T*(solve(L, (b - A*x) ))
+                elif sweep == 'backward':
+                    x = x + A.T*(solve(U, (b - A*x) ))
+                else:
+                    x = x + A.T*(solve(L, (b - A*x) ))
+                    x = x + A.T*(solve(U, (b - A*x) ))
+            return x            
+        
+        for A in cases:
+
+            b = asmatrix(rand(A.shape[0],1))
+            x = asmatrix(rand(A.shape[0],1))
+
+            x_copy = x.copy()
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
+            
+            x_copy = x.copy()
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='backward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='backward') )
+            
+            x_copy = x.copy()
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
+
+
+
+    def test_kaczmarz_gauss_seidel_csr(self):
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_gauss_seidel(A,x,b)
+        assert_almost_equal(x,array([0]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_gauss_seidel(A,x,b)
+        assert_almost_equal(x,array([4./15., 8./5., 4./5.]))
+
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_gauss_seidel(A,x,b,sweep='backward')
+        assert_almost_equal(x,array([0]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        kaczmarz_gauss_seidel(A,x,b,sweep='backward')
+        assert_almost_equal(x,array([2./5., 4./5., 6./5.]))
+
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10])
+        kaczmarz_gauss_seidel(A,x,b)
+        assert_almost_equal(x,array([5]))
+        
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10])
+        kaczmarz_gauss_seidel(A,x,b,sweep='backward')
+        assert_almost_equal(x,array([5]))
+        
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = array([10,20,30])
+        kaczmarz_gauss_seidel(A,x,b)
+        assert_almost_equal(x,array([-2./5., -2./5., (14 + 4./5.)]))
+
+        #forward and backward passes should give same result with x=ones(N),b=zeros(N)
+        N = 100
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = ones(N)
+        b = zeros(N)
+        kaczmarz_gauss_seidel(A,x,b,iterations=200,sweep='forward')
+        resid1 = numpy.linalg.norm(A*x,2)
+        x = ones(N)
+        kaczmarz_gauss_seidel(A,x,b,iterations=200,sweep='backward')
+        resid2 = numpy.linalg.norm(A*x,2)
+        self.assert_(resid1 < 0.2 and resid2 < 0.2)
+        self.assert_(allclose(resid1,resid2))
+
 
 #class TestDispatch(TestCase):
 #    def test_string(self):

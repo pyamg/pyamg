@@ -97,23 +97,29 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator
     """
 
-    # Use the square of the spectral radius of Dinv*S as 
-    # the Jacobi weight, as opposed to explicitly forming S*S.T
-    D = S.diagonal()
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0
-    D_inv_S = scale_rows(S, D_inv, copy=True)
-    rho = approximate_spectral_radius(D_inv_S)
-    omega = omega/(rho*rho) 
-
     # Form Dinv for S*S.T
     D = (S.multiply(S))*ones((S.shape[0],1))
     D_inv = 1.0 / D
     D_inv[D == 0] = 0
     D_inv_S = scale_rows(S, D_inv, copy=True)
 
+    # Approximate Spectral radius by defining a matvec for S.T*D_inv_S
+    ST = S.T.asformat(D_inv_S.format)
+    class matvec_mat:
+    
+        def __init__(self, matvec, shape):
+            self.shape = shape
+            self.matvec = matvec
+            self.__mul__ = matvec
+    
+    def matmul(A,B,x):
+        return A*(B*x)
+    
+    StDS_matmul = lambda x:matmul(ST, D_inv_S, x)
+    StDS = matvec_mat(StDS_matmul, S.shape)
+    omega = omega/approximate_spectral_radius(StDS)
+
     P = T
-    ST = S.T
     for i in range(degree):
         P = P - omega*(ST*(D_inv_S*P))
 

@@ -99,7 +99,9 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     # develop first candidate
     B,AggOps = initial_setup_stage(A, candidate_iters, epsilon, 
             max_levels, max_coarse, aggregation, prepostsmoother, smooth)
-
+    # Normalize B
+    B = (1.0/sqrt(inner(ravel(B), ravel(B))))*B
+    
     kwargs['aggregate'] = ('predefined',AggOps)
 
     ###
@@ -108,6 +110,9 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
         x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
                                                             postsmoother=prepostsmoother, smooth=smooth, **kwargs), 
                                 candidate_iters, prepostsmoother, smooth)
+        
+        # Normalize x and add to candidate list
+        x = (1.0/sqrt(inner(ravel(x), ravel(x))))*x
         B = hstack((B,x))
 
     ###
@@ -118,6 +123,9 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
             x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
                                                                  postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
                                      candidate_iters, prepostsmoother, smooth)
+            
+            # Normalize x and add to candidate list
+            x = (1.0/sqrt(inner(ravel(x), ravel(x))))*x
             B = hstack((B,x))
 
     return smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
@@ -215,6 +223,8 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
                 P_l = kaczmarz_richardson_prolongation_smoother(A_l, T_l, **kwargs)
             elif fn == 'kaczmarz_jacobi':
                 P_l = kaczmarz_jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+            elif fn == None:
+                P_l = T_l
             else:
                 raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
 
@@ -303,6 +313,8 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
                 levels[i].P = kaczmarz_richardson_prolongation_smoother(levels[i].A, T, **kwargs)
             elif fn == 'kaczmarz_jacobi':
                 levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+            elif fn == None:
+                P_l = T_l
             else:
                 raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
         
