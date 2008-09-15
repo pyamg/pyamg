@@ -138,7 +138,7 @@ void rs_cf_splitting(const I n_nodes,
 
                         if(splitting[k] == U_NODE){	      
                             //move k to the end of its current interval
-                            if(lambda[k] == n_nodes - 1) continue;
+                            if(lambda[k] >= n_nodes - 1) continue;
 
                             // TODO make this robust
                             //if(lambda[k] >= n_nodes -1)
