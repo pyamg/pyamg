@@ -109,6 +109,8 @@ def RS(S):
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
+    #if S.shape == (4,4):
+    #    print S.todense()
     splitting = empty( S.shape[0], dtype='intc' )
 
     multigridtools.rs_cf_splitting(S.shape[0],

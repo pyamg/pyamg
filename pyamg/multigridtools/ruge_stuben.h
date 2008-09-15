@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <iterator>
-#include <assert.h>
+#include <cassert>
 
 
 /*
@@ -80,8 +80,8 @@ void rs_cf_splitting(const I n_nodes,
     // count - is the number of indices in that interval
     // index to node - the node located at a given index
     // node to index - the index of a given node
-    std::vector<I> interval_ptr(n_nodes,0);
-    std::vector<I> interval_count(n_nodes,0);
+    std::vector<I> interval_ptr(n_nodes+1,0);
+    std::vector<I> interval_count(n_nodes+1,0);
     std::vector<I> index_to_node(n_nodes);
     std::vector<I> node_to_index(n_nodes);
 
@@ -105,9 +105,12 @@ void rs_cf_splitting(const I n_nodes,
     std::fill(splitting, splitting + n_nodes, U_NODE);
 
     //Now add elements to C and F, in decending order of lambda
-    for(I top_index = n_nodes - 1; top_index > -1; top_index--){
+    for(I top_index = n_nodes - 1; top_index != -1; top_index--){
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];
+
+        //if (n_nodes == 4)
+        //    std::cout << "selecting node #" << i << " with lambda " << lambda[i] << std::endl;
 
         //remove i from its interval
         interval_count[lambda_i]--;
@@ -135,8 +138,13 @@ void rs_cf_splitting(const I n_nodes,
 
                         if(splitting[k] == U_NODE){	      
                             //move k to the end of its current interval
-                            assert(lambda[j] < n_nodes - 1);//this would cause problems!
+                            if(lambda[k] == n_nodes - 1) continue;
 
+                            // TODO make this robust
+                            //if(lambda[k] >= n_nodes -1)
+                            //    std::cout << std::endl << "lambda[" << k << "]=" << lambda[k] << " n_nodes=" << n_nodes << std::endl;
+                            //assert(lambda[k] < n_nodes - 1);//this would cause problems!
+                            
                             I lambda_k = lambda[k];
                             I old_pos  = node_to_index[k];
                             I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
@@ -147,7 +155,7 @@ void rs_cf_splitting(const I n_nodes,
 
                             //update intervals
                             interval_count[lambda_k]   -= 1;
-                            interval_count[lambda_k+1] += 1;
+                            interval_count[lambda_k+1] += 1; //invalid write!
                             interval_ptr[lambda_k+1]    = new_pos;
 
                             //increment lambda_k
@@ -161,7 +169,9 @@ void rs_cf_splitting(const I n_nodes,
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                 I j = Sj[jj];
                 if(splitting[j] == U_NODE){            //decrement lambda for node j
-                    assert(lambda[j] > 0);//this would cause problems!
+                    if(lambda[j] == 0) continue;
+
+                    //assert(lambda[j] > 0);//this would cause problems!
 
                     //move j to the beginning of its current interval
                     I lambda_j = lambda[j];

@@ -1,9 +1,6 @@
 #ifndef RELAXATION_H
 #define RELAXATION_H
 
-#include <assert.h>
-#include <iostream>
-
 template<class I, class T>
 void gauss_seidel(const I Ap[], 
                   const I Aj[], 

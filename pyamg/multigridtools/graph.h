@@ -1,8 +1,8 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
-#include <iostream>
 #include <algorithm>
+#include <cassert>
 
 /*
  *  Compute a maximal independent set for a graph stored in CSR format
