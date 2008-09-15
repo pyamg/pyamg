@@ -182,7 +182,8 @@ class TestStrengthOfConnection(TestCase):
         Atilde = ode_strength_of_connection(Absr, B)
         AtildeExact = csr_matrix((
         array([  1.0,   1.0,   0.04256,  1.0,   0.07528,   1.0,
-                 0.13055,   1e-15,   0.30166,   1.0,   1e-15,   1.0,   1.0]),
+                 0.13055,   1e-6,   0.30166,   1.0,   1e-6,   1.0,   1.0]),
+        #ones((13,)),
         array([0, 1, 0, 1, 2, 2, 3, 1, 2, 3, 4, 3, 4]),
         array([ 0,  2,  5,  8, 11, 13])
         ), shape=Atilde.shape)

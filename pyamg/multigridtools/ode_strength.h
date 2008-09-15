@@ -75,8 +75,6 @@ void apply_distance_filter(const I n_row,
  *   n_blocks       Number of blocks in matrix, S
  *   blocksize      Size of each block
  *   Sx             Block data structure of BSR matrix, S
- *   Ax             Linear array of length n_blocks, which will hold the 
- *                      smallest nonzero element of each block in Sx
  *
  * Returns:
  *   Tx             Tx[i] holds the minimum nonzero of block i of S
@@ -88,17 +86,23 @@ void min_blocks(const I n_blocks, const I blocksize,
                 const T Sx[],     T Tx[])
 {
     I blockptr = 0;
+    T FLOAT_MAX = std::numeric_limits<T>::max();
 
     //Loop over blocks
     for(I i = 0; i < n_blocks; i++)
     {
-        T current_min = std::numeric_limits<T>::max();
+        T current_min = FLOAT_MAX;
         
         //Find min for this block
         for(I j = blockptr; j < (blockptr + blocksize); j++)
         {
             if( (Sx[j] != 0.0) && (Sx[j] < current_min) )
-            {   current_min = Sx[j]; }
+            {   
+                if( Sx[j] < 1e-6 )
+                {   current_min = 1e-6; }
+                else
+                {   current_min = Sx[j]; } 
+            }
         }
         
         blockptr += blocksize;
