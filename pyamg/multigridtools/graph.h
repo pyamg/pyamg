@@ -351,6 +351,7 @@ void lloyd_cluster(const I num_rows,
     }
     for(I i = 0; i < num_seeds; i++){
         I seed = z[i];
+        assert(seed >= 0 && seed < num_rows);
         x[seed] = 0;
         y[seed] = i;
     }
@@ -384,16 +385,17 @@ void lloyd_cluster(const I num_rows,
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
-    // compute new centers
+    // compute new seeds
     for(I i = 0; i < num_rows; i++){
-        const I cluster = y[i];
+        const I seed = y[i];
 
-        if (cluster == -1) //node belongs to no cluster
+        if (seed == -1) //node belongs to no cluster
             continue;
         
-        assert(cluster > 0 && cluster < num_seeds);
-        if( x[z[cluster]] < x[i] )
-            z[cluster] = i;
+        assert(seed >= 0 && seed < num_seeds);
+
+        if( x[z[seed]] < x[i] )
+            z[seed] = i;
     }
 }
 

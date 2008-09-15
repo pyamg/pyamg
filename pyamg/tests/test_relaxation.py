@@ -10,6 +10,11 @@ from scipy.linalg import solve
 from pyamg.gallery    import poisson
 from pyamg.relaxation import *
 
+# Ignore efficiency warnings
+import warnings
+from scipy.sparse import SparseEfficiencyWarning
+warnings.simplefilter('ignore',SparseEfficiencyWarning)
+
 class TestRelaxation(TestCase):
     def test_polynomial(self):
         N  = 3
