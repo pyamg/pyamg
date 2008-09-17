@@ -97,12 +97,7 @@ void min_blocks(const I n_blocks, const I blocksize,
         for(I j = blockptr; j < (blockptr + blocksize); j++)
         {
             if( (Sx[j] != 0.0) && (Sx[j] < current_min) )
-            {   
-                if( Sx[j] < 1e-6 )
-                {   current_min = 1e-6; }
-                else
-                {   current_min = Sx[j]; } 
-            }
+            {   current_min = Sx[j]; }
         }
         
         blockptr += blocksize;
@@ -164,7 +159,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     I max_length  = 35;
     I work_size  = 5*NullDimPone + 10;
     T z_at_i=1.0;
-    T ratio, zero;
+    T ratio, zero, error;
     T * LHS       = new T[NullDimPone*NullDimPone];
     T * RHS       = new T[NullDimPone];
     T * z         = new T[max_length];
@@ -319,9 +314,16 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                     else if(ratio < 0.0)
                     {   Sx[j] = 0.0; }
                     
-                    //Calculat approximation error as strength value
+                    //Calculate approximation error as strength value
                     else 
-                    {   Sx[j] = fabs(1.0 - ratio); }
+                    {
+                        error = fabs(1.0 - ratio);
+                        //This comparison allows for predictable handling of the "zero" error case
+                        if(error < 1e-8 )
+                        {    Sx[j] = 1e-8; }
+                        else
+                        {    Sx[j] = error; }
+                    }
                 }
                 zcounter++;
             }
