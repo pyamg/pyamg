@@ -85,23 +85,24 @@ template<class I, class T>
 void min_blocks(const I n_blocks, const I blocksize, 
                 const T Sx[],     T Tx[])
 {
-    I blockptr = 0;
-    T FLOAT_MAX = std::numeric_limits<T>::max();
+    const T * block = Sx;
 
     //Loop over blocks
     for(I i = 0; i < n_blocks; i++)
     {
-        T current_min = FLOAT_MAX;
+        T block_min = std::numeric_limits<T>::max();
         
-        //Find min for this block
-        for(I j = blockptr; j < (blockptr + blocksize); j++)
+        //Find smallest nonzero value in this block
+        for(I j = 0; j < blocksize; j++)
         {
-            if( (Sx[j] != 0.0) && (Sx[j] < current_min) )
-            {   current_min = Sx[j]; }
+            const T val = block[j];
+            if( val != 0.0 )
+                block_min = std::min(block_min, val);
         }
         
-        blockptr += blocksize;
-        Tx[i] = current_min;
+        Tx[i] = block_min;
+        
+        block += blocksize;
     }    
 }
 
