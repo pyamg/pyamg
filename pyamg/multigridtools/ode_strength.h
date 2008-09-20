@@ -1,11 +1,9 @@
 #ifndef ODE_STRENGTH_H
 #define ODE_STRENGTH_H
 
-#include <iostream>
-#include <vector>
 #include <iterator>
-#include <assert.h>
-#include <math.h>
+#include <algorithm>
+#include <cmath>
 #include "smoothed_aggregation.h"
 
 /*
@@ -173,7 +171,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     const T * DB  = y;
     
     //Calculate what we consider to be a "numerically" zero approximation value in z
-    const T zero = std::sqrt( std::numeric_limits<T>::epsilon() );
+    const T near_zero = std::sqrt( std::numeric_limits<T>::epsilon() );
 
     //Loop over rows
     for(I i = 0; i < nrows; i++)
@@ -182,134 +180,137 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         const I rowend   = Sp[i+1];
         const I length   = rowend - rowstart;
         
-        if(length <= NullDim)
-        {   
+        if(length <= NullDim) {   
             // If B can perfectly locally approximate this row of S, 
             // then all connections are strong
             std::fill(Sx + rowstart, Sx + rowend, static_cast<T>(1.0));
+            continue; //skip to next row
         }
-        else
+
+
+        //S[i,:] ==> z
+        std::copy(Sx + rowstart, Sx + rowend, z);
+
+        //construct Bi, where B_i is B with the rows restricted only to 
+        //the nonzero column indices of row i of S 
+        T z_at_i = 1.0;
+        for(I jj = rowstart, Bicounter = 0; jj < rowend; jj++)
         {
-            //S[i,:] ==> z, and construct Bi, where B_i is B 
-            // with the rows restricted only to the nonzero column indices of row i of S 
-            T z_at_i = 1.0;
-            for(I j = rowstart, zcounter = 0, Bicounter = 0; j < rowend; j++, zcounter++)
+            const I j = Sj[jj];
+            const T v = Sx[jj];
+
+            if(i == j)
+                z_at_i = v;
+            
+            I Bcounter = j*NullDim;
+            for(I k = 0; k < NullDim; k++)
             {
-                if(Sj[j] == i)
-                    z_at_i = Sx[j];
+                Bi[Bicounter] = B[Bcounter];
+                Bicounter++;
+                Bcounter++;
+            }
+        }
+        
+        //Construct DBi^T in row major,  where DB_i is DB 
+        // with the rows restricted only to the nonzero column indices of row i of S
+        for(I k = 0, Bicounter = 0, Bcounter = 0; k < NullDim; k++, Bcounter += nrows)
+        {
+            for(I jj = rowstart; jj < rowend; jj++)
+            {
+                DBi[Bicounter] = DB[Bcounter + Sj[jj]];
+                Bicounter++; 
+            }
+        }
+        
+        //Construct B_i^T * diag(A_i) * B_i, the 1,1 block of LHS
+        std::fill(LHS, LHS + NullDimPone * NullDimPone, static_cast<T>(0.0)); // clear LHS
+        
+        for(I jj = rowstart; jj < rowend; jj++)
+        {
+            const I j = Sj[jj];
+            // Do work in computing Diagonal of LHS  
+            I LHScounter = 0; 
+            I BDBCounter = j*BDBCols;
+            for(I m = 0; m < NullDim; m++)
+            {
+                LHS[LHScounter] += BDB[BDBCounter];
+                LHScounter += NullDimPone + 1;
+                BDBCounter += (NullDim - m);
+            }
+            // Do work in computing offdiagonals of LHS, 
+            //   noting that the (1,1) block of LHS is symmetric
+            BDBCounter = j*BDBCols;
+            for(I m = 0; m < NullDim; m++)
+            {
+                I counter = 1;
+                for(I n = m+1; n < NullDim; n++)
+                {
+                    T elmt_bdb = BDB[BDBCounter + counter];
+                    LHS[m*NullDimPone + n] += elmt_bdb;
+                    LHS[n*NullDimPone + m] += elmt_bdb;
+                    counter++;
+                }
+                BDBCounter += (NullDim - m);
+            }
+        }
+        
+        //Write last row of LHS           
+        for(I j = NullDim, Bcounter = i*NullDim; j < NullDim*NullDimPone; j+= NullDimPone, Bcounter++)
+        {   LHS[j] = B[Bcounter]; }
+        
+        //Write last column of LHS
+        for(I j = NullDim*NullDimPone, Bcounter = i; j < (NullDimPone*NullDimPone - 1); j++, Bcounter += nrows)
+        {   LHS[j] = DB[Bcounter]; }
+
+        //Write first NullDim Entries of RHS
+        //  DBi^T*z ==> RHS
+        gemm( DBi, NullDim, length, 'F', 
+                z, length,       1, 'F', 
+              RHS, NullDim,      1, 'F');
+        //Double the first NullDim entries in RHS
+        for(I j = 0; j < NullDim; j++)
+        {   RHS[j] *= 2.0; }
+        //Last entry of RHS
+        RHS[NullDim] = z_at_i;
+
+        //Solve minimization problem,  pseudo_inverse(LHS)*RHS ==> prod
+        svd_solve(&(LHS[0]), NullDimPone, NullDimPone, &(RHS[0]), 1, &(sing_vals[0]), &(work[0]), work_size);
+
+        //Find best approximation to z in span(Bi), Bi*RHS[0:NullDim] ==> zhat
+        gemm(  Bi,   length, NullDim, 'F', 
+              RHS,  NullDim,       1, 'F', 
+             zhat,   length,       1, 'F');
+        
+        for(I jj = rowstart, zcounter = 0; jj < rowend; jj++, zcounter++)
+        {
+            //Perfectly connected to self
+            if(Sj[jj] == i)
+            {   Sx[jj] = 1.0; }
+            else
+            {
+                //Approximation ratio
+                const T ratio = zhat[zcounter]/z[zcounter];
                 
-                z[zcounter] = Sx[j];
-                I Bcounter = Sj[j]*NullDim;
-                for(I k = 0; k < NullDim; k++)
+                // if zhat is numerically zero, but z is not, then weak connection
+                if( std::abs(z[zcounter]) >= near_zero &&  std::abs(zhat[zcounter]) < near_zero )
+                {   Sx[jj] = 0.0; }
+                
+                // if zhat[j] and z[j] have different sign, then weak connection
+                else if(ratio < 0.0)
+                {   Sx[jj] = 0.0; }
+                
+                //Calculate approximation error as strength value
+                else 
                 {
-                    Bi[Bicounter] = B[Bcounter];
-                    Bicounter++;
-                    Bcounter++;
+                    const T error = std::abs(1.0 - ratio);
+                    //This comparison allows for predictable handling of the "zero" error case
+                    if(error < near_zero)
+                    {    Sx[jj] = near_zero; }
+                    else
+                    {    Sx[jj] = error; }
                 }
             }
-            
-            //Construct DBi^T in row major,  where DB_i is DB 
-            // with the rows restricted only to the nonzero column indices of row i of S
-            for(I k = 0, Bicounter = 0, Bcounter = 0; k < NullDim; k++, Bcounter += nrows)
-            {
-                for(I j = rowstart; j < rowend; j++)
-                {
-                    DBi[Bicounter] = DB[Bcounter + Sj[j]];
-                    Bicounter++; 
-                }
-            }
-            
-            //Construct B_i^T * diag(A_i) * B_i, the 1,1 block of LHS
-            std::fill(LHS, LHS + NullDimPone * NullDimPone, static_cast<T>(0.0)); // clear LHS
-            
-            for(I j = rowstart; j < rowend; j++)
-            {
-                // Do work in computing Diagonal of LHS  
-                I LHScounter = 0; 
-                I BDBCounter = Sj[j]*BDBCols;
-                for(I m = 0; m < NullDim; m++)
-                {
-                    LHS[LHScounter] += BDB[BDBCounter];
-                    LHScounter += NullDimPone + 1;
-                    BDBCounter += (NullDim - m);
-                }
-                // Do work in computing offdiagonals of LHS, 
-                //   noting that the (1,1) block of LHS is symmetric
-                BDBCounter = Sj[j]*BDBCols;
-                for(I m = 0; m < NullDim; m++)
-                {
-                    I counter = 1;
-                    for(I n = m+1; n < NullDim; n++)
-                    {
-                        T elmt_bdb = BDB[BDBCounter + counter];
-                        LHS[m*NullDimPone + n] += elmt_bdb;
-                        LHS[n*NullDimPone + m] += elmt_bdb;
-                        counter++;
-                    }
-                    BDBCounter += (NullDim - m);
-                }
-            }
-            
-            //Write last row of LHS           
-            for(I j = NullDim, Bcounter = i*NullDim; j < NullDim*NullDimPone; j+= NullDimPone, Bcounter++)
-            {   LHS[j] = B[Bcounter]; }
-            
-            //Write last column of LHS
-            for(I j = NullDim*NullDimPone, Bcounter = i; j < (NullDimPone*NullDimPone - 1); j++, Bcounter += nrows)
-            {   LHS[j] = DB[Bcounter]; }
-
-            //Write first NullDim Entries of RHS
-            //  DBi^T*z ==> RHS
-            gemm(&(DBi[0]), NullDim, length, 'F', 
-                 &(z[0]), length, 1, 'F', 
-                 &(RHS[0]), NullDim, 1, 'F');
-            //Double the first NullDim entries in RHS
-            for(I j = 0; j < NullDim; j++)
-            {   RHS[j] *= 2.0; }
-            //Last entry of RHS
-            RHS[NullDim] = z_at_i;
-
-            //Solve minimization problem,  pseudo_inverse(LHS)*RHS ==> prod
-            svd_solve(&(LHS[0]), NullDimPone, NullDimPone, &(RHS[0]), 1, &(sing_vals[0]), &(work[0]), work_size);
-
-            //Find best approximation to z in span(Bi), Bi*RHS[0:NullDim] ==> zhat
-            gemm(&(Bi[0]), length, NullDim, 'F', 
-                 &(RHS[0]), NullDim, 1, 'F', 
-                 &(zhat[0]), length, 1, 'F');
-          
-            for(I j = rowstart, zcounter = 0; j < rowend; j++, zcounter++)
-            {
-                //Perfectly connected to self
-                if(Sj[j] == i)
-                {   Sx[j] = 1.0; }
-                else
-                {
-                    //Approximation ratio
-                    T ratio = zhat[zcounter]/z[zcounter];
-                    
-                    // if zhat is numerically zero, but z is not, then weak connection
-                    if( std::abs(z[zcounter]) >= zero &&  std::abs(zhat[zcounter]) < zero )
-                    {   Sx[j] = 0.0; }
-                    
-                    // if zhat[j] and z[j] have different sign, then weak connection
-                    else if(ratio < 0.0)
-                    {   Sx[j] = 0.0; }
-                    
-                    //Calculate approximation error as strength value
-                    else 
-                    {
-                        T error = std::abs(1.0 - ratio);
-                        //This comparison allows for predictable handling of the "zero" error case
-                        if(error < 1e-8 )
-                        {    Sx[j] = 1e-8; }
-                        else
-                        {    Sx[j] = error; }
-                    }
-                }
-            } //end for
-
-
-        }//end if(length <= NullDim){...} else{...}
+        } //end for
 
     } //end i loop
 
