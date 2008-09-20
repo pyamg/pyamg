@@ -158,8 +158,6 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     I NullDimPone = NullDim + 1;
     I max_length  = 35;
     I work_size  = 5*NullDimPone + 10;
-    T z_at_i=1.0;
-    T ratio, error;
     T * LHS       = new T[NullDimPone*NullDimPone];
     T * RHS       = new T[NullDimPone];
     T * z         = new T[max_length];
@@ -205,15 +203,14 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
 
             //S[i,:] ==> z, and construct Bi, where B_i is B 
             // with the rows restricted only to the nonzero column indices of row i of S 
-            I Bcounter, Bicounter, zcounter;
-            Bicounter = 0;  zcounter = 0;  
-            for(I j = rowstart; j < rowend; j++)
+            T z_at_i = 1.0;
+            for(I j = rowstart, zcounter = 0, Bicounter = 0; j < rowend; j++, zcounter++)
             {
                 if(Sj[j] == i)
-                {   z_at_i = Sx[j]; }
+                    z_at_i = Sx[j];
+                
                 z[zcounter] = Sx[j];
-                zcounter++;
-                Bcounter = Sj[j]*NullDim;
+                I Bcounter = Sj[j]*NullDim;
                 for(I k = 0; k < NullDim; k++)
                 {
                     Bi[Bicounter] = B[Bcounter];
@@ -224,15 +221,13 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             
             //Construct DBi^T in row major,  where DB_i is DB 
             // with the rows restricted only to the nonzero column indices of row i of S
-            Bicounter = 0; Bcounter = 0;
-            for(I k = 0; k < NullDim; k++)
+            for(I k = 0, Bicounter = 0, Bcounter = 0; k < NullDim; k++, Bcounter += nrows)
             {
                 for(I j = rowstart; j < rowend; j++)
                 {
                     DBi[Bicounter] = DB[Bcounter + Sj[j]];
                     Bicounter++; 
                 }
-                Bcounter+= nrows;
             }
             
             //Construct B_i^T * diag(A_i) * B_i, the 1,1 block of LHS
@@ -267,15 +262,14 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 }
             }
             
-            //Write last row of LHS
-            Bcounter = i*NullDim;
-            for(I j = NullDim; j < NullDim*NullDimPone; j+= NullDimPone)
-            {   LHS[j] = B[Bcounter];  Bcounter++; }
+            //Write last row of LHS           
+            for(I j = NullDim, Bcounter = i*NullDim; j < NullDim*NullDimPone; j+= NullDimPone, Bcounter++)
+            {   LHS[j] = B[Bcounter]; }
             
             //Write last column of LHS
-            Bcounter = i;
-            for(I j = NullDim*NullDimPone; j < (NullDimPone*NullDimPone - 1); j++)
-            {   LHS[j] = DB[Bcounter];  Bcounter+=nrows; }
+            
+            for(I j = NullDim*NullDimPone, Bcounter = i; j < (NullDimPone*NullDimPone - 1); j++, Bcounter += nrows)
+            {   LHS[j] = DB[Bcounter]; }
 
             //Write first NullDim Entries of RHS
             //  DBi^T*z ==> RHS
@@ -296,8 +290,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                  &(RHS[0]), NullDim, 1, 'F', 
                  &(zhat[0]), length, 1, 'F');
           
-            zcounter = 0;
-            for(I j = rowstart; j < rowend; j++)
+            for(I j = rowstart, zcounter = 0; j < rowend; j++, zcounter++)
             {
                 //Perfectly connected to self
                 if(Sj[j] == i)
@@ -305,7 +298,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 else
                 {
                     //Approximation ratio
-                    ratio = zhat[zcounter]/z[zcounter];
+                    T ratio = zhat[zcounter]/z[zcounter];
                     
                     // if zhat is numerically zero, but z is not, then weak connection
                     if( std::abs(z[zcounter]) >= zero &&  std::abs(zhat[zcounter]) < zero )
@@ -318,7 +311,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                     //Calculate approximation error as strength value
                     else 
                     {
-                        error = std::abs(1.0 - ratio);
+                        T error = std::abs(1.0 - ratio);
                         //This comparison allows for predictable handling of the "zero" error case
                         if(error < 1e-8 )
                         {    Sx[j] = 1e-8; }
@@ -326,8 +319,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                         {    Sx[j] = error; }
                     }
                 }
-                zcounter++;
-            }
+            } //end for
 
 
         }//end if(length <= NullDim){...} else{...}
