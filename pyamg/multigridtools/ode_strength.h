@@ -38,12 +38,11 @@ void apply_distance_filter(const I n_row,
     //Loop over rows
     for(I i = 0; i < n_row; i++)
     {
-        T min_offdiagonal = std::numeric_limits<T>::max();
-
-        I row_start = Sp[i];
-        I row_end   = Sp[i+1];
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
     
         //Find min for row i
+        T min_offdiagonal = std::numeric_limits<T>::max();
         for(I jj = row_start; jj < row_end; jj++){
             if(Sj[jj] != i){
                 min_offdiagonal = std::min(min_offdiagonal,Sx[jj]);
@@ -51,18 +50,15 @@ void apply_distance_filter(const I n_row,
         }
 
         //Apply drop tol to row i
-        T threshold = epsilon*min_offdiagonal;
+        const T threshold = epsilon*min_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
-            if(Sx[jj] >= threshold){
-                if(Sj[jj] != i){
-                    Sx[jj] = 0.0;
-                }
-            }
-            //Set diagonal to 1.0
             if(Sj[jj] == i){
-                    Sx[jj] = 1.0;
+                Sx[jj] = 1.0;  //Set diagonal to 1.0 
+            } else if(Sx[jj] >= threshold){
+                Sx[jj] = 0.0;  //Set weak connection to 0.0
             }
-        }
+        } //end for
+
     }
 }
 
@@ -154,23 +150,27 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                          const I nrows, const T x[],     const T y[], 
                          const T b[],     const I BDBCols, const I NullDim)
 {
+    //Compute maximum row length
+    I max_length = 0;
+    for(I i = 0; i < nrows; i++)
+        max_length = std::max(max_length, Sp[i + 1] - Sp[i]);
+    
     //Declare Workspace
-    I NullDimPone = NullDim + 1;
-    I max_length  = 35;
-    I work_size  = 5*NullDimPone + 10;
-    T * LHS       = new T[NullDimPone*NullDimPone];
-    T * RHS       = new T[NullDimPone];
+    const I NullDimPone = NullDim + 1;
+    const I work_size   = 5*NullDimPone + 10;
     T * z         = new T[max_length];
     T * zhat      = new T[max_length];
     T * DBi       = new T[max_length*NullDim];
     T * Bi        = new T[max_length*NullDim];
+    T * LHS       = new T[NullDimPone*NullDimPone];
+    T * RHS       = new T[NullDimPone];
     T * work      = new T[work_size];
     T * sing_vals = new T[NullDimPone];
 
     //Rename to something more understandable
     const T * BDB = b;
-    const T * B = x;
-    const T * DB = y;
+    const T * B   = x;
+    const T * DB  = y;
     
     //Calculate what we consider to be a "numerically" zero approximation value in z
     const T zero = std::sqrt( std::numeric_limits<T>::epsilon() );
@@ -186,21 +186,10 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         {   
             // If B can perfectly locally approximate this row of S, 
             // then all connections are strong
-            for(I j = rowstart; j < rowend; j++)
-            {   Sx[j] = 1.0; }
+            std::fill(Sx + rowstart, Sx + rowend, static_cast<T>(1.0));
         }
         else
         {
-            //If necessary, reallocate z, zhat, DBi and Bi    
-            if(length > max_length)
-            {   
-                max_length = length;
-                delete[] z;     z     = new T[max_length];
-                delete[] zhat;  zhat  = new T[max_length];
-                delete[] DBi;   DBi   = new T[max_length*NullDim];
-                delete[] Bi;    Bi    = new T[max_length*NullDim];
-            }
-
             //S[i,:] ==> z, and construct Bi, where B_i is B 
             // with the rows restricted only to the nonzero column indices of row i of S 
             T z_at_i = 1.0;
@@ -231,8 +220,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             }
             
             //Construct B_i^T * diag(A_i) * B_i, the 1,1 block of LHS
-            for(I j = 0; j < NullDimPone*NullDimPone; j++)
-            {   LHS[j] = 0.0; }
+            std::fill(LHS, LHS + NullDimPone * NullDimPone, static_cast<T>(0.0)); // clear LHS
             
             for(I j = rowstart; j < rowend; j++)
             {
@@ -267,7 +255,6 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             {   LHS[j] = B[Bcounter]; }
             
             //Write last column of LHS
-            
             for(I j = NullDim*NullDimPone, Bcounter = i; j < (NullDimPone*NullDimPone - 1); j++, Bcounter += nrows)
             {   LHS[j] = DB[Bcounter]; }
 
