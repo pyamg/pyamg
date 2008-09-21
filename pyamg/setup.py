@@ -10,6 +10,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('classical')
     config.add_subpackage('gallery')
     config.add_subpackage('multigridtools')
+    config.add_subpackage('relaxation')
     config.add_subpackage('vis')
     config.add_subpackage('testing')
 
