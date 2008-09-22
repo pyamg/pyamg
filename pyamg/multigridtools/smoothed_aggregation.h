@@ -226,15 +226,15 @@ void fit_candidates(const I n_row,
                     norm   += (*Ax_col) * (*Ax_col);
                     Ax_col += K2;
                 }
-                norm = sqrt(norm);
+                norm = std::sqrt(norm);
             }
             
             const T threshold = tol * norm;
     
-            //orthogonalize against previous columns
+            //orthogonalize bj against previous columns
             for(I bi = 0; bi < bj; bi++){
 
-                //compute dot product with column
+                //compute dot product with column bi
                 T dot_prod = 0;
 
                 {
@@ -247,7 +247,7 @@ void fit_candidates(const I n_row,
                     }
                 }
 
-                // orthogonalize against previous column
+                // orthogonalize against column bi
                 {
                     T * Ax_bi = Ax_start + bi;
                     T * Ax_bj = Ax_start + bj;
@@ -259,24 +259,24 @@ void fit_candidates(const I n_row,
                 }
                 
                 R_start[K2 * bi + bj] = dot_prod;
-            }
+            } // end orthogonalize bj against previous columns
 
 
-            //compute norm of block column
+            //compute norm of column bj
             norm = 0;
-
             {
                 T * Ax_bj = Ax_start + bj;
                 while(Ax_bj < Ax_end){
                     norm  += (*Ax_bj) * (*Ax_bj);
                     Ax_bj += K2;
                 }
-                norm = sqrt(norm);
+                norm = std::sqrt(norm);
             }
            
 
-            //normalize column if norm > threshold
-            //otherwise set column to 0
+            //normalize column bj if, after orthogonalization, its
+            //euclidean norm exceeds the threshold. otherwise set 
+            //column bj to 0.
             T scale;
             if(norm > threshold){
                 scale = 1.0/norm;
@@ -293,8 +293,7 @@ void fit_candidates(const I n_row,
                 }
             }
 
-
-        }
+        } // end orthogonalizing block column j
     }
 }
 
