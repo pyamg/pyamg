@@ -8,7 +8,7 @@ methods = ['gauss_seidel',
            'jacobi',
            'richardson',
            'sor',
-           #'chebyshev',
+           'chebyshev',
            'kaczmarz_gauss_seidel',
            'kaczmarz_jacobi',
            'kaczmarz_richardson']
@@ -23,7 +23,7 @@ class TestSmoothing(TestCase):
 
             residuals = profile_solver(ml)
             print "method",method
-            print "residuals",residuals
+            #print "residuals",residuals
             print "convergence rate:",(residuals[-1]/residuals[0])**(1.0/len(residuals))
             assert( (residuals[-1]/residuals[0])**(1.0/len(residuals)) < 0.95 )
 

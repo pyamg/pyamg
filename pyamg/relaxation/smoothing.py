@@ -82,7 +82,9 @@ def setup_smoothers(ml, presmoother, postsmoother):
 
 
 import relaxation
+from chebyshev import chebyshev_polynomial_coefficients
 from pyamg.utils import approximate_spectral_radius, scale_rows
+
 
 def rho_D_inv_A(A):
     """Return the (approx.) spectral radius of D^-1 * A 
@@ -115,8 +117,14 @@ def setup_sor(lvl, omega=0.5, iterations=1, sweep='forward'):
         relaxation.sor(A, x, b, omega=omega, iterations=iterations, sweep=sweep)
     return smoother
 
-def setup_chebyshev(lvl, iterations=1):
-    raise NotImplementedError
+def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3, iterations=1):
+    rho = approximate_spectral_radius(lvl.A)
+    a = rho * lower_bound
+    b = rho * upper_bound
+    coeffients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1] # drop the constant coefficient
+    def smoother(A,x,b):
+        relaxation.polynomial(A, x, b, coeffients=coeffients, iterations=iterations)
+    return smoother
 
 def setup_kaczmarz_jacobi(lvl, iterations=1, omega=1.0):
     omega = omega/rho_D_inv_A(lvl.A)**2
