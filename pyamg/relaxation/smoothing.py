@@ -1,7 +1,7 @@
 """Method to create pre- and post-smoothers on the levels of a multilevel_solver
 """
 
-__all__ = ['setup_smoothers','setup_gauss_seidel','setup_jacobi']
+__all__ = ['setup_smoothers']
 
 def setup_smoothers(ml, presmoother, postsmoother):
     """Initialize pre- and post- smoothers throughout a multilevel_solver
@@ -33,11 +33,12 @@ def setup_smoothers(ml, presmoother, postsmoother):
     ----------------
     gauss_seidel
     jacobi
+    richardson
     sor
-    kaczmarz_jacobi
-    kaczmarz_gauss_seidel
-    kaczmarz_richardson
     chebyshev
+    kaczmarz_gauss_seidel
+    kaczmarz_jacobi
+    kaczmarz_richardson
 
     Notes
     -----
@@ -88,15 +89,43 @@ def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
 
-#def setup_jacobi(lvl, iterations=1, omega=1.0):
-#    omega = omega/approximate_spectral_radius(lvl.A)
-#    def smoother(A,x,b):
-#        relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
-#    return smoother
+def setup_jacobi(lvl, iterations=1, omega=1.0):
+    raise NotImplementedError
+    omega = omega/approximate_spectral_radius(lvl.A)
+    def smoother(A,x,b):
+        relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
+    return smoother
 
 def setup_richardson(lvl, iterations=1, omega=1.0):
     omega = omega/approximate_spectral_radius(lvl.A)
     def smoother(A,x,b):
         relaxation.polynomial(A, x, b, coeffients=[omega], iterations=iterations)
     return smoother
+
+def setup_sor(lvl, omega=0.5, iterations=1, sweep='forward'):
+    def smoother(A,x,b):
+        relaxation.sor(A, x, b, omega=omega, iterations=iterations, sweep=sweep)
+    return smoother
+
+def setup_chebyshev(lvl, iterations=1):
+    raise NotImplementedError
+
+def setup_kaczmarz_jacobi(lvl, iterations=1, omega=1.0):
+    raise NotImplementedError
+    omega = omega/approximate_spectral_radius(lvl.A)
+    def smoother(A,x,b):
+        relaxation.kaczmarz_jacobi(A, x, b, iterations=iterations, omega=omega)
+    return smoother
+
+def setup_kaczmarz_gauss_seidel(lvl, iterations=1, sweep='forward'):
+    def smoother(A,x,b):
+        relaxation.kaczmarz_gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
+    return smoother
+
+def setup_kaczmarz_richardson(lvl, iterations=1, omega=1.0):
+    omega = omega/approximate_spectral_radius(lvl.A)**2
+    def smoother(A,x,b):
+        relaxation.kaczmarz_richardson(A, x, b, iterations=iterations, omega=omega)
+    return smoother
+
 
