@@ -82,7 +82,16 @@ def setup_smoothers(ml, presmoother, postsmoother):
 
 
 import relaxation
-from pyamg.utils import approximate_spectral_radius
+from pyamg.utils import approximate_spectral_radius, scale_rows
+
+def rho_D_inv_A(A):
+    """Return the (approx.) spectral radius of D^-1 * A 
+    """
+    D = A.diagonal()
+    D_inv = 1.0 / D
+    D_inv[D == 0] = 0
+    D_inv_A = scale_rows(A, D_inv, copy=True)
+    return approximate_spectral_radius(D_inv_A)
 
 def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
     def smoother(A,x,b):
@@ -90,8 +99,7 @@ def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
     return smoother
 
 def setup_jacobi(lvl, iterations=1, omega=1.0):
-    raise NotImplementedError
-    omega = omega/approximate_spectral_radius(lvl.A)
+    omega = omega/rho_D_inv_A(lvl.A)
     def smoother(A,x,b):
         relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
     return smoother
@@ -111,8 +119,7 @@ def setup_chebyshev(lvl, iterations=1):
     raise NotImplementedError
 
 def setup_kaczmarz_jacobi(lvl, iterations=1, omega=1.0):
-    raise NotImplementedError
-    omega = omega/approximate_spectral_radius(lvl.A)
+    omega = omega/rho_D_inv_A(lvl.A)**2
     def smoother(A,x,b):
         relaxation.kaczmarz_jacobi(A, x, b, iterations=iterations, omega=omega)
     return smoother

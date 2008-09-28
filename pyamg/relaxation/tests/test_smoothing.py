@@ -5,12 +5,12 @@ from pyamg import smoothed_aggregation_solver
 from pyamg.utils import profile_solver
     
 methods = ['gauss_seidel',
-           #'jacobi',
+           'jacobi',
            'richardson',
            'sor',
            #'chebyshev',
            'kaczmarz_gauss_seidel',
-           #'kaczmarz_jacobi',
+           'kaczmarz_jacobi',
            'kaczmarz_richardson']
 
 class TestSmoothing(TestCase):
@@ -25,5 +25,5 @@ class TestSmoothing(TestCase):
             print "method",method
             print "residuals",residuals
             print "convergence rate:",(residuals[-1]/residuals[0])**(1.0/len(residuals))
-            assert( (residuals[-1]/residuals[0])**(1.0/len(residuals)) < 0.9 )
+            assert( (residuals[-1]/residuals[0])**(1.0/len(residuals)) < 0.95 )
 
