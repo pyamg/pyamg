@@ -10,6 +10,7 @@ from scipy.sparse import csr_matrix, coo_matrix, \
 
 from pyamg import multigridtools
 from pyamg.multilevel import multilevel_solver
+from pyamg.relaxation.smoothing import setup_smoothers
 from pyamg.utils import symmetric_rescaling, diag_sparse, scale_columns
 
 from pyamg.strength import *
@@ -24,6 +25,8 @@ def smoothed_aggregation_solver(A, B=None,
         strength='symmetric', 
         aggregate='standard', 
         smooth=('jacobi', {'omega': 4.0/3.0}),
+        presmoother=('gauss_seidel',{'sweep':'symmetric'}),
+        postsmoother=('gauss_seidel',{'sweep':'symmetric'}),
         max_levels = 10, max_coarse = 500, **kwargs):
     """Create a multilevel solver using Smoothed Aggregation (SA)
 
@@ -143,8 +146,10 @@ def smoothed_aggregation_solver(A, B=None,
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth)
-        
-    return multilevel_solver(levels, **kwargs)
+    
+    ml = multilevel_solver(levels, **kwargs)
+    setup_smoothers(ml, presmoother, postsmoother)
+    return ml
 
 
 def sa_filtered_matrix(A,theta):

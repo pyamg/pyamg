@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
-from pyamg import multigridtools
+from pyamg.relaxation.smoothing import setup_smoothers
 
 from interpolate import *
 from pyamg.strength import *
@@ -16,6 +16,8 @@ __all__ = ['ruge_stuben_solver']
 def ruge_stuben_solver(A, 
                        strength=('classical',{'theta':0.25}), 
                        CF='RS', 
+                       presmoother=('gauss_seidel',{'sweep':'symmetric'}),
+                       postsmoother=('gauss_seidel',{'sweep':'symmetric'}),
                        max_levels=10, max_coarse=500, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
@@ -53,8 +55,9 @@ def ruge_stuben_solver(A,
     while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF)
 
-    return multilevel_solver(levels, **kwargs)
-
+    ml = multilevel_solver(levels, **kwargs)
+    setup_smoothers(ml, presmoother, postsmoother)
+    return ml
 
 
 def extend_hierarchy(levels, strength, CF):

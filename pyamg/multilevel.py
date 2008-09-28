@@ -15,22 +15,29 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
+    """Stores multigrid hierarchy and implements the multigrid cycle
+
+    TODO explain constructor and purpose/responsibilities of the class
+    """
+
     class level:
+        """Stores one level of the multigrid hierarchy
+
+        All level objects will have an 'A' attribute referencing the matrix
+        of that level.  All levels, except for the coarsest level, will 
+        also have 'P' and 'R' attributes referencing the prolongation and 
+        restriction operators that act between each level and the next 
+        coarser level.
+        """
         pass
 
-    def __init__(self, levels, preprocess=None, postprocess=None, \
-            presmoother  = ('gauss_seidel', {'sweep':'symmetric'}),
-            postsmoother = ('gauss_seidel', {'sweep':'symmetric'}),
-            coarse_solver='pinv2'):
-
+    def __init__(self, levels, preprocess=None, postprocess=None, coarse_solver='pinv2'):
         self.levels = levels
         
         self.preprocess  = preprocess
         self.postprocess = postprocess
 
         self.coarse_solver = coarse_grid_solver(coarse_solver)
-        self.presmoother  = presmoother
-        self.postsmoother = postsmoother
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
@@ -104,7 +111,7 @@ class multilevel_solver:
 
         A = self.levels[lvl].A
 
-        self.presmooth(A,x,b)
+        self.levels[lvl].presmoother(A,x,b)
 
         residual = b - A*x
 
@@ -118,41 +125,41 @@ class multilevel_solver:
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
-        self.postsmooth(A,x,b)
+        self.levels[lvl].postsmoother(A,x,b)
 
-    def presmooth(self,A,x,b):
-        def unpack_arg(v):
-            if isinstance(v,tuple):
-                return v[0],v[1]
-            else:
-                return v,{}
-
-        fn, kwargs = unpack_arg(self.presmoother)
-        if fn == 'gauss_seidel':
-            gauss_seidel(A, x, b, **kwargs)
-        elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(A, x, b, **kwargs)
-        else:
-            raise TypeError('Unrecognized presmoother')
-        #fn = relaxation.dispatch(self.presmoother)
-        #fn(A,x,b)
-
-    def postsmooth(self,A,x,b):
-        def unpack_arg(v):
-            if isinstance(v,tuple):
-                return v[0],v[1]
-            else:
-                return v,{}
-        
-        fn, kwargs = unpack_arg(self.presmoother)
-        if fn == 'gauss_seidel':
-            gauss_seidel(A, x, b, **kwargs)
-        elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(A, x, b, **kwargs)
-        else:
-            raise TypeError('Unrecognized postsmoother')
-        #fn = relaxation.dispatch(self.postsmoother)
-        #fn(A,x,b)
+#    def presmooth(self,A,x,b):
+#        def unpack_arg(v):
+#            if isinstance(v,tuple):
+#                return v[0],v[1]
+#            else:
+#                return v,{}
+#
+#        fn, kwargs = unpack_arg(self.presmoother)
+#        if fn == 'gauss_seidel':
+#            gauss_seidel(A, x, b, **kwargs)
+#        elif fn == 'kaczmarz_gauss_seidel':
+#            kaczmarz_gauss_seidel(A, x, b, **kwargs)
+#        else:
+#            raise TypeError('Unrecognized presmoother')
+#        #fn = relaxation.dispatch(self.presmoother)
+#        #fn(A,x,b)
+#
+#    def postsmooth(self,A,x,b):
+#        def unpack_arg(v):
+#            if isinstance(v,tuple):
+#                return v[0],v[1]
+#            else:
+#                return v,{}
+#        
+#        fn, kwargs = unpack_arg(self.presmoother)
+#        if fn == 'gauss_seidel':
+#            gauss_seidel(A, x, b, **kwargs)
+#        elif fn == 'kaczmarz_gauss_seidel':
+#            kaczmarz_gauss_seidel(A, x, b, **kwargs)
+#        else:
+#            raise TypeError('Unrecognized postsmoother')
+#        #fn = relaxation.dispatch(self.postsmoother)
+#        #fn(A,x,b)
 
 
 #TODO support (solver,opts) format also

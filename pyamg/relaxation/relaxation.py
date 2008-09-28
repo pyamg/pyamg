@@ -10,8 +10,9 @@ from pyamg import multigridtools
 from scipy.sparse import isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
 
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
-__all__ += ['gauss_seidel_indexed'] #TODO remove
+__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
+__all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
+__all__ += ['gauss_seidel_indexed'] 
 
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """Perform SOR iteration on the linear system Ax=b
@@ -171,7 +172,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                               omega)
 
 
-def polynomial(A, x, b, coeffs):
+def polynomial(A, x, b, coeffients, iterations=1):
     """Apply a polynomial smoother to the system Ax=b
 
 
@@ -183,33 +184,29 @@ def polynomial(A, x, b, coeffs):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    coeffs : {array_like}
+    coeffients : {array_like}
         Coefficients of the polynomial.  See Notes section for details.
     iterations : int
         Number of iterations to perform
-    sweep : {'forward','backward','symmetric'}
-        Direction of sweep
-
 
     Returns
     -------
     Nothing, x will be modified in place.
 
-
     Notes
     -----
     The smoother has the form  x[:] = x + p(A) (b - A*x) where p(A) is a 
     polynomial in A whose scalar coeffients are specified (in decending 
-    order) by argument coeffs.
+    order) by argument 'coeffients'.
 
     - Richardson iteration p(A) = c_0:
         polynomial_smoother(A, x, b, [c_0])
 
     - Linear smoother p(A) = c_1*A + c_0:
-        polynomial_smoother(A, x, b, [c_1,c_0])
+        polynomial_smoother(A, x, b, [c_1, c_0])
 
     - Quadratic smoother p(A) = c_2*A^2 + c_1*A + c_0:
-        polynomial_smoother(A, x, b, [c_2,c_1,c_0])
+        polynomial_smoother(A, x, b, [c_2, c_1, c_0])
 
     For efficiency, Horner's Rule is applied to avoid computing A^k directly.
 
@@ -217,16 +214,16 @@ def polynomial(A, x, b, coeffs):
 
     #TODO skip first matvec if x is all zero
 
-    residual = (b - A*x)
-    h = coeffs[0]*residual
+    for i in range(iterations):
+        residual = (b - A*x)
+        h = coeffients[0]*residual
+    
+        for c in coeffients[1:]:
+            h = c*residual + A*h
+    
+        x += h
 
-    for c in coeffs[1:]:
-        h = c*residual + A*h
 
-    x += h
-
-
-#TODO unify indexed with normal GS
 def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
     """
     Perform Gauss-Seidel iteration on the linear system Ax=b

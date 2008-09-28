@@ -10,6 +10,7 @@ from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
+from pyamg.relaxation.smoothing import setup_smoothers
 import pyamg.relaxation
 
 from aggregation import smoothed_aggregation_solver
@@ -323,7 +324,9 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
         levels[i+1].P = make_bridge(levels[i+1].P) 
         levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
 
-        solver = multilevel_solver(levels[i+1:], presmoother=prepostsmoother, postsmoother=prepostsmoother)
+        solver = multilevel_solver(levels[i+1:])
+        setup_smoothers(solver, presmoother=prepostsmoother, postsmoother=prepostsmoother)
+
         x = solver.solve(zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
 
 
