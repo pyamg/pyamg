@@ -86,7 +86,3 @@ class TestEnergyMin(TestCase):
 #
 #        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
 #        assert_almost_equal(U*B, 0*U*B)
-
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])
-

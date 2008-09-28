@@ -169,6 +169,3 @@ def reference_direct_interpolation(A,S,splitting):
 
     return P
 
-
-if __name__ == '__main__':
-    nose.run(argv=['', __file__])
