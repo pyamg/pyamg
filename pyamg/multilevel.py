@@ -32,6 +32,8 @@ class multilevel_solver:
         pass
 
     def __init__(self, levels, preprocess=None, postprocess=None, coarse_solver='pinv2'):
+        self.ccx = 0
+        self.first_pass=True
         self.levels = levels
         
         self.preprocess  = preprocess
@@ -58,6 +60,13 @@ class multilevel_solver:
 
         return output
 
+    def cycle_complexity(self,lvl=-1):
+        """number of nonzeros on all levels of a cycle/ number on the finest level"""
+        if(lvl>-1 and self.first_pass==True):
+            self.ccx += self.levels[lvl].A.nnz
+        else:
+            return self.ccx/float(self.levels[0].A.nnz)
+
     def operator_complexity(self):
         """number of nonzeros on all levels / number of nonzeros on the finest level"""
         return sum([level.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
@@ -69,7 +78,7 @@ class multilevel_solver:
     def psolve(self, b):
         return self.solve(b,maxiter=1)
 
-    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False):
+    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, mu=1):
         """
         TODO
         """
@@ -86,14 +95,18 @@ class multilevel_solver:
         A = self.levels[0].A
         residuals = [ norm(b-A*x) ]
 
+        self.first_pass=True
+
         while len(residuals) <= maxiter and residuals[-1]/residuals[0] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A,b)
             else:
-                self.__solve(0,x,b)
+                self.__solve(0,x,b,mu)
 
             residuals.append( norm(b-A*x) )
+
+            self.first_pass=False
 
             if callback is not None:
                 callback(x)
@@ -106,12 +119,34 @@ class multilevel_solver:
         else:
             return x
 
+    def __solve(self,lvl,x,b,mu=1):
+        """
+        Parameters
+        ----------
+        lvl : int
+            Solve problem on level `lvl`
+        x : numpy array
+            Initial guess `x` and return correction
+        b : numpy array
+            Right-hand side for Ax=b
+        mu : int
+            Recursively called cycling function.  The 
+            Defines the cycling used:
+            mu = 0, F-cycle
+            mu = 1, V-cycle
+            mu = 2, W-cycle
+            mu > 2, mu-cycle
 
-    def __solve(self,lvl,x,b):
-
+        Notes
+        -----
+        The cycle complexity ccx is update by nnz for each hit of the smoother.  nu1 and nu2
+        pre/post smoothing sweeps will not impact the cycle complexity.  Moreover, the coarse
+        level solve also assumes nnz time.
+        """
         A = self.levels[lvl].A
 
         self.levels[lvl].presmoother(A,x,b)
+        self.cycle_complexity(lvl)
 
         residual = b - A*x
 
@@ -120,12 +155,19 @@ class multilevel_solver:
 
         if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
+            self.cycle_complexity(lvl)
         else:
-            self.__solve(lvl + 1, coarse_x, coarse_b)
+            if(mu==0):
+                self.__solve(lvl + 1, coarse_x, coarse_b,mu)
+                self.__solve(lvl + 1, coarse_x, coarse_b,mu=1)
+            else:
+                for mu_idx in range(0,mu):
+                    self.__solve(lvl + 1, coarse_x, coarse_b,mu)
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
         self.levels[lvl].postsmoother(A,x,b)
+        self.cycle_complexity(lvl)
 
 #    def presmooth(self,A,x,b):
 #        def unpack_arg(v):
