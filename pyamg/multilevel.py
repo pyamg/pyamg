@@ -18,6 +18,7 @@ class multilevel_solver:
     """Stores multigrid hierarchy and implements the multigrid cycle
 
     TODO explain constructor and purpose/responsibilities of the class
+
     """
 
     class level:
@@ -78,7 +79,7 @@ class multilevel_solver:
     def psolve(self, b):
         return self.solve(b,maxiter=1)
 
-    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, mu=1):
+    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, cycle='V'):
         """
         TODO
         """
@@ -102,7 +103,7 @@ class multilevel_solver:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A,b)
             else:
-                self.__solve(0,x,b,mu)
+                self.__solve(0,x,b,cycle)
 
             residuals.append( norm(b-A*x) )
 
@@ -119,7 +120,7 @@ class multilevel_solver:
         else:
             return x
 
-    def __solve(self,lvl,x,b,mu=1):
+    def __solve(self,lvl,x,b,cycle='V'):
         """
         Parameters
         ----------
@@ -129,20 +130,22 @@ class multilevel_solver:
             Initial guess `x` and return correction
         b : numpy array
             Right-hand side for Ax=b
-        mu : int
+        cycle : {'V','W','F',int}
             Recursively called cycling function.  The 
             Defines the cycling used:
-            mu = 0, F-cycle
-            mu = 1, V-cycle
-            mu = 2, W-cycle
-            mu > 2, mu-cycle
+            cycle = 'F', F-cycle
+            cycle = 'V', V-cycle
+            cycle = 'W', W-cycle, default
 
         Notes
         -----
-        The cycle complexity ccx is update by nnz for each hit of the smoother.  nu1 and nu2
-        pre/post smoothing sweeps will not impact the cycle complexity.  Moreover, the coarse
-        level solve also assumes nnz time.
+        The cycle complexity ccx is update by nnz for each hit of the smoother.
+        nu1 and nu2 pre/post smoothing sweeps will not impact the cycle
+        complexity.  Moreover, the coarse level solve also assumes nnz time.
         """
+        if str(cycle).upper() not in ['V','W','F']:
+            raise TypeError('Unrecognized cycle type')
+
         A = self.levels[lvl].A
 
         self.levels[lvl].presmoother(A,x,b)
@@ -157,12 +160,13 @@ class multilevel_solver:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
             self.cycle_complexity(lvl)
         else:
-            if(mu==0):
-                self.__solve(lvl + 1, coarse_x, coarse_b,mu)
-                self.__solve(lvl + 1, coarse_x, coarse_b,mu=1)
+            if(cycle.upper()=='F'):
+                self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
+                self.__solve(lvl + 1, coarse_x, coarse_b,cycle='V')
             else:
-                for mu_idx in range(0,mu):
-                    self.__solve(lvl + 1, coarse_x, coarse_b,mu)
+                self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
+                if(cycle.upper()=='W'):
+                    self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
