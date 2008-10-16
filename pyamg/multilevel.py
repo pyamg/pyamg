@@ -332,22 +332,37 @@ def coarse_grid_solver(solver):
     Parameters
     ----------
     solver: string
-        Sparse direct methods:
-            splu         : sparse LU solver
-        Sparse iterative methods:
-            the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
-        Dense methods:
-            pinv     : pseudoinverse (QR)
-            pinv2    : pseudoinverse (SVD)
-            lu       : LU factorization 
-            cholesky : Cholesky factorization
+        - Sparse direct methods:
+            + splu         : sparse LU solver
+        - Sparse iterative methods:
+            + the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
+        - Dense methods:
+            + pinv     : pseudoinverse (QR)
+            + pinv2    : pseudoinverse (SVD)
+            + lu       : LU factorization 
+            + cholesky : Cholesky factorization
 
-    TODO add relaxation methods
+    Return
+    ------
+    ptr : function pointer
+        A method is returned for use as a standalone or coarse grids solver
 
     Examples
     --------
+    >>>> from numpy import ones
+    >>>> from scipy.sparse import spdiags
+    >>>> from pyamg.multlevel import coarse_grid_solver
+    >>>> n=100
+    >>>> e = ones((n,1)).ravel()
+    >>>> data = [ -1*e, 2*e, -1*e ]
+    >>>> A = spdiags(data,[-1,0,1],n,n)
+    >>>> b = A*ones(A.shape[0])
+    >>>> cgs = coarse_grid_solver('LU')
+    >>>> x=cgs(A,b)
 
     TODO
+    ----
+    add relaxation methods
         
     """
     
@@ -387,12 +402,14 @@ def coarse_grid_solver(solver):
     else:
         raise ValueError,('unknown solver: %s' % fn)
        
-    #TODO handle case A.nnz == 0
-
     def wrapped_solve(self,A,b):
         # make sure x is same dimensions and type as b
         b = asanyarray(b)
-        x = solve(self,A,b)
+        if A.nnz==0:
+            # if A.nnz = 0, then we expect no correction
+            x=zeros(b.shape)
+        else:
+            x = solve(self,A,b)
         if isinstance(b,numpy.ndarray):
             x = asarray(x)
         elif isinstance(b,numpy.matrix):
@@ -405,5 +422,3 @@ def coarse_grid_solver(solver):
         __call__ = wrapped_solve
 
     return generic_solver()
-    
-
