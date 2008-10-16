@@ -17,8 +17,38 @@ __all__ = ['multilevel_solver', 'coarse_grid_solver']
 class multilevel_solver:
     """Stores multigrid hierarchy and implements the multigrid cycle
 
-    TODO explain constructor and purpose/responsibilities of the class
+    The class constructs the cycling process and points to the methods for
+    coarse grid solves.  A multilevel_solver object is typically returned from
+    a particular AMG method (see ruge_stuben_solver or
+    smoothed_aggregation_solver for example).  A call to
+    multilevel_solver.solve() is a typical access point.  The class also
+    defines methods for constructing operator, cycle, and grid complexities. 
 
+    Attributes
+    ----------
+    ccx : float
+        Tracks the total operations (O(nnz) per smoothing sweep)
+    first_pass : {True,False}
+        Indicates whether the solver is in its first cycle
+    levels : level array
+        Array of level objects that contain A, R, and P.
+    preprocess : function pointer
+        Optional function to manipulate x and b at the start of the cycle
+    postprocess : function pointer
+        Optional function to manipulate x and b at the end of the cycle
+    coarse_solver : string
+        String passed to coarse_grid_solver indicating the solve type
+
+    Methods
+    -------
+    cycle_complexity(lvl=-1)
+        Returns the cycle complexity or updates for a given level (lvl>=0)
+    operator_complexity()
+        Returns the operator complexity
+    grid_complexity()
+        Returns the operator complexity
+    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, cycle='V')
+        The main multigrid solve call.
     """
 
     class level:
@@ -29,10 +59,47 @@ class multilevel_solver:
         also have 'P' and 'R' attributes referencing the prolongation and 
         restriction operators that act between each level and the next 
         coarser level.
+
+        Attributes
+        ----------
+        A : csr_matrix
+            Problem matrix for `A`x=b
+        R : csr_matrix
+            Restriction matrix between levels (often `R` = `P`.T)
+        P : csr_matrix
+            Prolongation or Interpolation matrix.
+
+        Notes
+        -----
+        The functionality of this class is a struct
         """
         pass
 
     def __init__(self, levels, preprocess=None, postprocess=None, coarse_solver='pinv2'):
+        """
+        Class constructor responsible for initializing the cycle and ensuring
+        the list of levels is complete.
+
+        Parameters
+        ----------
+        ccx : float
+            Tracks the total operations (O(nnz) per smoothing sweep)
+        first_pass : {True,False}
+            Indicates whether the solver is in its first cycle
+        levels : level array
+            Array of level objects that contain A, R, and P.
+        preprocess : function pointer
+            Optional function to manipulate x and b at the start of the cycle
+        postprocess : function pointer
+            Optional function to manipulate x and b at the end of the cycle
+        coarse_solver : string
+            String passed to coarse_grid_solver indicating the solve type
+    
+        Notes
+        -----
+        R is set to P.T unless previously set.
+
+        """
         self.ccx = 0
         self.first_pass=True
         self.levels = levels
@@ -47,6 +114,10 @@ class multilevel_solver:
                 level.R = level.P.T
 
     def __repr__(self):
+        """
+        Prints statistics about the fixed multigrid heirarchy.  Does not print
+        information from solving.
+        """
         output = 'multilevel_solver\n'
         output += 'Number of Levels:     %d\n'   % len(self.levels)
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
@@ -62,18 +133,22 @@ class multilevel_solver:
         return output
 
     def cycle_complexity(self,lvl=-1):
-        """number of nonzeros on all levels of a cycle/ number on the finest level"""
+        """Number of nonzeros in the matrix on all levels of a cycle/ 
+        number of nonzeros in the matrix on the finest level.  This is 
+        approximately 2*operator_complexity for a V-Cycle."""
         if(lvl>-1 and self.first_pass==True):
             self.ccx += self.levels[lvl].A.nnz
         else:
             return self.ccx/float(self.levels[0].A.nnz)
 
     def operator_complexity(self):
-        """number of nonzeros on all levels / number of nonzeros on the finest level"""
+        """Number of nonzeros in the matrix on all levels / 
+        number of nonzeros in the matrix on the finest level"""
         return sum([level.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
-        """number of unknowns on all levels / number of unknowns on the finest level"""
+        """Number of unknowns on all levels / 
+        number of unknowns on the finest level"""
         return sum([level.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
@@ -81,7 +156,50 @@ class multilevel_solver:
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, cycle='V'):
         """
-        TODO
+        Main solution call to execute multigrid cycling.
+
+        Parameters
+        ----------
+        b : numpy_array
+            Right hand side.
+        x0 : numpy_array
+            Initial guess.
+        tol : float
+            Stopping criteria for the relative residual r[k]/r[0].
+        maxiter : int
+            Stopping criteria for the maximum number of allowable iterations.
+        callback : function pointer
+            Function processed after each cycle (iteration).
+        return_residuals : {True,False}
+            Flag to return a vector of residuals.
+        cycle : {'V','W','F'}
+            Character to indicate the type of cycling to perform in each
+            iteration.
+
+        Returns
+        -------
+        x : numpy_array
+            Approximate solution to Ax=b
+        residuals : numpy_array
+            Optional return based on return_residuals.  Vector of residuals
+            after each cycle.
+
+        See Also
+        --------
+        __solve : private function implementing the recurssive calls.
+
+        Examples
+        --------
+        >>>> from numpy import ones
+        >>>> from scipy.sparse import spdiags
+        >>>> from pyamg.classical import ruge_stuben_solver
+        >>>> n=100
+        >>>> e = ones((n,1)).ravel()
+        >>>> data = [ -1*e, 2*e, -1*e ]
+        >>>> A = spdiags(data,[-1,0,1],n,n)
+        >>>> b = A*ones(A.shape[0])
+        >>>> ml = ruge_stuben_solver(A, max_coarse=10)
+        >>>> x, resvec = ml.solve(b, tol=1e-14, return_residuals=True)
         """
 
         if x0 is None:
@@ -92,7 +210,6 @@ class multilevel_solver:
         if self.preprocess is not None:
             x,b = self.preprocess(x,b)
 
-        #TODO change use of tol (relative tolerance) to agree with other iterative solvers
         A = self.levels[0].A
         residuals = [ norm(b-A*x) ]
 
