@@ -360,7 +360,10 @@ def scale_rows(A,v,copy=True):
     v : array_like
         Array of M scales
     copy : {True,False}
-        TODO
+        - If copy=True, then the matrix is copied to a new and different return
+          matrix (e.g. B=scale_rows(A,v))
+        - If copy=False, then the matrix is overwritten deeply (e.g.
+          scale_rows(A,v,copy=False) overwrites A)
 
     Returns
     -------
@@ -425,7 +428,10 @@ def scale_columns(A,v,copy=True):
     v : array_like
         Array of N scales
     copy : {True,False}
-        TODO
+        - If copy=True, then the matrix is copied to a new and different return
+          matrix (e.g. B=scale_columns(A,v))
+        - If copy=False, then the matrix is overwritten deeply (e.g.
+          scale_columns(A,v,copy=False) overwrites A)
 
     Returns
     -------
@@ -483,7 +489,7 @@ def symmetric_rescaling(A,copy=True):
     """
     Scale the matrix symmetrically::
 
-    A = D^{-1/2} A D^{-1/2}
+        A = D^{-1/2} A D^{-1/2}
 
     where D=diag(A).
 
@@ -495,7 +501,10 @@ def symmetric_rescaling(A,copy=True):
     A : sparse matrix
         Sparse matrix with N rows
     copy : {True,False}
-        TODO
+        - If copy=True, then the matrix is copied to a new and different return
+          matrix (e.g. B=symmetric_rescaling(A))
+        - If copy=False, then the matrix is overwritten deeply (e.g.
+          symmetric_rescaling(A,copy=False) overwrites A)
 
     Returns
     -------
@@ -569,46 +578,65 @@ def symmetric_rescaling(A,copy=True):
 #    return dispatcher
 
 
-
-##############################################################################################
-#                                           JBS Utils                                        #
-##############################################################################################
-
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
     Unamalgamate a CSR A with blocks of 1's.  
 
     Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock)
 
-    Input
-    =====
-    A                   Amalmagated matrix, assumed to be in CSR format
-    RowsPerBlock &
-    ColsPerBlock        Give A blocks of size (RowsPerBlock, ColsPerBlock)
+    Parameters
+    ----------
+    A : csr_matrix
+        Amalgamted matrix
+    RowsPerBlock : int
+        Give A blocks of size (RowsPerBlock, ColsPerBlock)
+    ColsPerBlock : int
+        Give A blocks of size (RowsPerBlock, ColsPerBlock)
     
-    Output
-    ======
-    A_UnAmal:           BSR matrix that is essentially a Kronecker product of 
-                        A and ones(RowsPerBlock, ColsPerBlock
+    Returns
+    -------
+    A_UnAmal : bsr_matrix 
+        Similar to a Kronecker product of A and ones(RowsPerBlock, ColsPerBlock)
 
+    Examples
+    --------
+    >>> from numpy import array
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.utils import UnAmal
+    >>> row = array([0,0,1,2,2,2])
+    >>> col = array([0,2,2,0,1,2])
+    >>> data = array([1,2,3,4,5,6])
+    >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
+    >>> A.todense()
+    >>> UnAmal(A,2,2).todense()
     """
     data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
     return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
 
 def Coord2RBM(numNodes, numPDEs, x, y, z):
-    """Convert 2D or 3D coordinates into Rigid body modes for use as near nullspace modes in elasticity AMG solvers
+    """
+    Convert 2D or 3D coordinates into Rigid body modes for use as near
+    nullspace modes in elasticity AMG solvers
 
-    Input
-    =====
-    numNodes    Number of nodes
-    numPDEs     Number of dofs per node
-    x,y,z       Coordinate vectors
+    Parameters
+    ----------
+    numNodes : int
+        Number of nodes
+    numPDEs : 
+        Number of dofs per node
+    x,y,z : array_like
+        Coordinate vectors
 
+    Returns
+    -------
+    rbm : matrix 
+        A matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
+        body modes
 
-    Output
-    ======
-    rbm:        Matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid body modes
-
+    Examples
+    --------
+    >>> from pyamg.utils import Coord2RBM
+    >>> Coord2RBM(3,6,array([0,1,2]),array([0,1,2]),array([0,1,2]))
     """
 
     #check inputs
@@ -680,24 +708,33 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     
     return rbm
 
-
-############################################################################################
-#                    JBS --- Define BSR helper functions                                   #
-############################################################################################
-
 def BSR_Get_Row(A, i):
-    """Return row i in BSR matrix A.  Only nonzero entries are returned
+    """
+    Return row i in BSR matrix A.  Only nonzero entries are returned
 
-    Input
-    =====
-    A   Matrix assumed to be in BSR format
-    i   row number
+    Parameters
+    ----------
+    A : bsr_matrix
+        Input matrix
+    i : int
+        Row number
 
-    Output
-    ======
-    z   Actual nonzero values for row i
-        colindx Array of column indices for the nonzeros of row i
-    
+    Returns
+    -------
+    z : array
+        Actual nonzero values for row i colindx Array of column indices for the
+        nonzeros of row i
+   
+    Examples
+    --------
+    >>> from numpy import array
+    >>> from scipy.sparse import bsr_matrix
+    >>> from pyamg.utils import BSR_Get_Row
+    >>> indptr  = array([0,2,3,6])
+    >>> indices = array([0,2,2,0,1,2])
+    >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
+    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> BSR_Get_Row(B,2)
     """
     
     blocksize = A.blocksize[0]
@@ -724,19 +761,28 @@ def BSR_Get_Row(A, i):
     return mat(z).T, colindx[0,:]
 
 def BSR_Row_WriteScalar(A, i, x): 
-    """Write a scalar at each nonzero location in row i of BSR matrix A
+    """
+    Write a scalar at each nonzero location in row i of BSR matrix A
 
-    Input
-    =====
-    A   Matrix assumed to be in BSR format
-    i   row number
-    x   scalar to overwrite nonzeros of row i in A
+    Parameters
+    ----------
+    A : bsr_matrix
+        Input matrix
+    i : int
+        Row number
+    x : float
+        Scalar to overwrite nonzeros of row i in A
 
-    Output
-    ======
-    A   All nonzeros in row i of A have been overwritten with x.  
+    Returns
+    -------
+    A : bsr_matrix
+        All nonzeros in row i of A have been overwritten with x.  
         If x is a vector, the first length(x) nonzeros in row i 
         of A have been overwritten with entries from x
+
+    Examples
+    --------
+    TODO
 
     """
     
@@ -756,22 +802,31 @@ def BSR_Row_WriteScalar(A, i, x):
 
 
 def BSR_Row_WriteVect(A, i, x): 
-    """Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
-       length(x) and nnz(A[i,:]) must be equivalent.
+    """
+    Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
+    length(x) and nnz(A[i,:]) must be equivalent.
 
-    Input
-    =====
-    A   Matrix assumed to be in BSR format
-    i   row number
-    x   Array of values to overwrite nonzeros in row i of A
+    Parameters
+    ----------
+    A : bsr_matrix
+        Matrix assumed to be in BSR format
+    i : int
+        Row number
+    x : float
+        Array of values to overwrite nonzeros in row i of A
 
-    Output
-    ======
-    A   The nonzeros in row i of A have been
+    Returns
+    -------
+    A : bsr_matrix
+        The nonzeros in row i of A have been
         overwritten with entries from x.  x must be same
         length as nonzeros of row i.  This is guaranteed
         when this routine is used with vectors derived form
         Get_BSR_Row
+
+    Examples
+    --------
+    TODO
 
     """
     
