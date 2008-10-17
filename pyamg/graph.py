@@ -118,6 +118,9 @@ def vertex_coloring(G, method='MIS'):
     elif method == 'LDF':
         fn = multigridtools.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, rand(N) )
+    elif method == 'IDO':
+        fn = multigridtools.vertex_coloring_IDO
+        fn(N, G.indptr, G.indices, coloring )
     else:
         raise ValueError('unknown method (%s)' % method)
 

@@ -142,9 +142,18 @@ def PMISc(S, method='JP'):
 def CLJP(S):
     """Compute a C/F splitting using the parallel CLJP algorithm
     """
-    #weights,G,S,T = preprocess(S)
-    #weights += diff(G.indptr)
-    raise NotImplementedError
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    T = S.T.tocsr()  #transpose S for efficient column access
+    splitting = empty( S.shape[0], dtype='intc' )
+
+    multigridtools.cljp_naive_splitting(S.shape[0],
+            S.indptr, S.indices, S.data,
+            T.indptr, T.indices,  
+            splitting,
+            0)
+
+    return splitting
 
 
 def CLJPc(S):
@@ -152,10 +161,33 @@ def CLJPc(S):
     
     CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
     random weights with weights determined by a vertex coloring.
-
     """
-    raise NotImplementedError
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
+    T = S.T.tocsr()  #transpose S for efficient column access
+    splitting = empty( S.shape[0], dtype='intc' )
+
+    multigridtools.cljp_naive_splitting(S.shape[0],
+            S.indptr, S.indices, S.data,
+            T.indptr, T.indices,  
+            splitting,
+            1)
+
+    return splitting
+
+def bsis(S):
+    """Compute a C/F splitting using bsis """
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    T = S.T.tocsr()  #transpose S for efficient column access
+    splitting = empty( S.shape[0], dtype='intc' )
+
+    multigridtools.bsis_splitting(S.shape[0],
+            S.indptr, S.indices, S.data,
+            T.indptr, T.indices,  
+            splitting)
+
+    return splitting
 
 #############################
 ## Helper functions
