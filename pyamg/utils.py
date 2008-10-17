@@ -782,8 +782,14 @@ def BSR_Row_WriteScalar(A, i, x):
 
     Examples
     --------
-    TODO
-
+    >>> from numpy import array
+    >>> from scipy.sparse import bsr_matrix
+    >>> from pyamg.utils import BSR_Row_WriteScalar
+    >>> indptr  = array([0,2,3,6])
+    >>> indices = array([0,2,2,0,1,2])
+    >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
+    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> BSR_Row_WriteScalar(B,5,22)
     """
     
     blocksize = A.blocksize[0]
@@ -812,7 +818,7 @@ def BSR_Row_WriteVect(A, i, x):
         Matrix assumed to be in BSR format
     i : int
         Row number
-    x : float
+    x : array
         Array of values to overwrite nonzeros in row i of A
 
     Returns
@@ -826,8 +832,14 @@ def BSR_Row_WriteVect(A, i, x):
 
     Examples
     --------
-    TODO
-
+    >>> from numpy import array
+    >>> from scipy.sparse import bsr_matrix
+    >>> from pyamg.utils import BSR_Row_WriteVect
+    >>> indptr  = array([0,2,3,6])
+    >>> indices = array([0,2,2,0,1,2])
+    >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
+    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> BSR_Row_WriteVect(B,5,array([11,22,33,44,55,66]))
     """
     
     blocksize = A.blocksize[0]
@@ -836,9 +848,7 @@ def BSR_Row_WriteVect(A, i, x):
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
     
-    # This line fixes one of the idiotic things about the array/matrix setup.
-    # Sometimes I really wish for the Matlab matrix "slicing" interface rather 
-    # than this.
+    # like matlab slicing:
     x = x.__array__().reshape( (max(x.shape),) )
 
     #counter = 0
@@ -850,8 +860,3 @@ def BSR_Row_WriteVect(A, i, x):
 
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
-
-
-###################################################################################################
-
-
