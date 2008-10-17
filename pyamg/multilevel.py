@@ -63,9 +63,9 @@ class multilevel_solver:
         Attributes
         ----------
         A : csr_matrix
-            Problem matrix for `A`x=b
+            Problem matrix for Ax=b
         R : csr_matrix
-            Restriction matrix between levels (often `R` = `P`.T)
+            Restriction matrix between levels (often R = P.T)
         P : csr_matrix
             Prolongation or Interpolation matrix.
 
@@ -190,16 +190,16 @@ class multilevel_solver:
 
         Examples
         --------
-        >>>> from numpy import ones
-        >>>> from scipy.sparse import spdiags
-        >>>> from pyamg.classical import ruge_stuben_solver
-        >>>> n=100
-        >>>> e = ones((n,1)).ravel()
-        >>>> data = [ -1*e, 2*e, -1*e ]
-        >>>> A = spdiags(data,[-1,0,1],n,n)
-        >>>> b = A*ones(A.shape[0])
-        >>>> ml = ruge_stuben_solver(A, max_coarse=10)
-        >>>> x, resvec = ml.solve(b, tol=1e-14, return_residuals=True)
+        >>> from numpy import ones
+        >>> from scipy.sparse import spdiags
+        >>> from pyamg.classical import ruge_stuben_solver
+        >>> n=100
+        >>> e = ones((n,1)).ravel()
+        >>> data = [ -1*e, 2*e, -1*e ]
+        >>> A = spdiags(data,[-1,0,1],n,n)
+        >>> b = A*ones(A.shape[0])
+        >>> ml = ruge_stuben_solver(A, max_coarse=10)
+        >>> x, resvec = ml.solve(b, tol=1e-14, return_residuals=True)
         """
 
         if x0 is None:
@@ -349,16 +349,16 @@ def coarse_grid_solver(solver):
 
     Examples
     --------
-    >>>> from numpy import ones
-    >>>> from scipy.sparse import spdiags
-    >>>> from pyamg.multlevel import coarse_grid_solver
-    >>>> n=100
-    >>>> e = ones((n,1)).ravel()
-    >>>> data = [ -1*e, 2*e, -1*e ]
-    >>>> A = spdiags(data,[-1,0,1],n,n)
-    >>>> b = A*ones(A.shape[0])
-    >>>> cgs = coarse_grid_solver('LU')
-    >>>> x=cgs(A,b)
+    >>> from numpy import ones
+    >>> from scipy.sparse import spdiags
+    >>> from pyamg.multlevel import coarse_grid_solver
+    >>> n=100
+    >>> e = ones((n,1)).ravel()
+    >>> data = [ -1*e, 2*e, -1*e ]
+    >>> A = spdiags(data,[-1,0,1],n,n)
+    >>> b = A*ones(A.shape[0])
+    >>> cgs = coarse_grid_solver('LU')
+    >>> x=cgs(A,b)
 
     TODO
     ----

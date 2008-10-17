@@ -11,10 +11,12 @@ __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection
         'ode_strength_of_connection']
 
 def classical_strength_of_connection(A,theta):
-    """Return a strength of connection matrix using the classical AMG measure
+    """
+    Return a strength of connection matrix using the classical AMG measure
 
-    An off-diagonal entry A[i,j] is a strong connection iff
-        -A[i,j] >= theta * max( -A[i,k] )   where k != i
+    An off-diagonal entry A[i,j] is a strong connection iff::
+
+            -A[i,j] >= theta * max( -A[i,k] )   where k != i
 
     Parameters
     ----------
@@ -40,7 +42,7 @@ def classical_strength_of_connection(A,theta):
     - A symmetric A does not necessarily yield a symmetric strength matrix S
     - Calls C++ function classical_strength_of_connection
     - The version as implemented is designed form M-matrices.  Trottenberg et
-      al. use max |a_ik| over all negative entries, which is the same.  A
+      al. use max A[i,k] over all negative entries, which is the same.  A
       positive edge weight never indicates a strong connection.
 
     References
@@ -54,15 +56,15 @@ def classical_strength_of_connection(A,theta):
 
     Examples
     --------
-    >>>> from numpy import array
-    >>>> from pyamg.gallery import stencil_grid
-    >>>> from pyamg.strength import classical_strength_of_connection
-    >>>> n=3
-    >>>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>>                  [-1.0, 8.0,-1.0],
-    >>>>                  [-1.0,-1.0,-1.0]])
-    >>>> A = stencil_grid(stencil, (n,n), format='csr')
-    >>>> S = classical_strength_of_connection(A, 0.0)
+    >>> from numpy import array
+    >>> from pyamg.gallery import stencil_grid
+    >>> from pyamg.strength import classical_strength_of_connection
+    >>> n=3
+    >>> stencil = array([[-1.0,-1.0,-1.0],
+    >>>                  [-1.0, 8.0,-1.0],
+    >>>                  [-1.0,-1.0,-1.0]])
+    >>> A = stencil_grid(stencil, (n,n), format='csr')
+    >>> S = classical_strength_of_connection(A, 0.0)
 
     """
     if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
@@ -81,9 +83,11 @@ def classical_strength_of_connection(A,theta):
 
 
 def symmetric_strength_of_connection(A, theta=0):
-    """Compute a strength of connection matrix using the standard symmetric measure
+    """
+    Compute a strength of connection matrix using the standard symmetric measure
     
-    An off-diagonal connection A[i,j] is strong iff
+    An off-diagonal connection A[i,j] is strong iff::
+
         abs(A[i,j]) >= theta * sqrt( abs(A[i,i] * A[j,j]) )
 
     Parameters
@@ -108,13 +112,15 @@ def symmetric_strength_of_connection(A, theta=0):
     Notes
     -----
         - Calls C++ function classical_strength_of_connection
-        - For vector problems, standard strength measures may produce undesirable
-          aggregates.  A "block approach" from Vanek et al. is used to replace
-          vertex comparisons with block-type comparisons.  A connection between
-          nodes i and j in the block case is strong if
-                ||AB[i,j]|| >= theta * sqrt( ||AB[i,i]||*||AB[j,j]|| )
-          where AB[k,l] is the matrix block (degrees of freedom) associated with
-          nodes k and l and ||.|| is a matrix norm, such a Frobenius.
+        - For vector problems, standard strength measures may produce
+          undesirable aggregates.  A "block approach" from Vanek et al. is used
+          to replace vertex comparisons with block-type comparisons.  A
+          connection between nodes i and j in the block case is strong if::
+
+          ||AB[i,j]|| >= theta * sqrt( ||AB[i,i]||*||AB[j,j]|| ) where AB[k,l]
+
+          is the matrix block (degrees of freedom) associated with nodes k and
+          l and ||.|| is a matrix norm, such a Frobenius.
         
 
     References
@@ -126,15 +132,15 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Examples
     --------
-    >>>> from numpy import array
-    >>>> from pyamg.gallery import stencil_grid
-    >>>> from pyamg.strength import symmetric_strength_of_connection
-    >>>> n=3
-    >>>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>>                  [-1.0, 8.0,-1.0],
-    >>>>                  [-1.0,-1.0,-1.0]])
-    >>>> A = stencil_grid(stencil, (n,n), format='csr')
-    >>>> S = symmetric_strength_of_connection(A, 0.0)
+    >>> from numpy import array
+    >>> from pyamg.gallery import stencil_grid
+    >>> from pyamg.strength import symmetric_strength_of_connection
+    >>> n=3
+    >>> stencil = array([[-1.0,-1.0,-1.0],
+    >>>                  [-1.0, 8.0,-1.0],
+    >>>                  [-1.0,-1.0,-1.0]])
+    >>> A = stencil_grid(stencil, (n,n), format='csr')
+    >>> S = symmetric_strength_of_connection(A, 0.0)
     """
 
     if (theta<0):
