@@ -13,7 +13,6 @@
 #include "relaxation.h"
 #include "graph.h"
 #include "ode_strength.h"
-#include "mysplit.h"
 %}
 
 %feature("autodoc", "1");
@@ -58,7 +57,6 @@
     const ctype Ax [ ],
     const ctype Bx [ ],
     const ctype Sx [ ],
-          ctype Sd [ ],
     const ctype Tx [ ],
     const ctype Xx [ ],
     const ctype Yx [ ],
@@ -182,7 +180,6 @@ DECLARE_DATA_TYPE( double )
 %include "relaxation.h"
 %include "graph.h"
 %include "ode_strength.h"
-%include "mysplit.h"
  /*
   * Order may be important here, list float before double
   */
@@ -208,9 +205,6 @@ DECLARE_DATA_TYPE( double )
 %enddef
  
  
-INSTANTIATE_BOTH(bsis_splitting)
-INSTANTIATE_BOTH(cljp_naive_splitting)
-
 INSTANTIATE_INDEX(standard_aggregation)
 INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
@@ -240,11 +234,10 @@ INSTANTIATE_BOTH(kaczmarz_gauss_seidel)
 %template(vertex_coloring_mis)                vertex_coloring_mis<int,int>;
 %template(vertex_coloring_jones_plassmann)    vertex_coloring_jones_plassmann<int,int,double>;
 %template(vertex_coloring_LDF)                vertex_coloring_LDF<int,int,double>;
-%template(vertex_coloring_IDO)                vertex_coloring_IDO<int,int>;
-
 
 INSTANTIATE_INDEX(breadth_first_search)
 INSTANTIATE_INDEX(connected_components)
 
 INSTANTIATE_ALL(bellman_ford)
 INSTANTIATE_ALL(lloyd_cluster)
+

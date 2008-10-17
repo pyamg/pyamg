@@ -51,7 +51,6 @@ del types
 F_NODE = _multigridtools.F_NODE
 C_NODE = _multigridtools.C_NODE
 U_NODE = _multigridtools.U_NODE
-DEBUGIT = _multigridtools.DEBUGIT
 
 def standard_aggregation(*args):
   """standard_aggregation(int n_row, int Ap, int Aj, int x) -> int"""
@@ -84,10 +83,6 @@ def vertex_coloring_LDF(*args):
   """vertex_coloring_LDF(int num_rows, int Ap, int Aj, int x, double y) -> int"""
   return _multigridtools.vertex_coloring_LDF(*args)
 
-def vertex_coloring_IDO(*args):
-  """vertex_coloring_IDO(int num_rows, int Ap, int Aj, int x) -> int"""
-  return _multigridtools.vertex_coloring_IDO(*args)
-
 def breadth_first_search(*args):
   """breadth_first_search(int Ap, int Aj, int seed, int order, int level)"""
   return _multigridtools.breadth_first_search(*args)
@@ -96,22 +91,6 @@ def connected_components(*args):
   """connected_components(int num_nodes, int Ap, int Aj, int components)"""
   return _multigridtools.connected_components(*args)
 
-
-def bsis_splitting(*args):
-  """
-    bsis_splitting(int n, int Sp, int Sj, float Sd, int Tp, int Tj, int splitting)
-    bsis_splitting(int n, int Sp, int Sj, double Sd, int Tp, int Tj, int splitting)
-    """
-  return _multigridtools.bsis_splitting(*args)
-
-def cljp_naive_splitting(*args):
-  """
-    cljp_naive_splitting(int n, int Sp, int Sj, float Sd, int Tp, int Tj, int splitting, 
-        int colorflag)
-    cljp_naive_splitting(int n, int Sp, int Sj, double Sd, int Tp, int Tj, int splitting, 
-        int colorflag)
-    """
-  return _multigridtools.cljp_naive_splitting(*args)
 
 def rs_direct_interpolation_pass2(*args):
   """
