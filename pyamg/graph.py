@@ -1,4 +1,4 @@
-"""Algorithms related to Graphs"""
+"""Algorithms related to graphs"""
 
 __docformat__ = "restructuredtext en"
 
@@ -35,7 +35,8 @@ def maximal_independent_set(G, algo='serial', k=None):
 
     Parameters
     ----------
-    G : symmetric matrix, preferably in sparse CSR or CSC format
+    G : sparse matrix
+        Symmetric matrix, preferably in sparse CSR or CSC format
         The nonzeros of G represent the edges of an undirected graph.
 
     algo : {'serial', 'parallel'}
@@ -86,7 +87,8 @@ def vertex_coloring(G, method='MIS'):
 
     Parameters
     ----------
-    G : symmetric matrix, preferably in sparse CSR or CSC format
+    G : sparse matrix
+        Symmetric matrix, preferably in sparse CSR or CSC format
         The nonzeros of G represent the edges of an undirected graph.
     method : {string}
         Algorithm used to compute the vertex coloring:
@@ -124,6 +126,25 @@ def vertex_coloring(G, method='MIS'):
     return coloring
 
 def bellman_ford(G, seeds, maxiter=None):
+    """
+    Bellman-Ford iteration
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    References
+    ----------
+    CLR
+
+    Examples
+    --------
+    """
     G = asgraph(G)
     N = G.shape[0]
 
@@ -154,11 +175,6 @@ def bellman_ford(G, seeds, maxiter=None):
 
     return (distances,nearest_seed)
 
-                                 
-                                
-
-
-         
 def lloyd_cluster(G, seeds, maxiter=10):
     """Perform Lloyd clustering on graph with weighted edges
 
@@ -209,6 +225,25 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
 
 def breadth_first_search(G, seed):
+    """
+    Breadth First search of a graph
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    Notes
+    -----
+
+    References
+    ----------
+    CLR
+
+    Examples
+    --------
+    """
     G = asgraph(G)
     N = G.shape[0]
 
