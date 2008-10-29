@@ -2,14 +2,12 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import asarray, empty, arange
-from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix
+from numpy import asarray, empty
+from scipy.sparse import isspmatrix_csr, bsr_matrix
 
-from pyamg.utils import scale_columns
 from pyamg import multigridtools
 
 __all__ = ['fit_candidates']
-
 
 def fit_candidates(AggOp, B, tol=1e-10):
     """Fit near-nullspace candidates to form the tentative prolongator
@@ -33,7 +31,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
         The tentative prolongator Q is a sparse block matrix with dimensions 
         (#blocks * blocksize, #aggregates * #candidates) formed by dense blocks
         of size (blocksize, #candidates).  The coarse level candidates are 
-        stored in R which has dimensions (#blocksize * #aggregates, #blocksize).
+        stored in R which has dimensions (#aggregates * #candidates, #candidates).
 
     Notes
     -----
@@ -46,9 +44,14 @@ def fit_candidates(AggOp, B, tol=1e-10):
         tentative prolongator will not include those degrees of freedom. This
         situation is illustrated in the examples below.
 
+    See Also
+    --------
+    multigridtools.fit_candidates
+
     Examples
     --------
     >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.aggregation.tentative import fit_candidates
     >>> # four nodes divided into two aggregates
     ... AggOp = csr_matrix( [[1,0],
     ...                      [1,0],
@@ -122,6 +125,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     K1 = B.shape[0] / N_fine  # DoF per supernode (e.g. 3 for 3d vectors)
     K2 = B.shape[1]           # candidates
 
+    # the first two dimensions of R and Qx are colapsed laster
     R = empty((N_coarse,K2,K2), dtype=B.dtype)   # coarse candidates
     Qx = empty((AggOp.nnz,K1,K2), dtype=B.dtype) # BSR data array
     
@@ -138,5 +142,3 @@ def fit_candidates(AggOp, B, tol=1e-10):
     R = R.reshape(-1,K2)
 
     return Q,R
-    
-
