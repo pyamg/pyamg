@@ -4,24 +4,28 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['poisson']
 
-from scipy import arange, empty, intc, ravel, prod
-from scipy.sparse import coo_matrix
+import numpy as np
 
+from stencil import stencil_grid
 
 def poisson( grid, spacing=None, dtype=float, format=None):
-    """Finite Difference approximation to the Poisson problem on a 
-    regular n-dimensional grid with Dirichlet boundary conditions.
-   
-    
+    """Returns a sparse matrix for the N-dimensional Poisson problem
+
+    The matrix represents a finite Difference approximation to the 
+    Poisson problem on a regular n-dimensional grid with unit grid 
+    spacing and Dirichlet boundary conditions.
+
     Parameters
     ----------
     grid : tuple of integers
         grid dimensions e.g. (100,100)
 
+    Notes
+    -----
+    The matrix is symmetric and positive definite (SPD).
 
     Examples
     --------
-
     >>> # 4 nodes in one dimension
     >>> poisson( (4,) ).todense()
     matrix([[ 2., -1.,  0.,  0.],
@@ -41,48 +45,17 @@ def poisson( grid, spacing=None, dtype=float, format=None):
     """
     grid = tuple(grid)
 
-    D = len(grid) # grid dimension
+    N = len(grid) # grid dimension
 
-    if D < 1 or min(grid) < 1:
-        raise ValueError,'invalid grid shape: %s' % str(grid)
+    if N < 1 or min(grid) < 1:
+        raise ValueError('invalid grid shape: %s' % str(grid))
 
-    nodes = arange(prod(grid)).reshape(*grid)
-
-    nnz = nodes.size 
-    for i in range(D):
-        nnz += 2 * prod( grid[:i] + grid[i+1:] ) * (grid[i] - 1)
-    
-    row  = empty(nnz, dtype=intc)
-    col  = empty(nnz, dtype=intc)
-    data = empty(nnz, dtype=dtype)
-    
-    row[:nodes.size]  = ravel(nodes)
-    col[:nodes.size]  = ravel(nodes)
-    data[:nodes.size] = 2*D
-    data[nodes.size:] = -1
-    
-    ptr = nodes.size
-    
-    for i in range(D):
-        s0 = [slice(None)] * i + [slice(0,-1)  ] + [slice(None)] * (D - i - 1)
-        s1 = [slice(None)] * i + [slice(1,None)] + [slice(None)] * (D - i - 1)
-    
-        n0 = nodes[s0]
-        n1 = nodes[s1]
-    
-        row0 = row[ ptr:ptr + n0.size].reshape(n0.shape)
-        col0 = col[ ptr:ptr + n0.size].reshape(n0.shape)
-        ptr += n0.size
-    
-        row1 = row[ ptr:ptr + n0.size].reshape(n0.shape)
-        col1 = col[ ptr:ptr + n0.size].reshape(n0.shape)
-        ptr += n0.size
-    
-        row0[:] = n0
-        col0[:] = n1
-    
-        row1[:] = n1
-        col1[:] = n0
-    
-    return coo_matrix((data,(row,col)),shape=(nodes.size,nodes.size)).asformat(format)
+    # create N-dimension Laplacian stencil
+    stencil = np.zeros((3,) * N, dtype=dtype) 
+    for i in range(N):
+        stencil[ (1,)*i + (0,) + (1,)*(N-i-1) ] = -1
+        stencil[ (1,)*i + (2,) + (1,)*(N-i-1) ] = -1
+    stencil[ (1,)*N ] = 2*N
+  
+    return stencil_grid(stencil, grid, format=format)
 
