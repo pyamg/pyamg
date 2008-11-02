@@ -29,13 +29,13 @@ class TestDiffusionStencil2D(TestCase):
         stencil = array([[-1.0,-1.0,-1.0],
                          [-1.0, 8.0,-1.0],
                          [-1.0,-1.0,-1.0]]) / 3.0
-        assert_equal(diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'), stencil)
+        assert_almost_equal(diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'), stencil)
 
         ## weak horizontal
-        #assert_equal(diffusion_stencil_2d(epsilon=0.5, theta=0.0, type='FE'), stencil)
+        #assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=0.0, type='FE'), stencil)
 
         ## weak vertical
-        #assert_equal(diffusion_stencil_2d(epsilon=0.5, theta=pi/2, type='FE'), stencil)
+        #assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=pi/2, type='FE'), stencil)
 
     def test_zero_sum(self):
         """test that stencil entries sum to zero"""

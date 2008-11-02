@@ -67,7 +67,7 @@ def load_example(name):
     if name not in example_names:
         raise ValueError('no example with name (%s)' % name)
     else:
-        return loadmat( os.path.join(example_dir, name + '.mat') )
+        return loadmat(os.path.join(example_dir, name + '.mat'), struct_as_record=True)
    
 # insert the example names into the docstring
 load_example.__doc__ %= ('\n' + ' ' * 8).join( [''] + example_names)
