@@ -9,7 +9,7 @@ from scipy.sparse import dia_matrix
 
 __all__ = ['stencil_grid']
 
-def stencil_grid(S, grid, format=None):
+def stencil_grid(S, grid, dtype=None, format=None):
     """Construct a sparse matrix form a local matrix stencil 
     
     Parameters
@@ -18,6 +18,8 @@ def stencil_grid(S, grid, format=None):
         matrix stencil stored in rank N array
     grid : tuple
         tuple containing the N grid dimensions
+    dtype :
+        data type of the result
     format : string
         sparse matrix format to return, e.g. "csr", "coo", etc.
 
@@ -28,7 +30,6 @@ def stencil_grid(S, grid, format=None):
 
     Notes
     -----
-
     The grid vertices are enumerated as arange(prod(grid)).reshape(grid).
     This implies that the last grid dimension cycles fastest, while the 
     first dimension cycles slowest.  For example, if grid=(2,3) then the
@@ -39,12 +40,39 @@ def stencil_grid(S, grid, format=None):
 
     Examples
     --------
-
-    TODO
-
+    >>> stencil = [-1,2,-1]  # 1D Poisson stencil
+    >>> grid = (5,)          # 1D grid with 5 vertices
+    >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')   
+    >>> A
+    <5x5 sparse matrix of type '<type 'numpy.float64'>'
+    	with 13 stored elements in Compressed Sparse Row format>
+    >>> A.todense()
+    matrix([[ 2., -1.,  0.,  0.,  0.],
+            [-1.,  2., -1.,  0.,  0.],
+            [ 0., -1.,  2., -1.,  0.],
+            [ 0.,  0., -1.,  2., -1.],
+            [ 0.,  0.,  0., -1.,  2.]])
+    
+    >>> stencil = [[0,-1,0],[-1,4,-1],[0,-1,0]] # 2D Poisson stencil
+    >>> grid = (3,3)                            # 2D grid with shape 3x3
+    >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')   
+    >>> A
+    <9x9 sparse matrix of type '<type 'numpy.float64'>'
+    	with 33 stored elements in Compressed Sparse Row format>
+    >>> A.todense()
+    matrix([[ 4., -1.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
+            [-1.,  4., -1.,  0., -1.,  0.,  0.,  0.,  0.],
+            [ 0., -1.,  4.,  0.,  0., -1.,  0.,  0.,  0.],
+            [-1.,  0.,  0.,  4., -1.,  0., -1.,  0.,  0.],
+            [ 0., -1.,  0., -1.,  4., -1.,  0., -1.,  0.],
+            [ 0.,  0., -1.,  0., -1.,  4.,  0.,  0., -1.],
+            [ 0.,  0.,  0., -1.,  0.,  0.,  4., -1.,  0.],
+            [ 0.,  0.,  0.,  0., -1.,  0., -1.,  4., -1.],
+            [ 0.,  0.,  0.,  0.,  0., -1.,  0., -1.,  4.]])
+    
     """
 
-    S    = asarray(S)
+    S    = asarray(S, dtype=dtype)
     grid = tuple(grid)
 
     if not (asarray(S.shape) % 2 == 1).all():

@@ -22,18 +22,18 @@ from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
    
 
-def linear_elasticity( grid, spacing=None, E=1e5, nu=0.3, format=None):
+def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     if len(grid) == 2:
-        return q12d( grid, spacing=spacing, E=E, nu=nu, format=format )
+        return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
     else:
-        raise NotImplemented,'no support for grid=%s' % str(grid)
+        raise NotImplemented('no support for grid=%s' % str(grid))
 
-def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, format=None):
+def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True, format=None):
     """Q1 elements in 2 dimensions"""
-    X,Y = grid
+    X,Y = tuple(grid)
     
     if X < 1 or Y < 1:
-        raise ValueError,'invalid grid shape'
+        raise ValueError('invalid grid shape')
 
     if dirichlet_boundary:
         X += 1
@@ -45,12 +45,13 @@ def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, form
     if spacing is None:
         DX,DY = 1,1
     else:
-        DX,DY = spacing
+        DX,DY = tuple(spacing)
         pts = [DX,DY]
 
     #compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu)) # Lame's first parameter
     mu   = E / (2 + 2*nu)                   # shear modulus
+
     vertices = array([[0,0],[DX,0],[DX,DY],[0,DY]])
     K = q12d_local(vertices, lame, mu ) 
     
@@ -58,8 +59,8 @@ def q12d( grid, spacing=None, E = 1e5, nu = 0.3, dirichlet_boundary = True, form
     LL = nodes[:-1,:-1]
     I  = (2*LL).repeat( K.size ).reshape(-1,8,8)
     J  = I.copy()
-    I += tile( [0,1,2,3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8,1) )
-    J += tile( [0,1,2,3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8,1) ).T
+    I += tile( [0, 1, 2, 3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8,1) )
+    J += tile( [0, 1, 2, 3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8,1) ).T
     V  = tile( K, (X*Y,1) )
      
     I = ravel(I)
@@ -160,8 +161,8 @@ def q12d_local(vertices, lame, mu):
 
 
 
-def linear_elasticity_p1( vertices, elements, E = 1e5, nu = 0.3, format=None):
-    """Q1 elements in 2 dimensions"""
+def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
+    """P1 elements in 2 or 3 dimensions"""
     
     #compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu)) # Lame's first parameter
