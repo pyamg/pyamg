@@ -132,23 +132,38 @@ class multilevel_solver:
 
         return output
 
-    def cycle_complexity(self,lvl=-1):
-        """Number of nonzeros in the matrix on all levels of a cycle/ 
-        number of nonzeros in the matrix on the finest level.  This is 
-        approximately 2*operator_complexity for a V-Cycle."""
+    def cycle_complexity(self, lvl=-1):
+        """Multigrid cycle complexity
+        
+        Defined as:
+            Number of nonzeros in the matrix on all levels of a cycle/ 
+            Number of nonzeros in the matrix on the finest level.  
+            
+        This is approximately 2*operator_complexity for a V-Cycle.
+        """
         if(lvl>-1 and self.first_pass==True):
             self.ccx += self.levels[lvl].A.nnz
         else:
             return self.ccx/float(self.levels[0].A.nnz)
 
     def operator_complexity(self):
-        """Number of nonzeros in the matrix on all levels / 
-        number of nonzeros in the matrix on the finest level"""
+        """Operator complexity of this multigrid heirarchy 
+
+        Defined as:
+            Number of nonzeros in the matrix on all levels / 
+            Number of nonzeros in the matrix on the finest level
+        
+        """
         return sum([level.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
-        """Number of unknowns on all levels / 
-        number of unknowns on the finest level"""
+        """Grid complexity of this multigrid heirarchy 
+        
+        Defined as:
+            Number of unknowns on all levels / 
+            Number of unknowns on the finest level
+
+        """
         return sum([level.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
@@ -172,10 +187,18 @@ class multilevel_solver:
 
         See Also
         --------
-        scipy.sparse.linalg.LinearOperator, scipy.sparse.linalg.isolve
+        multilevel_solver.solve, scipy.sparse.linalg.LinearOperator
 
         Examples
         --------
+        >>> from pyamg import smoothed_aggregation_solver, poisson
+        >>> from scipy.sparse.linalg import cg
+        >>> from scipy import rand
+        >>> A = poisson((100,100), format='csr')           # matrix
+        >>> b = rand(A.shape[0])                           # random RHS
+        >>> ml = smoothed_aggregation_solver(A)            # AMG solver
+        >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
+        >>> x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
                     
         """
         from scipy.sparse.linalg import LinearOperator
@@ -217,7 +240,7 @@ class multilevel_solver:
 
         See Also
         --------
-        precond
+        aspreconditioner
 
         Examples
         --------
@@ -231,6 +254,7 @@ class multilevel_solver:
         >>> b = A*ones(A.shape[0])
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
         >>> x, resvec = ml.solve(b, tol=1e-14, return_residuals=True)
+
         """
 
         if x0 is None:
