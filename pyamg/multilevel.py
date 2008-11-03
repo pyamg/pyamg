@@ -152,17 +152,50 @@ class multilevel_solver:
         return sum([level.A.shape[0] for level in self.levels])/float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
-        return self.solve(b,maxiter=1)
+        return self.solve(b, maxiter=1)
 
-    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, cycle='V'):
-        """
-        Main solution call to execute multigrid cycling.
+    def aspreconditioner(self, cycle='V'):
+        """Create a preconditioner using this multigrid cycle
 
         Parameters
         ----------
-        b : numpy_array
+        cycle : {'V','W','F'}
+            Type of multigrid cycle to perform in each iteration.
+       
+        Returns
+        -------
+        precond : LinearOperator
+            Preconditioner suitable for the iterative solvers in defined in
+            the scipy.sparse.linalg module (e.g. cg, gmres) and any other
+            solver that uses the LinearOperator interface.  Refer to the 
+            LinearOperator documentation in scipy.sparse.linalg
+
+        See Also
+        --------
+        scipy.sparse.linalg.LinearOperator, scipy.sparse.linalg.isolve
+
+        Examples
+        --------
+                    
+        """
+        from scipy.sparse.linalg import LinearOperator
+        
+        shape = self.levels[0].A.shape
+        dtype = self.levels[0].A.dtype
+
+        def matvec(b):
+            return self.solve(b, maxiter=1, cycle=cycle)
+                    
+        return LinearOperator(shape, matvec, dtype=dtype)
+
+    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, cycle='V', return_residuals=False):
+        """Main solution call to execute multigrid cycling.
+
+        Parameters
+        ----------
+        b : array
             Right hand side.
-        x0 : numpy_array
+        x0 : array
             Initial guess.
         tol : float
             Stopping criteria for the relative residual r[k]/r[0].
@@ -170,23 +203,21 @@ class multilevel_solver:
             Stopping criteria for the maximum number of allowable iterations.
         callback : function pointer
             Function processed after each cycle (iteration).
-        return_residuals : {True,False}
-            Flag to return a vector of residuals.
         cycle : {'V','W','F'}
-            Character to indicate the type of cycling to perform in each
-            iteration.
+            Type of multigrid cycle to perform in each iteration.
+        return_residuals : bool
+            Flag to return a vector of residuals.
 
         Returns
         -------
-        x : numpy_array
+        x : array
             Approximate solution to Ax=b
-        residuals : numpy_array
-            Optional return based on return_residuals.  Vector of residuals
-            after each cycle.
+        residuals : list : optional
+            List of residual norms at each iteration.
 
         See Also
         --------
-        __solve : private function implementing the recurssive calls.
+        precond
 
         Examples
         --------
@@ -208,7 +239,7 @@ class multilevel_solver:
             x = array(x0) #copy
 
         if self.preprocess is not None:
-            x,b = self.preprocess(x,b)
+            x,b = self.preprocess(x, b)
 
         A = self.levels[0].A
         residuals = [ norm(b-A*x) ]
@@ -218,9 +249,9 @@ class multilevel_solver:
         while len(residuals) <= maxiter and residuals[-1]/residuals[0] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
-                x = self.coarse_solver(A,b)
+                x = self.coarse_solver(A, b)
             else:
-                self.__solve(0,x,b,cycle)
+                self.__solve(0, x, b, cycle)
 
             residuals.append( norm(b-A*x) )
 
@@ -237,7 +268,7 @@ class multilevel_solver:
         else:
             return x
 
-    def __solve(self,lvl,x,b,cycle='V'):
+    def __solve(self, lvl, x, b, cycle):
         """
         Parameters
         ----------
@@ -247,12 +278,12 @@ class multilevel_solver:
             Initial guess `x` and return correction
         b : numpy array
             Right-hand side for Ax=b
-        cycle : {'V','W','F',int}
+        cycle : {'V','W','F'}
             Recursively called cycling function.  The 
             Defines the cycling used:
-            cycle = 'F', F-cycle
             cycle = 'V', V-cycle
-            cycle = 'W', W-cycle, default
+            cycle = 'W', W-cycle
+            cycle = 'F', F-cycle
 
         Notes
         -----
@@ -260,6 +291,7 @@ class multilevel_solver:
         nu1 and nu2 pre/post smoothing sweeps will not impact the cycle
         complexity.  Moreover, the coarse level solve also assumes nnz time.
         """
+
         if str(cycle).upper() not in ['V','W','F']:
             raise TypeError('Unrecognized cycle type')
 
@@ -278,8 +310,8 @@ class multilevel_solver:
             self.cycle_complexity(lvl)
         else:
             if(cycle.upper()=='F'):
-                self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
-                self.__solve(lvl + 1, coarse_x, coarse_b,cycle='V')
+                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
+                self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
             else:
                 self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
                 if(cycle.upper()=='W'):
@@ -290,39 +322,6 @@ class multilevel_solver:
         self.levels[lvl].postsmoother(A,x,b)
         self.cycle_complexity(lvl)
 
-#    def presmooth(self,A,x,b):
-#        def unpack_arg(v):
-#            if isinstance(v,tuple):
-#                return v[0],v[1]
-#            else:
-#                return v,{}
-#
-#        fn, kwargs = unpack_arg(self.presmoother)
-#        if fn == 'gauss_seidel':
-#            gauss_seidel(A, x, b, **kwargs)
-#        elif fn == 'kaczmarz_gauss_seidel':
-#            kaczmarz_gauss_seidel(A, x, b, **kwargs)
-#        else:
-#            raise TypeError('Unrecognized presmoother')
-#        #fn = relaxation.dispatch(self.presmoother)
-#        #fn(A,x,b)
-#
-#    def postsmooth(self,A,x,b):
-#        def unpack_arg(v):
-#            if isinstance(v,tuple):
-#                return v[0],v[1]
-#            else:
-#                return v,{}
-#        
-#        fn, kwargs = unpack_arg(self.presmoother)
-#        if fn == 'gauss_seidel':
-#            gauss_seidel(A, x, b, **kwargs)
-#        elif fn == 'kaczmarz_gauss_seidel':
-#            kaczmarz_gauss_seidel(A, x, b, **kwargs)
-#        else:
-#            raise TypeError('Unrecognized postsmoother')
-#        #fn = relaxation.dispatch(self.postsmoother)
-#        #fn(A,x,b)
 
 
 #TODO support (solver,opts) format also

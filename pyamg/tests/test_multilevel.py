@@ -2,6 +2,7 @@ from pyamg.testing import *
 
 from numpy import matrix, array, diag, arange
 from scipy import rand
+from scipy.linalg import norm
 from scipy.sparse import csr_matrix
 
 from pyamg.gallery import poisson
@@ -29,4 +30,16 @@ class TestMultilevel(TestCase):
                 x = s(A,b)  
                 assert_almost_equal( A*x, b)
 
+    def test_aspreconditioner(self):
+        from pyamg import smoothed_aggregation_solver
+        from scipy.sparse.linalg import cg
 
+        A = poisson((100,100), format='csr')
+        b = rand(A.shape[0])
+
+        ml = smoothed_aggregation_solver(A)
+
+        for cycle in ['V','W','F']:
+            M = ml.aspreconditioner(cycle='V')
+            x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)
+            assert( norm(b - A*x) < 1e-8*norm(b) )
