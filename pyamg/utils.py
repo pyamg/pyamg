@@ -45,7 +45,7 @@ def norm(x):
     """
 
     x = ravel(x)
-    return real(sqrt(inner(x,x)))
+    return sqrt( inner(x.conj(),x).real )
 
 def axpy(x,y,a=1.0):
     """

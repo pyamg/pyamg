@@ -1,14 +1,27 @@
 from pyamg.testing import *
 
 from numpy import matrix, array, diag, zeros, sqrt
-from scipy import rand
+from scipy import rand, linalg
 from scipy.sparse import csr_matrix
-from scipy.linalg import eigvals, norm
 
 from pyamg.utils import *
 from pyamg.utils import symmetric_rescaling
 
 class TestUtils(TestCase):
+    def test_norm(self):
+        cases = []
+
+        cases.append(  4 )
+        cases.append( -1 )
+        cases.append( 2.5 )
+        cases.append( 3 + 5j )
+        cases.append( 7 - 2j )
+        cases.append( [1 + 3j, 6] )
+        cases.append( [1 + 3j, 6 - 2j] )
+
+        for A in cases:
+            assert_almost_equal( norm(A), linalg.norm(A) )
+
     def test_approximate_spectral_radius(self):
         cases = []
 
@@ -28,7 +41,7 @@ class TestUtils(TestCase):
             A = A.astype(float)
             Asp = csr_matrix(A)
 
-            expected = max([norm(x) for x in eigvals(A)])
+            expected = max([linalg.norm(x) for x in linalg.eigvals(A)])
             assert_almost_equal( approximate_spectral_radius(A),   expected )
             assert_almost_equal( approximate_spectral_radius(Asp), expected )
         
@@ -38,7 +51,7 @@ class TestUtils(TestCase):
             A = A.astype(float) 
             Asp = csr_matrix(A)
 
-            expected = max([norm(x) for x in eigvals(A)])
+            expected = max([linalg.norm(x) for x in linalg.eigvals(A)])
             assert_almost_equal( approximate_spectral_radius(A,symmetric=True),   expected )
             assert_almost_equal( approximate_spectral_radius(Asp,symmetric=True), expected )
       
