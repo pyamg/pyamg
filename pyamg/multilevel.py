@@ -10,7 +10,7 @@ from scipy.sparse import csc_matrix
 
 #from pyamg import relaxation
 from pyamg.relaxation import *
-from utils import symmetric_rescaling, diag_sparse, norm
+from utils import symmetric_rescaling, diag_sparse, residual_norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -278,9 +278,9 @@ class multilevel_solver:
             # wrap callback function to compute residuals
             cb = callback
             if residuals is not None:
-                residuals[:] = [norm(b-A*x)]
+                residuals[:] = [residual_norm(A,x,b)]
                 def callback(x):
-                    residuals.append(norm(b-A*x))
+                    residuals.append(residual_norm(A,x,b))
                     if cb is not None:
                         cb(x)
 
@@ -301,7 +301,7 @@ class multilevel_solver:
 
         A = self.levels[0].A
 
-        residuals.append(norm(b-A*x))
+        residuals.append(residual_norm(A,x,b))
 
         self.first_pass=True
 
@@ -312,7 +312,7 @@ class multilevel_solver:
             else:
                 self.__solve(0, x, b, cycle)
 
-            residuals.append(norm(b-A*x))
+            residuals.append(residual_norm(A,x,b))
 
             self.first_pass=False
 
@@ -351,8 +351,10 @@ class multilevel_solver:
         complexity.  Moreover, the coarse level solve also assumes nnz time.
         """
 
-        if str(cycle).upper() not in ['V','W','F']:
-            raise TypeError('Unrecognized cycle type')
+        cycle = str(cycle).upper()
+
+        if cycle not in ['V','W','F']:
+            raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         A = self.levels[lvl].A
 
@@ -368,12 +370,12 @@ class multilevel_solver:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
             self.cycle_complexity(lvl)
         else:
-            if(cycle.upper()=='F'):
+            if cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
             else:
                 self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
-                if(cycle.upper()=='W'):
+                if cycle =='W':
                     self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction

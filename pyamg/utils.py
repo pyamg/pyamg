@@ -6,7 +6,7 @@ from numpy import fromfile, ascontiguousarray, mat, int32, inner, dot, \
                   ravel, arange, concatenate, tile, asarray, sqrt, diff, \
                   zeros, ones, empty, asmatrix, array, random, rank
 from scipy import rand, real                  
-from scipy.linalg import eigvals, norm
+from scipy.linalg import eigvals
 from scipy.lib.blas import get_blas_funcs
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
@@ -14,7 +14,7 @@ from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg import eigen, eigen_symmetric
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse',
-        'norm', 'profile_solver']
+        'norm', 'residual_norm','profile_solver']
 __all__ += ['UnAmal', 'Coord2RBM', 'BSR_Get_Row', 'BSR_Row_WriteScalar', 
         'BSR_Row_WriteVect' ]
 
@@ -74,6 +74,11 @@ def axpy(x,y,a=1.0):
     fn = get_blas_funcs(['axpy'], [x,y])[0]
     fn(x,y,a)
 
+
+def residual_norm(A, x, b):
+    """Compute ||b - A*x||"""
+
+    return norm(ravel(b) - A*ravel(x))
 
 #def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
 #    """approximate the spectral radius of a matrix
