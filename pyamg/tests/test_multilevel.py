@@ -24,11 +24,11 @@ class TestMultilevel(TestCase):
                 b = arange(A.shape[0],dtype=A.dtype)
 
                 x = s(A,b)
-                assert_almost_equal( A*x, b)
+                assert_almost_equal(A*x, b)
 
                 # subsequent calls use cached data
                 x = s(A,b)  
-                assert_almost_equal( A*x, b)
+                assert_almost_equal(A*x, b)
 
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
@@ -42,4 +42,25 @@ class TestMultilevel(TestCase):
         for cycle in ['V','W','F']:
             M = ml.aspreconditioner(cycle='V')
             x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)
-            assert( norm(b - A*x) < 1e-8*norm(b) )
+            assert(norm(b - A*x) < 1e-8*norm(b))
+
+
+    def test_accel(self):
+        from pyamg import smoothed_aggregation_solver
+        from scipy.sparse.linalg import cg, bicgstab
+
+        A = poisson((100,100), format='csr')
+        b = rand(A.shape[0])
+
+        ml = smoothed_aggregation_solver(A)
+
+        for accel in ['cg','bicgstab', cg, bicgstab]:
+            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
+            assert(norm(b - A*x) < 1e-8*norm(b))
+            residuals = []
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
+            assert(norm(b - A*x) < 1e-8*norm(b))
+            print residuals
+            assert_almost_equal(norm(b - A*x), residuals[-1])
+
+

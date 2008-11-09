@@ -212,7 +212,8 @@ class multilevel_solver:
                     
         return LinearOperator(shape, matvec, dtype=dtype)
 
-    def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', callback=None, residuals=None, return_residuals=False):
+    def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
+              callback=None, residuals=None, return_residuals=False):
         """Main solution call to execute multigrid cycling.
 
         Parameters
@@ -222,13 +223,20 @@ class multilevel_solver:
         x0 : array
             Initial guess.
         tol : float
-            Stopping criteria for the relative residual r[k]/r[0].
+            Stopping criteria: relative residual r[k]/r[0] tolerance.
         maxiter : int
-            Stopping criteria for the maximum number of allowable iterations.
+            Stopping criteria: maximum number of allowable iterations.
         cycle : {'V','W','F'}
             Type of multigrid cycle to perform in each iteration.
-        callback : function pointer
-            Function processed after each cycle (iteration).
+        accel : {string, function}
+            Defines acceleration method.  Can be a string such as 'cg'
+            or 'gmres' which is the name of an iterative solver in
+            scipy.sparse.linalg.isolve.  If accel is not a string, it 
+            will be treated like a function with the same interface 
+            provided by the iterative solvers in SciPy.
+        callback : function
+            User-defined function called after each iteration.  It is
+            called as callback(xk) where xk is the k-th iterate vector.
         residuals : list
             List to contain residual norms at each iteration.
 
@@ -244,18 +252,40 @@ class multilevel_solver:
         Examples
         --------
         >>> from numpy import ones
-        >>> from scipy.sparse import spdiags
-        >>> from pyamg.classical import ruge_stuben_solver
-        >>> n=100
-        >>> e = ones((n,1)).ravel()
-        >>> data = [ -1*e, 2*e, -1*e ]
-        >>> A = spdiags(data,[-1,0,1],n,n)
+        >>> from pyamg import ruge_stuben_solver, poisson
+        >>> A = poisson((100,100), format='csr')
         >>> b = A*ones(A.shape[0])
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
         >>> residuals = []
-        >>> x = ml.solve(b, tol=1e-12, residuals=residuals)
+        >>> x = ml.solve(b, tol=1e-12, residuals=residuals) #standalone solver
 
         """
+
+        if x0 is None:
+            x = zeros_like(b)
+        else:
+            x = array(x0) #copy
+
+        if accel is not None:
+            # Acceleration is being used
+            if isinstance(accel, basestring):
+                from scipy.sparse.linalg import isolve
+                accel = getattr(isolve, accel)
+
+            A = self.levels[0].A
+            M = self.aspreconditioner(cycle=cycle)
+
+            # wrap callback function to compute residuals
+            cb = callback
+            if residuals is not None:
+                residuals[:] = [norm(b-A*x)]
+                def callback(x):
+                    residuals.append(norm(b-A*x))
+                    if cb is not None:
+                        cb(x)
+
+            return accel(A, b, x0=x0, tol=tol, M=M, callback=callback)[0]
+
 
         if return_residuals:
             warn('return_residuals is deprecated.  Use residuals instead')
@@ -265,10 +295,6 @@ class multilevel_solver:
         else:
             residuals[:] = []
 
-        if x0 is None:
-            x = zeros_like(b)
-        else:
-            x = array(x0) #copy
 
         if self.preprocess is not None:
             x,b = self.preprocess(x, b)
