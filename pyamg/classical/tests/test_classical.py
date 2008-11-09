@@ -103,7 +103,8 @@ class TestSolverPerformance(TestCase):
 
             ml = ruge_stuben_solver(A, max_coarse=50)
 
-            x_sol,residuals = ml.solve(b, x0=x, maxiter=20, tol=1e-12, return_residuals=True)
+            residuals = []
+            x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12, residuals=residuals)
 
             avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
             

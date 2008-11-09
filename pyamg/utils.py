@@ -258,15 +258,15 @@ def profile_solver(ml, accel=None, **kwargs):
     """
     A = ml.levels[0].A
     b = A * rand(A.shape[0],1)
+    residuals = []
 
     if accel is None:
-        x_sol, residuals = ml.solve(b, return_residuals=True, **kwargs)
+        x_sol = ml.solve(b, residuals=residuals, **kwargs)
     else:
-        residuals = []
         def callback(x):
             residuals.append( norm(ravel(b) - ravel(A*x)) )
-        A.psolve = ml.psolve
-        accel(A, b, callback=callback, **kwargs)
+        M = ml.aspreconditioner(cycle=kwargs.get('cycle','V'))
+        accel(A, b, M=M, callback=callback, **kwargs)
 
     return asarray(residuals)
 

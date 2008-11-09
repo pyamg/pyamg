@@ -62,7 +62,6 @@ RHS = mat(rand(Amat.shape[0],1))
 x0 = mat(zeros((Amat.shape[0],1)))
 solver_tol = 1e-6
 solver_maxit = 100
-solver_return_residuals=True
 
 #------------------------------------- ODE Strength Params -----------------------------------------------
 k = 2
@@ -87,7 +86,8 @@ print "Building AMG hierarchy took " + str(stop - start) + " seconds"
 
 #---------------------------------------- Run AMG Test ---------------------------------------------------
 start = time.time()
-x, r = sa.solve(b=RHS, x0=x0, tol=solver_tol, maxiter=solver_maxit, return_residuals=solver_return_residuals)
+r = []
+x = sa.solve(b=RHS, x0=x0, tol=solver_tol, maxiter=solver_maxit, residuals=r)
 stop = time.time()
 print "AMG solve took " + str(stop - start) + " seconds." 
 

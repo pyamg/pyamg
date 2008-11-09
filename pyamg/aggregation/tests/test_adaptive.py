@@ -23,8 +23,11 @@ class TestAdaptiveSA(TestCase):
 
         b = rand(A.shape[0])
 
-        sol0,residuals0 = asa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
-        sol1,residuals1 =  sa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
+        residuals0 = []
+        residuals1 = []
+
+        sol0 = asa.solve(b, maxiter=20, tol=1e-10, residuals=residuals0)
+        sol1 =  sa.solve(b, maxiter=20, tol=1e-10, residuals=residuals1)
        
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
@@ -39,8 +42,11 @@ class TestAdaptiveSA(TestCase):
 
         b = rand(A.shape[0])
 
-        sol0,residuals0 = asa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
-        sol1,residuals1 =  sa.solve(b, maxiter=20, tol=1e-10, return_residuals=True)
+        residuals0 = []
+        residuals1 = []
+
+        sol0 = asa.solve(b, maxiter=20, tol=1e-10, residuals=residuals0)
+        sol1 =  sa.solve(b, maxiter=20, tol=1e-10, residuals=residuals1)
        
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))

@@ -36,7 +36,8 @@ if(__name__=="__main__"):
 
         ml = ruge_stuben_solver(A, max_coarse=10)
 
-        x, resvec = ml.solve(b, x0=x, maxiter=200, tol=1e-8, return_residuals=True)
+        resvec = []
+        x = ml.solve(b, x0=x, maxiter=200, tol=1e-8, residuals=resvec)
         factors[run] = (resvec[-1]/resvec[0])**(1.0/len(resvec))
         complexity[run] = ml.operator_complexity()
         nnz[run] = A.nnz

@@ -2,6 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 import scipy
 import numpy
 from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ravel
@@ -47,7 +48,7 @@ class multilevel_solver:
         Returns the operator complexity
     grid_complexity()
         Returns the operator complexity
-    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, return_residuals=False, cycle='V')
+    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, residuals=Non, cycle='V')
         The main multigrid solve call.
     """
 
@@ -211,7 +212,7 @@ class multilevel_solver:
                     
         return LinearOperator(shape, matvec, dtype=dtype)
 
-    def solve(self, b, x0=None, tol=1e-5, maxiter=100, callback=None, cycle='V', return_residuals=False):
+    def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', callback=None, residuals=None, return_residuals=False):
         """Main solution call to execute multigrid cycling.
 
         Parameters
@@ -224,19 +225,17 @@ class multilevel_solver:
             Stopping criteria for the relative residual r[k]/r[0].
         maxiter : int
             Stopping criteria for the maximum number of allowable iterations.
-        callback : function pointer
-            Function processed after each cycle (iteration).
         cycle : {'V','W','F'}
             Type of multigrid cycle to perform in each iteration.
-        return_residuals : bool
-            Flag to return a vector of residuals.
+        callback : function pointer
+            Function processed after each cycle (iteration).
+        residuals : list
+            List to contain residual norms at each iteration.
 
         Returns
         -------
         x : array
             Approximate solution to Ax=b
-        residuals : list : optional
-            List of residual norms at each iteration.
 
         See Also
         --------
@@ -253,9 +252,18 @@ class multilevel_solver:
         >>> A = spdiags(data,[-1,0,1],n,n)
         >>> b = A*ones(A.shape[0])
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
-        >>> x, resvec = ml.solve(b, tol=1e-14, return_residuals=True)
+        >>> residuals = []
+        >>> x = ml.solve(b, tol=1e-12, residuals=residuals)
 
         """
+
+        if return_residuals:
+            warn('return_residuals is deprecated.  Use residuals instead')
+            residuals = []
+        if residuals is None:
+            residuals = []
+        else:
+            residuals[:] = []
 
         if x0 is None:
             x = zeros_like(b)
@@ -266,7 +274,8 @@ class multilevel_solver:
             x,b = self.preprocess(x, b)
 
         A = self.levels[0].A
-        residuals = [ norm(b-A*x) ]
+
+        residuals.append(norm(b-A*x))
 
         self.first_pass=True
 
@@ -277,7 +286,7 @@ class multilevel_solver:
             else:
                 self.__solve(0, x, b, cycle)
 
-            residuals.append( norm(b-A*x) )
+            residuals.append(norm(b-A*x))
 
             self.first_pass=False
 

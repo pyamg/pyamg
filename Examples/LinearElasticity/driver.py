@@ -19,7 +19,8 @@ print mls
 b = rand(A.shape[0],1)
 
 # Solve Ax=b
-x, residuals = mls.solve(b, tol=1e-10, return_residuals=True)
+residuals = []
+x = mls.solve(b, tol=1e-10, residuals=residuals)
 
 # Compute relative residuals
 relative_residuals = array(residuals)/residuals[0]  
