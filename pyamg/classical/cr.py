@@ -12,9 +12,9 @@ from scipy.sparse import isspmatrix, csr_matrix
 
 from pyamg.relaxation import gauss_seidel
 
-__all__ = ['cr','binormalize']
+__all__ = ['CR','binormalize']
 
-def cr(S, method='habituated'):
+def CR(S, method='habituated'):
     """Use Compatible Relaxation to compute a C/F splitting 
 
     Parameters

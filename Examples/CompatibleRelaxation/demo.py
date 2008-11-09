@@ -1,11 +1,12 @@
-from numpy import meshgrid, arange, concatenate, ones, zeros, intc, array, tile
-from numpy import repeat, c_, where, linspace, sort
-from scipy.sparse import csr_matrix, spdiags, kron
-from pyamg.gallery.laplacian import *
-import cr
 import sys
-sys.path.append('./vis')
-from vis import coarse_grid_vis
+
+from numpy import meshgrid, arange, concatenate, ones, zeros, intc, array, tile, \
+                  repeat, c_, where, linspace, sort
+from scipy.sparse import csr_matrix, spdiags, kron
+
+from pyamg.gallery.laplacian import *
+from pyamg.classical import CR, binormalize
+from pyamg.vis import coarse_grid_vis
 
 def generate_from_stencil(sten,nx,ny):
 #    """
@@ -108,7 +109,7 @@ if test==3:
     N = nx * ny
     A, Vert, E2V =generate_from_stencil(sten,nx,ny)
 
-    splitting = cr.cr(A)
+    splitting = CR(A)
 
     row = arange(0, N)
     col = splitting
@@ -139,7 +140,7 @@ if test==1:
             E2V[k,3] = ix + iy*n + n 
             k += 1
 
-    splitting = cr.cr(A)
+    splitting = CR(A)
 
     row = arange(0, N)
     col = splitting
@@ -153,4 +154,4 @@ if test==2:
     N = n * n
 
     A=poisson((n,n)).tocsr()
-    C=cr.binormalize(A)
+    C = binormalize(A)
