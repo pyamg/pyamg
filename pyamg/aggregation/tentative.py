@@ -125,7 +125,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     K1 = B.shape[0] / N_fine  # DoF per supernode (e.g. 3 for 3d vectors)
     K2 = B.shape[1]           # candidates
 
-    # the first two dimensions of R and Qx are colapsed laster
+    # the first two dimensions of R and Qx are colapsed later
     R = empty((N_coarse,K2,K2), dtype=B.dtype)   # coarse candidates
     Qx = empty((AggOp.nnz,K1,K2), dtype=B.dtype) # BSR data array
     

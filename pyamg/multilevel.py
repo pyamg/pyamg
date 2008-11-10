@@ -48,7 +48,7 @@ class multilevel_solver:
         Returns the operator complexity
     grid_complexity()
         Returns the operator complexity
-    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, residuals=Non, cycle='V')
+    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, residuals=None, cycle='V')
         The main multigrid solve call.
     """
 
