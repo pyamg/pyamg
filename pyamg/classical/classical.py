@@ -97,7 +97,7 @@ def extend_hierarchy(levels, strength, CF):
     levels[-1].C = C                  # strength of connection matrix
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
-    levels[-1].spliting = splitting   # C/F splitting
+    levels[-1].splitting = splitting  # C/F splitting
 
     levels.append( multilevel_solver.level() )
 
