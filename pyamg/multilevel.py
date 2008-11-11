@@ -27,10 +27,6 @@ class multilevel_solver:
 
     Attributes
     ----------
-    ccx : float
-        Tracks the total operations (O(nnz) per smoothing sweep)
-    first_pass : {True,False}
-        Indicates whether the solver is in its first cycle
     levels : level array
         Array of level objects that contain A, R, and P.
     preprocess : function pointer
@@ -83,10 +79,6 @@ class multilevel_solver:
 
         Parameters
         ----------
-        ccx : float
-            Tracks the total operations (O(nnz) per smoothing sweep)
-        first_pass : {True,False}
-            Indicates whether the solver is in its first cycle
         levels : level array
             Array of level objects that contain A, R, and P.
         preprocess : function pointer
@@ -94,15 +86,18 @@ class multilevel_solver:
         postprocess : function pointer
             Optional function to manipulate x and b at the end of the cycle
         coarse_solver : string
-            String passed to coarse_grid_solver indicating the solve type
+            String passed to coarse_grid_solver indicating the type of coarse
+            grid solve to perform.  The default 'pinv2' is robust, but 
+            expands the coarse level matrix into a dense format.  Therefore,
+            larger coars level systems should use sparse coarse methods 
+            like 'splu'.
     
         Notes
         -----
-        R is set to P.T unless previously set.
+        If not defined, the R attribute on each level is set to the
+        transpose of P.
 
         """
-        self.ccx = 0
-        self.first_pass=True
         self.levels = levels
         
         self.preprocess  = preprocess
@@ -115,9 +110,7 @@ class multilevel_solver:
                 level.R = level.P.T
 
     def __repr__(self):
-        """
-        Prints statistics about the fixed multigrid heirarchy.  Does not print
-        information from solving.
+        """Prints basic statistics about the multigrid hierarchy.
         """
         output = 'multilevel_solver\n'
         output += 'Number of Levels:     %d\n'   % len(self.levels)
@@ -133,19 +126,76 @@ class multilevel_solver:
 
         return output
 
-    def cycle_complexity(self, lvl=-1):
-        """Multigrid cycle complexity
+    def cycle_complexity(self, cycle='V'):
+        """Cycle complexity of this Multigrid hierarchy
+       
+        Cycle complexity is an approximate measure of the number of
+        floating point operations (FLOPs) required to perform a single 
+        multigrid cycle relative to the cost a single smoothing operation.
+
+        Parameters
+        ----------
+        cycle : {'V','W','F'}
+            Type of multigrid cycle to perform in each iteration.
+
+        Returns
+        -------
+        cc : float
+            Defined as F_sum / F_0, where
+            F_sum is the total number of nonzeros in the matrix on all 
+            levels encountered during a cycle and F_0 is the number of 
+            nonzeros in the matrix on the finest level.
+
+        Notes
+        -----
+        This is only a rough estimate of the true cycle complexity. The 
+        estimate assumes that the cost of pre and post-smoothing are 
+        (each) equal to the number of nonzeros in the matrix on that level.
+        This assumption holds for smoothers like Jacobi and Gauss-Seidel.
+        However, the true cycle complexity of cycle using more expensive 
+        methods, like symmetric Gauss-Seidel and Chebyshev smoothers will 
+        be underestimated.
         
-        Defined as:
-            Number of nonzeros in the matrix on all levels of a cycle/ 
-            Number of nonzeros in the matrix on the finest level.  
-            
-        This is approximately 2*operator_complexity for a V-Cycle.
         """
-        if(lvl>-1 and self.first_pass==True):
-            self.ccx += self.levels[lvl].A.nnz
+        cycle = str(cycle).upper()
+
+        nnz = [ level.A.nnz for level in self.levels ]
+
+        def V(level):
+            if len(self.levels) == 1:
+                return nnz[0]
+            elif level == len(self.levels) - 2:
+                return 2*nnz[level] + nnz[level + 1]
+            else:
+                return 2*nnz[level] + V(level + 1)
+        
+        def W(level):
+            if len(self.levels) == 1:
+                return nnz[0]
+            elif level == len(self.levels) - 2:
+                return 2*nnz[level] + nnz[level + 1]
+            else:
+                return 2*nnz[level] + 2*W(level + 1)
+        
+        def F(level):
+            if len(self.levels) == 1:
+                return nnz[0]
+            elif level == len(self.levels) - 2:
+                return 2*nnz[level] + nnz[level + 1]
+            else:
+                return 2*nnz[level] + F(level + 1) + V(level + 1)
+
+        if cycle == 'V':
+            flops = V(0)
+        elif cycle == 'W':
+            flops = W(0)
+        elif cycle == 'F':
+            flops = F(0)
         else:
-            return self.ccx/float(self.levels[0].A.nnz)
+            raise TypeError('Unrecognized cycle type (%s)' % cycle)
+        
+        return float(flops) / float(nnz[0])
+
 
     def operator_complexity(self):
         """Operator complexity of this multigrid heirarchy 
@@ -265,6 +315,8 @@ class multilevel_solver:
             x = zeros_like(b)
         else:
             x = array(x0) #copy
+        
+        cycle = str(cycle).upper()
 
         if accel is not None:
             # Acceleration is being used
@@ -343,23 +395,12 @@ class multilevel_solver:
             cycle = 'V', V-cycle
             cycle = 'W', W-cycle
             cycle = 'F', F-cycle
-
-        Notes
-        -----
-        The cycle complexity ccx is update by nnz for each hit of the smoother.
-        nu1 and nu2 pre/post smoothing sweeps will not impact the cycle
-        complexity.  Moreover, the coarse level solve also assumes nnz time.
         """
 
-        cycle = str(cycle).upper()
-
-        if cycle not in ['V','W','F']:
-            raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         A = self.levels[lvl].A
 
         self.levels[lvl].presmoother(A,x,b)
-        self.cycle_complexity(lvl)
 
         residual = b - A*x
 
@@ -368,20 +409,21 @@ class multilevel_solver:
 
         if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
-            self.cycle_complexity(lvl)
         else:
-            if cycle == 'F':
+            if cycle == 'V':
+                self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
+            elif cycle =='W':
+                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
+                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
+            elif cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
             else:
-                self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
-                if cycle =='W':
-                    self.__solve(lvl + 1, coarse_x, coarse_b,cycle)
+                raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         x += self.levels[lvl].P * coarse_x   #coarse grid correction
 
         self.levels[lvl].postsmoother(A,x,b)
-        self.cycle_complexity(lvl)
 
 
 

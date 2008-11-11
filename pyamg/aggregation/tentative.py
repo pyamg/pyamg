@@ -125,7 +125,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     K1 = B.shape[0] / N_fine  # DoF per supernode (e.g. 3 for 3d vectors)
     K2 = B.shape[1]           # candidates
 
-    # the first two dimensions of R and Qx are colapsed later
+    # the first two dimensions of R and Qx are collapsed later
     R = empty((N_coarse,K2,K2), dtype=B.dtype)   # coarse candidates
     Qx = empty((AggOp.nnz,K1,K2), dtype=B.dtype) # BSR data array
     
@@ -133,8 +133,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
     
     fn = multigridtools.fit_candidates 
     fn(N_fine, N_coarse, K1, K2, \
-            AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(), \
-            B.ravel(), R.ravel(), tol)
+       AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(), \
+       B.ravel(), R.ravel(), tol)
 
     #TODO replace with BSC matrix here
     Q = bsr_matrix( (Qx.swapaxes(1,2).copy(), AggOp_csc.indices, AggOp_csc.indptr), shape=(K2*N_coarse,K1*N_fine)) 
