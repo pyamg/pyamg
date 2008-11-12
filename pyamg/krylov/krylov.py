@@ -121,15 +121,17 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Is RHS all zero?
     normb = mynorm(b) 
     if normb == 0:
-        if callback != None:
-            callback(0.0)
-    
-        return (zeros((dimen,), dtype=xtype),0)
-   
+        pass
+    #    if callback != None:
+    #        callback(0.0)
+    #
+    #    return (zeros((dimen,), dtype=xtype),0)
+    else:
+        tol = tol*normb
+
     # Prep for method
     r = b - ravel(matvec(x))
     rhat = rmatvec(r)
-    tol = tol*normb
 
     # Is initial guess sufficient?
     if mynorm(r) <= tol:
@@ -283,14 +285,16 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Is RHS all zero?
     normb = mynorm(b) 
     if normb == 0:
-        if callback != None:
-            callback(0.0)
-    
-        return (zeros((dimen,), dtype=xtype),0)
-   
+        pass
+    #    if callback != None:
+    #        callback(0.0)
+    #
+    #    return (zeros((dimen,), dtype=xtype),0)
+    else:
+        tol = tol*normb
+
     # Prep for method
     r = b - ravel(matvec(x))
-    tol = tol*normb
 
     # Is initial guess sufficient?
     if mynorm(r) <= tol:
@@ -440,10 +444,13 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     # Is RHS all zero?
     normb = mynorm(b) 
     if normb == 0:
-        if callback != None:
-            callback(0.0)
-    
-        return (zeros((dimen,), dtype=xtype),0)
+        pass
+    #    if callback != None:
+    #        callback(0.0)
+    #
+    #    return (zeros((dimen,), dtype=xtype),0)
+    else:
+        tol = tol*normb
    
     # Is this a one dimensional matrix?
     if dimen == 1:
@@ -453,7 +460,6 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     # Prep for method
     r = b - ravel(matvec(x))
     normr = mynorm(r)
-    tol = tol*normb
 
     # Is initial guess sufficient?
     if normr <= tol:
@@ -757,11 +763,14 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     # Is RHS all zero?
     normb = mynorm(b) 
     if normb == 0:
-        if callback != None:
-            callback(0.0)
-    
-        return (zeros((dimen,), dtype=xtype),0)
-   
+        pass
+    #    if callback != None:
+    #        callback(0.0)
+    #
+    #    return (zeros((dimen,), dtype=xtype),0)
+    else:
+        tol = tol*normb
+
     # Is this a one dimensional matrix?
     if dimen == 1:
         entry = ravel(matvec(array([1.0], dtype=xtype)))
@@ -769,7 +778,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
 
     # Prep for method
     r = b - ravel(matvec(x))
-    tol = tol*normb
     
     # Is initial guess sufficient?
     if mynorm(r) <= tol:
