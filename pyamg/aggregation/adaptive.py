@@ -315,7 +315,7 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
             elif fn == 'kaczmarz_jacobi':
                 levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
             elif fn == None:
-                P_l = T_l
+                levels[i].P = T
             else:
                 raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
         
