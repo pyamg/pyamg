@@ -4,6 +4,8 @@ from scipy.linalg import solve as direct_solve
 from numpy.random import random
 from types import FunctionType
 
+__all__ = ['cg']
+
 def checkinput(A,b,x0,M,Mopts):
     try:
         A = asarray(A)

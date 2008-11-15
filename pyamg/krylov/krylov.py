@@ -7,7 +7,8 @@ from Calc_NormResidual import Calc_NormResidual
 from warnings import warn
 import scipy.sparse
 
-__all__ = ['cgne', 'cgnr', 'gmres', 'fgmres', 'test_solver', 'test_complex_solver', 'van_der_vorst_plots', 'compare_krylov', 'compare_complex_krylov', 'test_fgmres', 'test_sparse_solver']
+__all__ = ['cgne', 'cgnr', 'gmres', 'fgmres']
+
 
 def mynorm(x):
     '''
