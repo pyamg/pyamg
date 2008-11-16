@@ -18,7 +18,6 @@ warnings.simplefilter('ignore',SparseEfficiencyWarning)
 class TestCommonRelaxation(TestCase):
     def setUp(self):
         self.cases = []
-
         self.cases.append( (gauss_seidel,          (),           {})                  )
         self.cases.append( (jacobi,                (),           {})                  )
         self.cases.append( (kaczmarz_jacobi,       (),           {})                  )
@@ -28,27 +27,77 @@ class TestCommonRelaxation(TestCase):
         self.cases.append( (polynomial,            ([0.6,0.1],), {})                  )
 
 
-    def test_basic(self):
-        for method,args,kwargs in self.cases:
+    def test_single_precision(self):
 
+        for method,args,kwargs in self.cases:
+            A = poisson((4,), format='csr').astype('float32')
+            b = arange(A.shape[0], dtype='float32')
+            x = 0*b
+            method(A, x, b, *args, **kwargs)
+
+
+    def test_double_precision(self):
+
+        for method,args,kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b = arange(A.shape[0], dtype='float64')
             x = 0*b
-
             method(A, x, b, *args, **kwargs)
+
 
     def test_strided_x(self):
         """non-contiguous x should raise errors"""
 
         for method,args,kwargs in self.cases:
-
             A = poisson((4,), format='csr').astype('float64')
             b = arange(A.shape[0], dtype='float64')
             x = zeros(2*A.shape[0])[::2]
             assert_raises(ValueError, method, A, x, b, *args, **kwargs)
 
 
+    def test_mixed_precision(self):
+        """mixed precision arguments should raise errors"""
 
+        for method,args,kwargs in self.cases:
+            A32 = poisson((4,), format='csr').astype('float32')
+            b32 = arange(A32.shape[0], dtype='float32')
+            x32 = 0*b32
+            
+            A64 = poisson((4,), format='csr').astype('float64')
+            b64 = arange(A64.shape[0], dtype='float64')
+            x64 = 0*b64
+
+            assert_raises(TypeError, method, A32, x32, b64, *args, **kwargs)
+            assert_raises(TypeError, method, A32, x64, b32, *args, **kwargs)
+            assert_raises(TypeError, method, A64, x32, b32, *args, **kwargs)
+            assert_raises(TypeError, method, A32, x64, b64, *args, **kwargs)
+            assert_raises(TypeError, method, A64, x64, b32, *args, **kwargs)
+            assert_raises(TypeError, method, A64, x32, b64, *args, **kwargs)
+
+
+    def test_vector_sizes(self):
+        """incorrect vector sizes should raise errors"""
+
+        for method,args,kwargs in self.cases:
+            A = poisson((4,), format='csr').astype('float64')
+            b4 = arange(4, dtype='float64')
+            x4 = 0*b4
+            b5 = arange(5, dtype='float64')
+            x5 = 0*b5
+            
+            assert_raises(ValueError, method, A, x4, b5, *args, **kwargs)
+            assert_raises(ValueError, method, A, x5, b4, *args, **kwargs)
+            assert_raises(ValueError, method, A, x5, b5, *args, **kwargs)
+
+    def test_non_square_matrix(self):
+
+        for method,args,kwargs in self.cases:
+            A = poisson((4,), format='csr').astype('float64')
+            A = A[:3]
+            b = arange(A.shape[0], dtype='float64')
+            x = ones(A.shape[1], dtype='float64')
+
+            assert_raises(ValueError, method, A, x, b, *args, **kwargs)
 
 class TestRelaxation(TestCase):
     def test_polynomial(self):
