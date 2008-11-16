@@ -15,13 +15,48 @@ import warnings
 from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore',SparseEfficiencyWarning)
 
+class TestCommonRelaxation(TestCase):
+    def setUp(self):
+        self.cases = []
+
+        self.cases.append( (gauss_seidel,          (),           {})                  )
+        self.cases.append( (jacobi,                (),           {})                  )
+        self.cases.append( (kaczmarz_jacobi,       (),           {})                  )
+        self.cases.append( (kaczmarz_richardson,   (),           {})                  )
+        self.cases.append( (sor,                   (0.5,),       {})                  )
+        self.cases.append( (gauss_seidel_indexed,  (),           {'Id':array([1,0])}) )
+        self.cases.append( (polynomial,            ([0.6,0.1],), {})                  )
+
+
+    def test_basic(self):
+        for method,args,kwargs in self.cases:
+
+            A = poisson((4,), format='csr').astype('float64')
+            b = arange(A.shape[0], dtype='float64')
+            x = 0*b
+
+            method(A, x, b, *args, **kwargs)
+
+    def test_strided_x(self):
+        """non-contiguous x should raise errors"""
+
+        for method,args,kwargs in self.cases:
+
+            A = poisson((4,), format='csr').astype('float64')
+            b = arange(A.shape[0], dtype='float64')
+            x = zeros(2*A.shape[0])[::2]
+            assert_raises(ValueError, method, A, x, b, *args, **kwargs)
+
+
+
+
 class TestRelaxation(TestCase):
     def test_polynomial(self):
         N  = 3
         A  = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x0 = arange(N).astype(numpy.float64)
+        x0 = arange(N, dtype=A.dtype)
         x  = x0.copy()
-        b  = zeros(N)
+        b  = zeros(N, dtype=A.dtype)
 
         r = (b - A*x0)
         polynomial(A,x,b,[-1.0/3.0])
@@ -64,23 +99,23 @@ class TestRelaxation(TestCase):
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         jacobi(A,x,b)
         assert_almost_equal(x,array([5]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10,20,30])
+        x = arange(N, dtype=A.dtype)
+        b = array([10,20,30], dtype=A.dtype)
         jacobi(A,x,b)
         assert_almost_equal(x,array([5.5,11.0,15.5]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N, dtype=A.dtype)
         x_copy = x.copy()
-        b = array([10,20,30])
+        b = array([10,20,30], dtype=A.dtype)
         jacobi(A,x,b,omega=1.0/3.0)
         assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([5.5,11.0,15.5]))
 
@@ -102,7 +137,7 @@ class TestRelaxation(TestCase):
                 gauss_seidel(B,x_bsr,b)
                 assert_almost_equal(x_bsr,x_csr)
                
-    def test_gauss_seidel_new(self):
+    def test_gauss_seidel_gold(self):
         scipy.random.seed(0)
 
         cases = []
@@ -181,15 +216,15 @@ class TestRelaxation(TestCase):
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         gauss_seidel(A,x,b)
         assert_almost_equal(x,array([5]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10,20,30])
+        x = arange(N, dtype=A.dtype)
+        b = array([10,20,30], dtype=A.dtype)
         gauss_seidel(A,x,b)
         assert_almost_equal(x,array([11.0/2.0,55.0/4,175.0/8.0]))
 
@@ -231,23 +266,23 @@ class TestRelaxation(TestCase):
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         kaczmarz_jacobi(A,x,b)
         assert_almost_equal(x,array([5]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10,20,30])
+        x = arange(N, dtype=A.dtype)
+        b = array([10,20,30], dtype=A.dtype)
         kaczmarz_jacobi(A,x,b)
         assert_almost_equal(x,array([16./15., 1./15., (9 + 7./15.) ]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N, dtype=A.dtype)
         x_copy = x.copy()
-        b = array([10,20,30])
+        b = array([10,20,30], dtype=A.dtype)
         kaczmarz_jacobi(A,x,b,omega=1.0/3.0)
         assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([16./15., 1./15., (9 + 7./15.) ]))
 
@@ -275,23 +310,23 @@ class TestRelaxation(TestCase):
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         kaczmarz_richardson(A,x,b)
         assert_almost_equal(x,array([20.]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10,20,30])
+        x = arange(N, dtype=A.dtype)
+        b = array([10,20,30], dtype=A.dtype)
         kaczmarz_richardson(A,x,b)
         assert_almost_equal(x,array([2., 3., 36.]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N, dtype=A.dtype)
         x_copy = x.copy()
-        b = array([10,20,30])
+        b = array([10,20,30], A.dtype)
         kaczmarz_richardson(A,x,b,omega=1.0/3.0)
         assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([2., 3., 36.]))
 
@@ -377,36 +412,36 @@ class TestRelaxation(TestCase):
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = zeros(N)
+        x = arange(N, dtype=A.dtype)
+        b = zeros(N, dtype=A.dtype)
         kaczmarz_gauss_seidel(A,x,b,sweep='backward')
         assert_almost_equal(x,array([0]))
 
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = zeros(N)
+        x = arange(N, dtype=A.dtype)
+        b = zeros(N, dtype=A.dtype)
         kaczmarz_gauss_seidel(A,x,b,sweep='backward')
         assert_almost_equal(x,array([2./5., 4./5., 6./5.]))
 
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         kaczmarz_gauss_seidel(A,x,b)
         assert_almost_equal(x,array([5]))
         
         N = 1
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10])
+        x = arange(N, dtype=A.dtype)
+        b = array([10], dtype=A.dtype)
         kaczmarz_gauss_seidel(A,x,b,sweep='backward')
         assert_almost_equal(x,array([5]))
         
         N = 3
         A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
-        x = arange(N).astype(numpy.float64)
-        b = array([10,20,30])
+        x = arange(N, dtype=A.dtype)
+        b = array([10,20,30], dtype=A.dtype)
         kaczmarz_gauss_seidel(A,x,b)
         assert_almost_equal(x,array([-2./5., -2./5., (14 + 4./5.)]))
 

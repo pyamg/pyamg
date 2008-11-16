@@ -4,15 +4,61 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from numpy import empty_like, asarray, arange, ravel, ones_like, zeros
+import numpy as np
+from numpy import empty_like, asarray, arange, ravel, ones_like, zeros, zeros_like
 
 from pyamg import multigridtools
-from scipy.sparse import isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
+from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
 __all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
 __all__ += ['gauss_seidel_indexed'] 
+
+def make_system(A, x, b, formats=None):
+    """Return A,x,b suitable for relaxation or raise an exception
+    """
+
+    if formats is None:
+        pass
+    elif formats == ['csr']:
+        if isspmatrix_csr(A):
+            pass
+        elif isspmatrix_bsr(A):
+            A = A.tocsr()
+        else:
+            A = csr_matrix(A)
+    else:
+        if isspmatrix(A) and A.format in formats:
+            pass
+        else:
+            A = csr_matrix(A).asformat(formats[0])
+
+    if not isinstance(x, np.ndarray):
+        raise ValueError('expected numpy array for argument x')
+    if not isinstance(b, np.ndarray):
+        raise ValueError('expected numpy array for argument b')
+
+    M,N = A.shape
+
+    if M != N:
+        raise ValueError('expected square matrix')
+
+    if x.shape not in [(M,), (M,1)]:
+        raise ValueError('x has invalid dimensions')
+    if b.shape not in [(M,), (M,1)]:
+        raise ValueError('b has invalid dimensions')
+
+    if A.dtype != x.dtype or A.dtype != b.dtype:
+        raise TypeError('arguments A, x, and b must have the same dtype')
+    
+    if not x.flags.carray:
+        raise ValueError('x must be contiguous in memory')
+
+    x = ravel(x)
+    b = ravel(b)
+
+    return A,x,b
 
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """Perform SOR iteration on the linear system Ax=b
@@ -41,6 +87,8 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     When omega=1.0, then SOR is equivalent to Gauss-Seidel.
 
     """
+    A,x,b = make_system(A, x, b, formats=['csr','bsr'])
+
     x_old = empty_like(x)
 
     for i in range(iterations):
@@ -73,28 +121,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     Nothing, x will be modified in place.
 
     """
-    
-    #TODO add support for block GS on BSR format
-    x = ravel(x) #TODO warn if not inplace
-    b = ravel(b)
+    A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
-    if isspmatrix_csr(A):
-        pass
-    elif isspmatrix_bsr(A):
-        R,C = A.blocksize
-        if R != C:
-            raise ValueError('BSR blocks must be square')
-    else:
-        warn('implicit conversion to CSR', SparseEfficiencyWarning)
-        A = csr_matrix(A)
-
-    if A.shape[0] != A.shape[1]:
-        raise ValueError('expected square matrix')
-
-    if A.shape[1] != len(x) or len(x) != len(b):
-        raise ValueError('unexpected number of unknowns')
-
-    
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(x),1
     elif sweep == 'backward':
@@ -114,14 +142,16 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
                                         x, b,
                                         row_start, row_stop, row_step)
     else:
-        blocksize = A.blocksize[0]
-        row_start = row_start/blocksize
-        row_stop  = row_stop/blocksize
+        R,C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        row_start = row_start / R
+        row_stop  = row_stop  / R
         for iter in xrange(iterations):
             multigridtools.block_gauss_seidel(A.indptr, A.indices, ravel(A.data),
                                               x, b,
                                               row_start, row_stop, row_step,
-                                              blocksize)
+                                              R)
 
 
 def jacobi(A, x, b, iterations=1, omega=1.0):
@@ -135,10 +165,10 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    omega : scalar
-        Damping parameter
     iterations : int
         Number of iterations to perform
+    omega : scalar
+        Damping parameter
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
 
@@ -147,15 +177,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     Nothing, x will be modified in place.
    
     """
-    x = asarray(x).reshape(-1)
-    b = asarray(b).reshape(-1)
-
-    if isspmatrix_csr(A):
-        pass
-    else:
-        warn('implicit conversion to CSR', SparseEfficiencyWarning)
-        A = csr_matrix(A)
-
+    A,x,b = make_system(A, x, b, formats=['csr'])
 
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
@@ -211,6 +233,7 @@ def polynomial(A, x, b, coeffients, iterations=1):
     For efficiency, Horner's Rule is applied to avoid computing A^k directly.
 
     """
+    A,x,b = make_system(A, x, b, formats=None)
 
     #TODO skip first matvec if x is all zero
 
@@ -238,26 +261,14 @@ def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
          sweep      - direction of sweep:
                         'forward' (default), 'backward', or 'symmetric'
     """
+    A,x,b = make_system(A, x, b, formats=['csr'])
 
-    x = ravel(x) #TODO warn if not inplace
-    b = ravel(b)
-
-    if isspmatrix_csr(A):
-        pass
-    else:
-        warn('implicit conversion to CSR',SparseEfficiencyWarning)
-        A = csr_matrix(A)
-
-    if A.shape[0] != A.shape[1]:
-        raise ValueError,'expected square matrix'
-
-    if A.shape[1] != len(x) or len(x) != len(b):
-        raise ValueError,'unexpected number of unknowns'
-
-    # Id==none is the same as standard gauss-seidel
-    if Id==None:
+    if Id is None:
+        # same as standard gauss-seidel
         gauss_seidel(A, x, b, iterations, sweep)
         return
+    else:
+        Id = asarray(Id, dtype='intc')
 
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(Id),1
@@ -269,7 +280,7 @@ def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
             gauss_seidel_indexed(A,x,b,iterations=1,Id=Id,sweep='backward')
         return
     else:
-        raise ValueError,'valid sweep directions are \'forward\', \'backward\', and \'symmetric\''
+        raise ValueError('valid sweep directions are \'forward\', \'backward\', and \'symmetric\'')
 
     for iter in xrange(iterations):
         multigridtools.gauss_seidel_indexed(
@@ -289,10 +300,10 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    omega : scalar
-        Damping parameter
     iterations : int
         Number of iterations to perform
+    omega : scalar
+        Damping parameter
 
     Returns
     -------
@@ -300,7 +311,6 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
 
     References
     ----------
-
     Brandt, Ta'asan.  
     "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
     1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
@@ -312,25 +322,12 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     Pubbliz. dell'Inst. pre le Appl. del Calculo 34, 326-333, 1938.
     
     """
-    x = asarray(x).reshape(-1)
-    b = asarray(b).reshape(-1)
+    A,x,b = make_system(A, x, b, formats=['csr'])
     
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    if isspmatrix_csr(A):
-        pass
-    elif isspmatrix_bsr(A):
-        if A.blocksize == (1,1):
-            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
-        else: 
-            warn('implicit conversion to CSR', SparseEfficiencyWarning)
-            A = csr_matrix(A)
-    else:
-        warn('implicit conversion to CSR', SparseEfficiencyWarning)
-        A = csr_matrix(A)
-    
-    temp = zeros(x.shape)
+    temp = zeros_like(x)
     # D for A*A.T
     D = (A.multiply(A))*ones_like(x)
     D_inv = 1.0 / D
@@ -344,7 +341,6 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     
 def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     """Perform Kaczmarz Richardson iterations on the linear system A A^T x = A^Tb
-
     
     Parameters
     ----------
@@ -354,10 +350,10 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    omega : scalar
-        Damping parameter
     iterations : int
         Number of iterations to perform
+    omega : scalar
+        Damping parameter
 
     Returns
     -------
@@ -365,7 +361,6 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     
     References
     ----------
-
     Brandt, Ta'asan.  
     "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
     1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
@@ -374,29 +369,12 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
  
     """
-    #from pyamg.utils import approximate_spectral_radius
-    #rho = approximate_spectral_radius(A)
-    #omega = omega/(rho*rho)
-
-    x = asarray(x).reshape(-1)
-    b = asarray(b).reshape(-1)
+    A,x,b = make_system(A, x, b, formats=['csr'])
     
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    if isspmatrix_csr(A):
-        pass
-    elif isspmatrix_bsr(A):
-        if A.blocksize == (1,1):
-            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
-        else: 
-            warn('implicit conversion to CSR', SparseEfficiencyWarning)
-            A = csr_matrix(A)
-    else:
-        warn('implicit conversion to CSR', SparseEfficiencyWarning)
-        A = csr_matrix(A)
-    
-    temp = zeros(x.shape)
+    temp = zeros_like(x)
     for i in range(iterations):
         delta = ravel(asarray((b - A*x)))
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
@@ -404,8 +382,7 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
                                            row_stop, row_step, omega)
 
 def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
-    """Perform Kaczmarz GaussSeidel iterations on the linear system A A^T x = A^Tb
-
+    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A^T x = A^Tb
     
     Parameters
     ----------
@@ -425,7 +402,6 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     
     References
     ----------
-
     Brandt, Ta'asan.  
     "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
     1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
@@ -435,35 +411,20 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
  
  
     """
+    A,x,b = make_system(A, x, b, formats=['csr'])
     
-    x = asarray(x).reshape(-1)
-    b = asarray(b).reshape(-1)
-    
-
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(x),1
     elif sweep == 'backward':
         row_start,row_stop,row_step = len(x)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            kaczmarz_gauss_seidel(A,x,b,iterations=1,sweep='forward')
-            kaczmarz_gauss_seidel(A,x,b,iterations=1,sweep='backward')
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward')
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
-    if isspmatrix_csr(A):
-        pass
-    elif isspmatrix_bsr(A):
-        if A.blocksize == (1,1):
-            A = csr_matrix((ravel(A.data), A.indices, A.indptr), shape=A.shape)
-        else: 
-            warn('implicit conversion to CSR', SparseEfficiencyWarning)
-            A = csr_matrix(A)
-    else:
-        warn('implicit conversion to CSR', SparseEfficiencyWarning)
-        A = csr_matrix(A)
-        
     # D for A*A.T
     D = (A.multiply(A))*ones_like(x)
     D_inv = 1.0 / D
@@ -471,8 +432,8 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     
     for i in range(iterations):
         multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
-                                           x, b, row_start,
-                                           row_stop, row_step, ravel(D_inv))
+                                             x, b, row_start,
+                                             row_stop, row_step, ravel(D_inv))
 
 #from pyamg.utils import dispatcher
 #dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )
