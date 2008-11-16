@@ -9,8 +9,7 @@ import multigridtools
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
 def classical_strength_of_connection(A,theta):
-    """
-    Return a strength of connection matrix using the classical AMG measure
+    """Compute a strength of connection matrix using the classical AMG measure
 
     An off-diagonal entry A[i,j] is a strong connection iff::
 
@@ -38,7 +37,6 @@ def classical_strength_of_connection(A,theta):
     Notes
     -----
     - A symmetric A does not necessarily yield a symmetric strength matrix S
-    - Calls C++ function classical_strength_of_connection
     - The version as implemented is designed form M-matrices.  Trottenberg et
       al. use max A[i,k] over all negative entries, which is the same.  A
       positive edge weight never indicates a strong connection.
@@ -81,8 +79,7 @@ def classical_strength_of_connection(A,theta):
 
 
 def symmetric_strength_of_connection(A, theta=0):
-    """
-    Compute a strength of connection matrix using the standard symmetric measure
+    """Compute a strength of connection matrix using the standard symmetric measure
     
     An off-diagonal connection A[i,j] is strong iff::
 
@@ -109,7 +106,6 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Notes
     -----
-        - Calls C++ function classical_strength_of_connection
         - For vector problems, standard strength measures may produce
           undesirable aggregates.  A "block approach" from Vanek et al. is used
           to replace vertex comparisons with block-type comparisons.  A
@@ -177,9 +173,7 @@ def symmetric_strength_of_connection(A, theta=0):
         raise TypeError('expected csr_matrix or bsr_matrix') 
 
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
-    """
-    Construct an AMG strength of connection matrix using an ODE based
-    inspiration.
+    """Construct an AMG strength of connection matrix using an ODE-based measure
 
     Parameters
     ----------
