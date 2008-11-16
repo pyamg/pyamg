@@ -18,13 +18,13 @@ warnings.simplefilter('ignore',SparseEfficiencyWarning)
 class TestCommonRelaxation(TestCase):
     def setUp(self):
         self.cases = []
-        self.cases.append( (gauss_seidel,          (),           {})                  )
-        self.cases.append( (jacobi,                (),           {})                  )
-        self.cases.append( (kaczmarz_jacobi,       (),           {})                  )
-        self.cases.append( (kaczmarz_richardson,   (),           {})                  )
-        self.cases.append( (sor,                   (0.5,),       {})                  )
-        self.cases.append( (gauss_seidel_indexed,  (),           {'Id':array([1,0])}) )
-        self.cases.append( (polynomial,            ([0.6,0.1],), {})                  )
+        self.cases.append( (gauss_seidel,          (),               {}) )
+        self.cases.append( (jacobi,                (),               {}) )
+        self.cases.append( (kaczmarz_jacobi,       (),               {}) )
+        self.cases.append( (kaczmarz_richardson,   (),               {}) )
+        self.cases.append( (sor,                   (0.5,),           {}) )
+        self.cases.append( (gauss_seidel_indexed,  ([1,0],),         {}) )
+        self.cases.append( (polynomial,            ([0.6,0.1],),     {}) )
 
 
     def test_single_precision(self):
@@ -109,20 +109,29 @@ class TestRelaxation(TestCase):
 
         r = (b - A*x0)
         polynomial(A,x,b,[-1.0/3.0])
-
         assert_almost_equal(x,x0-1.0/3.0*r)
 
-        x  = x0.copy()
+        x = x0.copy()
         polynomial(A,x,b,[0.2,-1])
         assert_almost_equal(x,x0 + 0.2*A*r - r)
 
-        x  = x0.copy()
+        x = x0.copy()
         polynomial(A,x,b,[0.2,-1])
         assert_almost_equal(x,x0 + 0.2*A*r - r)
 
-        x  = x0.copy()
+        x = x0.copy()
         polynomial(A,x,b,[-0.14285714,  1., -2.])
         assert_almost_equal(x,x0 - 0.14285714*A*A*r + A*r - 2*r)
+
+        # polynomial() optimizes for the case x=0
+        x = 0*x0
+        polynomial(A,x,b,[-1.0/3.0])
+        assert_almost_equal(x,1.0/3.0*b)
+
+        x = 0*x0
+        polynomial(A,x,b,[-0.14285714,  1., -2.])
+        assert_almost_equal(x,0.14285714*A*A*b + A*b - 2*b)
+
 
     def test_jacobi(self):
         N = 1
@@ -290,6 +299,49 @@ class TestRelaxation(TestCase):
         resid2 = numpy.linalg.norm(A*x,2)
         self.assert_(resid1 < 0.01 and resid2 < 0.01)
         self.assert_(allclose(resid1,resid2))
+    
+    def test_gauss_seidel_indexed(self):
+        N = 1
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[0])
+        assert_almost_equal(x,array([0]))
+
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[0,1,2])
+        assert_almost_equal(x,array([1.0/2.0,5.0/4.0,5.0/8.0]))
+        
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[2,1,0],sweep='backward')
+        assert_almost_equal(x,array([1.0/2.0,5.0/4.0,5.0/8.0]))
+        
+        N = 3
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = arange(N).astype(numpy.float64)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[0,1,2],sweep='backward')
+        assert_almost_equal(x,array([1.0/8.0,1.0/4.0,1.0/2.0]))
+        
+        N = 4
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = ones(N)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[0,3])
+        assert_almost_equal(x,array([1.0/2.0, 1.0, 1.0, 1.0/2.0]))
+        
+        N = 4
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = ones(N)
+        b = zeros(N)
+        gauss_seidel_indexed(A,x,b,[0,0])
+        assert_almost_equal(x,array([1.0/2.0, 1.0, 1.0, 1.0]))
 
     def test_kaczmarz_jacobi(self):
         N = 1

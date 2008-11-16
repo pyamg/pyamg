@@ -6,10 +6,12 @@ from warnings import warn
 
 import numpy as np
 from numpy import empty_like, asarray, arange, ravel, ones_like, zeros, zeros_like
-
-from pyamg import multigridtools
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
         csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
+
+from pyamg import multigridtools
+from pyamg.utils import norm
+
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
 __all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
@@ -230,15 +232,20 @@ def polynomial(A, x, b, coeffients, iterations=1):
     - Quadratic smoother p(A) = c_2*A^2 + c_1*A + c_0:
         polynomial_smoother(A, x, b, [c_2, c_1, c_0])
 
-    For efficiency, Horner's Rule is applied to avoid computing A^k directly.
+    Here, Horner's Rule is applied to avoid computing A^k directly.  
+    
+    For efficience, the method detects the case x = 0 one matrix-vector 
+    product is avoided (since (b - A*x) is b).
 
     """
     A,x,b = make_system(A, x, b, formats=None)
 
-    #TODO skip first matvec if x is all zero
-
     for i in range(iterations):
-        residual = (b - A*x)
+        if norm(x) == 0:
+            residual = b
+        else:
+            residual = (b - A*x)
+
         h = coeffients[0]*residual
     
         for c in coeffients[1:]:
@@ -247,46 +254,73 @@ def polynomial(A, x, b, coeffients, iterations=1):
         x += h
 
 
-def gauss_seidel_indexed(A, x, b, iterations=1, Id=None, sweep='forward'):
-    """
-    Perform Gauss-Seidel iteration on the linear system Ax=b
+def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
+    """Perform indexed Gauss-Seidel iteration on the linear system Ax=b
 
-     Input:
-         A - NxN csr_matrix
-         x - rank 1 ndarray of length N
-         b - rank 1 ndarray of length N
-     Optional:
-         iterations - number of iterations to perform (default: 1)
-         Id - index list to sweep over (default: None = all nodes)
-         sweep      - direction of sweep:
-                        'forward' (default), 'backward', or 'symmetric'
+    In indexed Gauss-Seidel, the sequence in which unknowns are relaxed is
+    specified explicitly.  In contrast, the standard Gauss-Seidel method
+    always performs complete sweeps of all variables in increasing or 
+    decreasing order.  The indexed method may be used to implement 
+    specialized smoothers, like F-smoothing in Classical AMG.
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    indices : ndarray
+        Row indices to relax.
+    iterations : int
+        Number of iterations to perform
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from numpy import array
+    >>> A = poisson((4,), format='csr')
+    >>> x = array([0.0, 0.0, 0.0, 0.0])
+    >>> b = array([0.0, 1.0, 2.0, 3.0])
+    >>> gauss_seidel_indexed(A, x, b, [0,1,2,3])                #relax all four rows, in order
+    >>> gauss_seidel_indexed(A, x, b, [0,1])                    #relax first two rows
+    >>> gauss_seidel_indexed(A, x, b, [2,0])                    #relax row 2, then row 0
+    >>> gauss_seidel_indexed(A, x, b, [2,3], sweep='backward')  #relax row 3, then row 2
+    >>> gauss_seidel_indexed(A, x, b, [2,0,2])                  #relax row 2, then 0, then 2 again
+
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
 
-    if Id is None:
-        # same as standard gauss-seidel
-        gauss_seidel(A, x, b, iterations, sweep)
-        return
-    else:
-        Id = asarray(Id, dtype='intc')
+    indices = asarray(indices, dtype='intc')
+
+    #if indices.min() < 0:
+    #    raise ValueError('row index (%d) is invalid' % indices.min())
+    #if indices.max() >= A.shape[0]
+    #    raise ValueError('row index (%d) is invalid' % indices.max())
 
     if sweep == 'forward':
-        row_start,row_stop,row_step = 0,len(Id),1
+        row_start,row_stop,row_step = 0,len(indices),1
     elif sweep == 'backward':
-        row_start,row_stop,row_step = len(Id)-1,-1,-1 
+        row_start,row_stop,row_step = len(indices)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            gauss_seidel_indexed(A,x,b,iterations=1,Id=Id,sweep='forward')
-            gauss_seidel_indexed(A,x,b,iterations=1,Id=Id,sweep='backward')
+            gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward')
+            gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='backward')
         return
     else:
         raise ValueError('valid sweep directions are \'forward\', \'backward\', and \'symmetric\'')
 
     for iter in xrange(iterations):
-        multigridtools.gauss_seidel_indexed(
-                            A.indptr, A.indices, A.data,
-                            x, b, Id,
-                            row_start, row_stop, row_step)
+        multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                                            x, b, indices,
+                                            row_start, row_stop, row_step)
 
 def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     """Perform Kaczmarz Jacobi iterations on the linear system A A^T x = A^Tb
