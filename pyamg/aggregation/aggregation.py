@@ -53,7 +53,6 @@ def smoothed_aggregation_solver(A, B=None,
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
     
-    TODO ADD PREPROCESSES            
     
     Cycle Parameters
     ----------------
@@ -74,7 +73,7 @@ def smoothed_aggregation_solver(A, B=None,
     -----
     TODO Distinguish betwenn setup and cycle parameters
     TODO describe sequence of operations on each level
-    preprocess -> strength -> aggregate -> tentative -> smooth
+    strength -> aggregate -> tentative -> smooth
 
 
 
@@ -82,9 +81,6 @@ def smoothed_aggregation_solver(A, B=None,
     -----------------
     symmetric: {boolean} : default True
         True if A is symmetric, False otherwise
-    rescale: {boolean} : default True
-        If True, symmetrically rescale A by the diagonal
-        i.e. A -> D * A * D,  where D is diag(A)^-0.5
     aggregation: {sequence of csr_matrix objects}
         List of csr_matrix objects that describe a user-defined
         multilevel aggregation of the degrees of freedom.
@@ -121,8 +117,6 @@ def smoothed_aggregation_solver(A, B=None,
     else:
         B = asarray(B, dtype=A.dtype)
     
-    pre,post = None,None   #preprocess/postprocess
-
     #if rescale:
     #    D_sqrt,D_sqrt_inv,A = symmetric_rescaling(A)
     #    D_sqrt,D_sqrt_inv = diag_sparse(D_sqrt),diag_sparse(D_sqrt_inv)
@@ -137,7 +131,6 @@ def smoothed_aggregation_solver(A, B=None,
         # predefined aggregation operators
         max_levels = len(aggregate[1]) + 1
         max_coarse = 0
-
 
     levels = []
     levels.append( multilevel_solver.level() )

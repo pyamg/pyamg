@@ -47,7 +47,6 @@ def ruge_stuben_solver(A,
 
     """
 
-
     levels = [ multilevel_solver.level() ]
 
     levels[-1].A = csr_matrix(A)

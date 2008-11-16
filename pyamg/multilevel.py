@@ -29,23 +29,19 @@ class multilevel_solver:
     ----------
     levels : level array
         Array of level objects that contain A, R, and P.
-    preprocess : function pointer
-        Optional function to manipulate x and b at the start of the cycle
-    postprocess : function pointer
-        Optional function to manipulate x and b at the end of the cycle
     coarse_solver : string
         String passed to coarse_grid_solver indicating the solve type
 
     Methods
     -------
-    cycle_complexity(lvl=-1)
-        Returns the cycle complexity or updates for a given level (lvl>=0)
+    solve()
+        Iteratively solves a linear system for the right hand side.
     operator_complexity()
-        Returns the operator complexity
+        A measure of the size of the multigrid hierarchy.
     grid_complexity()
-        Returns the operator complexity
-    solve(b, x0=None, tol=1e-5, maxiter=100, callback=None, residuals=None, cycle='V')
-        The main multigrid solve call.
+        A measure of the rate of coarsening.
+    cycle_complexity()
+        A measure of the cost of a single multigrid cycle.
     """
 
     class level:
@@ -72,7 +68,7 @@ class multilevel_solver:
         """
         pass
 
-    def __init__(self, levels, preprocess=None, postprocess=None, coarse_solver='pinv2'):
+    def __init__(self, levels, coarse_solver='pinv2'):
         """
         Class constructor responsible for initializing the cycle and ensuring
         the list of levels is complete.
@@ -81,10 +77,6 @@ class multilevel_solver:
         ----------
         levels : level array
             Array of level objects that contain A, R, and P.
-        preprocess : function pointer
-            Optional function to manipulate x and b at the start of the cycle
-        postprocess : function pointer
-            Optional function to manipulate x and b at the end of the cycle
         coarse_solver : string
             String passed to coarse_grid_solver indicating the type of coarse
             grid solve to perform.  The default 'pinv2' is robust, but 
@@ -100,9 +92,6 @@ class multilevel_solver:
         """
         self.levels = levels
         
-        self.preprocess  = preprocess
-        self.postprocess = postprocess
-
         self.coarse_solver = coarse_grid_solver(coarse_solver)
 
         for level in levels[:-1]:
@@ -348,9 +337,6 @@ class multilevel_solver:
             residuals[:] = []
 
 
-        if self.preprocess is not None:
-            x,b = self.preprocess(x, b)
-
         A = self.levels[0].A
 
         residuals.append(residual_norm(A,x,b))
@@ -370,9 +356,6 @@ class multilevel_solver:
 
             if callback is not None:
                 callback(x)
-
-        if self.postprocess is not None:
-            x = self.postprocess(x)
 
         if return_residuals:
             return x,residuals
