@@ -5,12 +5,9 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 import numpy as np
-from numpy import empty_like, asarray, arange, ravel, ones_like, zeros, zeros_like
-from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, isspmatrix_bsr, \
-        csr_matrix, coo_matrix, bsr_matrix, SparseEfficiencyWarning
+from scipy import sparse
 
 from pyamg import multigridtools
-from pyamg.utils import norm
 
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
@@ -24,17 +21,18 @@ def make_system(A, x, b, formats=None):
     if formats is None:
         pass
     elif formats == ['csr']:
-        if isspmatrix_csr(A):
+        if sparse.isspmatrix_csr(A):
             pass
-        elif isspmatrix_bsr(A):
+        elif sparse.isspmatrix_bsr(A):
             A = A.tocsr()
         else:
-            A = csr_matrix(A)
+            warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
+            A = sparse.csr_matrix(A)
     else:
-        if isspmatrix(A) and A.format in formats:
+        if sparse.isspmatrix(A) and A.format in formats:
             pass
         else:
-            A = csr_matrix(A).asformat(formats[0])
+            A = sparse.csr_matrix(A).asformat(formats[0])
 
     if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')
@@ -57,8 +55,8 @@ def make_system(A, x, b, formats=None):
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
 
-    x = ravel(x)
-    b = ravel(b)
+    x = np.ravel(x)
+    b = np.ravel(b)
 
     return A,x,b
 
@@ -86,17 +84,18 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
    
     Notes
     -----
-    When omega=1.0, then SOR is equivalent to Gauss-Seidel.
+    When omega=1.0, SOR is equivalent to Gauss-Seidel.
 
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
-    x_old = empty_like(x)
+    x_old = np.empty_like(x)
 
     for i in range(iterations):
         x_old[:] = x
-        gauss_seidel(A,x,b,iterations=1,sweep=sweep)
 
+        gauss_seidel(A, x, b, iterations=1, sweep=sweep)
+        
         x     *= omega
         x_old *= (1-omega)
         x     += x_old
@@ -131,14 +130,14 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start,row_stop,row_step = len(x)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            gauss_seidel(A,x,b,iterations=1,sweep='forward')
-            gauss_seidel(A,x,b,iterations=1,sweep='backward')
+            gauss_seidel(A, x, b, iterations=1, sweep='forward')
+            gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
 
-    if isspmatrix_csr(A):
+    if sparse.isspmatrix_csr(A):
         for iter in xrange(iterations):
             multigridtools.gauss_seidel(A.indptr, A.indices, A.data,
                                         x, b,
@@ -150,7 +149,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start = row_start / R
         row_stop  = row_stop  / R
         for iter in xrange(iterations):
-            multigridtools.block_gauss_seidel(A.indptr, A.indices, ravel(A.data),
+            multigridtools.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                               x, b,
                                               row_start, row_stop, row_step,
                                               R)
@@ -161,7 +160,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -187,7 +186,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     if (row_stop - row_start) * row_step <= 0:  #no work to do
         return
 
-    temp = empty_like(x)
+    temp = np.empty_like(x)
 
     for iter in xrange(iterations):
         multigridtools.jacobi(A.indptr, A.indices, A.data,
@@ -202,7 +201,7 @@ def polynomial(A, x, b, coeffients, iterations=1):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : sparse matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -241,6 +240,8 @@ def polynomial(A, x, b, coeffients, iterations=1):
     A,x,b = make_system(A, x, b, formats=None)
 
     for i in range(iterations):
+        from pyamg.utils import norm
+
         if norm(x) == 0:
             residual = b
         else:
@@ -265,7 +266,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -298,7 +299,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
 
-    indices = asarray(indices, dtype='intc')
+    indices = np.asarray(indices, dtype='intc')
 
     #if indices.min() < 0:
     #    raise ValueError('row index (%d) is invalid' % indices.min())
@@ -328,7 +329,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -361,14 +362,14 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    temp = zeros_like(x)
+    temp = np.zeros_like(x)
     # D for A*A.T
-    D = (A.multiply(A))*ones_like(x)
+    D = A.multiply(A) * np.ones_like(x)
     D_inv = 1.0 / D
     D_inv[D == 0] = 0.0
     
     for i in range(iterations):
-        delta = ravel(asarray((b - A*x))*asarray(D_inv))
+        delta = (b - A*x) * D_inv
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
@@ -378,7 +379,7 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -408,9 +409,9 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    temp = zeros_like(x)
+    temp = np.zeros_like(x)
     for i in range(iterations):
-        delta = ravel(asarray((b - A*x)))
+        delta = b - A*x
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                            x, b, delta, temp, row_start,
                                            row_stop, row_step, omega)
@@ -420,7 +421,7 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     x : { ndarray }
         Approximate solution (length N)
@@ -460,14 +461,14 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
     # D for A*A.T
-    D = (A.multiply(A))*ones_like(x)
+    D = A.multiply(A)* np.ones_like(x)
     D_inv = 1.0 / D
     D_inv[D == 0] = 0.0
     
     for i in range(iterations):
         multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
                                              x, b, row_start,
-                                             row_stop, row_step, ravel(D_inv))
+                                             row_stop, row_step, np.ravel(D_inv))
 
 #from pyamg.utils import dispatcher
 #dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )
