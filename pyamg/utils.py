@@ -11,7 +11,6 @@ from scipy.lib.blas import get_blas_funcs
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
-from scipy.sparse.linalg import eigen, eigen_symmetric
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'diag_sparse',
         'norm', 'residual_norm','profile_solver']
@@ -100,6 +99,8 @@ def residual_norm(A, x, b):
 #        An approximation to the spectral radius of A
 #
 #    """
+#    from scipy.sparse.linalg import eigen, eigen_symmetric
+#
 #    if symmetric:
 #        method = eigen_symmetric
 #    else:
