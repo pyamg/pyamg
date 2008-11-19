@@ -4,6 +4,8 @@
 #include <iterator>
 #include <algorithm>
 #include <cmath>
+#include <limits>
+
 #include "smoothed_aggregation.h"
 
 /*

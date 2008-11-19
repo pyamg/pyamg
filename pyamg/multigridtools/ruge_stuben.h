@@ -5,7 +5,8 @@
 #include <vector>
 #include <iterator>
 #include <cassert>
-
+#include <limits>
+#include <algorithm>
 
 /*
  *

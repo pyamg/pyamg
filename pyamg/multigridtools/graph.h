@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 
 /*
  *  Compute a maximal independent set for a graph stored in CSR format
