@@ -52,16 +52,16 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
 
     Examples
     --------
-    >>>from pyamg import *
-    >>>from pyamg.vis.oneD_vis import *
-    >>>import pylab
-    >>>from scipy import rand, zeros
-    >>>A = poisson( (128,), format='csr')
-    >>>ml=smoothed_aggregation_solver(A, max_coarse=5)
-    >>>oneD_profile(ml);                                         pylab.show()
-    >>>oneD_profile(ml, iter=3);                                 pylab.show()
-    >>>oneD_profile(ml, iter=3, cycle='W');                      pylab.show()
-    >>>oneD_profile(ml, b=rand(128,), x0=zeros((128,)), iter=5); pylab.show()
+    >>> from pyamg import *
+    >>> from pyamg.vis.oneD_vis import *
+    >>> import pylab
+    >>> from scipy import rand, zeros
+    >>> A = poisson( (128,), format='csr')
+    >>> ml=smoothed_aggregation_solver(A, max_coarse=5)
+    >>> oneD_profile(ml);                                         pylab.show()
+    >>> oneD_profile(ml, iter=3);                                 pylab.show()
+    >>> oneD_profile(ml, iter=3, cycle='W');                      pylab.show()
+    >>> oneD_profile(ml, b=rand(128,), x0=zeros((128,)), iter=5); pylab.show()
     '''
     
     A = mg.levels[0].A
