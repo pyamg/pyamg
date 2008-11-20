@@ -3,7 +3,7 @@
 __docformat__ = "restructuredtext en"
 
 from numpy import array, arange, ones, zeros, sqrt, asarray, \
-        empty, empty_like, diff
+        empty, empty_like, diff, abs, conjugate
 
 from scipy.sparse import csr_matrix, coo_matrix, \
         isspmatrix_csr, bsr_matrix, isspmatrix_bsr
@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix, coo_matrix, \
 from pyamg import multigridtools
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import setup_smoothers
-from pyamg.utils import symmetric_rescaling, diag_sparse, scale_columns
+from pyamg.util.utils import symmetric_rescaling, diag_sparse, scale_columns
 
 from pyamg.strength import *
 from aggregate import *
@@ -22,6 +22,7 @@ __all__ = ['smoothed_aggregation_solver']
 
 
 def smoothed_aggregation_solver(A, B=None, 
+        mat_flag='hermitian',
         strength='symmetric', 
         aggregate='standard', 
         smooth=('jacobi', {'omega': 4.0/3.0}),
@@ -37,6 +38,11 @@ def smoothed_aggregation_solver(A, B=None,
     B : {None, array_like}
         Near-nullspace candidates stored in the columns of an NxK array.
         The default value B=None is equivalent to B=ones((N,1))
+    mat_flag : {string}
+        'symmetric' refers to both real and complex symmetric
+        'hermitian' refers to both complex Hermitian and real Hermitian
+        Note that for the strictly real case, these two options are the same
+        Note that this flag does not denote definiteness of the operator
     strength : ['symmetric', 'classical', 'ode', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
@@ -79,8 +85,6 @@ def smoothed_aggregation_solver(A, B=None,
 
     Unused Parameters
     -----------------
-    symmetric: {boolean} : default True
-        True if A is symmetric, False otherwise
     aggregation: {sequence of csr_matrix objects}
         List of csr_matrix objects that describe a user-defined
         multilevel aggregation of the degrees of freedom.
@@ -105,6 +109,10 @@ def smoothed_aggregation_solver(A, B=None,
     """
 
     A = A.asfptype()
+    
+    if (mat_flag != 'symmetric') and (mat_flag != 'hermitian'):
+        raise ValueError('expected symmetric or hermitian mat_flag')
+    A.symmetry = mat_flag
 
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         raise TypeError('argument A must have type csr_matrix or bsr_matrix')
@@ -220,6 +228,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     else:
         raise ValueError('unrecognized strength of connection method: %s' % str(fn))
 
+    # In SA, strength represents "distance", so we take magnitude of complex values
+    if C.dtype == complex:
+        C.data = abs(C.data)
+
     ##
     # aggregation
     fn, kwargs = unpack_arg(aggregate)
@@ -244,6 +256,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     elif fn == 'richardson':
         P = richardson_prolongation_smoother(A, T, **kwargs)
     elif fn == 'energy':
+        #from scipy import conjugate
+        #R = energy_prolongation_smoother(A.H.asformat(A.format), T, C, conjugate(B), **kwargs).H
         P = energy_prolongation_smoother(A, T, C, B, **kwargs)
     elif fn == 'kaczmarz_richardson':
         P = kaczmarz_richardson_prolongation_smoother(A, T, **kwargs)
@@ -254,9 +268,15 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     else:
         raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
    
-
-    
-    R = P.T.asformat(P.format)
+    ##
+    # Choice of R reflects A's structure
+    symmetry = A.symmetry
+    #if fn != 'energy':
+    if True:
+        if symmetry == 'hermitian':
+            R = P.H
+        elif symmetry == 'symmetric':
+            R = P.T
 
     levels[-1].C     = C       # strength of connection matrix
     levels[-1].AggOp = AggOp   # aggregation operator
@@ -265,6 +285,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     levels[-1].R     = R       # restriction operator 
 
     A = R * A * P              # galerkin operator
+    A.symmetry = symmetry
     
     levels.append( multilevel_solver.level() )
     levels[-1].A = A

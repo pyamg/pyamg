@@ -22,9 +22,9 @@
  *  
  */          
 
-template<class I, class T>
+template<class I, class T, class F>
 void classical_strength_of_connection(const I n_row,
-                                      const T theta,
+                                      const F theta,
                                       const I Ap[], const I Aj[], const T Ax[],
                                             I Sp[],       I Sj[],       T Sx[])
 {
@@ -32,20 +32,21 @@ void classical_strength_of_connection(const I n_row,
     Sp[0] = 0;
 
     for(I i = 0; i < n_row; i++){
-        T min_offdiagonal = std::numeric_limits<T>::max();
+        F max_offdiagonal = std::numeric_limits<F>::min();
 
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
 
         for(I jj = row_start; jj < row_end; jj++){
             if(Aj[jj] != i){
-                min_offdiagonal = std::min(min_offdiagonal,Ax[jj]);
+                max_offdiagonal = std::max(max_offdiagonal,mynorm(Ax[jj]));
             }
         }
 
-        T threshold = theta*min_offdiagonal;
+        F threshold = theta*max_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
-            if(Ax[jj] <= threshold){
+            F norm_jj = mynorm(Ax[jj]);
+            if(norm_jj >= threshold){
                 if(Aj[jj] != i){
                     Sj[nnz] = Aj[jj];
                     Sx[nnz] = Ax[jj];

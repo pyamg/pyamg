@@ -9,10 +9,12 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('aggregation')
     config.add_subpackage('classical')
     config.add_subpackage('gallery')
+    config.add_subpackage('krylov')
     config.add_subpackage('multigridtools')
     config.add_subpackage('relaxation')
-    config.add_subpackage('vis')
     config.add_subpackage('testing')
+    config.add_subpackage('util')
+    config.add_subpackage('vis')
 
     config.add_data_dir('tests')
 

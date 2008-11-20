@@ -111,7 +111,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
         raise TypeError('expected csr_matrix for argument AggOp')
 
     B = asarray(B)
-    if B.dtype != 'float32':
+    if B.dtype not in ['float32','float64','complex64','complex128']:
         B = asarray(B,dtype='float64')
 
     if len(B.shape) != 2:

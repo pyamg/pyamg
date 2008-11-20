@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 from numpy import arange, ones, ones_like, empty
 from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr, isspmatrix_csc
-
+from scipy import real
 from pyamg import multigridtools
 from pyamg.graph import lloyd_cluster
 
@@ -155,7 +155,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if distance == 'unit':
-        data = ones_like(C.data)
+        data = ones_like(C.data).astype(float)
     elif distance == 'abs':
         data = abs(C.data)
     elif distance == 'inv':
@@ -166,6 +166,9 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         data = C.data - C.data.min()
     else:
         raise ValueError('unrecognized value distance=%s' % distance)
+    
+    if C.dtype == complex:
+        data = real(data)
 
     assert(data.min() >= 0)
 

@@ -7,6 +7,7 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 
+from pyamg.util.utils import type_prep, get_diagonal
 from pyamg import multigridtools
 
 
@@ -187,6 +188,9 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         return
 
     temp = np.empty_like(x)
+    
+    # Create uniform type, and convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
 
     for iter in xrange(iterations):
         multigridtools.jacobi(A.indptr, A.indices, A.data,
@@ -240,7 +244,7 @@ def polynomial(A, x, b, coeffients, iterations=1):
     A,x,b = make_system(A, x, b, formats=None)
 
     for i in range(iterations):
-        from pyamg.utils import norm
+        from pyamg.util.linalg import norm
 
         if norm(x) == 0:
             residual = b
@@ -363,13 +367,16 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
     temp = np.zeros_like(x)
-    # D for A*A.T
-    D = A.multiply(A) * np.ones_like(x)
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0.0
+    
+    # Dinv for A*A.H
+    Dinv = get_diagonal(A, norm_eq=2, inv=True)
+    
+    
+    # Create uniform type, and convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
     
     for i in range(iterations):
-        delta = (b - A*x) * D_inv
+        delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
@@ -410,8 +417,12 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
     temp = np.zeros_like(x)
+    
+    # Create uniform type, and convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
+    
     for i in range(iterations):
-        delta = b - A*x
+        delta = np.ravel(b - A*x).astype(A.dtype)
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                            x, b, delta, temp, row_start,
                                            row_stop, row_step, omega)
@@ -460,15 +471,13 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
-    # D for A*A.T
-    D = A.multiply(A)* np.ones_like(x)
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0.0
+    # Dinv for A*A.H
+    Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
     
     for i in range(iterations):
         multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
-                                             x, b, row_start,
-                                             row_stop, row_step, np.ravel(D_inv))
+                                           x, b, row_start,
+                                           row_stop, row_step, Dinv)
 
 #from pyamg.utils import dispatcher
 #dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

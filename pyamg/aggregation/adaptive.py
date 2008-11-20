@@ -3,7 +3,7 @@
 __docformat__ = "restructuredtext en"
 
 from numpy import sqrt, ravel, diff, zeros, ones, zeros_like, inner, concatenate, \
-                  asarray, hstack, ascontiguousarray, isinf, dot
+                  asarray, hstack, ascontiguousarray, isinf, dot, conjugate
 from numpy.random import randn, rand
 from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
 
@@ -12,6 +12,7 @@ from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
 from pyamg.relaxation.smoothing import setup_smoothers
 import pyamg.relaxation
+from pyamg.util.linalg import norm
 
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
@@ -23,11 +24,12 @@ __all__ = ['adaptive_sa_solver']
 
 
 
-def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5, 
+def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
+        num_candidates=1, candidate_iters=5, 
         improvement_iters=0, epsilon=0.1,
         max_levels=10, max_coarse=100, aggregation=None,
         prepostsmoother=('gauss_seidel', {'sweep':'symmetric'}),
-        smooth=('energy', {'degree' : 1}),
+        smooth=('jacobi', {}),
         **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
@@ -37,6 +39,13 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
 
     A : {csr_matrix, bsr_matrix}
         Square matrix in CSR or BSR format
+    mat_flag : {string}
+        'symmetric' refers to both real and complex symmetric
+        'hermitian' refers to both complex Hermitian and real Hermitian
+        Note that for the strictly real case, these two options are the same
+        Note that this flag does not denote definiteness of the operator
+    pdef : {bool}
+        True or False, whether A is known to be positive definite or not
     num_candidates : {integer} : default 1
         Number of near-nullspace candidates to generate
     candidate_iters : {integer} : default 5
@@ -98,22 +107,22 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     
     ###
     # develop first candidate
-    B,AggOps = initial_setup_stage(A, candidate_iters, epsilon, 
+    B,AggOps = initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, 
             max_levels, max_coarse, aggregation, prepostsmoother, smooth)
     # Normalize B
-    B = (1.0/sqrt(inner(ravel(B), ravel(B))))*B
+    B = (1.0/norm(B))*B
     
     kwargs['aggregate'] = ('predefined',AggOps)
 
     ###
     # develop additional candidates
     for i in range(num_candidates - 1):
-        x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+        x = general_setup_stage( smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                                             postsmoother=prepostsmoother, smooth=smooth, **kwargs), 
-                                candidate_iters, prepostsmoother, smooth)
+                                mat_flag, candidate_iters, prepostsmoother, smooth)
         
         # Normalize x and add to candidate list
-        x = (1.0/sqrt(inner(ravel(x), ravel(x))))*x
+        x = (1.0/norm(x))*x
         B = hstack((B,x))
 
     ###
@@ -121,15 +130,15 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
     for i in range(improvement_iters):
         for j in range(B.shape[1]):
             B = B[:,1:]
-            x = general_setup_stage( smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+            x = general_setup_stage( smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                                                  postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
-                                     candidate_iters, prepostsmoother, smooth)
+                                     mat_flag, candidate_iters, prepostsmoother, smooth)
             
             # Normalize x and add to candidate list
-            x = (1.0/sqrt(inner(ravel(x), ravel(x))))*x
+            x = (1.0/norm(x))*x
             B = hstack((B,x))
 
-    return smoothed_aggregation_solver(A, B=B, presmoother=prepostsmoother, 
+    return smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                        postsmoother=prepostsmoother, smooth=smooth,**kwargs)
 
 
@@ -148,7 +157,7 @@ def adaptive_sa_solver(A, num_candidates=1, candidate_iters=5,
    
    
 
-def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, aggregation, prepostsmoother, smooth):
+def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels, max_coarse, aggregation, prepostsmoother, smooth):
     """Computes a complete aggregation and the first near-nullspace candidate
 
 
@@ -170,6 +179,8 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
     #step 1
     A_l = A
     x   = randn(A_l.shape[0],1) # TODO see why randn() fails here
+    if A_l.dtype == complex:
+        x = x + 1.0j*randn(A_l.shape[0],1)
     skip_f_to_i = False
 
     def relax(A,x):
@@ -205,31 +216,29 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
             AggOp = aggregation[len(AggOps)]
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
         
-        if False:                                                              #step 4d
-            #P_l   = jacobi_prolongation_smoother(A_l,T_l)                          
-            P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
-            #if len(AggOps) == 0:
-            #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=2)
-            #else:
-            #    P_l   = energy_prolongation_smoother(A_l, T_l, None, x, degree=1)
-        else: 
-            fn, kwargs = unpack_arg(smooth)
-            if fn == 'jacobi':
-                P_l = jacobi_prolongation_smoother(A_l, T_l, **kwargs)
-            elif fn == 'richardson':
-                P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
-            elif fn == 'energy':
-                P_l = energy_prolongation_smoother(A_l, T_l, None, x, **kwargs)
-            elif fn == 'kaczmarz_richardson':
-                P_l = kaczmarz_richardson_prolongation_smoother(A_l, T_l, **kwargs)
-            elif fn == 'kaczmarz_jacobi':
-                P_l = kaczmarz_jacobi_prolongation_smoother(A_l, T_l, **kwargs)
-            elif fn == None:
-                P_l = T_l
-            else:
-                raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
-
-        A_l   = P_l.T.asformat(P_l.format) * A_l * P_l                         #step 4e
+        fn, kwargs = unpack_arg(smooth)                                        #step 4d
+        if fn == 'jacobi':
+            P_l = jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+        elif fn == 'richardson':
+            P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
+        elif fn == 'energy':
+            P_l = energy_prolongation_smoother(A_l, T_l, None, x, **kwargs)
+        elif fn == 'kaczmarz_richardson':
+            P_l = kaczmarz_richardson_prolongation_smoother(A_l, T_l, **kwargs)
+        elif fn == 'kaczmarz_jacobi':
+            P_l = kaczmarz_jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+        elif fn == None:
+            P_l = T_l
+        else:
+            raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
+        
+        ##
+        # R should reflect A's structure                                          #step 4e
+        if mat_flag == 'symmetric':
+            A_l   = P_l.T.asformat(P_l.format) * A_l * P_l   
+        elif mat_flag == 'hermitian':
+            A_l   = P_l.H.asformat(P_l.format) * A_l * P_l    
+        
         AggOps.append(AggOp)
         Ps.append(P_l)
         As.append(A_l)
@@ -239,8 +248,15 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
         if not skip_f_to_i:
             x_hat = x.copy()                                                   #step 4g
             relax(A_l,x)                                                       #step 4h
-            x_A_x = dot(x.T,A_l*x)
-            err_ratio = (x_A_x/dot(x_hat.T,A_l*x_hat))**(1.0/candidate_iters) 
+            if pdef == True:
+                x_A_x = dot(conjugate(x).T,A_l*x)
+                err_ratio = (x_A_x/dot(conjugate(x_hat).T,A_l*x_hat))**(1.0/candidate_iters) 
+            else:
+                # use A.H A innerproduct
+                Ax = A_l*x; Axhat = A_l*x_hat;
+                x_A_x = dot(conjugate(Ax).T,Ax)
+                err_ratio = (x_A_x/dot(conjugate(Axhat).T,Axhat))**(1.0/candidate_iters) 
+
             if err_ratio < epsilon:                                            #step 4i
                 print "sufficient convergence, skipping"
                 skip_f_to_i = True
@@ -256,7 +272,7 @@ def initial_setup_stage(A, candidate_iters, epsilon, max_levels, max_coarse, agg
     return x,AggOps  #first candidate
 
 
-def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
+def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
          
     def unpack_arg(v):
         if isinstance(v,tuple):
@@ -267,6 +283,8 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
     levels = ml.levels
 
     x = randn(levels[0].A.shape[0],1)
+    if levels[0].A.dtype == complex:
+        x = x + 1.0j*randn(levels[0].A.shape[0],1)
     b = zeros_like(x)
 
     x = ml.solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)
@@ -295,34 +313,34 @@ def general_setup_stage(ml, candidate_iters, prepostsmoother, smooth):
         T,R = fit_candidates(levels[i].AggOp,B)
         x = R[:,-1].reshape(-1,1)
         
-        if False:
-            #levels[i].P   = jacobi_prolongation_smoother(levels[i].A, T)
-            levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
-            #if i == 0:
-            #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=2)
-            #else:
-            #    levels[i].P   = energy_prolongation_smoother(levels[i].A, T, None, R, degree=1)
-        else: 
-            fn, kwargs = unpack_arg(smooth)
-            if fn == 'jacobi':
-                levels[i].P = jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
-            elif fn == 'richardson':
-                levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
-            elif fn == 'energy':
-                levels[i].P = energy_prolongation_smoother(levels[i].A, T, None, R, **kwargs)
-            elif fn == 'kaczmarz_richardson':
-                levels[i].P = kaczmarz_richardson_prolongation_smoother(levels[i].A, T, **kwargs)
-            elif fn == 'kaczmarz_jacobi':
-                levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
-            elif fn == None:
-                levels[i].P = T
-            else:
-                raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
+        fn, kwargs = unpack_arg(smooth)
+        if fn == 'jacobi':
+            levels[i].P = jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+        elif fn == 'richardson':
+            levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
+        elif fn == 'energy':
+            levels[i].P = energy_prolongation_smoother(levels[i].A, T, None, R, **kwargs)
+        elif fn == 'kaczmarz_richardson':
+            levels[i].P = kaczmarz_richardson_prolongation_smoother(levels[i].A, T, **kwargs)
+        elif fn == 'kaczmarz_jacobi':
+            levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+        elif fn == None:
+            levels[i].P = T
+        else:
+            raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
         
-        levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
+        if mat_flag == 'symmetric':                     # R should reflect A's structure
+            levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
+        elif mat_flag == 'hermitian':
+            levels[i].R   = levels[i].P.H.asformat(levels[i].P.format)
+        
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
-        levels[i+1].P = make_bridge(levels[i+1].P) 
-        levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
+        levels[i+1].P = make_bridge(levels[i+1].P)
+        
+        if mat_flag == 'symmetric':                     # R should reflect A's structure
+            levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
+        elif mat_flag == 'hermitian':
+            levels[i+1].R = levels[i+1].P.H.asformat(levels[i+1].P.format)
 
         solver = multilevel_solver(levels[i+1:])
         setup_smoothers(solver, presmoother=prepostsmoother, postsmoother=prepostsmoother)

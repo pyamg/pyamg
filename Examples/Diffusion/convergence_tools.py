@@ -3,6 +3,7 @@ Print and plot functions for testing convergence and scalability.
 """
 from numpy import array, random, mean, prod, zeros
 from scipy import rand, log10
+from pyamg.util.utils import print_table
 
 def print_cycle_history(resvec, ml, verbose=False, plotting=False):
     """
@@ -84,7 +85,7 @@ def print_cycle_history(resvec, ml, verbose=False, plotting=False):
         ylabel('residual')
         show()
 
-def print_scalability(factors,complexity,nnz,nlist,plotting=False):
+def print_scalability(factors,complexity,nnz,nlist,plotting=False,title='Scalability Test'):
     """
     Shows a summary of the scalability in problems size n.
 
@@ -99,24 +100,24 @@ def print_scalability(factors,complexity,nnz,nlist,plotting=False):
         problem
     nlist : array like
         A list of problem sizes
+    title : title for the tables
 
     plotting : {True, False}
         Plot the residual history
 
     """
-    print '---Scalability Summary---------------------------------------'
-    print ''
-    print '%-10s %-10s %-10s %-10s %-10s'%("n","nnz","rho","OpCx","Work")
+    # build table up in list form, then pass to print_table for pretty output
+    table = []
+
+    table.append(["n","nnz","rho","OpCx","Work"])
     run=0
     work = zeros((len(nlist),1)).ravel()
     for n in nlist:
         work[run]=-complexity[run]/log10(factors[run]);
-        if(run>0):
-            str = (n,nnz[run],factors[run],complexity[run],work[run])
-            print '%-10.3d %-10.3d %-10.3f %-10.3f %-10.3f'%str
-        else:
-            print '%-10.3d'%n
+        table.append([ str(int(n)), str(int(nnz[run])), ('%1.3f'%factors[run]), ('%1.3f'%complexity[run]), ('%1.3f'%work[run]) ])
         run+=1
+
+    print print_table(table, title=title, col_padding=4)
 
     if(plotting):
         from pylab import plot, show, semilogy, figure, xlabel, ylabel, axis
@@ -127,3 +128,4 @@ def print_scalability(factors,complexity,nnz,nlist,plotting=False):
         xlabel('n')
         ylabel('work per digit of accuracy')
         show()
+

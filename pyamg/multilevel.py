@@ -7,10 +7,12 @@ import scipy
 import numpy
 from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ravel
 from scipy.sparse import csc_matrix
+from scipy.sparse.sputils import upcast
 
 #from pyamg import relaxation
 from pyamg.relaxation import *
-from utils import symmetric_rescaling, diag_sparse, residual_norm
+from pyamg.util.utils import symmetric_rescaling, diag_sparse, to_type
+from pyamg.util.linalg import residual_norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -90,13 +92,34 @@ class multilevel_solver:
         transpose of P.
 
         """
+        """
+        Class constructor responsible for initializing the cycle and ensuring
+        the list of levels is complete.
+
+        Parameters
+        ----------
+        levels : level array
+            Array of level objects that contain A, R, and P.
+        coarse_solver : string
+            String passed to coarse_grid_solver indicating the type of coarse
+            grid solve to perform.  The default 'pinv2' is robust, but 
+            expands the coarse level matrix into a dense format.  Therefore,
+            larger coars level systems should use sparse coarse methods 
+            like 'splu'.
+    
+        Notes
+        -----
+        If not defined, the R attribute on each level is set to the
+        transpose of P.
+
+        """
         self.levels = levels
         
         self.coarse_solver = coarse_grid_solver(coarse_solver)
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
-                level.R = level.P.T
+                level.R = level.P.H
 
     def __repr__(self):
         """Prints basic statistics about the multigrid hierarchy.
@@ -299,7 +322,7 @@ class multilevel_solver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) #standalone solver
 
         """
-
+        
         if x0 is None:
             x = zeros_like(b)
         else:
@@ -337,6 +360,11 @@ class multilevel_solver:
             residuals[:] = []
 
 
+        # Create uniform types for A, x and b
+        # Clearly, this logic doesn't handle the case of A being real and b complex
+        tp = upcast(b.dtype, x.dtype, self.levels[0].A.dtype)
+        [b, x] = to_type(tp, [b, x])
+        
         A = self.levels[0].A
 
         residuals.append(residual_norm(A,x,b))

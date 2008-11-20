@@ -2,7 +2,7 @@ from pyamg.testing import *
 
 import numpy
 from numpy import sqrt, ones, ravel, array
-from scipy import rand
+from scipy import rand, real, imag
 from scipy.sparse import csr_matrix, coo_matrix, spdiags
 from scipy.special import round
 
@@ -219,37 +219,89 @@ class TestStrengthOfConnection(TestCase):
         ), shape=Atilde.shape)
         assert_equal( Atilde.indptr, AtildeExact.indptr )
         assert_equal( Atilde.indices, AtildeExact.indices )
+
+
+# Define Complex tests
+class TestComplexStrengthOfConnection(TestCase):
+    def setUp(self):
+        self.cases = []
+
+        # random matrices
+        numpy.random.seed(0)
+        for N in [2,3,5]:
+            self.cases.append( csr_matrix(rand(N,N)) + csr_matrix(1.0j*rand(N,N)))
+
+        # poisson problems in 1D and 2D
+        for N in [2,3,5,7,10,11,19]:
+            A = poisson( (N,), format='csr'); A.data = A.data + 1.0j*A.data;
+            self.cases.append(A)
+        for N in [2,3,5,7,10,11]:
+            A = poisson( (N,N), format='csr'); A.data = A.data + 1.0j*rand(A.data.shape[0],);
+            self.cases.append(A)
+
+        for name in ['knot','airfoil','bar']:
+            ex = load_example(name)
+            A = ex['A'].tocsr(); A.data = A.data + 0.5j*rand(A.data.shape[0],);
+            self.cases.append(A)
+
+    def test_classical_strength_of_connection(self):
+        for A in self.cases:
+            for theta in [ 0.0, 0.05, 0.25, 0.50, 0.90 ]:
+                result   = classical_strength_of_connection(A, theta)
+                expected = reference_classical_strength_of_connection(A, theta)
+                
+                assert_equal( result.nnz, expected.nnz )
+                assert_equal( result.todense(), expected.todense() )
+
+    def test_symmetric_strength_of_connection(self):
+        for A in self.cases:
+            for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
+                expected = reference_symmetric_strength_of_connection(A, theta)
+                result   = symmetric_strength_of_connection(A, theta)
+                assert_equal( result.nnz,       expected.nnz)
+                assert_equal( result.todense(), expected.todense())
         
         
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
 def reference_classical_strength_of_connection(A, theta):
+    # This complex extension of the classic Ruge-Stuben 
+    # strength-of-connection has some theoretical justification in
+    # "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan, 
+    # Cornelis Oosterlee
+
+    # Connection is strong if, 
+    #   | a_ij| >= theta * max_{k != i} |a_ik|
     S = coo_matrix(A)
     
     # remove diagonals
     mask = S.row != S.col
-
     S.row  = S.row[mask]
     S.col  = S.col[mask]
     S.data = S.data[mask]
-  
-    min_offdiag    = numpy.empty(S.shape[0])
-    min_offdiag[:] = numpy.finfo(S.data.dtype).max
+    max_offdiag    = numpy.empty(S.shape[0])
+    max_offdiag[:] = numpy.finfo(S.data.dtype).min
 
+    # Note abs(.) takes the complex modulus
     for i,v in zip(S.row,S.data):
-        min_offdiag[i] = min(min_offdiag[i],v)
+        max_offdiag[i] = max(max_offdiag[i], abs(v))
 
     # strong connections
-    mask = S.data <= (theta * min_offdiag[S.row])
-    
+    mask = abs(S.data) >= (theta * max_offdiag[S.row])
     S.row  = S.row[mask]
     S.col  = S.col[mask]
     S.data = S.data[mask]
-    
+
     return S.tocsr()
+    
 
 def reference_symmetric_strength_of_connection(A, theta):
+    # This is just a direct complex extension of the classic 
+    # SA strength-of-connection measure.  The extension continues 
+    # to compare magnitudes. This should reduce to the classic 
+    # measure if A is all real.
+
     #if theta == 0:
     #    return A
     
@@ -258,7 +310,11 @@ def reference_symmetric_strength_of_connection(A, theta):
     S = coo_matrix(A)
 
     mask  = S.row != S.col
-    mask &= abs(S.data) >= theta * sqrt(D[S.row] * D[S.col])
+    DD = array(D[S.row] * D[S.col]).reshape(-1,)
+    # Note that abs takes the complex modulus element-wise
+    # Note that using the square of the measure is the technique used 
+    # in the C++ routine, so we use it here.  Doing otherwise causes errors. 
+    mask &= (  (real(S.data)**2 + imag(S.data)**2) >= theta*theta*DD )
 
     S.row  = S.row[mask]
     S.col  = S.col[mask]

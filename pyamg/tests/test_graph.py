@@ -123,6 +123,47 @@ class TestGraph(TestCase):
     
                 distances,clusters,centers = lloyd_cluster(G, n_seeds)
 
+class TestComplexGraph(TestCase):
+    def setUp(self):
+        cases = []
+        seed(0)
+
+        for i in range(5):
+            A = rand(8,8) > 0.5
+            cases.append( canonical_graph(A + A.T).astype(float) )
+
+        cases = [ canonical_graph(G)+1.0j*canonical_graph(G) for G in cases ]
+
+        self.cases = cases        
+
+    def test_maximal_independent_set(self):
+        # test that method works with diagonal entries
+        assert_equal( maximal_independent_set(eye(2)), [1, 1] )
+
+        for algo in ['serial','parallel']:
+            for G in self.cases:
+                mis = maximal_independent_set(G, algo=algo)
+                assert_is_mis(G,mis)
+        
+    def test_vertex_coloring(self):
+        for method in ['MIS','JP','LDF']:
+            for G in self.cases:
+                c = vertex_coloring(G, method=method)
+                assert_is_vertex_coloring(G,c)
+    
+    def test_lloyd_cluster(self):
+        numpy.random.seed(0)
+
+        for G in self.cases:
+            G.data = rand(G.nnz) + 1.0j*rand(G.nnz)
+            
+            for n_seeds in [5]:
+                if n_seeds > G.shape[0]: 
+                    continue
+    
+                distances,clusters,centers = lloyd_cluster(G, n_seeds)
+
+
 
 class TestVertexColorings(TestCase):
     def setUp(self):
@@ -282,6 +323,85 @@ def test_connected_components():
         assert_equal(result, expected)
 
         
+def test_complex_connected_components():
+
+    cases = []
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,1,0],
+                              [0,1,0,1],
+                              [0,0,1,0]]) )
+
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,0,0],
+                              [0,0,0,1],
+                              [0,0,1,0]]) )
+    
+    cases.append( csr_matrix([[0,1,0,0],
+                              [1,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0]]) )
+    
+    cases.append( csr_matrix([[0,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0],
+                              [0,0,0,0]]) )
+
+    #  2        5
+    #  | \    / | 
+    #  0--1--3--4
+    cases.append( csr_matrix([[ 0, 1, 1, 0, 0, 0],
+                              [ 1, 0, 1, 1, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 1, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+    
+    #  2        5
+    #  | \    / | 
+    #  0  1--3--4
+    cases.append( csr_matrix([[ 0, 0, 1, 0, 0, 0],
+                              [ 0, 0, 1, 1, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 1, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+
+    #  2        5
+    #  | \    / | 
+    #  0--1  3--4
+    cases.append( csr_matrix([[ 0, 1, 1, 0, 0, 0],
+                              [ 1, 0, 1, 0, 0, 0],
+                              [ 1, 1, 0, 0, 0, 0],
+                              [ 0, 0, 0, 0, 1, 1],
+                              [ 0, 0, 0, 1, 0, 1],
+                              [ 0, 0, 0, 1, 1, 0]]) )
+
+    # Create complex data entries
+    cases = [ G+1.0j*G for G in cases ]
+
+    #######################################
+    # Compare to reference implementation #
+    #######################################
+
+    for G in cases:
+        result = connected_components(G)
+
+        assert_equal(result.min(), 0)
+        
+        def array_to_set_of_sets(arr):
+            """convert array to set of sets format"""
+            D = {}
+            for i in set(arr):
+                D[i] = set()
+            for n,i in enumerate(arr):
+                D[i].add(n)
+            return set([frozenset(s) for s in D.values()])
+        
+        result = array_to_set_of_sets(result)
+        expected = reference_connected_components(G)
+
+        assert_equal(result, expected)
+       
 
 #############################
 # reference implementations #

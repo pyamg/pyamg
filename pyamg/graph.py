@@ -3,7 +3,8 @@
 __docformat__ = "restructuredtext en"
 
 import numpy
-from numpy import zeros, empty, asarray, empty_like, isscalar
+from warnings import warn
+from numpy import zeros, empty, asarray, empty_like, isscalar, abs
 from scipy import rand
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_csc
 
@@ -147,9 +148,11 @@ def bellman_ford(G, seeds, maxiter=None):
     """
     G = asgraph(G)
     N = G.shape[0]
-
+    
     if maxiter is not None and maxiter < 0:
         raise ValueError('maxiter must be positive')
+    if G.dtype == complex:
+        raise ValueError('Bellman-Ford algorithm only defined for real weights')
 
     seeds = asarray(seeds, dtype='intc')
 
@@ -193,6 +196,12 @@ def lloyd_cluster(G, seeds, maxiter=10):
     """
     G = asgraph(G)
     N = G.shape[0]
+    
+    if G.dtype == complex:
+        warn("Converting complex to real for lloyd_cluster")
+        G = G.copy()
+        G.data = abs(G.data)
+        G = G.astype(float)
     
     #interpret seeds argument
     if isscalar(seeds):

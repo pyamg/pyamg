@@ -46,6 +46,25 @@ class TestAggregate(TestCase):
         assert_equal(result.todense(),expected)
         
 
+class TestComplexAggregate(TestCase):
+    def setUp(self):
+        self.cases = []
+
+        # poisson problems in 2D
+        for N in [2,3,5,7,10,11]:
+            A = poisson( (N,N), format='csr'); A.data = A.data + 0.001j*rand(A.nnz)
+            self.cases.append(A)
+
+    def test_standard_aggregation(self):
+        for A in self.cases:
+            S = symmetric_strength_of_connection(A)
+            
+            expected = reference_standard_aggregation(S)
+            result   = standard_aggregation(S)
+
+            assert_equal( (result - expected).nnz, 0 )
+
+
 ################################################
 ##   reference implementations for unittests  ##
 ################################################

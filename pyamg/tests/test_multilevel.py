@@ -60,7 +60,7 @@ class TestMultilevel(TestCase):
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
             assert(norm(b - A*x) < 1e-8*norm(b))
-            print residuals
+            #print residuals
             assert_almost_equal(norm(b - A*x), residuals[-1])
 
     def test_cycle_complexity(self):
@@ -101,5 +101,32 @@ class TestMultilevel(TestCase):
         assert_equal(mg.cycle_complexity(cycle='V'), 272.0/100.0) #2,2,2,1
         assert_equal(mg.cycle_complexity(cycle='W'), 388.0/100.0) #2,4,8,4
         assert_equal(mg.cycle_complexity(cycle='F'), 366.0/100.0) #2,4,6,3
+
+
+class TestComplexMultilevel(TestCase):
+    def test_coarse_grid_solver(self):
+        cases = []
+
+        cases.append( csr_matrix(diag(arange(1,5))) )
+        cases.append( poisson( (4,),  format='csr') )
+        cases.append( poisson( (4,4), format='csr') )
+        
+        # Make cases complex
+        cases = [ G+1e-5j*G for G in cases ]
+        cases = [ 0.5*(G + G.H) for G in cases ]
+        
+        # method should be almost exact for small matrices
+        for A in cases:
+            for solver in ['splu','pinv','pinv2','lu','cholesky','cg']:
+                s = coarse_grid_solver(solver)
+
+                b = arange(A.shape[0],dtype=A.dtype)
+
+                x = s(A,b)
+                assert_almost_equal( A*x, b)
+
+                # subsequent calls use cached data
+                x = s(A,b)  
+                assert_almost_equal( A*x, b)
 
 

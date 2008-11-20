@@ -8,6 +8,7 @@
 #define SWIG_FILE_WITH_INIT
 #include "numpy/arrayobject.h"
 
+#include "complex_ops.h"
 #include "ruge_stuben.h"
 #include "smoothed_aggregation.h"
 #include "relaxation.h"
@@ -64,7 +65,8 @@
     const ctype  y [ ],
     const ctype  z [ ],
     const ctype  b [ ],
-    const ctype  B [ ]    
+    const ctype  B [ ],
+    const ctype omega[ ]
 };
 %enddef
 
@@ -173,6 +175,8 @@ DECLARE_INDEX_TYPE( int )
 DECLARE_DATA_TYPE( int    )
 DECLARE_DATA_TYPE( float  )
 DECLARE_DATA_TYPE( double )
+DECLARE_DATA_TYPE( npy_cfloat_wrapper  )
+DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 
 
 %include "ruge_stuben.h"
@@ -198,6 +202,13 @@ DECLARE_DATA_TYPE( double )
 %template(f_name)   f_name<int,double>;
 %enddef
 
+%define INSTANTIATE_COMPLEX( f_name )
+%template(f_name)   f_name<int,float,float>;
+%template(f_name)   f_name<int,double,double>;
+%template(f_name)   f_name<int,npy_cfloat_wrapper,float>;
+%template(f_name)   f_name<int,npy_cdouble_wrapper,double>;
+%enddef
+
 %define INSTANTIATE_ALL( f_name )
 %template(f_name)   f_name<int,int>;
 %template(f_name)   f_name<int,float>;
@@ -210,23 +221,21 @@ INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
-INSTANTIATE_BOTH(fit_candidates)
+INSTANTIATE_COMPLEX(satisfy_constraints_helper)
+INSTANTIATE_COMPLEX(invert_BtB)
 
-INSTANTIATE_BOTH(satisfy_constraints_helper)
-INSTANTIATE_BOTH(invert_BtB)
-INSTANTIATE_BOTH(min_blocks)
-
-INSTANTIATE_BOTH(classical_strength_of_connection)
-INSTANTIATE_BOTH(symmetric_strength_of_connection)
+INSTANTIATE_COMPLEX(classical_strength_of_connection)
+INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
 INSTANTIATE_BOTH(apply_distance_filter)
 INSTANTIATE_BOTH(ode_strength_helper)
+INSTANTIATE_BOTH(min_blocks)
 
-INSTANTIATE_BOTH(block_gauss_seidel)
-INSTANTIATE_BOTH(gauss_seidel)
-INSTANTIATE_BOTH(jacobi)
+INSTANTIATE_COMPLEX(block_gauss_seidel)
+INSTANTIATE_COMPLEX(gauss_seidel)
+INSTANTIATE_COMPLEX(jacobi)
 INSTANTIATE_BOTH(gauss_seidel_indexed)
-INSTANTIATE_BOTH(kaczmarz_jacobi)
-INSTANTIATE_BOTH(kaczmarz_gauss_seidel)
+INSTANTIATE_COMPLEX(kaczmarz_jacobi)
+INSTANTIATE_COMPLEX(kaczmarz_gauss_seidel)
 
 %template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;
@@ -240,4 +249,11 @@ INSTANTIATE_INDEX(connected_components)
 
 INSTANTIATE_ALL(bellman_ford)
 INSTANTIATE_ALL(lloyd_cluster)
+
+
+%template(fit_candidates)   fit_candidates_real<int,float>;
+%template(fit_candidates)   fit_candidates_real<int,double>;
+%template(fit_candidates)   fit_candidates_complex<int,float,npy_cfloat_wrapper>;
+%template(fit_candidates)   fit_candidates_complex<int,double,npy_cdouble_wrapper>;
+/*INSTANTIATE_BOTH()*/
 

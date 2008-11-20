@@ -3,7 +3,8 @@
 __docformat__ = "restructuredtext en"
 
 from numpy import ones
-from pyamg.utils import approximate_spectral_radius, scale_rows
+from pyamg.util.utils import scale_rows, get_diagonal
+from pyamg.util.linalg import approximate_spectral_radius
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
         'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
@@ -97,26 +98,25 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator
     """
 
-    # Form Dinv for S*S.T
-    D = (S.multiply(S))*ones((S.shape[0],1))
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0
+    # Form Dinv for S*S.H
+    D_inv = get_diagonal(S, norm_eq=2, inv=True)
     D_inv_S = scale_rows(S, D_inv, copy=True)
 
     # Approximate Spectral radius by defining a matvec for S.T*D_inv_S
-    ST = S.T.asformat(D_inv_S.format)
+    ST = S.conjugate().T.asformat(D_inv_S.format)
     class matvec_mat:
     
-        def __init__(self, matvec, shape):
+        def __init__(self, matvec, shape, dtype):
             self.shape = shape
             self.matvec = matvec
             self.__mul__ = matvec
+            self.dtype = dtype
     
     def matmul(A,B,x):
         return A*(B*x)
     
     StDS_matmul = lambda x:matmul(ST, D_inv_S, x)
-    StDS = matvec_mat(StDS_matmul, S.shape)
+    StDS = matvec_mat(StDS_matmul, S.shape, S.dtype)
     omega = omega/approximate_spectral_radius(StDS)
 
     P = T
@@ -145,13 +145,24 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator 
     """
 
-    # Use the square of the spectral radius of Dinv*S as 
-    # the Jacobi weight, as opposed to explicitly forming S*S.T
-    rho = approximate_spectral_radius(S)
-    omega = omega/(rho*rho) 
+    # Approximate Spectral radius by defining a matvec for S*S.H
+    ST = S.conjugate().T.asformat(S.format)
+    class matvec_mat:
+    
+        def __init__(self, matvec, shape, dtype):
+            self.shape = shape
+            self.matvec = matvec
+            self.__mul__ = matvec
+            self.dtype = dtype
+    
+    def matmul(A,B,x):
+        return A*(B*x)
+    
+    StS_matmul = lambda x:matmul(ST, S, x)
+    StS = matvec_mat(StS_matmul, S.shape, S.dtype)
+    omega = omega/approximate_spectral_radius(StS)
 
     P = T
-    ST = S.T
     for i in range(degree):
         P = P - omega*(ST*(S*P))
 
@@ -160,10 +171,10 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import ones, zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like
+from numpy import ones, zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like, conjugate, mat
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
-from pyamg.utils import UnAmal
+from pyamg.util.utils import UnAmal
 import pyamg.multigridtools
 
 ########################################################################################################
@@ -190,15 +201,13 @@ def Satisfy_Constraints(U, B, BtBinv):
     num_blocks = U.indices.shape[0]
     num_block_rows = U.shape[0]/RowsPerBlock
 
-    UB = U*B
+    UB = ravel(U*B)
 
-    B  = ravel(asarray(B).reshape(-1,ColsPerBlock,B.shape[1]))
-    UB = ravel(asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1]))
-     
-    #Apply constraints
+    # Apply constraints, noting that we need the conjugate of B 
+    # for use as Bi.H in local projection
     pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
             num_blocks, num_block_rows, 
-            B, UB, ravel(BtBinv), 
+            conjugate(ravel(B)), UB, ravel(BtBinv), 
             U.indptr, U.indices, ravel(U.data))
         
     return U
@@ -224,7 +233,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         Near-nullspace modes for coarse grid.  Has shape (M,k) where
         k is the number of coarse candidate vectors.
     SPD : boolean
-        Booolean denoting symmetric positive-definiteness of A
+        Booolean denoting symmetric (or Hermitian) positive-definiteness of A
     maxiter : integer
         Number of energy minimization steps to apply to the prolongator
     tol : scalar
@@ -293,7 +302,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     Sparsity_Pattern = bsr_matrix( (ones_like(T.data), T.indices, T.indptr), shape=T.shape)
     X = UnAmal(Atilde, numPDEs, numPDEs)
     for i in range(degree):
-        Sparsity_Pattern = X * Sparsity_Pattern 
+        Sparsity_Pattern = X * Sparsity_Pattern
+    del X
     Sparsity_Pattern.data[:] = 1.0
     Sparsity_Pattern.sort_indices()
 
@@ -308,15 +318,18 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 
     BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
     BsqCols = sum(range(NullDim+1))
-    Bsq = zeros((Ncoarse,BsqCols))
+    Bsq = zeros((Ncoarse,BsqCols), dtype=B.dtype)
     counter = 0
     for i in range(NullDim):
         for j in range(i,NullDim):
-            Bsq[:,counter] = ravel(asarray(B[:,i]))*ravel(asarray(B[:,j]))
+            Bsq[:,counter] = conjugate(ravel(asarray(B[:,i])))*ravel(asarray(B[:,j]))
             counter = counter + 1
     
     pyamg.multigridtools.invert_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
         BsqCols, ravel(asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
+    # TODO extend pseudoinverse in C++ to complex
+    for i in range(Nnodes):
+        BtBinv[i,:,:] = pinv2(BtBinv[i,:,:]) 
     #====================================================================
     
     #====================================================================
@@ -324,11 +337,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     #   and maintaining T's effect on B, i.e. T*B = (T+Update)*B, i.e. Update*B = 0 
     i = 0
     if SPD:
-        #Apply CG with diagonal preconditioning
 
-        D = A.diagonal();
-        Dinv = 1.0 / D
-        Dinv[D == 0] = 1.0
+        #Apply CG with diagonal preconditioning
+        Dinv = get_diagonal(A, norm_eq=False, inv=True)
 
         #Calculate initial residual
         R = -A*T  
@@ -359,8 +370,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #Apply diagonal preconditioner
             Z = scale_rows(R, Dinv)
     
-            #Frobenius innerproduct of (R,Z) = sum(rk.*zk)
-            newsum = (R.multiply(Z)).sum()
+            #Frobenius innerproduct of (R,Z) = sum( conjugate(rk).*zk)
+            newsum = (R.conjugate().multiply(Z)).sum()
                 
             #P is the search direction, not the prolongator, which is T.    
             if(i == 0):
@@ -386,7 +397,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             Satisfy_Constraints(AP, B, BtBinv)
             
             #Frobenius innerproduct of (P, AP)
-            alpha = newsum/(P.multiply(AP)).sum()
+            alpha = newsum/(P.conjugate().multiply(AP)).sum()
     
             #Update the prolongator, T
             T = T + alpha*P 
@@ -400,15 +411,13 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
      
     else:   
         #For non-SPD system, apply CG on Normal Equations with Diagonal Preconditioning (requires transpose)
-        At = A.T
+        Ah = A.H
         
-        # D for A*A.T
-        D = (A.multiply(A))*ones((A.shape[0],))
-        Dinv = 1.0 / D
-        Dinv[D == 0] = 1.0
+        # D for A.H*A
+        Dinv = get_diagonal(A, norm_eq=1, inv=True)
 
         #Calculate initial residual
-        R = -A*(At*T)  
+        R = -Ah*(A*T)  
         
         #Enforce constraints on R.  First the sparsity pattern, then the nullspace vectors.
         R = R.multiply(Sparsity_Pattern)
@@ -437,7 +446,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             Z = scale_rows(R, Dinv)
     
             #Frobenius innerproduct of (R,Z) = sum(rk.*zk)
-            newsum = (R.multiply(Z)).sum()
+            newsum = (R.conjugate().multiply(Z)).sum()
                 
             #P is the search direction, not the prolongator, which is T.    
             if(i == 0):
@@ -448,7 +457,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             oldsum = newsum
     
             #Calculate new direction and enforce constraints
-            AP = A*(At*P)
+            AP = Ah*(A*P)
             AP = AP.multiply(Sparsity_Pattern)
             if AP.nnz < Sparsity_Pattern.nnz:
                 # ugly hack to give AP the same sparsity pattern as Sparsity_Pattern
@@ -463,7 +472,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             Satisfy_Constraints(AP, B, BtBinv)
             
             #Frobenius innerproduct of (P, AP)
-            alpha = newsum/(P.multiply(AP)).sum()
+            alpha = newsum/(P.conjugate().multiply(AP)).sum()
     
             #Update the prolongator, T
             T = T + alpha*P 
@@ -491,7 +500,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 #        Z = scale_rows(R, Dinv)
 #        
 #        # P is the search direction, not prolongator, which is T.
-#        P = At*Z
+#        P = Ah*Z
 #
 #        #Enforce constraints on P.  First the sparsity pattern, then the nullspace vectors.
 #        P = P.multiply(Sparsity_Pattern)
@@ -548,7 +557,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 #            old_zr = new_zr
 #
 #            # Update search direction
-#            P = At*Z + beta*P
+#            P = Ah*Z + beta*P
 #
 #            #Calculate new direction and enforce constraints
 #            P = P.multiply(Sparsity_Pattern)
@@ -569,7 +578,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 
 # experimentally and theoretically this does not seem like a good idea
 #        ## Convert T back to original system
-#        #T = At*T
+#        #T = Ah*T
 #        #T = T.multiply(Sparsity_Pattern)
 #        #if T.nnz < Sparsity_Pattern.nnz:
 #        #    # ugly hack to give AP the same sparsity pattern as Sparsity_Pattern
@@ -612,7 +621,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 #            i += 1
 #            resid = max(R.data.flatten().__abs__())
 #            #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
-    #====================================================================
+#====================================================================
     
     T.eliminate_zeros()
     return T

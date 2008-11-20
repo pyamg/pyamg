@@ -1,7 +1,9 @@
 #ifndef RELAXATION_H
 #define RELAXATION_H
 
-template<class I, class T>
+#include "linalg.h"
+
+template<class I, class T, class F>
 void gauss_seidel(const I Ap[], 
                   const I Aj[], 
                   const T Ax[],
@@ -33,7 +35,7 @@ void gauss_seidel(const I Ap[],
 }
 
 
-template<class I, class T>
+template<class I, class T, class F>
 void block_gauss_seidel(const I Ap[], 
                         const I Aj[], 
                         const T Ax[],
@@ -83,7 +85,7 @@ void block_gauss_seidel(const I Ap[],
     }
 }
 
-template<class I, class T>
+template<class I, class T, class F>
 void jacobi(const I Ap[], 
             const I Aj[], 
             const T Ax[],
@@ -93,8 +95,11 @@ void jacobi(const I Ap[],
             const I row_start,
             const I row_stop,
             const I row_step,
-            const T omega)
+            const T omega[])
 {
+    T one = 1.0;
+    T omega2 = omega[0];
+
     for(I i = row_start; i != row_stop; i += row_step) {
         temp[i] = x[i];
     }
@@ -115,7 +120,7 @@ void jacobi(const I Ap[],
         
         //TODO raise error? inform user?
         if (diag != 0){ 
-            x[i] = (1 - omega) * temp[i] + omega * ((b[i] - rsum)/diag);
+            x[i] = (one - omega2) * temp[i] + omega2 * ((b[i] - rsum)/diag);
         }
     }
 }
@@ -160,7 +165,7 @@ void gauss_seidel_indexed(const I Ap[],
 //
 // weighted-Jacobi on the normal equations, i.e. Kaczmarz type iteration
 //
-template<class I, class T>
+template<class I, class T, class F>
 void kaczmarz_jacobi(const I Ap[], 
                      const I Aj[], 
                      const T Ax[],
@@ -171,11 +176,12 @@ void kaczmarz_jacobi(const I Ap[],
                      const I row_start,
                      const I row_stop,
                      const I row_step,
-                     const T omega)
+                     const T omega[])
 {
     //rename
     const T * delta = Tx;
-    
+    const T omega2 = omega[0];
+
     for(I i = row_start; i < row_stop; i+=row_step)
     {   temp[i] = 0.0; }
 
@@ -184,7 +190,7 @@ void kaczmarz_jacobi(const I Ap[],
         I start = Ap[i];
         I end   = Ap[i+1];
         for(I j = start; j < end; j++)
-        {   temp[Aj[j]] += omega*Ax[j]*delta[i]; }
+        {   temp[Aj[j]] += omega2*conjugate(Ax[j])*delta[i]; }
     }
 
     for(I i = row_start; i < row_stop; i+=row_step)
@@ -194,7 +200,7 @@ void kaczmarz_jacobi(const I Ap[],
 //
 // Gauss Seidel on the normal equations, i.e. Kaczmarz type iteration
 //
-template<class I, class T>
+template<class I, class T, class F>
 void kaczmarz_gauss_seidel(const I Ap[], 
                      const I Aj[], 
                      const T Ax[],
@@ -220,7 +226,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
         delta = (b[i] - delta)*D_inv[i];
 
         for(I j = start; j < end; j++)
-        {   x[Aj[j]] += Ax[j]*delta; }
+        {   x[Aj[j]] += conjugate(Ax[j])*delta; }
     }
 
 }

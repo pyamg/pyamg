@@ -103,15 +103,6 @@ def rs_direct_interpolation_pass2(*args):
     """
   return _multigridtools.rs_direct_interpolation_pass2(*args)
 
-def fit_candidates(*args):
-  """
-    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
-        float Ax, float B, float R, float tol)
-    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
-        double Ax, double B, double R, double tol)
-    """
-  return _multigridtools.fit_candidates(*args)
-
 def satisfy_constraints_helper(*args):
   """
     satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
@@ -120,6 +111,14 @@ def satisfy_constraints_helper(*args):
     satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
         int num_block_rows, double x, double y, double z, 
         int Sp, int Sj, double Sx)
+    satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
+        int num_block_rows, npy_cfloat_wrapper x, npy_cfloat_wrapper y, 
+        npy_cfloat_wrapper z, int Sp, 
+        int Sj, npy_cfloat_wrapper Sx)
+    satisfy_constraints_helper(int RowsPerBlock, int ColsPerBlock, int num_blocks, 
+        int num_block_rows, npy_cdouble_wrapper x, npy_cdouble_wrapper y, 
+        npy_cdouble_wrapper z, 
+        int Sp, int Sj, npy_cdouble_wrapper Sx)
     """
   return _multigridtools.satisfy_constraints_helper(*args)
 
@@ -129,15 +128,14 @@ def invert_BtB(*args):
         int BsqCols, float x, int Sp, int Sj)
     invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, 
         int BsqCols, double x, int Sp, int Sj)
+    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cfloat_wrapper b, 
+        int BsqCols, npy_cfloat_wrapper x, 
+        int Sp, int Sj)
+    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cdouble_wrapper b, 
+        int BsqCols, npy_cdouble_wrapper x, 
+        int Sp, int Sj)
     """
   return _multigridtools.invert_BtB(*args)
-
-def min_blocks(*args):
-  """
-    min_blocks(int n_blocks, int blocksize, float Sx, float Tx)
-    min_blocks(int n_blocks, int blocksize, double Sx, double Tx)
-    """
-  return _multigridtools.min_blocks(*args)
 
 def classical_strength_of_connection(*args):
   """
@@ -145,6 +143,10 @@ def classical_strength_of_connection(*args):
         int Sj, float Sx)
     classical_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, 
         int Sp, int Sj, double Sx)
+    classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, npy_cfloat_wrapper Ax, 
+        int Sp, int Sj, npy_cfloat_wrapper Sx)
+    classical_strength_of_connection(int n_row, double theta, int Ap, int Aj, npy_cdouble_wrapper Ax, 
+        int Sp, int Sj, npy_cdouble_wrapper Sx)
     """
   return _multigridtools.classical_strength_of_connection(*args)
 
@@ -154,6 +156,10 @@ def symmetric_strength_of_connection(*args):
         int Sj, float Sx)
     symmetric_strength_of_connection(int n_row, double theta, int Ap, int Aj, double Ax, 
         int Sp, int Sj, double Sx)
+    symmetric_strength_of_connection(int n_row, float theta, int Ap, int Aj, npy_cfloat_wrapper Ax, 
+        int Sp, int Sj, npy_cfloat_wrapper Sx)
+    symmetric_strength_of_connection(int n_row, double theta, int Ap, int Aj, npy_cdouble_wrapper Ax, 
+        int Sp, int Sj, npy_cdouble_wrapper Sx)
     """
   return _multigridtools.symmetric_strength_of_connection(*args)
 
@@ -173,11 +179,24 @@ def ode_strength_helper(*args):
     """
   return _multigridtools.ode_strength_helper(*args)
 
+def min_blocks(*args):
+  """
+    min_blocks(int n_blocks, int blocksize, float Sx, float Tx)
+    min_blocks(int n_blocks, int blocksize, double Sx, double Tx)
+    """
+  return _multigridtools.min_blocks(*args)
+
 def block_gauss_seidel(*args):
   """
     block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
         int row_stop, int row_step, int blocksize)
     block_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
+        int row_stop, int row_step, int blocksize)
+    block_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, int row_start, 
+        int row_stop, int row_step, int blocksize)
+    block_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, int row_start, 
         int row_stop, int row_step, int blocksize)
     """
   return _multigridtools.block_gauss_seidel(*args)
@@ -187,6 +206,12 @@ def gauss_seidel(*args):
     gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
         int row_stop, int row_step)
     gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
+        int row_stop, int row_step)
+    gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, int row_start, 
+        int row_stop, int row_step)
+    gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, int row_start, 
         int row_stop, int row_step)
     """
   return _multigridtools.gauss_seidel(*args)
@@ -199,6 +224,14 @@ def jacobi(*args):
     jacobi(int Ap, int Aj, double Ax, double x, double b, double temp, 
         int row_start, int row_stop, int row_step, 
         double omega)
+    jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, npy_cfloat_wrapper temp, 
+        int row_start, int row_stop, int row_step, 
+        npy_cfloat_wrapper omega)
+    jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, npy_cdouble_wrapper temp, 
+        int row_start, int row_stop, 
+        int row_step, npy_cdouble_wrapper omega)
     """
   return _multigridtools.jacobi(*args)
 
@@ -219,6 +252,14 @@ def kaczmarz_jacobi(*args):
     kaczmarz_jacobi(int Ap, int Aj, double Ax, double x, double b, double Tx, 
         double temp, int row_start, int row_stop, 
         int row_step, double omega)
+    kaczmarz_jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, npy_cfloat_wrapper Tx, 
+        npy_cfloat_wrapper temp, int row_start, 
+        int row_stop, int row_step, npy_cfloat_wrapper omega)
+    kaczmarz_jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, npy_cdouble_wrapper Tx, 
+        npy_cdouble_wrapper temp, int row_start, 
+        int row_stop, int row_step, npy_cdouble_wrapper omega)
     """
   return _multigridtools.kaczmarz_jacobi(*args)
 
@@ -228,6 +269,12 @@ def kaczmarz_gauss_seidel(*args):
         int row_stop, int row_step, float Tx)
     kaczmarz_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
         int row_stop, int row_step, double Tx)
+    kaczmarz_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, int row_start, 
+        int row_stop, int row_step, npy_cfloat_wrapper Tx)
+    kaczmarz_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, int row_start, 
+        int row_stop, int row_step, npy_cdouble_wrapper Tx)
     """
   return _multigridtools.kaczmarz_gauss_seidel(*args)
 
@@ -267,4 +314,19 @@ def lloyd_cluster(*args):
         double x, int y, int z)
     """
   return _multigridtools.lloyd_cluster(*args)
+
+def fit_candidates(*args):
+  """
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        float Ax, float B, float R, float tol)
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        double Ax, double B, double R, double tol)
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        npy_cfloat_wrapper Ax, npy_cfloat_wrapper B, 
+        npy_cfloat_wrapper R, float tol)
+    fit_candidates(int n_row, int n_col, int K1, int K2, int Ap, int Ai, 
+        npy_cdouble_wrapper Ax, npy_cdouble_wrapper B, 
+        npy_cdouble_wrapper R, double tol)
+    """
+  return _multigridtools.fit_candidates(*args)
 

@@ -2,18 +2,18 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones, empty_like
+from numpy import ones, empty_like, diff, conjugate
+from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 import multigridtools
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
-def classical_strength_of_connection(A,theta):
-    """Compute a strength of connection matrix using the classical AMG measure
-
+def classical_strength_of_connection(A,theta=0.0):
+    """
+    Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
-
-            -A[i,j] >= theta * max( -A[i,k] )   where k != i
+            | A[i,j] | >= theta * max(| A[i,k] |), where k != i
 
     Parameters
     ----------
@@ -37,6 +37,7 @@ def classical_strength_of_connection(A,theta):
     Notes
     -----
     - A symmetric A does not necessarily yield a symmetric strength matrix S
+    - Calls C++ function classical_strength_of_connection
     - The version as implemented is designed form M-matrices.  Trottenberg et
       al. use max A[i,k] over all negative entries, which is the same.  A
       positive edge weight never indicates a strong connection.
@@ -63,7 +64,9 @@ def classical_strength_of_connection(A,theta):
     >>> S = classical_strength_of_connection(A, 0.0)
 
     """
-    if not isspmatrix_csr(A): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(A): 
+        warn("Efficiency Warning, Implicit conversion of A to csr")
+        A = csr_matrix(A)
 
     if (theta<0 or theta>1):
         raise ValueError('expected theta in [0,1]')
@@ -79,11 +82,12 @@ def classical_strength_of_connection(A,theta):
 
 
 def symmetric_strength_of_connection(A, theta=0):
-    """Compute a strength of connection matrix using the standard symmetric measure
+    """
+    Compute a strength of connection matrix using the standard symmetric measure
     
     An off-diagonal connection A[i,j] is strong iff::
 
-        abs(A[i,j]) >= theta * sqrt( abs(A[i,i] * A[j,j]) )
+        abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
 
     Parameters
     ----------
@@ -166,7 +170,7 @@ def symmetric_strength_of_connection(A, theta=0):
         else:
             # the strength of connection matrix is based on the 
             # Frobenius norms of the blocks
-            data = (A.data*A.data).reshape(-1,R*C).sum(axis=1) 
+            data = (conjugate(A.data)*A.data).reshape(-1,R*C).sum(axis=1) 
             A = csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
             return symmetric_strength_of_connection(A, theta)
     else:
@@ -214,7 +218,8 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     from numpy import array, zeros, mat, ravel, diff, mod, repeat, inf, asarray
     from scipy.sparse import bsr_matrix, spdiags, eye
     from scipy.sparse import eye as speye
-    from pyamg.utils import approximate_spectral_radius, scale_rows
+    from pyamg.util.linalg import approximate_spectral_radius
+    from pyamg.util.utils  import scale_rows
 
     #Regarding the efficiency TODO listings below, the bulk of the routine's time
     #   is spent inside the main loop that solves the constrained min problem

@@ -11,25 +11,25 @@
 
 #include "linalg.h"
  
-template<class I, class T>
+template<class I, class T, class F>
 void symmetric_strength_of_connection(const I n_row, 
-                                      const T theta,
+                                      const F theta,
                                       const I Ap[], const I Aj[], const T Ax[],
                                             I Sp[],       I Sj[],       T Sx[])
 {
     //Sp,Sj form a CSR representation where the i-th row contains
     //the indices of all the strong connections from node i
-    std::vector<T> diags(n_row);
+    std::vector<F> diags(n_row);
 
-    //compute diagonal values
+    //compute norm of diagonal values
     for(I i = 0; i < n_row; i++){
-        T diag = 0;
+        T diag = 0.0;
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             if(Aj[jj] == i){
                 diag += Ax[jj]; //gracefully handle duplicates
             }
         }    
-        diags[i] = std::abs(diag);
+        diags[i] = mynorm(diag);
     }
 
     I nnz = 0;
@@ -37,7 +37,7 @@ void symmetric_strength_of_connection(const I n_row,
 
     for(I i = 0; i < n_row; i++){
 
-        T eps_Aii = theta*theta*diags[i];
+        F eps_Aii = theta*theta*diags[i];
 
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I   j = Aj[jj];
@@ -46,7 +46,7 @@ void symmetric_strength_of_connection(const I n_row,
             if(i == j){continue;}  //skip diagonal
 
             //  |A(i,j)| >= theta * sqrt(|A(i,i)|*|A(j,j)|) 
-            if(Aij*Aij >= eps_Aii * diags[j]){    
+            if(mynormsq(Aij) >= eps_Aii * diags[j]){    
                 Sj[nnz] =   j;
                 Sx[nnz] = Aij;
                 nnz++;
@@ -177,17 +177,19 @@ I standard_aggregation(const I n_row,
 
 
 
-template <class I, class T>
-void fit_candidates(const I n_row,
-                    const I n_col,
-                    const I   K1,
-                    const I   K2,
-                    const I Ap[], 
-                    const I Ai[],
-                          T Ax[],
-                    const T  B[],
-                          T  R[],
-                    const T  tol)
+template <class I, class S, class T, class DOT, class NORM>
+void fit_candidates_common(const I n_row,
+                           const I n_col,
+                           const I   K1,
+                           const I   K2,
+                           const I Ap[], 
+                           const I Ai[],
+                                 T Ax[],
+                           const T  B[],
+                                 T  R[],
+                           const S  tol,
+                           const DOT& dot,
+                           const NORM& norm)
 {
     std::fill(R, R + (n_col*K2*K2), 0);
 
@@ -218,18 +220,18 @@ void fit_candidates(const I n_row,
         
         for(I bj = 0; bj < K2; bj++){
             //compute norm of block column
-            T norm = 0;
+            S norm_j = 0;
 
             {
                 T * Ax_col = Ax_start + bj;
                 while(Ax_col < Ax_end){
-                    norm   += (*Ax_col) * (*Ax_col);
+                    norm_j += norm(*Ax_col);
                     Ax_col += K2;
                 }
-                norm = std::sqrt(norm);
+                norm_j = std::sqrt(norm_j);
             }
             
-            const T threshold = tol * norm;
+            const S threshold_j = tol * norm_j;
     
             //orthogonalize bj against previous columns
             for(I bi = 0; bi < bj; bi++){
@@ -241,7 +243,7 @@ void fit_candidates(const I n_row,
                     T * Ax_bi = Ax_start + bi;
                     T * Ax_bj = Ax_start + bj;
                     while(Ax_bi < Ax_end){
-                        dot_prod += (*Ax_bi) * (*Ax_bj);
+                        dot_prod += dot(*Ax_bj,*Ax_bi);
                         Ax_bi    += K2;
                         Ax_bj    += K2;
                     }
@@ -263,14 +265,14 @@ void fit_candidates(const I n_row,
 
 
             //compute norm of column bj
-            norm = 0;
+            norm_j = 0;
             {
                 T * Ax_bj = Ax_start + bj;
                 while(Ax_bj < Ax_end){
-                    norm  += (*Ax_bj) * (*Ax_bj);
-                    Ax_bj += K2;
+                    norm_j += norm(*Ax_bj);
+                    Ax_bj  += K2;
                 }
-                norm = std::sqrt(norm);
+                norm_j = std::sqrt(norm_j);
             }
            
 
@@ -278,9 +280,9 @@ void fit_candidates(const I n_row,
             //euclidean norm exceeds the threshold. otherwise set 
             //column bj to 0.
             T scale;
-            if(norm > threshold){
-                scale = 1.0/norm;
-                R_start[K2 * bj + bj] = norm;
+            if(norm_j > threshold_j){
+                scale = 1.0/norm_j;
+                R_start[K2 * bj + bj] = norm_j;
             } else {
                 scale = 0;
                 R_start[K2 * bj + bj] = 0;
@@ -297,6 +299,56 @@ void fit_candidates(const I n_row,
     }
 }
 
+template<class T>
+struct real_norm
+{
+    T operator()(const T& a) const { return a*a; }
+};
+
+template<class T>
+struct real_dot
+{
+    T operator()(const T& a, const T& b) const { return b*a; }
+};
+
+template<class T>
+struct complex_dot
+{
+    T operator()(const T& a, const T& b) const { return T(b.real,-b.imag) * a; }
+};
+
+template<class S, class T>
+struct complex_norm
+{
+    S operator()(const T& a) const { return a.real * a.real + a.imag * a.imag; }
+};
+
+template <class I, class T>
+void fit_candidates_real(const I n_row,
+                         const I n_col,
+                         const I   K1,
+                         const I   K2,
+                         const I Ap[], 
+                         const I Ai[],
+                               T Ax[],
+                         const T  B[],
+                               T  R[],
+                         const T  tol)
+{ fit_candidates_common(n_row, n_col, K1, K2, Ap, Ai, Ax, B, R, tol, real_dot<T>(), real_norm<T>()); }
+
+template <class I, class S, class T>
+void fit_candidates_complex(const I n_row,
+                            const I n_col,
+                            const I   K1,
+                            const I   K2,
+                            const I Ap[], 
+                            const I Ai[],
+                                  T Ax[],
+                            const T  B[],
+                                  T  R[],
+                            const S  tol)
+{ fit_candidates_common(n_row, n_col, K1, K2, Ap, Ai, Ax, B, R, tol, complex_dot<T>(), complex_norm<S,T>()); }
+
 
 /*
  * Helper routine for satisfy_constraints routine called 
@@ -305,23 +357,26 @@ void fit_candidates(const I n_row,
  *
  *   # U is a BSR matrix, B is num_block_rows x ColsPerBlock x ColsPerBlock
  *   # UB is num_block_rows x RowsPerBlock x ColsPerBlock,  BtBinv is num_block_rows x ColsPerBlock x ColsPerBlock
+ *   B  = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
+ *   UB = asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1])
  *
  *   rows = csr_matrix((U.indices,U.indices,U.indptr), shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
  *   for n,j in enumerate(U.indices):
  *      i = rows[n]
- *      Bi  = B[j]
+ *      Bi  = mat(B[j])
  *      UBi = UB[i]
- *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.T))
+ *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.H))
  *
  * Parameters:
  *  RowsPerBlock     rows per block in the BSR matrix, S
  *  ColsPerBlock     cols per block in the BSR matrix, S
  *  num_blocks       number of stored blocks in Sx
  *  num_block_rows   S.shape[0]/RowsPerBlock
- *  x                Near-nullspace vectors, B
- *  y                S*B
- *  z                BtBinv
+ *  x                Conjugate of near-nullspace vectors, B, in row major
+ *  y                S*B, in row major
+ *  z                BtBinv, in row major
  *  Sp,Sj,Sx         BSR matrix, S, that is the update to the prolongator
+ *                   Note that data array Sx is in row major
  *  
  * Returns:
  *  Sx is modified such that S*B = 0
@@ -330,12 +385,12 @@ void fit_candidates(const I n_row,
  *  
  */          
 
-template<class I, class T>
+template<class I, class T, class F>
 void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, const I num_blocks,
                                 const I num_block_rows, const T x[], const T y[], const T z[], const I Sp[], const I Sj[], T Sx[])
 {
     //Rename to something more familiar
-    const T * B = x;
+    const T * Bt = x;
     const T * UB = y;
     const T * BtBinv = z;
     
@@ -357,10 +412,12 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
 
         for(I j = rowstart; j < rowend; j++)
         {
-            //Calculate C = BtBinv[i*blocksize => (i+1)*blocksize]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^T
-            gemm(&(BtBinv[i*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(B[Sj[j]*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(C[0]), ColsPerBlock, ColsPerBlock, 'T');
+            // Calculate C = BtBinv[i*blocksize => (i+1)*blocksize]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
+            // Implicit transpose of conjugate(B_i) is done through gemm assuming Bt is in column major
+            gemm(&(BtBinv[i*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(Bt[Sj[j]*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(C[0]), ColsPerBlock, ColsPerBlock, 'T');
             
             //Calculate Sx[ j*block_size => (j+1)*blocksize ] =  UB[ i*block_size => (i+1)*blocksize ] * C
+            // Note that C actually stores C^T in row major, or C in col major.  gemm assumes C is in col major, so we're OK
             gemm(&(UB[i*block_size]), RowsPerBlock, ColsPerBlock, 'F', &(C[0]), ColsPerBlock, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F');
             
             //Update Sx
@@ -375,12 +432,12 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  * Helper routine for energy_prolongation_smoother
  * Calculates the following python code:
  *
- *  Bblk = asarray(B).reshape(-1,NullDim,NullDim)
- *  colindices = array_split(Sparsity_Pattern.indices,Sparsity_Pattern.indptr[1:-1])
- *  for i,cols in enumerate(colindices):
- *      if len(cols) > 0:
- *      Bi = Bblk[cols].reshape(-1,NullDim)
- *      BtBinv[i] = pinv2(dot(Bi.T,Bi))
+ *   RowsPerBlock = Sparsity_Pattern.blocksize[0]
+ *   BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
+ *   S2 = Sparsity_Pattern.tocsr()
+ *   for i in range(Nnodes):
+ *       Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
+ *       BtBinv[i,:,:] = pinv2(Bi.H*Bi) 
  *
  * Parameters:
  *   NullDim      Number of near nullspace vectors
@@ -389,23 +446,23 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  *   b            In row-major form, this is B-squared, i.e. it 
  *                is each column of B multiplied against each 
  *                other column of B.  For a Nx3 B,
- *                b[:,0] = B[:,0]*B[:,0]
- *                b[:,1] = B[:,0]*B[:,1]
- *                b[:,2] = B[:,0]*B[:,2]
- *                b[:,3] = B[:,1]*B[:,1]
- *                b[:,4] = B[:,1]*B[:,2]
- *                b[:,5] = B[:,2]*B[:,2]
+ *                b[:,0] = conjugate(B[:,0])*B[:,0]
+ *                b[:,1] = conjugate(B[:,0])*B[:,1]
+ *                b[:,2] = conjugate(B[:,0])*B[:,2]
+ *                b[:,3] = conjugate(B[:,1])*B[:,1]
+ *                b[:,4] = conjugate(B[:,1])*B[:,2]
+ *                b[:,5] = conjugate(B[:,2])*B[:,2]
  *   BsqCols      sum(range(NullDim+1)), i.e. number of columns in b
  *   x            BtBinv (output).  Should be zeros upon entry
  *   Sp,Sj        BSR indptr and indices members for matrix, S
  *
  * Returns:
- *  BtBinv      BtBinv[i] = pseudo_invers(B_i^T*B_i), where
- *              B_i is B[colindices,:], colindices = all the nonzero
+ *  BtBinv      BtBinv[i] = pseudo_invers(B_i^T*B_i), in row major format
+ *              where B_i is B[colindices,:], colindices = all the nonzero
  *              column indices for block row i in S
  */          
 
-template<class I, class T>
+template<class I, class T, class F>
 void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock, 
                 const T b[],     const I BsqCols, T x[], 
                 const I Sp[],    const I Sj[])
@@ -415,7 +472,7 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
     T * BtBinv = x;
     
     //Declare workspace
-    const I NullDimLoc = NullDim;
+    //const I NullDimLoc = NullDim;
     const I NullDimSq  = NullDim*NullDim;
     const I work_size  = 5*NullDim + 10;
 
@@ -439,7 +496,7 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
         for(I k = 0; k < NullDimSq; k++)
         {   BtB[k] = 0.0; }
         
-        //Loop over row i in order to calculate B_i^T*B_i, where B_i is B 
+        //Loop over row i in order to calculate B_i^H*B_i, where B_i is B 
         // with the rows restricted only to the nonzero column indices of row i of S
         for(I j = rowstart; j < rowend; j++)
         {
@@ -453,23 +510,24 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
             {          
                 // Do work in computing Diagonal of  BtB  
                 I BtBcounter = 0; 
-                I BsqCounter = k*BsqCols;
+                I BsqCounter = k*BsqCols;                   // Row-major index
                 for(I m = 0; m < NullDim; m++)
                 {
                     BtB[BtBcounter] += Bsq[BsqCounter];
                     BtBcounter += NullDim + 1;
                     BsqCounter += (NullDim - m);
                 }
-                // Do work in computing offdiagonals of BtB, noting that BtB is symmetric
+                // Do work in computing offdiagonals of BtB, noting that BtB is Hermitian and that
+                // svd_solve needs BtB in column-major form, because svd_solve is Fortran
                 BsqCounter = k*BsqCols;
-                for(I m = 0; m < NullDim; m++)
+                for(I m = 0; m < NullDim; m++)  // Loop over cols
                 {
                     I counter = 1;
-                    for(I n = m+1; n < NullDim; n++)
+                    for(I n = m+1; n < NullDim; n++) // Loop over Rows
                     {
                         T elmt_bsq = Bsq[BsqCounter + counter];
-                        BtB[m*NullDim + n] += elmt_bsq;
-                        BtB[n*NullDim + m] += elmt_bsq;
+                        BtB[m*NullDim + n] += conjugate(elmt_bsq);      // entry(n, m)
+                        BtB[n*NullDim + m] += elmt_bsq;                 // entry(m, n)
                         counter ++;
                     }
                     BsqCounter += (NullDim - m);
@@ -477,14 +535,23 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
             } // end k loop
         } // end j loop
 
-        // pseudo_inverse(BtB) ==> blockinverse
-        // since BtB is symmetric theres no need to convert to row major
-        T * blockinverse = BtBinv + i*NullDimSq; //pseudoinverse output
-        for(I k = 0; k < NullDimSq; k++)
-        {   blockinverse[k] = identity[k]; }
-        svd_solve(BtB, (int) NullDimLoc, (int) NullDimLoc, blockinverse, (int) NullDimLoc, sing_vals, work, (int) work_size);
-          
+        // pseudo_inverse(BtB), output begins at the ptr location BtBinv offset by i*NullDimSq
+        T * blockinverse = BtBinv + i*NullDimSq; 
+        
+        /*  svd_solve doesn't work for imaginary 
+         *  Should uncomment the NullDimLoc declaration above
+         *   for(I k = 0; k < NullDimSq; k++)
+         *   {   blockinverse[k] = identity[k]; }
+         *   svd_solve(BtB, (int) NullDimLoc, (int) NullDimLoc, blockinverse, (int) NullDimLoc, sing_vals, work, (int) work_size);
+         */
 
+        // For now, copy BtB into BtBinv and do pseudo-inverse in python.
+        // Be careful to move the data from column major in BtB to row major in blockinverse.
+        // Later when svd_solve is working, will need to convert from column to row major in blockinverse
+        // Both of the conversions form row to col major only involve taking the conjugate, as BtB is Hermitian  
+        for(I k = 0; k < NullDimSq; k++)
+        {   blockinverse[k] = conjugate(BtB[k]); }
+    
     } // end i loop
 
     delete[] BtB; 
