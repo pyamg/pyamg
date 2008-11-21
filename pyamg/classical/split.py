@@ -3,13 +3,13 @@
 Overview
 --------
 
-A C/F splitting is a partitioning of the nodes of a strength of 
-connection matrix (denoted S) into sets of C (coarse) and F (fine) nodes.
-The C-nodes will be promoted to the coarser grid while the F-nodes
-are retained on the finer grid.  Ideally, the C-nodes, which represent
-the coarse-level unknowns, should be far fewer in number than the F-nodes.
-Furthermore, algebraically smooth error must be well-approximated by
-the coarse level degrees of freedom.
+A C/F splitting is a partitioning of the nodes in the graph of as connection
+matrix (denoted S for strength) into sets of C (coarse) and F (fine) nodes.
+The C-nodes are promoted to the coarser grid while the F-nodes are retained
+on the finer grid.  Ideally, the C-nodes, which represent the coarse-level
+unknowns, should be far fewer in number than the F-nodes.  Furthermore,
+algebraically smooth error must be well-approximated by the coarse level
+degrees of freedom.
 
 
 Representation
@@ -100,17 +100,47 @@ from scipy.sparse import csr_matrix, isspmatrix_csr
 from pyamg.graph import vertex_coloring
 from pyamg import multigridtools
 
-__all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']
+__all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
+__docformat__ = "restructuredtext en"
 
 def RS(S):
     """Compute a C/F splitting using Ruge-Stuben coarsening
+
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+
+    Returns
+    -------
+    splitting : ndarray
+        Array of length of S of ones (coarse) and zeros (fine)
+        
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import RS
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = RS(S)
+    >>> splitting
+    array([0, 1, 0, 1, 0, 1, 0])
+ 
+    See Also
+    --------
+    multigridtools.rs_cf_splitting
+
+    Reference
+    ---------
+    Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
+    In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
+    SIAM: Philadelphia, PA, 1987; 73-130.
+
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
-    #if S.shape == (4,4):
-    #    print S.todense()
     splitting = empty( S.shape[0], dtype='intc' )
 
     multigridtools.rs_cf_splitting(S.shape[0],
@@ -124,6 +154,36 @@ def RS(S):
 def PMIS(S):
     """C/F splitting using the Parallel Modified Independent Set method
 
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+
+    Returns
+    -------
+    splitting : ndarray
+        Array of length of S of ones (coarse) and zeros (fine)
+        
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import PMIS
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = PMIS(S)
+    >>> splitting
+    array([0, 1, 0, 0, 1, 0, 1])
+ 
+    See Also
+    --------
+    MIS
+
+    Reference
+    ---------
+    Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+    "Reducing complexity in parallel algebraic multigrid preconditioners" 
+    SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
+
     """
     weights,G,S,T = preprocess(S)
     return MIS(G, weights)
@@ -133,6 +193,41 @@ def PMISc(S, method='JP'):
 
     PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
     random weights with weights determined by a vertex coloring.
+
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+    method : string
+        Algorithm used to compute the initial vertex coloring:
+            * 'MIS' - Maximal Independent Set
+            * 'JP'  - Jones-Plassmann (parallel)
+            * 'LDF' - Largest-Degree-First (parallel)
+
+    Returns
+    -------
+    splitting : array
+        Array of length of S of ones (coarse) and zeros (fine)
+        
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import PMISc
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = PMISc(S)
+    >>> splitting
+    array([1, 0, 1, 0, 1, 0, 1])
+ 
+    See Also
+    --------
+    MIS
+
+    Reference
+    ---------
+    David M. Alber and Luke N. Olson
+    "Parallel coarse-grid selection"
+    Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
     weights,G,S,T = preprocess(S, coloring_method=method)
@@ -152,21 +247,87 @@ def CLJPc(S):
     
     CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
     random weights with weights determined by a vertex coloring.
-
     """
     raise NotImplementedError
 
+def MIS(G, weights, maxiter=None):
+    """Compute a maximal independent set of a graph in parallel
 
-#############################
-## Helper functions
-#############################
+    Parameters
+    ----------
+    G : csr_matrix
+        Matrix graph, G[i,j] != 0 indicates an edge
+    weights : ndarray
+        Array of weights for each vertex in the graph G
+    maxiter : int
+        Maximum number of iterations (default: None)
 
-def CLJP_update_weights(weights,G,S,T,D):
-    raise NotImplementedError
+    Returns
+    -------
+    mis : array
+        Array of length of G of zeros/ones indicating the independent set
+        
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import MIS
+    >>> from numpy import ones
+    >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> w = ones((G.shape[0],1)).ravel()
+    >>> mis = MIS(G,w)
+    >>> mis
+    >>> array([1, 0, 1, 0, 1, 0, 1])
 
+    See Also
+    --------
+    fn = multigridtools.maximal_independent_set_parallel
+ 
+    """
+
+    if not isspmatrix_csr(G): raise TypeError('expected csr_matrix')
+
+    mis    = empty( G.shape[0], dtype='intc' )
+    mis[:] = -1
+    
+    fn = multigridtools.maximal_independent_set_parallel
+        
+    if maxiter is None:
+        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights)
+    else:
+        if maxiter < 0:
+            raise ValueError('maxiter must be >= 0')
+
+        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights, maxiter)
+
+    return mis
+
+# internal function
 def preprocess(S, coloring_method = None):
     """Common preprocess for splitting functions
     
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix
+    method : {string}
+        Algorithm used to compute the vertex coloring:
+            * 'MIS' - Maximal Independent Set
+            * 'JP'  - Jones-Plassmann (parallel)
+            * 'LDF' - Largest-Degree-First (parallel)
+
+    Returns
+    -------
+    weights: ndarray
+        Weights from a graph coloring of G
+    S : csr_matrix
+        Strength matrix with ones
+    T : csr_matrix
+        transpose of S
+    G : csr_matrix
+        union of S and T
+    
+    Notes
+    -----
     Performs the following operations:
         - Checks input strength of connection matrix S
         - Replaces S.data with ones
@@ -174,9 +335,6 @@ def preprocess(S, coloring_method = None):
         - Creates G = S union T in CSR format
         - Creates random weights 
         - Augments weights with graph coloring (if use_color == True)
-
-    Returns:
-        (weights,G,S,T)
 
     """
 
@@ -203,43 +361,3 @@ def preprocess(S, coloring_method = None):
         weights  = weights + (rand(len(weights)) + coloring)/num_colors
 
     return (weights,G,S,T)
-
-
-def MIS(G, weights, maxiter=None):
-    """compute an idependent set in parallel with given weights"""
-
-    mis    = empty( G.shape[0], dtype='intc' )
-    mis[:] = -1
-    
-    fn = multigridtools.maximal_independent_set_parallel
-        
-    if maxiter is None:
-        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights)
-    else:
-        if maxiter < 0:
-            raise ValueError('maxiter must be >= 0')
-
-        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights, maxiter)
-
-    return mis
-
-
-
-
-common_docstring = \
-"""
-    Parameters
-    ----------
-    S : csr_matrix
-        strength of connection matrix
-
-    Returns
-    -------
-    splitting : ndarray
-        splitting[i] = 1 if the i-th variable is a C-node        
-        splitting[i] = 0 if the i-th variable is a F-node        
-
-"""
-
-__docformat__ = "restructuredtext en"
-
