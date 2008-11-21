@@ -1,4 +1,4 @@
-from numpy import dot, conjugate, ravel, array, int, ceil
+from numpy import inner, conjugate, ravel, asarray, int, ceil
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
@@ -27,18 +27,15 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     maxiter : int
         maximum number of allowed iterations
         default is A.shape[0]/10
-    xtype : type
-        dtype for the solution
     M : matrix-like
         n x n, inverted preconditioner, i.e. solve M A A.H x = b.
         For preconditioning with a mat-vec routine, set
         A.psolve = func, where func := M y
     callback : function
-        callback( r ) is called each iteration, 
-        where r = b - A*x 
-    residuals : {None, empty-list}
-        If empty-list, residuals holds the residual norm history,
-        including the initial residual, upon completion
+        callback(x) is after each iteration, 
+    residuals : {None, list}
+        If not None, residuals holds the residual norm history, including 
+        the initial residual, upon completion.
      
     Returns
     -------    
@@ -71,91 +68,63 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     '''
     A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
 
-    # We assume henceforth that shape=(n,) for all arrays
-    xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
-    b = ravel(array(b,xtype))
-    x = ravel(array(x,xtype))
-    
     n = len(b)
     # Determine maxiter
     if maxiter is None:
-        maxiter = int(ceil(1.3*n)) + 2
+        maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     
-    # Should norm(r) be kept
-    if residuals == []:
-        keep_r = True
-    else:
-        keep_r = False
-    
     # Scale tol by normb
     normb = norm(b) 
-    if normb == 0:
-        pass
-    #    if callback != None:
-    #        callback(0.0)
-    #
-    #    return (postprocess(zeros((dimen,), dtype=xtype)),0)
-    else:
+    if normb != 0:
         tol = tol*normb
 
     # setup method
-    doneiterating = False
+    r  = b - ravel(A*x)
+    z  = ravel(M*r)
+    p  = z.copy()
+    rz = inner(conjugate(r), z)
+    
+    normr = norm(r)
+
+    if residuals is not None:
+        residuals[:] = [normr] #initial residual 
+
+    if normr < tol:
+        return (postprocess(x), 0)
+
     iter = 0
-    flag = 1
 
-    r = b - ravel(A*x)
-
-    normr0 = norm(r)
-    if keep_r:
-        residuals.append(normr0)
-
-    if normr0 < tol:
-        doneiterating = True
-
-    z = ravel(M*r)
-    rz = dot(conjugate(ravel(r)), ravel(z))
-    p = z.copy()
-
-    while not doneiterating:
+    while True:
         Ap = ravel(A*p)
-        alpha = rz/dot(conjugate(ravel(Ap)), ravel(p))
 
-        x += alpha * p
-
-        r -= alpha * Ap
-        z = ravel(M*r)
-
-        rz_new = dot(conjugate(ravel(r)), ravel(z))
-        beta = rz_new/rz
-        rz = rz_new
+        rz_old = rz
         
-        # Bizzare Behavior
-        z = z + beta*p
-        #z += beta * p
-        p = z.copy()
+        alpha = rz/inner(conjugate(Ap), p)  # 3  (step # in Saad's pseudocode)
+        x    += alpha * p                   # 4
+        r    -= alpha * Ap                  # 5
+        z     = ravel(M*r)                  # 6
+        rz    = inner(conjugate(r), z)          
+        beta  = rz/rz_old                   # 7
+        p    *= beta                        # 8
+        p    += z
 
         iter += 1
         
         normr = norm(r)
-        if keep_r:
+
+        if residuals is not None:
             residuals.append(normr)
         
-        if callback != None:
-            callback(r)
+        if callback is not None:
+            callback(x)
 
         if normr < tol:
-            doneiterating = True
-            flag = 0
+            return (postprocess(x), 0)
 
-        if iter > (maxiter-1):
-            doneiterating = True
-    
-    if flag == 0:
-        return (postprocess(x), flag)
-    else:    
-        return (postprocess(x), iter)
+        if iter == maxiter:
+            return (postprocess(x), iter)
 
 if __name__ == '__main__':
     # from numpy import diag
@@ -166,7 +135,7 @@ if __name__ == '__main__':
 
     from pyamg.gallery import stencil_grid
     from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(10,10),dtype=float,format='csr')
+    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(40,40),dtype=float,format='csr')
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 

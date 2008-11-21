@@ -43,8 +43,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         total iterations = restrt*maxiter
     maxiter : int
         maximum number of allowed inner iterations
-    xtype : type
-        dtype for the solution
     M : matrix-like
         n x n, inverted preconditioner, i.e. solve M A x = b.
         For preconditioning with a mat-vec routine, set
