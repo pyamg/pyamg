@@ -50,7 +50,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     -------    
     (xNew, info)
     xNew -- an updated guess to the solution of Ax = b
-    info -- halting status of gmres
+    info -- halting status of cgne
             0  : successful exit
             >0 : convergence to tolerance not achieved,
                  return iteration count instead.  
@@ -177,4 +177,38 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # end loop
 
     return (postprocess(x), iter+1)
+
+
+
+
+if __name__ == '__main__':
+    # from numpy import diag
+    # A = random((4,4))
+    # A = A*A.transpose() + diag([10,10,10,10])
+    # b = random((4,1))
+    # x0 = random((4,1))
+
+    from pyamg.gallery import stencil_grid
+    from numpy.random import random
+    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),dtype=float,format='csr')
+    b = random((A.shape[0],))
+    x0 = random((A.shape[0],))
+
+    import time
+    from scipy.sparse.linalg.isolve import cg as icg
+
+    print '\n\nTesting CGNE with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+    t1=time.time()
+    (x,flag) = cgne(A,b,x0,tol=1e-8,maxiter=100)
+    t2=time.time()
+    print '%s took %0.3f ms' % ('cgne', (t2-t1)*1000.0)
+    print 'norm = %g'%(norm(b - A*x))
+    print 'info flag = %d'%(flag)
+
+    t1=time.time()
+    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
+    t2=time.time()
+    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
+    print 'norm = %g'%(norm(b - A*y))
+    print 'info flag = %d'%(flag)
 

@@ -41,7 +41,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     -------    
     (xNew, info)
     xNew -- an updated guess to the solution of Ax = b
-    info -- halting status of gmres
+    info -- halting status of cg
             0  : successful exit
             >0 : convergence to tolerance not achieved,
                  return iteration count instead.  
@@ -67,6 +67,8 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
     '''
     A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
+    x = ravel(x)
+    b = ravel(b)
 
     n = len(b)
     # Determine maxiter
@@ -135,7 +137,7 @@ if __name__ == '__main__':
 
     from pyamg.gallery import stencil_grid
     from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(40,40),dtype=float,format='csr')
+    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 
