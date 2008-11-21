@@ -356,7 +356,7 @@ def preprocess(S, coloring_method = None):
     if coloring_method is None:
         weights  = weights + rand(len(weights))
     else:
-        coloring = vertex_coloring(G, coloring_method)  #TODO use better parallel coloring
+        coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
         weights  = weights + (rand(len(weights)) + coloring)/num_colors
 

@@ -33,10 +33,36 @@ def ruge_stuben_solver(A,
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, and CLJPc
+    presmoother : {string or dict}
+        Method used for presmoothing at each level.  Method-specific parameters
+        may be passed in using a tuple, e.g.
+        presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
+    postsmoother : {string or dict}
+        Postsmoothing method with the same usage as presmoother
     max_levels: {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
+
+    Returns
+    -------
+    ml : multilevel_solver
+        Multigrid hierarchy of matrices and prolongation operators
+
+    Examples
+    --------
+    >>> from pyamg import poisson, ruge_stuben_solver
+    >>> A = poisson((10,),format='csr')
+    >>> ml = ruge_stuben_solver(A,max_coarse=1)
+    >>> ml
+    Number of Levels:     4
+    Operator Complexity:  1.643
+    Grid Complexity:      1.800
+    level   unknowns     nonzeros
+    0           10           28 [60.87%]
+    1            5           13 [28.26%]
+    2            2            4 [ 8.70%]
+    3            1            1 [ 2.17%]
 
     References
     ----------
@@ -44,6 +70,10 @@ def ruge_stuben_solver(A,
         "Multigrid"
         San Diego: Academic Press, 2001.
         Appendix A
+
+    See Also
+    --------
+    smoothed_aggregation_solver, multilevel_solver
 
     """
 
@@ -59,7 +89,10 @@ def ruge_stuben_solver(A,
     return ml
 
 
+# internal function
 def extend_hierarchy(levels, strength, CF):
+    """
+    """
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
