@@ -19,10 +19,10 @@ class TestKrylov(TestCase):
         random.seed(0)
         n_max=8
 
-        real_runs(gmres, n_max=n_max)
-        real_runs_restrt(gmres, n_max=n_max)
-        complex_runs(gmres, n_max=n_max)
-        complex_runs_restrt(gmres, n_max=n_max)
+        real_runs(fgmres, n_max=n_max)
+        real_runs_restrt(fgmres, n_max=n_max)
+        complex_runs(fgmres, n_max=n_max)
+        complex_runs_restrt(fgmres, n_max=n_max)
         fgmres_runs(fgmres)
 
     def test_cgne(self):

@@ -61,7 +61,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     -------    
     (xNew, info)
     xNew -- an updated guess to the solution of Ax = b
-    info -- halting status of fgmres
+    info -- halting status of gmres
             0  : successful exit
             >0 : convergence to tolerance not achieved,
                  return iteration count instead.  This value
@@ -96,10 +96,6 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     # Choose type
     xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
 
-    # We assume henceforth that shape=(n,) for all arrays
-    b = ravel(array(b,xtype))
-    x = ravel(array(x,xtype))
-    
     # Should norm(r) be kept
     if residuals == []:
         keep_r = True
@@ -341,39 +337,4 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     # end outer loop
     
     return (postprocess(x), niter)
-
-
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(75,75),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import gmres as igmres
-
-    print '\n\nTesting fGMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    t1=time.time()
-    (x,flag) = fgmres(A,b,x0,tol=1e-8)
-    t2=time.time()
-    print '%s took %0.3f ms' % ('fgmres', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
-    t1=time.time()
-    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-    (y,flag) = igmres(A,b,x0,tol=1e-8)
-    t2=time.time()
-    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*y))
-    print 'info flag = %d'%(flag)
-
 

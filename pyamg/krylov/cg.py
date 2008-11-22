@@ -67,8 +67,6 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
     '''
     A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
-    x = ravel(x)
-    b = ravel(b)
 
     n = len(b)
     # Determine maxiter
@@ -128,35 +126,35 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
         if iter == maxiter:
             return (postprocess(x), iter)
 
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import cg as icg
-
-    print '\n\nTesting CG with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    t1=time.time()
-    (x,flag) = cg(A,b,x0,tol=1e-8,maxiter=100)
-    t2=time.time()
-    print '%s took %0.3f ms' % ('cg', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
-    t1=time.time()
-    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
-    t2=time.time()
-    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*y))
-    print 'info flag = %d'%(flag)
-
-    
+#if __name__ == '__main__':
+#    # from numpy import diag
+#    # A = random((4,4))
+#    # A = A*A.transpose() + diag([10,10,10,10])
+#    # b = random((4,1))
+#    # x0 = random((4,1))
+#
+#    from pyamg.gallery import stencil_grid
+#    from numpy.random import random
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    b = random((A.shape[0],))
+#    x0 = random((A.shape[0],))
+#
+#    import time
+#    from scipy.sparse.linalg.isolve import cg as icg
+#
+#    print '\n\nTesting CG with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    t1=time.time()
+#    (x,flag) = cg(A,b,x0,tol=1e-8,maxiter=100)
+#    t2=time.time()
+#    print '%s took %0.3f ms' % ('cg', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*x))
+#    print 'info flag = %d'%(flag)
+#
+#    t1=time.time()
+#    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
+#    t2=time.time()
+#    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*y))
+#    print 'info flag = %d'%(flag)
+#
+#    

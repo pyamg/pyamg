@@ -92,10 +92,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     # Choose type
     xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
 
-    # We assume henceforth that shape=(n,) for all arrays
-    b = ravel(array(b,xtype))
-    x = ravel(array(x,xtype))
-    
     # Should norm(r) be kept
     if residuals == []:
         keep_r = True
@@ -148,10 +144,10 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     #Apply preconditioner
     r = ravel(M*r)
     normr = norm(r)
-    # Check for nan, inf    
-    if any(isnan(r)) or any(isinf(r)):
-        warn('inf or nan after application of preconditioner')
-        return(postprocess(x), -1)
+    ## Check for nan, inf    
+    #if any(isnan(r)) or any(isinf(r)):
+    #    warn('inf or nan after application of preconditioner')
+    #    return(postprocess(x), -1)
     
     # Use separate variable to track iterations.  If convergence fails, we cannot 
     # simply report niter = (outer-1)*maxiter + inner.  Numerical error could cause 
@@ -167,7 +163,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         w = r 
         beta = mysign(w[0])*normr
         w[0] += beta
-        w = w / norm(w)
+        w /= norm(w)
     
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg matrix
         # Space required is O(dimen*maxiter)
@@ -187,21 +183,21 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             v[inner] += 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             for j in range(inner-1,-1,-1):
-                v = v - 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
+                v -= 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
             
             # Calculate new search direction
             v = ravel(A*v)
 
             #Apply preconditioner
             v = ravel(M*v)
-            # Check for nan, inf    
-            if any(isnan(v)) or any(isinf(v)):
-                warn('inf or nan after application of preconditioner')
-                return(postprocess(x), -1)
+            ## Check for nan, inf    
+            #if any(isnan(v)) or any(isinf(v)):
+            #    warn('inf or nan after application of preconditioner')
+            #    return(postprocess(x), -1)
 
             # Factor in all Householder orthogonal reflections on new search direction
             for j in range(inner+1):
-                v = v - 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
+                v -= 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
                   
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
@@ -219,7 +215,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                     if inner < (maxiter-1):
                         w[inner+1:] = vslice
                         w[inner+1] += alpha
-                        w = w / norm(w)
+                        w /= norm(w)
                         W[:,inner+1] = w
       
                     # Apply new reflector to v
@@ -320,18 +316,18 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         for j in range(inner,-1,-1):
             update[j] += y[j]
             # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
-            update = update - 2.0*dot(conjugate(W[:,j]), update)*W[:,j]
+            update -= 2.0*dot(conjugate(W[:,j]), update)*W[:,j]
 
-        x = x + update
+        x += update
         r = b - ravel(A*x)
 
         #Apply preconditioner
         r = ravel(M*r)
         normr = norm(r)
-        # Check for nan, inf    
-        if any(isnan(r)) or any(isinf(r)):
-            warn('inf or nan after application of preconditioner')
-            return(postprocess(x), -1)
+        ## Check for nan, inf    
+        #if any(isnan(r)) or any(isinf(r)):
+        #    warn('inf or nan after application of preconditioner')
+        #    return(postprocess(x), -1)
         
         # Allow user access to residual
         if callback != None:
@@ -357,36 +353,37 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
 
 
 
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(75,75),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import gmres as igmres
-
-    print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    t1=time.time()
-    (x,flag) = gmres(A,b,x0,tol=1e-8)
-    t2=time.time()
-    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
-    t1=time.time()
-    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-    (y,flag) = igmres(A,b,x0,tol=1e-8)
-    t2=time.time()
-    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*y))
-    print 'info flag = %d'%(flag)
-
-    
+#if __name__ == '__main__':
+#    # from numpy import diag
+#    # A = random((4,4))
+#    # A = A*A.transpose() + diag([10,10,10,10])
+#    # b = random((4,1))
+#    # x0 = random((4,1))
+#    #%timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
+#
+#    from pyamg.gallery import stencil_grid
+#    from numpy.random import random
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(50,50),dtype=float,format='csr')
+#    b = random((A.shape[0],))
+#    x0 = random((A.shape[0],))
+#
+#    import time
+#    from scipy.sparse.linalg.isolve import gmres as igmres
+#
+#    print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    t1=time.time()
+#    (x,flag) = gmres(A,b,x0,tol=1e-8)
+#    t2=time.time()
+#    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*x))
+#    print 'info flag = %d'%(flag)
+#
+#    t1=time.time()
+#    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
+#    (y,flag) = igmres(A,b,x0,tol=1e-8)
+#    t2=time.time()
+#    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*y))
+#    print 'info flag = %d'%(flag)
+#
+#    

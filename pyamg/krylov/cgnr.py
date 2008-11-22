@@ -89,10 +89,6 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Choose type
     xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
 
-    # We assume henceforth that shape=(n,) for all arrays
-    b = ravel(array(b,xtype))
-    x = ravel(array(x,xtype))
-    
     # Should norm(r) be kept
     if residuals == []:
         keep_r = True
@@ -151,10 +147,10 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         alpha = old_zr/dot(conjugate(w), w)
         
         # x_{j+1} = x_j + alpha*p_j
-        x = x + alpha*p
+        x += alpha*p
 
         # r_{j+1} = r_j - alpha*w_j
-        r = r - alpha*w
+        r -= alpha*w
 
         # rhat_{j+1} = A.H*r_{j+1}
         rhat = ravel(AH*r)
@@ -168,7 +164,8 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         old_zr = new_zr
 
         # p_{j+1} = A.H*z_{j+1} + beta*p_j
-        p = z + beta*p
+        p *= beta
+        p += z
 
         # Allow user access to residual
         if callback != None:
@@ -187,34 +184,34 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
 
 
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import cg as icg
-
-    print '\n\nTesting CGNR with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    t1=time.time()
-    (x,flag) = cgnr(A,b,x0,tol=1e-8,maxiter=100)
-    t2=time.time()
-    print '%s took %0.3f ms' % ('cgnr', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
-    t1=time.time()
-    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
-    t2=time.time()
-    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*y))
-    print 'info flag = %d'%(flag)
-
+#if __name__ == '__main__':
+#    # from numpy import diag
+#    # A = random((4,4))
+#    # A = A*A.transpose() + diag([10,10,10,10])
+#    # b = random((4,1))
+#    # x0 = random((4,1))
+#
+#    from pyamg.gallery import stencil_grid
+#    from numpy.random import random
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),dtype=float,format='csr')
+#    b = random((A.shape[0],))
+#    x0 = random((A.shape[0],))
+#
+#    import time
+#    from scipy.sparse.linalg.isolve import cg as icg
+#
+#    print '\n\nTesting CGNR with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    t1=time.time()
+#    (x,flag) = cgnr(A,b,x0,tol=1e-8,maxiter=100)
+#    t2=time.time()
+#    print '%s took %0.3f ms' % ('cgnr', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*x))
+#    print 'info flag = %d'%(flag)
+#
+#    t1=time.time()
+#    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
+#    t2=time.time()
+#    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
+#    print 'norm = %g'%(norm(b - A*y))
+#    print 'info flag = %d'%(flag)
+#
