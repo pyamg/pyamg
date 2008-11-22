@@ -1,4 +1,4 @@
-from numpy import array, zeros, ravel, dot, conjugate
+from numpy import array, zeros, dot, conjugate
 from scipy.sparse import csr_matrix, isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -118,7 +118,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         tol = tol*normb
 
     # Prep for method
-    r = b - ravel(A*x)
+    r = b - A*x
     rhat = AH*r
     normr = norm(r)
     if keep_r:
@@ -134,14 +134,14 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Begin CGNR
 
     # Apply preconditioner and calculate initial search direction
-    z = ravel(M*rhat)
+    z = M*rhat
     p = z.copy()
     old_zr = dot(conjugate(z), rhat)
 
     for iter in range(maxiter):
 
         # w_j = A p_j
-        w = ravel(A*p)
+        w = A*p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
         alpha = old_zr/dot(conjugate(w), w)
@@ -153,10 +153,10 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         r -= alpha*w
 
         # rhat_{j+1} = A.H*r_{j+1}
-        rhat = ravel(AH*r)
+        rhat = AH*r
 
         # z_{j+1} = M*r_{j+1}
-        z = ravel(M*rhat)
+        z = M*rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
         new_zr = dot(conjugate(z), rhat)

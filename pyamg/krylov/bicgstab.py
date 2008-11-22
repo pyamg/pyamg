@@ -1,4 +1,4 @@
-from numpy import array, zeros, ravel, inner, conjugate
+from numpy import array, zeros,  inner, conjugate
 from scipy.sparse import csr_matrix, isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -86,7 +86,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
         tol = tol*normb
 
     # Prep for method
-    r = b - ravel(A*x)
+    r = b - A*x
     normr = norm(r)
 
     if residuals is not None:
@@ -105,16 +105,16 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     # Begin BiCGStab
     while True:
-        Mp  = ravel(M*p)
-        AMp = ravel(A*Mp)
+        Mp  = M*p
+        AMp = A*Mp
         
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
         alpha = rrstarOld/inner(conjugate(rstar), AMp)
         
         # s_j = r_j - alpha*A*M*p_j
         s   = r - alpha*AMp
-        Ms  = ravel(M*s)
-        AMs = ravel(A*Ms)
+        Ms  = M*s
+        AMs = A*Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
         omega = inner(conjugate(AMs), s)/inner(conjugate(AMs), AMs)

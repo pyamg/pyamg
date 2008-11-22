@@ -1,4 +1,4 @@
-from numpy import array, zeros, ravel, dot, conjugate
+from numpy import array, zeros, dot, conjugate
 from scipy.sparse import csr_matrix, isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -118,7 +118,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         tol = tol*normb
 
     # Prep for method
-    r = b - ravel(A*x)
+    r = b - A*x
     normr = norm(r)
     if keep_r:
         residuals.append(normr)
@@ -133,8 +133,8 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Begin CGNE
 
     # Apply preconditioner and calculate initial search direction
-    z = ravel(M*r)
-    p = ravel(AH*z)
+    z = M*r
+    p = AH*z
     old_zr = dot(conjugate(z), r)
 
     for iter in range(maxiter):
@@ -146,10 +146,10 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         x += alpha*p
 
         # r_{j+1} = r_j - alpha*w_j,   where w_j = A*p_j
-        r -= alpha*ravel(A*p)
+        r -= alpha*(A*p)
 
         # z_{j+1} = M*r_{j+1}
-        z = ravel(M*r)
+        z = M*r
 
         # beta = (z_{j+1}, r_{j+1}) / (z_j, r_j)
         new_zr = dot(conjugate(z), r)
@@ -158,7 +158,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
         # p_{j+1} = A.H*z_{j+1} + beta*p_j
         p *= beta
-        p += ravel(AH*z)
+        p += AH*z
 
         # Allow user access to residual
         if callback != None:

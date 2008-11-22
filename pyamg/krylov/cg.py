@@ -1,4 +1,4 @@
-from numpy import inner, conjugate, ravel, asarray, int, ceil
+from numpy import inner, conjugate, asarray, int, ceil
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
@@ -6,11 +6,10 @@ from warnings import warn
 
 __docformat__ = "restructuredtext en"
 
-__all__=['cg']
+__all__ = ['cg']
 
 def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Conjugate Gradient on A x = b
+    '''Conjugate Gradient on A x = b
     Left preconditioning is supported
 
     Parameters
@@ -81,8 +80,8 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
         tol = tol*normb
 
     # setup method
-    r  = b - ravel(A*x)
-    z  = ravel(M*r)
+    r  = b - A*x
+    z  = M*r
     p  = z.copy()
     rz = inner(conjugate(r), z)
     
@@ -97,14 +96,14 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     iter = 0
 
     while True:
-        Ap = ravel(A*p)
+        Ap = A*p
 
         rz_old = rz
         
         alpha = rz/inner(conjugate(Ap), p)  # 3  (step # in Saad's pseudocode)
         x    += alpha * p                   # 4
         r    -= alpha * Ap                  # 5
-        z     = ravel(M*r)                  # 6
+        z     = M*r                         # 6
         rz    = inner(conjugate(r), z)          
         beta  = rz/rz_old                   # 7
         p    *= beta                        # 8
