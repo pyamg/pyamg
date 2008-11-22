@@ -130,13 +130,18 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
     for i in range(improvement_iters):
         for j in range(B.shape[1]):
             B = B[:,1:]
+            if B.shape[1]==0: # else error for 1 candidate
+                B=None
             x = general_setup_stage( smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                                                  postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
                                      mat_flag, candidate_iters, prepostsmoother, smooth)
             
             # Normalize x and add to candidate list
             x = (1.0/norm(x))*x
-            B = hstack((B,x))
+            if B==None:
+                B=x
+            else:
+                B = hstack((B,x))
 
     return smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                        postsmoother=prepostsmoother, smooth=smooth,**kwargs)
