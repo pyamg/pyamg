@@ -289,22 +289,22 @@ def setup_kaczmarz_richardson(lvl, iterations=1, omega=1.0):
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None, residuals=None):
     def smoother(A,x,b):
-            (x[:],flag) = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M, callback=callback, residuals=residuals)
+        x[:] = (gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M, callback=callback, residuals=residuals)[0]).reshape(x.shape)
     return smoother
             
 def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
     def smoother(A,x,b):
-            (x[:],flag) = cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)
+        x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)[0]).reshape(x.shape)
     return smoother
 
 def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
     def smoother(A,x,b):
-            (x[:],flag) = cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)
+        x[:] = (cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)[0]).reshape(x.shape)
     return smoother
 
 def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
     def smoother(A,x,b):
-            (x[:],flag) = cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)
+        x[:] = (cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M, callback=callback, residuals=residuals)[0]).reshape(x.shape)
     return smoother
 
 def setup_None(lvl):
