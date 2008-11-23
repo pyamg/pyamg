@@ -4,12 +4,15 @@ import numpy
 import scipy.sparse
 from numpy import sqrt, ones, arange, array, abs
 from scipy import rand, pi, exp, hstack
-from scipy.sparse import csr_matrix, spdiags, coo_matrix
+from scipy.sparse import csr_matrix, spdiags, coo_matrix, SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian
 
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
+
+import warnings
+warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 class TestParameters(TestCase):
     def setUp(self):
@@ -94,7 +97,7 @@ class TestComplexParameters(TestCase):
 
 
     def test_strength_of_connection(self): 
-        for strength in ['classical', 'symmetric']:                 #,'ode']:
+        for strength in ['classical', 'symmetric']:
             self.run_cases( {'strength' : strength} )
     
     def test_aggregation_method(self): 
@@ -229,6 +232,8 @@ class TestComplexSolverPerformance(TestCase):
         """check that method converges at a reasonable rate"""
 
         for A,B,c_factor,mat_flag,smooth in self.cases:
+            A = csr_matrix(A)
+
             ml = smoothed_aggregation_solver(A, B, mat_flag=mat_flag, smooth=smooth, max_coarse=10)
 
             numpy.random.seed(0) #make tests repeatable

@@ -186,7 +186,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             #Apply preconditioner
             v = ravel(M*v)
             # Check for nan, inf    
-            if any(isnan(v)) or any(isinf(v)):
+            if isnan(v).any() or isinf(v).any():
                 warn('inf or nan after application of preconditioner')
                 return(postprocess(x), -1)
             Z[:,inner] = v

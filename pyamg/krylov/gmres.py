@@ -146,7 +146,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     r = ravel(M*r)
     normr = norm(r)
     ## Check for nan, inf    
-    #if any(isnan(r)) or any(isinf(r)):
+    #if isnan(r).any() or isinf(r).any():
     #    warn('inf or nan after application of preconditioner')
     #    return(postprocess(x), -1)
     
@@ -193,7 +193,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             #Apply preconditioner
             v = ravel(M*v)
             ## Check for nan, inf    
-            #if any(isnan(v)) or any(isinf(v)):
+            #if isnan(v).any() or isinf(v).any():
             #    warn('inf or nan after application of preconditioner')
             #    return(postprocess(x), -1)
 
@@ -329,7 +329,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         r = ravel(M*r)
         normr = norm(r)
         ## Check for nan, inf    
-        #if any(isnan(r)) or any(isinf(r)):
+        #if isnan(r).any() or isinf(r).any():
         #    warn('inf or nan after application of preconditioner')
         #    return(postprocess(x), -1)
         

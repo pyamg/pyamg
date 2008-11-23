@@ -4,12 +4,12 @@ __docformat__ = "restructuredtext en"
 
 from numpy import ones, empty_like, diff, conjugate
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning
 import multigridtools
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
-def classical_strength_of_connection(A,theta=0.0):
+def classical_strength_of_connection(A, theta=0.0):
     """
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
@@ -65,7 +65,7 @@ def classical_strength_of_connection(A,theta=0.0):
 
     """
     if not isspmatrix_csr(A): 
-        warn("Efficiency Warning, Implicit conversion of A to csr")
+        warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
         A = csr_matrix(A)
 
     if (theta<0 or theta>1):

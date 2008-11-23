@@ -3,7 +3,6 @@
 __docformat__ = "restructuredtext en"
 
 import numpy
-from warnings import warn
 from numpy import zeros, empty, asarray, empty_like, isscalar, abs
 from scipy import rand
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_csc
@@ -185,7 +184,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     ----------
     G : csr_matrix or csc_matrix
         A sparse NxN matrix where each nonzero entry G[i,j] is the distance 
-        between nodes i and j
+        between nodes i and j.
     seeds : {int, array}
         If seeds is an integer, then its value determines the number of clusters.
         Otherwise, seeds is an array of unique integers between 0 and N-1 that
@@ -193,15 +192,17 @@ def lloyd_cluster(G, seeds, maxiter=10):
     maxiter : int
         The maximum number of iterations to perform. 
 
+    Notes
+    -----
+    If G has complex values, abs(G) is used instead.
+
     """
     G = asgraph(G)
     N = G.shape[0]
     
-    if G.dtype == complex:
-        warn("Converting complex to real for lloyd_cluster")
-        G = G.copy()
-        G.data = abs(G.data)
-        G = G.astype(float)
+    if G.dtype.kind == 'c':
+        # complex dtype
+        G = abs(G)
     
     #interpret seeds argument
     if isscalar(seeds):

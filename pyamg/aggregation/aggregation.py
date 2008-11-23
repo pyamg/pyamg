@@ -107,15 +107,15 @@ def smoothed_aggregation_solver(A, B=None,
         http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
+    
+    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+        raise TypeError('argument A must have type csr_matrix or bsr_matrix')
 
     A = A.asfptype()
     
     if (mat_flag != 'symmetric') and (mat_flag != 'hermitian'):
         raise ValueError('expected symmetric or hermitian mat_flag')
     A.symmetry = mat_flag
-
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
-        raise TypeError('argument A must have type csr_matrix or bsr_matrix')
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
