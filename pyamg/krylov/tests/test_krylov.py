@@ -4,6 +4,7 @@ from helper import real_runs, real_runs_restrt, complex_runs, complex_runs_restr
 from scipy import random
 
 class TestKrylov(TestCase):
+    @decorators.skipif(True)
     def test_gmres(self):
         # Ensure repeatability of tests
         random.seed(0)
@@ -13,7 +14,8 @@ class TestKrylov(TestCase):
         real_runs_restrt(gmres, n_max=n_max)
         complex_runs(gmres, n_max=n_max)
         complex_runs_restrt(gmres, n_max=n_max)
-
+    
+    @decorators.skipif(True)
     def test_fgmres(self):
         # Ensure repeatability of tests
         random.seed(0)
