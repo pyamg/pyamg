@@ -14,10 +14,15 @@
 template<class I, class T, class F>
 void apply_householders(T z[], const T B[], const I n, const I start, const I stop, const I step)
 {
+    I index = start*n;
+    I index_step = step*n;
+    const T * Bptr;
     for(I i = start; i != stop; i+=step)
     {
-        T alpha = dot_prod(&(B[i*n]), &(z[0]), n)*(-2.0);
-        axpy(&(z[0]), &(B[i*n]), alpha, n);
+        Bptr = &(B[index]);
+        T alpha = dot_prod(Bptr, z, n)*(-2.0);
+        axpy(z, Bptr, alpha, n);
+        index += index_step;
     }
 }
 
@@ -42,11 +47,48 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
 template<class I, class T, class F>
 void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const I start, const I stop, const I step)
 {
+    I index = start*n;
+    I index_step = step*n;
+    const T * Bptr;
     for(I i = start; i != stop; i+=step)
     {
         z[i] += y[i];
-        T alpha = dot_prod(&(B[i*n]), &(z[0]), n)*(-2.0);
-        axpy(&(z[0]), &(B[i*n]), alpha, n);
+        Bptr = &(B[index]);
+
+        T alpha = dot_prod(Bptr, z, n)*(-2.0);
+        axpy(z, Bptr, alpha, n);
+
+        index += index_step;
+    }
+}
+
+
+/* Apply the first nrot Given's rotations in B to x
+ * x is an n-vector
+ * B is a one dimensional array, but each 4 entries represent
+ *   a Given's rotation
+ */
+template<class I, class T, class F>
+void apply_givens(const T B[], T x[], const I n, const I nrot)
+{
+    I ind1 = 0; 
+    I ind2 = 1; 
+    I ind3 = 2; 
+    I ind4 = 3; 
+    T x_temp;
+
+    for(I rot=0; rot < nrot; rot++)
+    {
+        // Apply rotation
+        x_temp = x[rot];
+        x[rot]   = B[ind1]*x_temp + B[ind2]*x[rot+1];
+        x[rot+1] = B[ind3]*x_temp + B[ind4]*x[rot+1];
+
+        // Increment indices
+        ind1 +=4;
+        ind2 +=4;
+        ind3 +=4;
+        ind4 +=4;
     }
 }
 

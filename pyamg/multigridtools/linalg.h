@@ -4,49 +4,49 @@
 #include <math.h>
 
 // Overloaded routines for complex arithmetic
-float conjugate(const float& x)
+inline float conjugate(const float& x)
     { return x; }
-double conjugate(const double& x)
+inline double conjugate(const double& x)
     { return x; }
-npy_cfloat_wrapper conjugate(const npy_cfloat_wrapper& x)
+inline npy_cfloat_wrapper conjugate(const npy_cfloat_wrapper& x)
     { return npy_cfloat_wrapper(x.real, -x.imag); }
-npy_cdouble_wrapper conjugate(const npy_cdouble_wrapper& x)
+inline npy_cdouble_wrapper conjugate(const npy_cdouble_wrapper& x)
     { return npy_cdouble_wrapper(x.real, -x.imag); }
 
-float real(const float& x)
+inline float real(const float& x)
     { return x; }
-double real(const double& x)
+inline double real(const double& x)
     { return x; }
-float real(const npy_cfloat_wrapper& x)
+inline float real(const npy_cfloat_wrapper& x)
     { return x.real; }
-double real(const npy_cdouble_wrapper& x)
+inline double real(const npy_cdouble_wrapper& x)
     { return x.real; }
 
-float imag(const float& x)
+inline float imag(const float& x)
     { return 0.0; }
-double imag(const double& x)
+inline double imag(const double& x)
     { return 0.0; }
-float imag(const npy_cfloat_wrapper& x)
+inline float imag(const npy_cfloat_wrapper& x)
     { return x.imag; }
-double imag(const npy_cdouble_wrapper& x)
+inline double imag(const npy_cdouble_wrapper& x)
     { return x.imag; }
 
-float mynorm(const float& x)
+inline float mynorm(const float& x)
     { return fabs(x); }
-double mynorm(const double& x)
+inline double mynorm(const double& x)
     { return fabs(x); }
-float mynorm(const npy_cfloat_wrapper& x)
+inline float mynorm(const npy_cfloat_wrapper& x)
     { return sqrt(x.real*x.real + x.imag*x.imag); }
-double mynorm(const npy_cdouble_wrapper& x)
+inline double mynorm(const npy_cdouble_wrapper& x)
     { return sqrt(x.real*x.real + x.imag*x.imag); }
 
-float mynormsq(const float& x)
+inline float mynormsq(const float& x)
     { return (x*x); }
-double mynormsq(const double& x)
+inline double mynormsq(const double& x)
     { return (x*x); }
-float mynormsq(const npy_cfloat_wrapper& x)
+inline float mynormsq(const npy_cfloat_wrapper& x)
     { return (x.real*x.real + x.imag*x.imag); }
-double mynormsq(const npy_cdouble_wrapper& x)
+inline double mynormsq(const npy_cdouble_wrapper& x)
     { return (x.real*x.real + x.imag*x.imag); }
 
 

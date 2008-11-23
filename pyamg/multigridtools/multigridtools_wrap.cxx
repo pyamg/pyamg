@@ -13999,6 +13999,375 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_apply_givens__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 ;
+  float *arg2 ;
+  int arg3 ;
+  int arg4 ;
+  PyArrayObject *array1 = NULL ;
+  int is_new_object1 ;
+  PyArrayObject *temp2 = NULL ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:apply_givens",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array1 = obj_to_array_contiguous_allow_conversion(obj0, PyArray_FLOAT, &is_new_object1);
+    if (!array1 || !require_dimensions(array1,1) || !require_size(array1,size,1)
+      || !require_contiguous(array1)   || !require_native(array1)) SWIG_fail;
+    
+    arg1 = (float*) array1->data;
+  }
+  {
+    temp2 = obj_to_array_no_conversion(obj1,PyArray_FLOAT);
+    if (!temp2  || !require_contiguous(temp2) || !require_native(temp2)) SWIG_fail;
+    arg2 = (float*) array_data(temp2);
+  }
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "apply_givens" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "apply_givens" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  apply_givens<int,float,float >((float const (*))arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_apply_givens__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 ;
+  double *arg2 ;
+  int arg3 ;
+  int arg4 ;
+  PyArrayObject *array1 = NULL ;
+  int is_new_object1 ;
+  PyArrayObject *temp2 = NULL ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:apply_givens",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array1 = obj_to_array_contiguous_allow_conversion(obj0, PyArray_DOUBLE, &is_new_object1);
+    if (!array1 || !require_dimensions(array1,1) || !require_size(array1,size,1)
+      || !require_contiguous(array1)   || !require_native(array1)) SWIG_fail;
+    
+    arg1 = (double*) array1->data;
+  }
+  {
+    temp2 = obj_to_array_no_conversion(obj1,PyArray_DOUBLE);
+    if (!temp2  || !require_contiguous(temp2) || !require_native(temp2)) SWIG_fail;
+    arg2 = (double*) array_data(temp2);
+  }
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "apply_givens" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "apply_givens" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  apply_givens<int,double,double >((double const (*))arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_apply_givens__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 ;
+  npy_cfloat_wrapper *arg2 ;
+  int arg3 ;
+  int arg4 ;
+  PyArrayObject *array1 = NULL ;
+  int is_new_object1 ;
+  PyArrayObject *temp2 = NULL ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:apply_givens",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array1 = obj_to_array_contiguous_allow_conversion(obj0, PyArray_CFLOAT, &is_new_object1);
+    if (!array1 || !require_dimensions(array1,1) || !require_size(array1,size,1)
+      || !require_contiguous(array1)   || !require_native(array1)) SWIG_fail;
+    
+    arg1 = (npy_cfloat_wrapper*) array1->data;
+  }
+  {
+    temp2 = obj_to_array_no_conversion(obj1,PyArray_CFLOAT);
+    if (!temp2  || !require_contiguous(temp2) || !require_native(temp2)) SWIG_fail;
+    arg2 = (npy_cfloat_wrapper*) array_data(temp2);
+  }
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "apply_givens" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "apply_givens" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  apply_givens<int,npy_cfloat_wrapper,float >((npy_cfloat_wrapper const (*))arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_apply_givens__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 ;
+  npy_cdouble_wrapper *arg2 ;
+  int arg3 ;
+  int arg4 ;
+  PyArrayObject *array1 = NULL ;
+  int is_new_object1 ;
+  PyArrayObject *temp2 = NULL ;
+  int val3 ;
+  int ecode3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:apply_givens",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    npy_intp size[1] = {
+      -1
+    };
+    array1 = obj_to_array_contiguous_allow_conversion(obj0, PyArray_CDOUBLE, &is_new_object1);
+    if (!array1 || !require_dimensions(array1,1) || !require_size(array1,size,1)
+      || !require_contiguous(array1)   || !require_native(array1)) SWIG_fail;
+    
+    arg1 = (npy_cdouble_wrapper*) array1->data;
+  }
+  {
+    temp2 = obj_to_array_no_conversion(obj1,PyArray_CDOUBLE);
+    if (!temp2  || !require_contiguous(temp2) || !require_native(temp2)) SWIG_fail;
+    arg2 = (npy_cdouble_wrapper*) array_data(temp2);
+  }
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "apply_givens" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "apply_givens" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  apply_givens<int,npy_cdouble_wrapper,double >((npy_cdouble_wrapper const (*))arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return resultobj;
+fail:
+  {
+    if (is_new_object1 && array1) {
+      Py_DECREF(array1); 
+    }
+  }
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_apply_givens(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[5];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_FLOAT)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        _v = (is_array(argv[1]) && PyArray_CanCastSafely(PyArray_TYPE(argv[1]),PyArray_FLOAT)) ? 1 : 0;
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_apply_givens__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_DOUBLE)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        _v = (is_array(argv[1]) && PyArray_CanCastSafely(PyArray_TYPE(argv[1]),PyArray_DOUBLE)) ? 1 : 0;
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_apply_givens__SWIG_2(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_CFLOAT)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        _v = (is_array(argv[1]) && PyArray_CanCastSafely(PyArray_TYPE(argv[1]),PyArray_CFLOAT)) ? 1 : 0;
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_apply_givens__SWIG_3(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_CDOUBLE)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        _v = (is_array(argv[1]) && PyArray_CanCastSafely(PyArray_TYPE(argv[1]),PyArray_CDOUBLE)) ? 1 : 0;
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_apply_givens__SWIG_4(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'apply_givens'.\n  Possible C/C++ prototypes are:\n""    apply_givens<(int,float,float)>(float const [],float [],int const,int const)\n""    apply_givens<(int,double,double)>(double const [],double [],int const,int const)\n""    apply_givens<(int,npy_cfloat_wrapper,float)>(npy_cfloat_wrapper const [],npy_cfloat_wrapper [],int const,int const)\n""    apply_givens<(int,npy_cdouble_wrapper,double)>(npy_cdouble_wrapper const [],npy_cdouble_wrapper [],int const,int const)\n");
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_maximal_independent_set_serial(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -17223,6 +17592,14 @@ static PyMethodDef SwigMethods[] = {
 		"householder_hornerscheme(npy_cdouble_wrapper z, npy_cdouble_wrapper B, npy_cdouble_wrapper y, \n"
 		"    int n, int start, int stop, \n"
 		"    int step)\n"
+		""},
+	 { (char *)"apply_givens", _wrap_apply_givens, METH_VARARGS, (char *)"\n"
+		"apply_givens(float B, float x, int n, int nrot)\n"
+		"apply_givens(double B, double x, int n, int nrot)\n"
+		"apply_givens(npy_cfloat_wrapper B, npy_cfloat_wrapper x, int n, \n"
+		"    int nrot)\n"
+		"apply_givens(npy_cdouble_wrapper B, npy_cdouble_wrapper x, int n, \n"
+		"    int nrot)\n"
 		""},
 	 { (char *)"maximal_independent_set_serial", _wrap_maximal_independent_set_serial, METH_VARARGS, (char *)"\n"
 		"maximal_independent_set_serial(int num_rows, int Ap, int Aj, int active, int C, int F, \n"

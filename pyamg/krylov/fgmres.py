@@ -109,7 +109,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         raise ValueError('Number of restarts must be positive')
 
     if maxiter == None:
-        maxiter = int(max(ceil(dimen/restrt)))
+        maxiter = int(min(ceil(dimen/restrt), 40.0))
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > dimen:

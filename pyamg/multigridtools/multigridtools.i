@@ -241,6 +241,7 @@ INSTANTIATE_COMPLEX(kaczmarz_gauss_seidel)
 
 INSTANTIATE_COMPLEX(apply_householders)
 INSTANTIATE_COMPLEX(householder_hornerscheme)
+INSTANTIATE_COMPLEX(apply_givens)
 
 %template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;

@@ -303,6 +303,17 @@ def householder_hornerscheme(*args):
     """
   return _multigridtools.householder_hornerscheme(*args)
 
+def apply_givens(*args):
+  """
+    apply_givens(float B, float x, int n, int nrot)
+    apply_givens(double B, double x, int n, int nrot)
+    apply_givens(npy_cfloat_wrapper B, npy_cfloat_wrapper x, int n, 
+        int nrot)
+    apply_givens(npy_cdouble_wrapper B, npy_cdouble_wrapper x, int n, 
+        int nrot)
+    """
+  return _multigridtools.apply_givens(*args)
+
 def maximal_independent_set_parallel(*args):
   """
     maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 

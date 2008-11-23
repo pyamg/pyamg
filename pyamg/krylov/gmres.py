@@ -9,7 +9,6 @@ from pyamg.util.linalg import norm
 from pyamg import multigridtools
 import scipy.sparse
 
-
 __docformat__ = "restructuredtext en"
 
 __all__ = ['gmres']
@@ -85,7 +84,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
 
     '''
-    
     # Convert inputs to linear system, with error checking  
     A,M,x,b,postprocess = make_system(A,M,x0,b,xtype)
     dimen = A.shape[0]
@@ -106,7 +104,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         raise ValueError('Number of restarts must be positive')
 
     if maxiter == None:
-        maxiter = int(max(ceil(dimen/restrt)))
+        maxiter = int(min(ceil(dimen/restrt), 40.0))
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > dimen:
@@ -157,7 +155,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
 
     # Begin GMRES
     for outer in range(restrt):
-
+        
         # Calculate vector w, which defines the Householder reflector
         #    Take shortcut in calculating, 
         #    w = r + sign(r[1])*||r||_2*e_1
@@ -168,6 +166,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg matrix
         # Space required is O(dimen*maxiter)
+        Q = zeros( (4*maxiter,), dtype=xtype)               # Given's Rotations
         H = zeros( (maxiter, maxiter), dtype=xtype)         # upper Hessenberg matrix (actually made upper tri with Given's Rotations) 
         W = zeros( (maxiter, dimen), dtype=xtype)           # Householder reflectors
         W[0,:] = w
@@ -176,7 +175,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         # This is the RHS vector for the problem in the Krylov Space
         g = zeros((dimen,), dtype=xtype) 
         g[0] = -beta
-    
+
         for inner in range(maxiter):
             # Calcute Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
@@ -209,7 +208,8 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             #     Householder reflector or Given's rotation because nnz(v) is already the
             #     desired length, i.e. we do not need to zero anything out.
             if inner != dimen-1:
-                w = zeros((dimen,), dtype=xtype)
+                if inner < (maxiter-1):
+                    w = W[inner+1,:]
                 vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
@@ -219,31 +219,18 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                         w[inner+1:] = vslice
                         w[inner+1] += alpha
                         w /= norm(w)
-                        W[inner+1,:] = w
       
                     # Apply new reflector to v
                     #  v = v - 2.0*w*(w.T*v)
                     v[inner+1] = -alpha
                     v[inner+2:] = 0.0
             
-            # Apply all previous Given's Rotations to v
-            if inner == 0:
-                # Q will store the cumulative effect of all Given's Rotations
-                Q = scipy.sparse.eye(dimen, dimen, format='csr', dtype=xtype)
 
-                # Declare initial Qj, which will be the current Given's Rotation
-                rowptr  = hstack( (array([0, 2, 4],int), arange(5,dimen+3,dtype=int)) )
-                colindices = hstack( (array([0, 1, 0, 1],int), arange(2, dimen,dtype=int)) )
-                data = ones((dimen+2,), dtype=xtype)
-                Qj = csr_matrix( (data, colindices, rowptr), shape=(dimen,dimen), dtype=xtype)
-            else: 
-                # Could avoid building a global Given's Rotation, by storing 
-                # and applying each 2x2 matrix individually.
-                # But that would require looping, the bane of wonderful Python
-                Q = Qj*Q
-                v = Q*v
-      
-            # Calculate Qj, the next Given's rotation, where j = inner
+            if inner > 0:
+                # Apply all previous Given's Rotations to v
+                multigridtools.apply_givens(Q, v, dimen, inner)
+
+            # Calculate the next Given's rotation, where j = inner
             #  Note that if maxiter = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  Here we do not need to calculate a
             #     Householder reflector or Given's rotation because nnz(v) is already the
@@ -264,17 +251,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                     denom = sqrt( h1_mag**2 + h2_mag**2 )               
                     c = h1_mag/denom; s = h2_mag*tau/denom; 
                     Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype) 
-                    
-                    # Modify Qj in csr-format so that it represents the current 
-                    #   global Given's Rotation equivalent to Qblock
-                    if inner != 0:
-                        Qj.data[inner-1] = 1.0
-                        Qj.indices[inner-1] = inner-1
-                        Qj.indptr[inner-1] = inner-1
-                    
-                    Qj.data[inner:inner+4] = ravel(Qblock)
-                    Qj.indices[inner:inner+4] = [inner, inner+1, inner, inner+1]
-                    Qj.indptr[inner:inner+3] = [inner, inner+2, inner+4]
+                    Q[(inner*4) : ((inner+1)*4)] = ravel(Qblock).copy()
                     
                     # Apply Given's Rotation to g, 
                     #   the RHS for the linear system in the Krylov Subspace.
@@ -289,7 +266,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             # Write to upper Hessenberg Matrix,
             #   the LHS for the linear system in the Krylov Subspace
             H[:,inner] = v[0:maxiter]
-      
+
             # Don't update normr if last inner iteration, because 
             # normr is calculated directly after this loop ends.
             if inner < maxiter-1:
@@ -304,7 +281,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                     residuals.append(normr)
             
             niter += 1
-        
+            
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space, V.  Solve inner+1 x inner+1 system.
@@ -347,10 +324,11 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                 # No change, halt
                 return (postprocess(x), -1)
 
+    
         # test for convergence
         if normr < tol:
             return (postprocess(x),0)
-    
+            
     # end outer loop
     
     return (postprocess(x), niter)
@@ -367,7 +345,7 @@ if __name__ == '__main__':
 
     from pyamg.gallery import stencil_grid
     from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(50,50),dtype=float,format='csr')
+    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(75,75),dtype=float,format='csr')
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 
@@ -376,7 +354,7 @@ if __name__ == '__main__':
 
     print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
     t1=time.time()
-    (x,flag) = gmres(A,b,x0,tol=1e-8)
+    (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=240)
     t2=time.time()
     print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
     print 'norm = %g'%(norm(b - A*x))
