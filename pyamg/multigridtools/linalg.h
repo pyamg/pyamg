@@ -52,6 +52,31 @@ double mynormsq(const npy_cdouble_wrapper& x)
 
 //Dense Algebra Routines
 
+/* dot(x, y, n)
+ * x,y are n-vectors
+ * calculate conjuate(x).T y
+*/
+template<class I, class T>
+T dot_prod(const T x[], const T y[], const I n)
+{
+    T sum = 0.0;
+    for( I i = 0; i < n; i++)
+    {   sum += conjugate(x[i])*y[i]; }
+    return sum;
+}
+
+/* axpy(x, y, alpha, n)
+ * x, y are n-vectors
+ * alpha is a constant scalar
+ * calculate x = x + alpha*y
+*/
+template<class I, class T>
+void axpy(T x[], const T y[], const T alpha, const I n)
+{
+    for( I i = 0; i < n; i++)
+    {   x[i] += alpha*y[i]; }
+}
+
 /*
  * Compute A*B ==> S
  *

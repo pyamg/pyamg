@@ -6,6 +6,7 @@ from scipy import hstack, ceil, isnan, isinf
 from scipy.linalg import lu_solve
 from warnings import warn
 from pyamg.util.linalg import norm
+from pyamg import multigridtools
 import scipy.sparse
 
 
@@ -168,8 +169,8 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg matrix
         # Space required is O(dimen*maxiter)
         H = zeros( (maxiter, maxiter), dtype=xtype)         # upper Hessenberg matrix (actually made upper tri with Given's Rotations) 
-        W = zeros( (dimen, maxiter), dtype=xtype)           # Householder reflectors
-        W[:,0] = w
+        W = zeros( (maxiter, dimen), dtype=xtype)           # Householder reflectors
+        W[0,:] = w
     
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
         # This is the RHS vector for the problem in the Krylov Space
@@ -182,9 +183,10 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             v = -2.0*conjugate(w[inner])*w
             v[inner] += 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
-            for j in range(inner-1,-1,-1):
-                v -= 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
-            
+            #for j in range(inner-1,-1,-1):
+            #    v -= 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
+            multigridtools.apply_householders(v, ravel(W), dimen, inner-1, -1, -1)
+
             # Calculate new search direction
             v = ravel(A*v)
 
@@ -196,8 +198,9 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
             #    return(postprocess(x), -1)
 
             # Factor in all Householder orthogonal reflections on new search direction
-            for j in range(inner+1):
-                v -= 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
+            #for j in range(inner+1):
+            #    v -= 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
+            multigridtools.apply_householders(v, ravel(W), dimen, 0, inner+1, 1)
                   
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
@@ -216,7 +219,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
                         w[inner+1:] = vslice
                         w[inner+1] += alpha
                         w /= norm(w)
-                        W[:,inner+1] = w
+                        W[inner+1,:] = w
       
                     # Apply new reflector to v
                     #  v = v - 2.0*w*(w.T*v)
@@ -313,10 +316,11 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         # Use Horner like Scheme to map solution, y, back to original space.
         # Note that we do not use the last reflector.
         update = zeros(x.shape, dtype=xtype)
-        for j in range(inner,-1,-1):
-            update[j] += y[j]
-            # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
-            update -= 2.0*dot(conjugate(W[:,j]), update)*W[:,j]
+        #for j in range(inner,-1,-1):
+        #    update[j] += y[j]
+        #    # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
+        #    update -= 2.0*dot(conjugate(W[j,:]), update)*W[j,:]
+        multigridtools.householder_hornerscheme(update, ravel(W), ravel(y), dimen, inner, -1, -1)
 
         x += update
         r = b - ravel(A*x)
@@ -353,37 +357,37 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
 
 
 
-#if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#    #%timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
-#
-#    from pyamg.gallery import stencil_grid
-#    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(50,50),dtype=float,format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    import time
-#    from scipy.sparse.linalg.isolve import gmres as igmres
-#
-#    print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-#    t1=time.time()
-#    (x,flag) = gmres(A,b,x0,tol=1e-8)
-#    t2=time.time()
-#    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)
-#
-#    t1=time.time()
-#    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-#    (y,flag) = igmres(A,b,x0,tol=1e-8)
-#    t2=time.time()
-#    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*y))
-#    print 'info flag = %d'%(flag)
-#
-#    
+if __name__ == '__main__':
+    # from numpy import diag
+    # A = random((4,4))
+    # A = A*A.transpose() + diag([10,10,10,10])
+    # b = random((4,1))
+    # x0 = random((4,1))
+    #%timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
+
+    from pyamg.gallery import stencil_grid
+    from numpy.random import random
+    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(50,50),dtype=float,format='csr')
+    b = random((A.shape[0],))
+    x0 = random((A.shape[0],))
+
+    import time
+    from scipy.sparse.linalg.isolve import gmres as igmres
+
+    print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+    t1=time.time()
+    (x,flag) = gmres(A,b,x0,tol=1e-8)
+    t2=time.time()
+    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
+    print 'norm = %g'%(norm(b - A*x))
+    print 'info flag = %d'%(flag)
+
+    t1=time.time()
+    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
+    (y,flag) = igmres(A,b,x0,tol=1e-8)
+    t2=time.time()
+    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
+    print 'norm = %g'%(norm(b - A*y))
+    print 'info flag = %d'%(flag)
+
+    

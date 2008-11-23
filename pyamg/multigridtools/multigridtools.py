@@ -278,6 +278,31 @@ def kaczmarz_gauss_seidel(*args):
     """
   return _multigridtools.kaczmarz_gauss_seidel(*args)
 
+def apply_householders(*args):
+  """
+    apply_householders(float z, float B, int n, int start, int stop, int step)
+    apply_householders(double z, double B, int n, int start, int stop, int step)
+    apply_householders(npy_cfloat_wrapper z, npy_cfloat_wrapper B, int n, 
+        int start, int stop, int step)
+    apply_householders(npy_cdouble_wrapper z, npy_cdouble_wrapper B, int n, 
+        int start, int stop, int step)
+    """
+  return _multigridtools.apply_householders(*args)
+
+def householder_hornerscheme(*args):
+  """
+    householder_hornerscheme(float z, float B, float y, int n, int start, int stop, 
+        int step)
+    householder_hornerscheme(double z, double B, double y, int n, int start, int stop, 
+        int step)
+    householder_hornerscheme(npy_cfloat_wrapper z, npy_cfloat_wrapper B, npy_cfloat_wrapper y, 
+        int n, int start, int stop, int step)
+    householder_hornerscheme(npy_cdouble_wrapper z, npy_cdouble_wrapper B, npy_cdouble_wrapper y, 
+        int n, int start, int stop, 
+        int step)
+    """
+  return _multigridtools.householder_hornerscheme(*args)
+
 def maximal_independent_set_parallel(*args):
   """
     maximal_independent_set_parallel(int num_rows, int Ap, int Aj, int active, int C, int F, 

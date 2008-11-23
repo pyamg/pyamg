@@ -14,6 +14,7 @@
 #include "relaxation.h"
 #include "graph.h"
 #include "ode_strength.h"
+#include "krylov.h"
 %}
 
 %feature("autodoc", "1");
@@ -184,6 +185,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %include "relaxation.h"
 %include "graph.h"
 %include "ode_strength.h"
+%include "krylov.h"
  /*
   * Order may be important here, list float before double
   */
@@ -236,6 +238,9 @@ INSTANTIATE_COMPLEX(jacobi)
 INSTANTIATE_BOTH(gauss_seidel_indexed)
 INSTANTIATE_COMPLEX(kaczmarz_jacobi)
 INSTANTIATE_COMPLEX(kaczmarz_gauss_seidel)
+
+INSTANTIATE_COMPLEX(apply_householders)
+INSTANTIATE_COMPLEX(householder_hornerscheme)
 
 %template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
 %template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;
