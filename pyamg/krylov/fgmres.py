@@ -6,6 +6,7 @@ from scipy import hstack, ceil, isnan, isinf
 from scipy.linalg import lu_solve
 from warnings import warn
 from pyamg.util.linalg import norm
+from pyamg import multigridtools
 import scipy.sparse
 
 __docformat__ = "restructuredtext en"
@@ -30,32 +31,34 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
 
     Parameters
     ----------
-    A : array, matrix or sparse matrix
+    A : {array, matrix, sparse matrix, LinearOperator}
         n x n, linear system to solve
-    b : array
-        n x 1, right hand side
-    x0 : array-like
-        n x 1, initial guess
-        default is a vector of zeros
+    b : {array, matrix}
+        right hand side, shape is (n,) or (n,1)
+    x0 : {array, matrix}
+        initial guess, default is a vector of zeros
     tol : float
-        convergence tolerance
-    restrt : int
-        number of restarts
-        total iterations = restrt*maxiter
-    maxiter : int
-        maximum number of allowed inner iterations
+        relative convergence tolerance, i.e. tol is scaled by ||b||
+    restrt : {None, int}
+        if int, restrt is max number of inner iterations
+            and maxiter is the max number of outer iterations
+        if None, do not restart GMRES, and max number of inner iterations is maxiter
+    maxiter : {None, int}
+        if restrt is None, maxiter is the max number of inner iterations 
+            and GMRES does not restart  
+        if restrt is int, maxiter is the max number of outer iterations, 
+            and restrt is the max number of inner iterations
     xtype : type
-        dtype for the solution
-    M : matrix-like
+        dtype for the solution, default is automatic type detection
+    M : {array, matrix, sparse matrix, LinearOperator}
         n x n, inverted preconditioner, i.e. solve A M x = b.
-        M need not be static for fgmres
-        For preconditioning with a mat-vec routine, set
-        A.psolve = func, where func := M y
+        M need not be stationary for fgmres
     callback : function
-        callback( ||resid||_2 ) is called each iteration, 
-    residuals : {None, empty-list}
-        If empty-list, residuals holds the residual norm history,
-        including the initial residual, upon completion
+        User-supplied funtion is called after each iteration as
+        callback( ||rk||_2 ), where rk is the current residual vector
+    residuals : list
+        residuals has the residual norm history,
+        including the initial residual, appended to it
      
     Returns
     -------    
@@ -71,16 +74,22 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
 
     Notes
     -----
+    The LinearOperator class is in scipy.sparse.linalg.interface.
+    Use this class if you prefer to define A or M as a mat-vec routine
+    as opposed to explicitly constructing the matrix.  A.psolve(..) is
+    still supported as a legacy.
+
+    fGMRES allows for nonstationary preconditioners, as opposed to GMRES
     
     Examples
     --------
-    >>>from pyamg.krylov import *
-    >>>from scipy import rand
-    >>>import pyamg
-    >>>A = pyamg.poisson((50,50))
-    >>>b = rand(A.shape[0],)
-    >>>(x,flag) = fgmres(A,b)
-    >>>print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov import *
+    >>> from scipy import rand
+    >>> import pyamg
+    >>> A = pyamg.poisson((50,50))
+    >>> b = rand(A.shape[0],)
+    >>> (x,flag) = fgmres(A,b,maxiter=200,tol=1e-8)
+    >>> print pyamg.util.linalg.norm(b - A*x)
 
     References
     ----------
@@ -102,19 +111,24 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     else:
         keep_r = False
 
-    # check number of iterations
-    if restrt == None:
-        restrt = 1
-    elif restrt < 1:
-        raise ValueError('Number of restarts must be positive')
-
-    if maxiter == None:
-        maxiter = int(min(ceil(dimen/restrt), 40.0))
-    elif maxiter < 1:
-        raise ValueError('Number of iterations must be positive')
-    elif maxiter > dimen:
-        warn('maximimum allowed inner iterations (maxiter) are the number of degress of freedom')
-        maxiter = dimen
+    # Set number of outer and inner iterations
+    if restrt:
+        if maxiter:
+            max_outer = maxiter
+        else:
+            max_outer = 1
+        if restrt > dimen:
+            warn('Setting number of inner iterations (restrt) to maximimum allowed, which is A.shape[0] ')
+            restrt = dimen
+        max_inner = restrt
+    else:
+        max_outer = 1
+        if maxiter > dimen:
+            warn('Setting number of inner iterations (maxiter) to maximimum allowed, which is A.shape[0] ')
+            maxiter = dimen
+        elif maxiter == None:
+            maxiter = min(dimen, 40)
+        max_inner = maxiter
 
     # Scale tol by normb
     normb = norm(b) 
@@ -146,12 +160,12 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         return (postprocess(x), 0)
 
     # Use separate variable to track iterations.  If convergence fails, we cannot 
-    # simply report niter = (outer-1)*maxiter + inner.  Numerical error could cause 
-    # the inner loop to halt before reaching maxiter while the actual ||r|| > tol.
+    # simply report niter = (outer-1)*max_outer + inner.  Numerical error could cause 
+    # the inner loop to halt while the actual ||r|| > tol.
     niter = 0
 
     # Begin fGMRES
-    for outer in range(restrt):
+    for outer in range(max_outer):
 
         # Calculate vector w, which defines the Householder reflector
         #    Take shortcut in calculating, 
@@ -159,88 +173,78 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         w = r 
         beta = mysign(w[0])*normr
         w[0] += beta
-        w = w / norm(w)
+        w /= norm(w)
     
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg matrix
-        # Space required is O(dimen*maxiter)
-        H = zeros( (maxiter, maxiter), dtype=xtype)         # upper Hessenberg matrix (actually made upper tri with Given's Rotations) 
-        W = zeros( (dimen, maxiter), dtype=xtype)           # Householder reflectors
-        Z = zeros( (dimen, maxiter), dtype=xtype)           # For fGMRES, preconditioned vectors must be stored
+        # Space required is O(dimen*max_inner)
+        Q = zeros( (4*max_inner,), dtype=xtype)               # Given's Rotations
+        H = zeros( (max_inner, max_inner), dtype=xtype)         # upper Hessenberg matrix (actually made upper tri with Given's Rotations) 
+        W = zeros( (max_inner, dimen), dtype=xtype)           # Householder reflectors
+        Z = zeros( (dimen, max_inner), dtype=xtype)           # For fGMRES, preconditioned vectors must be stored
                                                             #     No Horner-like scheme exists that allow us to avoid this
-        W[:,0] = w
+        W[0,:] = w
     
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
         # This is the RHS vector for the problem in the Krylov Space
         g = zeros((dimen,), dtype=xtype) 
         g[0] = -beta
     
-        for inner in range(maxiter):
+        for inner in range(max_inner):
             # Calcute Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
             v = -2.0*conjugate(w[inner])*w
             v[inner] += 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
-            for j in range(inner-1,-1,-1):
-                v = v - 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
-            
+            #for j in range(inner-1,-1,-1):
+            #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
+            multigridtools.apply_householders(v, ravel(W), dimen, inner-1, -1, -1)
+ 
             #Apply preconditioner
             v = ravel(M*v)
-            # Check for nan, inf    
-            if isnan(v).any() or isinf(v).any():
-                warn('inf or nan after application of preconditioner')
-                return(postprocess(x), -1)
+            ## Check for nan, inf    
+            #if isnan(v).any() or isinf(v).any():
+            #    warn('inf or nan after application of preconditioner')
+            #    return(postprocess(x), -1)
             Z[:,inner] = v
 
             # Calculate new search direction
             v = ravel(A*v)
 
             # Factor in all Householder orthogonal reflections on new search direction
-            for j in range(inner+1):
-                v = v - 2.0*dot(conjugate(W[:,j]), v)*W[:,j]
-                  
+            #for j in range(inner+1):
+            #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
+            multigridtools.apply_householders(v, ravel(W), dimen, 0, inner+1, 1)
+      
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
-            #  Note that if maxiter = dimen, then this is unnecessary for the last inner 
+            #  Note that if max_inner = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  Here we do not need to calculate a
             #     Householder reflector or Given's rotation because nnz(v) is already the
             #     desired length, i.e. we do not need to zero anything out.
             if inner != dimen-1:
-                w = zeros((dimen,), dtype=xtype)
+                if inner < (max_inner-1):
+                    w = W[inner+1,:]
                 vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
                     alpha = mysign(vslice[0])*alpha
                     # We do not need the final reflector for future calculations
-                    if inner < (maxiter-1):
+                    if inner < (max_inner-1):
                         w[inner+1:] = vslice
                         w[inner+1] += alpha
-                        w = w / norm(w)
-                        W[:,inner+1] = w
+                        w /= norm(w)
       
                     # Apply new reflector to v
                     #  v = v - 2.0*w*(w.T*v)
                     v[inner+1] = -alpha
                     v[inner+2:] = 0.0
             
-            # Apply all previous Given's Rotations to v
-            if inner == 0:
-                # Q will store the cumulative effect of all Given's Rotations
-                Q = scipy.sparse.eye(dimen, dimen, format='csr', dtype=xtype)
+            if inner > 0:
+                # Apply all previous Given's Rotations to v
+                multigridtools.apply_givens(Q, v, dimen, inner)
 
-                # Declare initial Qj, which will be the current Given's Rotation
-                rowptr  = hstack( (array([0, 2, 4],int), arange(5,dimen+3,dtype=int)) )
-                colindices = hstack( (array([0, 1, 0, 1],int), arange(2, dimen,dtype=int)) )
-                data = ones((dimen+2,), dtype=xtype)
-                Qj = csr_matrix( (data, colindices, rowptr), shape=(dimen,dimen), dtype=xtype)
-            else: 
-                # Could avoid building a global Given's Rotation, by storing 
-                # and applying each 2x2 matrix individually.
-                # But that would require looping, the bane of wonderful Python
-                Q = Qj*Q
-                v = Q*v
-      
-            # Calculate Qj, the next Given's rotation, where j = inner
-            #  Note that if maxiter = dimen, then this is unnecessary for the last inner 
+            # Calculate the next Given's rotation, where j = inner
+            #  Note that if max_inner = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  Here we do not need to calculate a
             #     Householder reflector or Given's rotation because nnz(v) is already the
             #     desired length, i.e. we do not need to zero anything out.
@@ -260,18 +264,8 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
                     denom = sqrt( h1_mag**2 + h2_mag**2 )               
                     c = h1_mag/denom; s = h2_mag*tau/denom; 
                     Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype) 
-                    
-                    # Modify Qj in csr-format so that it represents the current 
-                    #   global Given's Rotation equivalent to Qblock
-                    if inner != 0:
-                        Qj.data[inner-1] = 1.0
-                        Qj.indices[inner-1] = inner-1
-                        Qj.indptr[inner-1] = inner-1
-                    
-                    Qj.data[inner:inner+4] = ravel(Qblock)
-                    Qj.indices[inner:inner+4] = [inner, inner+1, inner, inner+1]
-                    Qj.indptr[inner:inner+3] = [inner, inner+2, inner+4]
-                    
+                    Q[(inner*4) : ((inner+1)*4)] = ravel(Qblock).copy()
+
                     # Apply Given's Rotation to g, 
                     #   the RHS for the linear system in the Krylov Subspace.
                     #   Note that this dot does a matrix multiply, not an actual
@@ -284,11 +278,11 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             
             # Write to upper Hessenberg Matrix,
             #   the LHS for the linear system in the Krylov Subspace
-            H[:,inner] = v[0:maxiter]
+            H[:,inner] = v[0:max_inner]
       
             # Don't update normr if last inner iteration, because 
             # normr is calculated directly after this loop ends.
-            if inner < maxiter-1:
+            if inner < max_inner-1:
                 normr = abs(g[inner+1])
                 if normr < tol:
                     break

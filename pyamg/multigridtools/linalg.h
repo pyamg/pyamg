@@ -57,7 +57,7 @@ inline double mynormsq(const npy_cdouble_wrapper& x)
  * calculate conjuate(x).T y
 */
 template<class I, class T>
-T dot_prod(const T x[], const T y[], const I n)
+inline T dot_prod(const T x[], const T y[], const I n)
 {
     T sum = 0.0;
     for( I i = 0; i < n; i++)
@@ -71,7 +71,7 @@ T dot_prod(const T x[], const T y[], const I n)
  * calculate x = x + alpha*y
 */
 template<class I, class T>
-void axpy(T x[], const T y[], const T alpha, const I n)
+inline void axpy(T x[], const T y[], const T alpha, const I n)
 {
     for( I i = 0; i < n; i++)
     {   x[i] += alpha*y[i]; }

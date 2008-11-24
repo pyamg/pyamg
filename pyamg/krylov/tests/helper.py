@@ -103,13 +103,6 @@ def real_runs(krylov, n_max = 12, Weak=False, Symmetric=False):
     assert_equal(x.any(), False)             #print 'krylov failed with all zero input'
     assert_equal(flag, 0)
     
-    # Try some invalid iteration numbers, invalid dimensions are handled by make_system(..)  
-    try: krylov(A, v1, maxiter=0)
-    except ValueError:
-        pass
-    else:
-        assert(0) #print "Failed to detect bad maxiter"
-    
     # Build and test list of random dense matrices
     cases = []
     for i in range(1,n_max):
@@ -263,20 +256,13 @@ def real_runs_restrt(krylov, n_max=12):
         A = pyamg.poisson( (i,i), format='csr' )
         cases.append(( A, rand(A.shape[0],1)    ))
 
-    try: krylov(A, zeros((A.shape[0],)), restrt=0)
-    except ValueError:
-        pass
-    else:
-        assert(0) #print "Failed to detect bad restrt"
-
-    
     for i in range(len(cases)):
         A = cases[i][0]
         b=cases[i][1]
         x0=rand(A.shape[0],1)
         
-        restrt=1 
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=1 
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)
@@ -285,8 +271,8 @@ def real_runs_restrt(krylov, n_max=12):
         #print "callback used an incorrect number of times"
         assert_equal( len(residuals), restrt*maxiter)
 
-        restrt=2
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=2
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)
@@ -295,8 +281,8 @@ def real_runs_restrt(krylov, n_max=12):
         #print "callback used an incorrect number of times"
         assert_equal( len(residuals), restrt*maxiter)
         
-        restrt=3 
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=3 
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)
@@ -509,8 +495,8 @@ def complex_runs_restrt(krylov, n_max=12):
         b=cases[i][1]
         x0=rand(A.shape[0],1)
         
-        restrt=1 
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=1 
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)
@@ -519,8 +505,8 @@ def complex_runs_restrt(krylov, n_max=12):
         #print "callback used an incorrect number of times"
         assert_equal( len(residuals), restrt*maxiter)
 
-        restrt=2 
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=2 
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)
@@ -529,8 +515,8 @@ def complex_runs_restrt(krylov, n_max=12):
         #print "callback used an incorrect number of times"
         assert_equal( len(residuals), restrt*maxiter)
 
-        restrt=3
-        maxiter=int(ceil(A.shape[0]/8))
+        maxiter=3
+        restrt=int(ceil(A.shape[0]/8))
         residuals = []
         def callback_fcn(x):
             if isscalar(x): residuals.append(x)

@@ -20,30 +20,26 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
     Parameters
     ----------
-    A : array, matrix or sparse matrix
+    A : {array, matrix, sparse matrix, LinearOperator}
         n x n, linear system to solve
-    b : array
-        n x 1, right hand side
-    x0 : array
-        n x 1, initial guess
-        default is a vector of zeros
+    b : {array, matrix}
+        right hand side, shape is (n,) or (n,1)
+    x0 : {array, matrix}
+        initial guess, default is a vector of zeros
     tol : float
-        convergence tolerance
+        relative convergence tolerance, i.e. tol is scaled by ||b||
     maxiter : int
         maximum number of allowed iterations
-        default is A.shape[0]
     xtype : type
-        dtype for the solution
-    M : matrix-like
+        dtype for the solution, default is automatic type detection
+    M : {array, matrix, sparse matrix, LinearOperator}
         n x n, inverted preconditioner, i.e. solve M A.H A x = b.
-        For preconditioning with a mat-vec routine, set
-        A.psolve = func, where func := M y
     callback : function
-        callback( r ) is called each iteration, 
-        where r = b - A*x 
-    residuals : {None, empty-list}
-        If empty-list, residuals holds the residual norm history,
-        including the initial residual, upon completion
+        User-supplied funtion is called after each iteration as
+        callback(xk), where xk is the current solution vector
+    residuals : list
+        residuals has the residual norm history,
+        including the initial residual, appended to it
      
     Returns
     -------    
@@ -58,6 +54,10 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
     Notes
     -----
+    The LinearOperator class is in scipy.sparse.linalg.interface.
+    Use this class if you prefer to define A or M as a mat-vec routine
+    as opposed to explicitly constructing the matrix.  A.psolve(..) is
+    still supported as a legacy.
     
     Examples
     --------
@@ -66,7 +66,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     >>>import pyamg
     >>>A = pyamg.poisson((50,50))
     >>>b = rand(A.shape[0],)
-    >>>(x,flag) = cgnr(A,b)
+    >>>(x,flag) = cgnr(A,b,maxiter=1500, tol=1e-8)
     >>>print pyamg.util.linalg.norm(b - A*x)
 
     References
@@ -127,7 +127,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Is initial guess sufficient?
     if normr <= tol:
         if callback != None:    
-            callback(r)
+            callback(x)
         
         return (postprocess(x), 0)
    
@@ -169,7 +169,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
         # Allow user access to residual
         if callback != None:
-            callback( r )
+            callback( x )
         
         # test for convergence
         normr = norm(r)
