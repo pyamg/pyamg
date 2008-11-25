@@ -80,7 +80,10 @@ def real_runs(krylov, n_max = 12, Weak=False, Symmetric=False):
     Weak is used to be somewhat less rigorous for methods like cgne or cgnr
     Symmetric allows this routine to be run with a symmetric solver like CG
     '''
-    
+   
+    from numpy.random import seed
+    seed(0)
+
     A = zeros((10,10))
     M = zeros((10,9))
     v1 = zeros((10,1))

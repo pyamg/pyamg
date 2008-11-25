@@ -3,7 +3,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from scipy import hstack, ceil, isnan, isinf
-from scipy.linalg import lu_solve
+from scipy.linalg import solve
 from warnings import warn
 from pyamg.util.linalg import norm
 from pyamg import multigridtools
@@ -300,8 +300,9 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         # Find best update to x in Krylov Space, V.  Solve inner+1 x inner+1 system.
         #   Apparently this is the best way to solve a triangular
         #   system in the magical world of scipy
-        piv = arange(inner+1)
-        y = lu_solve((H[0:(inner+1),0:(inner+1)], piv), g[0:(inner+1)], trans=0)
+        #piv = arange(inner+1)
+        #y = lu_solve((H[0:(inner+1),0:(inner+1)], piv), g[0:(inner+1)], trans=0)
+        y = solve(H[0:(inner+1),0:(inner+1)], g[0:(inner+1)])
         
         # Use Horner like Scheme to map solution, y, back to original space.
         # Note that we do not use the last reflector.
