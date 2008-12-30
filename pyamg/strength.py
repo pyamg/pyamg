@@ -48,7 +48,7 @@ def classical_strength_of_connection(A, theta=0.0):
     Second edition. Society for Industrial and Applied Mathematics (SIAM),
     Philadelphia, PA, 2000. xii+193 pp. ISBN: 0-89871-462-1
 
-    Trottenberg, U., Oosterlee, C. W., Schüller, A., "Multigrid",
+    Trottenberg, U., Oosterlee, C. W., Schuller, A., "Multigrid",
     Academic Press, Inc., San Diego, CA, 2001. xvi+631 pp. ISBN: 0-12-701070-X
 
     Examples
