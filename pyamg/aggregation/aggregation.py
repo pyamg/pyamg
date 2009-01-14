@@ -85,17 +85,19 @@ def smoothed_aggregation_solver(A, B=None,
     Notes
     -----
     - The additional parameters are passed through as arguments to
-    multilevel_solver.  Refer to pyamg.multilevel_solver for additional
-    documentation.
+      multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+      documentation.
+
     - At each level, four steps are executed in order to define the coarser
       level operator.
-        1. Matrix A is given and used to derive a strength matrix, C.
-        2. Based on the strength matrix, indices are grouped or aggregated.
-        3. The aggregates define coarse nodes and a tentative prolongation 
-           operator T is defined by injection 
-        4. The tentative prolongation operator is smoothed by a relaxation
-           scheme to improve the quality and extent of interpolation from the
-           aggregates to fine nodes.
+
+      1. Matrix A is given and used to derive a strength matrix, C.
+      2. Based on the strength matrix, indices are grouped or aggregated.
+      3. The aggregates define coarse nodes and a tentative prolongation 
+         operator T is defined by injection 
+      4. The tentative prolongation operator is smoothed by a relaxation
+         scheme to improve the quality and extent of interpolation from the
+         aggregates to fine nodes.
 
     Example
     -------
