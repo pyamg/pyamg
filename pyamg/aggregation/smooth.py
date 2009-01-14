@@ -10,7 +10,6 @@ __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
         'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
         'kaczmarz_jacobi_prolongation_smoother']
 
-
 def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     """Jacobi prolongation smoother
    
@@ -31,7 +30,6 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) * T
         where K = diag(S)^-1 * S and rho(K) is an approximation to the 
         spectral radius of K.
-
     """
 
     D = S.diagonal()

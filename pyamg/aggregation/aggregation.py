@@ -132,16 +132,6 @@ def smoothed_aggregation_solver(A, B=None,
     else:
         B = asarray(B, dtype=A.dtype)
     
-    #if rescale:
-    #    D_sqrt,D_sqrt_inv,A = symmetric_rescaling(A)
-    #    D_sqrt,D_sqrt_inv = diag_sparse(D_sqrt),diag_sparse(D_sqrt_inv)
-
-    #    B = D_sqrt * B  #scale candidates
-    #    def pre(x,b):
-    #        return D_sqrt*x,D_sqrt_inv*b
-    #    def post(x):
-    #        return D_sqrt_inv*x
-
     if isinstance(aggregate,tuple) and aggregate[0] == 'predefined':
         # predefined aggregation operators
         max_levels = len(aggregate[1]) + 1
