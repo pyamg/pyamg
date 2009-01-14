@@ -2,24 +2,23 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import array, arange, ones, zeros, sqrt, asarray, \
-        empty, empty_like, diff, abs, conjugate
-
-from scipy.sparse import csr_matrix, coo_matrix, \
-        isspmatrix_csr, bsr_matrix, isspmatrix_bsr
+from numpy import arange, ones, zeros, asarray, abs
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 
 from pyamg import multigridtools
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import setup_smoothers
-from pyamg.util.utils import symmetric_rescaling, diag_sparse, scale_columns
+from pyamg.util.utils import symmetric_rescaling, diag_sparse
+from pyamg.strength import classical_strength_of_connection, \
+        symmetric_strength_of_connection, ode_strength_of_connection
 
-from pyamg.strength import *
-from aggregate import *
+from aggregate import standard_aggregation, lloyd_aggregation
 from tentative import fit_candidates
-from smooth import *
+from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
+        energy_prolongation_smoother, kaczmarz_richardson_prolongation_smoother, \
+        kaczmarz_jacobi_prolongation_smoother
 
 __all__ = ['smoothed_aggregation_solver']
-
 
 def smoothed_aggregation_solver(A, B=None, 
         mat_flag='hermitian',
@@ -29,10 +28,11 @@ def smoothed_aggregation_solver(A, B=None,
         presmoother=('gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('gauss_seidel',{'sweep':'symmetric'}),
         max_levels = 10, max_coarse = 500, **kwargs):
-    """Create a multilevel solver using Smoothed Aggregation (SA)
+    """
+    Create a multilevel solver using Smoothed Aggregation (SA)
 
-    Setup Parameters
-    ----------------
+    Parameters
+    ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix in CSR or BSR format
     B : {None, array_like}
@@ -49,19 +49,21 @@ def smoothed_aggregation_solver(A, B=None,
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
     aggregate : ['standard', 'lloyd', ('predefined',[csr_matrix, ...])]
-        Method used to aggregate nodes.  A predefined aggregation is specified 
-        with a sequence of csr_matrices that represent the aggregation operators
-        on each level of the hierarchy.
+        Method used to aggregate nodes.  A predefined aggregation is specified
+        with a sequence of csr_matrices that represent the aggregation
+        operators on each level of the hierarchy.  For instance [ Agg0, Agg1 ]
+        defines a three-level hierarchy where the dimensions of A, Agg0 and
+        Agg1 are compatible, i.e.  Agg0.shape[1] == A.shape[0] and
+        Agg1.shape[1] == Agg0.shape[0].
     smooth : ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
         Method used used to smooth the tentative prolongator.
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    
-    
-    Cycle Parameters
-    ----------------
+
+    Additional Parameters
+    ---------------------
     cycle_type : ['V','W','F']
         Structrure of multigrid cycle
     presmoother  : ['gauss_seidel', 'jacobi', ... ]
@@ -71,43 +73,48 @@ def smoothed_aggregation_solver(A, B=None,
     coarse_solver : ['splu','lu', ... ]
         Solver used at the coarsest level of the MG hierarchy 
 
-    Cycle parameters are passed through as arguments to multilevel_solver.
-    Refer to pyamg.multilevel_solver for additional documentation.
-    
+    Returns
+    -------
+    ml : multilevel_solver
+        Multigrid hierarchy of matrices and prolongation operators
+
+    See Also
+    --------
+    multilevel_solver, classical.ruge_stuben_solver
 
     Notes
     -----
-    TODO Distinguish betwenn setup and cycle parameters
-    TODO describe sequence of operations on each level
-    strength -> aggregate -> tentative -> smooth
-
-
-
-    Unused Parameters
-    -----------------
-    aggregation: {sequence of csr_matrix objects}
-        List of csr_matrix objects that describe a user-defined
-        multilevel aggregation of the degrees of freedom.
-        For instance [ Agg0, Agg1 ] defines a three-level hierarchy
-        where the dimensions of A, Agg0 and Agg1 are compatible, i.e.
-        Agg0.shape[1] == A.shape[0] and Agg1.shape[1] == Agg0.shape[0].
-  
-
+    - The additional parameters are passed through as arguments to
+    multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+    documentation.
+    - At each level, four steps are executed in order to define the coarser
+      level operator.
+        1. Matrix A is given and used to derive a strength matrix, C.
+        2. Based on the strength matrix, indices are grouped or aggregated.
+        3. The aggregates define coarse nodes and a tentative prolongation 
+           operator T is defined by injection 
+        4. The tentative prolongation operator is smoothed by a relaxation
+           scheme to improve the quality and extent of interpolation from the
+           aggregates to fine nodes.
 
     Example
     -------
-        TODO
-        TODO show aggregate=('predefined',[AggOp1,AggOp2])
+    >>> from pyamg import smoothed_aggregation_solver, poisson
+    >>> from scipy.sparse.linalg import cg
+    >>> from scipy import rand
+    >>> A = poisson((100,100), format='csr')           # matrix
+    >>> b = rand(A.shape[0])                           # random RHS
+    >>> ml = smoothed_aggregation_solver(A)            # AMG solver
+    >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
+    >>> x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
 
     References
     ----------
-
-        Petr Vanek, Jan Mandel and Marian Brezina
-        "Algebraic Multigrid by Smoothed Aggregation for Second and Fourth Order Elliptic Problems",
-        http://citeseer.ist.psu.edu/vanek96algebraic.html
+    Petr Vanek, Jan Mandel and Marian Brezina
+    "Algebraic Multigrid by Smoothed Aggregation for Second and Fourth Order Elliptic Problems",
+    http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
-    
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         raise TypeError('argument A must have type csr_matrix or bsr_matrix')
 
@@ -152,59 +159,12 @@ def smoothed_aggregation_solver(A, B=None,
     setup_smoothers(ml, presmoother, postsmoother)
     return ml
 
-
-def sa_filtered_matrix(A,theta):
-    """The filtered matrix is obtained from A by lumping all weak off-diagonal
-    entries onto the diagonal.  Weak off-diagonals are determined by
-    the standard strength of connection measure using the parameter theta.
-
-    In the case theta = 0.0, (i.e. no weak connections) A is returned.
+def extend_hierarchy(levels, strength, aggregate, smooth):
+    """Service routine to implement the strenth of connection, aggregation,
+    tentative prolongation construction, and prolongation smoothing.  Called by
+    smoothed_aggregation_solver.
     """
 
-    if theta == 0:
-        return A
-
-    if isspmatrix_csr(A): 
-        #TODO rework this
-        raise NotImplementedError('blocks not handled yet')
-        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
-        return csr_matrix((Sx,Sj,Sp),shape=A.shape)
-    elif ispmatrix_bsr(A):
-        raise NotImplementedError('blocks not handled yet')
-    else:
-        return sa_filtered_matrix(csr_matrix(A),theta)
-##            #TODO subtract weak blocks from diagonal blocks?
-##            num_dofs   = A.shape[0]
-##            num_blocks = blocks.max() + 1
-##
-##            if num_dofs != len(blocks):
-##                raise ValueError,'improper block specification'
-##
-##            # for non-scalar problems, use pre-defined blocks in aggregation
-##            # the strength of connection matrix is based on the 1-norms of the blocks
-##
-##            B  = csr_matrix((ones(num_dofs),blocks,arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
-##            Bt = B.T.tocsr()
-##
-##            #1-norms of blocks entries of A
-##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
-##
-##            S = symmetric_strength_of_connection(Block_A,theta)
-##            S.data[:] = 1
-##
-##            Mask = B * S * Bt
-##
-##            A_strong = A ** Mask
-##            #A_weak   = A - A_strong
-##            A_filtered = A_strong
-
-    return A_filtered
-
-
-
-
-
-def extend_hierarchy(levels, strength, aggregate, smooth):
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
@@ -291,8 +251,49 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
     levels[-1].A = A
     levels[-1].B = B
 
+## unused, but useful
+def sa_filtered_matrix(A,theta):
+    """The filtered matrix is obtained from A by lumping all weak off-diagonal
+    entries onto the diagonal.  Weak off-diagonals are determined by
+    the standard strength of connection measure using the parameter theta.
 
+    In the case theta = 0.0, (i.e. no weak connections) A is returned.
+    """
 
+    if theta == 0:
+        return A
 
-
-
+    if isspmatrix_csr(A): 
+        #TODO rework this
+        raise NotImplementedError('blocks not handled yet')
+        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
+        return csr_matrix((Sx,Sj,Sp),shape=A.shape)
+    elif ispmatrix_bsr(A):
+        raise NotImplementedError('blocks not handled yet')
+    else:
+        return sa_filtered_matrix(csr_matrix(A),theta)
+##            #TODO subtract weak blocks from diagonal blocks?
+##            num_dofs   = A.shape[0]
+##            num_blocks = blocks.max() + 1
+##
+##            if num_dofs != len(blocks):
+##                raise ValueError,'improper block specification'
+##
+##            # for non-scalar problems, use pre-defined blocks in aggregation
+##            # the strength of connection matrix is based on the 1-norms of the blocks
+##
+##            B  = csr_matrix((ones(num_dofs),blocks,arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
+##            Bt = B.T.tocsr()
+##
+##            #1-norms of blocks entries of A
+##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
+##
+##            S = symmetric_strength_of_connection(Block_A,theta)
+##            S.data[:] = 1
+##
+##            Mask = B * S * Bt
+##
+##            A_strong = A ** Mask
+##            #A_weak   = A - A_strong
+##            A_filtered = A_strong
+    return A_filtered
