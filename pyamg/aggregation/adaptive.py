@@ -2,16 +2,15 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import sqrt, ravel, diff, zeros, ones, zeros_like, inner, concatenate, \
-                  asarray, hstack, ascontiguousarray, isinf, dot, conjugate
+from numpy import zeros, zeros_like, hstack, dot, conjugate
 from numpy.random import randn, rand
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
+from scipy.sparse import bsr_matrix
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
 from pyamg.relaxation.smoothing import setup_smoothers
-import pyamg.relaxation
+
 from pyamg.util.linalg import norm
 
 from aggregation import smoothed_aggregation_solver
@@ -22,8 +21,6 @@ from tentative import fit_candidates
 
 __all__ = ['adaptive_sa_solver']
 
-
-
 def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         num_candidates=1, candidate_iters=5, 
         improvement_iters=0, epsilon=0.1,
@@ -31,12 +28,11 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         prepostsmoother=('gauss_seidel', {'sweep':'symmetric'}),
         smooth=('jacobi', {}),
         **kwargs):
-    """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
-
+    """
+    Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
     Parameters
     ----------
-
     A : {csr_matrix, bsr_matrix}
         Square matrix in CSR or BSR format
     mat_flag : {string}
@@ -53,7 +49,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         the adaptive setup phase
     improvement_iters : {integer} : default 0
         Number of times each candidate is improved
-    epsilon : {float} : default 0.10
+    epsilon : {float} : default 0.1
         Target convergence factor
     prepostsmoother : {string or dict} 
         Pre- and post-smoother used in the adaptive method
@@ -63,7 +59,6 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
     
     Optional Parameters
     -------------------
-
     max_levels: {integer}
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer}
@@ -80,8 +75,6 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         where the dimensions of A, Agg0 and Agg1 are compatible, i.e.
         Agg0.shape[1] == A.shape[0] and Agg1.shape[1] == Agg0.shape[0].
   
-                    
-
     Notes
     -----
         Unlike the standard Smoothed Aggregation (SA) method, adaptive SA
@@ -90,27 +83,28 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         'from scratch'.  This approach is useful when no candidates are known
         or the candidates have been invalidated due to changes to matrix A.
         
-
     Example
     -------
-        TODO
+
 
     References
     ----------
-
-        Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-        "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-        SIAM Review Volume 47,  Issue 2  (2005)
-        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
-
+    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+    SIAM Review Volume 47,  Issue 2  (2005)
+    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
     
     ###
     # develop first candidate
+    # Algorithm 3
     B,AggOps = initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, 
             max_levels, max_coarse, aggregation, prepostsmoother, smooth)
+
     # Normalize B
     B = (1.0/norm(B))*B
+    #mymax = abs(B).max()
+    #B = 1/mymax * B
     
     kwargs['aggregate'] = ('predefined',AggOps)
 
@@ -123,6 +117,8 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         
         # Normalize x and add to candidate list
         x = (1.0/norm(x))*x
+        #mymax = abs(x).max()
+        #x = 1/mymax * x
         B = hstack((B,x))
 
     ###
@@ -138,6 +134,8 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
             
             # Normalize x and add to candidate list
             x = (1.0/norm(x))*x
+            #mymax = abs(x).max()
+            #x = 1/mymax * x
             if B==None:
                 B=x
             else:
@@ -160,41 +158,37 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 #        ml.presmooth(A,x,b)
 #        ml.postsmooth(A,x,b)
    
-   
-
+def unpack_arg(v):
+    if isinstance(v,tuple):
+        return v[0],v[1]
+    else:
+        return v,{}
+     
 def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels, max_coarse, aggregation, prepostsmoother, smooth):
-    """Computes a complete aggregation and the first near-nullspace candidate
-
-
     """
-    def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
-        else:
-            return v,{}
+    Computes a complete aggregation and the first near-nullspace candidate
+    following Algorithm 3 in Brezina et al.
+    
+    Parameters
+    ----------
+    candidate_iters 
+        number of test relaxation iterations
+    epsilon 
+        minimum acceptable relaxation convergence factor
+
+    References
+    ----------
+    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+    SIAM Review Volume 47,  Issue 2  (2005)
+    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+    """
 
     if aggregation is not None:
         max_coarse = 0
         max_levels = len(aggregation) + 1
 
-    # aSA parameters
-    # candidate_iters - number of test relaxation iterations
-    # epsilon - minimum acceptable relaxation convergence factor
-
-    #step 1
-    A_l = A
-    x   = randn(A_l.shape[0],1) # TODO see why randn() fails here
-    if A_l.dtype == complex:
-        x = x + 1.0j*randn(A_l.shape[0],1)
-    skip_f_to_i = False
-
     def relax(A,x):
-        def unpack_arg(v):
-            if isinstance(v,tuple):
-                return v[0],v[1]
-            else:
-                return v,{}
-
         fn, kwargs = unpack_arg(prepostsmoother)
         if fn == 'gauss_seidel':
             gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
@@ -202,23 +196,41 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
             kaczmarz_gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         else:
             raise TypeError('Unrecognized smoother')
-    
+
+    skip_f_to_i = False  # flag for skipping steps f-i in step 4
+
+    #step 1
+    A_l = A
+    x   = randn(A_l.shape[0],1)
+    if A_l.dtype == complex:
+        x = x + 1.0j*randn(A_l.shape[0],1)
+
     #step 2
+    #x_A_x_old = dot(conjugate(x).T,A_l*x)
     relax(A_l,x)
+    #x_A_x = dot(conjugate(x).T,A_l*x)
 
     #step 3
-    #TODO test convergence rate here
+    # not advised to stop the iteration here: often the first relaxation pass _is_ good, but the remaining
+    # passes are poor
+    #if x_A_x/x_A_x_old < epsilon:
+    #    # relaxation alone is sufficient
+    #    print 'relaxation alone works: %g'%(x_A_x/x_A_x_old)
+    #    return x, []
 
+    #step 4
     As     = [A]
     Ps     = []
     AggOps = []
 
     while len(AggOps) + 1 < max_levels and A_l.shape[0] > max_coarse:
+
         if aggregation is None:
             C_l   = symmetric_strength_of_connection(A_l)
             AggOp = standard_aggregation(C_l)                                  #step 4b
         else:
             AggOp = aggregation[len(AggOps)]
+
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
         
         fn, kwargs = unpack_arg(smooth)                                        #step 4d
@@ -237,7 +249,6 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
         else:
             raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
         
-        ##
         # R should reflect A's structure                                          #step 4e
         if mat_flag == 'symmetric':
             A_l   = P_l.T.asformat(P_l.format) * A_l * P_l   
@@ -248,14 +259,15 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
         Ps.append(P_l)
         As.append(A_l)
 
-        if A_l.shape <= max_coarse:  break
+        if A_l.shape <= max_coarse:  break # skip to step 5 as in step 4e
 
         if not skip_f_to_i:
             x_hat = x.copy()                                                   #step 4g
             relax(A_l,x)                                                       #step 4h
             if pdef == True:
                 x_A_x = dot(conjugate(x).T,A_l*x)
-                err_ratio = (x_A_x/dot(conjugate(x_hat).T,A_l*x_hat))**(1.0/candidate_iters) 
+                xhat_A_xhat = dot(conjugate(x_hat).T,A_l*x_hat)
+                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
             else:
                 # use A.H A innerproduct
                 Ax = A_l*x; Axhat = A_l*x_hat;
@@ -263,11 +275,12 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
                 err_ratio = (x_A_x/dot(conjugate(Axhat).T,Axhat))**(1.0/candidate_iters) 
 
             if err_ratio < epsilon:                                            #step 4i
-                print "sufficient convergence, skipping"
+                #print "sufficient convergence, skipping"
                 skip_f_to_i = True
                 if x_A_x == 0:
                     x = x_hat  #need to restore x
 
+    #step 5
     # extend coarse-level candidate to the finest level
     for A_l,P in reversed(zip(As[1:],Ps)):
         relax(A_l,x)
@@ -278,12 +291,6 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
 
 def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
-         
-    def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
-        else:
-            return v,{}
     
     levels = ml.levels
 
@@ -352,12 +359,6 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
 
         x = solver.solve(zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
 
-
-    def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
-        else:
-            return v,{}
     
     fn, kwargs = unpack_arg(prepostsmoother)
     for lvl in reversed(levels[:-2]):
@@ -371,5 +372,3 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
 
     
     return x
-
-
