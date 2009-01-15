@@ -1,4 +1,4 @@
-from numpy import array, zeros,  inner, conjugate
+from numpy import array, zeros,  inner, conjugate, ravel
 from scipy.sparse import csr_matrix, isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -99,6 +99,11 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     if normr < tol:
         return (postprocess(x), 0)
    
+    # Is this a one dimensional matrix?
+    if A.shape[0] == 1:
+        entry = ravel(A*array([1.0], dtype=xtype))
+        return (postprocess(b/entry), 0)
+
     rstar = r.copy()
     p     = r.copy()
 

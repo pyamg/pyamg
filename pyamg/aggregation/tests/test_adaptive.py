@@ -75,8 +75,8 @@ class TestComplexAdaptiveSA(TestCase):
         cases.append((Ai, 0.75))
         
         # imaginary shift 
-        Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        cases.append((Ai,0.75))
+        #Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
+        #cases.append((Ai,0.75))
 
         for A,rratio in cases:
             asa = adaptive_sa_solver(A, num_candidates = 1, mat_flag='symmetric')
