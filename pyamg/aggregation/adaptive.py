@@ -3,7 +3,7 @@
 __docformat__ = "restructuredtext en"
 
 from numpy import sqrt, ravel, diff, zeros, ones, zeros_like, inner, concatenate, \
-                  asarray, hstack, ascontiguousarray, isinf, dot, conjugate,array
+                  asarray, hstack, ascontiguousarray, isinf, dot, conjugate
 from numpy.random import randn, rand
 from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, isspmatrix_csr
 
@@ -183,9 +183,9 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     #step 1
     A_l = A
-    x   = array(randn(A_l.shape[0],1),dtype=A.dtype) # TODO see why randn() fails here
-    #if A_l.dtype == complex:
-    #    x = x + 1.0j*randn(A_l.shape[0],1)
+    x   = randn(A_l.shape[0],1) # TODO see why randn() fails here
+    if A_l.dtype == complex:
+        x = x + 1.0j*randn(A_l.shape[0],1)
     skip_f_to_i = False
 
     def relax(A,x):
@@ -268,21 +268,9 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
                 if x_A_x == 0:
                     x = x_hat  #need to restore x
 
-    import pylab; from scipy import linspace, real, imag; iter = len(Ps)*2
     # extend coarse-level candidate to the finest level
     for A_l,P in reversed(zip(As[1:],Ps)):
         relax(A_l,x)
-        
-        pylab.figure(100+iter)
-        pylab.plot(linspace(0.0, 1.0, x.shape[0]), real(x), '-ro')
-        handle = pylab.title('Level %d Real(Initial Candidate)'%iter)
-        handle.set_fontsize(18)
-        pylab.figure(100+iter+1)
-        pylab.plot(linspace(0.0, 1.0, x.shape[0]), imag(x), '-ro')
-        handle = pylab.title('Level %d Imag(Initial Candidate)'%iter)
-        handle.set_fontsize(18)
-        iter -= 2
-        
         x = P * x
     relax(A,x)
 
