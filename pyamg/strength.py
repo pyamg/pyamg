@@ -176,7 +176,7 @@ def symmetric_strength_of_connection(A, theta=0):
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
 
-def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
+def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric=True):
     """Construct an AMG strength of connection matrix using an ODE-based measure
 
     Parameters
@@ -191,6 +191,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         ODE num time steps, step size is assumed to be 1/rho(DinvA)
     proj_type : {'l2','D_A'}
         Define norm for constrained min prob, i.e. define projection
+    symmetric : boolean
+        Is A symmetric.  If true, alllows for more efficient 
+        matrix-matrix multiplies during time stepping.
    
     Returns
     -------
@@ -215,14 +218,12 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     >>> S = ode_strength_of_connection(A, ones((A.shape[0],1)))
     """
     # many imports for ode_strength_of_connection, so moved the imports local
-    from numpy import array, zeros, mat, ravel, diff, mod, repeat, inf, asarray
+    from numpy import array, zeros, mat, ravel, diff, mod, repeat,\
+         inf, asarray, log2
     from scipy.sparse import bsr_matrix, spdiags, eye
     from scipy.sparse import eye as speye
     from pyamg.util.linalg import approximate_spectral_radius
     from pyamg.util.utils  import scale_rows
-
-    #Regarding the efficiency TODO listings below, the bulk of the routine's time
-    #   is spent inside the main loop that solves the constrained min problem
 
     #====================================================================
     #Check inputs
@@ -259,17 +260,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     dimen = A.shape[1]
     NullDim = Bmat.shape[1]
         
-    #Get spectral radius of Dinv*A, this is the time step size for the ODE 
+    #Get spectral radius of Dinv*A, this will be used to scale the time step size for the ODE 
     D = A.diagonal();
-    if (D == 0).any():
-        zero_rows = (D == 0).nonzero()[0]
-        if (diff(A.indptr)[zero_rows] > 0).any():
-            pass
-            #raise ValueError('zero on diag(A) for nonzero row of A')
-        # Zeros on D represent 0 rows, so we can just set D to 1.0 at those locations and then Dinv*A 
-        #   at the zero rows of A will still be zero
-        D[zero_rows] = 1.0
-    Dinv = 1.0/D
+    Dinv = 1.0 / D
+    Dinv[D == 0] = 1.0
     Dinv_A  = scale_rows(A, Dinv, copy=True)
     rho_DinvA = approximate_spectral_radius(Dinv_A)
     
@@ -286,55 +280,26 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     
     
     #====================================================================
-    # Calculate (Atilde^k)^T in two steps.  
-    #
-    # In order to later access columns of Atilde^k, we calculate (Atilde^k)^T 
-    # in CSR format so that columns will be accessed efficiently
+    # Calculate (I - delta_t Dinv A)^k  
+    #      In order to later access columns, we calculate the transpose in 
+    #      CSR format so that columns will be accessed efficiently
     
-    # First Step.  Calculate (Atilde^p)^T = (Atilde^T)^p, where p is the largest power of two <= k, 
-    p = 2;
+    # Calculate the number of time steps that can be done by squaring, and 
+    # the number of time steps that must be done incrementally
+    nsquare = int(log2(k))
+    ninc = k - 2**nsquare
+
+    # Calculate one time step
     I = speye(dimen, dimen, format="csr")
     Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
     Atilde = Atilde.T.tocsr()
 
-    while p <= k:
-        Atilde = Atilde*Atilde
-        p = p*2
-    
-    #Second Step.  Calculate Atilde^p*Atilde^(k-p)
-    p = p/2
-    if p < k:
-        print "The most efficient time stepping for the ODE Strength Method"\
-              " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
-
-        JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T.tocsr()
-        while p < k:
-            Atilde = Atilde*JacobiStep
-            p = p+1
-        del JacobiStep
-    
-    #Check matrix Atilde^k vs. above    
-    #Atilde2 = ((I - (t/k)*Dinv_A).T)**k
-    #diff = (Atilde2 - Atilde).todense()
-    #print "Norm of difference is " + str(norm(diff))
-    
-    del Dinv, Dinv_A
-    
-    #---Efficiency--- TODO:  Calculate Atilde^k only at the sparsity of A^T, restricting the nonzero pattern
-    #            of A^T so that col i only retains the nonzeros that are of the same PDE as i.
-    #            However, this will require specialized C routine.  Perhaps look
-    #            at mat-mult routines that first precompute the sparsity pattern for
-    #            sparse mat-mat-mult.  This could be the easiest thing to do.
-           
-    #====================================================================
-    #Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
-    #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
-    #  in the same PDE as i. 
-    
+    #Construct a sparsity mask for Atilde that will restrict Atilde^T to the 
+    # nonzero pattern of A, with the added constraint that row i of Atilde^T 
+    # retains only the nonzeros that are also in the same PDE as i. 
     mask = A.copy()
     
-    #Only consider strength at dofs from your PDE.  Use mask to enforce this by zeroing out
-    #   all entries in Atilde that aren't from your PDE.
+    # Restrict to same PDE
     if numPDEs > 1:
         row_length = diff(mask.indptr)
         my_pde = mod(range(dimen), numPDEs)
@@ -343,12 +308,69 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         del row_length, my_pde
         mask.eliminate_zeros()
 
-    #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
-    mask.data[:] = 1.0
-    Atilde = Atilde.multiply(mask)
-    Atilde.eliminate_zeros()
-    del mask
+    # If total the number of time steps is a power of two, then there is  
+    # a very efficient computational short-cut.  Otherwise, we support  
+    # other numbers of time steps, through an inefficient algorithm.
+    if ninc > 0: 
+        print "The most efficient time stepping for the ODE Strength Method"\
+              " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
+    
+        # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
+        for i in range(nsquare):
+            Atilde = Atilde*Atilde
+        
+        JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T.tocsr()
+        for i in range(ninc):    
+            Atilde = Atilde*JacobiStep
+        del JacobiStep
 
+        #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
+        mask.data[:] = 1.0
+        Atilde = Atilde.multiply(mask)
+        Atilde.eliminate_zeros()
+        Atilde.sort_indices()
+
+        ##Check matrix Atilde^k vs. above    
+        #Atilde2 = (((I - (1.0/rho_DinvA)*Dinv_A).T)**k).multiply(mask)
+        #differ = ravel((Atilde2 - Atilde).todense())
+        #print "Sum(Abs(differ)) is " + str(sum(abs(differ)))       
+        del mask
+
+    elif nsquare == 0:
+        if numPDEs > 1:
+            #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
+            mask.data[:] = 1.0
+            Atilde = Atilde.multiply(mask)
+            Atilde.eliminate_zeros()
+            Atilde.sort_indices()
+
+        del mask
+
+    else:
+        # Use computational short-cut for case (ninc == 0) and (nsquare > 0)  
+        # Calculate Atilde^k only at the sparsity pattern of mask.
+        for i in range(nsquare-1):
+            Atilde = Atilde*Atilde
+
+        # Call incomplete mat-mat mult
+        if symmetric:
+            AtildeCSC = Atilde
+        else:
+            AtildeCSC = Atilde.tocsc() 
+            AtildeCSC.sort_indices()
+        
+        mask.sort_indices()
+        Atilde.sort_indices()
+        multigridtools.incomplete_matmat(Atilde.indptr,    Atilde.indices,    Atilde.data, 
+                                         AtildeCSC.indptr, AtildeCSC.indices, AtildeCSC.data,
+                                         mask.indptr,      mask.indices,      mask.data,      
+                                         dimen)
+        
+        del AtildeCSC, Atilde
+        Atilde = mask            
+
+    del Dinv, Dinv_A
+           
     #====================================================================
     # Calculate strength based on constrained min problem of 
     # min( z - B*x ), such that
@@ -410,12 +432,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
             for j in range(i,NullDim):
                 BDB[:,counter] = 2.0*ravel(asarray(B[:,i]))*ravel(asarray(DB[:,j]))
                 counter = counter + 1        
-                
+        
         # Use constrained min problem to define strength
         multigridtools.ode_strength_helper(Atilde.data,        Atilde.indptr,    Atilde.indices, 
                                            Atilde.shape[0],    ravel(asarray(B)), ravel(asarray(DB.T)), 
                                            ravel(asarray(BDB)), BDBCols,           NullDim)
-        
     #===================================================================
     
     #Apply drop tolerance
@@ -437,7 +458,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         multigridtools.min_blocks(n_blocks, blocksize, ravel(asarray(Atilde.data)), CSRdata)
         #Atilde = csr_matrix((data, row, col), shape=(*,*))
         Atilde = csr_matrix((CSRdata, Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
-    
     
     return Atilde
 

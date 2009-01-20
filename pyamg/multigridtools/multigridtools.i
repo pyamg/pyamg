@@ -231,6 +231,7 @@ INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
 INSTANTIATE_BOTH(apply_distance_filter)
 INSTANTIATE_BOTH(ode_strength_helper)
 INSTANTIATE_BOTH(min_blocks)
+INSTANTIATE_BOTH(incomplete_matmat)
 
 INSTANTIATE_COMPLEX(block_gauss_seidel)
 INSTANTIATE_COMPLEX(gauss_seidel)

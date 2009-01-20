@@ -2,12 +2,13 @@ from pyamg.testing import *
 
 import numpy
 from numpy import sqrt, ones, ravel, array
-from scipy import rand, real, imag
+from scipy import rand, real, imag, mat, zeros
 from scipy.sparse import csr_matrix, coo_matrix, spdiags
 from scipy.special import round
 
 from pyamg.gallery import poisson, linear_elasticity, load_example
 from pyamg.strength import *
+from pyamg.multigridtools import incomplete_matmat
 
 
 class TestStrengthOfConnection(TestCase):
@@ -46,6 +47,127 @@ class TestStrengthOfConnection(TestCase):
 
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
+
+    def test_incomplete_matmat(self):
+        # Test a critical helper routine for ode_strength_of_connection(...)
+        cases = []
+
+        # 1x1 tests
+        A = csr_matrix(mat([[1.1]]))
+        B = csr_matrix(mat([[1.0]]))
+        A2 = csr_matrix(mat([[0.]]))
+        mask = csr_matrix(mat([[1.]]))
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A,A2,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+
+        # 2x2 tests
+        A = csr_matrix(mat([[1.,2.],[2.,4.]]))
+        B = csr_matrix(mat([[1.3,2.],[2.8,4.]]))
+        A2 = csr_matrix(mat([[1.3,0.],[0.,4.]]))
+        B2 = csr_matrix(mat([[1.3,0.],[2.,4.]]))
+        mask = csr_matrix( (ones(4),(array([0,0,1,1]),array([0,1,0,1]))), shape=(2,2) )
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+        cases.append( (A2,B2,mask) ) 
+
+        mask = csr_matrix( (ones(3),(array([0,0,1]),array([0,1,1]))), shape=(2,2) )
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+        cases.append( (A2,B2,mask) ) 
+
+        mask = csr_matrix( (ones(2),(array([0,1]),array([0,0]))), shape=(2,2) )
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+        cases.append( (A2,B2,mask) ) 
+
+        # 5x5 tests
+        A = mat([[  0. ,  16.9,   6.4,   0.0,   5.8],
+                    [ 16.9,  13.8,   7.2,   0. ,   9.5],
+                    [  6.4,   7.2,  12. ,   6.1,   5.9],
+                    [  0.0,   0. ,   6.1,   0. ,   0. ],
+                    [  5.8,   9.5,   5.9,   0. ,  13. ]])
+        B = A.copy()
+        B[1,0] = 3.1
+        B[0,1] = 3.1
+        C = A.copy()
+        C[1,0] = 3.1
+        C[3,2] = 10.1
+        A2 = A.copy()
+        A2[1,:] = 0.0
+        A3 = A2.copy()
+        A3[:,1] = 0.0
+        A = csr_matrix(A)
+        A2 = csr_matrix(A2)
+        A3 = csr_matrix(A3)
+        B = csr_matrix(B)
+        C = csr_matrix(C)
+
+        mask = A.copy()
+        mask.data[:] = 1.0
+        cases.append( (A,A,mask) )
+        cases.append( (C,C,mask) )
+        cases.append( (A2,A2,mask) )
+        cases.append( (A3,A3,mask) )
+        cases.append( (A,B,mask) )
+        cases.append( (A,A2,mask) )
+        cases.append( (A3,A,mask) )
+        cases.append( (A,C,mask) )
+        cases.append( (C,A,mask) )
+
+        mask.data[1] = 0.0        
+        mask.data[5] = 0.0        
+        mask.data[9] = 0.0        
+        mask.data[13] = 0.0        
+        mask.eliminate_zeros()
+        cases.append( (A,A,mask) )
+        cases.append( (C,C,mask) )
+        cases.append( (A2,A2,mask) )
+        cases.append( (A3,A3,mask) )
+        cases.append( (A,B,mask) )
+        cases.append( (A,A2,mask) )
+        cases.append( (A3,A,mask) )
+        cases.append( (A,C,mask) )
+        cases.append( (C,A,mask) )
+
+        # Laplacian tests
+        A = poisson((5,5),format='csr')
+        B = A.copy()
+        B.data[1] = 3.5
+        B.data[11] = 11.6
+        B.data[28] = -3.2
+        C = csr_matrix(zeros(A.shape))
+        mask=A.copy()
+        mask.data[:]=1.0
+        cases.append( (A,A,mask) )
+        cases.append( (A,B,mask) )
+        cases.append( (B,A,mask) )
+        cases.append( (C,A,mask) )
+        cases.append( (A,C,mask) )
+        cases.append( (C,C,mask) )
+
+        for case in cases:
+            A = case[0].tocsr()
+            B = case[1].tocsc()
+            mask = case[2].tocsr()
+            A.sort_indices()
+            B.sort_indices()
+            mask.sort_indices()
+            result = mask.copy()
+            incomplete_matmat(A.indptr,A.indices,A.data, B.indptr,B.indices,B.data, 
+                              result.indptr,result.indices,result.data, A.shape[0])
+            result.eliminate_zeros()
+            exact = (A*B).multiply(mask)
+            exact.sort_indices()
+            exact.eliminate_zeros()
+            assert_array_almost_equal(exact.data, result.data)
+            assert_array_equal(exact.indptr, result.indptr)
+            assert_array_equal(exact.indices, result.indices)
+
 
     def test_ode_strength_of_connection(self):
         # Params:  A, B, epsilon=4.0, k=2, proj_type="l2"
@@ -115,7 +237,7 @@ class TestStrengthOfConnection(TestCase):
                     0.95,  0.71,  0.94,  0.73,  0.59,  0.51,  1.  ])
         A = spdiags([A1, A2, 4*ones(N*N),A3, A4],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
         B = ones((A.shape[0],1))
-        Atilde = ode_strength_of_connection(A, B, epsilon=8.0, proj_type="D_A")
+        Atilde = ode_strength_of_connection(A, B, epsilon=8.0, proj_type="D_A", symmetric=False)
         AtildeExact = csr_matrix((
         array([ 1.    ,  0.6645,  4.3104,  1.6258,  1.    ,  3.5164,  3.3427,
                 3.3462,  1.    ,  3.7242,  6.2437,  0.4763,  1.    ,  1.5659,
@@ -146,7 +268,7 @@ class TestStrengthOfConnection(TestCase):
         
         # BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B, epsilon=8.0, proj_type="D_A")
+        Atilde = ode_strength_of_connection(Absr, B, epsilon=8.0, proj_type="D_A", symmetric=False)
         AtildeExact = csr_matrix((
         array([ 1.    ,  3.3427,  0.5596,  1.    ,  0.3134,  0.414 ,  1.    ,
                 0.7234,  0.4593,  1.    ,  0.4921,  0.0975,  1.    ]),
@@ -164,7 +286,7 @@ class TestStrengthOfConnection(TestCase):
                    array([ 0.26,  0.37,  0.85,  0.48,  0.16,  0.49,  0.58,  0.7 ,  0.1 ,
                    0.78,  0.27,  0.28,  0.71,  0.18,  0.89,  0.65,  0.28,  0.89,
                    0.34,  0.04,  0.96,  0.25,  0.88,  0.58,  0.95]) ]).T
-        Atilde = ode_strength_of_connection(A, B)
+        Atilde = ode_strength_of_connection(A, B, symmetric=False)
         AtildeExact = csr_matrix((
         ones((67,)),
         array([ 0,  1,  5,  1,  2,  2,  3,  2,  3,  0,  5, 10,  6, 11,  7,  8,  3,
@@ -179,7 +301,7 @@ class TestStrengthOfConnection(TestCase):
         
         # Zero row BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B)
+        Atilde = ode_strength_of_connection(Absr, B, symmetric=False)
         AtildeExact = csr_matrix((
         array([  1.0,   1.0,   0.04256,  1.0,   0.07528,   1.0,
                  0.13055,   1e-8,   0.30166,   1.0,   1e-8,   1.0,   1.0]),
@@ -196,7 +318,7 @@ class TestStrengthOfConnection(TestCase):
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A.eliminate_zeros()
         A = A.tocsr()
-        Atilde = ode_strength_of_connection(A, B)
+        Atilde = ode_strength_of_connection(A, B, symmetric=False)
         AtildeExact = csr_matrix((
         ones((67,)),
         array([ 0,  1,  5,  1,  2,  2,  3,  2,  3,  0,  5, 10,  6, 11,  7,  8,  3,
@@ -211,7 +333,7 @@ class TestStrengthOfConnection(TestCase):
         
         # Zero row and column BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B)
+        Atilde = ode_strength_of_connection(Absr, B, symmetric=False)
         AtildeExact = csr_matrix((
         ones((13,)),
         array([0, 1, 0, 1, 2, 2, 3, 1, 2, 3, 4, 3, 4]),

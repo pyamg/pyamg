@@ -327,5 +327,92 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     delete[] sing_vals; 
 }
 
+/* For use in my_inner(...)
+ * B is in CSC format
+ * return B(row,col), where col is the current column pointed to by Bptr
+ * return Bptr pointing at the first entry past B(row,col)
+ */
+template<class I, class T>
+inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
+                         const I row,         I &Bptr, const T Aval,
+                               T &sum )
+{
+    while(Bptr < BptrLim)
+    {
+        if(Bj[Bptr] == row)
+        {   
+            sum += Bx[Bptr]*Aval;
+            Bptr++;
+            return;
+        }
+        else if(Bj[Bptr] > row)
+        {   
+            //entry not found, do nothing
+            return; 
+        }
+        Bptr++;
+    }
+
+    // entry not found, do nothing
+}
+
+/* For use in incomplete_matmat(...)
+ * Calcuate <A_{row,:}, B_{:, col}>
+ * A is in CSR, B is in CSC
+ */
+template<class I, class T>
+inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[], 
+                   const I Bp[],  const I Bj[],    const T Bx[], 
+                   const I row,   const I col )
+{
+    T sum = 0.0;
+    I Bptr = Bp[col];
+    I BptrLim = Bp[col+1];
+
+    for(I colptr = Ap[row]; colptr < Ap[row+1]; colptr++)
+    {
+        if(Bptr == BptrLim)
+        {   return sum;}
+
+        I Acol = Aj[colptr];
+        if(Bj[Bptr] <= Acol)
+        {
+            //increment sum by Ax[colptr]*B(Acol,col)
+            find_matval(Bj, Bx, BptrLim, Acol, Bptr, Ax[colptr], sum);
+        }
+    }
+    return sum;
+}
+
+/* A:  CSR,  square, sorted indices
+ * B:  CSC,  square, sorted indices
+ * S:  CSR,  square, sorted indices, values are overwritten
+ * dimen:  dimensionality of A,B and S
+ *
+ * Calculate A*B = S, but only at the current sparsity pattern of S
+ * Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
+ * But, we know apriori that S's sparsity pattern is a subset of A*B, 
+ *      so this algorithm should work well.
+ */
+template<class I, class T>
+void incomplete_matmat(  const I Ap[],  const I Aj[],    const T Ax[], 
+                         const I Bp[],  const I Bj[],    const T Bx[], 
+                         const I Sp[],  const I Sj[],          T Sx[], const I dimen)
+{
+    for(I row = 0; row < dimen; row++)
+    {
+        I rowstart = Sp[row];
+        I rowend = Sp[row+1];
+
+        for(I colptr = rowstart; colptr < rowend; colptr++)
+        {
+            //calculate S(row, Sj[colptr]) = <A_{row,:}, B_{:,Sj[colptr]}>
+            Sx[colptr] = my_inner(Ap, Aj, Ax, Bp, Bj, Bx, row, Sj[colptr]);
+        }
+    }
+}
+
+
+
 #endif
 

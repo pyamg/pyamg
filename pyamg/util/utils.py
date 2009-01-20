@@ -423,8 +423,8 @@ def get_diagonal(A, norm_eq=False, inv=False):
     Notes
     -----
     This function is especially useful for its fast methods
-    of obtaining diag(A A.H) and diag(A.H A).  Zeros on the diagonal
-    are also set to 1.0 if D is inverted.
+    of obtaining diag(A A.H) and diag(A.H A).  Dinv is zero
+    wherever D is zero
 
     Examples
     --------

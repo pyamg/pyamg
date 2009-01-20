@@ -186,6 +186,15 @@ def min_blocks(*args):
     """
   return _multigridtools.min_blocks(*args)
 
+def incomplete_matmat(*args):
+  """
+    incomplete_matmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
+        int Sp, int Sj, float Sx, int dimen)
+    incomplete_matmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
+        int Sp, int Sj, double Sx, int dimen)
+    """
+  return _multigridtools.incomplete_matmat(*args)
+
 def block_gauss_seidel(*args):
   """
     block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
