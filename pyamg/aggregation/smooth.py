@@ -292,19 +292,18 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     
     
     #====================================================================
-    # Unamalgate Atilde if (numPDEs > 1)
-
-    # UnAmal returns a BSR matrix, so the mat-mat will be between BSR mats. 
+    # Expand the allowed sparsity pattern for P through multiplication by Atilde
     T.sort_indices()
-    Sparsity_Pattern = bsr_matrix( (ones_like(T.data), T.indices, T.indptr), shape=T.shape)
-    X = UnAmal(Atilde, numPDEs, numPDEs)
+    Sparsity_Pattern = csr_matrix( (ones(T.indices.shape), T.indices, T.indptr), 
+                                    shape=(T.shape[0]/T.blocksize[0],T.shape[1]/T.blocksize[1])  )
     for i in range(degree):
-        Sparsity_Pattern = X * Sparsity_Pattern
-    del X
-    Sparsity_Pattern.data[:] = 1.0
-    Sparsity_Pattern.sort_indices()
-
+        Sparsity_Pattern = Atilde*Sparsity_Pattern
     
+    Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
+    Sparsity_Pattern.sort_indices()
+    #====================================================================
+    
+
     #====================================================================
     #Construct array of inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in 
     #   Sparsity Pattern.  This array is used multiple times in the Satisfy_Constraints routine.
