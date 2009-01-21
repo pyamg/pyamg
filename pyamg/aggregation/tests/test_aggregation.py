@@ -211,21 +211,21 @@ class TestComplexSolverPerformance(TestCase):
         # Test 2
         A = poisson( (100,100),  format='csr')
         Ai = A + (0.625/0.01)*1.0j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        self.cases.append(( Ai, None, 1e-4, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
-        self.cases.append(( Ai, None, 1e-4, 'symmetric', ('energy', {'SPD': False})))
+        self.cases.append(( Ai, None, 1e-3, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
+        self.cases.append(( Ai, None, 1e-3, 'symmetric', ('energy', {'SPD': False})))
 
         # Test 3
         A = poisson( (100,100),  format='csr')
         Ai = 1.0j*A;
-        self.cases.append(( Ai, None, 0.22, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
-        self.cases.append(( Ai, None, 0.52, 'symmetric', ('energy', {'SPD': False, 'maxiter' : 8})))
+        self.cases.append(( Ai, None, 0.3, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
+        self.cases.append(( Ai, None, 0.6, 'symmetric', ('energy', {'SPD': False, 'maxiter' : 8})))
 
         # Test 4
         # Use an "inherently" imaginary problem, the Gauge Laplacian in 2D from Quantum Chromodynamics,
         A = gauge_laplacian(100, spacing=1.0, beta=0.41)
-        self.cases.append(( A, None, 0.32, 'hermitian', ('jacobi', {'omega': 4.0/3.0})))
-        self.cases.append(( A, None, 0.32, 'hermitian', ('energy', {'SPD': True})))
-        self.cases.append(( A, None, 0.32, 'hermitian', ('energy', {'SPD': False})))
+        self.cases.append(( A, None, 0.4, 'hermitian', ('jacobi', {'omega': 4.0/3.0})))
+        self.cases.append(( A, None, 0.4, 'hermitian', ('energy', {'SPD': True})))
+        self.cases.append(( A, None, 0.4, 'hermitian', ('energy', {'SPD': False})))
 
 
     def test_basic(self):
@@ -246,7 +246,7 @@ class TestComplexSolverPerformance(TestCase):
 
             avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
             
-            #print "Complex Test:   %1.3e,  %d,  %1.3e" % (avg_convergence_ratio, len(ml.levels), ml.operator_complexity())
+            #print "Complex Test:   %1.3e,  %1.3e,  %d,  %1.3e" % (avg_convergence_ratio, c_factor, len(ml.levels), ml.operator_complexity())
             assert(avg_convergence_ratio < c_factor)
 
 

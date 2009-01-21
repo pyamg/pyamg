@@ -12,7 +12,7 @@ from scipy.sparse.sputils import upcast
 #from pyamg import relaxation
 from pyamg.relaxation import *
 from pyamg.util.utils import symmetric_rescaling, diag_sparse, to_type
-from pyamg.util.linalg import residual_norm
+from pyamg.util.linalg import residual_norm, norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -349,7 +349,13 @@ class multilevel_solver:
                         cb(x)
 
             return accel(A, b, x0=x0, tol=tol, M=M, callback=callback)[0]
-
+        
+        else:
+            # Scale tol by normb
+            # Don't scale tol any earlier. The accel routine should also scale tol
+            normb = norm(b) 
+            if normb != 0:
+                tol = tol*normb
 
         if return_residuals:
             warn('return_residuals is deprecated.  Use residuals instead')

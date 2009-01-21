@@ -295,7 +295,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     # Unamalgate Atilde if (numPDEs > 1)
 
     # UnAmal returns a BSR matrix, so the mat-mat will be between BSR mats. 
-    #TODO replace large matmat with smaller matmat, then expand
     T.sort_indices()
     Sparsity_Pattern = bsr_matrix( (ones_like(T.data), T.indices, T.indptr), shape=T.shape)
     X = UnAmal(Atilde, numPDEs, numPDEs)
