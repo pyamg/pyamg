@@ -341,7 +341,7 @@ inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
     {
         if(Bj[Bptr] == row)
         {   
-            sum += Bx[Bptr]*Aval;
+            sum += Aval*Bx[Bptr];
             Bptr++;
             return;
         }

@@ -137,6 +137,23 @@ def invert_BtB(*args):
     """
   return _multigridtools.invert_BtB(*args)
 
+def incomplete_BSRmatmat(*args):
+  """
+    incomplete_BSRmatmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
+        int Sp, int Sj, float Sx, int n, int brows, 
+        int bcols)
+    incomplete_BSRmatmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
+        int Sp, int Sj, double Sx, int n, int brows, 
+        int bcols)
+    incomplete_BSRmatmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
+        npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, 
+        int n, int brows, int bcols)
+    incomplete_BSRmatmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
+        npy_cdouble_wrapper Bx, int Sp, int Sj, 
+        npy_cdouble_wrapper Sx, int n, int brows, int bcols)
+    """
+  return _multigridtools.incomplete_BSRmatmat(*args)
+
 def classical_strength_of_connection(*args):
   """
     classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, 

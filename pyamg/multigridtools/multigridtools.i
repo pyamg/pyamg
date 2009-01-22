@@ -225,6 +225,7 @@ INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
 INSTANTIATE_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_COMPLEX(invert_BtB)
+INSTANTIATE_COMPLEX(incomplete_BSRmatmat)
 
 INSTANTIATE_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_COMPLEX(symmetric_strength_of_connection)

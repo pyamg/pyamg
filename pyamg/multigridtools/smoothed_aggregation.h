@@ -560,4 +560,122 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
     delete[] identity;
 }
 
+/* For use in my_BSRinner(...)
+ * B is in BSC format
+ * return B(row,col), where col is the current column pointed to by Bptr
+ * return Bptr pointing at the first entry past B(row,col)
+ */
+template<class I, class T>
+inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
+                            const I row,         I &Bptr, const T Aval[],
+                                  T blockproduct[],             I &flag,
+                            const I brows, const I bcols)
+{
+    const char trans = 'F';
+    I blocksize = brows*bcols;
+
+    while(Bptr < BptrLim)
+    {
+        if(Bj[Bptr] == row)
+        {   
+            flag = 1;
+            // block multiply
+            gemm(&(Aval[0]),            brows, brows, trans, 
+                 &(Bx[Bptr*blocksize]), brows, bcols, trans, 
+                 &(blockproduct[0]),    brows, bcols, trans);
+            Bptr++;
+            return;
+        }
+        else if(Bj[Bptr] > row)
+        {   
+            //entry not found, do nothing
+            return; 
+        }
+        Bptr++;
+    }
+
+    // entry not found, do nothing
+}
+
+/* For use in incomplete_BSRmatmat(...)
+ * Calcuate <A_{row,:}, B_{:, col}>
+ * A is in BSR, B is in BSC
+ */
+template<class I, class T>
+inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[], 
+                      const I Bp[],  const I Bj[],    const T Bx[], 
+                      const I row,   const I col ,          T sum[],
+                      const I brows, const I bcols)
+{
+    I flag;
+    I Bptr = Bp[col];
+    I BptrLim = Bp[col+1];
+    I Ablocksize = brows*brows;
+    I blocksize = brows*bcols;
+    I Aoffset = Ablocksize*Ap[row];
+    T blockproduct[blocksize];
+
+    for(I index = 0; index < blocksize; index++)
+    {   sum[index] = 0.0; }
+
+    for(I colptr = Ap[row]; colptr < Ap[row+1]; colptr++)
+    {
+        if(Bptr == BptrLim)
+        {   return;}
+
+        I Acol = Aj[colptr];
+        if(Bj[Bptr] <= Acol)
+        {
+            //increment sum by the block multiply A(row,col)*B(Acol,col)
+            flag = 0;
+            find_BSRmatval(Bj, Bx, BptrLim, Acol, Bptr, &(Ax[Aoffset]), &(blockproduct[0]), flag, brows, bcols);
+            if(flag)
+            {
+                for(I index = 0; index < blocksize; index++)
+                {   sum[index] += blockproduct[index]; }
+            }
+        }
+
+        Aoffset += Ablocksize;
+    }
+    return;
+}
+
+/* BEWARE, this routine is designed ONLY for A, B and S such that,
+ * A:  BSR,  nxn square,      sorted indices, brows x brows blocksize
+ * B:  BSC,  nxm rectangular, sorted indices, brows x bcols blocksize, Bx in col major format
+ * S:  BSR,  nxm rectangular, sorted indices, brows x bcols blocksize, values are overwritten
+ * rows:  n
+ * brows: blockrows
+ * bcols: blockcols
+ *
+ * Calculate A*B = S, but only at the current sparsity pattern of S
+ * Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
+ * But, we know apriori that S's sparsity pattern is a subset of A*B, 
+ *      so this algorithm should work well.
+ */
+template<class I, class T, class F>
+void incomplete_BSRmatmat( const I Ap[],  const I Aj[],    const T Ax[], 
+                           const I Bp[],  const I Bj[],    const T Bx[], 
+                           const I Sp[],  const I Sj[],          T Sx[], 
+                           const I n,     const I brows,   const I bcols)
+{
+    I blocksize = brows*bcols;
+    I offset = 0;
+    I Srows = n/brows;
+
+    for(I row = 0; row < Srows; row++)
+    {
+        I rowstart = Sp[row];
+        I rowend = Sp[row+1];
+
+        for(I colptr = rowstart; colptr < rowend; colptr++)
+        {
+            //calculate S(row, Sj[colptr]) = <A_{row,:}, B_{:,Sj[colptr]}>
+            my_BSRinner(Ap, Aj, Ax, Bp, Bj, Bx, row, Sj[colptr], &(Sx[offset]), brows, bcols);
+            offset += blocksize;
+        }
+    }
+}
+
 #endif

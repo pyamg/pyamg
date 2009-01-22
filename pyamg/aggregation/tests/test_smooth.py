@@ -2,16 +2,148 @@ from pyamg.testing import *
 import scipy.sparse
 import numpy
 
-from numpy import array, zeros, ones, mat
-from scipy import rand
+from numpy import array, zeros, ones, mat, ravel
+from scipy import rand, mat
 from scipy.linalg import pinv2
-from scipy.sparse import bsr_matrix
+from scipy.sparse import bsr_matrix, csr_matrix
 
 from pyamg.aggregation.smooth import Satisfy_Constraints
 from pyamg.gallery import poisson, linear_elasticity, load_example, gauge_laplacian
 from pyamg.aggregation import smoothed_aggregation_solver
+from pyamg.multigridtools import incomplete_BSRmatmat
 
 class TestEnergyMin(TestCase):
+    def test_incomplete_BSRmatmat(self):
+        # Test a critical helper routine for energy_min_prolongation(...)
+        cases = []
+
+        # 1x1 tests
+        A = csr_matrix(mat([[1.1]])).tobsr(blocksize=(1,1))
+        B = csr_matrix(mat([[1.0]])).tobsr(blocksize=(1,1))
+        A2 = csr_matrix(mat([[0.]])).tobsr(blocksize=(1,1))
+        mask = csr_matrix(mat([[1.]])).tobsr(blocksize=(1,1))
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A,A2,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+
+        # 2x2 tests
+        A = csr_matrix(mat([[1.,2.],[2.,4.]])).tobsr(blocksize=(2,2))
+        B = csr_matrix(mat([[1.3,2.],[2.8,4.]])).tobsr(blocksize=(2,2))
+        A2 = csr_matrix(mat([[1.3,0.],[0.,4.]])).tobsr(blocksize=(2,2))
+        B2 = csr_matrix(mat([[1.3,0.],[2.,4.]])).tobsr(blocksize=(2,1))
+        mask = csr_matrix( (ones(4, dtype=float),(array([0,0,1,1]),array([0,1,0,1]))), shape=(2,2) ).tobsr(blocksize=(2,2))
+        mask2 = csr_matrix( (array([1.,0.,1.,0.]),(array([0,0,1,1]),array([0,1,0,1]))), shape=(2,2) ).tobsr(blocksize=(2,1))
+        mask2.eliminate_zeros()
+        cases.append( (A,A,mask) ) 
+        cases.append( (A,B,mask) ) 
+        cases.append( (A2,A2,mask) ) 
+        cases.append( (A2,B2,mask2) ) 
+        cases.append( (A,B2,mask2) ) 
+
+        A = A.tobsr(blocksize=(1,1))
+        B = B.tobsr(blocksize=(1,1))
+        A2 = A2.tobsr(blocksize=(1,1))
+        B2 = B2.tobsr(blocksize=(1,1))
+        mask = A.copy()
+        mask.data[:] = 1.0
+        mask2 = A2.copy()
+        mask2.data[:] = 1.0
+        mask3 = csr_matrix( (ones(2, dtype=float),(array([0,1]),array([0,0]))), shape=(2,2) ).tobsr(blocksize=(1,1))
+        cases.append( (A,B,mask) )
+        cases.append( (A2,B2,mask2) )
+        cases.append( (A,B,mask3) )
+        cases.append( (A2,B2,mask3) )
+
+        # 4x4 tests
+        A = mat([[  0. ,  16.9,   6.4,   0.0],
+                 [ 16.9,  13.8,   7.2,   0. ],
+                 [  6.4,   7.2,  12. ,   6.1],
+                 [  0.0,   0. ,   6.1,   0. ]])
+        B = A.copy()
+        B = A[:,0:2]
+        B[1,0] = 3.1
+        B[2,1] = 10.1
+        A2 = A.copy()
+        A2[1,:] = 0.0
+        A3 = A2.copy()
+        A3[:,1] = 0.0
+        A = csr_matrix(A).tobsr(blocksize=(2,2))
+        A2 = csr_matrix(A2).tobsr(blocksize=(2,2))
+        A3 = csr_matrix(A3).tobsr(blocksize=(2,2))
+        B = csr_matrix(B).tobsr(blocksize=(2,2))
+        B2 = csr_matrix(B).tobsr(blocksize=(2,1))
+
+        mask = A.copy()
+        mask.data[:] = 1.0
+        mask2 = B.copy()
+        mask2.data[:] = 1.0
+        mask3 = B2.copy()
+        mask3.data[:] = 1.0
+        cases.append( (A,B,mask2) )
+        cases.append( (A2,B,mask2) )
+        cases.append( (A3,B,mask2) )
+        cases.append( (A3,A3,mask) )
+        cases.append( (A,A,mask) )
+        cases.append( (A2,A2,mask) )
+        cases.append( (A,A2,mask) )
+        cases.append( (A3,A,mask) )
+        cases.append( (A, B2,mask3) )
+        cases.append( (A2, B2,mask3) )
+        cases.append( (A3, B2,mask3) )
+
+        # Laplacian tests
+        A = poisson((5,5),format='csr')
+        A = A.tobsr(blocksize=(5,5))
+        Ai = 1.0j*A
+        B = A.todense()
+        B = csr_matrix(B[:,0:8])
+        B = B.tobsr(blocksize=(5,8))
+        Bi = 1.0j*B
+        B2 = B.tobsr(blocksize=(5,2))
+        B2i = 1.0j*B2
+        B3 = B.tobsr(blocksize=(5,1))
+        B3i = 1.0j*B3
+        mask=B.copy()
+        mask.data[:]=1.0
+        mask2=B2.copy()
+        mask2.data[:]=1.0
+        mask3=B3.copy()
+        mask3.data[:]=1.0
+        cases.append( (A,B,mask) )
+        cases.append( (A,B2,mask2) )
+        cases.append( (A,B3,mask3) )
+        cases.append( (Ai,Bi,mask) )
+        cases.append( (Ai,B2i,mask2) )
+        cases.append( (Ai,B3i,mask3) )
+
+        for case in cases:
+            A = case[0].tobsr()
+            B = case[1].tobsr()
+            B2 = case[1].T.tobsr()
+            mask = case[2].tobsr()
+            
+            A.sort_indices()
+            B.sort_indices()
+            B2.sort_indices()
+            mask.sort_indices()
+            
+            result = mask.copy()
+            result.data = array(result.data, dtype=A.dtype)
+            incomplete_BSRmatmat(A.indptr,A.indices,ravel(A.data), B2.indptr,B2.indices,ravel(B2.data), 
+                                 result.indptr,result.indices,ravel(result.data), 
+                                 mask.shape[0], mask.blocksize[0], mask.blocksize[1])
+            result.eliminate_zeros()
+            result.sort_indices()
+
+            exact = (A*B).multiply(mask)
+            exact.eliminate_zeros()
+            exact.sort_indices()
+            
+            differ = max(abs(ravel((result-exact).todense())))
+            assert_almost_equal(differ, 0.0)
+
+
     def test_range(self):
         """Check that P*R=B"""
         numpy.random.seed(0) #make tests repeatable
