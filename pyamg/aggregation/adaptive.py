@@ -3,7 +3,7 @@
 __docformat__ = "restructuredtext en"
 
 from numpy import zeros, zeros_like, hstack, dot, conjugate
-from numpy.random import randn, rand
+from numpy.random import rand
 from scipy.sparse import bsr_matrix
 
 from pyamg.multilevel import multilevel_solver
@@ -103,8 +103,6 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 
     # Normalize B
     B = (1.0/norm(B))*B
-    #mymax = abs(B).max()
-    #B = 1/mymax * B
     
     kwargs['aggregate'] = ('predefined',AggOps)
 
@@ -117,28 +115,22 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         
         # Normalize x and add to candidate list
         x = (1.0/norm(x))*x
-        #mymax = abs(x).max()
-        #x = 1/mymax * x
         B = hstack((B,x))
 
     ###
     # improve candidates
-    for i in range(improvement_iters):
-        for j in range(B.shape[1]):
-            B = B[:,1:]
-            if B.shape[1]==0: # else error for 1 candidate
-                B=None
-            x = general_setup_stage( smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
-                                                                 postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
-                                     mat_flag, candidate_iters, prepostsmoother, smooth)
-            
-            # Normalize x and add to candidate list
-            x = (1.0/norm(x))*x
-            #mymax = abs(x).max()
-            #x = 1/mymax * x
-            if B==None:
-                B=x
-            else:
+    if B.shape[1]>1:  # only run improvement passes for more than one candidate
+        for i in range(improvement_iters):
+            for j in range(B.shape[1]):
+                B = B[:,1:]
+                x = general_setup_stage( \
+                        smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, \
+                                                    presmoother=prepostsmoother, \
+                                                    postsmoother=prepostsmoother, smooth=smooth,**kwargs), 
+                        mat_flag, candidate_iters, prepostsmoother, smooth)
+                
+                # Normalize x and add to candidate list
+                x = (1.0/norm(x))*x
                 B = hstack((B,x))
 
     return smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
@@ -201,9 +193,9 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     #step 1
     A_l = A
-    x   = randn(A_l.shape[0],1)
+    x   = rand(A_l.shape[0],1)
     if A_l.dtype == complex:
-        x = x + 1.0j*randn(A_l.shape[0],1)
+        x = x + 1.0j*rand(A_l.shape[0],1)
 
     #step 2
     #x_A_x_old = dot(conjugate(x).T,A_l*x)
@@ -283,9 +275,9 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
     #step 5
     # extend coarse-level candidate to the finest level
     for A_l,P in reversed(zip(As[1:],Ps)):
-        relax(A_l,x)
+        #relax(A_l,x)
         x = P * x
-    relax(A,x)
+    #relax(A,x)
 
     return x,AggOps  #first candidate
 
@@ -294,9 +286,9 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
     
     levels = ml.levels
 
-    x = randn(levels[0].A.shape[0],1)
+    x = rand(levels[0].A.shape[0],1)
     if levels[0].A.dtype == complex:
-        x = x + 1.0j*randn(levels[0].A.shape[0],1)
+        x = x + 1.0j*rand(levels[0].A.shape[0],1)
     b = zeros_like(x)
 
     x = ml.solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)
