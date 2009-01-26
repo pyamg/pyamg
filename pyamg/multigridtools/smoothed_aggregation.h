@@ -562,8 +562,8 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
 
 /* For use in my_BSRinner(...)
  * B is in BSC format
- * return B(row,col), where col is the current column pointed to by Bptr
- * return Bptr pointing at the first entry past B(row,col)
+ * return: blockproduce = Aval*B(row,col), where col is the current column pointed to by Bptr
+ *         Bptr pointing at the first entry past B(row,col)
  */
 template<class I, class T>
 inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
@@ -574,6 +574,8 @@ inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
     const char trans = 'F';
     I blocksize = brows*bcols;
 
+    // loop over this column of B until we either find a matching entry in B, 
+    // or we reach an entry in B that has a row number larger than the current column number in A
     while(Bptr < BptrLim)
     {
         if(Bj[Bptr] == row)
@@ -614,19 +616,27 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
     I blocksize = brows*bcols;
     I Aoffset = Ablocksize*Ap[row];
     T blockproduct[blocksize];
+    I rowstart = Ap[row];
+    I rowend = Ap[row+1];
 
+    // sum will be incremented by block multiplies each time an entry in 
+    // this row of A matches up with an entry in this column of B
     for(I index = 0; index < blocksize; index++)
     {   sum[index] = 0.0; }
 
-    for(I colptr = Ap[row]; colptr < Ap[row+1]; colptr++)
+    // Loop over row=row of A, looking for entries in column=col 
+    // of B that line up for the innerproduct
+    for(I colptr = rowstart; colptr < rowend; colptr++)
     {
+        // Return if there are no more entries in this column of B
         if(Bptr == BptrLim)
         {   return;}
 
+        //Indices are assumed to be sorted
         I Acol = Aj[colptr];
         if(Bj[Bptr] <= Acol)
         {
-            //increment sum by the block multiply A(row,col)*B(Acol,col)
+            //increment sum by the block multiply A(row,Acol)*B(Acol,col)
             flag = 0;
             find_BSRmatval(Bj, Bx, BptrLim, Acol, Bptr, &(Ax[Aoffset]), &(blockproduct[0]), flag, brows, bcols);
             if(flag)

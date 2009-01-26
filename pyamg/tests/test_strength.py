@@ -50,6 +50,7 @@ class TestStrengthOfConnection(TestCase):
 
     def test_incomplete_matmat(self):
         # Test a critical helper routine for ode_strength_of_connection(...)
+        # We test that (A*B).multiply(mask) = incomplete_matmat(A,B,mask)
         cases = []
 
         # 1x1 tests
@@ -91,9 +92,6 @@ class TestStrengthOfConnection(TestCase):
                     [  6.4,   7.2,  12. ,   6.1,   5.9],
                     [  0.0,   0. ,   6.1,   0. ,   0. ],
                     [  5.8,   9.5,   5.9,   0. ,  13. ]])
-        B = A.copy()
-        B[1,0] = 3.1
-        B[0,1] = 3.1
         C = A.copy()
         C[1,0] = 3.1
         C[3,2] = 10.1
@@ -104,7 +102,6 @@ class TestStrengthOfConnection(TestCase):
         A = csr_matrix(A)
         A2 = csr_matrix(A2)
         A3 = csr_matrix(A3)
-        B = csr_matrix(B)
         C = csr_matrix(C)
 
         mask = A.copy()
@@ -113,7 +110,6 @@ class TestStrengthOfConnection(TestCase):
         cases.append( (C,C,mask) )
         cases.append( (A2,A2,mask) )
         cases.append( (A3,A3,mask) )
-        cases.append( (A,B,mask) )
         cases.append( (A,A2,mask) )
         cases.append( (A3,A,mask) )
         cases.append( (A,C,mask) )
@@ -128,7 +124,6 @@ class TestStrengthOfConnection(TestCase):
         cases.append( (C,C,mask) )
         cases.append( (A2,A2,mask) )
         cases.append( (A3,A3,mask) )
-        cases.append( (A,B,mask) )
         cases.append( (A,A2,mask) )
         cases.append( (A3,A,mask) )
         cases.append( (A,C,mask) )

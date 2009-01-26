@@ -15,6 +15,7 @@ from pyamg.multigridtools import incomplete_BSRmatmat
 class TestEnergyMin(TestCase):
     def test_incomplete_BSRmatmat(self):
         # Test a critical helper routine for energy_min_prolongation(...)
+        # We test that (A*B).multiply(mask) = incomplete_BSRmatmat(A,B,mask)
         cases = []
 
         # 1x1 tests
@@ -22,9 +23,12 @@ class TestEnergyMin(TestCase):
         B = csr_matrix(mat([[1.0]])).tobsr(blocksize=(1,1))
         A2 = csr_matrix(mat([[0.]])).tobsr(blocksize=(1,1))
         mask = csr_matrix(mat([[1.]])).tobsr(blocksize=(1,1))
+        mask2 = csr_matrix(mat([[0.]])).tobsr(blocksize=(1,1))
         cases.append( (A,A,mask) ) 
+        cases.append( (A,A,mask2) ) 
         cases.append( (A,B,mask) ) 
         cases.append( (A,A2,mask) ) 
+        cases.append( (A,A2,mask2) ) 
         cases.append( (A2,A2,mask) ) 
 
         # 2x2 tests
@@ -133,13 +137,8 @@ class TestEnergyMin(TestCase):
             incomplete_BSRmatmat(A.indptr,A.indices,ravel(A.data), B2.indptr,B2.indices,ravel(B2.data), 
                                  result.indptr,result.indices,ravel(result.data), 
                                  mask.shape[0], mask.blocksize[0], mask.blocksize[1])
-            result.eliminate_zeros()
-            result.sort_indices()
 
             exact = (A*B).multiply(mask)
-            exact.eliminate_zeros()
-            exact.sort_indices()
-            
             differ = max(abs(ravel((result-exact).todense())))
             assert_almost_equal(differ, 0.0)
 

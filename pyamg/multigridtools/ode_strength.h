@@ -329,14 +329,16 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
 
 /* For use in my_inner(...)
  * B is in CSC format
- * return B(row,col), where col is the current column pointed to by Bptr
- * return Bptr pointing at the first entry past B(row,col)
+ * return: sum+=Aval*B(row,col), where col is the current column pointed to by Bptr
+ *         Bptr pointing at the first entry past B(row,col)
  */
 template<class I, class T>
 inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
                          const I row,         I &Bptr, const T Aval,
                                T &sum )
 {
+    // loop over this column of B until we either find a matching entry in B, 
+    // or we reach an entry in B that has a row number larger than the current column number in A
     while(Bptr < BptrLim)
     {
         if(Bj[Bptr] == row)
@@ -365,19 +367,28 @@ inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[],
                    const I Bp[],  const I Bj[],    const T Bx[], 
                    const I row,   const I col )
 {
+    // sum will be incremented by Ax[.]*Bx[.] each time an entry in 
+    // this row of A matches up with an entry in this column of B
     T sum = 0.0;
+    
     I Bptr = Bp[col];
     I BptrLim = Bp[col+1];
+    I rowstart = Ap[row];
+    I rowend = Ap[row+1];
 
-    for(I colptr = Ap[row]; colptr < Ap[row+1]; colptr++)
+    // Loop over row=row of A, looking for entries in column=col 
+    // of B that line up for the innerproduct
+    for(I colptr = rowstart; colptr < rowend; colptr++)
     {
+        // Return if there are no more entries in this column of B
         if(Bptr == BptrLim)
         {   return sum;}
 
+        //Indices are assumed to be sorted
         I Acol = Aj[colptr];
         if(Bj[Bptr] <= Acol)
         {
-            //increment sum by Ax[colptr]*B(Acol,col)
+            //increment sum by Ax[colptr]*B(Acol,col) = A(row,Acol)*B(Acol,col)
             find_matval(Bj, Bx, BptrLim, Acol, Bptr, Ax[colptr], sum);
         }
     }
