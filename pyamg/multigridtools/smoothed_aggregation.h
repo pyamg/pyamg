@@ -538,19 +538,11 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
         // pseudo_inverse(BtB), output begins at the ptr location BtBinv offset by i*NullDimSq
         T * blockinverse = BtBinv + i*NullDimSq; 
         
-        /*  svd_solve doesn't work for imaginary 
-         *  Should uncomment the NullDimLoc declaration above
-         *   for(I k = 0; k < NullDimSq; k++)
-         *   {   blockinverse[k] = identity[k]; }
-         *   svd_solve(BtB, (int) NullDimLoc, (int) NullDimLoc, blockinverse, (int) NullDimLoc, sing_vals, work, (int) work_size);
-         */
-
         // For now, copy BtB into BtBinv and do pseudo-inverse in python.
-        // Be careful to move the data from column major in BtB to row major in blockinverse.
-        // Later when svd_solve is working, will need to convert from column to row major in blockinverse
-        // Both of the conversions form row to col major only involve taking the conjugate, as BtB is Hermitian  
+        // Be careful to move the data from column major in BtB to column major in blockinverse.
+        // BtB is hermitian 
         for(I k = 0; k < NullDimSq; k++)
-        {   blockinverse[k] = conjugate(BtB[k]); }
+        {   blockinverse[k] = BtB[k]; }
     
     } // end i loop
 

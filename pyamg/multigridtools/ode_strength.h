@@ -157,7 +157,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     
     //Declare Workspace
     const I NullDimPone = NullDim + 1;
-    const I work_size   = 5*NullDimPone + 10;
+    const I work_size   = 2*NullDimPone*NullDimPone + NullDimPone;
     T * z         = new T[max_length];
     T * zhat      = new T[max_length];
     T * DBi       = new T[max_length*NullDim];
@@ -276,7 +276,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         RHS[NullDim] = z_at_i;
 
         //Solve minimization problem,  pseudo_inverse(LHS)*RHS ==> prod
-        svd_solve(&(LHS[0]), NullDimPone, NullDimPone, &(RHS[0]), 1, &(sing_vals[0]), &(work[0]), work_size);
+        svd_solve(&(LHS[0]), NullDimPone, NullDimPone, &(RHS[0]), &(sing_vals[0]), &(work[0]), work_size);
 
         //Find best approximation to z in span(Bi), Bi*RHS[0:NullDim] ==> zhat
         gemm(  Bi,   length, NullDim, 'F', 

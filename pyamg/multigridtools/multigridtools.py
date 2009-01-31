@@ -92,6 +92,59 @@ def connected_components(*args):
   return _multigridtools.connected_components(*args)
 
 
+def signof(*args):
+  """
+    signof(int a) -> int
+    signof(float a) -> float
+    signof(double a) -> double
+    """
+  return _multigridtools.signof(*args)
+
+def conjugate(*args):
+  """
+    conjugate(float x) -> float
+    conjugate(double x) -> double
+    conjugate(npy_cfloat_wrapper x) -> npy_cfloat_wrapper
+    conjugate(npy_cdouble_wrapper x) -> npy_cdouble_wrapper
+    """
+  return _multigridtools.conjugate(*args)
+
+def real(*args):
+  """
+    real(float x) -> float
+    real(double x) -> double
+    real(npy_cfloat_wrapper x) -> float
+    real(npy_cdouble_wrapper x) -> double
+    """
+  return _multigridtools.real(*args)
+
+def imag(*args):
+  """
+    imag(float x) -> float
+    imag(double x) -> double
+    imag(npy_cfloat_wrapper x) -> float
+    imag(npy_cdouble_wrapper x) -> double
+    """
+  return _multigridtools.imag(*args)
+
+def mynorm(*args):
+  """
+    mynorm(float x) -> float
+    mynorm(double x) -> double
+    mynorm(npy_cfloat_wrapper x) -> float
+    mynorm(npy_cdouble_wrapper x) -> double
+    """
+  return _multigridtools.mynorm(*args)
+
+def mynormsq(*args):
+  """
+    mynormsq(float x) -> float
+    mynormsq(double x) -> double
+    mynormsq(npy_cfloat_wrapper x) -> float
+    mynormsq(npy_cdouble_wrapper x) -> double
+    """
+  return _multigridtools.mynormsq(*args)
+
 def rs_direct_interpolation_pass2(*args):
   """
     rs_direct_interpolation_pass2(int n_nodes, int Ap, int Aj, float Ax, int Sp, int Sj, 
@@ -153,6 +206,15 @@ def incomplete_BSRmatmat(*args):
         npy_cdouble_wrapper Sx, int n, int brows, int bcols)
     """
   return _multigridtools.incomplete_BSRmatmat(*args)
+
+def pinv_array(*args):
+  """
+    pinv_array(float Ax, int m, int n, char TransA)
+    pinv_array(double Ax, int m, int n, char TransA)
+    pinv_array(npy_cfloat_wrapper Ax, int m, int n, char TransA)
+    pinv_array(npy_cdouble_wrapper Ax, int m, int n, char TransA)
+    """
+  return _multigridtools.pinv_array(*args)
 
 def classical_strength_of_connection(*args):
   """

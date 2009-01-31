@@ -2479,8 +2479,10 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_char swig_types[0]
-static swig_type_info *swig_types[2];
-static swig_module_info swig_module = {swig_types, 1, 0, 0, 0, 0};
+#define SWIGTYPE_p_npy_cdouble_wrapper swig_types[1]
+#define SWIGTYPE_p_npy_cfloat_wrapper swig_types[2]
+static swig_type_info *swig_types[4];
+static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -2580,6 +2582,7 @@ namespace swig {
 #include "graph.h"
 #include "ode_strength.h"
 #include "krylov.h"
+#include "linalg.h"
 
 
 #ifndef SWIG_FILE_WITH_INIT
@@ -3100,9 +3103,995 @@ SWIG_AsVal_float (PyObject * obj, float *val)
   return res;
 }
 
+
+  #define SWIG_From_double   PyFloat_FromDouble 
+
+
+SWIGINTERNINLINE PyObject *
+SWIG_From_float  (float value)
+{    
+  return SWIG_From_double  (value);
+}
+
+
+SWIGINTERN swig_type_info*
+SWIG_pchar_descriptor(void)
+{
+  static int init = 0;
+  static swig_type_info* info = 0;
+  if (!init) {
+    info = SWIG_TypeQuery("_p_char");
+    init = 1;
+  }
+  return info;
+}
+
+
+SWIGINTERN int
+SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
+{
+  if (PyString_Check(obj)) {
+    char *cstr; Py_ssize_t len;
+    PyString_AsStringAndSize(obj, &cstr, &len);
+    if (cptr)  {
+      if (alloc) {
+	/* 
+	   In python the user should not be able to modify the inner
+	   string representation. To warranty that, if you define
+	   SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
+	   buffer is always returned.
+
+	   The default behavior is just to return the pointer value,
+	   so, be careful.
+	*/ 
+#if defined(SWIG_PYTHON_SAFE_CSTRINGS)
+	if (*alloc != SWIG_OLDOBJ) 
+#else
+	if (*alloc == SWIG_NEWOBJ) 
+#endif
+	  {
+	    *cptr = reinterpret_cast< char* >(memcpy((new char[len + 1]), cstr, sizeof(char)*(len + 1)));
+	    *alloc = SWIG_NEWOBJ;
+	  }
+	else {
+	  *cptr = cstr;
+	  *alloc = SWIG_OLDOBJ;
+	}
+      } else {
+	*cptr = PyString_AsString(obj);
+      }
+    }
+    if (psize) *psize = len + 1;
+    return SWIG_OK;
+  } else {
+    swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
+    if (pchar_descriptor) {
+      void* vptr = 0;
+      if (SWIG_ConvertPtr(obj, &vptr, pchar_descriptor, 0) == SWIG_OK) {
+	if (cptr) *cptr = (char *) vptr;
+	if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
+	if (alloc) *alloc = SWIG_OLDOBJ;
+	return SWIG_OK;
+      }
+    }
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsCharArray(PyObject * obj, char *val, size_t size)
+{ 
+  char* cptr = 0; size_t csize = 0; int alloc = SWIG_OLDOBJ;
+  int res = SWIG_AsCharPtrAndSize(obj, &cptr, &csize, &alloc);
+  if (SWIG_IsOK(res)) {
+    if ((csize == size + 1) && cptr && !(cptr[csize-1])) --csize;
+    if (csize <= size) {
+      if (val) {
+	if (csize) memcpy(val, cptr, csize*sizeof(char));
+	if (csize < size) memset(val + csize, 0, (size - csize)*sizeof(char));
+      }
+      if (alloc == SWIG_NEWOBJ) {
+	delete[] cptr;
+	res = SWIG_DelNewMask(res);
+      }      
+      return res;
+    }
+    if (alloc == SWIG_NEWOBJ) delete[] cptr;
+  }
+  return SWIG_TypeError;
+}
+
+
+SWIGINTERN int
+SWIG_AsVal_char (PyObject * obj, char *val)
+{    
+  int res = SWIG_AsCharArray(obj, val, 1);
+  if (!SWIG_IsOK(res)) {
+    long v;
+    res = SWIG_AddCast(SWIG_AsVal_long (obj, &v));
+    if (SWIG_IsOK(res)) {
+      if ((CHAR_MIN <= v) && (v <= CHAR_MAX)) {
+	if (val) *val = static_cast< char >(v);
+      } else {
+	res = SWIG_OverflowError;
+      }
+    }
+  }
+  return res;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+SWIGINTERN PyObject *_wrap_signof__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int result;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:signof",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "signof" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  result = (int)signof(arg1);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_signof__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float arg1 ;
+  float result;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:signof",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "signof" "', argument " "1"" of type '" "float""'");
+  } 
+  arg1 = static_cast< float >(val1);
+  result = (float)signof(arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_signof__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double arg1 ;
+  double result;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:signof",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "signof" "', argument " "1"" of type '" "double""'");
+  } 
+  arg1 = static_cast< double >(val1);
+  result = (double)signof(arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_signof(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_signof__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_signof__SWIG_1(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_signof__SWIG_2(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'signof'.\n  Possible C/C++ prototypes are:\n""    signof(int)\n""    signof(float)\n""    signof(double)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_conjugate__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 = 0 ;
+  float result;
+  float temp1 ;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:conjugate",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "conjugate" "', argument " "1"" of type '" "float""'");
+  } 
+  temp1 = static_cast< float >(val1);
+  arg1 = &temp1;
+  result = (float)conjugate((float const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_conjugate__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = 0 ;
+  double result;
+  double temp1 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:conjugate",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "conjugate" "', argument " "1"" of type '" "double""'");
+  } 
+  temp1 = static_cast< double >(val1);
+  arg1 = &temp1;
+  result = (double)conjugate((double const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_conjugate__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 = 0 ;
+  npy_cfloat_wrapper result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:conjugate",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cfloat_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "conjugate" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "conjugate" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cfloat_wrapper * >(argp1);
+  result = conjugate((npy_cfloat_wrapper const &)*arg1);
+  resultobj = SWIG_NewPointerObj((new npy_cfloat_wrapper(static_cast< const npy_cfloat_wrapper& >(result))), SWIGTYPE_p_npy_cfloat_wrapper, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_conjugate__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 = 0 ;
+  npy_cdouble_wrapper result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:conjugate",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cdouble_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "conjugate" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "conjugate" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cdouble_wrapper * >(argp1);
+  result = conjugate((npy_cdouble_wrapper const &)*arg1);
+  resultobj = SWIG_NewPointerObj((new npy_cdouble_wrapper(static_cast< const npy_cdouble_wrapper& >(result))), SWIGTYPE_p_npy_cdouble_wrapper, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_conjugate(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cfloat_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_conjugate__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cdouble_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_conjugate__SWIG_3(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_conjugate__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_conjugate__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'conjugate'.\n  Possible C/C++ prototypes are:\n""    conjugate(float const &)\n""    conjugate(double const &)\n""    conjugate(npy_cfloat_wrapper const &)\n""    conjugate(npy_cdouble_wrapper const &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_real__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 = 0 ;
+  float result;
+  float temp1 ;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:real",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "real" "', argument " "1"" of type '" "float""'");
+  } 
+  temp1 = static_cast< float >(val1);
+  arg1 = &temp1;
+  result = (float)real((float const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_real__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = 0 ;
+  double result;
+  double temp1 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:real",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "real" "', argument " "1"" of type '" "double""'");
+  } 
+  temp1 = static_cast< double >(val1);
+  arg1 = &temp1;
+  result = (double)real((double const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_real__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 = 0 ;
+  float result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:real",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cfloat_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "real" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "real" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cfloat_wrapper * >(argp1);
+  result = (float)real((npy_cfloat_wrapper const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_real__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 = 0 ;
+  double result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:real",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cdouble_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "real" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "real" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cdouble_wrapper * >(argp1);
+  result = (double)real((npy_cdouble_wrapper const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_real(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cfloat_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_real__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cdouble_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_real__SWIG_3(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_real__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_real__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'real'.\n  Possible C/C++ prototypes are:\n""    real(float const &)\n""    real(double const &)\n""    real(npy_cfloat_wrapper const &)\n""    real(npy_cdouble_wrapper const &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_imag__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 = 0 ;
+  float result;
+  float temp1 ;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:imag",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "imag" "', argument " "1"" of type '" "float""'");
+  } 
+  temp1 = static_cast< float >(val1);
+  arg1 = &temp1;
+  result = (float)imag((float const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_imag__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = 0 ;
+  double result;
+  double temp1 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:imag",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "imag" "', argument " "1"" of type '" "double""'");
+  } 
+  temp1 = static_cast< double >(val1);
+  arg1 = &temp1;
+  result = (double)imag((double const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_imag__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 = 0 ;
+  float result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:imag",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cfloat_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "imag" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "imag" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cfloat_wrapper * >(argp1);
+  result = (float)imag((npy_cfloat_wrapper const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_imag__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 = 0 ;
+  double result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:imag",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cdouble_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "imag" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "imag" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cdouble_wrapper * >(argp1);
+  result = (double)imag((npy_cdouble_wrapper const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_imag(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cfloat_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_imag__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cdouble_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_imag__SWIG_3(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_imag__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_imag__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'imag'.\n  Possible C/C++ prototypes are:\n""    imag(float const &)\n""    imag(double const &)\n""    imag(npy_cfloat_wrapper const &)\n""    imag(npy_cdouble_wrapper const &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynorm__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 = 0 ;
+  float result;
+  float temp1 ;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynorm",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "mynorm" "', argument " "1"" of type '" "float""'");
+  } 
+  temp1 = static_cast< float >(val1);
+  arg1 = &temp1;
+  result = (float)mynorm((float const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynorm__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = 0 ;
+  double result;
+  double temp1 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynorm",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "mynorm" "', argument " "1"" of type '" "double""'");
+  } 
+  temp1 = static_cast< double >(val1);
+  arg1 = &temp1;
+  result = (double)mynorm((double const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynorm__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 = 0 ;
+  float result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynorm",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cfloat_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "mynorm" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "mynorm" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cfloat_wrapper * >(argp1);
+  result = (float)mynorm((npy_cfloat_wrapper const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynorm__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 = 0 ;
+  double result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynorm",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cdouble_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "mynorm" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "mynorm" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cdouble_wrapper * >(argp1);
+  result = (double)mynorm((npy_cdouble_wrapper const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynorm(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cfloat_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_mynorm__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cdouble_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_mynorm__SWIG_3(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_mynorm__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_mynorm__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'mynorm'.\n  Possible C/C++ prototypes are:\n""    mynorm(float const &)\n""    mynorm(double const &)\n""    mynorm(npy_cfloat_wrapper const &)\n""    mynorm(npy_cdouble_wrapper const &)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynormsq__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 = 0 ;
+  float result;
+  float temp1 ;
+  float val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynormsq",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_float(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "mynormsq" "', argument " "1"" of type '" "float""'");
+  } 
+  temp1 = static_cast< float >(val1);
+  arg1 = &temp1;
+  result = (float)mynormsq((float const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynormsq__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 = 0 ;
+  double result;
+  double temp1 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynormsq",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_double(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "mynormsq" "', argument " "1"" of type '" "double""'");
+  } 
+  temp1 = static_cast< double >(val1);
+  arg1 = &temp1;
+  result = (double)mynormsq((double const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynormsq__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 = 0 ;
+  float result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynormsq",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cfloat_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "mynormsq" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "mynormsq" "', argument " "1"" of type '" "npy_cfloat_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cfloat_wrapper * >(argp1);
+  result = (float)mynormsq((npy_cfloat_wrapper const &)*arg1);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynormsq__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 = 0 ;
+  double result;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:mynormsq",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_npy_cdouble_wrapper,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "mynormsq" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "mynormsq" "', argument " "1"" of type '" "npy_cdouble_wrapper const &""'"); 
+  }
+  arg1 = reinterpret_cast< npy_cdouble_wrapper * >(argp1);
+  result = (double)mynormsq((npy_cdouble_wrapper const &)*arg1);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_mynormsq(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cfloat_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_mynormsq__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_npy_cdouble_wrapper, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_mynormsq__SWIG_3(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_float(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_mynormsq__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_double(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_mynormsq__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'mynormsq'.\n  Possible C/C++ prototypes are:\n""    mynormsq(float const &)\n""    mynormsq(double const &)\n""    mynormsq(npy_cfloat_wrapper const &)\n""    mynormsq(npy_cdouble_wrapper const &)\n");
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_standard_aggregation(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
@@ -6865,6 +7854,319 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
   
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'incomplete_BSRmatmat'.\n  Possible C/C++ prototypes are:\n""    incomplete_BSRmatmat<(int,float,float)>(int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],float [],int const,int const,int const)\n""    incomplete_BSRmatmat<(int,double,double)>(int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],double [],int const,int const,int const)\n""    incomplete_BSRmatmat<(int,npy_cfloat_wrapper,float)>(int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper [],int const,int const,int const)\n""    incomplete_BSRmatmat<(int,npy_cdouble_wrapper,double)>(int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper [],int const,int const,int const)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_pinv_array__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  float *arg1 ;
+  int arg2 ;
+  int arg3 ;
+  char arg4 ;
+  PyArrayObject *temp1 = NULL ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:pinv_array",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    temp1 = obj_to_array_no_conversion(obj0,PyArray_FLOAT);
+    if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
+    arg1 = (float*) array_data(temp1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "pinv_array" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "pinv_array" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_char(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "pinv_array" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = static_cast< char >(val4);
+  pinv_array<int,float,float >(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_pinv_array__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  double *arg1 ;
+  int arg2 ;
+  int arg3 ;
+  char arg4 ;
+  PyArrayObject *temp1 = NULL ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:pinv_array",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    temp1 = obj_to_array_no_conversion(obj0,PyArray_DOUBLE);
+    if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
+    arg1 = (double*) array_data(temp1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "pinv_array" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "pinv_array" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_char(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "pinv_array" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = static_cast< char >(val4);
+  pinv_array<int,double,double >(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_pinv_array__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cfloat_wrapper *arg1 ;
+  int arg2 ;
+  int arg3 ;
+  char arg4 ;
+  PyArrayObject *temp1 = NULL ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:pinv_array",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    temp1 = obj_to_array_no_conversion(obj0,PyArray_CFLOAT);
+    if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
+    arg1 = (npy_cfloat_wrapper*) array_data(temp1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "pinv_array" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "pinv_array" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_char(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "pinv_array" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = static_cast< char >(val4);
+  pinv_array<int,npy_cfloat_wrapper,float >(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_pinv_array__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  npy_cdouble_wrapper *arg1 ;
+  int arg2 ;
+  int arg3 ;
+  char arg4 ;
+  PyArrayObject *temp1 = NULL ;
+  int val2 ;
+  int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  char val4 ;
+  int ecode4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:pinv_array",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  {
+    temp1 = obj_to_array_no_conversion(obj0,PyArray_CDOUBLE);
+    if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
+    arg1 = (npy_cdouble_wrapper*) array_data(temp1);
+  }
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "pinv_array" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "pinv_array" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  ecode4 = SWIG_AsVal_char(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "pinv_array" "', argument " "4"" of type '" "char""'");
+  } 
+  arg4 = static_cast< char >(val4);
+  pinv_array<int,npy_cdouble_wrapper,double >(arg1,arg2,arg3,arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_pinv_array(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[5];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_FLOAT)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_char(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_pinv_array__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_DOUBLE)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_char(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_pinv_array__SWIG_2(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_CFLOAT)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_char(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_pinv_array__SWIG_3(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    {
+      _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_CDOUBLE)) ? 1 : 0;
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_int(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          {
+            int res = SWIG_AsVal_char(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            return _wrap_pinv_array__SWIG_4(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'pinv_array'.\n  Possible C/C++ prototypes are:\n""    pinv_array<(int,float,float)>(float [],int const,int const,char const)\n""    pinv_array<(int,double,double)>(double [],int const,int const,char const)\n""    pinv_array<(int,npy_cfloat_wrapper,float)>(npy_cfloat_wrapper [],int const,int const,char const)\n""    pinv_array<(int,npy_cdouble_wrapper,double)>(npy_cdouble_wrapper [],int const,int const,char const)\n");
   return NULL;
 }
 
@@ -19237,6 +20539,41 @@ fail:
 
 
 static PyMethodDef SwigMethods[] = {
+	 { (char *)"signof", _wrap_signof, METH_VARARGS, (char *)"\n"
+		"signof(int a) -> int\n"
+		"signof(float a) -> float\n"
+		"signof(double a) -> double\n"
+		""},
+	 { (char *)"conjugate", _wrap_conjugate, METH_VARARGS, (char *)"\n"
+		"conjugate(float x) -> float\n"
+		"conjugate(double x) -> double\n"
+		"conjugate(npy_cfloat_wrapper x) -> npy_cfloat_wrapper\n"
+		"conjugate(npy_cdouble_wrapper x) -> npy_cdouble_wrapper\n"
+		""},
+	 { (char *)"real", _wrap_real, METH_VARARGS, (char *)"\n"
+		"real(float x) -> float\n"
+		"real(double x) -> double\n"
+		"real(npy_cfloat_wrapper x) -> float\n"
+		"real(npy_cdouble_wrapper x) -> double\n"
+		""},
+	 { (char *)"imag", _wrap_imag, METH_VARARGS, (char *)"\n"
+		"imag(float x) -> float\n"
+		"imag(double x) -> double\n"
+		"imag(npy_cfloat_wrapper x) -> float\n"
+		"imag(npy_cdouble_wrapper x) -> double\n"
+		""},
+	 { (char *)"mynorm", _wrap_mynorm, METH_VARARGS, (char *)"\n"
+		"mynorm(float x) -> float\n"
+		"mynorm(double x) -> double\n"
+		"mynorm(npy_cfloat_wrapper x) -> float\n"
+		"mynorm(npy_cdouble_wrapper x) -> double\n"
+		""},
+	 { (char *)"mynormsq", _wrap_mynormsq, METH_VARARGS, (char *)"\n"
+		"mynormsq(float x) -> float\n"
+		"mynormsq(double x) -> double\n"
+		"mynormsq(npy_cfloat_wrapper x) -> float\n"
+		"mynormsq(npy_cdouble_wrapper x) -> double\n"
+		""},
 	 { (char *)"standard_aggregation", _wrap_standard_aggregation, METH_VARARGS, (char *)"standard_aggregation(int n_row, int Ap, int Aj, int x) -> int"},
 	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int n_nodes, int Sp, int Sj, int Tp, int Tj, int splitting)"},
 	 { (char *)"rs_direct_interpolation_pass1", _wrap_rs_direct_interpolation_pass1, METH_VARARGS, (char *)"rs_direct_interpolation_pass1(int n_nodes, int Sp, int Sj, int splitting, int Bp)"},
@@ -19289,6 +20626,12 @@ static PyMethodDef SwigMethods[] = {
 		"incomplete_BSRmatmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, \n"
 		"    npy_cdouble_wrapper Bx, int Sp, int Sj, \n"
 		"    npy_cdouble_wrapper Sx, int n, int brows, int bcols)\n"
+		""},
+	 { (char *)"pinv_array", _wrap_pinv_array, METH_VARARGS, (char *)"\n"
+		"pinv_array(float Ax, int m, int n, char TransA)\n"
+		"pinv_array(double Ax, int m, int n, char TransA)\n"
+		"pinv_array(npy_cfloat_wrapper Ax, int m, int n, char TransA)\n"
+		"pinv_array(npy_cdouble_wrapper Ax, int m, int n, char TransA)\n"
 		""},
 	 { (char *)"classical_strength_of_connection", _wrap_classical_strength_of_connection, METH_VARARGS, (char *)"\n"
 		"classical_strength_of_connection(int n_row, float theta, int Ap, int Aj, float Ax, int Sp, \n"
@@ -19484,15 +20827,23 @@ static PyMethodDef SwigMethods[] = {
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_npy_cdouble_wrapper = {"_p_npy_cdouble_wrapper", "npy_cdouble_wrapper *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_npy_cfloat_wrapper = {"_p_npy_cfloat_wrapper", "npy_cfloat_wrapper *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
+  &_swigt__p_npy_cdouble_wrapper,
+  &_swigt__p_npy_cfloat_wrapper,
 };
 
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_npy_cdouble_wrapper[] = {  {&_swigt__p_npy_cdouble_wrapper, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_npy_cfloat_wrapper[] = {  {&_swigt__p_npy_cfloat_wrapper, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
+  _swigc__p_npy_cdouble_wrapper,
+  _swigc__p_npy_cfloat_wrapper,
 };
 
 

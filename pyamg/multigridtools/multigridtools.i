@@ -15,6 +15,7 @@
 #include "graph.h"
 #include "ode_strength.h"
 #include "krylov.h"
+#include "linalg.h"
 %}
 
 %feature("autodoc", "1");
@@ -186,6 +187,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %include "graph.h"
 %include "ode_strength.h"
 %include "krylov.h"
+%include "linalg.h"
  /*
   * Order may be important here, list float before double
   */
@@ -227,6 +229,7 @@ INSTANTIATE_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_COMPLEX(invert_BtB)
 INSTANTIATE_COMPLEX(incomplete_BSRmatmat)
 
+INSTANTIATE_COMPLEX(pinv_array)
 INSTANTIATE_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
 INSTANTIATE_BOTH(apply_distance_filter)
