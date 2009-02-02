@@ -9,7 +9,6 @@
 #include "smoothed_aggregation.h"
 
 /*
- *
  * Return a filtered strength-of-connection matrix by applying a drop tolerance
  *  Strength values are assumed to be "distance"-like, i.e. the smaller the 
  *  value the stronger the connection
@@ -20,16 +19,25 @@
  *  
  *   Also, set the diagonal to 1.0, as each node is perfectly close to itself
  *
- * Parameters:
- *   n_row      Dimension of matrix, S
- *   epsilon    Drop tolerance
- *   Sp, Sj, Sx Define CSR matrix, S
+ * Parameters
+ * ----------
+ * n_row : {int}
+ *      Dimension of matrix, S
+ * epsilon : {float}
+ *      Drop tolerance
+ * Sp : {int array}
+ *      Row pointer array for CSR matrix S
+ * Sj : {int array}
+ *      Col index array for CSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for CSR matrix S
  *
- * Returns:
- *   Sx         Such that the above dropping strategy has been applied
+ * Returns
+ * -------
+ *   Sx, such that the above dropping strategy has been applied
+ *   There will be explicit zero entries for each weak connection
  *
  */          
-
 template<class I, class T>
 void apply_distance_filter(const I n_row,
                            const T epsilon,
@@ -63,20 +71,25 @@ void apply_distance_filter(const I n_row,
 }
 
 /*
- *
- *  Given a BSR matrice's data structure, return a linear array of length 
+ *  Given a BSR matrix, return a linear array of length 
  *  num_blocks, which holds each block's smallest, nonzero, entry
  *  
- * Parameters:
- *   n_blocks       Number of blocks in matrix, S
- *   blocksize      Size of each block
- *   Sx             Block data structure of BSR matrix, S
+ * Parameters
+ * ----------
+ * n_blocks : {int}
+ *      Number of blocks in matrix
+ * blocksize : {int}
+ *      Size of each block
+ * Sx : {float|complex array}
+ *      Block data structure of BSR matrix, S
+ *      Sx is n_blocks x blocksize
+ * Tx : {float|complex array}
+ *      modified inplace for output
  *
  * Returns:
- *   Tx             Tx[i] holds the minimum nonzero of block i of S
+ * Tx[i] holds the minimum nonzero value of block i of S
  *
  */          
-
 template<class I, class T>
 void min_blocks(const I n_blocks, const I blocksize, 
                 const T Sx[],     T Tx[])
@@ -112,38 +125,66 @@ void min_blocks(const I n_blocks, const I blocksize,
  *        z = (I - (t/k) Dinv A)^k delta_i
  *   
  * Strength is defined as the relative point-wise approx. error between
- * B*x and z.  We don't use the full z in this problem, only that part of
- * z that is in the sparsity pattern of A.
+ * B*x and z.  B is the near-nullspace candidates.  The constrained min problem
+ * is also restricted to consider B*x and z only at the nonozeros of column i of A
  *    
- * Can use either the D-norm, and inner product, or l2-norm and inner-prod
- * to solve the constrained min problem.  Using D gives scale invariance.
- * This choice is reflected in whether the parameter DB = B or diag(A)*B  
+ * Can use either the D_A inner product, or l2 inner-prod in the minimization 
+ * problem. Using D_A gives scale invariance.  This choice is reflected in 
+ * whether the parameter DB = B or diag(A)*B  
  *
  * This is a quadratic minimization problem with a linear constraint, so
  * we can build a linear system and solve it to find the critical point,
  * i.e. minimum.
  *
- * Parameters:
- *   Sx, Sp, Sj     Define CSR raw strength of connection matrix
- *   nrows          Dimension of S
- *   B              Transpose of near nullspace vectors (nrows x NullDim)
- *   DB (transpose) Depending on calling routine, either (diag(A)*B)^T or B^T
- *                    (nrows x NullDim)
- *   b              In row-major form, this is B-squared, i.e. it 
- *                  is each column of B multiplied against each 
- *                  other column of B.  For a Nx3 B,
- *                  b[:,0] = B[:,0]*B[:,0]
- *                  b[:,1] = B[:,0]*B[:,1]
- *                  b[:,2] = B[:,0]*B[:,2]
- *                  b[:,3] = B[:,1]*B[:,1]
- *                  b[:,4] = B[:,1]*B[:,2]
- *                  b[:,5] = B[:,2]*B[:,2]
- *   BDBCols        sum(range(NullDim+1)), i.e. number of columns in b
- *   NullDim        Number of nullspace vectors
+ * Parameters
+ * ----------
+ * Sp : {int array}
+ *      Row pointer array for CSR matrix S
+ * Sj : {int array}
+ *      Col index array for CSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for CSR matrix S
+ *      S = (I - (t/k) Dinv A)^k 
+ * nrows : {int}
+ *      Dimension of S
+ * B : {float|complex array}
+ *      nrows x NullDim array of near nullspace vectors in col major form,
+ *      if calling from within Python, take a transpose.
+ * DB : {float|complex array}
+ *      nrows x NullDim array of possibly scaled near nullspace 
+ *      vectors in col major form.  If calling from within Python, take a
+ *      transpose.  For a scale invarient measure, 
+ *      DB = (diag(A)*B), corresponding to the D_A inner-product
+ *      Otherwise,
+ *      DB = B, corresponding to the l2-inner-product
+ * b : {float|complex array}
+ *      nrows x BDBCols array in row-major form.
+ *      This  array is B-squared, i.e. it is each column of B
+ *      multiplied against each other column of B.  For a Nx3 B,
+ *      b[:,0] = conjugate(B[:,0])*B[:,0]
+ *      b[:,1] = conjugate(B[:,0])*B[:,1]
+ *      b[:,2] = conjugate(B[:,0])*B[:,2]
+ *      b[:,3] = conjugate(B[:,1])*B[:,1]
+ *      b[:,4] = conjugate(B[:,1])*B[:,2]
+ *      b[:,5] = conjugate(B[:,2])*B[:,2]
+ * BDBCols : {int}
+ *      sum(range(NullDim+1)), i.e. number of columns in b
+ * NullDim : {int}
+ *      Number of nullspace vectors
  *
- * Returns:
- *   Sx             Holds new strength values reflecting 
- *                    the above minimization problem
+ * Returns
+ * -------
+ *   Sx is written in place and holds strength 
+ *   values reflecting the above minimization problem
+ *
+ * Notes
+ * -----
+ * Upon entry to the routine, S = (I - (t/k) Dinv A)^k.  However,
+ * we only need the values of S at the sparsity pattern of A.  Hence,
+ * there is no need to completely calculate all of S.
+ *
+ * b is used to save on computation of each local minimization problem
+ *
  */
 template<class I, class T>
 void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
@@ -395,15 +436,51 @@ inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[],
     return sum;
 }
 
-/* A:  CSR,  square, sorted indices
- * B:  CSC,  square, sorted indices
- * S:  CSR,  square, sorted indices, values are overwritten
- * dimen:  dimensionality of A,B and S
+
+/* Calculate A*B = S, but only at the pre-exitsting sparsity
+ * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
  *
- * Calculate A*B = S, but only at the current sparsity pattern of S
+ * A must be in CSR, B must be in CSC and S must be in CSR
+ * Indices for A, B and S must be sorted
+ * A, B, and S must be square
+ *
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *      Row pointer array for CSR matrix A
+ * Aj : {int array}
+ *      Col index array for CSR matrix A
+ * Ax : {float|complex array}
+ *      Value array for CSR matrix A
+ * Bp : {int array}
+ *      Row pointer array for CSC matrix B
+ * Bj : {int array}
+ *      Col index array for CSC matrix B
+ * Bx : {float|complex array}
+ *      Value array for CSC matrix B
+ * Sp : {int array}
+ *      Row pointer array for CSR matrix S
+ * Sj : {int array}
+ *      Col index array for CSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for CSR matrix S
+ * dimen: {int} 
+ *      dimensionality of A,B and S
+ *
+ * Returns
+ * -------
+ * Sx is modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ *
+ * Notes
+ * -----
+ * A must be in CSR, B must be in CSC and S must be in CSR.
+ * Indices for A, B and S must all be sorted.
+ * A, B and S must be square.
+ *
  * Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
- * But, we know apriori that S's sparsity pattern is a subset of A*B, 
- *      so this algorithm should work well.
+ * But, the routine is written for the case when S's 
+ * sparsity pattern is a subset of A*B, so this algorithm 
+ * should work well.
  */
 template<class I, class T>
 void incomplete_matmat(  const I Ap[],  const I Aj[],    const T Ax[], 

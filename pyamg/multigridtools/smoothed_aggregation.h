@@ -367,22 +367,38 @@ void fit_candidates_complex(const I n_row,
  *      UBi = UB[i]
  *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.H))
  *
- * Parameters:
- *  RowsPerBlock     rows per block in the BSR matrix, S
- *  ColsPerBlock     cols per block in the BSR matrix, S
- *  num_blocks       number of stored blocks in Sx
- *  num_block_rows   S.shape[0]/RowsPerBlock
- *  x                Conjugate of near-nullspace vectors, B, in row major
- *  y                S*B, in row major
- *  z                BtBinv, in row major
- *  Sp,Sj,Sx         BSR matrix, S, that is the update to the prolongator
- *                   Note that data array Sx is in row major
+ * Parameters
+ * ----------
+ * RowsPerBlock : {int}
+ *      rows per block in the BSR matrix, S
+ * ColsPerBlock : {int}
+ *      cols per block in the BSR matrix, S
+ * num_blocks : {int}
+ *      number of stored blocks in Sx
+ * num_block_rows : {int}
+ *      Number of block rows, S.shape[0]/RowsPerBlock
+ * x : {float|complex array}
+ *      Conjugate of near-nullspace vectors, B, in row major
+ * y : {float|complex array}
+ *      S*B, in row major
+ * z : {float|complex array}
+ *      BtBinv, in row major, i.e. z[i] = pinv(B_i.H Bi), where
+ *      B_i is B restricted to the neighborhood of dof of i.
+ * Sp : {int array}
+ *      Row pointer array for BSR matrix S
+ * Sj : {int array}
+ *      Col index array for BSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for BSR matrix S
  *  
- * Returns:
- *  Sx is modified such that S*B = 0
+ * Return
+ * ------
+ * Sx is modified such that S*B = 0.  S ends up being the 
+ * update to the prolongator in the energy_minimization algorithm.
  *
- * Notes:
- *  
+ * Notes
+ * -----
+ *
  */          
 
 template<class I, class T, class F>
@@ -437,29 +453,39 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  *   S2 = Sparsity_Pattern.tocsr()
  *   for i in range(Nnodes):
  *       Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
- *       BtBinv[i,:,:] = pinv2(Bi.H*Bi) 
+ *       BtBinv[i,:,:] = Bi.H*Bi 
  *
- * Parameters:
- *   NullDim      Number of near nullspace vectors
- *   Nnodes       Number of nodes, i.e. block rows in BSR matrix, S
- *   ColsPerBlock Columns per block in S
- *   b            In row-major form, this is B-squared, i.e. it 
- *                is each column of B multiplied against each 
- *                other column of B.  For a Nx3 B,
- *                b[:,0] = conjugate(B[:,0])*B[:,0]
- *                b[:,1] = conjugate(B[:,0])*B[:,1]
- *                b[:,2] = conjugate(B[:,0])*B[:,2]
- *                b[:,3] = conjugate(B[:,1])*B[:,1]
- *                b[:,4] = conjugate(B[:,1])*B[:,2]
- *                b[:,5] = conjugate(B[:,2])*B[:,2]
- *   BsqCols      sum(range(NullDim+1)), i.e. number of columns in b
- *   x            BtBinv (output).  Should be zeros upon entry
- *   Sp,Sj        BSR indptr and indices members for matrix, S
+ * Parameters
+ * ----------
+ * NullDim : {int}
+ *      Number of near nullspace vectors
+ * Nnodes : {int}
+ *      Number of nodes, i.e. number of block rows in BSR matrix, S
+ * ColsPerBlock : {int}
+ *      Columns per block in S
+ * b : {float|complex array}
+ *      Nnodes x BsqCols array, in row-major form.
+ *      This is B-squared, i.e. it is each column of B 
+ *      multiplied against each other column of B.  For a Nx3 B,
+ *      b[:,0] = conjugate(B[:,0])*B[:,0]
+ *      b[:,1] = conjugate(B[:,0])*B[:,1]
+ *      b[:,2] = conjugate(B[:,0])*B[:,2]
+ *      b[:,3] = conjugate(B[:,1])*B[:,1]
+ *      b[:,4] = conjugate(B[:,1])*B[:,2]
+ *      b[:,5] = conjugate(B[:,2])*B[:,2]
+ * BsqCols : {int}
+ *      sum(range(NullDim+1)), i.e. number of columns in b
+ * x  : {float|complex array}
+ *      Modified inplace for output.  Should be zeros upon entry
+ * Sp,Sj : {int array} 
+ *      BSR indptr and indices members for matrix, S
  *
- * Returns:
- *  BtBinv      BtBinv[i] = pseudo_invers(B_i^T*B_i), in row major format
- *              where B_i is B[colindices,:], colindices = all the nonzero
- *              column indices for block row i in S
+ * Return
+ * ------
+ * BtBinv[i] = B_i.H*B_i in row major format
+ * where B_i is B[colindices,:], colindices = all the nonzero
+ * column indices for block row i in S
+ *
  */          
 
 template<class I, class T, class F>
@@ -643,18 +669,58 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
     return;
 }
 
-/* BEWARE, this routine is designed ONLY for A, B and S such that,
- * A:  BSR,  nxn square,      sorted indices, brows x brows blocksize
- * B:  BSC,  nxm rectangular, sorted indices, brows x bcols blocksize, Bx in col major format
- * S:  BSR,  nxm rectangular, sorted indices, brows x bcols blocksize, values are overwritten
- * rows:  n
- * brows: blockrows
- * bcols: blockcols
+
+/* Calculate A*B = S, but only at the pre-exitsting sparsity
+ * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
  *
- * Calculate A*B = S, but only at the current sparsity pattern of S
+ * A must be in BSR, B must be in BSC and S must be in CSR
+ * Indices for A, B and S must be sorted
+ * A must be square, B and S must be the same size
+ *
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *      Row pointer array for BSR matrix A
+ * Aj : {int array}
+ *      Col index array for BSR matrix A
+ * Ax : {float|complex array}
+ *      Value array for BSR matrix A
+ * Bp : {int array}
+ *      Row pointer array for BSC matrix B
+ * Bj : {int array}
+ *      Col index array for BSC matrix B
+ * Bx : {float|complex array}
+ *      Value array for BSC matrix B
+ * Sp : {int array}
+ *      Row pointer array for BSR matrix S
+ * Sj : {int array}
+ *      Col index array for BSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for BSR matrix S
+ * n: {int} 
+ *      number of rows of A.  We do not need
+ *      the number of columns, as that data 
+ *      is stored implicitly in the BSR data
+ *      structures
+ * brows : {int}
+ *      number of rows per block
+ * bcols : {int}
+ *      number of cols per block
+ *
+ * Returns
+ * -------
+ * Sx is modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ *
+ * Notes
+ * -----
+ * A must be in BSR, B must be in BSC and S must be in CSR
+ * Indices for A, B and S must be sorted
+ * A must be square, B and S must be the same size
+ *
  * Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
- * But, we know apriori that S's sparsity pattern is a subset of A*B, 
- *      so this algorithm should work well.
+ * But, the routine is written for the case when S's 
+ * sparsity pattern is a subset of A*B, so this algorithm 
+ * should work well.
  */
 template<class I, class T, class F>
 void incomplete_BSRmatmat( const I Ap[],  const I Aj[],    const T Ax[], 

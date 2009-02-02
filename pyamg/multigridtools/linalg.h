@@ -4,12 +4,17 @@
 #include <math.h>
 #include <limits>
 
-// sign function that assigns a sign of 1 to 0
+// sign function for int, float and double
+// Assigns a sign of 1 to 0
 inline int signof(int a) { return (a<0 ? -1 : 1); }
 inline float signof(float a) { return (a<0.0 ? -1.0 : 1.0); }
 inline double signof(double a) { return (a<0.0 ? -1.0 : 1.0); }
 
-// Overloaded routines for complex arithmetic
+
+// Overloaded routines for complex arithmetic that accept 
+// pyamg's complex class and the default float and double types
+
+// Return the complex conjugate of a number 
 inline float conjugate(const float& x)
     { return x; }
 inline double conjugate(const double& x)
@@ -19,6 +24,7 @@ inline npy_cfloat_wrapper conjugate(const npy_cfloat_wrapper& x)
 inline npy_cdouble_wrapper conjugate(const npy_cdouble_wrapper& x)
     { return npy_cdouble_wrapper(x.real, -x.imag); }
 
+// Return the real part of a number
 inline float real(const float& x)
     { return x; }
 inline double real(const double& x)
@@ -28,6 +34,7 @@ inline float real(const npy_cfloat_wrapper& x)
 inline double real(const npy_cdouble_wrapper& x)
     { return x.real; }
 
+// Return the imaginary part of a number
 inline float imag(const float& x)
     { return 0.0; }
 inline double imag(const double& x)
@@ -37,6 +44,7 @@ inline float imag(const npy_cfloat_wrapper& x)
 inline double imag(const npy_cdouble_wrapper& x)
     { return x.imag; }
 
+// Return the norm, i.e. the magnitude, of a single number
 inline float mynorm(const float& x)
     { return fabs(x); }
 inline double mynorm(const double& x)
@@ -46,6 +54,8 @@ inline float mynorm(const npy_cfloat_wrapper& x)
 inline double mynorm(const npy_cdouble_wrapper& x)
     { return sqrt(x.real*x.real + x.imag*x.imag); }
 
+// Return the norm squared of a single number, i.e. 
+// save on a square root
 inline float mynormsq(const float& x)
     { return (x*x); }
 inline double mynormsq(const double& x)
@@ -59,9 +69,21 @@ inline double mynormsq(const npy_cdouble_wrapper& x)
 //Dense Algebra Routines
 
 /* dot(x, y, n)
- * x,y are n-vectors
- * calculate conjuate(x).T y
-*/
+ *
+ * Parameters
+ * ----------
+ * x : {float|complex array}
+ *      n-vector
+ * y : {float|complex array}
+ *      n-vector
+ * n : {int}
+ *      size of x and y
+ *
+ * Return
+ * ------
+ * conjuate(x).T y
+ *
+ */
 template<class I, class T>
 inline T dot_prod(const T x[], const T y[], const I n)
 {
@@ -71,10 +93,23 @@ inline T dot_prod(const T x[], const T y[], const I n)
     return sum;
 }
 
+
 /* norm(x, n)
- * x is an n-vectors
- * calculate sqrt( <x, x> )
-*/
+ *
+ * Parameters
+ * ----------
+ * x : {float|complex array}
+ *      n-vector
+ * n : {int}
+ *      size of x and y
+ * normx : {scalar}
+ *      output value
+ *
+ * Return
+ * ------
+ * normx = sqrt( <x, x> )
+ *
+ */
 template<class I, class T, class F>
 inline void norm(const T x[], const I n, F &normx)
 {
@@ -83,10 +118,22 @@ inline void norm(const T x[], const I n, F &normx)
 
 
 /* axpy(x, y, alpha, n)
- * x, y are n-vectors
- * alpha is a constant scalar
- * calculate x = x + alpha*y
-*/
+ *
+ * Parameters
+ * ----------
+ * x : {float|complex array}
+ *      n-vector
+ * y : {float|complex array}
+ *      n-vector
+ * n : {int}
+ *      size of x and y
+ * alpha : {scalar}
+ *      
+ * Return
+ * ------
+ * x = x + alpha*y
+ *
+ */
 template<class I, class T>
 inline void axpy(T x[], const T y[], const T alpha, const I n)
 {
@@ -94,31 +141,28 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
     {   x[i] += alpha*y[i]; }
 }
 
-/*
- * Compute A*B ==> S
- *
- * Parameters:
- * A      -  Left operand in row major
- * B      -  Right operand in column major
- * S      -  A*B, in row-major
- * Atrans -  Whether to transpose A before multiply
- * Btrans -  Whether to transpose B before multiply
- * Strans -  Whether to transpose S after multiply, Outputted in row-major         
- *
- * Returns:
- *  S = A*B
- *
- * Notes:
- *    Not fully implemented, 
- *    - Atrans and Btrans not implemented
- *    - No error checking on inputs
- *
- */
 
-/*
- * transpose Ax by overwriting Bx
- * Ax is (m,n)
- * Bx is (n,m)
+/* Transpose Ax by overwriting Bx
+ * 
+ * Parameters
+ * ----------
+ * Ax : {float|complex array}
+ *      m x n dense array
+ * Bx : {float|complex array}
+ *      m x n dense array
+ * m,n : {int}
+ *      Dimensions of Ax and Bx
+ *
+ * Return
+ * ------
+ * Bx is overwritten with the transpose of Ax
+ *
+ * Notes
+ * -----
+ * There is a fair amount of hardcoding to make this routine very 
+ * fast for small (<10) square matrices, although it works for general 
+ * m x n matrices.
+ *
  */
 template<class I, class T>
 inline void transpose(const T Ax[], T Bx[], const I m, const I n)
@@ -200,12 +244,46 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
     return;
 }
 
-/*
- * A is row major
- * B is col major
- * Strans = 'T' gives S in col major
- * Strans = 'F' gives S in row major
- * Contents of S are overwritten
+/* Calculate Ax*Bx = S
+ *
+ * Parameters
+ * ----------
+ * Ax : {float|complex array} 
+ *      Stored in row major
+ * Arows : {int}
+ *      Number of rows of A
+ * Acols : {int}
+ *      Number of columns of A
+ * Atrans : {char}
+ *      Not Used
+ * Bx : {float|complex array} 
+ *      Stored in col major
+ * Brows : {int}
+ *      Number of rows of B
+ * Bcols : {int}
+ *      Number of columns of B
+ * Btrans : {char}
+ *      Not Used
+ * Sx : {float|complex array} 
+ *      Output array, Contents are overwitten
+ * Srows : {int}
+ *      Number of rows of S
+ * Scols : {int}
+ *      Number of columns of S
+ * Strans : {char}
+ *      'T' gives S in col major
+ *      'F' gives S in row major
+ *
+ * Return
+ * ------
+ * Sx = Ax*Bx in column or row major, depending on Strans.
+ * Contents of Sx are overwritten
+ *
+ * Notes
+ * -----
+ * Naively calculates S(i,j) = A(i,:) B(:,j) by looping over the rows of A
+ * and the columns of B.
+ *
  */
 template<class I, class T>
 void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans, 
@@ -263,31 +341,57 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
 
 
 /*
- * Compute the SVD of a matrix, A, using the Jacobi method.  See reference,
+ * Compute the SVD of a matrix, Ax, using the Jacobi method.
+ * Compute Ax = U S V.H
+ *
+ * Parameters
+ * ----------
+ * Ax : {float|complex array}
+ *      m x n dense matrix, stored in col major form
+ * U : {float|complex array}
+ *      m x n dense matrix initialized to 0.0 
+ *      Passed in as Tx
+ * V : {float|complex array}
+ *      n x n dense matrix initialized to 0.0 
+ *      Passed in as Bx
+ * S : {float|complex array}
+ *      n x 1 dense matrix initialized to 0.0 
+ *      Passed in as Sx
+ * m,n : {int} 
+ *      Dimensions of Ax, m > n.
+ *
+ * Return
+ * ------
+ * Returns Ax = U S V.H
+ * U, V, S are modified in place
+ * 
+ * V : {array}
+ *      Orthogonal n x n matrix, V, stored in col major
+ * U : {array}
+ *      Orthogonal m x nmatrix, U, stored in col major
+ * S : {array}
+ *      Singular values
+ * int : {int}
+ *      Function return value, 
+ *      -1:  error
+ *      0:  successful
+ *      1:  did not converge
+ *
+ * Notes
+ * -----
+ * The Jacobi method is used to compute the SVD.  Conceptually, 
+ * the Jacobi method applies successive Jacobi rotations, Q_i to
+ * the system, Q_i^H Ax.H Ax Q_i.  Despite the normal equations 
+ * appearing here, the actual method can be quite accurate.  
+ * However, the method is slower than Golub-Reinsch for all 
+ * but very small matrices.
+ *
+ * References
+ * ----------
  * De Rijk, "A One-Sided Jacobi Algorithm for computing the singular value 
  * decomposition on a vector computer", SIAM J Sci and Statistical Comp,
- * Vol 10, No 2, p 359-371, March 1989. 
+ * Vol 10, No 2, p 359-371, March 1989.
  *
- * Compute A = U S V.H, where S is diagonal and U and V are orthogonal
- * Input
- * -----
- * A        dense matrix, stored in col major form
- *          A is (m,n), m > n.
- * U        All 0.0 matrix of size (m, n)
- * V        All 0.0 matrix of size (n, n) 
- * S        All 0.0 vector of size max(m,n)
- * m, n     size of A, it must be that m > n
- *
- * Output
- * ------
- * V = V, i.e. not V.H, in col major
- * U = U, in col major
- * S holds the singular values
- *
- * returns int
- *    -1:  error
- *     0:  successful
- *     1:  did not converge
  */
 
 template<class I, class T, class F>
@@ -547,18 +651,34 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 }
  
 /*
- * Solve a system with the SVD, i.e. use a robust pseudo-inverse
- * to multiply the RHS
- * Input:
- * A is (m,n), in column major, m>n
- * b is RHS and is m-vector
- * sing_vals holds the singular values upon return
- * work is a worksize array so that we avoid reallocating 
- *      memory on the heap for multiple calls to svd_solve
- * worksize must be > m*n + n
+ * Solve a system with the SVD, i.e. use a robust Moore-Penrose 
+ * Pseudoinverse to multiply the RHS
+ * 
+ * Parameters
+ * ----------
+ * A : {float|complex array} 
+ *      m x n dense column major array, m>n
+ * m,n : {int}
+ *      Dimensions of A, m > n
+ * b : {float|complex array}
+ *      RHS, m-vector
+ * sing_vals : {float array}
+ *      Holds the singular values upon return
+ * work : {float|complex array}
+ *      worksize array for temporary space for routine 
+ * worksize : {int}
+ *      must be > m*n + n
  *
- * Output:
+ * Return
+ * ------
  * A^{-1} b replaces b
+ * sing_vals holds the singular values
+ *
+ * Notes
+ * -----
+ * forcing preallocation of sing_vals and work, allows for 
+ * efficient multiple calls to this routine
+ *
  */
 template<class I, class T, class F>
 void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
@@ -601,18 +721,35 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     return;
 }
 
-/*
- * Ax is (m, n, n), and is assumed to be "raveled" and in row major form
+/* Parameters
+ * ----------
+ * Replace each block of A with a Moore-Penrose pseudoinverse of that block.
+ * Routine is designed to inverst many small matrices at once.
+ *
+ * Ax : {float|complex array}  
+ *      (m, n, n) array, assumed to be "raveled" and in row major form
+ * m,n : int
+ *      dimensions of Ax
+ * TransA : char
+ *      'T' or 'F'.  Decides whether to transpose each nxn block
+ *      of A before inverting.  If using Python array, should be 'T'.  
  * 
- * Replace each block of A with a moore-penrose pseudo inverse of that block
- * The pseudo inverse, however, will be in row major, so python will immediately
- * be able to use it
+ * Return
+ * ------
+ * Ax : {array}
+ *      Ax is modified in place with the pseduo-inverse replacing each
+ *      block of Ax.  Ax is returned in row-major form for Python
  *
- * TransA='T' forces a transpose of each block of A.  
- * This is needed if calling pinv_array from python.
+ * Notes
+ * -----
+ * This routine is designed to be called once for a large m.
+ * Calling this routine repeatably would not be efficient.
  *
- * Routine is designed to be called once for a large m.  Calling this routine repeatably 
- * would not be efficient
+ * This function offers substantial speedup over native Python
+ * code for many small matrices, e.g. 5x5 and 10x10.  Tests have
+ * indicated that matrices larger than 27x27 are faster if done 
+ * in native Python.
+ *
  */
 template<class I, class T, class F>
 void pinv_array(T Ax[], const I m, const I n, const char TransA)
