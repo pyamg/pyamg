@@ -481,6 +481,23 @@ inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[],
  * But, the routine is written for the case when S's 
  * sparsity pattern is a subset of A*B, so this algorithm 
  * should work well.
+ *
+ * Examples
+ * --------
+ * >>> from pyamg.multigridtools import incomplete_matmat
+ * >>> from scipy import arange, eye, ones
+ * >>> from scipy.sparse import csr_matrix, csc_matrix
+ * >>>
+ * >>> A = csr_matrix(arange(1,10,dtype=float).reshape(3,3))
+ * >>> B = csc_matrix(ones((3,3),dtype=float))
+ * >>> AB = csr_matrix(eye(3,3,dtype=float))
+ * >>> A.sort_indices()
+ * >>> B.sort_indices()
+ * >>> AB.sort_indices()
+ * >>> incomplete_matmat(A.indptr, A.indices, A.data, B.indptr, B.indices,
+ *                       B.data, AB.indptr, AB.indices, AB.data, 3)
+ * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
+ * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
  */
 template<class I, class T>
 void incomplete_matmat(  const I Ap[],  const I Aj[],    const T Ax[], 

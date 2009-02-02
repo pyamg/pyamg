@@ -750,6 +750,21 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  * indicated that matrices larger than 27x27 are faster if done 
  * in native Python.
  *
+ * Examples
+ * --------
+ * >>> from pyamg.multigridtools import pinv_array
+ * >>> from scipy import arange, ones, array, dot
+ * >>> A = array([arange(1,5, dtype=float).reshape(2,2), ones((2,2),dtype=float)])
+ * >>> Ac = A.copy()
+ * >>> pinv_array(A, 2, 2, 'T')
+ * >>> print "Multiplication By Inverse\n" + str(dot(A[0], Ac[0]))
+ * >>> print "Multiplication by PseudoInverse\n" + str(dot(Ac[1], dot(A[1], Ac[1])))
+ * >>>
+ * >>> A = Ac.copy()
+ * >>> pinv_array(A,2,2,'F')
+ * >>> print "Changing flag to \'F\' results in different Inverse\n" + str(dot(A[0], Ac[0]))
+ * >>> print "A holds the inverse of the transpose\n" + str(dot(A[0], Ac[0].T))
+ *
  */
 template<class I, class T, class F>
 void pinv_array(T Ax[], const I m, const I n, const char TransA)

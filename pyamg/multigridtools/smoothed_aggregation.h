@@ -721,6 +721,25 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
  * But, the routine is written for the case when S's 
  * sparsity pattern is a subset of A*B, so this algorithm 
  * should work well.
+ *
+ * Examples
+ * --------
+ * >>> from pyamg.multigridtools import incomplete_BSRmatmat
+ * >>> from scipy import arange, eye, ones, ravel
+ * >>> from scipy.sparse import bsr_matrix
+ * >>>
+ * >>> A = bsr_matrix(ones((4,4),dtype=float), blocksize=(2,2))
+ * >>> B = bsr_matrix(arange(1,17,dtype=float).reshape(4,4), blocksize=(2,2))
+ * >>> BT = B.T.tobsr()      # Mimic bsc format with a transpose
+ * >>> AB = bsr_matrix(eye(4,4,dtype=float), blocksize=(2,2))
+ * >>> A.sort_indices()
+ * >>> B.sort_indices()
+ * >>> BT.sort_indices()
+ * >>> AB.sort_indices()
+ * >>> incomplete_BSRmatmat(A.indptr, A.indices, ravel(A.data), BT.indptr, BT.indices,
+ *                       ravel(BT.data), AB.indptr, AB.indices, ravel(AB.data), 4, 2, 2)
+ * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
+ * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
  */
 template<class I, class T, class F>
 void incomplete_BSRmatmat( const I Ap[],  const I Aj[],    const T Ax[], 
