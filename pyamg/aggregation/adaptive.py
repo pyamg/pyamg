@@ -85,7 +85,16 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         
     Example
     -------
-
+    >>> from pyamg import stencil_grid
+    >>> from pyamg.aggregation import adaptive_sa_solver
+    >>> from numpy.random import rand
+    >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
+    >>> asa = adaptive_sa_solver(A,num_candidates=1)
+    >>> print asa
+    >>> residuals=[]
+    >>> x=asa.solve(b=rand(A.shape[0]),x0=rand(A.shape[0]),residuals=residuals)
+    >>> factor = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+    >>> print factor
 
     References
     ----------
@@ -135,7 +144,6 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 
     return smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                        postsmoother=prepostsmoother, smooth=smooth,**kwargs)
-
 
 #def relax_candidate(A, x, candidate_iters, prepostsmoother, smooth):
 #    #Currently this fcn is not called anywhere, can this be removed?  
@@ -198,9 +206,7 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
         x = x + 1.0j*rand(A_l.shape[0],1)
 
     #step 2
-    #x_A_x_old = dot(conjugate(x).T,A_l*x)
     relax(A_l,x)
-    #x_A_x = dot(conjugate(x).T,A_l*x)
 
     #step 3
     # not advised to stop the iteration here: often the first relaxation pass _is_ good, but the remaining
@@ -224,7 +230,7 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
             AggOp = aggregation[len(AggOps)]
 
         T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-        
+
         fn, kwargs = unpack_arg(smooth)                                        #step 4d
         if fn == 'jacobi':
             P_l = jacobi_prolongation_smoother(A_l, T_l, **kwargs)
@@ -264,7 +270,8 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
                 # use A.H A innerproduct
                 Ax = A_l*x; Axhat = A_l*x_hat;
                 x_A_x = dot(conjugate(Ax).T,Ax)
-                err_ratio = (x_A_x/dot(conjugate(Axhat).T,Axhat))**(1.0/candidate_iters) 
+                xhat_A_xhat = dot(conjugate(x_hat).T,A_l*x_hat)
+                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
 
             if err_ratio < epsilon:                                            #step 4i
                 #print "sufficient convergence, skipping"
@@ -274,10 +281,13 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     #step 5
     # extend coarse-level candidate to the finest level
-    for A_l,P in reversed(zip(As[1:],Ps)):
-        #relax(A_l,x)
+    #for A_l,P in reversed(zip(As[1:],Ps)):
+    relax(A_l,x)
+    for lev in range(len(Ps)-1,-1,-1):  # lev = coarsest ... finest-1
+        P = Ps[lev]                     # I: lev --> lev+1
+        A = As[lev]                     # A on lev+1
         x = P * x
-    #relax(A,x)
+        relax(A,x)
 
     return x,AggOps  #first candidate
 
