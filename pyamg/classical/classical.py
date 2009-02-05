@@ -2,16 +2,17 @@
 
 __docformat__ = "restructuredtext en"
 
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import setup_smoothers
+from pyamg.strength import classical_strength_of_connection, \
+                           symmetric_strength_of_connection, \
+                           ode_strength_of_connection
 
-from interpolate import *
-from pyamg.strength import *
+from interpolate import direct_interpolation
 
 __all__ = ['ruge_stuben_solver']
-
 
 def ruge_stuben_solver(A, 
                        strength=('classical',{'theta':0.25}), 
@@ -88,11 +89,9 @@ def ruge_stuben_solver(A,
     setup_smoothers(ml, presmoother, postsmoother)
     return ml
 
-
 # internal function
 def extend_hierarchy(levels, strength, CF):
-    """
-    """
+    """ helper function for local methods """
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
