@@ -29,6 +29,15 @@ def direct_interpolation(A, C, splitting):
     P : {csr_matrix}
         Prolongator using direct interpolation
 
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import direct_interpolation
+    >>> from numpy import array
+    >>> A = poisson((5,),format='csr')
+    >>> P = direct_interpolation(A,A,array([1,0,1,0,1]))
+    >>> P.todense()
+
     """
     if not isspmatrix_csr(A): 
         raise TypeError('expected csr_matrix for A')
@@ -52,4 +61,3 @@ def direct_interpolation(A, C, splitting):
             Pp,       Pj,        Px)
 
     return csr_matrix( (Px,Pj,Pp) )
-
