@@ -6,15 +6,15 @@ __docformat__ = "restructuredtext en"
 
 from numpy import array, dot, multiply, power, sqrt, sum, ones, arange, \
         abs, inf, ceil, zeros, where, bool
-from numpy.random import random
+from numpy.random import rand
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, csr_matrix
+from scipy.sparse import isspmatrix, csr_matrix, spdiags
 
 from pyamg.relaxation import gauss_seidel
 
 __all__ = ['CR','binormalize']
 
-def CR(S, method='habituated'):
+def CR(S, method='habituated',maxiter=20):
     """Use Compatible Relaxation to compute a C/F splitting 
 
     Parameters
@@ -26,14 +26,13 @@ def CR(S, method='habituated'):
             - concurrent: GS relaxation on F-points, leaving e_c = 0
             - habituated: full relaxation, setting e_c = 0
     maxiter : int
-        maximum number of outer iterations
+        maximum number of outer iterations (lambda)
 
-    Return
-    ------
+    Returns
+    -------
     splitting : array
         C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
    
-
     References
     ----------
         - Compatible relaxation: coarse set selection by relaxation as described in
@@ -41,16 +40,23 @@ def CR(S, method='habituated'):
             Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
 
 
-    Example
-    -------
-
+    Examples
+    --------
+    >>> from numpy import linspace, meshgrid
+    >>> from pyamg import poisson
+    >>> from pyamg.classical.cr import CR
+    >>> from pylab import imshow, show
+    >>> n = 20
+    >>> A = poisson((n,n),format='csr')
+    >>> splitting = CR(A)
+    >>> imshow(splitting.reshape((n,n)),interpolation='nearest')
+    >>> show()
     """
     # parameters (paper notation)
-    maxiter = 20    # (lambda) max number of outer iterations
     ntests = 3      # (nu) number of random tests to do per iteration
     nrelax = 4      # (eta) number of relaxation sweeps per test
 
-    smagic = 1      # (s) parameter in [1,5] to account for fillin 
+    smagic = 1.0    # (s) parameter in [1,5] to account for fillin 
     gamma = 1.5     # (gamma) cycle index.  use 1.5 for 2d
     G = 30          # (G) number of equivalence classes (# of bins)
     tdepth = 1      # (t) drop depth on parse of L bins
@@ -58,7 +64,7 @@ def CR(S, method='habituated'):
     alphai = 0.25   # (alpha_inc) quota increase
 
     # initializaitons    
-    alpha = 0.0     # coarsening ratio
+    alpha = 0.0     # coarsening ratio, quota
     beta = inf      # quality criterion
     beta1 = inf     # quality criterion, older
     beta2 = inf     # quality criterion, oldest
@@ -68,29 +74,26 @@ def CR(S, method='habituated'):
 
     if not isspmatrix(S): raise TypeError('expecting sparse matrix')
 
-    #S = binormalize(S)
+    S = binormalize(S)
     
-    splitting = zeros( (S.shape[0],1), dtype='uint8' )
+    splitting = zeros( (S.shape[0],1), dtype=int )
    
     # out iterations ---------------
     for m in range(0,maxiter):
 
-        #print "[m = %d"%m
         mu = 0.0        # convergence rate
         E = zeros((n,1))  # slowness measure
 
         # random iterations ---------------
         for k in range(0,ntests):
-            #print "[..k = %d"%k
 
-            e  = 0.5*( 1 + random((n,1)))
+            e  = 0.5*( 1 + rand(n,1))
             e[splitting>0] = 0
 
             enorm = norm(e)
 
             # relaxation iterations ---------------
             for l in range(0,nrelax):
-                #print "[....l = %d"%l
 
                 if method == 'habituated':
                     gauss_seidel(S,e,zeros((n,1)),iterations=1)
@@ -148,7 +151,6 @@ def CR(S, method='habituated'):
 
         # add whole bins (and tdepth nodes) at a time
         u = zeros((n,1))
-        #troots = zeros((n,1),dtype='bool')
         while nC < nCmax:
             if delta > 0:
                 raise NotImplementedError
@@ -172,23 +174,12 @@ def CR(S, method='habituated'):
             #    u = abs(S) * u
             #(troots,tmp) = where(u>0)
 
-        #print "alpha = %g" % alpha
-        #print "beta  = %g" % beta
-        #print "mu    = %g" % mu
-
     return splitting.ravel()
 
 def binormalize( A, tol=1e-5, maxiter=10):
     """Binormalize matrix A
 
     Attempt to create unit l_1 norm rows
-
-    Usage
-    -----
-    B = binormalize( A, tol=1e-8, maxiter=20 )
-    n = A.shape[0]
-    C = B.multiply(B)
-    print C.sum(1) # check binormalization
 
     Parameters
     ----------
@@ -203,9 +194,8 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     Return
     ------
-        C : csr_matrix
-            diagonally scaled A, C=DAD
-         
+    C : csr_matrix
+        diagonally scaled A, C=DAD
     
     Notes
     -----
@@ -219,15 +209,20 @@ def binormalize( A, tol=1e-5, maxiter=10):
                 o easily done with tol=0 if B=DA, but this is not symmetric
                 o algorithm is O(N log (1.0/tol))
 
-    Example
-    -------
-    from pyamg import poisson
-    from pyamg.classical import binormalize
-    A = poisson((10,),format='csr')
-    C = binormalize(A)
+    Examples
+    --------
+ from pyamg import poisson
+ from pyamg.classical import binormalize
+ A = poisson((10,),format='csr')
+ C = binormalize(A)
+ print C.multiply(C).sum(axis=1)
 
     """
-    if not isspmatrix(A): raise TypeError('expecting sparse matrix A')
+    if not isspmatrix(A): 
+        raise TypeError('expecting sparse matrix A')
+
+    if A.dtype==complex:
+        raise NotImplementedError('complex A not implemented')
 
     n  = A.shape[0]
     it = 0
@@ -251,16 +246,15 @@ def binormalize( A, tol=1e-5, maxiter=10):
             c2 = (n-1)*d[i]
             c1 = (n-2)*(beta[i] - d[i]*x[i])
             c0 = -d[i]*x[i]*x[i] + 2*beta[i]*x[i] - n*betabar
-            if (-c0 < 1e-13):
+            if (-c0 < 1e-14):
                 print 'warning: A nearly un-binormalizable...'
-                return ones((n,1))
+                return A
             else:
                 # see equation (12)
-                xnew = (-2*c0)/(c1 + sqrt(c1*c1 - 4*c0*c2))
+                xnew = (2*c0)/(-c1 - sqrt(c1*c1 - 4*c0*c2))
             dx = xnew - x[i]
 
             #ttmp=time.time()
-
             #betabar = betabar + (1.0/n)*(dx * x.T * B[:,i] + dx*beta[i] + d[i]*dx*dx)
             #beta = beta + dx*array(B[:,i].todense()).ravel()
 
@@ -277,9 +271,10 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     # rescale for unit 2-norm
     d = sqrt(x)
-    D=csr_matrix( ( d.ravel(), (arange(0,n),arange(0,n))), shape=(n,n))
+    D = spdiags( d.ravel(), [0], n,n)
     C = D * A * D
-    beta = C.multiply(C).sum(1)
+    C = C.tocsr()
+    beta = C.multiply(C).sum(axis=1)
     scale = sqrt((1.0/n) * sum(beta))
     return (1/scale)*C
 
@@ -293,16 +288,17 @@ def rowsum_stdev(x,beta):
 
     Parameters
     ----------
-        x : array
-        beta : array
+    x : array
+    beta : array
+
+    Returns
+    -------
+    s(x)/betabar : float
 
     Notes
     -----
-        equation (7) in Livne/Golub
+    equation (7) in Livne/Golub
 
-    return 
-    ------
-        s(x)/betabar : float
     """
     n=x.size
     betabar = (1.0/n) * dot(x,beta)
