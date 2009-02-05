@@ -437,7 +437,8 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
     '''
     
-    if not isspmatrix(A):
+    #if not isspmatrix(A):
+    if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
         warn('Implicit conversion to sparse matrix')
         A = csr_matrix(A)
     
