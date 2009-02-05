@@ -323,7 +323,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     >>> T.todense()
     >>> A = poisson((10,),format='csr')
     >>> A.todense()
-    >>> P = energy_prolongation_smoother(A,T,A,ones((10,1)))
+    >>> P = energy_prolongation_smoother(A,T,A,ones((2,1)))
     >>> P.todense()
 
     References
@@ -364,10 +364,14 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 
     if T.blocksize[0] != A.blocksize[0]:
         raise ValueError("T's row-blocksize should be the same as A's blocksize")
+    
+    if B.shape[0] != T.shape[1]:
+        raise ValueError("B is the candidates for the coarse grid. \
+                            num_rows(b) = num_cols(T)")
 
     if min(T.nnz, Atilde.nnz, A.nnz) == 0:
         return T
-
+    
     #====================================================================
     # Retrieve problem information
     Nfine = T.shape[0]
@@ -403,7 +407,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     BsqCols = sum(range(NullDim+1))
     Bsq = zeros((Ncoarse,BsqCols), dtype=B.dtype)
     counter = 0
-    print NullDim
     for i in range(NullDim):
         for j in range(i,NullDim):
             Bsq[:,counter] = conjugate(ravel(asarray(B[:,i])))*ravel(asarray(B[:,j]))
