@@ -159,6 +159,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 #        ml.postsmooth(A,x,b)
    
 def unpack_arg(v):
+    """Helper function for local methods"""
     if isinstance(v,tuple):
         return v[0],v[1]
     else:
@@ -293,6 +294,24 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
 
 def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
+    """
+    Computes additional candidates and improvements
+    following Algorithm 4 in Brezina et al.
+    
+    Parameters
+    ----------
+    candidate_iters 
+        number of test relaxation iterations
+    epsilon 
+        minimum acceptable relaxation convergence factor
+
+    References
+    ----------
+    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+    SIAM Review Volume 47,  Issue 2  (2005)
+    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+    """
     
     levels = ml.levels
 
