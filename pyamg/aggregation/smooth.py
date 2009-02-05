@@ -2,9 +2,15 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones
+from numpy import ones, zeros, ravel, asarray, conjugate
+
+from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
+from scipy.linalg import pinv2
+
 from pyamg.util.utils import scale_rows, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
+from pyamg.util.utils import UnAmal
+import pyamg.multigridtools
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
         'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
@@ -30,6 +36,23 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) * T
         where K = diag(S)^-1 * S and rho(K) is an approximation to the 
         spectral radius of K.
+
+    Examples
+    --------
+    >>> from pyamg.aggregation import jacobi_prolongation_smoother
+    >>> from pyamg import poisson
+    >>> from scipy.sparse import coo_matrix
+    >>> from numpy import ones, arange, kron
+    >>> data = ones((10,))
+    >>> row = arange(0,10)
+    >>> col = kron([0,1],ones((5,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> T.todense()
+    >>> A = poisson((10,),format='csr')
+    >>> A.todense()
+    >>> P = jacobi_prolongation_smoother(A,T)
+    >>> P.todense()
+
     """
 
     D = S.diagonal()
@@ -66,6 +89,22 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) * T
         where rho(S) is an approximation to the spectral radius of S.
 
+    Examples
+    --------
+    >>> from pyamg.aggregation import richardson_prolongation_smoother
+    >>> from pyamg import poisson
+    >>> from scipy.sparse import coo_matrix
+    >>> from numpy import ones, arange, kron
+    >>> data = ones((10,))
+    >>> row = arange(0,10)
+    >>> col = kron([0,1],ones((5,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> T.todense()
+    >>> A = poisson((10,),format='csr')
+    >>> A.todense()
+    >>> P = richardson_prolongation_smoother(A,T)
+    >>> P.todense()
+
     """
 
     weight = omega/approximate_spectral_radius(S)
@@ -94,6 +133,23 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     -------
     P : {csr_matrix, bsr_matrix}
         Smoothed (final) prolongator
+
+    Examples
+    --------
+    >>> from pyamg.aggregation import kaczmarz_jacobi_prolongation_smoother
+    >>> from pyamg import poisson
+    >>> from scipy.sparse import coo_matrix
+    >>> from numpy import ones, arange, kron
+    >>> data = ones((10,))
+    >>> row = arange(0,10)
+    >>> col = kron([0,1],ones((5,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> T.todense()
+    >>> A = poisson((10,),format='csr')
+    >>> A.todense()
+    >>> P = kaczmarz_jacobi_prolongation_smoother(A,T)
+    >>> P.todense()
+
     """
 
     # Form Dinv for S*S.H
@@ -141,6 +197,23 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     -------
     P : {csr_matrix, bsr_matrix}
         Smoothed (final) prolongator 
+
+    Examples
+    --------
+    >>> from pyamg.aggregation import kaczmarz_richardson_prolongation_smoother
+    >>> from pyamg import poisson
+    >>> from scipy.sparse import coo_matrix
+    >>> from numpy import ones, arange, kron
+    >>> data = ones((10,))
+    >>> row = arange(0,10)
+    >>> col = kron([0,1],ones((5,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> T.todense()
+    >>> A = poisson((10,),format='csr')
+    >>> A.todense()
+    >>> P = kaczmarz_richardson_prolongation_smoother(A,T)
+    >>> P.todense()
+
     """
 
     # Approximate Spectral radius by defining a matvec for S*S.H
@@ -169,11 +242,6 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
 
-from numpy import ones, zeros, asarray, dot, array_split, diff, ravel, asarray, ones_like, conjugate, mat, array
-from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
-from scipy.linalg import pinv2
-from pyamg.util.utils import UnAmal
-import pyamg.multigridtools
 
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine
@@ -242,9 +310,24 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     P : {bsr_matrix}
         Smoothed prolongator
 
+    Examples
+    --------
+    >>> from pyamg.aggregation import energy_prolongation_smoother
+    >>> from pyamg import poisson
+    >>> from scipy.sparse import coo_matrix
+    >>> from numpy import ones, arange, kron
+    >>> data = ones((10,))
+    >>> row = arange(0,10)
+    >>> col = kron([0,1],ones((5,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> T.todense()
+    >>> A = poisson((10,),format='csr')
+    >>> A.todense()
+    >>> P = energy_prolongation_smoother(A,T,A,ones((10,1)))
+    >>> P.todense()
+
     References
     ----------
-
         Jan Mandel, Marian Brezina, and Petr Vanek
         "Energy Optimization of Algebraic Multigrid Bases"
         Computing 62, 205-228, 1999
@@ -266,6 +349,13 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     else:
         raise TypeError("A must be csr_matrix or bsr_matrix")
 
+    if isspmatrix_csr(T):
+        T = T.tobsr(blocksize=(1,1), copy=False)
+    elif isspmatrix_bsr(T):
+        pass
+    else:
+        raise TypeError("T must be csr_matrix or bsr_matrix")
+
     if Atilde is None:
         Atilde = csr_matrix( (ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
 
@@ -279,9 +369,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         return T
 
     #====================================================================
-    
-    
-    #====================================================================
     # Retrieve problem information
     Nfine = T.shape[0]
     Ncoarse = T.shape[1]
@@ -289,7 +376,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     #Number of PDEs per point is defined implicitly by block size
     numPDEs = A.blocksize[0]
     #====================================================================
-    
     
     #====================================================================
     # Expand the allowed sparsity pattern for P through multiplication by Atilde
@@ -304,7 +390,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
     Sparsity_Pattern.sort_indices()
     #====================================================================
-    
 
     #====================================================================
     #Construct array of inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in 
@@ -318,6 +403,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     BsqCols = sum(range(NullDim+1))
     Bsq = zeros((Ncoarse,BsqCols), dtype=B.dtype)
     counter = 0
+    print NullDim
     for i in range(NullDim):
         for j in range(i,NullDim):
             Bsq[:,counter] = conjugate(ravel(asarray(B[:,i])))*ravel(asarray(B[:,j]))
@@ -544,7 +630,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 #            resid = max(R.data.flatten().__abs__())
 #            #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
 #====================================================================
-    
     T.eliminate_zeros()
     return T
 
