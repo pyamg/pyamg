@@ -33,12 +33,15 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
         
-        #assert( conv_asa < 1.1 * conv_sa )
+        print "ASA convergence (Poisson)",conv_asa
+        print "SA convergence (Poisson)",conv_sa
+        assert( conv_asa < 1.1 * conv_sa )
 
     def test_elasticity(self):
         A,B = linear_elasticity( (100,100), format='bsr' )
 
-        asa = adaptive_sa_solver(A, num_candidates = 3)
+        asa = adaptive_sa_solver(A, num_candidates = 3, \
+                improvement_iters=5,prepostsmoother=('gauss_seidel',{'sweep':'symmetric','iterations':2}))
         sa  = smoothed_aggregation_solver(A, B=B )
 
         b = rand(A.shape[0])
@@ -52,9 +55,9 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
        
-        #print "ASA convergence",conv_asa
-        #print "SA convergence",conv_sa
-        #assert( conv_asa < 1.1 * conv_sa ) 
+        print "ASA convergence (Elasticity)",conv_asa
+        print "SA convergence (Elasticity)",conv_sa
+        assert( conv_asa < 1.1 * conv_sa ) 
        
 
 class TestComplexAdaptiveSA(TestCase):
