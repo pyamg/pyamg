@@ -221,6 +221,10 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     Example
     -------
+    from pyamg import poisson
+    from pyamg.classical import binormalize
+    A = poisson((10,),format='csr')
+    C = binormalize(A)
 
     """
     if not isspmatrix(A): raise TypeError('expecting sparse matrix A')
