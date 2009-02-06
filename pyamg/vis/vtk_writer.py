@@ -8,10 +8,10 @@ This will use the XML VTK format for unstructured meshes, .vtu
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
-__all__ = ['write_vtu','write_tetmesh','write_trimesh']
+__all__ = ['write_vtu','write_basic_mesh']
 
 import xml.dom.minidom
-from numpy import hstack, vstack, zeros, rank, ones
+from numpy import hstack, vstack, zeros, rank, ones, arange
 
 def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None):
     """
@@ -111,6 +111,10 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
     >>> cvdata={5:ones((3*12,2)),3:ones((3*1,2)),1:ones((3*4,2))}
 
     >>> write_vtu( 'test.vtu', Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None)
+
+    See Also
+    --------
+    write_mesh
        
     """
     # number of indices per cell for each cell type
@@ -364,6 +368,103 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
     doc.writexml(fid, newl='\n')
     fid.close()
 
+
+def write_basic_mesh(fid, Vert, E2V=None, mesh_type='tri', pdata=None, pvdata=None, \
+        cdata=None, cvdata=None):
+    """
+    Write mesh file for basic types of elements
+
+    Parameters
+    ----------
+    fid : {string}
+        file to be written, e.g. 'mymesh.vtu'
+    Vert : {array}
+        coordinate array (N x D)
+    E2V : {array}
+        element index array (Nel x Nelnodes)
+    mesh_type : {string}
+        type of elements: tri, quad, tet, hex (all 3d)
+    pdata : {array}
+        scalar data on vertices (Nfields x N)
+    pvdata : {array}
+        vector data on vertices (3*Nfields x N)
+    cdata : {array}
+        scalar data on cells (Nfields x Nel)
+    cvdata : {array}
+        vector data on cells (3*Nfields x Nel)
+
+    Returns
+    -------
+    writes a .vtu file for use in Paraview
+
+    Notes
+    -----
+    The difference between write_basic_mesh and write_vtu is that write_vtu is
+    more general and requires dictionaries of cell information.
+    write_basic_mesh calls write_vtu
+
+    Examples
+    --------
+    >>> Verts = array([[0.0,0.0],
+                       [1.0,0.0],
+                       [2.0,0.0],
+                       [0.0,1.0],
+                       [1.0,1.0],
+                       [2.0,1.0],
+                       [0.0,2.0],
+                       [1.0,2.0],
+                       [2.0,2.0],
+                       [0.0,3.0],
+                       [1.0,3.0],
+                       [2.0,3.0]])
+    >>> E2V = array([[0,4,3],
+                     [0,1,4],
+                     [1,5,4],
+                     [1,2,5],
+                     [3,7,6],
+                     [3,4,7],
+                     [4,8,7],
+                     [4,5,8],
+                     [6,10,9],
+                     [6,7,10],
+                     [7,11,10],
+                     [7,8,11]])
+    >>> 
+    >>> pdata=ones((12,2))
+    >>> pvdata=ones((12*3,2))
+    >>> cdata=ones((12,2))
+    >>> cvdata=ones((3*12,2))
+    >>> 
+    >>> write_basic_mesh( 'test.vtu', Verts, E2V=E2V, mesh_type='tri',pdata=pdata, pvdata=pvdata, cdata=cdata, cvdata=cvdata)
+
+    See Also
+    --------
+    write_vtu
+
+    """
+    if E2V is None:
+        mesh_type='vertex'
+
+    map_type_to_key = {'vertex':1, 'tri':5, 'quad':9, 'tet':10, 'hex':12}
+
+    if mesh_type not in map_type_to_key:
+        raise ValueError('unknown mesh_type=%s' % mesh_type)
+    
+    key = map_type_to_key[mesh_type]
+
+    if mesh_type=='vertex':
+        E2V = { key : arange(0,Vert.shape[0]).reshape((Vert.shape[0],1))}
+    else:
+        E2V = { key : E2V }
+
+    if cdata != None:
+        cdata = {key: cdata} 
+    
+    if cvdata != None:
+        cvdata = {key: cvdata}
+
+    write_vtu( fid, Verts=Vert, Cells=E2V, pdata=pdata, pvdata=pvdata, \
+            cdata=cdata, cvdata=cvdata)
 
 
 # ---------------------------------------
