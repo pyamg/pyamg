@@ -2,8 +2,6 @@
 
 __docformat__ = "restructuredtext en"
 
-#import time
-
 from numpy import array, dot, multiply, power, sqrt, sum, ones, arange, \
         abs, inf, ceil, zeros, where, bool
 from numpy.random import rand
@@ -238,7 +236,6 @@ def binormalize( A, tol=1e-5, maxiter=10):
     stdev = rowsum_stdev(x,beta)
 
     #3
-    #t=0.0
     while stdev > tol and it < maxiter:
         for i in range(0,n):
             # solve equation x_i, keeping x_j's fixed
@@ -254,19 +251,18 @@ def binormalize( A, tol=1e-5, maxiter=10):
                 xnew = (2*c0)/(-c1 - sqrt(c1*c1 - 4*c0*c2))
             dx = xnew - x[i]
 
-            #ttmp=time.time()
-            #betabar = betabar + (1.0/n)*(dx * x.T * B[:,i] + dx*beta[i] + d[i]*dx*dx)
-            #beta = beta + dx*array(B[:,i].todense()).ravel()
+            # here we assume input matrix is symmetric since we grab a row of B
+            # instead of a column
+            ii = B.indptr[i]
+            iii = B.indptr[i+1]
+            dot_Bcol = dot(x[B.indices[ii:iii]],B.data[ii:iii])
 
-            Bcol = dx*B[:,i]
-            betabar = betabar + (1.0/n)*(dot(x[Bcol.indices],Bcol.data) + dx*beta[i] + d[i]*dx*dx)
-            beta[Bcol.indices] += Bcol.data
-
-            #t+=time.time()-ttmp
+            betabar = betabar + (1.0/n)*dx*(dot_Bcol + beta[i] + d[i]*dx)
+            beta[B.indices[ii:iii]] += dx*B.data[ii:iii]
 
             x[i] = xnew
+
         stdev = rowsum_stdev(x,beta)
-        #print "time %d: "%it, t
         it+=1
 
     # rescale for unit 2-norm
