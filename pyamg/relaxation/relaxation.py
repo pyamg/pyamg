@@ -87,6 +87,20 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     -----
     When omega=1.0, SOR is equivalent to Gauss-Seidel.
 
+    Examples
+    --------
+    >>> from pyamg.relaxation import sor
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros
+    >>> A = poisson((50,50), format='csr')
+    >>> x0 = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> r0 = norm(b - A*x0)
+    >>> sor(A, x0, b, 1.33, iterations=10)
+    >>> print "Initial Residual:  %1.2e"%r0
+    >>> print "Residual After 10 SOR Sweeps:  %1.2e"%norm(b-A*x0)
+
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
