@@ -79,18 +79,15 @@ def gauge_laplacian( npts, spacing=1.0, beta=0.1):
         temperature
         Note that if beta=0, then we get the typical 5pt Laplacian stencil
 
-
     Examples
     --------
     $ A = gauge_laplacian(10)
-
 
     Output
     ------
     A : {csr matrix}
         A is Hermitian positive definite for beta > 0.0
         A is Symmetric semi-definite for beta = 0.0
-
 
     References
     ----------

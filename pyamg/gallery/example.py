@@ -11,27 +11,6 @@ from scipy.io import loadmat
 
 __all__ = ['load_example']
 
-### recursive attempt
-##def rec_glob(base,pattern):
-##    matched_files = []
-##
-##    for dirpath, dirnames, filenames in os.walk(base):
-##        print "dirpath",dirpath
-##        for filename in filenames:
-##            if fnmatch(filename, pattern):
-##                matched_files.append( os.path.join( dirpath, filename) )
-##
-##    return matched_files
-##
-##base_dir = os.path.split(__file__)[0]
-##example_dir = os.path.join( base_dir, 'example_data')
-##example_files = rec_glob(example_dir,'*.mat')
-##example_files = [ os.path.join( example_dir, fn ) for fn in example_files ]
-##example_names = [ os.path.split(name)[1][:-4] for name in example_files ]
-##examples = dict( izip(example_names,example_files) )
-##example_names.sort()
-
-
 base_dir = os.path.split(__file__)[0]
 example_dir = os.path.join( base_dir, 'example_data')
 example_files = glob( os.path.join(example_dir, '*.mat') )
@@ -71,7 +50,3 @@ def load_example(name):
    
 # insert the example names into the docstring
 load_example.__doc__ %= ('\n' + ' ' * 8).join( [''] + example_names)
-
-
-
-
