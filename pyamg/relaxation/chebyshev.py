@@ -8,13 +8,28 @@ __all__ = ['chebyshev_polynomial_coefficients']
 def chebyshev_polynomial_coefficients(a, b, degree):
     """Chebyshev polynomial coefficients for the interval [a,b]
 
-    Return the coefficients of the Chebyshev polynomial C(t) with minimum
-    magnitude on the interval [a,b] such that C(0) = 1.0.
-
     Parameters
     ----------
     a,b : float
         The left and right endpoints of the interval.
+    degree : int
+        Degree of desired chebyshev polynomial
+
+    Returns
+    -------
+    Coefficients of the Chebyshev polynomial C(t) with minimum
+    magnitude on the interval [a,b] such that C(0) = 1.0.
+    The coefficients are returned in descending order.
+    
+    Notes
+    -----
+    a,b typically represent the interval of the spectrum for some matrix
+    that you wish to damp with a Chebyshev smoother.
+
+    Examples
+    --------
+    >>> from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
+    >>> print chebyshev_polynomial_coefficients(1.0/30.0, 2.0, 3)
     """
 
     if a >= b or a <= 0:
@@ -38,25 +53,41 @@ def chebyshev_polynomial_coefficients(a, b, degree):
 
 def mls_polynomial_coefficients(rho, degree):
     """Determine the coefficients for a MLS polynomial smoother
+    
+    Parameters
+    ---------
+    rho : {float}
+        Spectral radius of the matrix in question
+    degree : {int}
+        Degree of polynomial coefficients to generate
 
-    Returns a tuple of arrays (coeffs,roots) containing the
+    Returns
+    -------
+    Tuple of arrays (coeffs,roots) containing the
     coefficients for the (symmetric) polynomial smoother and
     the roots of polynomial prolongation smoother.
 
+    The coefficients of the polynomial are in descending order
+
     References
     ----------
-
         Parallel multigrid smoothing: polynomial versus Gauss--Seidel
         M. F. Adams, M. Brezina, J. J. Hu, and R. S. Tuminaro
         J. Comp. Phys., 188 (2003), pp. 593--610
 
+    Examples
+    --------
+    >>> from pyamg.relaxation.chebyshev import mls_polynomial_coefficients
+    >>> mls = mls_polynomial_coefficients(2.0, 3)
+    >>> print "Coefficients for Symmetric Polynomial Smoother:\n" + str(mls[0])
+    >>> print "Roots of the Prolongation Smoother:\n" + str(mls[1])
     """
     
     std_roots = np.cos( np.pi * (np.arange(degree) + 0.5)/ degree )
-    print std_roots
+    #print std_roots
 
     roots = rho/2.0 * (1.0 - np.cos(2*np.pi*(np.arange(degree,dtype='float64') + 1)/(2.0*degree+1.0)))
-    print roots
+    #print roots
     roots = 1.0/roots
 
     #S_coeffs = list(-np.poly(roots)[1:][::-1])

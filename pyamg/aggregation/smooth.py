@@ -247,18 +247,29 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 #   Helper function for the energy minimization prolongator generation routine
 
 def Satisfy_Constraints(U, B, BtBinv):
-    """Update U to satisfy U*B = 0
+    """U is the prolongator update.
+       Project out components of U such that U*B = 0
 
-    Input
-    =====
-    U                     BSR Matrix to operate on
-    B                     Near nullspace vectors
-    BtBinv                Local inv(B'*B) matrices for each dof, i.  
-        
-    Output
-    ======
-    Updated U, so that U*B = 0.  Update is computed by orthogonally (in 2-norm)
-    projecting out the components of span(B) in U in a row-wise fashion
+    Parameters
+    ----------
+    U : {bsr_matrix}
+        m x n sparse bsr matrix
+        Update to the prolongator
+    B : {array}
+        n x k array of the coarse grid near nullspace vectors
+    BtBinv : {array}
+        Local inv(B_i.H*B_i) matrices for each supernode, i 
+        B_i is B restricted to the sparsity pattern of supernode i in U
+
+    Returns
+    -------
+    Updated U, so that U*B = 0.  
+    Update is computed by orthogonally (in 2-norm) projecting 
+    out the components of span(B) in U in a row-wise fashion.
+
+    Examples
+    --------
+    See the function energy_prolongation_smoother in smooth.py 
 
     """
     

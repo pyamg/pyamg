@@ -16,7 +16,44 @@ __all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
 __all__ += ['gauss_seidel_indexed'] 
 
 def make_system(A, x, b, formats=None):
-    """Return A,x,b suitable for relaxation or raise an exception
+    """
+    Return A,x,b suitable for relaxation or raise an exception
+    
+    Parameters
+    ----------
+    A : {sparse-matrix}
+        n x n system
+    x : {array}
+        n-vector, initial guess
+    b : {array}
+        n-vector, right-hand side
+    formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
+        desired sparse matrix format
+        default is no change to A's format
+
+    Returns
+    -------
+    (A,x,b), where A is in the desired sparse-matrix format
+    and x and b are "raveled", i.e. (n,) vectors.
+
+    Notes
+    -----
+    Does some rudimentary error checking on the system,
+    such as checking for compatible dimensions and checking
+    for compatible type, i.e. float or complex.
+
+    Examples
+    --------
+    >>> from pyamg.relaxation.relaxation import make_system 
+    >>> from pyamg.gallery import poisson
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> x = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
+    >>> print "x.shape = " + str(x.shape)
+    >>> print "b.shape = " + str(b.shape)
+    >>> print "A.format = " + A.format
     """
 
     if formats is None:
@@ -89,10 +126,11 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     Examples
     --------
+    >>> ## Use SOR as stand-along solver
     >>> from pyamg.relaxation import sor
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros
+    >>> from scipy import rand, zeros, ones, array, mean
     >>> A = poisson((50,50), format='csr')
     >>> x0 = zeros((A.shape[0],1))
     >>> b = rand(A.shape[0],1)
@@ -100,7 +138,19 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> sor(A, x0, b, 1.33, iterations=10)
     >>> print "Initial Residual:  %1.2e"%r0
     >>> print "Residual After 10 SOR Sweeps:  %1.2e"%norm(b-A*x0)
-
+    >>>
+    >>> ## Use SOR as the multigrid smoother 
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+                coarse_solver='pinv2', max_coarse=50,
+                presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}), 
+                postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
@@ -136,6 +186,33 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     -------
     Nothing, x will be modified in place.
 
+    Examples
+    --------
+    >>> ## Use Gauss-Seidel as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> x0 = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> r0 = norm(b - A*x0)
+    >>> gauss_seidel(A, x0, b, iterations=10)
+    >>> print "Initial Residual:  %1.2e"%r0
+    >>> print "Residual After 10 Gauss-Seidel Sweeps:  %1.2e"%norm(b-A*x0)
+    >>> 
+    >>> ## Use Gauss-Seidel as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('gauss_seidel', {'sweep':'symmetric'}), 
+    >>>         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
@@ -185,13 +262,38 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         Number of iterations to perform
     omega : scalar
         Damping parameter
-    sweep : {'forward','backward','symmetric'}
-        Direction of sweep
 
     Returns
     -------
     Nothing, x will be modified in place.
    
+    Examples
+    --------
+    >>> ## Use Jacobi as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> x0 = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> r0 = norm(b - A*x0)
+    >>> jacobi(A, x0, b, iterations=10, omega=1.0)
+    >>> print "Initial Residual:  %1.2e"%r0
+    >>> print "Residual After 10 w-Jacobi Sweeps:  %1.2e"%norm(b-A*x0)
+    >>> 
+    >>> ## Use Jacobi as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}), 
+    >>>         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
 
@@ -254,6 +356,27 @@ def polynomial(A, x, b, coeffients, iterations=1):
     For efficience, the method detects the case x = 0 one matrix-vector 
     product is avoided (since (b - A*x) is b).
 
+    Examples
+    --------
+    >>> ## The polynomial smoother is not currently used directly 
+    >>> ## in PyAMG.  It is only used by the chebyshev smoothing option,
+    >>> ## which automatically calculates the correct coefficients.
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> A = poisson((50,50), format='csr')
+    >>> b = rand(A.shape[0],1)
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('chebyshev', {'degree':3, 'iterations':1}), 
+    >>>         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=None)
 
@@ -374,6 +497,33 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     Cimmino. La ricerca scientifica ser. II 1. 
     Pubbliz. dell'Inst. pre le Appl. del Calculo 34, 326-333, 1938.
     
+    Examples
+    --------
+    >>> ## Use Kaczmarz Jacobi as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> x0 = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> r0 = norm(b - A*x0)
+    >>> kaczmarz_jacobi(A, x0, b, iterations=10, omega=2.0/3.0)
+    >>> print "Initial Residual:  %1.2e"%r0
+    >>> print "Residual After 10 Kaczmarz-Jacobi Sweeps:  %1.2e"%norm(b-A*x0)
+    >>> 
+    >>> ## Use Kaczmarz Jacobi as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}), 
+    >>>         postsmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
     
@@ -424,7 +574,27 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
     Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
  
+    Examples
+    --------
+    >>> ## Use Kaczmarz Richardson as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> b = rand(A.shape[0],1)
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}), 
+    >>>         postsmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
+
     A,x,b = make_system(A, x, b, formats=['csr'])
     
     sweep = slice(None)
@@ -468,9 +638,36 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
     Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
- 
- 
+    
+    Examples
+    --------
+    >>> ## Use Kaczmarz Gauss-Seidel as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, ones, array, mean
+    >>> A = poisson((50,50), format='csr')
+    >>> x0 = zeros((A.shape[0],1))
+    >>> b = rand(A.shape[0],1)
+    >>> r0 = norm(b - A*x0)
+    >>> kaczmarz_gauss_seidel(A, x0, b, iterations=10, sweep='symmetric')
+    >>> print "Initial Residual:  %1.2e"%r0
+    >>> print "Residual After 10 Kaczmarz Gauss-Seidel Sweeps:  %1.2e"%norm(b-A*x0)
+    >>> 
+    >>> ## Use Kaczmarz Gauss-Seidel as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
+    >>>         coarse_solver='pinv2', max_coarse=50,
+    >>>         presmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}), 
+    >>>         postsmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}))
+    >>> x0=zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
+    
     A,x,b = make_system(A, x, b, formats=['csr'])
     
     if sweep == 'forward':

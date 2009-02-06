@@ -16,7 +16,7 @@ def setup_smoothers(ml, presmoother, postsmoother):
     ml : multilevel_solver
         Data structure that stores the multigrid hierarchy.
     pre, post : smoother configuration
-        See below of for available options
+        See "Smoother Configuration" below for available options
         
     Returns
     -------
@@ -48,22 +48,36 @@ def setup_smoothers(ml, presmoother, postsmoother):
 
     Notes
     -----
-    Parameter 'omega' of the Jacobi and Richardson methods is scaled by the 
-    spectral radius of the matrix on each level.  Therefore 'omega' should 
-    be in the interval (0,2).
+    Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
+    Kaczmarz-Richardson methods is scaled by the spectral radius of 
+    the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
 
     Examples
     --------
+    >>> from pyamg.relaxation.smoothing import setup_smoothers
     >>> from pyamg import poisson, smoothed_aggregation_solver
+    >>> from pyamg.util.linalg import norm
+    >>> from scipy import rand, zeros, mean, array
     >>> A = poisson((100,100), format='csr')
+    >>> b = rand(A.shape[0])
     >>> ml = smoothed_aggregation_solver(A)
-    >>> #Gauss-Seidel with default options
-    >>> setup_smoother(ml, pre='gauss_seidel', post='gauss_seidel')  
-    >>> #Two iterations of symmetric Gauss-Seidel
+    >>> ## Gauss-Seidel with default options
+    >>> setup_smoothers(ml, presmoother='gauss_seidel', postsmoother='gauss_seidel')  
+    >>> residuals=[]
+    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
+    >>> 
+    >>> ## Two iterations of symmetric Gauss-Seidel
     >>> pre  = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
     >>> post = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
-    >>> setup_smoother(ml, pre=pre, post=post)
-
+    >>> setup_smoothers(ml, presmoother=pre, postsmoother=post)
+    >>> residuals=[]
+    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
 
     # interpret arguments
@@ -151,33 +165,49 @@ def change_smoothers(ml, presmoother, postsmoother):
 
     Notes
     -----
-    Parameter 'omega' of the Jacobi and Richardson methods is scaled by the 
-    spectral radius of the matrix on each level.  Therefore 'omega' should 
-    be in the interval (0,2).
+    Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
+    Kaczmarz-Richardson methods is scaled by the spectral radius of 
+    the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+
+    This function is most differs from setup_smoothers in that it allows 
+    for different smoothing strategies on different levels.
 
     Examples
     --------
     >>> from pyamg import poisson, smoothed_aggregation_solver
     >>> from pyamg.relaxation.smoothing import change_smoothers
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand
+    >>> from scipy import rand, array, mean
     >>> A = poisson((50,50), format='csr')
     >>> b = rand(A.shape[0],)
     >>> ml = smoothed_aggregation_solver(A, max_coarse=10)
+    >>> ## Set all levels to use gauss_seidel's defaults
     >>> smoothers = 'gauss_seidel'
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
-    >>> x = ml.solve(b)
-    >>> print "residaul 1 = %e" % norm(b - A*x) 
-    >>>
+    >>> residuals=[]
+    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
+    >>> 
+    >>> ## Set all levels to use three iterations of gauss_seidel's defaults
     >>> smoothers = ('gauss_seidel', {'iterations' : 3})
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=None)
-    >>> x = ml.solve(b)
-    >>> print "residaul 2 = %e" % norm(b - A*x) 
-    >>>
+    >>> residuals=[]
+    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
+    >>> 
+    >>> ## Set level 0 to use gauss_seidel's defaults, and all  
+    >>> ## subsequent levels to use 5 iterations of cgnr
     >>> smoothers = ['gauss_seidel', ('cgnr', {'maxiter' : 5})]
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
-    >>> x = ml.solve(b)
-    >>> print "residaul 3 = %e" % norm(b - A*x) 
+    >>> residuals=[]
+    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
+    >>> residuals = array(residuals)
+    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
+    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     '''
 
     # interpret arguments into list
@@ -231,14 +261,56 @@ from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 
 def rho_D_inv_A(A):
-    """Return the (approx.) spectral radius of D^-1 * A 
     """
+    Return the (approx.) spectral radius of D^-1 * A 
+    
+    Parameters
+    ----------
+    A : {sparse-matrix}
+
+    Returns
+    -------
+    approximate spectral radius of diag(A)^{-1} A
+
+    Examples
+    --------
+    >>> from pyamg import poisson
+    >>> from pyamg.relaxation.smoothing import rho_D_inv_A
+    >>> A = poisson((50,50), format='csr')
+    >>> print "Approximate rho(D^{-1} A) = %1.2f"%rho_D_inv_A(A)
+    """
+
     D = A.diagonal()
     D_inv = 1.0 / D
     D_inv[D == 0] = 0
     D_inv_A = scale_rows(A, D_inv, copy=True)
     return approximate_spectral_radius(D_inv_A)
 
+"""
+    The following setup_smoother_name functions are helper functions
+    for parsing user input and assigning each level the appropriate smoother
+    for the above functions, "change_smoothers" and "setup_smoothers".
+
+    The standard interface is
+
+    Parameters
+    ----------
+    lvl : {multilevel level}
+        the level in the hierarchy for which to assign a smoother
+    iterations : {int}
+        how many smoother iterations
+    optional_params : {}
+        optional params specific for each method such as omega or sweep
+
+    Returns
+    -------
+    Function pointer for the appropriate relaxation method for level=lvl
+
+    Examples
+    --------
+    See change_smoothers and setup_smoothers above
+
+"""
 def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
     def smoother(A,x,b):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
@@ -376,7 +448,7 @@ def smootherlists_tostring(smlist):
         
     Returns
     -------
-    string that when printed describes the smoothing strategies 
+    string that when printed describes all of the smoothing strategies 
     in smlist in readable format
 
     Notes
@@ -384,6 +456,9 @@ def smootherlists_tostring(smlist):
     Designed for running numerical tests on various pre/post smoothing 
     strategies so that the test scripts can generate readable output on 
     the multilevel method.
+    
+    Different from smootherlist_tostring in that this function handles
+    multiple smoothing strategies.
 
     Examples
     --------
