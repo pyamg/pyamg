@@ -1,9 +1,7 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D
 
-
-References
-----------
-
+    References
+    ----------
     "Matlab implementation of the finite element method in elasticity"
     Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263  
     J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
@@ -13,23 +11,61 @@ References
 
 __docformat__ = "restructuredtext en"
 
-__all__ = [ 'linear_elasticity' ]
+__all__ = [ 'linear_elasticity', 'linear_elasticity_p1' ]
 
 from scipy import array, matrix, ones, zeros, arange, empty, \
         hstack, vstack, tile, ravel, mgrid, concatenate, \
         cumsum, dot, eye, asarray
 from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
-   
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
+    """
+    Q1 FEM on a regular recatangular grid for linear elasticity
+
+    Parameters
+    ----------
+    grid : tuple
+        length 2 tuple of grid sizes, e.g. (10,10)
+    spacing : tuple
+        length 2 tuple of grid spacings, e.g. (1.0,0.1)
+    E : float
+        Young's modulus
+    nu : float
+        Poisson's ratio
+    format : string
+        'csr', 'csc', 'coo', 'bsr'
+
+    Returns
+    -------
+    A : {csr_matrix}
+        FE Q1 stiffness matrix
+
+    Notes
+    -----
+        - only 2d for now
+
+    Examples
+    --------
+    >>> from pyamg.gallery import linear_elasticity
+    >>> A,B = linear_elasticity((4,4))
+
+    See Also
+    --------
+    linear_elasticity_p1
+    """
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
     else:
         raise NotImplemented('no support for grid=%s' % str(grid))
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True, format=None):
-    """Q1 elements in 2 dimensions"""
+    """Q1 elements in 2 dimensions
+
+    See Also
+    --------
+    linear_elasticity
+    """
     X,Y = tuple(grid)
     
     if X < 1 or Y < 1:
@@ -102,7 +138,7 @@ def q12d_local(vertices, lame, mu):
     ----------
     lame : Float
         Lame's first parameter
-    mu   : Float 
+    mu : Float 
         shear modulus
 
     Notes
@@ -159,10 +195,42 @@ def q12d_local(vertices, lame, mu):
 
     return K
 
-
-
 def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
-    """P1 elements in 2 or 3 dimensions"""
+    """P1 elements in 2 or 3 dimensions
+    
+    Parameters
+    ----------
+    verticies : array_like
+        array of vertices of a triangle or tets
+    elements : array_like
+        array of vertex indices for tri or tet elements
+    E : float
+        Young's modulus
+    nu : float
+        Poisson's ratio
+    format : string
+        'csr', 'csc', 'coo', 'bsr'
+
+    Returns
+    -------
+    A : {csr_matrix}
+        FE Q1 stiffness matrix
+
+    Notes
+    -----
+        - works in both 2d and in 3d
+
+    Examples
+    --------
+    >>> from pyamg.gallery import linear_elasticity_p1
+    >>> E = array([[0,1,2],[1,3,2]])
+    >>> V = array([[0.0,0.0],[1.0,0.0],[0.0,1.0],[1.0,1.0]])
+    >>> A,B = linear_elasticity_p1(V,E)
+
+    See Also
+    --------
+    linear_elasticity
+    """
     
     #compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu)) # Lame's first parameter
@@ -230,8 +298,6 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     return A.asformat(format),B
 
-
-
 def p12d_local(vertices, lame, mu):
     """local stiffness matrix for P1 elements in 2d"""
     assert(vertices.shape == (3,2))
@@ -264,5 +330,3 @@ def p13d_local(vertices, lame, mu):
     
     K = det(A)/6*dot(dot(R.T,C),R)
     return K
-   
-
