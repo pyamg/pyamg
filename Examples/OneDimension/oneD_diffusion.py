@@ -5,7 +5,7 @@ stand-along SA solver.
 
 Usage
 -----
-$ python oneD_diffusion.py  n
+$ python oneD_diffusion.py  npts
 
 """
 from numpy import array, random, zeros, ravel
@@ -26,13 +26,13 @@ if(__name__=="__main__"):
     ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2')
         
     # Profile this solver for 5 iterations
-    #oneD_profile(ml, grid=linspace(0,1,n), x0=rand(n,), soln=zeros((n,)), b=zeros((n,)), iter=5)
+    oneD_profile(ml, grid=linspace(0,1,n), x0=rand(n,), soln=zeros((n,)), b=zeros((n,)), iter=10)
     
     # Plot the 1st coarse level's near nullspace mode
-    #oneD_nullspace_vis(ml, level=1, interp=True, fig_num=10)
+    oneD_nullspace_vis(ml, level=1, interp=True, fig_num=10)
     
     # Plot the fine level's aggregates
-    #oneD_coarse_grid_vis(ml, fig_num=20, level=0)
+    oneD_coarse_grid_vis(ml, fig_num=20, level=0)
     
     if True:
         # Only plot the basis functions in P if n is small, e.g. 20

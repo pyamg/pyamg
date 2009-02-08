@@ -11,10 +11,56 @@ __all__ = ['oneD_P_vis', 'oneD_coarse_grid_vis', 'oneD_nullspace_vis', 'oneD_pro
 
 import pylab
 from numpy import ravel, zeros, ones, min, abs, array, max, pi
-from scipy import imag, real, linspace, exp, rand
+from scipy import imag, real, linspace, exp, rand, sqrt
 from scipy.sparse import bsr_matrix
 from scipy.linalg import solve 
 from pyamg.util.linalg import norm
+
+def update_rcparams(fig_width_pt=700.0):
+    '''
+    Updates rcparams for appropriate plotting parameters
+    
+    parameters
+    ----------
+    fig_width_pt : {float}
+        sets the size of the figure
+
+    returns
+    -------
+    nothing, pylab.rcparams is updated
+
+    examples
+    --------
+    >>> from scipy import linspace
+    >>> from update_rcparams import update_rcparams
+    >>> import pylab
+    >>> update_rcparams(700.0)
+    >>> pylab.plot(linspace(0,10,10), linspace(0,10,10))
+    >>> pylab.title(' X = Y' )
+    >>> pylab.xlabel('X')
+    >>> pylab.ylabel('Y')
+    >>> pylab.show()
+
+    '''
+
+    inches_per_pt = 1.0/72.27               # Convert pt to inch
+    golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
+    fig_width = fig_width_pt*inches_per_pt  # width in inches
+    fig_height = fig_width*golden_mean      # height in inches
+    fig_size =  [fig_width,fig_height]
+
+    params = {'backend': 'ps',
+              'axes.labelsize': 18,
+              'text.fontsize': 18,
+              'axes.titlesize' : 18,
+              'legend.fontsize': 14,
+              'xtick.labelsize': 14,
+              'ytick.labelsize': 14,
+              'text.usetex': True,
+              'figure.figsize': fig_size}
+    
+    pylab.rcParams.update(params)
+
 
 def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', fig_num=1):
     '''
@@ -63,7 +109,10 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
     >>> oneD_profile(ml, iter=3, cycle='W');                      pylab.show()
     >>> oneD_profile(ml, b=rand(128,), x0=zeros((128,)), iter=5); pylab.show()
     '''
-    
+
+    # use good plotting paramters
+    update_rcparams()
+
     A = mg.levels[0].A
     ndof = mg.levels[0].A.shape[0]
 
@@ -111,34 +160,25 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
     e = soln - guess
 
     # plot results
-    pylab.rcParams.update({'text.usetex': True})
     if iter > 1:
         pylab.figure(fig_num)
         pylab.plot(array(range(1,resratio.shape[0]+1)), resratio)
-        title = pylab.title('Residual Ratio History')
-        title.set_fontsize(18)
-        xlabel = pylab.xlabel('Iteration')
-        xlabel.set_fontsize(18)
-        ylabel = pylab.ylabel('$||r_{i+1}|| / ||r_{i}||$')
-        ylabel.set_fontsize(18)
+        pylab.title('Residual Ratio History')
+        pylab.xlabel('Iteration')
+        pylab.ylabel(r'$||r_{i}|| / ||r_{i-1}||$')
+        pylab.xticks(array(range(1,resratio.shape[0]+1)))
 
     pylab.figure(fig_num+1)
     pylab.plot(grid, r)
-    title = pylab.title('Final Residual')
-    title.set_fontsize(18)
-    xlabel = pylab.xlabel('X')
-    xlabel.set_fontsize(18)
-    ylabel = pylab.ylabel('b - Ax')
-    ylabel.set_fontsize(18)
+    pylab.title('Final Residual')
+    pylab.xlabel('Grid')
+    pylab.ylabel('b - Ax')
     
     pylab.figure(fig_num+2)
     pylab.plot(grid, e)
-    title = pylab.title('Final Error')
-    title.set_fontsize(18)
-    xlabel = pylab.xlabel('X')
-    xlabel.set_fontsize(18)
-    ylabel = pylab.ylabel('soln - x')
-    ylabel.set_fontsize(18)
+    pylab.title('Final Error')
+    pylab.xlabel('Grid')
+    pylab.ylabel('soln - x')
 
 def oneD_nullspace_vis(mg, level=0, interp=False, fig_num=1, x=None):
     '''
@@ -186,6 +226,9 @@ def oneD_nullspace_vis(mg, level=0, interp=False, fig_num=1, x=None):
     >>>pylab.show()
     '''
     
+    # use good plotting paramters
+    update_rcparams()
+    
     if level > (len(mg.levels)-1):
         raise ValueError("Level %d has no Nullspace Candidates" % level)
 
@@ -210,37 +253,34 @@ def oneD_nullspace_vis(mg, level=0, interp=False, fig_num=1, x=None):
     # Plot modes
     for i in range(Btemp.shape[1]):
         pylab.plot(x, ravel(real(Btemp[:,i])), colors[i], label=("Mode %d" % i))
-        title_string = 'Level ' + str(level) + ' Real Components of Null Space Modes'
+        title_string = 'Real Part of Null Space Candidates from Level' + str(level)
         if interp and (level != 0):
             title_string += '\nInterpolated to Finest Level'
-        title = pylab.title(title_string)
-        title.set_fontsize(18)
-        xlabel = pylab.xlabel('X')
-        xlabel.set_fontsize(18)
-        ylabel = pylab.ylabel('real(mode)')
-        ylabel.set_fontsize(18)
+        pylab.title(title_string)
+        pylab.xlabel('Grid')
+        pylab.ylabel('real(cand)')
 
     ax = array(pylab.axis())
     ax[2] = min(real(ravel(Btemp[:,:])))*0.9
     ax[3] = max(real(ravel(Btemp[:,:])))*1.1
     ax = pylab.axis(ax)
-    
+    pylab.legend()
+
     if Btemp.dtype == complex:
         pylab.figure(fig_num+1)
         for i in range(Btemp.shape[1]):
             pylab.plot(x, ravel(imag(Btemp[:,i])), colors[i], label=("Mode %d" % i))
-            title_string = 'Level ' + str(level) + ' Imag Components of Null Space Modes'
+            title_string = 'Imag Part of Null Space Candidates from Level' + str(level)
             if interp and (level != 0):
                 title_string += '\nInterpolated to Finest Level'
-            title = pylab.title(title_string)
-            title.set_fontsize(18)
-            xlabel = pylab.xlabel('X')
-            xlabel.set_fontsize(18)
-            ylabel = pylab.ylabel('imag(mode)')
-            ylabel.set_fontsize(18)
+            pylab.title(title_string)
+            pylab.xlabel('Grid')
+            pylab.ylabel('imag(cand)')
         bottom = min(imag(Btemp[:,:]))*0.9
         top = max(imag(Btemp[:,:]))*1.1
         pylab.axis([min(x), max(x), bottom, top])
+
+    pylab.legend()
 
 
 def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
@@ -305,12 +345,9 @@ def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
     title_string='Level ' + str(level) + ' Aggregates'
     if level != 0:
         title_string += '\nInterpolated to Finest Level'
-    title = pylab.title(title_string)
-    title.set_fontsize(18)
-    xlabel=pylab.xlabel('X')
-    xlabel.set_fontsize(18)
-    ylabel = pylab.ylabel('Aggregate Number')
-    ylabel.set_fontsize(18)
+    pylab.title(title_string)
+    pylab.xlabel('Grid')
+    pylab.ylabel('Aggregate Number')
     pylab.axis([min(x)-.05, max(x)+.05, -1, AggOp.shape[1]])
     
 
@@ -389,15 +426,12 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
             p2 = ravel(p[:,j])
             pylab.plot(x[p2!=0], real(p2[p2!=0.0]), marker='o')
             axline = pylab.axhline(color='k')
-            title_string = ('Level ' + str(level) + ' Real Part of Interp Function %d' % j)
+            title_string = ('Level ' + str(level) + '\nReal Part of %d-th Local Interp Fcn' % j)
             if interp and (level != 0):
                 title_string += '\nInterpolated to Finest Level'
-            title = pylab.title(title_string)
-            title.set_fontsize(18)
-            xlabel = pylab.xlabel('X')
-            xlabel.set_fontsize(18)
-            ylabel = pylab.ylabel('real(Interp Function)')
-            ylabel.set_fontsize(18)
+            pylab.title(title_string)
+            pylab.xlabel('Grid')
+            pylab.ylabel('real(Local Interp Fcn)')
             ax = array(pylab.axis()); ax[0] = min(x); ax[1] = max(x)
             ax = pylab.axis(ax)
             
@@ -406,15 +440,12 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
                 p2 = ravel(p[:,j])
                 pylab.plot(x[p2!=0], imag(p2[p2!=0.0]), marker='o')
                 axline = pylab.axhline(color='k')
-                title_string = ('Level ' + str(level) + ' Imag Part of Interp Function %d' % j)
+                title_string = ('Level ' + str(level) + '\nImag Part of %d-th Local Interp Fcn' % j)
                 if interp and (level != 0):
                     title_string += '\nInterpolated to Finest Level'
-                title = pylab.title(title_string)
-                title.set_fontsize(18)
-                xlabel = pylab.xlabel('X')
-                xlabel.set_fontsize(18)
-                ylabel = pylab.ylabel('imag(Interp Function)')
-                ylabel.set_fontsize(18)
+                pylab.title(title_string)
+                pylab.xlabel('Grid')
+                pylab.ylabel('imag(Local Interp Fcn)')
                 ax = array(pylab.axis()); ax[0] = min(x)
                 ax[1] = max(x); ax = pylab.axis(ax)
 
