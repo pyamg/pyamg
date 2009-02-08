@@ -45,7 +45,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
     Returns
     -------
     The error, residual and residual ratio history are sent to the plotter.
-    To see plots, type pyamg.show()
+    To see plots, type pylab.show()
 
     Notes
     -----
@@ -53,7 +53,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
     Examples
     --------
     >>> from pyamg import *
-    >>> from pyamg.vis.oneD_vis import *
+    >>> from oneD_tools import *
     >>> import pylab
     >>> from scipy import rand, zeros
     >>> A = poisson( (128,), format='csr')
@@ -111,6 +111,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
     e = soln - guess
 
     # plot results
+    pylab.rcParams.update({'text.usetex': True})
     if iter > 1:
         pylab.figure(fig_num)
         pylab.plot(array(range(1,resratio.shape[0]+1)), resratio)
@@ -118,7 +119,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
         title.set_fontsize(18)
         xlabel = pylab.xlabel('Iteration')
         xlabel.set_fontsize(18)
-        ylabel = pylab.ylabel('||r_{i+1}|| / ||r_{i}||')
+        ylabel = pylab.ylabel('$||r_{i+1}|| / ||r_{i}||$')
         ylabel.set_fontsize(18)
 
     pylab.figure(fig_num+1)
@@ -173,7 +174,7 @@ def oneD_nullspace_vis(mg, level=0, interp=False, fig_num=1, x=None):
     Examples
     --------
     >>>from pyamg import *
-    >>>from pyamg.vis.oneD_vis import *
+    >>>from oneD_tools import *
     >>>import pylab
     >>>A = poisson( (64,), format='csr')
     >>>ml=smoothed_aggregation_solver(A, max_coarse=5)
@@ -271,7 +272,7 @@ def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
     Examples
     --------
     >>>from pyamg import *
-    >>>from pyamg.vis.oneD_vis import *
+    >>>from oneD_tools import *
     >>>import pylab
     >>>A = poisson( (64,), format='csr')
     >>>ml=smoothed_aggregation_solver(A, max_coarse=5)
@@ -346,9 +347,9 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
     Examples
     --------
     >>>from pyamg import *
-    >>>from pyamg.vis.oneD_vis import *
+    >>>from oneD_tools import *
     >>>import pylab
-    >>>A = poisson( (64,), format='csr')
+    >>>A = poisson( (32,), format='csr')
     >>>ml=smoothed_aggregation_solver(A, max_coarse=5)
     >>>oneD_P_vis(ml, level=0, interp=False)
     >>>pylab.show()
@@ -388,14 +389,14 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
             p2 = ravel(p[:,j])
             pylab.plot(x[p2!=0], real(p2[p2!=0.0]), marker='o')
             axline = pylab.axhline(color='k')
-            title_string = ('Level ' + str(level) + ' Real Components of Basis Function %d' % j)
+            title_string = ('Level ' + str(level) + ' Real Part of Interp Function %d' % j)
             if interp and (level != 0):
                 title_string += '\nInterpolated to Finest Level'
             title = pylab.title(title_string)
             title.set_fontsize(18)
             xlabel = pylab.xlabel('X')
             xlabel.set_fontsize(18)
-            ylabel = pylab.ylabel('real(mode)')
+            ylabel = pylab.ylabel('real(Interp Function)')
             ylabel.set_fontsize(18)
             ax = array(pylab.axis()); ax[0] = min(x); ax[1] = max(x)
             ax = pylab.axis(ax)
@@ -405,14 +406,14 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
                 p2 = ravel(p[:,j])
                 pylab.plot(x[p2!=0], imag(p2[p2!=0.0]), marker='o')
                 axline = pylab.axhline(color='k')
-                title_string = ('Level ' + str(level) + ' Imag Components of Basis Function %d' % j)
+                title_string = ('Level ' + str(level) + ' Imag Part of Interp Function %d' % j)
                 if interp and (level != 0):
                     title_string += '\nInterpolated to Finest Level'
                 title = pylab.title(title_string)
                 title.set_fontsize(18)
                 xlabel = pylab.xlabel('X')
                 xlabel.set_fontsize(18)
-                ylabel = pylab.ylabel('imag(mode)')
+                ylabel = pylab.ylabel('imag(Interp Function)')
                 ylabel.set_fontsize(18)
                 ax = array(pylab.axis()); ax[0] = min(x)
                 ax[1] = max(x); ax = pylab.axis(ax)
