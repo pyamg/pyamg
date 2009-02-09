@@ -3,6 +3,10 @@ from scipy import rand, randn, ones, array
 from scipy.sparse import csr_matrix, tril
 from pyamg.util.utils import symmetric_rescaling, diag_sparse
 
+__all__ = ['sprand', 'sprand_spd']
+
+#TODO add sprandn
+
 def _rand_sparse(grid, density, format='csr'):
     """Helper function for sprand, sprandn
     """
