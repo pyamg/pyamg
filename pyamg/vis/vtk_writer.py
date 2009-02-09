@@ -13,13 +13,13 @@ __all__ = ['write_vtu','write_basic_mesh']
 import xml.dom.minidom
 from numpy import hstack, vstack, zeros, rank, ones, arange
 
-def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None):
+def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fname='output.vtk'):
     """
     Write a .vtu file in xml format
 
     Parameters
     ----------
-    fid : {string}
+    fname : {string}
         file to be written, e.g. 'mymesh.vtu'
     Verts : {array}
         Ndof x 3 (if 2, then expanded by 0)
@@ -120,14 +120,14 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
     # number of indices per cell for each cell type
     vtk_cell_info = [-1, 1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
-    # check fid
-    if type(fid) is str:
+    # check fname
+    if type(fname) is str:
         try:
-            fid = open(fid,'w')
+            fname = open(fname,'w')
         except IOError, (errno, strerror):
             print ".vtu error (%s): %s" % (errno, strerror)
     else:
-        raise ValueError('fid is assumed to be a string')
+        raise ValueError('fname is assumed to be a string')
 
     # check Verts
     # get dimension and verify that it's 3d data
@@ -190,10 +190,7 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
                 n_cdata=1
                 cdata[key] = cdata[key].reshape((cdata[key].size,1))
             if cdata[key].shape[0]!=Cells[key].shape[0]:
-                print key
-                print cdata[key].shape[0]
-                print Cells[key].shape[0]
-                raise ValueError('size mismatch with cdata and Cells')
+                raise ValueError('size mismatch with cdata %d and Cells %d'%(cdata[key].shape[0],Cells[key].shape[0]))
             if cdata[key] == None:
                 raise ValueError('cdata array cannot be empty for key %d'%(key))
 
@@ -365,20 +362,20 @@ def write_vtu( fid, Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=No
         celldata.appendChild(cvdata_obj[i])
         cvdata_obj[i].appendChild(cvdata_str[i])
 
-    doc.writexml(fid, newl='\n')
-    fid.close()
+    doc.writexml(fname, newl='\n')
+    fname.close()
 
 
-def write_basic_mesh(fid, Vert, E2V=None, mesh_type='tri', pdata=None, pvdata=None, \
-        cdata=None, cvdata=None):
+def write_basic_mesh(Verts, E2V=None, mesh_type='tri', pdata=None, pvdata=None, \
+        cdata=None, cvdata=None, fname='output.vtk'):
     """
     Write mesh file for basic types of elements
 
     Parameters
     ----------
-    fid : {string}
+    fname : {string}
         file to be written, e.g. 'mymesh.vtu'
-    Vert : {array}
+    Verts : {array}
         coordinate array (N x D)
     E2V : {array}
         element index array (Nel x Nelnodes)
@@ -453,7 +450,7 @@ def write_basic_mesh(fid, Vert, E2V=None, mesh_type='tri', pdata=None, pvdata=No
     key = map_type_to_key[mesh_type]
 
     if mesh_type=='vertex':
-        E2V = { key : arange(0,Vert.shape[0]).reshape((Vert.shape[0],1))}
+        E2V = { key : arange(0,Verts.shape[0]).reshape((Verts.shape[0],1))}
     else:
         E2V = { key : E2V }
 
@@ -463,8 +460,8 @@ def write_basic_mesh(fid, Vert, E2V=None, mesh_type='tri', pdata=None, pvdata=No
     if cvdata != None:
         cvdata = {key: cvdata}
 
-    write_vtu( fid, Verts=Vert, Cells=E2V, pdata=pdata, pvdata=pvdata, \
-            cdata=cdata, cvdata=cvdata)
+    write_vtu(Verts=Verts, Cells=E2V, pdata=pdata, pvdata=pvdata, \
+            cdata=cdata, cvdata=cvdata, fname=fname)
 
 
 # ---------------------------------------
