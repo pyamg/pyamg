@@ -21,7 +21,8 @@ from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
 from pyamg.graph import vertex_coloring
 from vtk_writer import write_basic_mesh
 
-__all__ = ['vis_splitting', 'vis_aggregate_points','vis_aggregate_groups']
+__all__ = ['vis_splitting']
+#__all__ = ['vis_splitting', 'vis_aggregate_points','vis_aggregate_groups']
 
 def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
     """
@@ -61,14 +62,34 @@ def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
     Examples
     --------
     >>> from numpy import array, ones
-    >>> from vis_coarse import vis_splitting
+    >>> from python.vis.vis_coarse import vis_splitting
     >>> fname = 'example_mesh.vtu'
     >>> Verts = array([[0.0,0.0],
     >>>               [1.0,0.0],
     >>>               [0.0,1.0],
     >>>               [1.0,1.0]])
-    >>> splitting = array([0,1,0,1,1,0,1,0])
+    >>> splitting = array([0,1,0,1,1,0,1,0])    # two variables
     >>> vis_splitting(Verts,splitting,output='matplotlib',fname=fname)
+
+
+    >>> from numpy import array, ones
+    >>> from scipy.io import loadmat
+    >>> from pyamg.classical import RS
+    >>> from pyamg.vis.vis_coarse import vis_splitting
+    >>> from pyamg.vis.vtk_writer import write_basic_mesh
+    >>> 
+    >>> data = loadmat('square.mat')
+    >>> A = data['A'].tocsr()                        # matrix
+    >>> V = data['vertices']
+    >>> E2V = data['elements']
+    >>> 
+    >>> splitting = RS(A)
+    >>> 
+    >>> vis_splitting(Verts=V,splitting=splitting,output='vtk',fname='output.vtu')
+    >>> write_basic_mesh(Verts=V, E2V=E2V, mesh_type='tri', fname='output_mesh.vtu')
+    >>> 
+    >>> vis_splitting(Verts=V,splitting=splitting,output='matplotlib')
+
     """
 
     check_input(Verts,splitting)
@@ -78,6 +99,7 @@ def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
 
     E2V = arange(0,N,dtype=int)
 
+    ## adjust name in case of multiple variables
     a = fname.split('.')
     if len(a)<2:
         fname1 = a[0]
@@ -88,9 +110,15 @@ def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
     else:
         raise ValueError('problem with fname')
 
+    new_fname = fname
     for d in range(0,Ndof):
-        new_fname = fname1 + '_%d.'%(d+1) + fname2
+        # for each variables, write a file or open a figure
+        
+        if Ndof>1:
+            new_fname = fname1 + '_%d.'%(d+1) + fname2
+
         cdata = splitting[(d*N):((d+1)*N)]
+
         if output=='vtk':
             write_basic_mesh(Verts=Verts, E2V=E2V, mesh_type='vertex', \
                              cdata=cdata, fname=new_fname)
@@ -103,11 +131,10 @@ def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
             xF = Verts[cdataF,0]
             yF = Verts[cdataF,1]
             figure()
-            plot(xC,yC,cdataC,'r.',xF,yF,cdataF,'b.')
-            title('C/F splitting')
+            plot(xC,yC,'r.',xF,yF,'b.')
+            title('C/F splitting (red=coarse, blue=fine)')
             xlabel('x')
             ylabel('y')
-            legend(('Coarse','Fine'))
             axis('off')
             show()
         else:
