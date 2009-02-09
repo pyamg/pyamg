@@ -157,7 +157,9 @@ I maximal_independent_set_parallel(const I num_rows,
  *  Compute a vertex coloring for a graph stored in CSR format.
  *
  *  The coloring is computed by removing maximal independent sets
- *  of vertices from the graph.
+ *  of vertices from the graph.  Specifically, at iteration i an
+ *  independent set of the remaining subgraph is constructed and
+ *  assigned color i.
  *
  *  Returns the K, the number of colors used in the coloring.
  *  On return x[i] \in [0,1, ..., K - 1] will contain the color
@@ -183,6 +185,16 @@ T vertex_coloring_mis(const I num_rows,
     return K;
 }
 
+
+/*
+ *  Applies the first fit heuristic to a graph coloring.
+ *
+ *  For each vertex with color K the vertex is assigned the *first* 
+ *  available color such that no neighbor of the vertex has that
+ *  color.  This heuristic is used to reduce the number of color used
+ *  in the vertex coloring.
+ *
+ */
 template<class I, class T>
 void vertex_coloring_first_fit(const I num_rows,
                                const I Ap[], 
@@ -267,7 +279,11 @@ T vertex_coloring_jones_plassmann(const I num_rows,
  *      y[]        - initial random values for each vertex
  *
  *   References:
- *     TODO 
+ *     J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
+ *     A Comparison of Parallel Graph Coloring Algorithms
+ *     DRAFT SCCS-666
+ *     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
+ *
  */
 template<class I, class T, class R>
 T vertex_coloring_LDF(const I num_rows,
@@ -308,7 +324,22 @@ T vertex_coloring_LDF(const I num_rows,
     return *std::max_element(x, x + num_rows);
 }
 
-    
+
+/* 
+ * Apply one iteration of Bellman-Ford iteration on a distance
+ * graph stored in CSR format.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array (edge lengths)
+ *      x[]        - (current) distance to nearest center
+ *      y[]        - (current) index of nearest center
+ *
+ *  References:
+ *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ */
 template<class I, class T>
 void bellman_ford(const I num_rows,
                   const I Ap[], 
@@ -332,10 +363,26 @@ void bellman_ford(const I num_rows,
         y[i] = yi;
     }
 }
-
-// x[num_rows]     - distance to nearest seed
-// y[num_rows]     - cluster membership
-// z[num_centers]  - cluster centers
+ 
+    
+/*
+ * Perform Lloyd clustering on a distance graph
+ *
+ *  Parameters   
+ *      num_rows       - number of rows in A (number of vertices)
+ *      Ap[]           - CSR row pointer
+ *      Aj[]           - CSR index array
+ *      Ax[]           - CSR data array (edge lengths)
+ *      x[num_rows]    - distance to nearest seed
+ *      y[num_rows]    - cluster membership
+ *      z[num_centers] - cluster centers
+ *
+ *  References
+ *      Nathan Bell
+ *      Algebraic Multigrid for Discrete Differential Forms
+ *      PhD thesis (UIUC), August 2008
+ *
+ */
 template<class I, class T>
 void lloyd_cluster(const I num_rows,
                    const I Ap[], 
@@ -402,6 +449,21 @@ void lloyd_cluster(const I num_rows,
 
 
 
+
+/*
+ * Propagate (key,value) pairs across a graph in CSR format.
+ *
+ * Each vertex in the graph looks at all neighboring vertices
+ * and selects the (key,value) pair such that the value is 
+ * greater or equal to every other neighboring value.  If
+ * two (key,value) pairs have the same value, the one with 
+ * the higher index is chosen
+ *
+ * This method is used within a parallel MIS-k method to 
+ * propagate the local maximia's information to neighboring
+ * vertices at distance K > 1 away.
+ *
+ */
 template<typename IndexType, typename ValueType>
 void csr_propagate_max(const IndexType  num_rows,
                        const IndexType  Ap[], 
@@ -434,7 +496,24 @@ void csr_propagate_max(const IndexType  num_rows,
     }
 }
 
-
+/*
+ *  Compute a distance-k maximal independent set for a graph stored
+ *  in CSR format using a parallel algorithm.  An MIS-k is a set of 
+ *  vertices such that all vertices in the MIS-k are separated by a
+ *  path of at least K+1 edges and no additional vertex can be added
+ *  to the set without destroying this property.  A standard MIS
+ *  is therefore a MIS-1.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      k          - minimum separation between MIS vertices
+ *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
+ *      y[]        - random values used during parallel MIS algorithm 
+ *      max_iters  - maximum number of iterations to use (default, no limit)
+ *  
+ */
 template<class I, class T, class R>
 void maximal_independent_set_k_parallel(const I num_rows,
                                         const I Ap[], 
@@ -507,8 +586,21 @@ void maximal_independent_set_k_parallel(const I num_rows,
 
 }
 
-
-// level must be initialized to -1!
+/*
+ *  Compute a breadth first search of a graph in CSR format
+ *  beginning at a given seed vertex.
+ *
+ *  Parameters
+ *      num_rows         - number of rows in A (number of vertices)
+ *      Ap[]             - CSR row pointer
+ *      Aj[]             - CSR index array
+ *      order[num_rows]  - records the order in which vertices were searched
+ *      level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
+ *
+ *  Notes:
+ *      The values of the level must be initialized to -1
+ *
+ */
 template <class I>
 void breadth_first_search(const I Ap[], 
                           const I Aj[],
@@ -568,6 +660,20 @@ void connected_components_helper(const I Ap[],
     }
 }
 
+
+/*
+ *  Compute the connected components of a graph stored in CSR format.
+ *
+ *  Vertices beloning to each component are marked with a unique integer
+ *  in the range [0,K), where K is the number of components.
+ *
+ *  Parameters
+ *      num_rows             - number of rows in A (number of vertices)
+ *      Ap[]                 - CSR row pointer
+ *      Aj[]                 - CSR index array
+ *      components[num_rows] - component labels
+ *
+ */
 template <class I>
 void connected_components(const I num_nodes,
                           const I Ap[], 
