@@ -162,9 +162,43 @@ void gauss_seidel_indexed(const I Ap[],
   }
 }
 
-//
-// weighted-Jacobi on the normal equations, i.e. Kaczmarz type iteration
-//
+/*
+ * Perform Kaczmarz Jacobi on the linear system A x = b
+ * This effective carries out weighted-Jacobi on A A^T x = A^T b
+ * 
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *  index pointer for CSR matrix A
+ * Aj : {int array}
+ *  column indices for CSR matrix A
+ * Ax : {array}
+ *  value array for CSR matrix A
+ * x : {array}
+ *  current guess to the linear system
+ * b : {array}
+ *  right hand side
+ * Tx : {array}
+ *  scaled residual
+ *  D_A^{-1} (b - Ax)
+ * temp : {array}
+ *  work space
+ * row_start,stop,step : {int}
+ *  controls which rows to iterate over
+ * omega : {array}
+ *  size one array that contains the weighted-jacobi 
+ *  parameter.  An array must be used to pass in omega to
+ *  account for the case where omega may be complex
+ *
+ * Returns
+ * -------
+ * x is modified in place in an additive, not overwiting fashion
+ *
+ * Notes
+ * -----
+ * Primary calling routines are kaczmarz_jacobi 
+ * and kaczmarz_richardson in relaxation.py
+ */
 template<class I, class T, class F>
 void kaczmarz_jacobi(const I Ap[], 
                      const I Aj[], 
@@ -197,9 +231,35 @@ void kaczmarz_jacobi(const I Ap[],
     {   x[i] += temp[i]; }
 }
 
-//
-// Gauss Seidel on the normal equations, i.e. Kaczmarz type iteration
-//
+/*
+ * Perform Kaczmarz Gauss-Seidel on the linear system A x = b
+ * This effective carries out Gauss-Seidel on A A^T x = A^T b
+ * 
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *  index pointer for CSR matrix A
+ * Aj : {int array}
+ *  column indices for CSR matrix A
+ * Ax : {array}
+ *  value array for CSR matrix A
+ * x : {array}
+ *  current guess to the linear system
+ * b : {array}
+ *  right hand side
+ * Tx : {array}
+ *  inverse(diag(A))
+ * row_start,stop,step : {int}
+ *  controls which rows to iterate over
+ *
+ * Returns
+ * -------
+ * x is modified in place in an additive, not overwiting fashion
+ *
+ * Notes
+ * -----
+ * Primary calling routine is kaczmarz_gass_seidel in relaxation.py
+ */
 template<class I, class T, class F>
 void kaczmarz_gauss_seidel(const I Ap[], 
                      const I Aj[], 
