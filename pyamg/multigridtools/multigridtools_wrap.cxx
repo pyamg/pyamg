@@ -5896,7 +5896,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_calc_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
@@ -5930,20 +5930,20 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), Py
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:invert_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:calc_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "invert_BtB" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "calc_BtB" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "invert_BtB" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "calc_BtB" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "invert_BtB" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "calc_BtB" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   {
@@ -5958,7 +5958,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), Py
   }
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "invert_BtB" "', argument " "5"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "calc_BtB" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
   {
@@ -5986,7 +5986,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_1(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,float,float >(arg1,arg2,arg3,(float const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  calc_BtB<int,float,float >(arg1,arg2,arg3,(float const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) {
@@ -6024,7 +6024,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_calc_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
@@ -6058,20 +6058,20 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), Py
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:invert_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:calc_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "invert_BtB" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "calc_BtB" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "invert_BtB" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "calc_BtB" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "invert_BtB" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "calc_BtB" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   {
@@ -6086,7 +6086,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), Py
   }
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "invert_BtB" "', argument " "5"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "calc_BtB" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
   {
@@ -6114,7 +6114,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_2(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,double,double >(arg1,arg2,arg3,(double const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  calc_BtB<int,double,double >(arg1,arg2,arg3,(double const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) {
@@ -6152,7 +6152,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_calc_BtB__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
@@ -6186,20 +6186,20 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_3(PyObject *SWIGUNUSEDPARM(self), Py
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:invert_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:calc_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "invert_BtB" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "calc_BtB" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "invert_BtB" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "calc_BtB" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "invert_BtB" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "calc_BtB" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   {
@@ -6214,7 +6214,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_3(PyObject *SWIGUNUSEDPARM(self), Py
   }
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "invert_BtB" "', argument " "5"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "calc_BtB" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
   {
@@ -6242,7 +6242,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_3(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,npy_cfloat_wrapper,float >(arg1,arg2,arg3,(npy_cfloat_wrapper const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  calc_BtB<int,npy_cfloat_wrapper,float >(arg1,arg2,arg3,(npy_cfloat_wrapper const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) {
@@ -6280,7 +6280,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_calc_BtB__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
@@ -6314,20 +6314,20 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_4(PyObject *SWIGUNUSEDPARM(self), Py
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:invert_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:calc_BtB",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "invert_BtB" "', argument " "1"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "calc_BtB" "', argument " "1"" of type '" "int""'");
   } 
   arg1 = static_cast< int >(val1);
   ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "invert_BtB" "', argument " "2"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "calc_BtB" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
   ecode3 = SWIG_AsVal_int(obj2, &val3);
   if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "invert_BtB" "', argument " "3"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "calc_BtB" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
   {
@@ -6342,7 +6342,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_4(PyObject *SWIGUNUSEDPARM(self), Py
   }
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "invert_BtB" "', argument " "5"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "calc_BtB" "', argument " "5"" of type '" "int""'");
   } 
   arg5 = static_cast< int >(val5);
   {
@@ -6370,7 +6370,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB__SWIG_4(PyObject *SWIGUNUSEDPARM(self), Py
     
     arg8 = (int*) array8->data;
   }
-  invert_BtB<int,npy_cdouble_wrapper,double >(arg1,arg2,arg3,(npy_cdouble_wrapper const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
+  calc_BtB<int,npy_cdouble_wrapper,double >(arg1,arg2,arg3,(npy_cdouble_wrapper const (*))arg4,arg5,arg6,(int const (*))arg7,(int const (*))arg8);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object4 && array4) {
@@ -6408,7 +6408,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_calc_BtB(PyObject *self, PyObject *args) {
   int argc;
   PyObject *argv[9];
   int ii;
@@ -6456,7 +6456,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
                     _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_INT)) ? 1 : 0;
                   }
                   if (_v) {
-                    return _wrap_invert_BtB__SWIG_1(self, args);
+                    return _wrap_calc_BtB__SWIG_1(self, args);
                   }
                 }
               }
@@ -6504,7 +6504,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
                     _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_INT)) ? 1 : 0;
                   }
                   if (_v) {
-                    return _wrap_invert_BtB__SWIG_2(self, args);
+                    return _wrap_calc_BtB__SWIG_2(self, args);
                   }
                 }
               }
@@ -6552,7 +6552,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
                     _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_INT)) ? 1 : 0;
                   }
                   if (_v) {
-                    return _wrap_invert_BtB__SWIG_3(self, args);
+                    return _wrap_calc_BtB__SWIG_3(self, args);
                   }
                 }
               }
@@ -6600,7 +6600,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
                     _v = (is_array(argv[7]) && PyArray_CanCastSafely(PyArray_TYPE(argv[7]),PyArray_INT)) ? 1 : 0;
                   }
                   if (_v) {
-                    return _wrap_invert_BtB__SWIG_4(self, args);
+                    return _wrap_calc_BtB__SWIG_4(self, args);
                   }
                 }
               }
@@ -6612,7 +6612,7 @@ SWIGINTERN PyObject *_wrap_invert_BtB(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'invert_BtB'.\n  Possible C/C++ prototypes are:\n""    invert_BtB<(int,float,float)>(int const,int const,int const,float const [],int const,float [],int const [],int const [])\n""    invert_BtB<(int,double,double)>(int const,int const,int const,double const [],int const,double [],int const [],int const [])\n""    invert_BtB<(int,npy_cfloat_wrapper,float)>(int const,int const,int const,npy_cfloat_wrapper const [],int const,npy_cfloat_wrapper [],int const [],int const [])\n""    invert_BtB<(int,npy_cdouble_wrapper,double)>(int const,int const,int const,npy_cdouble_wrapper const [],int const,npy_cdouble_wrapper [],int const [],int const [])\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'calc_BtB'.\n  Possible C/C++ prototypes are:\n""    calc_BtB<(int,float,float)>(int const,int const,int const,float const [],int const,float [],int const [],int const [])\n""    calc_BtB<(int,double,double)>(int const,int const,int const,double const [],int const,double [],int const [],int const [])\n""    calc_BtB<(int,npy_cfloat_wrapper,float)>(int const,int const,int const,npy_cfloat_wrapper const [],int const,npy_cfloat_wrapper [],int const [],int const [])\n""    calc_BtB<(int,npy_cdouble_wrapper,double)>(int const,int const,int const,npy_cdouble_wrapper const [],int const,npy_cdouble_wrapper [],int const [],int const [])\n");
   return NULL;
 }
 
@@ -20601,15 +20601,15 @@ static PyMethodDef SwigMethods[] = {
 		"    npy_cdouble_wrapper z, \n"
 		"    int Sp, int Sj, npy_cdouble_wrapper Sx)\n"
 		""},
-	 { (char *)"invert_BtB", _wrap_invert_BtB, METH_VARARGS, (char *)"\n"
-		"invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, float b, \n"
+	 { (char *)"calc_BtB", _wrap_calc_BtB, METH_VARARGS, (char *)"\n"
+		"calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, float b, \n"
 		"    int BsqCols, float x, int Sp, int Sj)\n"
-		"invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, \n"
+		"calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, \n"
 		"    int BsqCols, double x, int Sp, int Sj)\n"
-		"invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cfloat_wrapper b, \n"
+		"calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cfloat_wrapper b, \n"
 		"    int BsqCols, npy_cfloat_wrapper x, \n"
 		"    int Sp, int Sj)\n"
-		"invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cdouble_wrapper b, \n"
+		"calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cdouble_wrapper b, \n"
 		"    int BsqCols, npy_cdouble_wrapper x, \n"
 		"    int Sp, int Sj)\n"
 		""},

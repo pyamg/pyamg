@@ -9,7 +9,7 @@ import warnings
 
 from numpy import array, ones, zeros
 from pyamg.aggregation import standard_aggregation
-from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection
+from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection, energy_based_strength_of_connection
 from scipy.sparse import csr_matrix
 from scipy.io import loadmat
 from vis import coarse_grid_vis, write_mesh, shrink_elmts
@@ -32,6 +32,7 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
     str_type : {string}
         'ode' uses the ode_strength_of_connection routine to determine strength of connections
         'classic' uses the classic strength measure
+        'energy_based' uses the energy_based strength measure
     ODE_epsilon : {scalar > 1.0}
         drop tolerance for the ode strength measure
     k : {integer}
@@ -74,6 +75,8 @@ def vis_aggs(mat_file, prob_type='dg', str_type='ode', ODE_epsilon=2.0, k=2, pro
     # Note that the new pyamg hierarchy now stores C and Agg, so you can call viz based only on a hierarchy.
     if(str_type == 'ode'):
         C = ode_strength_of_connection(csr_matrix(A), B, epsilon=ODE_epsilon, k=k, proj_type=proj_type)
+    elif(str_type == 'energy_based'):
+        C = energy_based_strength_of_connection(A.tocsr(), theta=SA_theta, k=k)
     elif(str_type == 'classic'):
         C = symmetric_strength_of_connection(A.tocsr(), theta=SA_theta)
     else:

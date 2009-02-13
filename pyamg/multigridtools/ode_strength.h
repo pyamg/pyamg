@@ -34,9 +34,28 @@
  *
  * Returns
  * -------
- *   Sx, such that the above dropping strategy has been applied
- *   There will be explicit zero entries for each weak connection
+ * Sx is modified in place such that the above dropping strategy has been applied
+ * There will be explicit zero entries for each weak connection
  *
+ * Notes
+ * -----
+ * Principle calling routines are strength of connection routines, e.g.
+ * ode_strength_of_connection(...) in strength.py.  It is used to apply 
+ * a drop tolerance.
+ *
+ * Examples
+ * --------
+ * >>> from scipy.sparse import csr_matrix
+ * >>> from pyamg.multigridtools import apply_distance_filter
+ * >>> from scipy import array
+ * >>> # Graph in CSR where entries in row i represent distances from dof i
+ * >>> indptr = array([0,3,6,9])
+ * >>> indices = array([0,1,2,0,1,2,0,1,2])
+ * >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
+ * >>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
+ * >>> print "Matrix BEfore Applying Filter\n" + str(S.todense())
+ * >>> apply_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
+ * >>> print "Matrix AFter Applying Filter\n" + str(S.todense())
  */          
 template<class I, class T>
 void apply_distance_filter(const I n_row,
@@ -71,7 +90,7 @@ void apply_distance_filter(const I n_row,
 }
 
 /*
- *  Given a BSR matrix, return a linear array of length 
+ *  Given a BSR with num_blocks stored, return a linear array of length 
  *  num_blocks, which holds each block's smallest, nonzero, entry
  *  
  * Parameters
@@ -82,13 +101,36 @@ void apply_distance_filter(const I n_row,
  *      Size of each block
  * Sx : {float|complex array}
  *      Block data structure of BSR matrix, S
- *      Sx is n_blocks x blocksize
+ *      Sx is (n_blocks x blocksize) in length
  * Tx : {float|complex array}
  *      modified inplace for output
  *
- * Returns:
- * Tx[i] holds the minimum nonzero value of block i of S
+ * Returns
+ * ------
+ * Tx[i] modified in place, it holds 
+ * the minimum nonzero value of block i of S
  *
+ * Notes
+ * -----
+ * Principle calling routine is ode_strength_of_connection(...) in strength.py.  
+ * In that routine, it is used to assign a strength of connection value between 
+ * supernodes by setting the strength value to be the minimum nonzero in a block.
+ *
+ * Examples
+ * --------
+ * >>> from scipy.sparse import bsr_matrix, csr_matrix
+ * >>> from pyamg.multigridtools import min_blocks
+ * >>> from numpy import zeros, array, ravel, round
+ * >>> from scipy import rand
+ * >>> row  = array([0,2,4,6])
+ * >>> col  = array([0,2,2,0,1,2])
+ * >>> data = round(10*rand(6,2,2), decimals=1)
+ * >>> S = bsr_matrix( (data,col,row), shape=(6,6) )
+ * >>> T = zeros(data.shape[0])
+ * >>> print "Matrix BEfore\n" + str(S.todense())
+ * >>> min_blocks(6, 4, ravel(S.data), T)
+ * >>> S2 = csr_matrix((T, S.indices, S.indptr), shape=(3,3))
+ * >>> print "Matrix AFter\n" + str(S2.todense())
  */          
 template<class I, class T>
 void min_blocks(const I n_blocks, const I blocksize, 
@@ -117,9 +159,7 @@ void min_blocks(const I n_blocks, const I blocksize,
 
 
 /*
- *
- * Given Strength of connection matrix, Atilde, calculate strength based on 
- * constrained min problem of 
+ * Create strength-of-connection matrix based on constrained min problem of 
  *    min( z - B*x ), such that
  *       (B*x)|_i = z|_i, i.e. they are equal at point i
  *        z = (I - (t/k) Dinv A)^k delta_i
@@ -133,8 +173,7 @@ void min_blocks(const I n_blocks, const I blocksize,
  * whether the parameter DB = B or diag(A)*B  
  *
  * This is a quadratic minimization problem with a linear constraint, so
- * we can build a linear system and solve it to find the critical point,
- * i.e. minimum.
+ * we can build a linear system and solve it to find the critical point, i.e. minimum.
  *
  * Parameters
  * ----------
@@ -143,8 +182,8 @@ void min_blocks(const I n_blocks, const I blocksize,
  * Sj : {int array}
  *      Col index array for CSR matrix S
  * Sx : {float|complex array}
- *      Value array for CSR matrix S
- *      S = (I - (t/k) Dinv A)^k 
+ *      Value array for CSR matrix S.
+ *      Upon entry to the routine, S = (I - (t/k) Dinv A)^k 
  * nrows : {int}
  *      Dimension of S
  * B : {float|complex array}
@@ -183,8 +222,15 @@ void min_blocks(const I n_blocks, const I blocksize,
  * we only need the values of S at the sparsity pattern of A.  Hence,
  * there is no need to completely calculate all of S.
  *
- * b is used to save on computation of each local minimization problem
+ * b is used to save on the computation of each local minimization problem
  *
+ * Principle calling routine is ode_strength_of_connection(...) in strength.py.  
+ * In that routine, it is used to calculate strength-of-connection for the case
+ * of multiple near-nullspace modes.
+ *
+ * Examples
+ * --------
+ * See odes_strength_of_connection(...) in strength.py
  */
 template<class I, class T>
 void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
@@ -368,10 +414,43 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     delete[] sing_vals; 
 }
 
-/* For use in my_inner(...)
- * B is in CSC format
- * return: sum+=Aval*B(row,col), where col is the current column pointed to by Bptr
- *         Bptr pointing at the first entry past B(row,col)
+/* Helper function for my_inner(...) where we search for the row-th entry 
+ * in the current j-th column of CSC matrix, B.
+ *
+ * Parameters
+ * ----------
+ * Bj : {int array}
+ *  column indices of CSC matrix, B
+ *  MUst be sorted
+ * Bx : {float array}
+ *  values array for CSC matrix B
+ * BptrLim : {int}
+ *  stop index for the current column of B
+ *  equal to B.indptr[j+1]
+ * Bptr : {int}
+ *  current index under consideration in this column of B
+ *  B.indptr[j] <= Bptr < B.indptr[j+1]
+ * row : {int}
+ *  the row number of the entry that we are searching for
+ * Aval : {float}
+ *  the current entry of the right matrix in the mat-mat
+ *  this is the (i,k)-th entry where k=row
+ * sum : {float}
+ *  cumulative variable to store the eventual value A(i,:)*B(:,j)
+ *
+ * Returns
+ * -------
+ * sum is modified in place, such that 
+ *   sum += Aval*B(row,j) 
+ * 
+ * Bptr is modified in place such that it 
+ *   is incremented to the first entry past B(row,j)
+ *
+ * Notes
+ * -----
+ * Principle calling routine is my_inner(...) in this file
+ *
+ * CSC matrix B must have sorted indices
  */
 template<class I, class T>
 inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
@@ -399,9 +478,40 @@ inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
     // entry not found, do nothing
 }
 
+
 /* For use in incomplete_matmat(...)
  * Calcuate <A_{row,:}, B_{:, col}>
- * A is in CSR, B is in CSC
+ *
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *  row ptr array for CSR matrix A
+ * Aj : {int array}
+ *  col index array for CSR matrix A
+ *  MUst be sorted
+ * Ax : {float array}
+ *  value array for CSR matrix A
+ * Bp : {int array}
+ *  col ptr array for CSC matrix A
+ * Bj : {int array}
+ *  row index array for CSC matrix A
+ *  MUst be sorted
+ * Bx : {float array}
+ *  value array for CSC matrix A
+ * row, col : {int}
+ *  indicate which row of A and column of B to take
+ *  the inner product of
+ *
+ * Returns
+ * -------
+ * returns <A_{row,:}, B_{:, col}>
+ *
+ * Notes
+ * -----
+ * Principle calling routine is incomplete_matmat in this file 
+ *
+ * A and B are assumed to have sorted indices
+ *  
  */
 template<class I, class T>
 inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[], 
@@ -481,6 +591,11 @@ inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[],
  * But, the routine is written for the case when S's 
  * sparsity pattern is a subset of A*B, so this algorithm 
  * should work well.
+ *
+ * Principle calling routine is ode_strength_of_connection in 
+ * strength.py.  Here it is used to calculate S*S only at the 
+ * sparsity pattern of the original operator.  This allows for
+ * BIG cost savings.
  *
  * Examples
  * --------

@@ -175,20 +175,20 @@ def satisfy_constraints_helper(*args):
     """
   return _multigridtools.satisfy_constraints_helper(*args)
 
-def invert_BtB(*args):
+def calc_BtB(*args):
   """
-    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, float b, 
+    calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, float b, 
         int BsqCols, float x, int Sp, int Sj)
-    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, 
+    calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, double b, 
         int BsqCols, double x, int Sp, int Sj)
-    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cfloat_wrapper b, 
+    calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cfloat_wrapper b, 
         int BsqCols, npy_cfloat_wrapper x, 
         int Sp, int Sj)
-    invert_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cdouble_wrapper b, 
+    calc_BtB(int NullDim, int Nnodes, int ColsPerBlock, npy_cdouble_wrapper b, 
         int BsqCols, npy_cdouble_wrapper x, 
         int Sp, int Sj)
     """
-  return _multigridtools.invert_BtB(*args)
+  return _multigridtools.calc_BtB(*args)
 
 def incomplete_BSRmatmat(*args):
   """

@@ -2,10 +2,12 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones, empty_like, diff, conjugate
+from numpy import ones, empty_like, diff, conjugate, mat, sqrt, arange, array
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, isspmatrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning, csc_matrix
+from scipy.sparse import eye as speye
 import multigridtools
+from pyamg.util.linalg import approximate_spectral_radius
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
@@ -176,6 +178,151 @@ def symmetric_strength_of_connection(A, theta=0):
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
 
+def energy_based_strength_of_connection(A, theta=0.0, k=2):
+    """
+    Compute a strength of connection matrix using an energy-based measure.
+       
+
+    Parameters
+    ----------
+    A : {sparse-matrix}
+        matrix from which to generate strength of connection information
+    theta : {float}
+        Threshold parameter in [0,1]
+    k : {int}
+        Number of relaxation steps used to generate strength information
+
+    Return
+    ------
+    S : {csr_matrix}
+        Matrix graph defining strong connections.  The sparsity pattern
+        of S matches that of A.  For BSR matrices, S is a reduced strength
+        of connection matrix that describes connections between supernodes.
+
+    Notes
+    -----
+    This method relaxes with weighted-Jacobi in order to approximate the  
+    matrix inverse.  A normalized change of energy is then used to define 
+    point-wise strength of connection values.  Specifically, let v be the 
+    approximation to the i-th column of the inverse, then 
+
+    (S_ij)^2 = <v_j, v_j>_A / <v, v>_A, 
+    
+    where v_j = v, such that entry j in v has been zeroed out.  As is common,
+    larger values imply a stronger connection.
+    
+    Current implemenation is a very slow pure-python implementation for 
+    experimental purposes, only.
+
+    References
+    ----------
+        Brannick, Brezina, MacLachlan, Manteuffel, McCormick. 
+        "An Energy-Based AMG Coarsening Strategy",
+        Numerical Linear Algebra with Applications, 
+        vol. 13, pp. 133-148, 2006.
+
+    Examples
+    --------
+    >>> from numpy import array
+    >>> from pyamg.gallery import stencil_grid
+    >>> from pyamg.strength import energy_based_strength_of_connection
+    >>> n=3
+    >>> stencil = array([[-1.0,-1.0,-1.0],
+    >>>                  [-1.0, 8.0,-1.0],
+    >>>                  [-1.0,-1.0,-1.0]])
+    >>> A = stencil_grid(stencil, (n,n), format='csr')
+    >>> S = energy_based_strength_of_connection(A, 0.0)
+    """
+
+    if (theta<0):
+        raise ValueError('expected a positive theta')
+    if not isspmatrix(A):
+        raise ValueError('expected sparse matrix')
+    if (k < 0):
+        raise ValueError('expected positive number of steps')
+    if not isinstance(k, int):
+        raise ValueError('expected integer')
+    
+    if isspmatrix_bsr(A):
+        bsr_flag = True
+        numPDEs = A.blocksize[0]
+        if A.blocksize[0] != A.blocksize[1]:
+            raise ValueError('expected square blocks in BSR matrix A')
+    else:
+        bsr_flag = False
+    
+    ##
+    # Convert A to csc and Atilde to csr
+    if isspmatrix_csr(A):
+        Atilde = A.copy()
+        A = A.tocsc()
+    else:
+        A = A.tocsc()
+        Atilde = A.copy()
+        Atilde = Atilde.tocsr()
+
+    ##
+    # Calculate the weighted-Jacobi parameter
+    D = A.diagonal()
+    Dinv = 1.0/D
+    Dinv[D == 0] = 0.0
+    Dinv = csc_matrix( (Dinv, (arange(A.shape[0]),arange(A.shape[1]))), shape=A.shape)
+    DinvA = Dinv*A
+    omega = 1.0/approximate_spectral_radius(DinvA, maxiter=20)
+    del DinvA
+
+    ## 
+    # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
+    S = csc_matrix( (array([]),(array([]),array([]))), shape=A.shape )
+    I = speye(A.shape[0], A.shape[1], format='csc')
+    for i in range(k+1):
+        S = S + omega*(Dinv*(I - A*S))
+    
+    ##
+    # Calculate the strength entries in S column-wise, but only strength
+    # values at the sparsity pattern of A
+    for i in range(Atilde.shape[0]):
+        v = mat(S[:,i].todense())
+        Av = mat(A*v)
+        denom = sqrt(conjugate(v).T*Av)
+        ##
+        # replace entries in row i with strength values
+        for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
+            col = Atilde.indices[j]
+            vj = v[col].copy()
+            v[col] = 0.0
+            #         =  (||v_j||_A - ||v||_A) / ||v||_A
+            val = sqrt(conjugate(v).T*A*v)/denom - 1.0
+            
+            # Negative values generally imply a weak connection
+            if val > -0.01:
+                Atilde.data[j] = abs(val)
+            else:
+                Atilde.data[j] = 0.0
+
+            v[col] = vj
+ 
+    ##
+    # Apply drop tolerance
+    Atilde = classical_strength_of_connection(Atilde, theta=theta)
+    Atilde.eliminate_zeros()
+
+    ##
+    # Put ones on the diagonal
+    Atilde = Atilde + I.tocsr()
+    Atilde.sort_indices()
+
+    ##
+    # Amalgamate Atilde for the BSR case, using ones for all strong connections
+    if bsr_flag:
+        Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
+        nblocks = Atilde.indices.shape[0]
+        Atilde = csr_matrix( (ones((nblocks,)), Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+    
+    return Atilde
+
+
+
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric=True):
     """Construct an AMG strength of connection matrix using an ODE-based measure
 
@@ -222,7 +369,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
          inf, asarray, log2
     from scipy.sparse import bsr_matrix, spdiags, eye
     from scipy.sparse import eye as speye
-    from pyamg.util.linalg import approximate_spectral_radius
     from pyamg.util.utils  import scale_rows
 
     #====================================================================

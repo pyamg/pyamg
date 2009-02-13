@@ -423,7 +423,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             Bsq[:,counter] = conjugate(ravel(asarray(B[:,i])))*ravel(asarray(B[:,j]))
             counter = counter + 1
     
-    pyamg.multigridtools.invert_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
+    pyamg.multigridtools.calc_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
         BsqCols, ravel(asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
     # pinv_array inverts each block in BtBinv
     pyamg.multigridtools.pinv_array(ravel(BtBinv), Nnodes, NullDim, 'F')

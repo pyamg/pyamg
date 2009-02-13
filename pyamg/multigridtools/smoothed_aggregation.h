@@ -398,6 +398,7 @@ void fit_candidates_complex(const I n_row,
  *
  * Notes
  * -----
+ * Principle calling routine is energy_prolongation_smoother(...) in smooth.py.  
  *
  */          
 
@@ -449,11 +450,11 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  * Calculates the following python code:
  *
  *   RowsPerBlock = Sparsity_Pattern.blocksize[0]
- *   BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
+ *   BtB = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
  *   S2 = Sparsity_Pattern.tocsr()
  *   for i in range(Nnodes):
  *       Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
- *       BtBinv[i,:,:] = Bi.H*Bi 
+ *       BtB[i,:,:] = Bi.H*Bi 
  *
  * Parameters
  * ----------
@@ -482,27 +483,30 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  *
  * Return
  * ------
- * BtBinv[i] = B_i.H*B_i in row major format
+ * BtB[i] = B_i.H*B_i in row major format
  * where B_i is B[colindices,:], colindices = all the nonzero
  * column indices for block row i in S
  *
+ * Notes
+ * -----
+ * Principle calling routine is energy_prolongation_smoother(...) in smooth.py.  
+ *
  */          
-
 template<class I, class T, class F>
-void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock, 
+void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock, 
                 const T b[],     const I BsqCols, T x[], 
                 const I Sp[],    const I Sj[])
 {
     //Rename to something more familiar
     const T * Bsq = b;
-    T * BtBinv = x;
+    T * BtB = x;
     
     //Declare workspace
     //const I NullDimLoc = NullDim;
     const I NullDimSq  = NullDim*NullDim;
     const I work_size  = 5*NullDim + 10;
 
-    T * BtB       = new T[NullDimSq];
+    T * BtB_loc       = new T[NullDimSq];
     T * work      = new T[work_size];
     T * sing_vals = new T[NullDim];
     T * identity  = new T[NullDimSq];
@@ -520,7 +524,7 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
         const I rowstart = Sp[i];
         const I rowend   = Sp[i+1];
         for(I k = 0; k < NullDimSq; k++)
-        {   BtB[k] = 0.0; }
+        {   BtB_loc[k] = 0.0; }
         
         //Loop over row i in order to calculate B_i^H*B_i, where B_i is B 
         // with the rows restricted only to the nonzero column indices of row i of S
@@ -534,17 +538,17 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
             //Loop over each absolute column index, k, of block column, j
             for(I k = colstart; k < colend; k++)
             {          
-                // Do work in computing Diagonal of  BtB  
+                // Do work in computing Diagonal of  BtB_loc  
                 I BtBcounter = 0; 
                 I BsqCounter = k*BsqCols;                   // Row-major index
                 for(I m = 0; m < NullDim; m++)
                 {
-                    BtB[BtBcounter] += Bsq[BsqCounter];
+                    BtB_loc[BtBcounter] += Bsq[BsqCounter];
                     BtBcounter += NullDim + 1;
                     BsqCounter += (NullDim - m);
                 }
-                // Do work in computing offdiagonals of BtB, noting that BtB is Hermitian and that
-                // svd_solve needs BtB in column-major form, because svd_solve is Fortran
+                // Do work in computing offdiagonals of BtB_loc, noting that BtB_loc is Hermitian and that
+                // svd_solve needs BtB_loc in column-major form, because svd_solve is Fortran
                 BsqCounter = k*BsqCols;
                 for(I m = 0; m < NullDim; m++)  // Loop over cols
                 {
@@ -552,8 +556,8 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
                     for(I n = m+1; n < NullDim; n++) // Loop over Rows
                     {
                         T elmt_bsq = Bsq[BsqCounter + counter];
-                        BtB[m*NullDim + n] += conjugate(elmt_bsq);      // entry(n, m)
-                        BtB[n*NullDim + m] += elmt_bsq;                 // entry(m, n)
+                        BtB_loc[m*NullDim + n] += conjugate(elmt_bsq);      // entry(n, m)
+                        BtB_loc[n*NullDim + m] += elmt_bsq;                 // entry(m, n)
                         counter ++;
                     }
                     BsqCounter += (NullDim - m);
@@ -561,27 +565,65 @@ void invert_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
             } // end k loop
         } // end j loop
 
-        // pseudo_inverse(BtB), output begins at the ptr location BtBinv offset by i*NullDimSq
-        T * blockinverse = BtBinv + i*NullDimSq; 
-        
-        // For now, copy BtB into BtBinv and do pseudo-inverse in python.
-        // Be careful to move the data from column major in BtB to column major in blockinverse.
-        // BtB is hermitian 
+        // Copy BtB_loc into BtB at the ptr location offset by i*NullDimSq
+        // Note that we are moving the data from column major in BtB_loc to column major in curr_block.
+        T * curr_block = BtB + i*NullDimSq; 
         for(I k = 0; k < NullDimSq; k++)
-        {   blockinverse[k] = BtB[k]; }
+        {   curr_block[k] = BtB_loc[k]; }
     
     } // end i loop
 
-    delete[] BtB; 
+    delete[] BtB_loc; 
     delete[] work;
     delete[] sing_vals; 
     delete[] identity;
 }
 
-/* For use in my_BSRinner(...)
- * B is in BSC format
- * return: blockproduce = Aval*B(row,col), where col is the current column pointed to by Bptr
- *         Bptr pointing at the first entry past B(row,col)
+/* Helper function for my_BSRinner(...) where we search for the row-th entry 
+ * in the current j-th column of CSC matrix, B.
+ *
+ * Parameters
+ * ----------
+ * Bj : {int array}
+ *  column indices of BSC matrix, B
+ *  MUst be sorted
+ * Bx : {float array}
+ *  values array for BSC matrix B
+ * BptrLim : {int}
+ *  stop index for the current column of B
+ *  equal to B.indptr[j+1]
+ * Bptr : {int}
+ *  current index under consideration in this column of B
+ *  B.indptr[j] <= Bptr < B.indptr[j+1]
+ * row : {int}
+ *  the row number of the entry that we are searching for
+ * Aval : {float}
+ *  the current entry of the right matrix in the mat-mat
+ *  this is the (i,k)-th block entry where k=row
+ * blockproduct : {float array}
+ *  modified in place as return value
+ * flag : {int}
+ *  modified in place as return value 
+ * brows, bcols : {int}
+ *  the number of rows and columns in each block of B
+ *
+ * Returns
+ * -------
+ * blockproduct is modified in place such it holds the 
+ *   mat-mat multiply of the blocks, Aval*B(row,j) 
+ * 
+ * Bptr is modified in place such that it 
+ *   is incremented to the first entry past B(row,j)
+ *
+ * flag is modified in place to reflect whether the 
+ *   matching B(row,j)-th entry was nonzero and the 
+ *   cumulative sum must be updated in the calling routine
+ *
+ * Notes
+ * -----
+ * Principle calling routine is my_BSRinner(...) in this file
+ *
+ * BSC matrix B must have sorted indices
  */
 template<class I, class T>
 inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
@@ -617,9 +659,48 @@ inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
     // entry not found, do nothing
 }
 
+
 /* For use in incomplete_BSRmatmat(...)
  * Calcuate <A_{row,:}, B_{:, col}>
- * A is in BSR, B is in BSC
+ *
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *  row ptr array for BSR matrix A
+ * Aj : {int array}
+ *  col index array for BSR matrix A
+ *  MUst be sorted
+ * Ax : {float array}
+ *  value array for BSR matrix A
+ * Bp : {int array}
+ *  col ptr array for BSC matrix A
+ * Bj : {int array}
+ *  row index array for BSC matrix A
+ *  MUst be sorted
+ * Bx : {float array}
+ *  value array for BSC matrix A
+ * row, col : {int}
+ *  indicate which row of A and column of B to take
+ *  the inner product of
+ * sum : {float array}
+ *  modified in place return value
+ *  array of size brows x bcols
+ * brows, bcols : {int}
+ *  the number of rows and columns in each block of B
+ *
+ *
+ * Returns
+ * -------
+ * sum is modified in place to hold the result <A_{row,:}, B_{:, col}>
+ *   because A and B are block matrices, sum is a dense matrix of size
+ *   brows x bcols
+ *
+ * Notes
+ * -----
+ * Principle calling routine is incomplete_BSRmatmat in this file 
+ *
+ * A and B are assumed to have sorted indices
+ *  
  */
 template<class I, class T>
 inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[], 
@@ -721,6 +802,10 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
  * But, the routine is written for the case when S's 
  * sparsity pattern is a subset of A*B, so this algorithm 
  * should work well.
+ *
+ * Principle calling routine is energy_prolongation_smoother(...) in
+ * smooth.py.  Here is is used to calculate the descent direction
+ * A*P_tent, but only within an accepted sparsity pattery.
  *
  * Examples
  * --------

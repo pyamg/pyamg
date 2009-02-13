@@ -10,7 +10,8 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import setup_smoothers
 from pyamg.util.utils import symmetric_rescaling, diag_sparse
 from pyamg.strength import classical_strength_of_connection, \
-        symmetric_strength_of_connection, ode_strength_of_connection
+        symmetric_strength_of_connection, ode_strength_of_connection, \
+        energy_based_strength_of_connection
 
 from aggregate import standard_aggregation, lloyd_aggregation
 from tentative import fit_candidates
@@ -175,6 +176,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'ode':
         C = ode_strength_of_connection(A, B, **kwargs)
+    elif fn == 'energy_based':
+        C = energy_based_strength_of_connection(A, **kwargs)
     elif fn is None:
         C = A
     else:

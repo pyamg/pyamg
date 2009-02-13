@@ -226,7 +226,7 @@ INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
 INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
 INSTANTIATE_COMPLEX(satisfy_constraints_helper)
-INSTANTIATE_COMPLEX(invert_BtB)
+INSTANTIATE_COMPLEX(calc_BtB)
 INSTANTIATE_COMPLEX(incomplete_BSRmatmat)
 
 INSTANTIATE_COMPLEX(pinv_array)
