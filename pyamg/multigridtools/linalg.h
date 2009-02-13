@@ -4,17 +4,29 @@
 #include <math.h>
 #include <limits>
 
-// sign function for int, float and double
-// Assigns a sign of 1 to 0
+/*******************************************************************
+ * Overloaded routines for real arithmetic for int, float and double
+ *******************************************************************/
+
+/* Sign-of Function overloaded for int, float and double
+ * signof(x) =  1 if x > 0
+ * signof(x) = -1 if x < 0
+ * signof(0) =  1 if x = 0
+ */
 inline int signof(int a) { return (a<0 ? -1 : 1); }
 inline float signof(float a) { return (a<0.0 ? -1.0 : 1.0); }
 inline double signof(double a) { return (a<0.0 ? -1.0 : 1.0); }
 
 
-// Overloaded routines for complex arithmetic that accept 
-// pyamg's complex class and the default float and double types
 
-// Return the complex conjugate of a number 
+/*******************************************************************
+ *         Overloaded routines for complex arithmetic for  
+ *         pyamg's complex class, float and double
+ *******************************************************************/
+
+/*
+ * Return the complex conjugate of a number
+ */
 inline float conjugate(const float& x)
     { return x; }
 inline double conjugate(const double& x)
@@ -24,7 +36,9 @@ inline npy_cfloat_wrapper conjugate(const npy_cfloat_wrapper& x)
 inline npy_cdouble_wrapper conjugate(const npy_cdouble_wrapper& x)
     { return npy_cdouble_wrapper(x.real, -x.imag); }
 
-// Return the real part of a number
+/* 
+ * Return the real part of a number
+ */
 inline float real(const float& x)
     { return x; }
 inline double real(const double& x)
@@ -34,7 +48,9 @@ inline float real(const npy_cfloat_wrapper& x)
 inline double real(const npy_cdouble_wrapper& x)
     { return x.real; }
 
-// Return the imaginary part of a number
+/*
+ * Return the imaginary part of a number
+ */
 inline float imag(const float& x)
     { return 0.0; }
 inline double imag(const double& x)
@@ -44,7 +60,9 @@ inline float imag(const npy_cfloat_wrapper& x)
 inline double imag(const npy_cdouble_wrapper& x)
     { return x.imag; }
 
-// Return the norm, i.e. the magnitude, of a single number
+/* 
+ * Return the norm, i.e. the magnitude, of a single number
+ */
 inline float mynorm(const float& x)
     { return fabs(x); }
 inline double mynorm(const double& x)
@@ -54,8 +72,9 @@ inline float mynorm(const npy_cfloat_wrapper& x)
 inline double mynorm(const npy_cdouble_wrapper& x)
     { return sqrt(x.real*x.real + x.imag*x.imag); }
 
-// Return the norm squared of a single number, i.e. 
-// save on a square root
+/* 
+ * Return the norm squared of a single number, i.e.  save a square root
+ */
 inline float mynormsq(const float& x)
     { return (x*x); }
 inline double mynormsq(const double& x)
@@ -66,7 +85,11 @@ inline double mynormsq(const npy_cdouble_wrapper& x)
     { return (x.real*x.real + x.imag*x.imag); }
 
 
-//Dense Algebra Routines
+
+/*******************************************************************
+ *              Dense Linear Algebra Routines
+ *      templated for pyamg's complex class, float and double
+ *******************************************************************/
 
 /* dot(x, y, n)
  *
@@ -244,6 +267,7 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
     return;
 }
 
+
 /* Calculate Ax*Bx = S
  *
  * Parameters
@@ -337,7 +361,6 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
         }
     }
 }
-
 
 
 /*
@@ -650,6 +673,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     return 0;
 }
  
+
 /*
  * Solve a system with the SVD, i.e. use a robust Moore-Penrose 
  * Pseudoinverse to multiply the RHS
@@ -721,11 +745,10 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     return;
 }
 
-/* Parameters
- * ----------
- * Replace each block of A with a Moore-Penrose pseudoinverse of that block.
+ /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
  * Routine is designed to inverst many small matrices at once.
- *
+ * Parameters
+ * ----------
  * Ax : {float|complex array}  
  *      (m, n, n) array, assumed to be "raveled" and in row major form
  * m,n : int
