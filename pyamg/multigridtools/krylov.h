@@ -4,12 +4,32 @@
 #include "linalg.h"
 
 /* Apply |start-stop| Householder reflectors in B to z
- * B stores the Householder vectors in row major form
  *
  * Implements the below python
  *
  * for j in range(start,stop,step):
  *   z = z - 2.0*dot(conjugate(B[j,:]), v)*B[j,:]
+ *
+ * Parameters
+ * ----------
+ * z : {float array}
+ *  length n vector to be operated on
+ * B : {float array}
+ *  n x m matrix of householder reflectors
+ *  must be in row major form
+ * n : {int}
+ *  dimensionality of z
+ * start, stop, step : {int}
+ *  control the choice of vectors in B to use
+ *
+ * Returns
+ * -------
+ * z is modified in place to reflect the application of
+ * the Householder reflectors, B[:,range(start,stop,step)]
+ *
+ * Notes
+ * -----
+ * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
  */
 template<class I, class T, class F>
 void apply_householders(T z[], const T B[], const I n, const I start, const I stop, const I step)
@@ -35,14 +55,38 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
  * that we follow the Horner-like scheme to map our least squares
  * solution in y back to the original space
  * 
- * B stores the Householder vectors in row major form
- *
  * Implements the below python
  *
- *for j in range(inner,-1,-1):
+ * for j in range(inner,-1,-1):
  *  z[j] += y[j]
  *  # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
  *  z = z - 2.0*dot(conjugate(B[j,:]), update)*B[j,:]
+ *
+ * Parameters
+ * ----------
+ * z : {float array}
+ *  length n vector to be operated on
+ * B : {float array}
+ *  n x m matrix of householder reflectors
+ *  must be in row major form
+ * y : {float array}
+ *  solution to the reduced system at the end of GMRES
+ * n : {int}
+ *  dimensionality of z
+ * start, stop, step : {int}
+ *  control the choice of vectors in B to use
+ *
+ * Returns
+ * -------
+ * z is modified in place to reflect the application of
+ * the Householder reflectors, B[:,range(start,stop,step)],
+ * and the inclusion of values in y.
+ *
+ * Notes
+ * -----
+ * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
+ * 
+ * See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems"
  */
 template<class I, class T, class F>
 void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const I start, const I stop, const I step)
@@ -64,9 +108,29 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
 
 
 /* Apply the first nrot Given's rotations in B to x
- * x is an n-vector
- * B is a one dimensional array, but each 4 entries represent
- *   a Given's rotation
+ *
+ * Parameters
+ * ----------
+ * x : {float array}
+ *  n-vector to be operated on
+ * B : {float array} 
+ *  Each 4 entries represent a Given's rotation
+ *  length nrot*4
+ * n : {int}
+ *  dimensionality of x
+ * nrot : {int}
+ *  number of rotations in B
+ *
+ * Returns
+ * -------
+ * x is modified in place to reflect the application of the nrot 
+ * rotations in B.  It is assumed that the the first rotation operates on 
+ * degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
+ * and so on
+ *
+ * Notes
+ * -----
+ * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
  */
 template<class I, class T, class F>
 void apply_givens(const T B[], T x[], const I n, const I nrot)
