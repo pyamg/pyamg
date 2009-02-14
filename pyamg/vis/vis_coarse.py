@@ -19,12 +19,73 @@ from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
 
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
 from pyamg.graph import vertex_coloring
-from vtk_writer import write_basic_mesh
+from vtk_writer import write_basic_mesh, write_vtu
 
 __all__ = ['vis_splitting']
 #__all__ = ['vis_splitting', 'vis_aggregate_points','vis_aggregate_groups']
 
-def vis_splitting(Verts, splitting, fname='output.vtu', output='vtk'):
+def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output.vtu'):
+    """
+    """
+    check_input(Verts=Verts,E2V=E2V,Agg=Agg,mesh_type=mesh_type)
+    map_type_to_key = {'tri':5, 'quad':9, 'tet':10, 'hex':12}
+    if mesh_type not in map_type_to_key:
+        raise ValueError('unknown mesh_type=%s' % mesh_type)
+    key = map_type_to_key[mesh_type]
+
+    Agg = csr_matrix(Agg)
+
+    # remove elements with dirichlet BCs
+    if E2V.max() >= Agg.shape[0]:
+        E2V = E2V[E2V.max(axis=1) < Agg.shape[0]]
+
+    #####
+    # 1 #
+    # Find elements with all vertices in same aggregate
+
+    # account for 0 rows.  mark them as solitary aggregates
+    if len(Agg.indices) != Agg.shape[0]:
+        new_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
+        new_aggs[full_aggs==1] = Agg.indices    # keep existing aggregate IDs
+        new_aggs[full_aggs==0] = Agg.shape[1]   # fill in singletons maxID+1
+        ElementAggs = new_aggs[E2V]
+    else:
+        ElementAggs = Agg.indices[E2V]
+
+    #####
+    # 2 #
+    # find all aggregates encompassing full elements
+    # mask[i] == True if all vertices in element i belong to the same aggregate
+    mask = where( abs(diff(ElementAggs)).max(axis=1) == 0 )[0]
+    #mask = (ElementAggs[:,:] == ElementAggs[:,0]).all(axis=1)
+    E2V_a = E2V[mask,:]   # elements where element is full
+    Nel_a = E2V_a.shape[0]
+
+    #####
+    # 3 #
+    # find edges of elements in the same aggregate (brute force)
+    E2V_b = zeros(((E2V.shape[1]**2) * E2V.shape[0],2), dtype=int)
+    k=0
+    for i in range(0,E2V.shape[0]):
+        for j1 in range(0,E2V.shape[1]):
+            for j2 in range(j1,E2V.shape[1]):
+                if E2V[i,j1]==E2V[i,j2]:
+                    E2V_b[k,:] = [E2V[i,j1],E2V[i,j2]]
+                    k+=1
+    E2V_b.resize((k-1,2))
+    Nel_b = E2V_b.shape[0]
+
+    #####
+    # 4 #
+    # now write out the elements and edges
+    colors_b = 2*ones((1,Nel_b))  # color edges with twos
+    colors_a = 3*ones((1,Nel_a))  # color triangles with threes
+
+    Cells  =  {3: E2V_b, 5: E2V_a}
+    cdata  = ({3: colors_b, key: colors_a},) # make sure it's a tuple
+    write_vtu(Verts=Verts, Cells=Cells, fname=fname)
+
+def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     """
     Coarse grid visualization for C/F splittings.
 
