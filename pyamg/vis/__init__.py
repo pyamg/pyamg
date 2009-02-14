@@ -2,7 +2,6 @@
 
 from info import __doc__
 
-from vis import *
 from vtk_writer import *
 from vis_coarse import *
 

@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix, spdiags, kron
 
 from pyamg.gallery.laplacian import *
 from pyamg.classical import CR, binormalize
-from pyamg.vis import coarse_grid_vis
+from pyamg.vis import vis_splitting
 
 def generate_from_stencil(sten,nx,ny):
 #    """
@@ -111,13 +111,7 @@ if test==3:
 
     splitting = CR(A)
 
-    row = arange(0, N)
-    col = splitting
-    data = ones((N,1)).ravel()
-    Agg = csr_matrix( (data, (row, col)), shape=(N, 2))
-
-    coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
-    #coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='vertex', A=None, plot_type='points')
+    vis_splitting(Verts=Verts, splitting,output='matplotlib')
 
 if test==1:
     n = 25
@@ -147,7 +141,7 @@ if test==1:
     data = ones((N,1)).ravel()
     Agg = csr_matrix( (data, (row, col)), shape=(N, 2))
 
-    coarse_grid_vis('mytest.vtu', Vert=Vert, E2V=E2V, Agg=Agg, mesh_type='quad', A=None, plot_type='points')
+    vis_splitting(Verts=Verts, splitting,output='matplotlib')
 
 if test==2:
     n = 25
