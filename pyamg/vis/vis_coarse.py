@@ -26,32 +26,58 @@ __all__ = ['vis_splitting']
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output.vtu'):
     """
-Verts = array([[0.0,0.0],
-          [1.0,0.0],
-          [2.0,0.0],
-          [0.0,1.0],
-          [1.0,1.0],
-          [2.0,1.0],
-          [0.0,2.0],
-          [1.0,2.0],
-          [2.0,2.0],
-          [0.0,3.0],
-          [1.0,3.0],
-          [2.0,3.0]])
-E2V = array([[0,4,3],
-         [0,1,4],
-         [1,5,4],
-         [1,2,5],
-         [3,7,6],
-         [3,4,7],
-         [4,8,7],
-         [4,5,8],
-         [6,10,9],
-         [6,7,10],
-         [7,11,10],
-         [7,8,11]])
-Agg = array([[1,1,1,1,1,1,0,0,1,0,0,1],[0,0,0,0,0,0,1,1,0,1,1,0]])
-mesh_type='tri'
+    Coarse grid visualization of aggregate groups.  Create .vtu files for use
+    in Paraview or display with Matplotlib
+
+    Parameters
+    ----------
+    Verts : {array}
+        coordinate array (N x D)
+    E2V : {array}
+        element index array (Nel x Nelnodes)
+    Agg : {csr_matrix}
+        sparse matrix for the aggregate-vertex relationship (N x Nagg)  
+    mesh_type : {string}
+        type of elements: vertex, tri, quad, tet, hex (all 3d)
+    fname : {string, file object}
+        file to be written, e.g. 'output.vtu'
+    output : {string}
+        'vtk' or 'matplotlib'
+
+    Returns
+    -------
+        - Writes data to .vtu file for use in paraview (xml 0.1 format) or
+          displays to screen using matplotlib
+    
+    Notes
+    -----
+        - Works for both 2d and 3d elements.  Element groupings are colored
+          with data equal to 2.0 and stringy edges in the aggregate are colored
+          with 3.0
+
+    Examples
+    --------
+    >>> from pyamg.aggregation import standard_aggregation
+    >>> from vis_coarse import vis_aggregate_groups
+    >>> from pyamg.gallery import load_example
+    >>> data = load_example('unit_square')
+    >>> A = data['A'].tocsr()
+    >>> V = data['vertices']
+    >>> E2V = data['elements']
+    >>> Agg = standard_aggregation(A)
+    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tri', output='vtk', fname='output.vtu'
+
+
+    >>> from pyamg.aggregation import standard_aggregation
+    >>> from vis_coarse import vis_aggregate_groups
+    >>> from pyamg.gallery import load_example
+    >>> data = load_example('unit_cube')
+    >>> A = data['A'].tocsr()
+    >>> V = data['vertices']
+    >>> E2V = data['elements']
+    >>> Agg = standard_aggregation(A)
+    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tet', output='vtk', fname='output.vtu')
+
     """
     check_input(Verts=Verts,E2V=E2V,Agg=Agg,mesh_type=mesh_type)
     map_type_to_key = {'tri':5, 'quad':9, 'tet':10, 'hex':12}
@@ -165,23 +191,15 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     >>> splitting = array([0,1,0,1,1,0,1,0])    # two variables
     >>> vis_splitting(Verts,splitting,output='matplotlib',fname=fname)
 
-
-    >>> from numpy import array, ones
-    >>> from scipy.io import loadmat
     >>> from pyamg.classical import RS
     >>> from pyamg.vis.vis_coarse import vis_splitting
-    >>> from pyamg.vis.vtk_writer import write_basic_mesh
-    >>> 
-    >>> data = loadmat('square.mat')
-    >>> A = data['A'].tocsr()                        # matrix
+    >>> from pyamg.gallery import load_example
+    >>> data = load_example('unit_square')
+    >>> A = data['A'].tocsr()
     >>> V = data['vertices']
     >>> E2V = data['elements']
-    >>> 
     >>> splitting = RS(A)
-    >>> 
     >>> vis_splitting(Verts=V,splitting=splitting,output='vtk',fname='output.vtu')
-    >>> write_basic_mesh(Verts=V, E2V=E2V, mesh_type='tri', fname='output_mesh.vtu')
-    >>> 
     >>> vis_splitting(Verts=V,splitting=splitting,output='matplotlib')
 
     """
