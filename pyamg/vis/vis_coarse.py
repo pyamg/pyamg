@@ -4,9 +4,8 @@ Visualization tools for coarse grids, both C/F splittings and aggregation.
 Output is either to file (VTK) or to the screen (matplotlib).
 
 vis_splitting:        visualize C/F splittings through vertex elements
-vis_aggregate_points: visualize aggregation through vertex elements
-vis_aggregate_groups: visualize aggregation through groupins of vertices,
-                      edges, elements
+vis_aggregate_groups: visualize aggregation through groupins of edges, elements
+
 """
 
 __docformat__ = "restructuredtext en"
@@ -21,8 +20,7 @@ from scipy.sparse import csr_matrix, coo_matrix, csc_matrix, triu
 from pyamg.graph import vertex_coloring
 from vtk_writer import write_basic_mesh, write_vtu
 
-__all__ = ['vis_splitting']
-#__all__ = ['vis_splitting', 'vis_aggregate_points','vis_aggregate_groups']
+__all__ = ['vis_splitting', 'vis_aggregate_groups']
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output.vtu'):
     """

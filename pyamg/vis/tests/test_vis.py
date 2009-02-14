@@ -9,7 +9,7 @@ import os
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
 
-from pyamg.vis import coarse_grid_vis, write_vtu
+from pyamg.vis import vis_aggregate_groups, vis_splitting, write_vtu, write_basic_mesh
 
 class TestVis(TestCase):
     def setUp(self):
@@ -18,8 +18,8 @@ class TestVis(TestCase):
     def tearDown(self):
         os.remove(self.file_name)
 
-    def test_tri_points(self):
-        Vert = array([[0.0,0.0],
+    def test_1(self):
+        Verts = array([[0.0,0.0],
                       [1.0,0.0],
                       [2.0,0.0],
                       [0.0,1.0],
@@ -51,12 +51,10 @@ class TestVis(TestCase):
 
         Agg = csr_matrix((data,(row,col)),shape=(12,2))
 
-        coarse_grid_vis(self.file_name, 
-                        Vert=Vert, E2V=E2V, Agg=Agg,
-                        mesh_type='tri', A=None, plot_type='points')
+        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri', fname = self.file_name)
 
-    def test_tri_primal(self):
-        Vert = array([[0.0,0.0],
+    def test_2(self):
+        Verts = array([[0.0,0.0],
                       [1.0,0.0],
                       [2.0,0.0],
                       [0.0,1.0],
@@ -103,7 +101,4 @@ class TestVis(TestCase):
 
         Agg = csr_matrix((data,(row,col)),shape=(18,5))
 
-        coarse_grid_vis(self.file_name, 
-                        Vert=Vert, E2V=E2V, Agg=Agg,
-                        mesh_type='tri', A=None, plot_type='primal')
-
+        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri', fname = self.file_name)
