@@ -15,9 +15,9 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean, sum, prod, ravel, hstack, invert, repeat
+        integer, mean, sum, prod, ravel, hstack, vstack, invert, repeat
 
-from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
+from scipy.sparse import csr_matrix, coo_matrix, csc_matrix, triu
 from pyamg.graph import vertex_coloring
 from vtk_writer import write_basic_mesh, write_vtu
 
@@ -26,6 +26,32 @@ __all__ = ['vis_splitting']
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output.vtu'):
     """
+Verts = array([[0.0,0.0],
+          [1.0,0.0],
+          [2.0,0.0],
+          [0.0,1.0],
+          [1.0,1.0],
+          [2.0,1.0],
+          [0.0,2.0],
+          [1.0,2.0],
+          [2.0,2.0],
+          [0.0,3.0],
+          [1.0,3.0],
+          [2.0,3.0]])
+E2V = array([[0,4,3],
+         [0,1,4],
+         [1,5,4],
+         [1,2,5],
+         [3,7,6],
+         [3,4,7],
+         [4,8,7],
+         [4,5,8],
+         [6,10,9],
+         [6,7,10],
+         [7,11,10],
+         [7,8,11]])
+Agg = array([[1,1,1,1,1,1,0,0,1,0,0,1],[0,0,0,0,0,0,1,1,0,1,1,0]])
+mesh_type='tri'
     """
     check_input(Verts=Verts,E2V=E2V,Agg=Agg,mesh_type=mesh_type)
     map_type_to_key = {'tri':5, 'quad':9, 'tet':10, 'hex':12}
@@ -64,26 +90,33 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     #####
     # 3 #
     # find edges of elements in the same aggregate (brute force)
-    E2V_b = zeros(((E2V.shape[1]**2) * E2V.shape[0],2), dtype=int)
-    k=0
-    for i in range(0,E2V.shape[0]):
-        for j1 in range(0,E2V.shape[1]):
-            for j2 in range(j1,E2V.shape[1]):
-                if E2V[i,j1]==E2V[i,j2]:
-                    E2V_b[k,:] = [E2V[i,j1],E2V[i,j2]]
-                    k+=1
-    E2V_b.resize((k-1,2))
+ 
+    # construct vertex to vertex graph
+    col = E2V.ravel()
+    row = kron(arange(0,E2V.shape[0]),ones((E2V.shape[1],),dtype=int))
+    data = ones((len(col),))
+    if len(row)!=len(col):
+        raise ValueError('Problem constructing vertex-to-vertex map')
+    V2V = coo_matrix((data,(row,col)),shape=(E2V.shape[0],E2V.max()+1))
+    V2V = V2V.T * V2V
+    V2V = triu(V2V,1).tocoo()
+
+    # get all the edges
+    edges = vstack((V2V.row,V2V.col)).T
+
+    # all the edges in the same aggregate
+    E2V_b = edges[Agg.indices[V2V.row] == Agg.indices[V2V.col]]
     Nel_b = E2V_b.shape[0]
 
     #####
     # 4 #
     # now write out the elements and edges
-    colors_b = 2*ones((1,Nel_b))  # color edges with twos
-    colors_a = 3*ones((1,Nel_a))  # color triangles with threes
+    colors_b = 2*ones((Nel_b,))  # color edges with twos
+    colors_a = 3*ones((Nel_a,))  # color triangles with threes
 
-    Cells  =  {3: E2V_b, 5: E2V_a}
-    cdata  = ({3: colors_b, key: colors_a},) # make sure it's a tuple
-    write_vtu(Verts=Verts, Cells=Cells, fname=fname)
+    Cells  =  {3: E2V_b, key: E2V_a}
+    cdata  =  {3: colors_b, key: colors_a} # make sure it's a tuple
+    write_vtu(Verts=Verts, Cells=Cells, fname=fname, cdata=cdata)
 
 def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     """
