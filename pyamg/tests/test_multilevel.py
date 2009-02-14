@@ -47,14 +47,14 @@ class TestMultilevel(TestCase):
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
-        from scipy.sparse.linalg import cg, bicgstab
+        from pyamg.krylov import cg, bicgstab
 
         A = poisson((100,100), format='csr')
         b = rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)
 
-        for accel in ['cg','bicgstab', cg, bicgstab]:
+        for accel in ['cg', 'bicgstab', 'cgs', cg, bicgstab]:
             x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
             assert(norm(b - A*x) < 1e-8*norm(b))
             residuals = []

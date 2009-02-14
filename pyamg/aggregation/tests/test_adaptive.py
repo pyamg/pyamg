@@ -33,8 +33,8 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
         
-        print "ASA convergence (Poisson)",conv_asa
-        print "SA convergence (Poisson)",conv_sa
+        #print "ASA convergence (Poisson)",conv_asa
+        #print "SA convergence (Poisson)",conv_sa
         assert( conv_asa < 1.1 * conv_sa )
 
     def test_elasticity(self):
@@ -55,8 +55,8 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
        
-        print "ASA convergence (Elasticity)",conv_asa
-        print "SA convergence (Elasticity)",conv_sa
+        #print "ASA convergence (Elasticity)",conv_asa
+        #print "SA convergence (Elasticity)",conv_sa
         assert( conv_asa < 1.1 * conv_sa ) 
        
 

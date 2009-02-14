@@ -293,9 +293,9 @@ class multilevel_solver:
         accel : {string, function}
             Defines acceleration method.  Can be a string such as 'cg'
             or 'gmres' which is the name of an iterative solver in
-            scipy.sparse.linalg.isolve.  If accel is not a string, it 
-            will be treated like a function with the same interface 
-            provided by the iterative solvers in SciPy.
+            pyamg.krylov (preferred) or scipy.sparse.linalg.isolve.
+            If accel is not a string, it will be treated like a function 
+            with the same interface provided by the iterative solvers in SciPy.
         callback : function
             User-defined function called after each iteration.  It is
             called as callback(xk) where xk is the k-th iterate vector.
@@ -333,8 +333,13 @@ class multilevel_solver:
         if accel is not None:
             # Acceleration is being used
             if isinstance(accel, basestring):
+                from pyamg import krylov
                 from scipy.sparse.linalg import isolve
-                accel = getattr(isolve, accel)
+
+                if hasattr(krylov, accel):
+                    accel = getattr(krylov, accel)
+                else:
+                    accel = getattr(isolve, accel)
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)

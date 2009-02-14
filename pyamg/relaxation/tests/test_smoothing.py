@@ -35,9 +35,9 @@ class TestSmoothing(TestCase):
             ml = smoothed_aggregation_solver(A, presmoother=method, postsmoother=method, max_coarse=10)
 
             residuals = profile_solver(ml)
-            print "method",method
+            #print "method",method
             #print "residuals",residuals
-            print "convergence rate:",(residuals[-1]/residuals[0])**(1.0/len(residuals))
+            #print "convergence rate:",(residuals[-1]/residuals[0])**(1.0/len(residuals))
             assert( (residuals[-1]/residuals[0])**(1.0/len(residuals)) < 0.95 )
 
         for method in methods2:
