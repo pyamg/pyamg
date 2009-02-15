@@ -1,6 +1,8 @@
 """Method to create pre- and post-smoothers on the levels of a multilevel_solver
 """
 
+__docformat__ = "restructuredtext en"
+
 __all__ = ['setup_smoothers', 'change_smoothers']#, 'smootherlist_tostring', 'smootherlists_tostring']
 
 

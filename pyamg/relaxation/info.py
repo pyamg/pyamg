@@ -29,6 +29,7 @@ Refer to the docstrings of the individual methods for additional information.
 
 """
 
+__docformat__ = "restructuredtext en"
 #TODO: explain separation of basic methods from interface methods.
 #TODO: explain why each class of methods exist (parallel vs. serial, SPD vs. indefinite)
 

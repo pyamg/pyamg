@@ -3,6 +3,8 @@
 
 import numpy as np
 
+__docformat__ = "restructuredtext en"
+
 __all__ = ['chebyshev_polynomial_coefficients']
 
 def chebyshev_polynomial_coefficients(a, b, degree):
@@ -55,7 +57,7 @@ def mls_polynomial_coefficients(rho, degree):
     """Determine the coefficients for a MLS polynomial smoother
     
     Parameters
-    ---------
+    ----------
     rho : {float}
         Spectral radius of the matrix in question
     degree : {int}
@@ -71,16 +73,16 @@ def mls_polynomial_coefficients(rho, degree):
 
     References
     ----------
-        Parallel multigrid smoothing: polynomial versus Gauss--Seidel
-        M. F. Adams, M. Brezina, J. J. Hu, and R. S. Tuminaro
-        J. Comp. Phys., 188 (2003), pp. 593--610
+    Parallel multigrid smoothing: polynomial versus Gauss--Seidel
+    M. F. Adams, M. Brezina, J. J. Hu, and R. S. Tuminaro
+    J. Comp. Phys., 188 (2003), pp. 593--610
 
     Examples
     --------
     >>> from pyamg.relaxation.chebyshev import mls_polynomial_coefficients
     >>> mls = mls_polynomial_coefficients(2.0, 3)
-    >>> print "Coefficients for Symmetric Polynomial Smoother:\n" + str(mls[0])
-    >>> print "Roots of the Prolongation Smoother:\n" + str(mls[1])
+    >>> print "Coefficients for Symmetric Polynomial Smoother: \\n" + str(mls[0])
+    >>> print "Roots of the Prolongation Smoother: \\n" + str(mls[1])
     """
     
     std_roots = np.cos( np.pi * (np.arange(degree) + 0.5)/ degree )

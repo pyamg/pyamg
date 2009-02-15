@@ -624,7 +624,8 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         Right-hand side (length N)
     iterations : { int }
         Number of iterations to perform
-    sweep : { string }
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
 
     Returns
     -------
