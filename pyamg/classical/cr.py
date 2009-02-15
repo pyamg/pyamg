@@ -175,9 +175,7 @@ def CR(S, method='habituated',maxiter=20):
     return splitting.ravel()
 
 def binormalize( A, tol=1e-5, maxiter=10):
-    """Binormalize matrix A
-
-    Attempt to create unit l_1 norm rows
+    """Binormalize matrix A.  Attempt to create unit l_1 norm rows.
 
     Parameters
     ----------
@@ -190,11 +188,11 @@ def binormalize( A, tol=1e-5, maxiter=10):
     maxiter : int
         maximum number of iterations to try
 
-    Return
-    ------
+    Returns
+    -------
     C : csr_matrix
         diagonally scaled A, C=DAD
-    
+
     Notes
     -----
         - BIN Algorithm to binormalize a matrix following:
@@ -202,18 +200,18 @@ def binormalize( A, tol=1e-5, maxiter=10):
           Livne, Golub, Scaling by Binormalization, 2003
 
         - Goal: Scale A so that l_1 norm of the rows are equal to 1:
-                |\sum_{j=1}^N |b_{ij}| - 1| \leq tol
-                o B=DAD -> b_{ij}
+                o B=DAD
+                o want row sum of B = 1
                 o easily done with tol=0 if B=DA, but this is not symmetric
                 o algorithm is O(N log (1.0/tol))
 
     Examples
     --------
- from pyamg import poisson
- from pyamg.classical import binormalize
- A = poisson((10,),format='csr')
- C = binormalize(A)
- print C.multiply(C).sum(axis=1)
+    >>> from pyamg import poisson
+    >>> from pyamg.classical import binormalize
+    >>> A = poisson((10,),format='csr')
+    >>> C = binormalize(A)
+    >>> print C.multiply(C).sum(axis=1)
 
     """
     if not isspmatrix(A): 
@@ -280,7 +278,7 @@ def rowsum_stdev(x,beta):
 
     Compute for approximation x, the std dev of the row sums
     s(x) = ( 1/n \sum_k  (x_k beta_k - betabar)^2 )^(1/2)
-    with betabar = 1/n x'*beta
+    with betabar = 1/n dot(beta,x)
 
     Parameters
     ----------
