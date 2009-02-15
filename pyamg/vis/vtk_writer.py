@@ -8,6 +8,8 @@ This will use the XML VTK format for unstructured meshes, .vtu
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
+__docformat__ = "restructuredtext en"
+
 __all__ = ['write_vtu','write_basic_mesh']
 
 import xml.dom.minidom
