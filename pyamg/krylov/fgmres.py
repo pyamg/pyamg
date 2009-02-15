@@ -24,10 +24,6 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     '''
     Flexible Generalized Minimum Residual Method (fGMRES)
         fGMRES iteratively refines the initial solution guess to the system Ax = b
-    For robustness, Householder reflections are used to orthonormalize the Krylov Space
-    Givens Rotations are used to provide the residual norm each iteration
-    Flexibility implies that the right preconditioner, M or A.psolve, can vary from 
-    iteration to iteration
 
     Parameters
     ----------
@@ -40,14 +36,14 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     tol : float
         relative convergence tolerance, i.e. tol is scaled by ||b||
     restrt : {None, int}
-        if int, restrt is max number of inner iterations
-            and maxiter is the max number of outer iterations
-        if None, do not restart GMRES, and max number of inner iterations is maxiter
+        - if int, restrt is max number of inner iterations
+          and maxiter is the max number of outer iterations
+        - if None, do not restart GMRES, and max number of inner iterations is maxiter
     maxiter : {None, int}
-        if restrt is None, maxiter is the max number of inner iterations 
-            and GMRES does not restart  
-        if restrt is int, maxiter is the max number of outer iterations, 
-            and restrt is the max number of inner iterations
+        - if restrt is None, maxiter is the max number of inner iterations 
+          and GMRES does not restart  
+        - if restrt is int, maxiter is the max number of outer iterations, 
+          and restrt is the max number of inner iterations
     xtype : type
         dtype for the solution, default is automatic type detection
     M : {array, matrix, sparse matrix, LinearOperator}
@@ -63,23 +59,31 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     Returns
     -------    
     (xNew, info)
-    xNew -- an updated guess to the solution of Ax = b
-    info -- halting status of gmres
-            0  : successful exit
-            >0 : convergence to tolerance not achieved,
-                 return iteration count instead.  This value
-                 is precisely the order of the Krylov space.
-            <0 : numerical breakdown, or illegal input
+    xNew : an updated guess to the solution of Ax = b
+    info : halting status of gmres
+
+            ==  =============================================
+            0   successful exit
+            >0  convergence to tolerance not achieved,
+                return iteration count instead.  This value
+                is precisely the order of the Krylov space.
+            <0  numerical breakdown, or illegal input
+            ==  =============================================
 
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
-    Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+        - The LinearOperator class is in scipy.sparse.linalg.interface.
+          Use this class if you prefer to define A or M as a mat-vec routine
+          as opposed to explicitly constructing the matrix.  A.psolve(..) is
+          still supported as a legacy.
 
-    fGMRES allows for nonstationary preconditioners, as opposed to GMRES
+        - fGMRES allows for nonstationary preconditioners, as opposed to GMRES
+
+        - For robustness, Householder reflections are used to orthonormalize the Krylov Space
+          Givens Rotations are used to provide the residual norm each iteration
+          Flexibility implies that the right preconditioner, M or A.psolve, can vary from 
+          iteration to iteration
     
     Examples
     --------

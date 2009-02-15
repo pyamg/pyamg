@@ -45,12 +45,15 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     Returns
     -------    
     (xNew, info)
-    xNew -- an updated guess to the solution of Ax = b
-    info -- halting status of cgne
-            0  : successful exit
-            >0 : convergence to tolerance not achieved,
-                 return iteration count instead.  
-            <0 : numerical breakdown, or illegal input
+    xNew : an updated guess to the solution of Ax = b
+    info : halting status of cgne
+
+            ==  =======================================
+            0   successful exit
+            >0  convergence to tolerance not achieved,
+                return iteration count instead.  
+            <0  numerical breakdown, or illegal input
+            ==  =======================================
 
     Notes
     -----
