@@ -3,6 +3,33 @@
 
 #include "linalg.h"
 
+/*
+ *  Perform one iteration of Gauss-Seidel relaxation on the linear
+ *  system Ax = b, where A is stored in CSR format and x and b
+ *  are column vectors.
+ *
+ *  The unknowns are swept through according to the slice defined
+ *  by row_start, row_end, and row_step.  These options are used
+ *  to implement standard forward and backward sweeps, or sweeping
+ *  only a subset of the unknowns.  A forward sweep is implemented
+ *  with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the 
+ *  number of rows in matrix A.  Similarly, a backward sweep is 
+ *  implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      row_start  - beginning of the sweep
+ *      row_stop   - end of the sweep (i.e. one past the last unknown)
+ *      row_step   - stride used during the sweep (may be negative)
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
 template<class I, class T, class F>
 void gauss_seidel(const I Ap[], 
                   const I Aj[], 
@@ -35,6 +62,30 @@ void gauss_seidel(const I Ap[],
 }
 
 
+/*
+ *  Perform one iteration of Gauss-Seidel relaxation on the linear
+ *  system Ax = b, where A is stored in Block CSR format and x and b
+ *  are column vectors.  This method applies pointwise relaxation
+ *  to the BSR as opposed to "block relaxation".
+ *
+ *  Refer to gauss_seidel for additional information regarding
+ *  row_start, row_stop, and row_step.
+ *
+ *  Parameters
+ *      Ap[]       - BSR row pointer
+ *      Aj[]       - BSR index array
+ *      Ax[]       - BSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      row_start  - beginning of the sweep (block row index)
+ *      row_stop   - end of the sweep (i.e. one past the last unknown)
+ *      row_step   - stride used during the sweep (may be negative)
+ *      blocksize  - BSR blocksize (blocks must be square)
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
 template<class I, class T, class F>
 void block_gauss_seidel(const I Ap[], 
                         const I Aj[], 
@@ -85,6 +136,32 @@ void block_gauss_seidel(const I Ap[],
     }
 }
 
+
+/*
+ *  Perform one iteration of Jacobi relaxation on the linear
+ *  system Ax = b, where A is stored in CSR format and x and b
+ *  are column vectors.  Damping is controlled by the omega
+ *  parameter.
+ *
+ *  Refer to gauss_seidel for additional information regarding
+ *  row_start, row_stop, and row_step.
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      temp[]     - temporary vector the same size as x
+ *      row_start  - beginning of the sweep
+ *      row_stop   - end of the sweep (i.e. one past the last unknown)
+ *      row_step   - stride used during the sweep (may be negative)
+ *      omega      - damping parameter
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
 template<class I, class T, class F>
 void jacobi(const I Ap[], 
             const I Aj[], 
@@ -125,9 +202,36 @@ void jacobi(const I Ap[],
     }
 }
 
-//
-// Guass Seidel Indexed will relax a specific index field Id
-//
+/*
+ *  Perform one iteration of Gauss-Seidel relaxation on the linear
+ *  system Ax = b, where A is stored in CSR format and x and b
+ *  are column vectors.
+ *
+ *  Unlike gauss_seidel, which is restricted to updating a slice
+ *  of the unknowns (defined by row_start, row_start, and row_step),
+ *  this method updates unknowns according to the rows listed in  
+ *  an index array.  This allows and arbitrary set of the unknowns 
+ *  to be updated in an arbitrary order, as is necessary for the
+ *  relaxation steps in the Compatible Relaxation method.
+ *
+ *  In this method the slice arguments are used to define the subset
+ *  of the index array Id which is to be considered.
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      Id[]       - index array representing the 
+ *      row_start  - beginning of the sweep (in array Id)
+ *      row_stop   - end of the sweep (in array Id)
+ *      row_step   - stride used during the sweep (may be negative)
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
 template<class I, class T>
 void gauss_seidel_indexed(const I Ap[], 
                           const I Aj[], 
