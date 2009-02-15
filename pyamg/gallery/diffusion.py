@@ -34,7 +34,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         The dimension of the problem.  2D or 3D
     epsilon  : float, optional
         Anisotropic diffusion coefficient: -div A grad u, 
-        where A = [1 0; 0 `epsilon`].  The default is isotropic, `epsilon`=1.0
+        where A = [1 0; 0 epsilon].  The default is isotropic, epsilon=1.0
     theta : float, optional
         Rotation angle `theta` in radians defines -div Q A Q^T grad,
         where Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].  
@@ -65,18 +65,18 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     theta = float(theta)
 
     if(type=='FE'):
-        """FE approximation to:
+        """FE approximation to::
 
             - (eps c^2 +     s^2) u_xx + 
             -2(eps - 1) c s       u_xy + 
             - (    c^2 + eps s^2) u_yy
 
-        [ -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps,        2*c^2*eps+2*s^2-4*c^2-4*s^2*eps, -c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps]
-        [       -4*c^2*eps-4*s^2+2*c^2+2*s^2*eps,        8*c^2*eps+8*s^2+8*c^2+8*s^2*eps,       -4*c^2*eps-4*s^2+2*c^2+2*s^2*eps]
-        [ -c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps,        2*c^2*eps+2*s^2-4*c^2-4*s^2*eps, -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps]
+            [ -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps,        2*c^2*eps+2*s^2-4*c^2-4*s^2*eps, -c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps]
+            [       -4*c^2*eps-4*s^2+2*c^2+2*s^2*eps,        8*c^2*eps+8*s^2+8*c^2+8*s^2*eps,       -4*c^2*eps-4*s^2+2*c^2+2*s^2*eps]
+            [ -c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps,        2*c^2*eps+2*s^2-4*c^2-4*s^2*eps, -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps]
 
-        c = cos(theta)
-        s = sin(theta)
+            c = cos(theta)
+            s = sin(theta)
         """
         C = cos(theta)
         S = sin(theta)

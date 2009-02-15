@@ -4,6 +4,7 @@ from scipy.sparse import csr_matrix, tril
 from pyamg.util.utils import symmetric_rescaling, diag_sparse
 
 __all__ = ['sprand', 'sprand_spd']
+__docformat__ = "restructuredtext en"
 
 #TODO add sprandn
 
@@ -34,7 +35,7 @@ def sprand(grid, density, format='csr'):
     density : float
         target a matrix with nnz(A) = m*n*density, 0<=density<=1
     format : string
-        sparse matrix format to return, e.g. "csr", "coo", etc.
+        sparse matrix format to return, e.g. 'csr', 'coo', etc.
 
     Returns
     -------
@@ -43,7 +44,7 @@ def sprand(grid, density, format='csr'):
 
     Examples
     --------
-    >>>> print sprand((5,5),3/5.0).todense()
+    >>> print sprand((5,5),3/5.0).todense()
     [[ 0.55331722  0.          0.35156318  0.68261756  0.62756243]
      [ 0.          0.          0.          0.          0.        ]
      [ 0.          0.97096491  0.          0.          0.45973418]
@@ -91,9 +92,9 @@ def sprand_spd(grid, density, format='csr'):
      [-0.73750262  0.          0.          0.73750262  0.        ]
      [-0.82078241 -0.21737203  0.          0.          1.03815444]]
 
-     See Also
-     --------
-     pyamg.classical.cr.binormalize
+    See Also
+    --------
+    pyamg.classical.cr.binormalize
 
     """
     grid = tuple(grid)
