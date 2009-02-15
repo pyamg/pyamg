@@ -9,19 +9,35 @@
 #include <algorithm>
 
 /*
+ *  Compute a strength of connection matrix using the classical strength
+ *  of connection measure by Ruge and Stuben. Both the input and output 
+ *  matrices are stored in CSR format.  An off-diagonal nonzero entry
+ *  A[i,j] is considered strong if:
  *
- * Return a strength of connection matrix using the classical 
- * strength of connection measure by Ruge and Stuben.
- *
- * Specifically, an off-diagonal entry A[i.j] is a strong 
- * connection if:
- *  
  *      -A[i,j] >= theta * max( -A[i,k] )   where k != i
- * 
+ *
  * Otherwise, the connection is weak.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A
+ *      theta      - stength of connection tolerance
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      Sp[]       - (output) CSR row pointer
+ *      Sj[]       - (output) CSR index array
+ *      Sx[]       - (output) CSR data array
+ *
  *  
- */          
-
+ *  Returns:
+ *      Nothing, S will be stored in Sp, Sj, Sx
+ *
+ *  Notes:
+ *      Storage for S must be preallocated.  Since S will consist of a subset
+ *      of A's nonzero values, a conservative bound is to allocate the same
+ *      storage for S as is used by A.
+ *
+ */
 template<class I, class T, class F>
 void classical_strength_of_connection(const I n_row,
                                       const F theta,
@@ -64,6 +80,25 @@ void classical_strength_of_connection(const I n_row,
 #define C_NODE 1
 #define U_NODE 2
 
+/*
+ * Compute a C/F (coarse-fine( splitting using the classical coarse grid 
+ * selection method of Ruge and Stuben.  The strength of connection matrix S,
+ * and its transpose T, are stored in CSR format.  Upon return, the  splitting 
+ * array will consist of zeros and ones, where C-nodes (coarse nodes) are 
+ * marked with the value 1 and F-nodes (fine nodes) with the value 0.
+ *
+ * Parameters:
+ *   n_nodes   - number of rows in A
+ *   Sp[]      - CSR pointer array 
+ *   Sj[]      - CSR index array
+ *   Tp[]      - CSR pointer array
+ *   Tj[]      - CSR index array
+ *   splitting - array to store the C/F splitting
+ *
+ * Notes:
+ *   The splitting array must be preallocated
+ *    
+ */
 template<class I>
 void rs_cf_splitting(const I n_nodes,
                      const I Sp[], const I Sj[], 

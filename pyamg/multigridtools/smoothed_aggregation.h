@@ -93,7 +93,7 @@ void symmetric_strength_of_connection(const I n_row,
  * Compute aggregates for a matrix A stored in CSR format
  *
  * Parameters:
- *   n_row         - # of rows in A
+ *   n_row         - number of rows in A
  *   Ap[n_row + 1] - CSR row pointer
  *   Aj[nnz]       - CSR column indices
  *    x[n_row]     - aggregate numbers for each node
@@ -107,7 +107,6 @@ void symmetric_strength_of_connection(const I n_row,
  *    Unaggregated nodes are marked with a -1
  *    
  */
-    
 template <class I>
 I standard_aggregation(const I n_row,
                        const I Ap[], 
