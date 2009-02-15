@@ -11,6 +11,38 @@
 
 #include "linalg.h"
  
+
+/*
+ *  Compute a strength of connection matrix using the standard symmetric
+ *  Smoothed Aggregation heuristic.  Both the input and output matrices
+ *  are stored in CSR format.  A nonzero connection A[i,j] is considered
+ *  strong if:
+ *
+ *      abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
+ *
+ *  The strength of connection matrix S is simply the set of nonzero entries
+ *  of A that qualify as strong connections.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A
+ *      theta      - stength of connection tolerance
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      Sp[]       - (output) CSR row pointer
+ *      Sj[]       - (output) CSR index array
+ *      Sx[]       - (output) CSR data array
+ *
+ *  
+ *  Returns:
+ *      Nothing, S will be stored in Sp, Sj, Sx
+ *
+ *  Notes:
+ *      Storage for S must be preallocated.  Since S will consist of a subset
+ *      of A's nonzero values, a conservative bound is to allocate the same
+ *      storage for S as is used by A.
+ *
+ */
 template<class I, class T, class F>
 void symmetric_strength_of_connection(const I n_row, 
                                       const F theta,
@@ -177,6 +209,48 @@ I standard_aggregation(const I n_row,
 
 
 
+/*
+ *  Given a set of near-nullspace candidates stored in the columns of B, and
+ *  an aggregation opertor stored in A using BSR format, this method computes
+ *      Ax : the data array of the tentative prolongator in BSR format
+ *      R : the coarse level near-nullspace candidates
+ *
+ *  The tentative prolongator A and coarse near-nullspaces candidates satisfy 
+ *  the following relationships:
+ *      B = A * R        and      transpose(A) * A = identity
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A
+ *      num_cols   - number of columns in A
+ *      K1         - BSR row blocksize
+ *      K2         - BSR column blocksize
+ *      Ap[]       - BSR row pointer
+ *      Aj[]       - BSR index array
+ *      Ax[]       - BSR data array
+ *      B[]        - fine-level near-nullspace candidates (n_row x K2)
+ *      R[]        - coarse-level near-nullspace candidates (n_coarse x K2)
+ *      tol        - tolerance used to drop numerically linearly dependent vectors
+ *
+ *  
+ *  Returns:
+ *      Nothing, Ax and R will be modified in places.
+ *
+ *  Notes:
+ *      - Storage for Ax and R must be preallocated.
+ *      - The tol parameter is applied to the candidates restricted to each
+ *      aggregate to discard (redundant) numerically linear dependancies. 
+ *      For instance, if the restriction of two different fine-level candidates
+ *      to a single aggregate are equal, then the second candidate will not
+ *      contribute to the range of A.
+ *      - When the aggregation operator does not aggregate all fine-level
+ *      nodes, the corresponding rows of A will simply be zero.  In this case,
+ *      the two relationships mentioned above do not hold.  Instead the following
+ *      relationships are maintained:
+ *             B[i,:] = A[i,:] * R     where  A[i,:] is nonzero
+ *         and
+ *             transpose(A[i,:]) * A[i,:] = 1   where A[i,:] is nonzero
+ *
+ */
 template <class I, class S, class T, class DOT, class NORM>
 void fit_candidates_common(const I n_row,
                            const I n_col,
