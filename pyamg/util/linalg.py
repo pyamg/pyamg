@@ -289,7 +289,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     Returns
     -------
-    Estimate of cond(A) with |lambda_max| / |lambda_min|
+    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\|
     through the use of Arnoldi or Lanczos iterations, depending on
     the symmetric flag
 
@@ -429,7 +429,7 @@ def issymm(A, tol=1e-6):
     Returns
     -------
     0                if symmetric
-    max( |A - A.H| ) if unsymmetric
+    max( \|A - A.H\| ) if unsymmetric
 
     Notes
     -----
