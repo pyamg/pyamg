@@ -8,4 +8,5 @@
 dist
 build
 __svn_version__.py
+generate_modules.py
 
