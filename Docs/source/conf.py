@@ -22,8 +22,7 @@ import sys, os
 #sys.path.append(os.path.abspath('.'))
 
 # path to sphinxext in Numpy source director
-#sys.path.append(os.path.abspath('../../../numpy/doc/sphinxext'))
-sys.path.append('/home/lukeo/packagesB/python_core/numpy/doc/sphinxext')
+sys.path.append(os.path.abspath('../sphinxext'))
 
 # General configuration
 # ---------------------
