@@ -68,7 +68,8 @@ class multilevel_solver:
         -----
         The functionality of this class is a struct
         """
-        pass
+        def __init__(self):
+            pass
 
     def __init__(self, levels, coarse_solver='pinv2'):
         """
