@@ -36,14 +36,16 @@ class multilevel_solver:
 
     Methods
     -------
-    solve()
-        Iteratively solves a linear system for the right hand side.
-    operator_complexity()
-        A measure of the size of the multigrid hierarchy.
-    grid_complexity()
-        A measure of the rate of coarsening.
+    aspreconditioner()
+        Create a preconditioner using this multigrid cycle
     cycle_complexity()
         A measure of the cost of a single multigrid cycle.
+    grid_complexity()
+        A measure of the rate of coarsening.
+    operator_complexity()
+        A measure of the size of the multigrid hierarchy.
+    solve()
+        Iteratively solves a linear system for the right hand side.
     """
 
     class level:
@@ -72,27 +74,6 @@ class multilevel_solver:
             pass
 
     def __init__(self, levels, coarse_solver='pinv2'):
-        """
-        Class constructor responsible for initializing the cycle and ensuring
-        the list of levels is complete.
-
-        Parameters
-        ----------
-        levels : level array
-            Array of level objects that contain A, R, and P.
-        coarse_solver : string
-            String passed to coarse_grid_solver indicating the type of coarse
-            grid solve to perform.  The default 'pinv2' is robust, but 
-            expands the coarse level matrix into a dense format.  Therefore,
-            larger coars level systems should use sparse coarse methods 
-            like 'splu'.
-    
-        Notes
-        -----
-        If not defined, the R attribute on each level is set to the
-        transpose of P.
-
-        """
         """
         Class constructor responsible for initializing the cycle and ensuring
         the list of levels is complete.
