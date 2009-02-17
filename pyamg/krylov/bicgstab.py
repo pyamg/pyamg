@@ -72,8 +72,9 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     References
     ----------
-    Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
-    Second Edition", SIAM, pp. 231-234, 2003
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+       Second Edition", SIAM, pp. 231-234, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
 
     '''
     

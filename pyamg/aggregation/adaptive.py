@@ -98,7 +98,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 
     References
     ----------
-    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
        "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
@@ -179,7 +179,7 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     References
     ----------
-    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
        "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
@@ -307,7 +307,7 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
 
     References
     ----------
-    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+    .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
        "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf

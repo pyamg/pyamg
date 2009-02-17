@@ -73,9 +73,9 @@ def mls_polynomial_coefficients(rho, degree):
 
     References
     ----------
-    Parallel multigrid smoothing: polynomial versus Gauss--Seidel
-    M. F. Adams, M. Brezina, J. J. Hu, and R. S. Tuminaro
-    J. Comp. Phys., 188 (2003), pp. 593--610
+    .. [1] Parallel multigrid smoothing: polynomial versus Gauss--Seidel
+       M. F. Adams, M. Brezina, J. J. Hu, and R. S. Tuminaro
+       J. Comp. Phys., 188 (2003), pp. 593--610
 
     Examples
     --------

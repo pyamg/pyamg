@@ -67,7 +67,7 @@ def ruge_stuben_solver(A,
 
     References
     ----------
-    .. Trottenberg, U., Oosterlee, C. W., and Schuller, A., 
+    .. [1] Trottenberg, U., Oosterlee, C. W., and Schuller, A., 
        "Multigrid" San Diego: Academic Press, 2001.  Appendix A
 
     See Also

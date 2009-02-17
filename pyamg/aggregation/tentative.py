@@ -33,6 +33,10 @@ def fit_candidates(AggOp, B, tol=1e-10):
         of size (blocksize, #candidates).  The coarse level candidates are 
         stored in R which has dimensions (#aggregates * #candidates, #candidates).
 
+    See Also
+    --------
+    multigridtools.fit_candidates
+    
     Notes
     -----
         Assuming that each row of AggOp contains exactly one non-zero entry,
@@ -44,9 +48,14 @@ def fit_candidates(AggOp, B, tol=1e-10):
         tentative prolongator will not include those degrees of freedom. This
         situation is illustrated in the examples below.
 
-    See Also
-    --------
-    multigridtools.fit_candidates
+    References
+    ----------
+    .. [1] Vanek, P. and Mandel, J. and Brezina, M., 
+       "Algebraic Multigrid by Smoothed Aggregation for 
+       Second and Fourth Order Elliptic Problems", 
+       Computing, vol. 56, no. 3, pp. 179--196, 1996.
+       http://citeseer.ist.psu.edu/vanek96algebraic.html
+
 
     Examples
     --------

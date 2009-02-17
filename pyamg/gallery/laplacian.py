@@ -63,9 +63,10 @@ def poisson( grid, spacing=None, dtype=float, format=None):
     return stencil_grid(stencil, grid, format=format)
 
 def gauge_laplacian( npts, spacing=1.0, beta=0.1):
-    """ Construct a Gauge Laplacian from Quantum Chromodynamics for regualar 2D grids
-        Note that this function is not written efficiently, but should be fine for N x N
-        grids where N is in the low hundreds.
+    """Construct a Gauge Laplacian from Quantum Chromodynamics for regualar 2D grids
+
+    Note that this function is not written efficiently, but should be 
+    fine for N x N grids where N is in the low hundreds.
 
     Parameters
     ----------
@@ -87,13 +88,14 @@ def gauge_laplacian( npts, spacing=1.0, beta=0.1):
 
     Examples
     --------
-    $ A = gauge_laplacian(10)
+    >>> A = gauge_laplacian(10)
 
     References
     ----------
     .. [1] MacLachlan, S. and Oosterlee, C., 
        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
        Vol. 30, SIAM J. Sci. Comp, 2008
+
     """
 
     # The gauge laplacian has the same sparsity structure as a normal

@@ -132,7 +132,7 @@ def RS(S):
 
     References
     ----------
-    .. Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
+    .. [1] Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
        In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
        SIAM: Philadelphia, PA, 1987; 73-130.
 
@@ -180,7 +180,7 @@ def PMIS(S):
 
     References
     ----------
-    .. Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+    .. [1] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
        "Reducing complexity in parallel algebraic multigrid preconditioners" 
        SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
@@ -225,7 +225,7 @@ def PMISc(S, method='JP'):
 
     References
     ----------
-    .. David M. Alber and Luke N. Olson
+    .. [1] David M. Alber and Luke N. Olson
        "Parallel coarse-grid selection"
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 

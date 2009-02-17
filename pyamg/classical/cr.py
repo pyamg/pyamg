@@ -33,7 +33,7 @@ def CR(S, method='habituated',maxiter=20):
 
     References
     ----------
-    .. Livne, O.E., "Coarsening by compatible relaxation."
+    .. [1] Livne, O.E., "Coarsening by compatible relaxation."
        Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
 
     Examples
@@ -193,15 +193,11 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     Notes
     -----
-        - BIN Algorithm to binormalize a matrix following:
-
-          Livne, Golub, Scaling by Binormalization, 2003
-
         - Goal: Scale A so that l_1 norm of the rows are equal to 1:
-                o B=DAD
-                o want row sum of B = 1
-                o easily done with tol=0 if B=DA, but this is not symmetric
-                o algorithm is O(N log (1.0/tol))
+        - B = DAD
+        - want row sum of B = 1
+        - easily done with tol=0 if B=DA, but this is not symmetric
+        - algorithm is O(N log (1.0/tol))
 
     Examples
     --------
@@ -210,6 +206,12 @@ def binormalize( A, tol=1e-5, maxiter=10):
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
     >>> print C.multiply(C).sum(axis=1)
+        
+    References
+    ----------
+    .. [1] Livne, Golub, "Scaling by Binormalization"
+       Tech Report SCCM-03-12, SCCM, Stanford, 2003
+       http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.3.1679
 
     """
     if not isspmatrix(A): 

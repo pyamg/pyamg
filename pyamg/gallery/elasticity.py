@@ -1,11 +1,5 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D
 
-    References
-    ----------
-    "Matlab implementation of the finite element method in elasticity"
-    Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263  
-    J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
-    http://www.math.hu-berlin.de/~cc/
 
 """
 
@@ -41,6 +35,10 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     A : {csr_matrix}
         FE Q1 stiffness matrix
 
+    See Also
+    --------
+    linear_elasticity_p1
+
     Notes
     -----
         - only 2d for now
@@ -50,9 +48,13 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     >>> from pyamg.gallery import linear_elasticity
     >>> A,B = linear_elasticity((4,4))
 
-    See Also
-    --------
-    linear_elasticity_p1
+    References
+    ----------
+    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
+       "Matlab implementation of the finite element method in elasticity"
+       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
+       http://www.math.hu-berlin.de/~cc/
+
     """
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
@@ -141,6 +143,10 @@ def q12d_local(vertices, lame, mu):
     mu : Float 
         shear modulus
 
+    See Also
+    --------
+    linear_elasticity
+
     Notes
     -----
     Vertices should be listed in counter-clockwise order::
@@ -227,9 +233,13 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     >>> V = array([[0.0,0.0],[1.0,0.0],[0.0,1.0],[1.0,1.0]])
     >>> A,B = linear_elasticity_p1(V,E)
 
-    See Also
-    --------
-    linear_elasticity
+    References
+    ----------
+    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
+       "Matlab implementation of the finite element method in elasticity"
+       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
+       http://www.math.hu-berlin.de/~cc/
+
     """
     
     #compute local stiffness matrix

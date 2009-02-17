@@ -182,9 +182,9 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
 
     References
     ----------
-    Z. Bai, J. Demmel, J. Dongarra, A. Ruhe, and H. van der Vorst, editors.
-    "Templates for the Solution of Algebraic Eigenvalue Problems: A Practical
-    Guide", SIAM, Philadelphia, 2000.
+    .. [1] Z. Bai, J. Demmel, J. Dongarra, A. Ruhe, and H. van der Vorst, editors.
+       "Templates for the Solution of Algebraic Eigenvalue Problems: A Practical
+       Guide", SIAM, Philadelphia, 2000.
 
     Examples
     --------

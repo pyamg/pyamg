@@ -99,8 +99,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
 
     References
     ----------
-    Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
-    Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+       Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
 
     '''
     

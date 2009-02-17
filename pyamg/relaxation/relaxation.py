@@ -487,15 +487,15 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
 
     References
     ----------
-    Brandt, Ta'asan.  
-    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
-    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+    .. [1] Brandt, Ta'asan.  
+       "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+       1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
 
-    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
-    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+    .. [2] Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+       Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
 
-    Cimmino. La ricerca scientifica ser. II 1. 
-    Pubbliz. dell'Inst. pre le Appl. del Calculo 34, 326-333, 1938.
+    .. [3] Cimmino. La ricerca scientifica ser. II 1. 
+       Pubbliz. dell'Inst. pre le Appl. del Calculo 34, 326-333, 1938.
     
     Examples
     --------
@@ -567,12 +567,12 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     
     References
     ----------
-    Brandt, Ta'asan.  
-    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
-    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+    .. [1] Brandt, Ta'asan.  
+       "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+       1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
 
-    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
-    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+    .. [2] Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+       Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
  
     Examples
     --------
@@ -633,12 +633,12 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     
     References
     ----------
-    Brandt, Ta'asan.  
-    "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
-    1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+    .. [1] Brandt, Ta'asan.  
+       "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
+       1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
 
-    Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
-    Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
+    .. [2] Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
+       Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
     
     Examples
     --------

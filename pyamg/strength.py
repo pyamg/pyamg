@@ -46,11 +46,11 @@ def classical_strength_of_connection(A, theta=0.0):
 
     References
     ----------
-    .. Briggs, W. L., Henson, V. E., McCormick, S. F., "A multigrid tutorial",
+    .. [1] Briggs, W. L., Henson, V. E., McCormick, S. F., "A multigrid tutorial",
        Second edition. Society for Industrial and Applied Mathematics (SIAM),
        Philadelphia, PA, 2000. xii+193 pp. ISBN: 0-89871-462-1
 
-    .. Trottenberg, U., Oosterlee, C. W., Schuller, A., "Multigrid",
+    .. [2] Trottenberg, U., Oosterlee, C. W., Schuller, A., "Multigrid",
        Academic Press, Inc., San Diego, CA, 2001. xvi+631 pp. ISBN: 0-12-701070-X
 
     Examples
@@ -125,7 +125,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
     References
     ----------
-    .. Vanek, P. and Mandel, J. and Brezina, M., 
+    .. [1] Vanek, P. and Mandel, J. and Brezina, M., 
        "Algebraic Multigrid by Smoothed Aggregation for 
        Second and Fourth Order Elliptic Problems", 
        Computing, vol. 56, no. 3, pp. 179--196, 1996.
@@ -217,7 +217,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     References
     ----------
-    .. Brannick, Brezina, MacLachlan, Manteuffel, McCormick. 
+    .. [1] Brannick, Brezina, MacLachlan, Manteuffel, McCormick. 
        "An Energy-Based AMG Coarsening Strategy",
        Numerical Linear Algebra with Applications, 
        vol. 13, pp. 133-148, 2006.
@@ -350,7 +350,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
 
     References
     ----------
-    .. Olson, L. N., Schroder, J., Tuminaro, R. S., 
+    .. [1] Olson, L. N., Schroder, J., Tuminaro, R. S., 
        "A New Perspective on Strength Measures in Algebraic Multigrid", 
        submitted, June, 2008.
 

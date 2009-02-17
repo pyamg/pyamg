@@ -113,7 +113,7 @@ def smoothed_aggregation_solver(A, B=None,
 
     References
     ----------
-    .. Vanek, P. and Mandel, J. and Brezina, M., 
+    .. [1] Vanek, P. and Mandel, J. and Brezina, M., 
        "Algebraic Multigrid by Smoothed Aggregation for 
        Second and Fourth Order Elliptic Problems", 
        Computing, vol. 56, no. 3, pp. 179--196, 1996.

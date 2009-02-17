@@ -339,7 +339,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
 
     References
     ----------
-    .. Jan Mandel, Marian Brezina, and Petr Vanek
+    .. [1] Jan Mandel, Marian Brezina, and Petr Vanek
        "Energy Optimization of Algebraic Multigrid Bases"
        Computing 62, 205-228, 1999
        http://dx.doi.org/10.1007/s006070050022
