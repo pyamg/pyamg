@@ -100,8 +100,8 @@ def smoothed_aggregation_solver(A, B=None,
          scheme to improve the quality and extent of interpolation from the
          aggregates to fine nodes.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg import smoothed_aggregation_solver, poisson
     >>> from scipy.sparse.linalg import cg
     >>> from scipy import rand
@@ -113,9 +113,11 @@ def smoothed_aggregation_solver(A, B=None,
 
     References
     ----------
-    Petr Vanek, Jan Mandel and Marian Brezina
-    "Algebraic Multigrid by Smoothed Aggregation for Second and Fourth Order Elliptic Problems",
-    http://citeseer.ist.psu.edu/vanek96algebraic.html
+    .. [Van1996] Vanek, P. and Mandel, J. and Brezina, M., 
+       "Algebraic Multigrid by Smoothed Aggregation for 
+       Second and Fourth Order Elliptic Problems", 
+       Computing, vol. 56, no. 3, pp. 179--196, 1996.
+       http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):

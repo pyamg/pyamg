@@ -125,10 +125,11 @@ def symmetric_strength_of_connection(A, theta=0):
 
     References
     ----------
-        Vanek, P. and Mandel, J. and Brezina, M., 
-        "Algebraic Multigrid by Smoothed Aggregation for 
-        Second and Fourth Order Elliptic Problems", 
-        Computing, vol. 56, no. 3, pp. 179--196, 1996.
+    .. [Van1996] Vanek, P. and Mandel, J. and Brezina, M., 
+       "Algebraic Multigrid by Smoothed Aggregation for 
+       Second and Fourth Order Elliptic Problems", 
+       Computing, vol. 56, no. 3, pp. 179--196, 1996.
+       http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     Examples
     --------
@@ -216,10 +217,10 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     References
     ----------
-        Brannick, Brezina, MacLachlan, Manteuffel, McCormick. 
-        "An Energy-Based AMG Coarsening Strategy",
-        Numerical Linear Algebra with Applications, 
-        vol. 13, pp. 133-148, 2006.
+    .. [Bra2006] Brannick, Brezina, MacLachlan, Manteuffel, McCormick. 
+       "An Energy-Based AMG Coarsening Strategy",
+       Numerical Linear Algebra with Applications, 
+       vol. 13, pp. 133-148, 2006.
 
     Examples
     --------
@@ -349,8 +350,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
 
     References
     ----------
-    Olson, L. N., Schroder, J., Tuminaro, R. S., "A New Perspective on Strength
-    Measures in Algebraic Multigrid", submitted, June, 2008.
+    .. [Ols2008] Olson, L. N., Schroder, J., Tuminaro, R. S., 
+       "A New Perspective on Strength Measures in Algebraic Multigrid", 
+       submitted, June, 2008.
 
     Examples
     --------
