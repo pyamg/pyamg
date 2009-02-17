@@ -308,7 +308,7 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
     References
     ----------
     .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       "Adaptive Smoothed Aggregation (alphaSA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
