@@ -14,8 +14,8 @@ from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """
-    Q1 FEM on a regular recatangular grid for linear elasticity
+    """Linear elasticity problem discretizes with Q1 finite elements
+    on a regular rectangular grid
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     nu : float
         Poisson's ratio
     format : string
-        'csr', 'csc', 'coo', 'bsr'
+        Format of the returned sparse matrix (eg. 'csr', 'bsr', etc.)
 
     Returns
     -------

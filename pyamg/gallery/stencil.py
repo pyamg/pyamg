@@ -25,8 +25,9 @@ def stencil_grid(S, grid, dtype=None, format=None):
 
     Returns
     -------
-    Sparse matrix which represents the operator given by applying
-    stencil S at each vertex of a regular grid with given dimensions.
+    A : sparse matrix
+        Sparse matrix which represents the operator given by applying
+        stencil S at each vertex of a regular grid with given dimensions.
 
     Notes
     -----
