@@ -467,8 +467,8 @@ def coarse_grid_solver(solver):
             + lu       : LU factorization 
             + cholesky : Cholesky factorization
 
-    Return
-    ------
+    Returns
+    -------
     ptr : function pointer
         A method is returned for use as a standalone or coarse grids solver
 
@@ -484,12 +484,8 @@ def coarse_grid_solver(solver):
     >>> b = A*ones(A.shape[0])
     >>> cgs = coarse_grid_solver('LU')
     >>> x=cgs(A,b)
-
-    TODO
-    ----
-    add relaxation methods
-        
     """
+    #TODO add relaxation methods
     
     if solver in ['pinv', 'pinv2']:
         def solve(self,A,b):

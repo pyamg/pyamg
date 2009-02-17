@@ -25,8 +25,8 @@ def classical_strength_of_connection(A, theta=0.0):
     theta : float
         Threshold parameter in [0,1].
 
-    Return
-    ------
+    Returns
+    -------
     S : csr_matrix
         Matrix graph defining strong connections.  S[i,j]=1 if vertex i
         is strongly influenced by vertex j.
@@ -99,8 +99,8 @@ def symmetric_strength_of_connection(A, theta=0):
     theta : float
         Threshold parameter (positive).
 
-    Return
-    ------
+    Returns
+    -------
     S : csr_matrix
         Matrix graph defining strong connections.  S[i,j]=1 if vertex i
         is strongly influenced by vertex j.
@@ -193,8 +193,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     k : {int}
         Number of relaxation steps used to generate strength information
 
-    Return
-    ------
+    Returns
+    -------
     S : {csr_matrix}
         Matrix graph defining strong connections.  The sparsity pattern
         of S matches that of A.  For BSR matrices, S is a reduced strength

@@ -23,8 +23,8 @@ def norm(x):
     x : array_like
         Vector of complex or real values
 
-    Return
-    ------
+    Returns
+    -------
     n : float
         2-norm of a vector
 
@@ -107,8 +107,8 @@ def axpy(x,y,a=1.0):
     a : float
         real or complex scalar
 
-    Return
-    ------
+    Returns
+    -------
     y : array_like
         Input variable y is rewritten
 
@@ -195,10 +195,8 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
     >>> print approximate_spectral_radius(A,maxiter=3)
     >>> print max([norm(x) for x in eigvals(A)])
 
-    TODO
-    ----
-    Make the method adaptive (restarts)
     """
+    # TODO Make the method adaptive (restarts)
    
     if type(A) == type( array([0.0]) ):
         A = asmatrix(A) #convert dense arrays to matrix type
