@@ -12,11 +12,11 @@ __docformat__ = "restructuredtext en"
 __all__ = ['cgnr']
 
 def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Conjugate Gradient, Normal Residual algorithm
-    Applies CG to the normal equations, A.H A x = b
-    Left preconditioning is supported
-    Note that if A is not well-conditioned, this algorithm is unadvisable
+    '''Conjugate Gradient, Normal Residual algorithm
+
+    Applies CG to the normal equations, A.H A x = b. Left preconditioning 
+    is supported.  Note that unless A is well-conditioned, the use of
+    CGNR is inadvisable
 
     Parameters
     ----------
@@ -64,13 +64,13 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     
     Examples
     --------
-    >>>from pyamg.krylov import *
-    >>>from scipy import rand
-    >>>import pyamg
-    >>>A = pyamg.poisson((50,50))
-    >>>b = rand(A.shape[0],)
-    >>>(x,flag) = cgnr(A,b,maxiter=1500, tol=1e-8)
-    >>>print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov import *
+    >>> from scipy import rand
+    >>> import pyamg
+    >>> A = pyamg.poisson((50,50))
+    >>> b = rand(A.shape[0],)
+    >>> (x,flag) = cgnr(A,b,maxiter=1500, tol=1e-8)
+    >>> print pyamg.util.linalg.norm(b - A*x)
 
     References
     ----------

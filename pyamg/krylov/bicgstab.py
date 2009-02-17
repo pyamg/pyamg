@@ -13,9 +13,9 @@ __all__ = ['bicgstab']
 
 
 def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Biconjugate Gradient Aglorithm with Stabilization applied to A x = b
-    Left preconditioning is supported
+    '''Biconjugate Gradient Algorithm with Stabilization
+    
+    Solves the linear system Ax = b. Left preconditioning is supported.
 
     Parameters
     ----------
@@ -62,13 +62,13 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     Examples
     --------
-    >>>from pyamg.krylov import *
-    >>>from scipy import rand
-    >>>import pyamg
-    >>>A = pyamg.poisson((50,50))
-    >>>b = rand(A.shape[0],)
-    >>>(x,flag) = bicgstab(A,b,maxiter=200, tol=1e-8)
-    >>>print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov import *
+    >>> from scipy import rand
+    >>> import pyamg
+    >>> A = pyamg.poisson((50,50))
+    >>> b = rand(A.shape[0],)
+    >>> (x,flag) = bicgstab(A,b,maxiter=200, tol=1e-8)
+    >>> print pyamg.util.linalg.norm(b - A*x)
 
     References
     ----------

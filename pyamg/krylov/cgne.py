@@ -13,11 +13,11 @@ __all__ = ['cgne']
 
 
 def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Conjugate Gradient, Normal Error algorithm
-    Applies CG to the normal equations, A A.H x = b
-    Left preconditioning is supported
-    Note that if A is not well-conditioned, this algorithm is unadvisable
+    '''Conjugate Gradient, Normal Error algorithm
+
+    Applies CG to the normal equations, A.H A x = b. Left preconditioning 
+    is supported.  Note that unless A is well-conditioned, the use of
+    CGNE is inadvisable
 
     Parameters
     ----------
@@ -57,20 +57,20 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
-    Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+        - The LinearOperator class is in scipy.sparse.linalg.interface.
+          Use this class if you prefer to define A or M as a mat-vec routine
+          as opposed to explicitly constructing the matrix.  A.psolve(..) is
+          still supported as a legacy.
 
     Examples
     --------
-    >>>from pyamg.krylov import *
-    >>>from scipy import rand
-    >>>import pyamg
-    >>>A = pyamg.poisson((50,50))
-    >>>b = rand(A.shape[0],)
-    >>>(x,flag) = cgne(A,b,maxiter=1500, tol=1e-8)
-    >>>print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov import *
+    >>> from scipy import rand
+    >>> import pyamg
+    >>> A = pyamg.poisson((50,50))
+    >>> b = rand(A.shape[0],)
+    >>> (x,flag) = cgne(A,b,maxiter=1500, tol=1e-8)
+    >>> print pyamg.util.linalg.norm(b - A*x)
 
     References
     ----------

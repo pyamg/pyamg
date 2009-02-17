@@ -21,9 +21,11 @@ def mysign(x):
         return x/abs(x)
 
 def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Flexible Generalized Minimum Residual Method (fGMRES)
-        fGMRES iteratively refines the initial solution guess to the system Ax = b
+    '''Flexible Generalized Minimum Residual Method (fGMRES)
+
+    fGMRES iteratively refines the initial solution guess to the
+    system Ax = b.  fGMRES is flexibile in the sense thatthe right 
+    preconditioner (M) can vary from iteration to iteration.
 
     Parameters
     ----------

@@ -9,8 +9,9 @@ __docformat__ = "restructuredtext en"
 __all__ = ['cg']
 
 def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
-    '''Conjugate Gradient on A x = b
-    Left preconditioning is supported
+    '''Conjugate Gradient algorithm
+    
+    Solves the linear system Ax = b. Left preconditioning is supported.
 
     Parameters
     ----------
@@ -57,13 +58,13 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
     Examples
     --------
-    >>>from pyamg.krylov import *
-    >>>from scipy import rand
-    >>>import pyamg
-    >>>A = pyamg.poisson((50,50))
-    >>>b = rand(A.shape[0],)
-    >>>(x,flag) = cg(A,b,maxiter=200, tol=1e-8)
-    >>>print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov import *
+    >>> from scipy import rand
+    >>> import pyamg
+    >>> A = pyamg.poisson((50,50))
+    >>> b = rand(A.shape[0],)
+    >>> (x,flag) = cg(A,b,maxiter=200, tol=1e-8)
+    >>> print pyamg.util.linalg.norm(b - A*x)
 
     References
     ----------
