@@ -33,9 +33,8 @@ def CR(S, method='habituated',maxiter=20):
    
     References
     ----------
-        - Compatible relaxation: coarse set selection by relaxation as described in
-            Livne, O.E., Coarsening by compatible relaxation.
-            Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
+    .. [Liv2004] Livne, O.E., "Coarsening by compatible relaxation."
+       Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
 
 
     Examples

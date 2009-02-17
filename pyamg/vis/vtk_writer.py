@@ -44,15 +44,10 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     Notes
     -----
         - Poly data not supported 
-
         - Non-Poly data is stored in Numpy array: Ncell x vtk_cell_info
-    
         - Each I1 must be >=3
-    
         - pdata = Ndof x Nfields
-
         - pvdata = 3*Ndof x Nfields
-    
         - cdata,cvdata = list of dictionaries in the form of Cells
 
 
