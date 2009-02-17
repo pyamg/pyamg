@@ -40,8 +40,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         where Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].  
         The default is `theta` = 0.0
 
-    Return
-    ------
+    Returns
+    -------
     stencil : numpy array
         A 3x3 diffusion stencil
 

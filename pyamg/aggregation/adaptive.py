@@ -57,8 +57,8 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
         Method used used to smooth the tentative prolongator.
     
-    Optional Parameters
-    -------------------
+    Other Parameters
+    ----------------
     max_levels: {integer}
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer}
@@ -83,8 +83,8 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         'from scratch'.  This approach is useful when no candidates are known
         or the candidates have been invalidated due to changes to matrix A.
         
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg import stencil_grid
     >>> from pyamg.aggregation import adaptive_sa_solver
     >>> from numpy.random import rand
@@ -98,10 +98,10 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
 
     References
     ----------
-    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-    SIAM Review Volume 47,  Issue 2  (2005)
-    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       SIAM Review Volume 47,  Issue 2  (2005)
+       http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
     
     ###
@@ -179,10 +179,10 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     References
     ----------
-    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-    SIAM Review Volume 47,  Issue 2  (2005)
-    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       SIAM Review Volume 47,  Issue 2  (2005)
+       http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
 
     if aggregation is not None:
@@ -307,10 +307,10 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
 
     References
     ----------
-    Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-    "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
-    SIAM Review Volume 47,  Issue 2  (2005)
-    http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+    .. Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       SIAM Review Volume 47,  Issue 2  (2005)
+       http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
     
     levels = ml.levels

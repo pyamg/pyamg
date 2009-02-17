@@ -19,40 +19,36 @@ def setup_smoothers(ml, presmoother, postsmoother):
         Data structure that stores the multigrid hierarchy.
     pre, post : smoother configuration
         See "Smoother Configuration" below for available options
-        
+
     Returns
     -------
     Nothing, ml will be changed in place.
 
-    Smoother Configuration
-    ----------------------
-    Arguments 'pre' and 'post' can be the name of a supported smoother, 
-    e.g. "gauss_seidel" or a tuple of the form ('method','opts') where 
-    'method' is the name of a supported smoother and 'opts' a dict of
-    keyword arguments to the smoother.  See the Examples section for
-    illustrations of the format.
-
-    Smoother Methods
-    ----------------
-    gauss_seidel
-    jacobi
-    richardson
-    sor
-    chebyshev
-    kaczmarz_gauss_seidel
-    kaczmarz_jacobi
-    kaczmarz_richardson
-    cg
-    gmres
-    cgne
-    cgnr
-    None
-
     Notes
     -----
-    Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
-    Kaczmarz-Richardson methods is scaled by the spectral radius of 
-    the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - Arguments 'pre' and 'post' can be the name of a supported smoother, 
+      e.g. "gauss_seidel" or a tuple of the form ('method','opts') where 
+      'method' is the name of a supported smoother and 'opts' a dict of
+      keyword arguments to the smoother.  See the Examples section for
+      illustrations of the format.
+    - Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
+      Kaczmarz-Richardson methods is scaled by the spectral radius of 
+      the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - Available smoother methods::
+
+        gauss_seidel
+        jacobi
+        richardson
+        sor
+        chebyshev
+        kaczmarz_gauss_seidel
+        kaczmarz_jacobi
+        kaczmarz_richardson
+        cg
+        gmres
+        cgne
+        cgnr
+        None
 
     Examples
     --------
@@ -143,22 +139,6 @@ def change_smoothers(ml, presmoother, postsmoother):
     postsmoother : {string, tuple, list}
         Defines postsmoother in identical fashion to presmoother
 
-    Smoother Methods
-    ----------------
-    gauss_seidel
-    jacobi
-    richardson
-    sor
-    chebyshev
-    kaczmarz_gauss_seidel
-    kaczmarz_jacobi
-    kaczmarz_richardson
-    cg
-    gmres
-    cgne
-    cgnr
-    None
-
     Returns
     -------
     ml changed in place
@@ -167,12 +147,26 @@ def change_smoothers(ml, presmoother, postsmoother):
 
     Notes
     -----
-    Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
-    Kaczmarz-Richardson methods is scaled by the spectral radius of 
-    the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
+      Kaczmarz-Richardson methods is scaled by the spectral radius of 
+      the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - This function is most differs from setup_smoothers in that it allows 
+      for different smoothing strategies on different levels.
+    - Available smoother methods::
 
-    This function is most differs from setup_smoothers in that it allows 
-    for different smoothing strategies on different levels.
+        gauss_seidel
+        jacobi
+        richardson
+        sor
+        chebyshev
+        kaczmarz_gauss_seidel
+        kaczmarz_jacobi
+        kaczmarz_richardson
+        cg
+        gmres
+        cgne
+        cgnr
+        None
 
     Examples
     --------

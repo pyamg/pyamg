@@ -73,20 +73,20 @@ from coloring.
 References
 ----------
 
-    [1] David M. Alber and Luke N. Olson
+..  [1] David M. Alber and Luke N. Olson
     "Parallel coarse-grid selection"
     Numerical Linear Algebra with Applications 2007; 14:611-643.
 
-    [2] Cleary AJ, Falgout RD, Henson VE, Jones JE. 
+..  [2] Cleary AJ, Falgout RD, Henson VE, Jones JE. 
     "Coarse-grid selection for parallel algebraic multigrid"
     Proceedings of the 5th International Symposium on Solving Irregularly 
     Structured Problems in Parallel. Springer: Berlin, 1998; 104-115.
 
-    [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+..  [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
     "Reducing complexity in parallel algebraic multigrid preconditioners" 
     SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
-    [4] Ruge JW, Stuben K. 
+..  [4] Ruge JW, Stuben K. 
     "Algebraic multigrid (AMG)"
     In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
     SIAM: Philadelphia, PA, 1987; 73-130.
@@ -130,11 +130,11 @@ def RS(S):
     --------
     multigridtools.rs_cf_splitting
 
-    Reference
-    ---------
-    Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
-    In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
-    SIAM: Philadelphia, PA, 1987; 73-130.
+    References
+    ----------
+    .. Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
+       In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
+       SIAM: Philadelphia, PA, 1987; 73-130.
 
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
@@ -178,11 +178,11 @@ def PMIS(S):
     --------
     MIS
 
-    Reference
-    ---------
-    Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
-    "Reducing complexity in parallel algebraic multigrid preconditioners" 
-    SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
+    References
+    ----------
+    .. Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+       "Reducing complexity in parallel algebraic multigrid preconditioners" 
+       SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
     """
     weights,G,S,T = preprocess(S)
@@ -223,11 +223,11 @@ def PMISc(S, method='JP'):
     --------
     MIS
 
-    Reference
-    ---------
-    David M. Alber and Luke N. Olson
-    "Parallel coarse-grid selection"
-    Numerical Linear Algebra with Applications 2007; 14:611-643.
+    References
+    ----------
+    .. David M. Alber and Luke N. Olson
+       "Parallel coarse-grid selection"
+       Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
     weights,G,S,T = preprocess(S, coloring_method=method)

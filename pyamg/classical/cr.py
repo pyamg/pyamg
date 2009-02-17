@@ -30,12 +30,11 @@ def CR(S, method='habituated',maxiter=20):
     -------
     splitting : array
         C/F list of 1's (coarse pt) and 0's (fine pt) (n x 1)
-   
+
     References
     ----------
-    .. [Liv2004] Livne, O.E., "Coarsening by compatible relaxation."
+    .. Livne, O.E., "Coarsening by compatible relaxation."
        Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
-
 
     Examples
     --------

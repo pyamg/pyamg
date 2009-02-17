@@ -63,8 +63,8 @@ def smoothed_aggregation_solver(A, B=None,
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
 
-    Additional Parameters
-    ---------------------
+    Other Parameters
+    ----------------
     cycle_type : ['V','W','F']
         Structrure of multigrid cycle
     presmoother  : ['gauss_seidel', 'jacobi', ... ]
@@ -113,7 +113,7 @@ def smoothed_aggregation_solver(A, B=None,
 
     References
     ----------
-    .. [Van1996] Vanek, P. and Mandel, J. and Brezina, M., 
+    .. Vanek, P. and Mandel, J. and Brezina, M., 
        "Algebraic Multigrid by Smoothed Aggregation for 
        Second and Fourth Order Elliptic Problems", 
        Computing, vol. 56, no. 3, pp. 179--196, 1996.
