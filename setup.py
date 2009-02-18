@@ -12,19 +12,21 @@ import os
 import sys
 
 CLASSIFIERS = """\
-Development Status :: 4 - Beta
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: OSI Approved
-Programming Language :: C
+Intended Audience :: Education
+License :: OSI Approved :: BSD License
+Programming Language :: C++
 Programming Language :: Python
+Topic :: Education
 Topic :: Software Development
 Topic :: Scientific/Engineering
+Topic :: Scientific/Engineering :: Mathematics
 Operating System :: Microsoft :: Windows
 Operating System :: POSIX
 Operating System :: Unix
 Operating System :: MacOS
-
 """
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
@@ -42,14 +44,13 @@ def configuration(parent_package='',top_path=None):
                        quiet=True)
 
     config.add_subpackage('pyamg')
-    #config.add_data_files(('pyamg','*.txt'))
+    config.add_data_files(('pyamg','*.txt'))
 
     config.get_version(os.path.join('pyamg','version.py')) # sets config.version
 
     return config
 
 def setup_package():
-
     from numpy.distutils.core import setup
     from numpy.distutils.misc_util import Configuration
 
@@ -80,4 +81,3 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
-
