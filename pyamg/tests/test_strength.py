@@ -1,14 +1,18 @@
 from pyamg.testing import *
 
 import numpy
-from numpy import sqrt, ones, ravel, array
-from scipy import rand, real, imag, mat, zeros
-from scipy.sparse import csr_matrix, coo_matrix, spdiags
+from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt
+from scipy import rand, real, imag, mat, zeros, sign, eye, arange
+from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags, coo_matrix
+import scipy.sparse
 from scipy.special import round
+from scipy.linalg import pinv2
 
-from pyamg.gallery import poisson, linear_elasticity, load_example
+from pyamg.gallery import poisson, linear_elasticity, load_example, stencil_grid
 from pyamg.strength import *
 from pyamg.multigridtools import incomplete_matmat
+from pyamg.util.linalg import approximate_spectral_radius
+from pyamg.util.utils import scale_rows
 
 
 class TestStrengthOfConnection(TestCase):
@@ -145,6 +149,26 @@ class TestStrengthOfConnection(TestCase):
         cases.append( (A,C,mask) )
         cases.append( (C,C,mask) )
 
+        # Imaginary tests
+        A = mat([[  0.0 +0.j ,   0.0+16.9j,   6.4 +1.2j,   0.0 +0.j ,   0.0 +0.j ],
+                 [ 16.9 +0.j ,  13.8 +0.j ,   7.2 +0.j ,   0.0 +0.j ,   0.0 +9.5j],
+                 [  0.0 +6.4j,   7.2 -8.1j,  12.0 +0.j ,   6.1 +0.j ,   5.9 +0.j ],
+                 [  0.0 +0.j ,   0.0 +0.j ,   6.1 +0.j ,   0.0 +0.j ,   0.0 +0.j ],
+                 [  5.8 +0.j ,  -4.0 +9.5j,  -3.2 -5.9j,   0.0 +0.j ,  13.0 +0.j ]])
+        C = A.copy()
+        C[1,0] = 3.1j - 1.3
+        C[3,2] = -10.1j + 9.7
+        A = csr_matrix(A)
+        C = csr_matrix(C)
+
+        mask = A.copy()
+        mask.data[:] = 1.0
+        cases.append( (A,A,mask) )
+        cases.append( (C,C,mask) )
+        cases.append( (A,C,mask) )
+        cases.append( (C,A,mask) )
+
+
         for case in cases:
             A = case[0].tocsr()
             B = case[1].tocsc()
@@ -171,51 +195,41 @@ class TestStrengthOfConnection(TestCase):
         for N in [3,5,7,10,11,19]:
             A = poisson( (N,), format='csr')
             B = ones((A.shape[0],1))
-            Atilde = ode_strength_of_connection(A, B)
-            assert_equal( Atilde.indptr, A.indptr )
-            assert_equal( Atilde.indices, A.indices )
+            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+            assert_array_almost_equal( result.todense(), expected.todense() )
 
         for N in [3,5,7,10,11,19]:
             A = poisson( (N,N), format='csr') 
             B = ones((A.shape[0],1))
-            Atilde = ode_strength_of_connection(A, B)
-            assert_equal( Atilde.indptr, A.indptr )
-            assert_equal( Atilde.indices, A.indices )
+            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+            assert_array_almost_equal( result.todense(), expected.todense() )
         
         # Ensure that anisotropic diffusion results an anisotropic strength stencil
         for N in [3,5,7,10,11,19]:
             A = spdiags([-ones(N*N), -0.1*ones(N*N), 2.2*ones(N*N),-0.1*ones(N*N),-ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
-            AtildeExact = spdiags([-ones(N*N), 4*ones(N*N), -ones(N*N)],[-N, 0, N], N*N, N*N,format='csr')
             B = ones((A.shape[0],1))
-            Atilde = ode_strength_of_connection(A, B)
-            # Truncate the first and last rows
-            Atilde = Atilde[1:-1]
-            AtildeExact = AtildeExact[1:-1]
-            assert_equal( Atilde.indptr, AtildeExact.indptr )
-            assert_equal( Atilde.indices, AtildeExact.indices )
-        
+            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+            assert_array_almost_equal( result.todense(), expected.todense() )
+
         for N in [3,5,7,10,11,19]:
             A = spdiags([-0.5*ones(N*N), -ones(N*N), 2.2*ones(N*N),-ones(N*N),-0.5*ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
-            AtildeExact = spdiags([-ones(N*N), 4*ones(N*N), -ones(N*N)],[-1, 0, 1], N*N, N*N,format='csr')
             B = ones((A.shape[0],1))
-            Atilde = ode_strength_of_connection(A, B, epsilon=2.0, k=4)
-            # Truncate the first and last rows
-            Atilde = Atilde[1:-1]
-            AtildeExact = AtildeExact[1:-1]
-            assert_equal( Atilde.indptr, AtildeExact.indptr )
-            assert_equal( Atilde.indices, AtildeExact.indices )       
-
+            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+            assert_array_almost_equal( result.todense(), expected.todense() )
+            
         # Ensure that isotropic elasticity results in an isotropic stencil (test bsr)
-        for N in [3,5,7,10,11,19]:
+        for N in [3,5,7,10]:
             (A,B) = linear_elasticity( (N,N), format='bsr')
-            Atilde = ode_strength_of_connection(A, B, proj_type="D_A",k=8,epsilon=32.0)
-            AtildeExact =  csr_matrix((ones(A.indices.shape), A.indices, A.indptr), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]) )
-            Atilde.sort_indices()
-            AtildeExact.sort_indices()
-            assert_equal( Atilde.indptr, AtildeExact.indptr )
-            assert_equal( Atilde.indices, AtildeExact.indices )
+            result = ode_strength_of_connection(A, B, epsilon=32.0, k=8, proj_type="D_A")
+            expected = reference_ode_strength_of_connection(A, B, epsilon=32.0, k=8, proj_type="D_A")
+            assert_array_almost_equal( result.todense(), expected.todense() )
 
-        # Run a few "random" examples with pre-stored answers
+
+        # Run a few "random" examples
         N = 5
         # CSR Test
         A1 = -1.0*array([ 0.21,  0.26,  0.15,  0.06,  0.14,  0.95,  0.8 ,  0.74,  0.57,
@@ -232,110 +246,74 @@ class TestStrengthOfConnection(TestCase):
                     0.95,  0.71,  0.94,  0.73,  0.59,  0.51,  1.  ])
         A = spdiags([A1, A2, 4*ones(N*N),A3, A4],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
         B = ones((A.shape[0],1))
-        Atilde = ode_strength_of_connection(A, B, epsilon=8.0, proj_type="D_A", symmetric=False)
-        AtildeExact = csr_matrix((
-        array([ 1.    ,  0.6645,  4.3104,  1.6258,  1.    ,  3.5164,  3.3427,
-                3.3462,  1.    ,  3.7242,  6.2437,  0.4763,  1.    ,  1.5659,
-                1.    ,  0.2778,  0.5596,  1.228 ,  1.    ,  0.3134,  1.0939,
-                0.6228,  1.    ,  1.3183,  0.6228,  0.7066,  1.8063,  1.    ,
-                0.3019,  0.7066,  1.792 ,  2.0939,  1.    ,  0.8766,  1.0083,
-                0.6414,  1.    ,  0.4791,  0.748 ,  3.7392,  1.0415,  1.    ,
-                0.7013,  0.7234,  0.414 ,  1.    ,  1.7397,  1.8743,  0.4878,
-                1.    ,  2.6133,  3.9358,  0.5277,  1.    ,  1.0052,  2.2082,
-                0.7521,  1.9932,  1.    ,  0.6143,  2.0569,  1.2691,  1.3548,
-                1.    ,  3.6822,  0.8601,  1.    ,  0.7866,  0.4921,  0.465 ,
-                1.    ,  2.5579,  0.4593,  2.224 ,  1.    ,  1.2005,  0.7115,
-                0.8302,  0.3679,  1.    ,  0.0975,  1.    ,  0.6226,  0.3773,
-                1.    ,  0.7947,  0.8238,  1.    ,  1.0694,  1.3114,  4.1253,
-                1.    ,  2.5721,  0.1057,  1.    ]), 
-        array([ 0,  1,  5,  0,  1,  2,  6,  1,  2,  3,  7,  2,  3,  4,  4,  5,  0,
-                4,  5, 10,  1,  5,  6,  7, 11,  2,  6,  7,  8, 12,  3,  7,  8,  9,
-               13,  4,  9, 10, 14,  5,  9, 10, 11, 15,  6, 11, 12,  7, 11, 12, 13,
-                8, 12, 13, 14, 18,  9, 13, 14, 15, 19, 10, 14, 15, 11, 15, 16, 17,
-               21, 16, 17, 18, 13, 17, 18, 19, 23, 14, 18, 19, 15, 20, 16, 20, 21,
-               22, 17, 22, 23, 18, 22, 23, 24, 19, 24]), 
-        array([ 0,  3,  7, 11, 14, 16, 20, 25, 30, 35, 39, 44, 47, 51, 56, 61, 64,
-               69, 72, 77, 80, 82, 86, 89, 93, 95])
-        ), shape=Atilde.shape)
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
-        assert_almost_equal( Atilde.data, AtildeExact.data, decimal=2 )
-        
+        result = ode_strength_of_connection(A+A.T, B, epsilon=8.0, proj_type="D_A")
+        expected = reference_ode_strength_of_connection(A+A.T, B, epsilon=8.0, proj_type="D_A")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+
         # BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B, epsilon=8.0, proj_type="D_A", symmetric=False)
-        AtildeExact = csr_matrix((
-        array([ 1.    ,  3.3427,  0.5596,  1.    ,  0.3134,  0.414 ,  1.    ,
-                0.7234,  0.4593,  1.    ,  0.4921,  0.0975,  1.    ]),
-        array([0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4]),
-        array([ 0,  2,  5,  8, 11, 13])
-        ), shape=Atilde.shape)
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
-        assert_almost_equal( Atilde.data, AtildeExact.data, decimal=2 )
+        result = ode_strength_of_connection(Absr, B, epsilon=8.0, k=2, proj_type="D_A")
+        expected = reference_ode_strength_of_connection(Absr, B, epsilon=8.0, k=2, proj_type="D_A")
+        assert_array_almost_equal( result.todense(), expected.todense())
         
-        # Zero row CSR Test
-        A.data[A.indptr[4]:A.indptr[5]] = 0.0
-        A.eliminate_zeros()
+        # Different B CSR Test
         B = array([ravel(B), 
                    array([ 0.26,  0.37,  0.85,  0.48,  0.16,  0.49,  0.58,  0.7 ,  0.1 ,
                    0.78,  0.27,  0.28,  0.71,  0.18,  0.89,  0.65,  0.28,  0.89,
                    0.34,  0.04,  0.96,  0.25,  0.88,  0.58,  0.95]) ]).T
-        Atilde = ode_strength_of_connection(A, B, symmetric=False)
-        AtildeExact = csr_matrix((
-        ones((67,)),
-        array([ 0,  1,  5,  1,  2,  2,  3,  2,  3,  0,  5, 10,  6, 11,  7,  8,  3,
-                7,  8,  9,  9, 10, 14,  9, 10, 15,  6, 11, 12, 11, 12, 13, 14, 13,
-               14, 10, 14, 15, 15, 16, 17, 21, 16, 17, 18, 13, 17, 18, 19, 23, 18,
-               19, 15, 19, 20, 16, 20, 21, 22, 22, 23, 18, 22, 23, 24, 19, 24]),
-        array([ 0,  3,  5,  7,  9,  9, 12, 14, 16, 20, 23, 26, 29, 31, 33, 35, 38,
-               42, 45, 50, 52, 55, 59, 61, 65, 67])
-        ), shape=Atilde.shape) 
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( result.todense(), expected.todense() )
         
-        # Zero row BSR Test
+        # BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B, symmetric=False)
-        AtildeExact = csr_matrix((
-        array([  1.0,   1.0,   0.04256,  1.0,   0.07528,   1.0,
-                 0.13055,   1e-8,   0.30166,   1.0,   1e-8,   1.0,   1.0]),
-        #ones((13,)),
-        array([0, 1, 0, 1, 2, 2, 3, 1, 2, 3, 4, 3, 4]),
-        array([ 0,  2,  5,  8, 11, 13])
-        ), shape=Atilde.shape)
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
-        assert_almost_equal( Atilde.data, AtildeExact.data, decimal=2 )
+        result = ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( result.todense(), expected.todense() )
         
         # Zero row and column CSR Test
+        A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A = A.tocsc()
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A.eliminate_zeros()
         A = A.tocsr()
-        Atilde = ode_strength_of_connection(A, B, symmetric=False)
-        AtildeExact = csr_matrix((
-        ones((67,)),
-        array([ 0,  1,  5,  1,  2,  2,  3,  2,  3,  0,  5, 10,  6, 11,  7,  8,  3,
-                7,  8,  9,  9, 10, 14,  9, 10, 15,  6, 11, 12, 11, 12, 13, 14, 13,
-               14, 10, 14, 15, 15, 16, 17, 21, 16, 17, 18, 13, 17, 18, 19, 23, 18,
-               19, 15, 19, 20, 16, 20, 21, 22, 22, 23, 18, 22, 23, 24, 19, 24]),
-        array([ 0,  3,  5,  7,  9,  9, 12, 14, 16, 20, 23, 26, 29, 31, 33, 35, 38,
-               42, 45, 50, 52, 55, 59, 61, 65, 67])
-        ), shape=Atilde.shape)
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
-        
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+
         # Zero row and column BSR Test
         Absr = A.tobsr(blocksize=(5,5))
-        Atilde = ode_strength_of_connection(Absr, B, symmetric=False)
-        AtildeExact = csr_matrix((
-        ones((13,)),
-        array([0, 1, 0, 1, 2, 2, 3, 1, 2, 3, 4, 3, 4]),
-        array([ 0,  2,  5,  8, 11, 13])
-        ), shape=Atilde.shape)
-        assert_equal( Atilde.indptr, AtildeExact.indptr )
-        assert_equal( Atilde.indices, AtildeExact.indices )
+        result = ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+
+        # Test Scale Invariance
+        A = poisson( (5,5), format='csr') 
+        B = arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        # create scaled A
+        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Ascaled = D*A*D
+        Bscaled = Dinv*B
+        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
+
+        # Test that the l2 and D_A are the same for the 1 near nullspace candidate case
+        resultDA = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        resultl2 = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
+
+        # Multiple Near Nullspace Candidates
+        (A,B) = linear_elasticity( (5,5), format='bsr')
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        # create scaled A
+        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Ascaled = (D*A*D).tobsr(blocksize=(2,2))
+        Bscaled = Dinv*B
+        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
 
 # Define Complex tests
@@ -377,8 +355,79 @@ class TestComplexStrengthOfConnection(TestCase):
                 result   = symmetric_strength_of_connection(A, theta)
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
+
+    def test_ode_strength_of_connection(self):
+        # Single near nullspace candidate
+        stencil = [[0.0, -1.0, 0.0],[-0.001, 2.002, -0.001],[0.0, -1.0, 0.0]]
+        A = 1.0j*stencil_grid(stencil, (4,4), format='csr')
+        B = 1.0j*ones((A.shape[0],1))
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+        # Tweak B
+        B[0] = 1.2 - 12.0j
+        B[11] = -14.2
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+
+        # Multiple near nullspace candidate
+        B = 1.0j*ones((A.shape[0],2))
+        B[0:-1:2,0] = 0.0
+        B[1:-1:2,1] = 0.0
+        B[-1,0] = 0.0
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+        # Different B
+        B = array(arange(1,2*A.shape[0]+1).reshape(-1,2),dtype=complex)
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+
+        # Multiple near nullspace candidate, BSR Test
+        A = A.tobsr(blocksize=(2,2))
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+        # Tweak B
+        B[0,1] = -9.2 + 2.3j
+        B[11,0] = 14.2
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense(), decimal=2 )
+
+        # Test Scale Invariance
+        A = 1.0j*poisson( (5,5), format='csr') 
+        B = 1.0j*arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        # create scaled A
+        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Ascaled = D*A*D
+        Bscaled = Dinv*B
+        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
         
-        
+        # Test that the l2 and D_A are the same for the 1 near nullspace candidate case
+        resultDA = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        resultl2 = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="l2")
+        assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
+
+        # Multiple Near Nullspace Candidates
+        (A,B) = linear_elasticity( (5,5), format='bsr')
+        A = 1.0j*A
+        B = 1.0j*B
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        # create scaled A
+        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
+        Ascaled = (D*A*D).tobsr(blocksize=(2,2))
+        Bscaled = Dinv*B
+        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
+
+
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
@@ -438,5 +487,159 @@ def reference_symmetric_strength_of_connection(A, theta):
     S.data = S.data[mask]
 
     return S.tocsr()
+
+
+
+def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
+    """
+    All python reference implementation for ODE Strength of Connection
+    If doing imaginary test, both A and B should be imaginary type upon entry
+    """
+   
+    #number of PDEs per point is defined implicitly by block size
+    csrflag = isspmatrix_csr(A)
+    if csrflag:
+        numPDEs = 1
+    else:
+        numPDEs = A.blocksize[0]
+        A = A.tocsr()
+    
+    # Preliminaries
+    Bmat = mat(B)
+    A.eliminate_zeros()
+    A.sort_indices()
+    dimen = A.shape[1]
+    NullDim = Bmat.shape[1]
+
+    #Get spectral radius of Dinv*A, this is the time step size for the ODE
+    D = A.diagonal();
+    Dinv = 1.0 / D
+    Dinv[D == 0] = 1.0
+    Dinv_A  = scale_rows(A, Dinv, copy=True)
+    rho_DinvA = approximate_spectral_radius(Dinv_A)
+     
+    # Calculate (Atilde^k) naively  
+    S = (scipy.sparse.eye(dimen,dimen,format="csr") - (1.0/rho_DinvA)*Dinv_A)
+    Atilde = scipy.sparse.eye(dimen, dimen, format="csr")
+    for i in range(k):
+        Atilde = S*Atilde
+    
+    # Strength Info should be row-based, so transpose Atilde
+    Atilde = Atilde.T.tocsr()
+
+    #====================================================================
+    #Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
+    #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
+    #  in the same PDE as i.
+
+    mask = A.copy()
+
+    #Only consider strength at dofs from your PDE.  Use mask to enforce this by zeroing out
+    #   all entries in Atilde that aren't from your PDE.
+    if numPDEs > 1:
+        row_length = diff(mask.indptr)
+        my_pde = mod(range(dimen), numPDEs)
+        my_pde = repeat(my_pde, row_length)
+        mask.data[ mod(mask.indices, numPDEs) != my_pde ] = 0.0
+        del row_length, my_pde
+        mask.eliminate_zeros()
+
+    #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
+    mask.data[:] = 1.0
+    Atilde = Atilde.multiply(mask)
+    Atilde.eliminate_zeros()
+    Atilde.sort_indices()
+    del mask
+
+    #====================================================================
+    # Calculate strength based on constrained min problem of
+    LHS = mat(zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
+    RHS = mat(zeros((NullDim+1, 1)), dtype=A.dtype)
+   
+    for i in range(dimen):
+       
+        #Get rowptrs and col indices from Atilde
+        rowstart = Atilde.indptr[i]
+        rowend = Atilde.indptr[i+1]
+        length = rowend - rowstart
+        colindx = Atilde.indices[rowstart:rowend]
+       
+        # Local diagonal of A is used for scale invariant min problem
+        D_A = mat(eye(length))
+        if proj_type == "D_A":
+            for j in range(length):
+                D_A[j,j] = D[colindx[j]] 
+
+        #Find row i's position in colindx, matrix must have sorted column indices.
+        iInRow = colindx.searchsorted(i)
+   
+        if length <= NullDim:
+            #Do nothing, because the number of nullspace vectors will  
+            #be able to perfectly approximate this row of Atilde.
+            Atilde.data[rowstart:rowend] = 1.0
+        else:
+            #Grab out what we want from Atilde and B.  Put into zi, Bi
+            zi = mat(Atilde.data[rowstart:rowend]).T
+           
+            Bi = Bmat[colindx,:]
+   
+            #Construct constrained min problem
+            LHS[0:NullDim, 0:NullDim] = 2.0*Bi.H*D_A*Bi
+            LHS[0:NullDim, NullDim] = D_A[iInRow,iInRow]*Bi[iInRow,:].H  
+            LHS[NullDim, 0:NullDim] = Bi[iInRow,:]
+            RHS[0:NullDim,0] = 2.0*Bi.H*D_A*zi
+            RHS[NullDim,0] = zi[iInRow,0]
+
+            #Calc Soln to Min Problem
+            x = mat(pinv2(LHS))*RHS
+            
+            #Calc best constrained approximation to zi with span(Bi).  
+            zihat = Bi*x[:-1]
+
+            #Find spots where zihat is approx 0 and zi isn't.
+            indys1 = (abs( ravel(zihat)) < 1e-8).nonzero()[0]
+            indys2 = (abs( ravel(zi)   ) < 1e-8).nonzero()[0]
+            indys = setdiff1d(indys1,indys2)
+
+            #Calculate approximation ratio
+            zi = zihat/zi
+           
+            #Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
+            #   ratio large.
+            zi[indys] = 1e100
+
+            #Drop negative ratios by making them large
+            zi[ sign(real(zihat)) != sign(real(zi)) ] = 1e100
+            zi[ sign(imag(zihat)) != sign(imag(zi)) ] = 1e100
+            zi[zi < 0.0] = 1e100
+           
+            #Calculate Relative Approximation Error
+            zi = abs(1.0 - zi)
+            
+            # important to make "perfect" connections explicitly nonzero
+            zi[abs(zi) < 1e-4] = 1e-4                 
+
+            #Calculate and applydrop-tol.  Ignore diagonal by making it very large
+            zi[iInRow] = 1e5
+            drop_tol = min(zi)*epsilon
+            zi[zi > drop_tol] = 0.0
+            zi[iInRow] = 1.0
+            Atilde.data[rowstart:rowend] = ravel(zi)
+
+    #===================================================================
+    # Clean up, and return Atilde
+    Atilde.eliminate_zeros()
+    Atilde.data = array(Atilde.data, dtype=float)
+
+    # If converted BSR to CSR we return amalgamated matrix with the minimum nonzero for each block 
+    # making up the nonzeros of Atilde
+    if not csrflag:
+        Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
+        
+        #Atilde = csr_matrix((data, row, col), shape=(*,*))
+        Atilde = csr_matrix((array([ Atilde.data[i,:,:][Atilde.data[i,:,:].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
+                             Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+
+    return Atilde
 
 

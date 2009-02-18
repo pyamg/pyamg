@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones, empty_like, diff, conjugate, mat, sqrt, arange, array
+from numpy import ones, empty_like, diff, conjugate, mat, sqrt, arange, array, real, imag, sign
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning, csc_matrix
 from scipy.sparse import eye as speye
@@ -325,7 +325,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 
-def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric=True):
+def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """Construct an AMG strength of connection matrix using an ODE-based measure
 
     Parameters
@@ -340,9 +340,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
         ODE num time steps, step size is assumed to be 1/rho(DinvA)
     proj_type : {'l2','D_A'}
         Define norm for constrained min prob, i.e. define projection
-    symmetric : boolean
-        Is A symmetric.  If true, alllows for more efficient 
-        matrix-matrix multiplies during time stepping.
    
     Returns
     -------
@@ -416,15 +413,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
     Dinv_A  = scale_rows(A, Dinv, copy=True)
     rho_DinvA = approximate_spectral_radius(Dinv_A)
     
-    #Calculate D_A * B for use in minimization problem
-    #   Incur the cost of creating a new CSR mat, Dmat, so that we can multiply 
-    #   Dmat*B by calling C routine and avoid looping python
+    #Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
-        Dmat = spdiags( [D], [0], dimen, dimen, format = 'csr')
-        DB = Dmat*Bmat
-        del Dmat
+        D_A = spdiags( [D], [0], dimen, dimen, format = 'csr')
     else:
-        DB = Bmat
+        D_A = speye(dimen, dimen, format="csr")
     #====================================================================
     
     
@@ -502,12 +495,8 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
             Atilde = Atilde*Atilde
 
         # Call incomplete mat-mat mult
-        if symmetric:
-            AtildeCSC = Atilde
-        else:
-            AtildeCSC = Atilde.tocsc() 
-            AtildeCSC.sort_indices()
-        
+        AtildeCSC = Atilde.tocsc() 
+        AtildeCSC.sort_indices()
         mask.sort_indices()
         Atilde.sort_indices()
         multigridtools.incomplete_matmat(Atilde.indptr,    Atilde.indices,    Atilde.data, 
@@ -542,22 +531,29 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
 
     if NullDim == 1:
         # Use shortcut to solve constrained min problem if B is only a vector
-        # Strength(i,j) = | 1 - (z(i)/b(i))/(z(j)/b(j)) |
+        # Strength(i,j) = | 1 - (z(i)/b(j))/(z(j)/b(i)) |
         # These ratios can be calculated by diagonal row and column scalings
         
         #Create necessary Diagonal matrices
         DAtilde = Atilde.diagonal();
-        DAtildeDivB = spdiags( [array(DAtilde)/(array(Bmat).reshape(DAtilde.shape))], [0], dimen, dimen, format = 'csr')
+        DAtildeDivB = array(DAtilde)/array(Bmat).reshape(DAtilde.shape)
+        DAtildeDivB[ravel(Bmat) == 0] = 1.0
+        DAtildeDivB = spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
         DiagB = spdiags( [array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
-        
-        #Calculate Approximation ratio
-        Atilde.data = 1.0/Atilde.data
+
+        # Calculate best approximation in span(B)
+        data = Atilde.data.copy()
+        Atilde.data[:] = 1.0
 
         Atilde = DAtildeDivB*Atilde
         Atilde = Atilde*DiagB
 
         #Find negative ratios
-        neg_ratios =  (Atilde.data < 0.0)
+        neg_ratios =  (sign(real(Atilde.data)) != sign(real(data))) + (sign(imag(Atilde.data)) != sign(imag(data)))
+
+        #Calculate Approximation ratio
+        Atilde.data = Atilde.data/data
+        del data
 
         #Calculate Approximation error
         Atilde.data = abs( 1.0 - Atilde.data)
@@ -571,7 +567,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
         Atilde = Atilde + I
 
     else:
-        # For use in computing local B_i^T*B, precompute the dot-* of 
+        # For use in computing local B_i^H*B, precompute the element-wise multiply of 
         #   each column of B with each other column.  We also scale by 2.0 
         #   to account for BDB's eventual use in a constrained minimization problem
         BDBCols = sum(range(NullDim+1))
@@ -579,18 +575,20 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", symmetric
         counter = 0
         for i in range(NullDim):
             for j in range(i,NullDim):
-                BDB[:,counter] = 2.0*ravel(asarray(B[:,i]))*ravel(asarray(DB[:,j]))
+                BDB[:,counter] = 2.0*conjugate(ravel(asarray(B[:,i])))*ravel(asarray(D_A*B[:,j]))
                 counter = counter + 1        
         
         # Use constrained min problem to define strength
-        multigridtools.ode_strength_helper(Atilde.data,        Atilde.indptr,    Atilde.indices, 
-                                           Atilde.shape[0],    ravel(asarray(B)), ravel(asarray(DB.T)), 
+        multigridtools.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
+                                           Atilde.shape[0],     ravel(asarray(B)), ravel(asarray((D_A*conjugate(B)).T)), 
                                            ravel(asarray(BDB)), BDBCols,           NullDim)
     #===================================================================
     
     #Apply drop tolerance
     if epsilon != inf:
         Atilde.eliminate_zeros()
+        # All of the strength values are real by this point, so ditch the complex part
+        Atilde.data = array(Atilde.data, dtype=float)
         multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
     
     Atilde.eliminate_zeros()

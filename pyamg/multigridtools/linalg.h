@@ -465,7 +465,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     for(i = 0; i < nsq; i+= (n+1) )
     {   V[i] = 1.0;}
 
-    // Copy A to U, note that the stop address &(A[nsq]) 
+    // Copy A to U, note that the stop address &(A[m*n]) 
     // should go one past the final element to be copied
     std::copy(&(A[0]), &(A[m*n]), &(U[0]));
 
@@ -518,11 +518,10 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                     // if count ever = 0, then everything is sorted and orthogonal 
                     // (or possibly just noise)
                     count--;
-                    continue;
                 }
                 
                 // swap cols ||     Handle 0 matrix case
-                if(!sorted   || ( (norm_d == 0.0) && (a==b)  ) )
+                else if(!sorted   || ( (norm_d == 0.0) && (a==b)  ) )
                 {
                     // Apply rotation matrix,
                     // [ 0.0  1.0 ]
@@ -560,6 +559,8 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                         koffset++;
                     }
                 }
+
+                // Carry out Jacobi Rotations to orgthogonalize column's j and k in U
                 else
                 {
                     // calculate rotation angles for 
@@ -618,7 +619,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     }// end while loop
 
     // Orthogonalization complete. Compute singular values.
-    F prev_norm = -1.0;
+    F sigma_tol=0.0;
     I Uoffset = 0;
     I iszero = n;
     for (j = 0; j < n; j++)
@@ -626,24 +627,25 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
         F curr_norm;
         norm(&(U[Uoffset]), m, curr_norm);              // || U[:,j] ||
         
-        // Determine if singular value is zero, according to the
-        // criteria used in the main loop above (i.e. comparison
-        // with norm of previous column).
-        if(curr_norm == 0.0 || prev_norm == 0.0 
-            || (j > 0 && (curr_norm <= tolerance*prev_norm)) )
+        if(j == 0)
+        {
+            F alpha = std::max(2000.0, 100.0*std::max(m,n)*std::numeric_limits<F>::epsilon()*curr_norm);
+            sigma_tol = alpha*std::numeric_limits<F>::epsilon();
+        }
+
+        // Determine if singular value is zero
+        if( curr_norm <= sigma_tol )
         {   
             iszero--;                               // detect all zero matrix
             S[j] = 0.0;                             // singular
             for(i = Uoffset; i < (Uoffset + m); i++)
             {   U[i] = 0.0; }                       // annihilate U[:,j]
-            prev_norm = 0.0;
         }
         else
         {
             S[j] = curr_norm;                       // non-singular
             for(i = Uoffset; i < (Uoffset + m); i++)
             {   U[i] = U[i]/curr_norm; }            // normalize column U[:,j]
-            prev_norm = curr_norm;
         }
 
         Uoffset += m;

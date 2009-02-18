@@ -192,10 +192,9 @@ void min_blocks(const I n_blocks, const I blocksize,
  * DB : {float|complex array}
  *      nrows x NullDim array of possibly scaled near nullspace 
  *      vectors in col major form.  If calling from within Python, take a
- *      transpose.  For a scale invarient measure, 
- *      DB = (diag(A)*B), corresponding to the D_A inner-product
- *      Otherwise,
- *      DB = B, corresponding to the l2-inner-product
+ *      transpose.  For a scale invariant measure, 
+ *      DB = diag(A)*conjugate(B)), corresponding to the D_A inner-product
+ *      Otherwise, DB = conjugate(B), corresponding to the l2-inner-product
  * b : {float|complex array}
  *      nrows x BDBCols array in row-major form.
  *      This  array is B-squared, i.e. it is each column of B
@@ -232,10 +231,10 @@ void min_blocks(const I n_blocks, const I blocksize,
  * --------
  * See odes_strength_of_connection(...) in strength.py
  */
-template<class I, class T>
+template<class I, class T, class F>
 void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
                          const I nrows, const T x[],     const T y[], 
-                         const T b[],     const I BDBCols, const I NullDim)
+                         const T b[],   const I BDBCols, const I NullDim)
 {
     //Compute maximum row length
     I max_length = 0;
@@ -252,7 +251,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     T * LHS       = new T[NullDimPone*NullDimPone];
     T * RHS       = new T[NullDimPone];
     T * work      = new T[work_size];
-    T * sing_vals = new T[NullDimPone];
+    F * sing_vals = new F[NullDimPone];
 
     //Rename to something more understandable
     const T * BDB = b;
@@ -260,7 +259,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     const T * DB  = y;
     
     //Calculate what we consider to be a "numerically" zero approximation value in z
-    const T near_zero = std::sqrt( std::numeric_limits<T>::epsilon() );
+    const F near_zero = std::numeric_limits<F>::epsilon();
 
     //Loop over rows
     for(I i = 0; i < nrows; i++)
@@ -272,7 +271,8 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         if(length <= NullDim) {   
             // If B can perfectly locally approximate this row of S, 
             // then all connections are strong
-            std::fill(Sx + rowstart, Sx + rowend, static_cast<T>(1.0));
+            for(I kk = rowstart; kk < rowend; kk++)
+            {   Sx[kk] = 1.0; }
             continue; //skip to next row
         }
 
@@ -300,7 +300,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             }
         }
         
-        //Construct DBi^T in row major,  where DB_i is DB 
+        //Construct Bi^H*D_A in row major,  where DB_i is DB 
         // with the rows restricted only to the nonzero column indices of row i of S
         for(I k = 0, Bicounter = 0, Bcounter = 0; k < NullDim; k++, Bcounter += nrows)
         {
@@ -311,8 +311,9 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             }
         }
         
-        //Construct B_i^T * diag(A_i) * B_i, the 1,1 block of LHS
-        std::fill(LHS, LHS + NullDimPone * NullDimPone, static_cast<T>(0.0)); // clear LHS
+        //Construct B_i^H * diag(A_i) * B_i, the 1,1 block of LHS in column major ordering
+        for(I kk = 0; kk < NullDimPone*NullDimPone; kk++)
+        {   LHS[kk] = 0.0; }
         
         for(I jj = rowstart; jj < rowend; jj++)
         {
@@ -327,7 +328,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 BDBCounter += (NullDim - m);
             }
             // Do work in computing offdiagonals of LHS, 
-            //   noting that the (1,1) block of LHS is symmetric
+            //   noting that the (1,1) block of LHS is Hermitian
             BDBCounter = j*BDBCols;
             for(I m = 0; m < NullDim; m++)
             {
@@ -335,24 +336,24 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 for(I n = m+1; n < NullDim; n++)
                 {
                     T elmt_bdb = BDB[BDBCounter + counter];
-                    LHS[m*NullDimPone + n] += elmt_bdb;
-                    LHS[n*NullDimPone + m] += elmt_bdb;
+                    LHS[m*NullDimPone + n] += conjugate(elmt_bdb);      // entry(n,m)
+                    LHS[n*NullDimPone + m] += elmt_bdb;                 // entry(m,n)
                     counter++;
                 }
                 BDBCounter += (NullDim - m);
             }
         }
         
-        //Write last row of LHS           
+        //Write last row of LHS, e_i^T*B           
         for(I j = NullDim, Bcounter = i*NullDim; j < NullDim*NullDimPone; j+= NullDimPone, Bcounter++)
         {   LHS[j] = B[Bcounter]; }
         
-        //Write last column of LHS
+        //Write last column of LHS, B^H*D_A*e_i
         for(I j = NullDim*NullDimPone, Bcounter = i; j < (NullDimPone*NullDimPone - 1); j++, Bcounter += nrows)
         {   LHS[j] = DB[Bcounter]; }
 
         //Write first NullDim Entries of RHS
-        //  DBi^T*z ==> RHS
+        //  Bi^H*D_A*z ==> RHS
         gemm( DBi, NullDim, length, 'F', 
                 z, length,       1, 'F', 
               RHS, NullDim,      1, 'F');
@@ -381,24 +382,27 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 const T ratio = zhat[zcounter]/z[zcounter];
                 
                 // if zhat is numerically zero, but z is not, then weak connection
-                if( std::abs(z[zcounter]) >= near_zero &&  std::abs(zhat[zcounter]) < near_zero )
+                if( mynormsq(z[zcounter]) >= near_zero &&  mynormsq(zhat[zcounter]) < near_zero )
                 {   Sx[jj] = 0.0; }
                 
                 // if zhat[j] and z[j] have different sign, then weak connection
-                else if(ratio < 0.0)
+                else if( (signof(real(zhat[zcounter])) != signof(real(z[zcounter]))) || 
+                         (signof(imag(zhat[zcounter])) != signof(imag(z[zcounter])))    )
                 {   Sx[jj] = 0.0; }
                 
                 //Calculate approximation error as strength value
                 else 
                 {
-                    const T error = std::abs(1.0 - ratio);
+                    const F error = mynormsq(-ratio + 1.0);
                     //This comparison allows for predictable handling of the "zero" error case
-                    if(error < near_zero)
-                    {    Sx[jj] = near_zero; }
+                    if(error < 1e-8)
+                    {    Sx[jj] = 1e-4; }
                     else
-                    {    Sx[jj] = error; }
+                    {    Sx[jj] = std::sqrt(error); }
                 }
             }
+            
+
         } //end for
 
     } //end i loop
@@ -614,7 +618,7 @@ inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[],
  * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
  * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
  */
-template<class I, class T>
+template<class I, class T, class F>
 void incomplete_matmat(  const I Ap[],  const I Aj[],    const T Ax[], 
                          const I Bp[],  const I Bj[],    const T Bx[], 
                          const I Sp[],  const I Sj[],          T Sx[], const I dimen)

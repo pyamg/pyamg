@@ -242,28 +242,20 @@ def symmetric_strength_of_connection(*args):
     """
   return _multigridtools.symmetric_strength_of_connection(*args)
 
-def apply_distance_filter(*args):
-  """
-    apply_distance_filter(int n_row, float epsilon, int Sp, int Sj, float Sx)
-    apply_distance_filter(int n_row, double epsilon, int Sp, int Sj, double Sx)
-    """
-  return _multigridtools.apply_distance_filter(*args)
-
 def ode_strength_helper(*args):
   """
     ode_strength_helper(float Sx, int Sp, int Sj, int nrows, float x, float y, 
         float b, int BDBCols, int NullDim)
     ode_strength_helper(double Sx, int Sp, int Sj, int nrows, double x, double y, 
         double b, int BDBCols, int NullDim)
+    ode_strength_helper(npy_cfloat_wrapper Sx, int Sp, int Sj, int nrows, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper y, npy_cfloat_wrapper b, 
+        int BDBCols, int NullDim)
+    ode_strength_helper(npy_cdouble_wrapper Sx, int Sp, int Sj, int nrows, 
+        npy_cdouble_wrapper x, npy_cdouble_wrapper y, 
+        npy_cdouble_wrapper b, int BDBCols, int NullDim)
     """
   return _multigridtools.ode_strength_helper(*args)
-
-def min_blocks(*args):
-  """
-    min_blocks(int n_blocks, int blocksize, float Sx, float Tx)
-    min_blocks(int n_blocks, int blocksize, double Sx, double Tx)
-    """
-  return _multigridtools.min_blocks(*args)
 
 def incomplete_matmat(*args):
   """
@@ -271,8 +263,28 @@ def incomplete_matmat(*args):
         int Sp, int Sj, float Sx, int dimen)
     incomplete_matmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
         int Sp, int Sj, double Sx, int dimen)
+    incomplete_matmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
+        npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, 
+        int dimen)
+    incomplete_matmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
+        npy_cdouble_wrapper Bx, int Sp, int Sj, 
+        npy_cdouble_wrapper Sx, int dimen)
     """
   return _multigridtools.incomplete_matmat(*args)
+
+def apply_distance_filter(*args):
+  """
+    apply_distance_filter(int n_row, float epsilon, int Sp, int Sj, float Sx)
+    apply_distance_filter(int n_row, double epsilon, int Sp, int Sj, double Sx)
+    """
+  return _multigridtools.apply_distance_filter(*args)
+
+def min_blocks(*args):
+  """
+    min_blocks(int n_blocks, int blocksize, float Sx, float Tx)
+    min_blocks(int n_blocks, int blocksize, double Sx, double Tx)
+    """
+  return _multigridtools.min_blocks(*args)
 
 def block_gauss_seidel(*args):
   """
