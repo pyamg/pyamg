@@ -1,7 +1,7 @@
 from pyamg.testing import *
 
 import numpy
-from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt
+from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt, finfo
 from scipy import rand, real, imag, mat, zeros, sign, eye, arange
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags, coo_matrix
 import scipy.sparse
@@ -277,6 +277,7 @@ class TestStrengthOfConnection(TestCase):
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A.eliminate_zeros()
         A = A.tocsr()
+        A.sort_indices()
         result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         assert_array_almost_equal( result.todense(), expected.todense() )
@@ -505,6 +506,8 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         A = A.tocsr()
     
     # Preliminaries
+    near_zero = finfo(float).eps
+    sqrt_near_zero = sqrt(sqrt(near_zero))
     Bmat = mat(B)
     A.eliminate_zeros()
     A.sort_indices()
@@ -597,8 +600,8 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             zihat = Bi*x[:-1]
 
             #Find spots where zihat is approx 0 and zi isn't.
-            indys1 = (abs( ravel(zihat)) < 1e-8).nonzero()[0]
-            indys2 = (abs( ravel(zi)   ) < 1e-8).nonzero()[0]
+            indys1 = (abs( ravel(zihat)) < sqrt_near_zero).nonzero()[0]
+            indys2 = (abs( ravel(zi)   ) < sqrt_near_zero).nonzero()[0]
             indys = setdiff1d(indys1,indys2)
 
             #Calculate approximation ratio
@@ -617,16 +620,20 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             zi = abs(1.0 - zi)
             
             # important to make "perfect" connections explicitly nonzero
-            zi[abs(zi) < 1e-4] = 1e-4                 
+            zi[abs(zi) < sqrt_near_zero] = 1e-4                 
 
             #Calculate and applydrop-tol.  Ignore diagonal by making it very large
             zi[iInRow] = 1e5
             drop_tol = min(zi)*epsilon
             zi[zi > drop_tol] = 0.0
-            zi[iInRow] = 1.0
             Atilde.data[rowstart:rowend] = ravel(zi)
 
     #===================================================================
+    # Set diagonal to 1.0, as each point is strongly connected to itself.
+    I = scipy.sparse.eye(dimen, dimen, format="csr")
+    I.data -= Atilde.diagonal()
+    Atilde = Atilde + I
+
     # Clean up, and return Atilde
     Atilde.eliminate_zeros()
     Atilde.data = array(Atilde.data, dtype=float)

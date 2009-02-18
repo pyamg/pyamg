@@ -260,6 +260,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     
     //Calculate what we consider to be a "numerically" zero approximation value in z
     const F near_zero = std::numeric_limits<F>::epsilon();
+    const F sqrt_near_zero = std::sqrt(near_zero);
 
     //Loop over rows
     for(I i = 0; i < nrows; i++)
@@ -373,7 +374,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         
         for(I jj = rowstart, zcounter = 0; jj < rowend; jj++, zcounter++)
         {
-            //Perfectly connected to self
+            //Strongly connected to self
             if(Sj[jj] == i)
             {   Sx[jj] = 1.0; }
             else
@@ -395,7 +396,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 {
                     const F error = mynormsq(-ratio + 1.0);
                     //This comparison allows for predictable handling of the "zero" error case
-                    if(error < 1e-8)
+                    if(error < sqrt_near_zero)
                     {    Sx[jj] = 1e-4; }
                     else
                     {    Sx[jj] = std::sqrt(error); }

@@ -538,6 +538,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         DAtilde = Atilde.diagonal();
         DAtildeDivB = array(DAtilde)/array(Bmat).reshape(DAtilde.shape)
         DAtildeDivB[ravel(Bmat) == 0] = 1.0
+        DAtildeDivB[DAtilde == 0] = 0.0
         DAtildeDivB = spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
         DiagB = spdiags( [array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
 
@@ -560,11 +561,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         #Drop negative ratios
         Atilde.data[neg_ratios] = 0.0
-
-        # Set diagonal to 1.0, as each point is perfectly strongly connected to itself.
-        I = speye(dimen, dimen, format="csr")
-        I.data -= Atilde.diagonal()
-        Atilde = Atilde + I
 
     else:
         # For use in computing local B_i^H*B, precompute the element-wise multiply of 
@@ -592,7 +588,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
     
     Atilde.eliminate_zeros()
-
+    
+    # Set diagonal to 1.0, as each point is strongly connected to itself.
+    I = speye(dimen, dimen, format="csr")
+    I.data -= Atilde.diagonal()
+    Atilde = Atilde + I
 
     # If converted BSR to CSR, convert back and return amalgamated matrix, 
     #   i.e. the sparsity structure of the blocks of Atilde
