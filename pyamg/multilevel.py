@@ -82,19 +82,68 @@ class multilevel_solver:
         ----------
         levels : level array
             Array of level objects that contain A, R, and P.
-        coarse_solver : string
-            String passed to coarse_grid_solver indicating the type of coarse
-            grid solve to perform.  The default 'pinv2' is robust, but 
-            expands the coarse level matrix into a dense format.  Therefore,
-            larger coars level systems should use sparse coarse methods 
-            like 'splu'.
+        solver: {string, callable}
+            The solver method is either a string such as 'splu' or 'pinv' of a 
+            callable object which received parameters (A, b) and returns an 
+            (approximate or exact) solution to the linear system Ax = b. 
+            The set of valid string arguments is listed below.  The default 
+            'pinv2' is robust, but expands the coarse level matrix into a 
+            dense format.  Therefore, larger coarse level systems should use
+            sparse solvers like 'splu'.
+
+            - Sparse direct methods:
+                + splu         : sparse LU solver
+            - Sparse iterative methods:
+                + the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
+            - Dense methods:
+                + pinv     : pseudoinverse (QR)
+                + pinv2    : pseudoinverse (SVD)
+                + lu       : LU factorization 
+                + cholesky : Cholesky factorization
     
         Notes
         -----
-        If not defined, the R attribute on each level is set to the
-        transpose of P.
+        If not defined, the R attribute on each level is set to the transpose of P.
+
+        Examples
+        --------
+        >>> # manual construction of a two-level AMG hierarchy
+        >>> from pyamg.gallery import poisson
+        >>> from pyamg.multilevel import multilevel_solver
+        >>> from pyamg.strength import classical_strength_of_connection
+        >>> from pyamg.classical import direct_interpolation
+        >>> from pyamg.classical.split import RS
+        >>> # compute necessary operators
+        >>> A = poisson((100,100), format='csr')
+        >>> C = classical_strength_of_connection(A)      # strength of connection matrix
+        >>> splitting = RS(A)                            # C/F splitting
+        >>> P = direct_interpolation(A, C, splitting)    # Prolongation operator
+        >>> R = P.T                                      # Restriction operator
+        >>> # store first level data
+        >>> levels = []
+        >>> levels.append( multilevel_solver.level() )
+        >>> levels.append( multilevel_solver.level() )
+        >>> levels[0].A = A
+        >>> levels[0].C = C
+        >>> levels[0].splitting = splitting
+        >>> levels[0].P = P
+        >>> levels[0].R = R
+        >>> # store second level data
+        >>> levels[1].A = R * A * P                      # coarse-level matrix
+        >>> # create multilevel_solver
+        >>> ml = multilevel_solver(levels, coarse_solver='splu')
+        >>> print ml
+        multilevel_solver
+        Number of Levels:     2
+        Operator Complexity:  1.891
+        Grid Complexity:      1.500
+        Coarse Solver:        'splu'
+          level   unknowns     nonzeros
+            0        10000        49600 [52.88%]
+            1         5000        44202 [47.12%]
 
         """
+
         self.levels = levels
         
         self.coarse_solver = coarse_grid_solver(coarse_solver)
@@ -110,7 +159,8 @@ class multilevel_solver:
         output += 'Number of Levels:     %d\n'   % len(self.levels)
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
-
+        output += 'Coarse Solver:        %s\n'    % self.coarse_solver.name()
+        
         total_nnz =  sum([level.A.nnz for level in self.levels])
 
         output += '  level   unknowns     nonzeros\n'
@@ -437,7 +487,11 @@ def coarse_grid_solver(solver):
     
     Parameters
     ----------
-    solver: string
+    solver: {string, callable}
+        The solver method is either a string such as 'splu' or 'pinv' of a 
+        callable object which received parameters (A, b) and returns an 
+        (approximate or exact) solution to the linear system Ax = b. The set
+        of valid string arguments is:
         - Sparse direct methods:
             + splu         : sparse LU solver
         - Sparse iterative methods:
@@ -450,22 +504,21 @@ def coarse_grid_solver(solver):
 
     Returns
     -------
-    ptr : function pointer
-        A method is returned for use as a standalone or coarse grids solver
+    ptr : generic_solver
+        A class for use as a standalone or coarse grids solver
 
     Examples
     --------
     >>> from numpy import ones
     >>> from scipy.sparse import spdiags
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.multlevel import coarse_grid_solver
-    >>> n=100
-    >>> e = ones((n,1)).ravel()
-    >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n)
+    >>> A = poisson((10,10), format='csr')
     >>> b = A*ones(A.shape[0])
-    >>> cgs = coarse_grid_solver('LU')
-    >>> x=cgs(A,b)
+    >>> cgs = coarse_grid_solver('lu')
+    >>> x = cgs(A,b)
     """
+
     #TODO add relaxation methods
     
     if solver in ['pinv', 'pinv2']:
@@ -501,26 +554,34 @@ def coarse_grid_solver(solver):
         # Identity
         def solve(self,A,b):
             return 0*b
+    elif callable(solver):
+        solve = solver
+
     else:
-        raise ValueError,('unknown solver: %s' % fn)
+        raise ValueError,('unknown solver: %s' % solver)
        
-    def wrapped_solve(self,A,b):
-        # make sure x is same dimensions and type as b
-        b = asanyarray(b)
-        if A.nnz==0:
-            # if A.nnz = 0, then we expect no correction
-            x=zeros(b.shape)
-        else:
-            x = solve(self,A,b)
-        if isinstance(b,numpy.ndarray):
-            x = asarray(x)
-        elif isinstance(b,numpy.matrix):
-            x = asmatrix(x)
-        else:
-            raise ValueError('unrecognized type')
-        return x.reshape(b.shape)
 
     class generic_solver:
-        __call__ = wrapped_solve
+        def __call__(self, A, b):
+            # make sure x is same dimensions and type as b
+            b = asanyarray(b)
+            if A.nnz==0:
+                # if A.nnz = 0, then we expect no correction
+                x=zeros(b.shape)
+            else:
+                x = solve(self,A,b)
+            if isinstance(b,numpy.ndarray):
+                x = asarray(x)
+            elif isinstance(b,numpy.matrix):
+                x = asmatrix(x)
+            else:
+                raise ValueError('unrecognized type')
+            return x.reshape(b.shape)
+
+        def __repr__(self):
+            return 'coarse_grid_solver(' + repr(solver) + ')'
+
+        def name(self):
+            return repr(solver)
 
     return generic_solver()
