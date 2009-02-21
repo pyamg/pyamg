@@ -7,7 +7,6 @@ def trimesh(vertices, indices, labels=False):
     from pylab import gca, axis, text
     from numpy import average
     
-    print 'trimesh'
     vertices,indices = asarray(vertices),asarray(indices)
 
     #3d tensor [triangle index][vertex index][x/y value]
@@ -18,7 +17,6 @@ def trimesh(vertices, indices, labels=False):
     col.set_alpha(0.5)
     col.set_linewidth(1)
 
-    #sub =  subplot(111)
     sub = gca()
     sub.add_collection(col,autolim=True)
     axis('off')
@@ -64,12 +62,13 @@ A.setdiag(-1*array(A.sum(axis=1)).ravel())
 A = A.tocsr()
 
 # construct preconditioner
-ml = smoothed_aggregation_solver(A, coarse_solver='pinv2')
+ml = smoothed_aggregation_solver(A, coarse_solver='pinv2',max_coarse=10)
 M = ml.aspreconditioner()
 
 # solve for lowest two modes: constant vector and Fiedler vector
 X = rand(A.shape[0], 2) 
-eval,evec = lobpcg(A, X, M=None, tol=1e-12, largest=False)
+(eval,evec,res) = lobpcg(A, X, M=M, tol=1e-12, largest=False, \
+        retResidualNormsHistory=True)
 
 # use the median of the Fiedler vector as a the separator
 vmed = median(evec[:,1])
