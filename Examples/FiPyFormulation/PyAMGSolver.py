@@ -1,9 +1,3 @@
-__docformat__ = 'restructuredtext'
-
-import sys
-from pysparse import precon
-from pysparse import itsolvers
-from fipy.solvers.pysparse.pysparseSolver import PysparseSolver
 from fipy.tools.pysparseMatrix import _PysparseMatrix
 from fipy.solvers.solver import Solver
 
@@ -14,8 +8,6 @@ from pyamg import smoothed_aggregation_solver
 class PyAMGSolver(Solver):
     """
     The PyAMGSolver class.
-
-    def __init__(self, tolerance=1e-10, iterations=1000, precon=None):
     """
     def __init__(self, *args, **kwargs):
         if kwargs.has_key('verbosity'):
@@ -45,9 +37,7 @@ class PyAMGSolver(Solver):
 
         # solve and deep copy data
         ml = smoothed_aggregation_solver(A,**self.MGSetupOpts)
-        xx = ml.solve(b=b,residuals=relres,**self.MGSolveOpts)
-        for i in range(0,len(xx)):
-            x[i]=xx[i]
+        x[:] = ml.solve(b=b,residuals=relres,**self.MGSolveOpts)
 
         # fix relres and set info
         if len(relres)>0:
