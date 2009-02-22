@@ -370,7 +370,7 @@ class TestComplexStrengthOfConnection(TestCase):
         B[11] = -14.2
         result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense(), decimal=2 )
+        assert_array_almost_equal( result.todense(), expected.todense() )
 
         # Multiple near nullspace candidate
         B = 1.0j*ones((A.shape[0],2))
