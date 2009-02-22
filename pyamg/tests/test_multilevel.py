@@ -15,13 +15,17 @@ class TestMultilevel(TestCase):
         cases.append( csr_matrix(diag(arange(1,5))) )
         cases.append( poisson( (4,),  format='csr') )
         cases.append( poisson( (4,4), format='csr') )
-       
+      
+        from pyamg.krylov import cg
+        def fn(A, b):
+            return cg(A, b)[0]
+
         # method should be almost exact for small matrices
         for A in cases:
-            for solver in ['splu','pinv','pinv2','lu','cholesky','cg']:
+            for solver in ['splu', 'pinv', 'pinv2', 'lu', 'cholesky', 'cg', fn]:
                 s = coarse_grid_solver(solver)
 
-                b = arange(A.shape[0],dtype=A.dtype)
+                b = arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A,b)
                 assert_almost_equal(A*x, b)

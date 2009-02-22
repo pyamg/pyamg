@@ -522,40 +522,42 @@ def coarse_grid_solver(solver):
     #TODO add relaxation methods
     
     if solver in ['pinv', 'pinv2']:
-        def solve(self,A,b):
+        def solve(self, A, b):
             if not hasattr(self, 'P'):
                 self.P = getattr(scipy.linalg, solver)( A.todense() )
             return numpy.dot(self.P,b)
     
     elif solver == 'lu':
-        def solve(self,A,b):
+        def solve(self, A, b):
             if not hasattr(self, 'LU'):
                 self.LU = scipy.linalg.lu_factor( A.todense() )
             return scipy.linalg.lu_solve(self.LU, b)
 
     elif solver == 'cholesky':
-        def solve(self,A,b):
+        def solve(self, A, b):
             if not hasattr(self, 'L'):
                 self.L = scipy.linalg.cho_factor( A.todense() )
             return scipy.linalg.cho_solve(self.L, b)
     
     elif solver == 'splu':
-        def solve(self,A,b):
+        def solve(self, A, b):
             if not hasattr(self, 'LU'):
                 self.LU = scipy.sparse.linalg.splu( csc_matrix(A) )
             return self.LU.solve( ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
         fn = getattr(scipy.sparse.linalg.isolve, solver)
-        def solve(self,A,b):
+        def solve(self, A, b):
             return fn(A, b, tol=1e-12)[0]
 
     elif solver is None:         
-        # Identity
-        def solve(self,A,b):
-            return 0*b
+        # No coarse grid solve
+        def solve(self, A, b):
+            return 0*b  # should this return b instead?
+
     elif callable(solver):
-        solve = solver
+        def solve(self, A, b):
+            return solver(A, b)
 
     else:
         raise ValueError,('unknown solver: %s' % solver)
@@ -565,17 +567,20 @@ def coarse_grid_solver(solver):
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
             b = asanyarray(b)
-            if A.nnz==0:
+
+            if A.nnz == 0:
                 # if A.nnz = 0, then we expect no correction
-                x=zeros(b.shape)
+                x = zeros(b.shape)
             else:
-                x = solve(self,A,b)
+                x = solve(self, A,b)
+
             if isinstance(b,numpy.ndarray):
                 x = asarray(x)
             elif isinstance(b,numpy.matrix):
                 x = asmatrix(x)
             else:
                 raise ValueError('unrecognized type')
+
             return x.reshape(b.shape)
 
         def __repr__(self):
