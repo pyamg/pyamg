@@ -366,7 +366,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
     # many imports for ode_strength_of_connection, so moved the imports local
     from numpy import array, zeros, mat, ravel, diff, mod, repeat,\
-         inf, asarray, log2
+         inf, asarray, log2, finfo
     from scipy.sparse import bsr_matrix, spdiags, eye
     from scipy.sparse import eye as speye
     from pyamg.util.utils  import scale_rows
@@ -453,7 +453,26 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     # If total the number of time steps is a power of two, then there is  
     # a very efficient computational short-cut.  Otherwise, we support  
     # other numbers of time steps, through an inefficient algorithm.
-    if ninc > 0: 
+    if False:
+        # Use Chebyshev polynomial of order k
+        # Poly coefficients, ignore the last (constant) coefficient
+        from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
+        bound = approximate_spectral_radius(A)
+        coefficents = -chebyshev_polynomial_coefficients(bound/30.0, 1.1*bound, k)[:-1]
+
+        # Generate Poly, coeff lists the coefficients in descending order
+        Atilde = coefficents[0]*I
+        for c in coefficents[1:]:
+            Atilde = c*I + A*Atilde 
+        
+        #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
+        mask.data[:] = 1.0
+        Atilde = Atilde.multiply(mask)
+        Atilde.eliminate_zeros()
+        Atilde.sort_indices()
+        del mask
+
+    elif ninc > 0: 
         print "The most efficient time stepping for the ODE Strength Method"\
               " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
     
@@ -561,6 +580,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         #Drop negative ratios
         Atilde.data[neg_ratios] = 0.0
+        Atilde.eliminate_zeros()
+        
+        #Set near perfect connections to 1e-4
+        Atilde.data[Atilde.data < sqrt(finfo(float).eps)] = 1e-4
 
     else:
         # For use in computing local B_i^H*B, precompute the element-wise multiply of 
@@ -578,16 +601,16 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         multigridtools.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
                                            Atilde.shape[0],     ravel(asarray(B)), ravel(asarray((D_A*conjugate(B)).T)), 
                                            ravel(asarray(BDB)), BDBCols,           NullDim)
+        
+        Atilde.eliminate_zeros()
     #===================================================================
     
     #Apply drop tolerance
     if epsilon != inf:
-        Atilde.eliminate_zeros()
         # All of the strength values are real by this point, so ditch the complex part
         Atilde.data = array(Atilde.data, dtype=float)
         multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
-    
-    Atilde.eliminate_zeros()
+        Atilde.eliminate_zeros()
     
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = speye(dimen, dimen, format="csr")

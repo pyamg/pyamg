@@ -29,7 +29,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     Cells : {dictionary}
         Dictionary of with the keys
     pdata : {array}
-        Nfields x Ndof array of scalar values for the vertices
+        Ndof x Nfields array of scalar values for the vertices
     pvdata : {array}
         Nfields*3 x Ndof array of vector values for the vertices
     cdata : {dictionary}
@@ -379,7 +379,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri', pdata=None, pvdata=None, 
     mesh_type : {string}
         type of elements: tri, quad, tet, hex (all 3d)
     pdata : {array}
-        scalar data on vertices (Nfields x N)
+        scalar data on vertices (N x Nfields)
     pvdata : {array}
         vector data on vertices (3*Nfields x N)
     cdata : {array}

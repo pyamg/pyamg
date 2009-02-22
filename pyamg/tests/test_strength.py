@@ -370,7 +370,7 @@ class TestComplexStrengthOfConnection(TestCase):
         B[11] = -14.2
         result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
+        assert_array_almost_equal( result.todense(), expected.todense(), decimal=2 )
 
         # Multiple near nullspace candidate
         B = 1.0j*ones((A.shape[0],2))
@@ -599,17 +599,19 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             #Calc best constrained approximation to zi with span(Bi).  
             zihat = Bi*x[:-1]
 
-            #Find spots where zihat is approx 0 and zi isn't.
-            indys1 = (abs( ravel(zihat)) < sqrt_near_zero).nonzero()[0]
-            indys2 = (abs( ravel(zi)   ) < sqrt_near_zero).nonzero()[0]
-            indys = setdiff1d(indys1,indys2)
+            if NullDim > 1:
+                #Find spots where zihat is approx 0 and zi isn't.
+                indys1 = (abs( ravel(zihat)) < sqrt_near_zero).nonzero()[0]
+                indys2 = (abs( ravel(zi)   ) < sqrt_near_zero).nonzero()[0]
+                indys = setdiff1d(indys1,indys2)
 
             #Calculate approximation ratio
             zi = zihat/zi
            
-            #Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
-            #   ratio large.
-            zi[indys] = 1e100
+            if NullDim > 1:
+                #Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
+                #   ratio large.
+                zi[indys] = 1e100
 
             #Drop negative ratios by making them large
             zi[ sign(real(zihat)) != sign(real(zi)) ] = 1e100
@@ -620,7 +622,7 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             zi = abs(1.0 - zi)
             
             # important to make "perfect" connections explicitly nonzero
-            zi[abs(zi) < sqrt_near_zero] = 1e-4                 
+            zi[zi < sqrt_near_zero] = 1e-4                 
 
             #Calculate and applydrop-tol.  Ignore diagonal by making it very large
             zi[iInRow] = 1e5
