@@ -3,9 +3,8 @@
 __docformat__ = "restructuredtext en"
 
 import numpy
-from numpy import zeros, empty, asarray, empty_like, isscalar, abs
-from scipy import rand
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_csc
+import scipy
+from scipy import sparse
 
 import multigridtools
 
@@ -21,8 +20,8 @@ def max_value(datatype):
 
 
 def asgraph(G):
-    if not ( isspmatrix_csr(G) or isspmatrix_csc(G) ):
-        G = csr_matrix(G)
+    if not ( sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G) ):
+        G = sparse.csr_matrix(G)
 
     if G.shape[0] != G.shape[1]:
         raise ValueError('expected square matrix')
@@ -62,7 +61,7 @@ def maximal_independent_set(G, algo='serial', k=None):
     G = asgraph(G)
     N = G.shape[0]
 
-    mis = empty(N, dtype='intc')
+    mis = numpy.empty(N, dtype='intc')
     mis[:] = -1
 
     if k is None:
@@ -71,12 +70,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = multigridtools.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, rand(N))
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, scipy.rand(N))
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
         fn = multigridtools.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, rand(N)) 
+        fn(N, G.indptr, G.indices, k, mis, scipy.rand(N)) 
 
 
     return mis
@@ -109,17 +108,17 @@ def vertex_coloring(G, method='MIS'):
     G = asgraph(G)
     N = G.shape[0]
     
-    coloring    = empty(N, dtype='intc')
+    coloring = numpy.empty(N, dtype='intc')
 
     if method == 'MIS':
         fn = multigridtools.vertex_coloring_mis
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = multigridtools.vertex_coloring_jones_plassmann
-        fn(N, G.indptr, G.indices, coloring, rand(N) )
+        fn(N, G.indptr, G.indices, coloring, scipy.rand(N) )
     elif method == 'LDF':
         fn = multigridtools.vertex_coloring_LDF
-        fn(N, G.indptr, G.indices, coloring, rand(N) )
+        fn(N, G.indptr, G.indices, coloring, scipy.rand(N) )
     else:
         raise ValueError('unknown method (%s)' % method)
 
@@ -153,17 +152,17 @@ def bellman_ford(G, seeds, maxiter=None):
     if G.dtype == complex:
         raise ValueError('Bellman-Ford algorithm only defined for real weights')
 
-    seeds = asarray(seeds, dtype='intc')
+    seeds = numpy.asarray(seeds, dtype='intc')
 
-    distances        = empty( N, dtype=G.dtype )
+    distances        = numpy.empty(N, dtype=G.dtype)
     distances[:]     = max_value(G.dtype)
     distances[seeds] = 0
 
-    nearest_seed        = empty(N, dtype='intc')
+    nearest_seed        = numpy.empty(N, dtype='intc')
     nearest_seed[:]     = -1
     nearest_seed[seeds] = seeds
    
-    old_distances = empty_like(distances)
+    old_distances = numpy.empty_like(distances)
 
     iter = 0
     while maxiter is None or iter < maxiter:
@@ -202,14 +201,14 @@ def lloyd_cluster(G, seeds, maxiter=10):
     
     if G.dtype.kind == 'c':
         # complex dtype
-        G = abs(G)
+        G = numpy.abs(G)
     
     #interpret seeds argument
-    if isscalar(seeds):
+    if numpy.isscalar(seeds):
         seeds = numpy.random.permutation(N)[:seeds]
         seeds = seeds.astype('intc')
     else: 
-        seeds = asarray(seeds, dtype='intc', copy=True)
+        seeds = numpy.asarray(seeds, dtype='intc', copy=True)
 
     if len(seeds) < 1:
         raise ValueError('at least one seed is required')
@@ -219,8 +218,8 @@ def lloyd_cluster(G, seeds, maxiter=10):
     if seeds.max() >= N:
         raise ValueError('invalid seed index (%d)' % seeds.max())
 
-    clusters  = empty( N, dtype='intc')
-    distances = empty( N, dtype=G.dtype)
+    clusters  = numpy.empty(N, dtype='intc')
+    distances = numpy.empty(N, dtype=G.dtype)
     
     for i in range(maxiter):
         last_seeds = seeds.copy()
@@ -235,8 +234,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
 
 def breadth_first_search(G, seed):
-    """
-    Breadth First search of a graph
+    """Breadth First search of a graph
 
     Parameters
     ----------
@@ -254,13 +252,15 @@ def breadth_first_search(G, seed):
     Examples
     --------
     """
+    #TODO document
+
     G = asgraph(G)
     N = G.shape[0]
 
     #Check symmetry?
 
-    order = empty(N, G.indptr.dtype)
-    level = empty(N, G.indptr.dtype)
+    order = numpy.empty(N, G.indptr.dtype)
+    level = numpy.empty(N, G.indptr.dtype)
     level[:] = -1
 
     BFS = multigridtools.breadth_first_search
@@ -306,7 +306,7 @@ def connected_components(G):
     N = G.shape[0]
 
     #Check symmetry?
-    components = empty(N, G.indptr.dtype)
+    components = numpy.empty(N, G.indptr.dtype)
     
     fn = multigridtools.connected_components
     fn(N, G.indptr, G.indices, components)
