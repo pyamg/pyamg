@@ -419,69 +419,6 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
     delete[] sing_vals; 
 }
 
-/* Helper function for my_inner(...) where we search for the row-th entry 
- * in the current j-th column of CSC matrix, B.
- *
- * Parameters
- * ----------
- * Bj : {int array}
- *  column indices of CSC matrix, B
- *  MUst be sorted
- * Bx : {float array}
- *  values array for CSC matrix B
- * BptrLim : {int}
- *  stop index for the current column of B
- *  equal to B.indptr[j+1]
- * Bptr : {int}
- *  current index under consideration in this column of B
- *  B.indptr[j] <= Bptr < B.indptr[j+1]
- * row : {int}
- *  the row number of the entry that we are searching for
- * Aval : {float}
- *  the current entry of the right matrix in the mat-mat
- *  this is the (i,k)-th entry where k=row
- * sum : {float}
- *  cumulative variable to store the eventual value A(i,:)*B(:,j)
- *
- * Returns
- * -------
- * sum is modified in place, such that 
- *   sum += Aval*B(row,j) 
- * 
- * Bptr is modified in place such that it 
- *   is incremented to the first entry past B(row,j)
- *
- * Notes
- * -----
- * Principle calling routine is my_inner(...) in this file
- *
- * CSC matrix B must have sorted indices
- */
-template<class I, class T>
-inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
-                         const I row,         I &Bptr, const T Aval,
-                               T &sum )
-{
-    // loop over this column of B until we either find a matching entry in B, 
-    // or we reach an entry in B that has a row number larger than the current column number in A
-    while(Bptr < BptrLim)
-    {
-        if(Bj[Bptr] == row)
-        {   
-            sum += Aval*Bx[Bptr];
-            Bptr++;
-            return;
-        }
-        else if(Bj[Bptr] > row)
-        {   
-            //entry not found, do nothing
-            return; 
-        }
-        Bptr++;
-    }
-
-    // entry not found, do nothing
-}
 
 
 /* For use in incomplete_matmat(...)
@@ -500,7 +437,7 @@ inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
  *  col ptr array for CSC matrix A
  * Bj : {int array}
  *  row index array for CSC matrix A
- *  MUst be sorted
+ *  Must be sorted
  * Bx : {float array}
  *  value array for CSC matrix A
  * row, col : {int}
@@ -515,7 +452,8 @@ inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
  * -----
  * Principle calling routine is incomplete_matmat in this file 
  *
- * A and B are assumed to have sorted indices
+ * A and B are assumed to have sorted indices and be free of
+ * duplicate entries
  *  
  */
 template<class I, class T>
@@ -619,24 +557,22 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
  */
 template<class I, class T, class F>
-void incomplete_matmat(  const I Ap[],  const I Aj[],    const T Ax[], 
-                         const I Bp[],  const I Bj[],    const T Bx[], 
-                         const I Sp[],  const I Sj[],          T Sx[], const I dimen)
+void incomplete_matmat(const I Ap[], const I Aj[], const T Ax[], 
+                       const I Bp[], const I Bj[], const T Bx[], 
+                       const I Sp[], const I Sj[],       T Sx[], const I num_rows)
 {
-    for(I row = 0; row < dimen; row++)
+    for(I row = 0; row < num_rows; row++)
     {
-        I rowstart = Sp[row];
-        I rowend = Sp[row+1];
+        const I row_start = Sp[row];
+        const I row_end   = Sp[row+1];
 
-        for(I colptr = rowstart; colptr < rowend; colptr++)
+        for(I ptr = row_start; ptr < row_end; ptr++)
         {
-            //calculate S(row, Sj[colptr]) = <A_{row,:}, B_{:,Sj[colptr]}>
-            Sx[colptr] = my_inner(Ap, Aj, Ax, Bp, Bj, Bx, row, Sj[colptr]);
+            //calculate S(row, col) = <A_{row,:}, B_{:,col}>
+            const I col = Sj[ptr];
+            Sx[ptr] = my_inner(Ap, Aj, Ax, Bp, Bj, Bx, row, col);
         }
     }
 }
 
-
-
 #endif
-
