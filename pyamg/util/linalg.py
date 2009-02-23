@@ -35,8 +35,8 @@ def norm(x):
     scipy.linalg.norm : scipy general matrix or vector norm
     """
 
-    #XXX check dimensions of x
-    #XXX speedup complex case
+    #TODO check dimensions of x
+    #TODO speedup complex case
 
     x = np.ravel(x)
     return np.sqrt( np.inner(x.conj(),x).real )
@@ -148,7 +148,7 @@ def axpy(x,y,a=1.0):
 #    
 #    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter, return_eigenvectors=False) )
 
-def __approximate_eigenvalues(A, tol, maxiter, symmetric=None):
+def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
     """Used by approximate_spectral_radius and condest"""
 
     from scipy.sparse.linalg import aslinearoperator
@@ -275,7 +275,7 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
 
     """
 
-    ev = __approximate_eigenvalues(A, tol, maxiter, symmetric) 
+    ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
     return np.max(np.abs(ev))
 
 
@@ -316,7 +316,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     
     """
 
-    ev = __approximate_eigenvalues(A, tol, maxiter, symmetric)
+    ev = _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
     return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
 

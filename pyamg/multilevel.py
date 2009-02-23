@@ -3,16 +3,10 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+
 import scipy
 import numpy
-from numpy import ones, zeros, zeros_like, array, asarray, empty, asanyarray, ravel
-from scipy.sparse import csc_matrix
-from scipy.sparse.sputils import upcast
 
-#from pyamg import relaxation
-from pyamg.relaxation import *
-from pyamg.util.utils import symmetric_rescaling, diag_sparse, to_type
-from pyamg.util.linalg import residual_norm, norm
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -354,11 +348,13 @@ class multilevel_solver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) #standalone solver
 
         """
+
+        from pyamg.util.linalg import residual_norm, norm
         
         if x0 is None:
-            x = zeros_like(b)
+            x = numpy.zeros_like(b)
         else:
-            x = array(x0) #copy
+            x = numpy.array(x0) #copy
         
         cycle = str(cycle).upper()
 
@@ -405,6 +401,8 @@ class multilevel_solver:
 
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of A being real and b complex
+        from scipy.sparse.sputils import upcast
+        from pyamg.util.utils import to_type
         tp = upcast(b.dtype, x.dtype, self.levels[0].A.dtype)
         [b, x] = to_type(tp, [b, x])
         
@@ -459,7 +457,7 @@ class multilevel_solver:
         residual = b - A*x
 
         coarse_b = self.levels[lvl].R * residual
-        coarse_x = zeros_like(coarse_b)
+        coarse_x = numpy.zeros_like(coarse_b)
 
         if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
@@ -542,8 +540,8 @@ def coarse_grid_solver(solver):
     elif solver == 'splu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.sparse.linalg.splu( csc_matrix(A) )
-            return self.LU.solve( ravel(b) )
+                self.LU = scipy.sparse.linalg.splu( scipy.sparse.csc_matrix(A) )
+            return self.LU.solve( numpy.ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
         fn = getattr(scipy.sparse.linalg.isolve, solver)
@@ -566,18 +564,18 @@ def coarse_grid_solver(solver):
     class generic_solver:
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
-            b = asanyarray(b)
+            b = numpy.asanyarray(b)
 
             if A.nnz == 0:
                 # if A.nnz = 0, then we expect no correction
-                x = zeros(b.shape)
+                x = numpy.zeros(b.shape)
             else:
                 x = solve(self, A,b)
 
             if isinstance(b,numpy.ndarray):
-                x = asarray(x)
+                x = numpy.asarray(x)
             elif isinstance(b,numpy.matrix):
-                x = asmatrix(x)
+                x = numpy.asmatrix(x)
             else:
                 raise ValueError('unrecognized type')
 
