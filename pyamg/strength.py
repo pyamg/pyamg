@@ -2,12 +2,12 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones, empty_like, diff, conjugate, mat, sqrt, arange, array, real, imag, sign
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning, csc_matrix
-from scipy.sparse import eye as speye
+
+import numpy
+from scipy import sparse
+
 import multigridtools
-from pyamg.util.linalg import approximate_spectral_radius
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
@@ -67,21 +67,21 @@ def classical_strength_of_connection(A, theta=0.0):
     >>> S = classical_strength_of_connection(A, 0.0)
 
     """
-    if not isspmatrix_csr(A): 
-        warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
-        A = csr_matrix(A)
+    if not sparse.isspmatrix_csr(A): 
+        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        A = sparse.csr_matrix(A)
 
     if (theta<0 or theta>1):
         raise ValueError('expected theta in [0,1]')
 
-    Sp = empty_like(A.indptr)
-    Sj = empty_like(A.indices)
-    Sx = empty_like(A.data)
+    Sp = numpy.empty_like(A.indptr)
+    Sj = numpy.empty_like(A.indices)
+    Sx = numpy.empty_like(A.data)
 
     fn = multigridtools.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
-    return csr_matrix((Sx,Sj,Sp), shape=A.shape)
+    return sparse.csr_matrix((Sx,Sj,Sp), shape=A.shape)
 
 
 def symmetric_strength_of_connection(A, theta=0):
@@ -145,23 +145,23 @@ def symmetric_strength_of_connection(A, theta=0):
     >>> S = symmetric_strength_of_connection(A, 0.0)
     """
 
-    if (theta<0):
+    if theta < 0:
         raise ValueError('expected a positive theta')
 
-    if isspmatrix_csr(A):
+    if sparse.isspmatrix_csr(A):
         #if theta == 0:
         #    return A
         
-        Sp = empty_like(A.indptr)
-        Sj = empty_like(A.indices)
-        Sx = empty_like(A.data)
+        Sp = numpy.empty_like(A.indptr)
+        Sj = numpy.empty_like(A.indices)
+        Sx = numpy.empty_like(A.data)
 
         fn = multigridtools.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
         
-        return csr_matrix((Sx,Sj,Sp),A.shape)
+        return sparse.csr_matrix((Sx,Sj,Sp),A.shape)
 
-    elif isspmatrix_bsr(A):
+    elif sparse.isspmatrix_bsr(A):
         M,N = A.shape
         R,C = A.blocksize
 
@@ -169,13 +169,13 @@ def symmetric_strength_of_connection(A, theta=0):
             raise ValueError('matrix must have square blocks')
 
         if theta == 0:
-            data = ones( len(A.indices), dtype=A.dtype )
-            return csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
+            data = numpy.ones(len(A.indices), dtype=A.dtype)
+            return sparse.csr_matrix((data, A.indices, A.indptr), shape=(M/R,N/C))
         else:
             # the strength of connection matrix is based on the 
             # Frobenius norms of the blocks
-            data = (conjugate(A.data)*A.data).reshape(-1,R*C).sum(axis=1) 
-            A = csr_matrix((data,A.indices,A.indptr),shape=(M/R,N/C))
+            data = (numpy.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1) 
+            A = sparse.csr_matrix((data, A.indices, A.indptr), shape=(M/R,N/C))
             return symmetric_strength_of_connection(A, theta)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
@@ -238,14 +238,14 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     if (theta<0):
         raise ValueError('expected a positive theta')
-    if not isspmatrix(A):
+    if not sparse.isspmatrix(A):
         raise ValueError('expected sparse matrix')
     if (k < 0):
         raise ValueError('expected positive number of steps')
     if not isinstance(k, int):
         raise ValueError('expected integer')
     
-    if isspmatrix_bsr(A):
+    if sparse.isspmatrix_bsr(A):
         bsr_flag = True
         numPDEs = A.blocksize[0]
         if A.blocksize[0] != A.blocksize[1]:
@@ -255,7 +255,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     
     ##
     # Convert A to csc and Atilde to csr
-    if isspmatrix_csr(A):
+    if sparse.isspmatrix_csr(A):
         Atilde = A.copy()
         A = A.tocsc()
     else:
@@ -265,18 +265,19 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     ##
     # Calculate the weighted-Jacobi parameter
+    from pyamg.util.linalg import approximate_spectral_radius
     D = A.diagonal()
     Dinv = 1.0/D
     Dinv[D == 0] = 0.0
-    Dinv = csc_matrix( (Dinv, (arange(A.shape[0]),arange(A.shape[1]))), shape=A.shape)
+    Dinv = sparse.csc_matrix( (Dinv, (numpy.arange(A.shape[0]), numpy.arange(A.shape[1]))), shape=A.shape)
     DinvA = Dinv*A
     omega = 1.0/approximate_spectral_radius(DinvA, maxiter=20)
     del DinvA
 
     ## 
     # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
-    S = csc_matrix( (array([]),(array([]),array([]))), shape=A.shape )
-    I = speye(A.shape[0], A.shape[1], format='csc')
+    S = sparse.csc_matrix(A.shape, dtype=A.dtype) # empty matrix
+    I = sparse.eye(A.shape[0], A.shape[1], format='csc')
     for i in range(k+1):
         S = S + omega*(Dinv*(I - A*S))
     
@@ -284,9 +285,9 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
-        v = mat(S[:,i].todense())
-        Av = mat(A*v)
-        denom = sqrt(conjugate(v).T*Av)
+        v = numpy.mat(S[:,i].todense())
+        Av = numpy.mat(A*v)
+        denom = numpy.sqrt(numpy.conjugate(v).T * Av)
         ##
         # replace entries in row i with strength values
         for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
@@ -294,7 +295,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
             vj = v[col].copy()
             v[col] = 0.0
             #         =  (||v_j||_A - ||v||_A) / ||v||_A
-            val = sqrt(conjugate(v).T*A*v)/denom - 1.0
+            val = numpy.sqrt(numpy.conjugate(v).T * A * v)/denom - 1.0
             
             # Negative values generally imply a weak connection
             if val > -0.01:
@@ -319,7 +320,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     if bsr_flag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
         nblocks = Atilde.indices.shape[0]
-        Atilde = csr_matrix( (ones((nblocks,)), Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+        Atilde = sparse.csr_matrix( (numpy.ones((nblocks,)), Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
     
     return Atilde
 
@@ -365,11 +366,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     >>> S = ode_strength_of_connection(A, ones((A.shape[0],1)))
     """
     # many imports for ode_strength_of_connection, so moved the imports local
-    from numpy import array, zeros, mat, ravel, diff, mod, repeat,\
-         inf, asarray, log2, finfo
-    from scipy.sparse import bsr_matrix, spdiags, eye
-    from scipy.sparse import eye as speye
     from pyamg.util.utils  import scale_rows
+    from pyamg.util.linalg import approximate_spectral_radius
+    from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
 
     #====================================================================
     #Check inputs
@@ -379,17 +378,17 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         raise ValueError("number of time steps must be > 0")
     if proj_type not in ['l2', 'D_A']:
         raise VaueError("proj_type must be 'l2' or 'D_A'")
-    if (not isspmatrix_csr(A)) and (not isspmatrix_bsr(A)):
+    if (not sparse.isspmatrix_csr(A)) and (not sparse.isspmatrix_bsr(A)):
         raise TypeError("expected csr_matrix or bsr_matrix") 
     
     #====================================================================
     # Format A and B correctly.
     #B must be in mat format, this isn't a deep copy
-    Bmat = mat(B)
+    Bmat = numpy.mat(B)
 
     # Amat must be in CSR format, be devoid of 0's and have sorted indices
     # Number of PDEs per point is defined implicitly by block size
-    if not isspmatrix_csr(A):
+    if not sparse.isspmatrix_csr(A):
        csrflag = False
        numPDEs = A.blocksize[0]
        A = A.tocsr()
@@ -415,9 +414,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     
     #Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
-        D_A = spdiags( [D], [0], dimen, dimen, format = 'csr')
+        D_A = sparse.spdiags( [D], [0], dimen, dimen, format = 'csr')
     else:
-        D_A = speye(dimen, dimen, format="csr")
+        D_A = sparse.eye(dimen, dimen, format="csr")
     #====================================================================
     
     
@@ -428,11 +427,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     
     # Calculate the number of time steps that can be done by squaring, and 
     # the number of time steps that must be done incrementally
-    nsquare = int(log2(k))
+    nsquare = int(numpy.log2(k))
     ninc = k - 2**nsquare
 
     # Calculate one time step
-    I = speye(dimen, dimen, format="csr")
+    I = sparse.eye(dimen, dimen, format="csr")
     Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
     Atilde = Atilde.T.tocsr()
 
@@ -443,10 +442,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     
     # Restrict to same PDE
     if numPDEs > 1:
-        row_length = diff(mask.indptr)
-        my_pde = mod(range(dimen), numPDEs)
-        my_pde = repeat(my_pde, row_length)
-        mask.data[ mod(mask.indices, numPDEs) != my_pde ] = 0.0
+        row_length = numpy.diff(mask.indptr)
+        my_pde = numpy.mod(range(dimen), numPDEs)
+        my_pde = numpy.repeat(my_pde, row_length)
+        mask.data[ numpy.mod(mask.indices, numPDEs) != my_pde ] = 0.0
         del row_length, my_pde
         mask.eliminate_zeros()
 
@@ -456,7 +455,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     if False:
         # Use Chebyshev polynomial of order k
         # Poly coefficients, ignore the last (constant) coefficient
-        from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
         bound = approximate_spectral_radius(A)
         coefficents = -chebyshev_polynomial_coefficients(bound/30.0, 1.1*bound, k)[:-1]
 
@@ -555,11 +553,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         #Create necessary Diagonal matrices
         DAtilde = Atilde.diagonal();
-        DAtildeDivB = array(DAtilde)/array(Bmat).reshape(DAtilde.shape)
-        DAtildeDivB[ravel(Bmat) == 0] = 1.0
+        DAtildeDivB = numpy.array(DAtilde) / numpy.array(Bmat).reshape(DAtilde.shape)
+        DAtildeDivB[numpy.ravel(Bmat) == 0] = 1.0
         DAtildeDivB[DAtilde == 0] = 0.0
-        DAtildeDivB = spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
-        DiagB = spdiags( [array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
+        DAtildeDivB = sparse.spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
+        DiagB = sparse.spdiags( [numpy.array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
 
         # Calculate best approximation in span(B)
         data = Atilde.data.copy()
@@ -569,7 +567,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde = Atilde*DiagB
 
         #Find negative ratios
-        neg_ratios =  (sign(real(Atilde.data)) != sign(real(data))) + (sign(imag(Atilde.data)) != sign(imag(data)))
+        neg_ratios  = (numpy.sign(numpy.real(Atilde.data)) != numpy.sign(numpy.real(data)))
+        neg_ratios += (numpy.sign(numpy.imag(Atilde.data)) != numpy.sign(numpy.imag(data)))
+
 
         #Calculate Approximation ratio
         Atilde.data = Atilde.data/data
@@ -583,37 +583,41 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde.eliminate_zeros()
         
         #Set near perfect connections to 1e-4
-        Atilde.data[Atilde.data < sqrt(finfo(float).eps)] = 1e-4
+        Atilde.data[Atilde.data < numpy.sqrt(numpy.finfo(float).eps)] = 1e-4
 
     else:
         # For use in computing local B_i^H*B, precompute the element-wise multiply of 
         #   each column of B with each other column.  We also scale by 2.0 
         #   to account for BDB's eventual use in a constrained minimization problem
-        BDBCols = sum(range(NullDim+1))
-        BDB = zeros((dimen,BDBCols))
+        BDBCols = numpy.sum(range(NullDim+1))
+        BDB = numpy.zeros((dimen,BDBCols))
         counter = 0
         for i in range(NullDim):
             for j in range(i,NullDim):
-                BDB[:,counter] = 2.0*conjugate(ravel(asarray(B[:,i])))*ravel(asarray(D_A*B[:,j]))
+                BDB[:,counter] = 2.0 * (numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i]))) * numpy.ravel(numpy.asarray(D_A * B[:,j])) )
                 counter = counter + 1        
         
         # Use constrained min problem to define strength
         multigridtools.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
-                                           Atilde.shape[0],     ravel(asarray(B)), ravel(asarray((D_A*conjugate(B)).T)), 
-                                           ravel(asarray(BDB)), BDBCols,           NullDim)
+                                           Atilde.shape[0],
+                                           numpy.ravel(numpy.asarray(B)), 
+                                           numpy.ravel(numpy.asarray((D_A * numpy.conjugate(B)).T)), 
+                                           numpy.ravel(numpy.asarray(BDB)),
+                                           BDBCols,
+                                           NullDim)
         
         Atilde.eliminate_zeros()
     #===================================================================
     
     #Apply drop tolerance
-    if epsilon != inf:
+    if epsilon != numpy.inf:
         # All of the strength values are real by this point, so ditch the complex part
-        Atilde.data = array(Atilde.data, dtype=float)
+        Atilde.data = numpy.array(Atilde.data, dtype=float)
         multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
     
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    I = speye(dimen, dimen, format="csr")
+    I = sparse.eye(dimen, dimen, format="csr")
     I.data -= Atilde.diagonal()
     Atilde = Atilde + I
 
@@ -624,10 +628,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         n_blocks = Atilde.indices.shape[0]
         blocksize = Atilde.blocksize[0]*Atilde.blocksize[1]
-        CSRdata = zeros((n_blocks,))
-        multigridtools.min_blocks(n_blocks, blocksize, ravel(asarray(Atilde.data)), CSRdata)
-        #Atilde = csr_matrix((data, row, col), shape=(*,*))
-        Atilde = csr_matrix((CSRdata, Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+        CSRdata = numpy.zeros((n_blocks,))
+        multigridtools.min_blocks(n_blocks, blocksize, numpy.ravel(numpy.asarray(Atilde.data)), CSRdata)
+        #Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
+        Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
     
     return Atilde
 
