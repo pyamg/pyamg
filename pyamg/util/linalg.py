@@ -3,13 +3,9 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from numpy import inner, dot, ravel, sqrt, zeros, ones, asmatrix, array, conjugate,\
-                  max, abs
-from scipy import rand, real, random                  
-from scipy.linalg import eigvals, svd
-from scipy.lib.blas import get_blas_funcs
-from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
-        isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
+import numpy as np
+import scipy as sp
+import scipy.sparse as sparse
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
            'condest', 'cond', 'issymm']
@@ -39,8 +35,11 @@ def norm(x):
     scipy.linalg.norm : scipy general matrix or vector norm
     """
 
-    x = ravel(x)
-    return sqrt( inner(x.conj(),x).real )
+    #XXX check dimensions of x
+    #XXX speedup complex case
+
+    x = np.ravel(x)
+    return np.sqrt( np.inner(x.conj(),x).real )
 
 def infinity_norm(A):
     """
@@ -78,19 +77,19 @@ def infinity_norm(A):
     >>> print infinity_norm(A)
     """
 
-    if isspmatrix_csr(A) or isspmatrix_csc(A):
+    if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
         #avoid copying index and ptr arrays
-        abs_A = A.__class__((abs(A.data),A.indices,A.indptr),shape=A.shape)
-        return (abs_A * ones((A.shape[1]),dtype=A.dtype)).max()
-    elif isspmatrix(A):
-        return (abs(A) * ones((A.shape[1]),dtype=A.dtype)).max()
+        abs_A = A.__class__((np.abs(A.data),A.indices,A.indptr),shape=A.shape)
+        return (abs_A * np.ones((A.shape[1]),dtype=A.dtype)).max()
+    elif sparse.isspmatrix(A):
+        return (A.abs() * np.ones((A.shape[1]),dtype=A.dtype)).max()
     else:
         return norm(A,inf)
 
 def residual_norm(A, x, b):
     """Compute ||b - A*x||"""
 
-    return norm(ravel(b) - A*ravel(x))
+    return norm(np.ravel(b) - A*np.ravel(x))
 
 
 def axpy(x,y,a=1.0):
@@ -117,6 +116,8 @@ def axpy(x,y,a=1.0):
     The call to get_blas_funcs automatically determines the prefix for the blas
     call.
     """
+    from scipy.lib.blas import get_blas_funcs
+
     fn = get_blas_funcs(['axpy'], [x,y])[0]
     fn(x,y,a)
 
@@ -147,8 +148,85 @@ def axpy(x,y,a=1.0):
 #    
 #    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter, return_eigenvectors=False) )
 
+def __approximate_eigenvalues(A, tol, maxiter, symmetric=None):
+    """Used by approximate_spectral_radius and condest"""
 
-def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
+    from scipy.sparse.linalg import aslinearoperator
+
+    A = aslinearoperator(A) # A could be dense or sparse, or something weird
+
+    if A.shape[0] != A.shape[1]:
+        raise ValueError('expected square matrix')
+
+    maxiter = min(A.shape[0],maxiter)
+
+    sp.random.seed(0)  #make results deterministic
+
+    v0  = sp.rand(A.shape[1],1)
+    if A.dtype == complex:
+        v0 = v0 + 1.0j * sp.rand(A.shape[1],1)
+
+    v0 /= norm(v0)
+
+    H  = np.zeros((maxiter+1,maxiter), dtype=A.dtype)
+    V = [v0]
+
+    for j in range(maxiter):
+        w = A * V[-1]
+   
+        if symmetric:
+            if j >= 1:
+                H[j-1,j] = beta
+                w -= beta * V[-2]
+
+            alpha = np.dot(np.conjugate(np.ravel(w)), np.ravel(V[-1]))
+            H[j,j] = alpha
+            w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
+            
+            beta = norm(w)
+            H[j+1,j] = beta
+
+            if (H[j+1,j] < 1e-10): 
+                break
+            
+            w /= beta
+
+            V.append(w)
+            V = V[-2:] #retain only last two vectors
+
+        else:
+            #orthogonalize against Vs
+            for i,v in enumerate(V):
+                H[i,j] = np.dot(np.conjugate(np.ravel(v)), np.ravel(w))
+                w = w - H[i,j]*v
+
+            H[j+1,j] = norm(w)
+            
+            if (H[j+1,j] < 1e-10): 
+                break
+            
+            w = w/H[j+1,j] 
+            V.append(w)
+   
+            # if upper 2x2 block of Hessenberg matrix H is almost symmetric,
+            # and the user has not explicitly specified symmetric=False,
+            # then switch to symmetric Lanczos algorithm
+            #if symmetric is not False and j == 1:
+            #    if abs(H[1,0] - H[0,1]) < 1e-12:
+            #        #print "using symmetric mode"
+            #        symmetric = True
+            #        V = V[1:]
+            #        H[1,0] = H[0,1]
+            #        beta = H[2,1]
+    
+    #print "Approximated spectral radius in %d iterations" % (j + 1)
+    
+    from scipy.linalg import eigvals
+
+    return eigvals(H[:j+1,:j+1])
+
+
+def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     """
     Approximate the spectral radius of a matrix
 
@@ -158,7 +236,7 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
     A : {dense or sparse matrix}
         E.g. csr_matrix, csc_matrix, ndarray, etc.
     tol : {scalar}
-        Tolerance of approximation
+        Tolerance of approximation (currently unused)
     maxiter : {integer}
         Maximum number of iterations to perform
     symmetric : {boolean}
@@ -196,82 +274,13 @@ def approximate_spectral_radius(A,tol=0.1,maxiter=10,symmetric=None):
     >>> print max([norm(x) for x in eigvals(A)])
 
     """
-    # TODO Make the method adaptive (restarts)
-   
-    if type(A) == type( array([0.0]) ):
-        A = asmatrix(A) #convert dense arrays to matrix type
-    
-    if A.shape[0] != A.shape[1]:
-        raise ValueError,'expected square matrix'
 
-    maxiter = min(A.shape[0],maxiter)
+    ev = __approximate_eigenvalues(A, tol, maxiter, symmetric) 
+    return np.max(np.abs(ev))
 
-    random.seed(0)  #make results deterministic
-
-    v0  = rand(A.shape[1],1)
-    if A.dtype == complex:
-        v0 = v0 + 1.0j*rand(A.shape[1],1)
-
-    v0 /= norm(v0)
-
-    H  = zeros((maxiter+1,maxiter), dtype=A.dtype)
-    V = [v0]
-
-    for j in range(maxiter):
-        w = A * V[-1]
-   
-        if symmetric:
-            if j >= 1:
-                H[j-1,j] = beta
-                w -= beta * V[-2]
-
-            alpha = dot(conjugate(ravel(w)),ravel(V[-1]))
-            H[j,j] = alpha
-            w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
-            
-            beta = norm(w)
-            H[j+1,j] = beta
-
-            if (H[j+1,j] < 1e-10): 
-                break
-            
-            w /= beta
-
-            V.append(w)
-            V = V[-2:] #retain only last two vectors
-
-        else:
-            #orthogonalize against Vs
-            for i,v in enumerate(V):
-                H[i,j] = dot(conjugate(ravel(v)),ravel(w))
-                w = w - H[i,j]*v
-
-            H[j+1,j] = norm(w)
-            
-            if (H[j+1,j] < 1e-10): 
-                break
-            
-            w = w/H[j+1,j] 
-            V.append(w)
-   
-            # if upper 2x2 block of Hessenberg matrix H is almost symmetric,
-            # and the user has not explicitly specified symmetric=False,
-            # then switch to symmetric Lanczos algorithm
-            #if symmetric is not False and j == 1:
-            #    if abs(H[1,0] - H[0,1]) < 1e-12:
-            #        #print "using symmetric mode"
-            #        symmetric = True
-            #        V = V[1:]
-            #        H[1,0] = H[0,1]
-            #        beta = H[2,1]
-    
-    #print "Approximated spectral radius in %d iterations" % (j + 1)
-     
-    e = eigvals(H[:j+1,:j+1])
-    return max(abs(e))        
 
 def condest(A, tol=0.1, maxiter=25, symmetric=False):
-    """Returns condition number of A
+    """Estimates the condition number of A
 
     Parameters
     ----------
@@ -306,73 +315,10 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     
     """
-    
-    if not isspmatrix(A):
-        A = asmatrix(A) #convert dense arrays to matrix type
 
-    if A.shape[0] != A.shape[1]:
-        raise ValueError,'expected square matrix'
-   
-    maxiter = min(A.shape[0],maxiter)
+    ev = __approximate_eigenvalues(A, tol, maxiter, symmetric)
 
-    random.seed(0)  #make results deterministic
-
-    v0  = rand(A.shape[1],1)
-    if A.dtype == complex:
-        v0 = v0 + 1.0j*rand(A.shape[1],1)
-
-    v0 /= norm(v0)
-
-    H  = zeros((maxiter+1,maxiter), dtype=A.dtype)
-    V = [v0]
-
-    for j in range(maxiter):
-        w = A * V[-1]
-   
-        if symmetric:
-            if j >= 1:
-                H[j-1,j] = beta
-                w -= beta * V[-2]
-
-            alpha = dot(conjugate(ravel(w)),ravel(V[-1]))
-            H[j,j] = alpha
-            w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
-            
-            beta = norm(w)
-            H[j+1,j] = beta
-
-            if (H[j+1,j] < 1e-10): break
-            
-            w /= beta
-
-            V.append(w)
-            V = V[-2:] #retain only last two vectors
-
-        else:
-            #orthogonalize against Vs
-            for i,v in enumerate(V):
-                H[i,j] = dot(conjugate(ravel(v)),ravel(w))
-                w -= H[i,j]*v #axpy(v,w,-H[i,j])
-            H[j+1,j] = norm(w)
-            if (H[j+1,j] < 1e-10): break
-            
-            w /= H[j+1,j] 
-            V.append(w)
-   
-            # if upper 2x2 block of Hessenberg matrix H is almost symmetric,
-            # and the user has not explicitly specified symmetric=False,
-            # then switch to symmetric Lanczos algorithm
-            #if symmetric is not False and j == 1:
-            #    if abs(H[1,0] - H[0,1]) < 1e-12:
-            #        #print "using symmetric mode"
-            #        symmetric = True
-            #        V = V[1:]
-            #        H[1,0] = H[0,1]
-            #        beta = H[2,1]
-    
-    #print "Approximated spectral radius in %d iterations" % (j + 1)
-    e = eigvals(H[:j+1,:j+1])
-    return max([norm(x) for x in e])/min([norm(x) for x in e])      
+    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
 
 def cond(A):
     """Returns condition number of A
@@ -406,12 +352,14 @@ def cond(A):
     if A.shape[0] != A.shape[1]:
         raise ValueError,'expected square matrix'
 
-    if isspmatrix(A):
+    if sparse.isspmatrix(A):
         A = A.todense()
 
     #2-Norm Condition Number
+    from scipy.linalg import svd
+
     U, Sigma, Vh = svd(A)
-    return max(Sigma)/min(Sigma)
+    return np.max(Sigma)/min(Sigma)
 
 
 def issymm(A, tol=1e-6):
@@ -444,16 +392,16 @@ def issymm(A, tol=1e-6):
 
     """
     
-    if isspmatrix(A):
-        diff = ravel((A - A.H).data)
+    if sparse.isspmatrix(A):
+        diff = np.ravel((A - A.H).data)
     else:
-        A = asmatrix(A)
-        diff = ravel(A - A.H)
+        A = np.asmatrix(A)
+        diff = np.ravel(A - A.H)
 
-    if max(diff.shape) == 0:
+    if np.max(diff.shape) == 0:
         return 0
     
-    max_entry = max(abs(diff)) 
+    max_entry = np.max(np.abs(diff)) 
     if max_entry < tol:
         return 0
     else:
