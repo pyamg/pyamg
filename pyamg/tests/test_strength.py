@@ -6,7 +6,7 @@ from scipy import rand, real, imag, mat, zeros, sign, eye, arange
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags, coo_matrix
 import scipy.sparse
 from scipy.special import round
-from scipy.linalg import pinv2
+from scipy.linalg import pinv2, pinv
 
 from pyamg.gallery import poisson, linear_elasticity, load_example, stencil_grid
 from pyamg.strength import *
@@ -381,6 +381,12 @@ class TestComplexStrengthOfConnection(TestCase):
         expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
         assert_array_almost_equal( result.todense(), expected.todense() )
         # Different B
+        B[11,1] = -14.2
+        B[0,0] = 1.2 - 12.0j
+        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
+        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
+        assert_array_almost_equal( result.todense(), expected.todense() )
+        
         B = array(arange(1,2*A.shape[0]+1).reshape(-1,2),dtype=complex)
         result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
@@ -594,30 +600,28 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             RHS[NullDim,0] = zi[iInRow,0]
 
             #Calc Soln to Min Problem
-            x = mat(pinv2(LHS))*RHS
+            x = mat(pinv(LHS))*RHS
             
             #Calc best constrained approximation to zi with span(Bi).  
             zihat = Bi*x[:-1]
-
-            if NullDim > 1:
-                #Find spots where zihat is approx 0 and zi isn't.
-                indys1 = (abs( ravel(zihat)) < sqrt_near_zero).nonzero()[0]
-                indys2 = (abs( ravel(zi)   ) < sqrt_near_zero).nonzero()[0]
-                indys = setdiff1d(indys1,indys2)
+            
+            #if angle in the complex plane between individual entries is 
+            #   greater than 90 degrees, then weak.  We can just look at the
+            #   dot product to determine if angle is greater than 90 degrees.
+            angle = real(ravel(zihat))*real(ravel(zi)) + imag(ravel(zihat))*imag(ravel(zi))
+            angle[angle < 0.0] = True
+            angle[angle >= 0.0] = False
+            angle = array(angle, dtype=bool)
 
             #Calculate approximation ratio
             zi = zihat/zi
            
-            if NullDim > 1:
-                #Drop ratios where zihat is approx 0 and zi isn't, by making the approximation
-                #   ratio large.
-                zi[indys] = 1e100
+            # If the ratio is small, then weak
+            zi[abs(zi) <= 1e-4] = 1e100 
 
-            #Drop negative ratios by making them large
-            zi[ sign(real(zihat)) != sign(real(zi)) ] = 1e100
-            zi[ sign(imag(zihat)) != sign(imag(zi)) ] = 1e100
-            zi[zi < 0.0] = 1e100
-           
+            # If angle is greater than 90 degrees, then weak
+            zi[angle] = 1e100
+
             #Calculate Relative Approximation Error
             zi = abs(1.0 - zi)
             

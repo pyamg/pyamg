@@ -471,9 +471,8 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         del mask
 
     elif ninc > 0: 
-        # TODO convert this to a warning
-        print "The most efficient time stepping for the ODE Strength Method"\
-              " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
+        warn("The most efficient time stepping for the ODE Strength Method"\
+              " is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
     
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
@@ -560,38 +559,46 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         DAtildeDivB = sparse.spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
         DiagB = sparse.spdiags( [numpy.array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
 
-        # Calculate best approximation in span(B)
+        # Calculate best approximation, z_tilde, in span(B)
         data = Atilde.data.copy()
         Atilde.data[:] = 1.0
 
         Atilde = DAtildeDivB*Atilde
         Atilde = Atilde*DiagB
 
-        #Find negative ratios
-        neg_ratios  = (numpy.sign(numpy.real(Atilde.data)) != numpy.sign(numpy.real(data)))
-        neg_ratios += (numpy.sign(numpy.imag(Atilde.data)) != numpy.sign(numpy.imag(data)))
-
+        #if angle in the complex plane between z and z_tilde is 
+        #   greater than 90 degrees, then weak.  We can just look at the
+        #   dot product to determine if angle is greater than 90 degrees.
+        angle = numpy.real(Atilde.data)*numpy.real(data) + numpy.imag(Atilde.data)*numpy.imag(data)
+        angle[angle < 0.0] = True
+        angle[angle >= 0.0] = False
+        angle = numpy.array(angle, dtype=bool)
 
         #Calculate Approximation ratio
         Atilde.data = Atilde.data/data
-        del data
+        
+        # If approximation ratio is less than tol, then weak connection
+        weak_ratio = (numpy.abs(Atilde.data) < 1e-4)
 
         #Calculate Approximation error
         Atilde.data = abs( 1.0 - Atilde.data)
         
-        #Drop negative ratios
-        Atilde.data[neg_ratios] = 0.0
-        Atilde.eliminate_zeros()
-        
+        # Set small ratios and large angles to weak
+        Atilde.data[weak_ratio] = 0.0
+        Atilde.data[angle] = 0.0
+
         #Set near perfect connections to 1e-4
+        Atilde.eliminate_zeros()
         Atilde.data[Atilde.data < numpy.sqrt(numpy.finfo(float).eps)] = 1e-4
+        
+        del data, weak_ratio, angle
 
     else:
         # For use in computing local B_i^H*B, precompute the element-wise multiply of 
         #   each column of B with each other column.  We also scale by 2.0 
         #   to account for BDB's eventual use in a constrained minimization problem
         BDBCols = numpy.sum(range(NullDim+1))
-        BDB = numpy.zeros((dimen,BDBCols))
+        BDB = numpy.zeros((dimen,BDBCols), dtype=A.dtype)
         counter = 0
         for i in range(NullDim):
             for j in range(i,NullDim):
@@ -610,10 +617,11 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde.eliminate_zeros()
     #===================================================================
     
+    # All of the strength values are real by this point, so ditch the complex part
+    Atilde.data = numpy.array(Atilde.data, dtype=float)
+    
     #Apply drop tolerance
     if epsilon != numpy.inf:
-        # All of the strength values are real by this point, so ditch the complex part
-        Atilde.data = numpy.array(Atilde.data, dtype=float)
         multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
     

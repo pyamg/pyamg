@@ -337,8 +337,8 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
                 for(I n = m+1; n < NullDim; n++)
                 {
                     T elmt_bdb = BDB[BDBCounter + counter];
-                    LHS[m*NullDimPone + n] += conjugate(elmt_bdb);      // entry(n,m)
-                    LHS[n*NullDimPone + m] += elmt_bdb;                 // entry(m,n)
+                    LHS[m*NullDimPone + n] = LHS[m*NullDimPone + n] + conjugate(elmt_bdb);      // entry(n,m)
+                    LHS[n*NullDimPone + m] = LHS[n*NullDimPone + m] + elmt_bdb;                 // entry(m,n)
                     counter++;
                 }
                 BDBCounter += (NullDim - m);
@@ -381,25 +381,27 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
             {
                 //Approximation ratio
                 const T ratio = zhat[zcounter]/z[zcounter];
+                // Dot-Product between zhat_j and z_j
+                const F dprod = real(zhat[zcounter])*real(z[zcounter]) + imag(zhat[zcounter])*imag(z[zcounter]);
                 
-                // if zhat is numerically zero, but z is not, then weak connection
-                if( mynormsq(z[zcounter]) >= near_zero &&  mynormsq(zhat[zcounter]) < near_zero )
+                // if the ratio is close to zero, then weak connection
+                if( mynormsq(ratio) <= 1e-8 )
                 {   Sx[jj] = 0.0; }
                 
-                // if zhat[j] and z[j] have different sign, then weak connection
-                else if( (signof(real(zhat[zcounter])) != signof(real(z[zcounter]))) || 
-                         (signof(imag(zhat[zcounter])) != signof(imag(z[zcounter])))    )
+                // if angle in complex plane between zhat[j] and z[j] is more than 90 degrees, then weak connection
+                // If the dot product is positive, we are guaranteed this by <a, b>/(||a|| ||b||) = cos(theta)
+                else if( dprod < 0.0 )
                 {   Sx[jj] = 0.0; }
                 
                 //Calculate approximation error as strength value
                 else 
                 {
-                    const F error = mynormsq(-ratio + 1.0);
+                    const F error = mynorm(-ratio + 1.0);
                     //This comparison allows for predictable handling of the "zero" error case
                     if(error < sqrt_near_zero)
                     {    Sx[jj] = 1e-4; }
                     else
-                    {    Sx[jj] = std::sqrt(error); }
+                    {    Sx[jj] = error; }
                 }
             }
             

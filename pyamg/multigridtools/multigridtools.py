@@ -260,15 +260,15 @@ def ode_strength_helper(*args):
 def incomplete_matmat(*args):
   """
     incomplete_matmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
-        int Sp, int Sj, float Sx, int dimen)
+        int Sp, int Sj, float Sx, int num_rows)
     incomplete_matmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
-        int Sp, int Sj, double Sx, int dimen)
+        int Sp, int Sj, double Sx, int num_rows)
     incomplete_matmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
         npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, 
-        int dimen)
+        int num_rows)
     incomplete_matmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
         npy_cdouble_wrapper Bx, int Sp, int Sj, 
-        npy_cdouble_wrapper Sx, int dimen)
+        npy_cdouble_wrapper Sx, int num_rows)
     """
   return _multigridtools.incomplete_matmat(*args)
 
