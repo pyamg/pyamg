@@ -471,6 +471,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         del mask
 
     elif ninc > 0: 
+        # TODO convert this to a warning
         print "The most efficient time stepping for the ODE Strength Method"\
               " is done in powers of two.\nYou have chosen " + str(k) + " time steps."
     

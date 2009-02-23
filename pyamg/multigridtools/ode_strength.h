@@ -519,35 +519,34 @@ inline void find_matval( const I Bj[],  const T Bx[],  const I BptrLim,
  *  
  */
 template<class I, class T>
-inline T my_inner( const I Ap[],  const I Aj[],    const T Ax[], 
-                   const I Bp[],  const I Bj[],    const T Bx[], 
-                   const I row,   const I col )
+T my_inner(const I Ap[], const I Aj[], const T Ax[], 
+           const I Bp[], const I Bj[], const T Bx[], 
+           const I row,  const I col )
 {
-    // sum will be incremented by Ax[.]*Bx[.] each time an entry in 
-    // this row of A matches up with an entry in this column of B
     T sum = 0.0;
-    
-    I Bptr = Bp[col];
-    I BptrLim = Bp[col+1];
-    I rowstart = Ap[row];
-    I rowend = Ap[row+1];
 
-    // Loop over row=row of A, looking for entries in column=col 
-    // of B that line up for the innerproduct
-    for(I colptr = rowstart; colptr < rowend; colptr++)
-    {
-        // Return if there are no more entries in this column of B
-        if(Bptr == BptrLim)
-        {   return sum;}
+    I A_pos = Ap[row];
+    I A_end = Ap[row+1];
+    I B_pos = Bp[col];
+    I B_end = Bp[col+1];
 
-        //Indices are assumed to be sorted
-        I Acol = Aj[colptr];
-        if(Bj[Bptr] <= Acol)
-        {
-            //increment sum by Ax[colptr]*B(Acol,col) = A(row,Acol)*B(Acol,col)
-            find_matval(Bj, Bx, BptrLim, Acol, Bptr, Ax[colptr], sum);
+    //while not finished with either A[row,:] or B[:,col]
+    while(A_pos < A_end && B_pos < B_end){
+        I A_j = Aj[A_pos];
+        I B_j = Bj[B_pos];
+
+        if(A_j == B_j){
+            sum += Ax[A_pos] * Bx[B_pos];
+            A_pos++;
+            B_pos++;
+        } else if (A_j < B_j) {
+            A_pos++; 
+        } else {
+            //B_j < A_j
+            B_pos++;
         }
     }
+    
     return sum;
 }
 
