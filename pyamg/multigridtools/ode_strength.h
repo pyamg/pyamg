@@ -279,7 +279,12 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
 
 
         //S[i,:] ==> z
-        std::copy(Sx + rowstart, Sx + rowend, z);
+        {
+            I counter = 0;
+            for(I kk = rowstart; kk < rowend; kk++)
+            {   z[counter] = Sx[kk]; 
+                counter++;}
+        }
 
         //construct Bi, where B_i is B with the rows restricted only to 
         //the nonzero column indices of row i of S 

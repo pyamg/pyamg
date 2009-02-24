@@ -476,7 +476,7 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
         colindx = Atilde.indices[rowstart:rowend]
        
         # Local diagonal of A is used for scale invariant min problem
-        D_A = mat(eye(length))
+        D_A = mat(eye(length, dtype=A.dtype))
         if proj_type == "D_A":
             for j in range(length):
                 D_A[j,j] = D[colindx[j]] 
@@ -537,14 +537,15 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             Atilde.data[rowstart:rowend] = ravel(zi)
 
     #===================================================================
+
+    # Clean up, and return Atilde
+    Atilde.eliminate_zeros()
+    Atilde.data = array(real(Atilde.data), dtype=float)
+    
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = scipy.sparse.eye(dimen, dimen, format="csr")
     I.data -= Atilde.diagonal()
     Atilde = Atilde + I
-
-    # Clean up, and return Atilde
-    Atilde.eliminate_zeros()
-    Atilde.data = array(Atilde.data, dtype=float)
 
     # If converted BSR to CSR we return amalgamated matrix with the minimum nonzero for each block 
     # making up the nonzeros of Atilde

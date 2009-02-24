@@ -416,7 +416,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     if proj_type == "D_A":
         D_A = sparse.spdiags( [D], [0], dimen, dimen, format = 'csr')
     else:
-        D_A = sparse.eye(dimen, dimen, format="csr")
+        D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
     #====================================================================
     
     
@@ -431,7 +431,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     ninc = k - 2**nsquare
 
     # Calculate one time step
-    I = sparse.eye(dimen, dimen, format="csr")
+    I = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
     Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
     Atilde = Atilde.T.tocsr()
 
@@ -449,7 +449,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         del row_length, my_pde
         mask.eliminate_zeros()
 
-    # If total the number of time steps is a power of two, then there is  
+    # If the total number of time steps is a power of two, then there is  
     # a very efficient computational short-cut.  Otherwise, we support  
     # other numbers of time steps, through an inefficient algorithm.
     if False:
@@ -555,7 +555,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         DAtilde = Atilde.diagonal();
         DAtildeDivB = numpy.array(DAtilde) / numpy.array(Bmat).reshape(DAtilde.shape)
         DAtildeDivB[numpy.ravel(Bmat) == 0] = 1.0
-        DAtildeDivB[DAtilde == 0] = 0.0
         DAtildeDivB = sparse.spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
         DiagB = sparse.spdiags( [numpy.array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
 
@@ -618,7 +617,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #===================================================================
     
     # All of the strength values are real by this point, so ditch the complex part
-    Atilde.data = numpy.array(Atilde.data, dtype=float)
+    Atilde.data = numpy.array(numpy.real(Atilde.data), dtype=float)
     
     #Apply drop tolerance
     if epsilon != numpy.inf:
