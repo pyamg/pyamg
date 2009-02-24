@@ -190,130 +190,58 @@ class TestStrengthOfConnection(TestCase):
 
     def test_ode_strength_of_connection(self):
         # Params:  A, B, epsilon=4.0, k=2, proj_type="l2"
+        cases = []
 
         # Ensure that isotropic diffusion results in isotropic strength stencil
-        for N in [3,5,7,10,11,19]:
+        for N in [3,5,7,10]:
             A = poisson( (N,), format='csr')
             B = ones((A.shape[0],1))
-            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-            assert_array_almost_equal( result.todense(), expected.todense() )
+            cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
 
-        for N in [3,5,7,10,11,19]:
-            A = poisson( (N,N), format='csr') 
+        # Ensure that anisotropic diffusion results in an anisotropic strength stencil
+        for N in [3,5,7,10]:
+            A = spdiags([-ones(N*N), -0.001*ones(N*N), 2.002*ones(N*N),-0.001*ones(N*N),-ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
             B = ones((A.shape[0],1))
-            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-            assert_array_almost_equal( result.todense(), expected.todense() )
-        
-        # Ensure that anisotropic diffusion results an anisotropic strength stencil
-        for N in [3,5,7,10,11,19]:
-            A = spdiags([-ones(N*N), -0.1*ones(N*N), 2.2*ones(N*N),-0.1*ones(N*N),-ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
-            B = ones((A.shape[0],1))
-            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-            assert_array_almost_equal( result.todense(), expected.todense() )
-
-        for N in [3,5,7,10,11,19]:
-            A = spdiags([-0.5*ones(N*N), -ones(N*N), 2.2*ones(N*N),-ones(N*N),-0.5*ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
-            B = ones((A.shape[0],1))
-            result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-            expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-            assert_array_almost_equal( result.todense(), expected.todense() )
+            cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
             
-        # Ensure that isotropic elasticity results in an isotropic stencil (test bsr)
+        # Ensure that isotropic elasticity results in an isotropic stencil
         for N in [3,5,7,10]:
             (A,B) = linear_elasticity( (N,N), format='bsr')
-            result = ode_strength_of_connection(A, B, epsilon=32.0, k=8, proj_type="D_A")
-            expected = reference_ode_strength_of_connection(A, B, epsilon=32.0, k=8, proj_type="D_A")
-            assert_array_almost_equal( result.todense(), expected.todense() )
+            cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 32.0, 'k' : 8, 'proj' : 'D_A'})
 
-
-        # Run a few "random" examples
-        N = 5
-        # CSR Test
-        A1 = -1.0*array([ 0.21,  0.26,  0.15,  0.06,  0.14,  0.95,  0.8 ,  0.74,  0.57,
-                    0.77,  0.77,  0.28,  0.17,  0.4 ,  0.47,  0.06,  0.91,  0.26,
-                    0.81,  0.24,  0.21,  0.35,  0.63,  0.82,  0.39])
-        A2 = -1.0*array([ 0.67,  0.25,  0.23,  0.42,  0.93,  0.04,  0.56,  0.97,  0.61,
-                    0.91,  0.78,  0.48,  0.35,  0.64,  0.89,  0.05,  0.76,  0.35,
-                    0.63  ,  0.04,  0.05,  0.66,  0.52,  0.33,  0.37])
-        A3 = -1.0*array([ 0.21,  0.43,  0.25,  0.73,  0.27,  0.56,  0.8 ,  0.45,  0.37,
-                    0.07,  0.65,  0.03,  0.85,  0.84,  0.48,  0.53,  0.73,  0.85,
-                    0.43,  0.95,  0.55,  0.86,  0.04,  0.23,  0.54])
-        A4 = -1.0*array([ 0.04,  0.51,  0.57,  0.52,  0.11,  0.8 ,  0.62,  0.74,  0.41,
-                    0.82,  0.28,  0.93,  0.44,  0.26,  0.82,  0.55,  0.29,  0.16,
-                    0.95,  0.71,  0.94,  0.73,  0.59,  0.51,  1.  ])
-        A = spdiags([A1, A2, 4*ones(N*N),A3, A4],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
+        # Run an example with a non-uniform stencil
+        ex = load_example('airfoil')
+        A = ex['A'].tocsr()
         B = ones((A.shape[0],1))
-        result = ode_strength_of_connection(A+A.T, B, epsilon=8.0, proj_type="D_A")
-        expected = reference_ode_strength_of_connection(A+A.T, B, epsilon=8.0, proj_type="D_A")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-
-        # BSR Test
+        cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 8.0, 'k' : 4, 'proj' : 'D_A'})
         Absr = A.tobsr(blocksize=(5,5))
-        result = ode_strength_of_connection(Absr, B, epsilon=8.0, k=2, proj_type="D_A")
-        expected = reference_ode_strength_of_connection(Absr, B, epsilon=8.0, k=2, proj_type="D_A")
-        assert_array_almost_equal( result.todense(), expected.todense())
-        
-        # Different B CSR Test
-        B = array([ravel(B), 
-                   array([ 0.26,  0.37,  0.85,  0.48,  0.16,  0.49,  0.58,  0.7 ,  0.1 ,
-                   0.78,  0.27,  0.28,  0.71,  0.18,  0.89,  0.65,  0.28,  0.89,
-                   0.34,  0.04,  0.96,  0.25,  0.88,  0.58,  0.95]) ]).T
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-        
-        # BSR Test
-        Absr = A.tobsr(blocksize=(5,5))
-        result = ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-        
-        # Zero row and column CSR Test
+        cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 8.0, 'k' : 4, 'proj' : 'D_A'})
+        # Different B
+        B = arange(1, 2*A.shape[0]+1, dtype=float).reshape(-1,2)
+        cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
+        cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
+       
+        # Zero row and column 
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A = A.tocsc()
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
-        A.eliminate_zeros()
-        A = A.tocsr()
-        A.sort_indices()
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-
-        # Zero row and column BSR Test
+        A.eliminate_zeros();  A = A.tocsr();  A.sort_indices()
+        cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
         Absr = A.tobsr(blocksize=(5,5))
-        result = ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(Absr, B, epsilon=4.0, k=2, proj_type="l2")
-        assert_array_almost_equal( result.todense(), expected.todense() )
+        cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
+        
+        for ca in cases:
+            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            assert_array_almost_equal( result.todense(), expected.todense() )
 
-        # Test Scale Invariance
-        A = poisson( (5,5), format='csr') 
-        B = arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
-        # create scaled A
-        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Ascaled = D*A*D
-        Bscaled = Dinv*B
-        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
-        assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
-
-        # Test that the l2 and D_A are the same for the 1 near nullspace candidate case
-        resultDA = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
-        resultl2 = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="l2")
-        assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
-
-        # Multiple Near Nullspace Candidates
+        # Test Scale Invariance for multiple near nullspace candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')
         result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Ascaled = (D*A*D).tobsr(blocksize=(2,2))
-        Bscaled = Dinv*B
-        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        result_scaled = ode_strength_of_connection( (D*A*D).tobsr(blocksize=(2,2)), Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
 
@@ -358,70 +286,46 @@ class TestComplexStrengthOfConnection(TestCase):
                 assert_equal( result.todense(), expected.todense())
 
     def test_ode_strength_of_connection(self):
+        cases = [] 
+
         # Single near nullspace candidate
         stencil = [[0.0, -1.0, 0.0],[-0.001, 2.002, -0.001],[0.0, -1.0, 0.0]]
         A = 1.0j*stencil_grid(stencil, (4,4), format='csr')
         B = 1.0j*ones((A.shape[0],1))
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-        # Tweak B
         B[0] = 1.2 - 12.0j
         B[11] = -14.2
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
+        cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
 
         # Multiple near nullspace candidate
         B = 1.0j*ones((A.shape[0],2))
         B[0:-1:2,0] = 0.0
         B[1:-1:2,1] = 0.0
-        B[-1,0] = 0.0
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-        # Different B
-        B[11,1] = -14.2
-        B[0,0] = 1.2 - 12.0j
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
+        B[-1,0] = 0.0;  B[11,1] = -14.2;  B[0,0] = 1.2 - 12.0j
+        cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
+        Absr = A.tobsr(blocksize=(2,2))
+        cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
         
-        B = array(arange(1,2*A.shape[0]+1).reshape(-1,2),dtype=complex)
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
+        for ca in cases:
+            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            assert_array_almost_equal( result.todense(), expected.todense() )
 
-        # Multiple near nullspace candidate, BSR Test
-        A = A.tobsr(blocksize=(2,2))
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense() )
-        # Tweak B
-        B[0,1] = -9.2 + 2.3j
-        B[11,0] = 14.2
-        result = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
-        expected = reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="12")
-        assert_array_almost_equal( result.todense(), expected.todense(), decimal=2 )
-
-        # Test Scale Invariance
-        A = 1.0j*poisson( (5,5), format='csr') 
+        # Test Scale Invariance for a single candidate
+        A = 1.0j*poisson( (5,5), format='csr')
         B = 1.0j*arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
         result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Ascaled = D*A*D
-        Bscaled = Dinv*B
-        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        result_scaled = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
         
-        # Test that the l2 and D_A are the same for the 1 near nullspace candidate case
-        resultDA = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
-        resultl2 = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="l2")
+        # Test that the l2 and D_A are the same for the 1 candidate case
+        resultDA = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
+        resultl2 = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="l2")
         assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
 
-        # Multiple Near Nullspace Candidates
+        # Test Scale Invariance for multiple candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')
         A = 1.0j*A
         B = 1.0j*B
@@ -429,9 +333,7 @@ class TestComplexStrengthOfConnection(TestCase):
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Ascaled = (D*A*D).tobsr(blocksize=(2,2))
-        Bscaled = Dinv*B
-        result_scaled = ode_strength_of_connection(Ascaled, Bscaled, epsilon=4.0, k=2, proj_type="D_A")
+        result_scaled = ode_strength_of_connection((D*A*D).tobsr(blocksize=(2,2)), Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
 
