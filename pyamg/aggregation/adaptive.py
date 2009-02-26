@@ -10,6 +10,7 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
 from pyamg.relaxation.smoothing import setup_smoothers
+from pyamg.krylov import gmres
 
 from pyamg.util.linalg import norm
 
@@ -195,6 +196,8 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
             gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'kaczmarz_gauss_seidel':
             kaczmarz_gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'gmres':
+            x[:] = (gmres(A, zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 
@@ -388,6 +391,8 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
             gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'kaczmarz_gauss_seidel':
             kaczmarz_gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'gmres':
+            x[:] = (gmres(lvl.A, zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 
