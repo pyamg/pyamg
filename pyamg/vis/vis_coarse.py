@@ -63,7 +63,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> Agg = standard_aggregation(A)
-    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tri', output='vtk', fname='output.vtu'
+    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tri', output='vtk', fname='output.vtu')
 
 
     >>> from pyamg.aggregation import standard_aggregation
