@@ -14,7 +14,7 @@ import warnings
 
 from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
         random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean, sum, prod, ravel, hstack, vstack, invert, repeat
+        integer, mean, sum, prod, ravel, hstack, vstack, invert, repeat, nonzero
 
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix, triu
 from pyamg.graph import vertex_coloring
@@ -132,14 +132,22 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     E2V_b = edges[Agg.indices[V2V.row] == Agg.indices[V2V.col]]
     Nel_b = E2V_b.shape[0]
 
+    #######
+    # 3.5 #
+    # single node aggregates
+    sums  = array(Agg.sum(axis=0)).ravel()
+    E2V_c = where(sums==1)[0]
+    Nel_c = len(E2V_c)
+
     #####
     # 4 #
     # now write out the elements and edges
-    colors_b = 2*ones((Nel_b,))  # color edges with twos
     colors_a = 3*ones((Nel_a,))  # color triangles with threes
+    colors_b = 2*ones((Nel_b,))  # color edges with twos
+    colors_c = 1*ones((Nel_c,))  # color the vertices with ones
 
-    Cells  =  {3: E2V_b, key: E2V_a}
-    cdata  =  {3: colors_b, key: colors_a} # make sure it's a tuple
+    Cells  =  {1:E2V_c, 3:E2V_b, key:E2V_a}
+    cdata  =  {1:colors_c, 3:colors_b, key:colors_a} # make sure it's a tuple
     write_vtu(Verts=Verts, Cells=Cells, fname=fname, cdata=cdata)
 
 def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
