@@ -377,7 +377,8 @@ class multilevel_solver:
             if residuals is not None:
                 residuals[:] = [residual_norm(A,x,b)]
                 def callback(x):
-                    residuals.append(residual_norm(A,x,b))
+                    if scipy.isscalar(x): residuals.append(x)
+                    else:                 residuals.append(residual_norm(A,x,b))
                     if cb is not None:
                         cb(x)
 
