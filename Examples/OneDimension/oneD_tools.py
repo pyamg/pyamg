@@ -7,7 +7,7 @@ __docformat__ = "restructuredtext en"
 
 import warnings
 
-__all__ = ['oneD_P_vis', 'oneD_coarse_grid_vis', 'oneD_nullspace_vis', 'oneD_profile']
+__all__ = ['oneD_P_vis', 'oneD_coarse_grid_vis', 'oneD_profile']
 
 import pylab
 from numpy import ravel, zeros, ones, min, abs, array, max, pi
@@ -167,120 +167,6 @@ def oneD_profile(mg, grid=None, x0=None, b=None, soln=None, iter=1, cycle='V', f
         pylab.xlabel('Iteration')
         pylab.ylabel(r'$||r_{i}|| / ||r_{i-1}||$')
         pylab.xticks(array(range(1,resratio.shape[0]+1)))
-
-    pylab.figure(fig_num+1)
-    pylab.plot(grid, r)
-    pylab.title('Final Residual')
-    pylab.xlabel('Grid')
-    pylab.ylabel('b - Ax')
-    
-    pylab.figure(fig_num+2)
-    pylab.plot(grid, e)
-    pylab.title('Final Error')
-    pylab.xlabel('Grid')
-    pylab.ylabel('soln - x')
-
-def oneD_nullspace_vis(mg, level=0, interp=False, fig_num=1, x=None):
-    '''
-    Plot the near nullspace modes from which P is built
-    
-    Parameters
-    ----------
-    mg : pyamg multilevel hierarchy
-        visualize the components of mg
-    
-    level : int
-        level of mg on which to visualize
-
-    interp : {False, True}
-        Should the modes at level=level be interpolated 
-        to the finest grid before plotting?
- 
-    fig_num : int
-        figure number from which to begin plotting
-
-    x : array
-        grid for the level on which to visualize
-        if None, then an evenly space grid on [0,1] is assumed
-
-    Returns
-    -------
-    Plots of the nullspace vectors on level=level are sent to the plotter
-    To see plots, type pyamg.show()
-
-    Notes
-    -----
-
-    Examples
-    --------
-    >>>from pyamg import *
-    >>>from oneD_tools import *
-    >>>import pylab
-    >>>A = poisson( (64,), format='csr')
-    >>>ml=smoothed_aggregation_solver(A, max_coarse=5)
-    >>>oneD_nullspace_vis(ml, level=0)
-    >>>pylab.show()
-    >>>oneD_nullspace_vis(ml, level=1)
-    >>>pylab.show()
-    >>>oneD_nullspace_vis(ml, level=1, interp=True)
-    >>>pylab.show()
-    '''
-    
-    # use good plotting paramters
-    update_rcparams()
-    
-    if level > (len(mg.levels)-1):
-        raise ValueError("Level %d has no Nullspace Candidates" % level)
-
-    pylab.figure(fig_num)
-    colors = ['b-o', 'r-o', 'k-o', 'g-o', 'm-o', 'c-o', 'y-o', '#00ff7f', '#006400' ]
-    
-    if interp == False:
-        ndof = mg.levels[level].A.shape[0]
-        Btemp = mg.levels[level].B
-    else:     
-        # We are visualizing coarse grid basis 
-        # functions interpolated up to the finest level
-        ndof = mg.levels[0].A.shape[0]
-        Btemp = mg.levels[level].B
-        for i in range(level-1,-1,-1):
-            Btemp = mg.levels[i].P*Btemp
-
-    # Default regular grid on 0 to 1
-    if x == None:
-        x = linspace(0,1,ndof)
-    
-    # Plot modes
-    for i in range(Btemp.shape[1]):
-        pylab.plot(x, ravel(real(Btemp[:,i])), colors[i], label=("Mode %d" % i))
-        title_string = 'Real Part of Null Space Candidates from Level' + str(level)
-        if interp and (level != 0):
-            title_string += '\nInterpolated to Finest Level'
-        pylab.title(title_string)
-        pylab.xlabel('Grid')
-        pylab.ylabel('real(cand)')
-
-    ax = array(pylab.axis())
-    ax[2] = min(real(ravel(Btemp[:,:])))*0.9
-    ax[3] = max(real(ravel(Btemp[:,:])))*1.1
-    ax = pylab.axis(ax)
-    pylab.legend()
-
-    if Btemp.dtype == complex:
-        pylab.figure(fig_num+1)
-        for i in range(Btemp.shape[1]):
-            pylab.plot(x, ravel(imag(Btemp[:,i])), colors[i], label=("Mode %d" % i))
-            title_string = 'Imag Part of Null Space Candidates from Level' + str(level)
-            if interp and (level != 0):
-                title_string += '\nInterpolated to Finest Level'
-            pylab.title(title_string)
-            pylab.xlabel('Grid')
-            pylab.ylabel('imag(cand)')
-        bottom = min(imag(Btemp[:,:]))*0.9
-        top = max(imag(Btemp[:,:]))*1.1
-        pylab.axis([min(x), max(x), bottom, top])
-
-    pylab.legend()
 
 
 def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
