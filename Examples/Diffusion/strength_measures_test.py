@@ -17,7 +17,7 @@ if(__name__=="__main__"):
     
     # Grid sizes to test
     nlist = [40,70,100,130,160]
-    #nlist = [100,200,300,400,500,600]
+    nlist = [100,200,300,400,500,600]
 
     factors_classic    =zeros((len(nlist),1)).ravel()
     complexity_classic =zeros((len(nlist),1)).ravel()
