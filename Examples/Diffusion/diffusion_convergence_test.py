@@ -3,10 +3,11 @@ Test the convergence of a 100x100 anisotropic diffusion equation
 """
 import numpy
 import scipy
+
 from pyamg.gallery import stencil_grid
 from pyamg.strength import classical_strength_of_connection
-from pyamg.classical.classical import classical_strength_of_connection,\
-        ruge_stuben_solver
+from pyamg.classical.classical import ruge_stuben_solver
+
 from convergence_tools import print_cycle_history
 from diffusion_stencil import diffusion_stencil
 
