@@ -1,8 +1,8 @@
 """
-Test the convergence of a diffusion equation
+Test the convergence of a 100x100 anisotropic diffusion equation
 """
-from numpy import array, random, mean, prod
-from scipy import rand, log10, pi
+import numpy
+import scipy
 from pyamg.gallery import stencil_grid
 from pyamg.strength import classical_strength_of_connection
 from pyamg.classical.classical import classical_strength_of_connection,\
@@ -16,14 +16,14 @@ if __name__ == '__main__':
     ny = n
 
     # Rotated Anisotropic Diffusion
-    stencil = diffusion_stencil('FE', eps=0.001, beta=pi/3)
+    stencil = diffusion_stencil('FE', eps=0.001, beta=scipy.pi/3.0)
 
     A = stencil_grid(stencil, (nx,ny), format='csr')
     S = classical_strength_of_connection(A, 0.0)
 
-    random.seed(625)
-    x = rand(A.shape[0])
-    b = A*rand(A.shape[0])
+    numpy.random.seed(625)
+    x = scipy.rand(A.shape[0])
+    b = A*scipy.rand(A.shape[0])
 
     ml = ruge_stuben_solver(A, max_coarse=10)
 
