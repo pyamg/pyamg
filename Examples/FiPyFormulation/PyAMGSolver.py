@@ -1,7 +1,7 @@
 from fipy.tools.pysparseMatrix import _PysparseMatrix
 from fipy.solvers.solver import Solver
 
-from numpy import array, copy
+import numpy
 from scipy.sparse import csr_matrix
 from pyamg import smoothed_aggregation_solver
 
@@ -41,7 +41,7 @@ class PyAMGSolver(Solver):
 
         # fix relres and set info
         if len(relres)>0:
-            relres=array(relres)/relres[0]
+            relres=numpy.array(relres)/relres[0]
             info = 0
         iter = len(relres)
 

@@ -8,8 +8,8 @@ Usage
 $ python oneD_diffusion.py  npts
 
 """
-from numpy import array, random, zeros, ravel
-from scipy import rand, linspace
+import numpy
+import scipy
 from pyamg import poisson, smoothed_aggregation_solver
 from oneD_tools import *
 import pylab
@@ -18,7 +18,7 @@ import sys
 if(__name__=="__main__"):
 
     # Ensure repeatability of tests
-    random.seed(625)
+    numpy.random.seed(625)
 
     # Generate system and solver
     n = int(sys.argv[1])
@@ -26,7 +26,8 @@ if(__name__=="__main__"):
     ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2')
         
     # Profile this solver for 5 iterations
-    oneD_profile(ml, grid=linspace(0,1,n), x0=rand(n,), soln=zeros((n,)), b=zeros((n,)), iter=10)
+    oneD_profile(ml, grid=scipy.linspace(0,1,n), x0=scipy.rand(n,), \
+                 soln=numpy.zeros((n,)), b=numpy.zeros((n,)), iter=10)
     
     # Plot the 1st coarse level's near nullspace mode
     oneD_nullspace_vis(ml, level=1, interp=True, fig_num=10)

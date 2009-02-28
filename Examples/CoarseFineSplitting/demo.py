@@ -1,7 +1,7 @@
 # Illustrates the selection of Coarse-Fine (CF) 
 # splittings in Classical AMG.
 
-from numpy import vstack
+import numpy
 from scipy.io import loadmat
 from pyamg import ruge_stuben_solver
 from pyamg.gallery import load_example
@@ -10,7 +10,7 @@ data = loadmat('square.mat') #load_example('airfoil')
 
 A = data['A']                                # matrix
 V = data['vertices'][:A.shape[0]]            # vertices of each variable
-E = vstack((A.tocoo().row,A.tocoo().col)).T  # edges of the matrix graph
+E = numpy.vstack((A.tocoo().row,A.tocoo().col)).T  # edges of the matrix graph
 
 # Use Ruge-Stuben Splitting Algorithm
 mls = ruge_stuben_solver(A, max_levels=2, max_coarse=1, CF='RS')

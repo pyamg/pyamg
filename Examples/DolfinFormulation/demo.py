@@ -9,7 +9,7 @@ from dolfin import *
 
 from scipy.sparse import csr_matrix
 from pyamg import smoothed_aggregation_solver
-from pylab import figure, show, semilogy
+import pylab
 
 ############################################################
 # Dolfin
@@ -48,6 +48,6 @@ x = ml.solve(b,tol=1e-10,accel='cg',residuals=residuals)
 residuals = residuals/residuals[0]
 print ml
 
-figure(2)
-semilogy(residuals)
-show()
+pylab.figure(2)
+pylab.semilogy(residuals)
+pylab.show()

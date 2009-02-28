@@ -6,7 +6,7 @@ the LOBPCG eigensolver on a two-dimensional Poisson problem with
 Dirichlet boundary conditions.
 """
 
-from scipy import rand
+import scipy
 from scipy.sparse.linalg import lobpcg
 
 from pyamg import smoothed_aggregation_solver
@@ -20,7 +20,7 @@ A = poisson((N,N), format='csr')
 ml = smoothed_aggregation_solver(A)
 
 # initial approximation to the K eigenvectors
-X = rand(A.shape[0], K) 
+X = scipy.rand(A.shape[0], K) 
 
 # preconditioner based on ml
 M = ml.aspreconditioner()

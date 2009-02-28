@@ -1,6 +1,6 @@
 # Linear Elasticity Example
 
-from scipy import array, rand
+import scipy
 from pyamg.gallery import linear_elasticity
 from pyamg import smoothed_aggregation_solver
 
@@ -16,21 +16,21 @@ mls = smoothed_aggregation_solver(A, B=B)
 print mls
 
 # Create random right hand side
-b = rand(A.shape[0],1)
+b = scipy.rand(A.shape[0],1)
 
 # Solve Ax=b
 residuals = []
 x = mls.solve(b, tol=1e-10, residuals=residuals)
 
 # Compute relative residuals
-relative_residuals = array(residuals)/residuals[0]  
+relative_residuals = scipy.array(residuals)/residuals[0]  
 
 # Plot convergence
-from pylab import figure, title, xlabel, ylabel, semilogy, show
-figure()
-title('Convergence History')
-xlabel('Iteration')
-ylabel('Relative Residual')
-semilogy(relative_residuals, linestyle='None', marker='.')
-show()
+import pylab
+pylab.figure()
+pylab.title('Convergence History')
+pylab.xlabel('Iteration')
+pylab.ylabel('Relative Residual')
+pylab.semilogy(relative_residuals, linestyle='None', marker='.')
+pylab.show()
 
