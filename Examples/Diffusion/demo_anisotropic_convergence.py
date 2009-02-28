@@ -5,11 +5,11 @@ import numpy
 import scipy
 
 from pyamg.gallery import stencil_grid
+from pyamg.gallery.diffusion import diffusion_stencil_2d
 from pyamg.strength import classical_strength_of_connection
 from pyamg.classical.classical import ruge_stuben_solver
 
 from convergence_tools import print_cycle_history
-from diffusion_stencil import diffusion_stencil
 
 if __name__ == '__main__':
     n = 100
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     ny = n
 
     # Rotated Anisotropic Diffusion
-    stencil = diffusion_stencil('FE', eps=0.001, beta=scipy.pi/3.0)
+    stencil = diffusion_stencil_2d(type='FE',epsilon=0.001,theta=scipy.pi/3)
 
     A = stencil_grid(stencil, (nx,ny), format='csr')
     S = classical_strength_of_connection(A, 0.0)
