@@ -5,11 +5,11 @@ import numpy
 import scipy
 
 from pyamg.gallery import stencil_grid
+from pyamg.gallery.diffusion import diffusion_stencil_2d
 from pyamg.strength import classical_strength_of_connection
 from pyamg.classical.classical import classical_strength_of_connection, ruge_stuben_solver
 
 from convergence_tools import print_scalability
-from diffusion_stencil import diffusion_stencil
 
 if(__name__=="__main__"):
     nlist = [100,200,300,400,500,600]
@@ -26,7 +26,7 @@ if(__name__=="__main__"):
         print "n = %-10d of %-10d"%(n,nlist[-1])
 
         # Rotated Anisotropic Diffusion
-        stencil = diffusion_stencil('FE',eps=0.001,beta=scipy.pi/3)
+        stencil = diffusion_stencil_2d(type='FE',epsilon=0.001,theta=scipy.pi/3)
 
         A = stencil_grid(stencil, (nx,ny), format='csr')
 
