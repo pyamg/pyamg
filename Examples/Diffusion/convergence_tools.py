@@ -1,8 +1,8 @@
 """
 Print and plot functions for testing convergence and scalability.
 """
-from numpy import array, random, mean, prod, zeros
-from scipy import rand, log10
+import numpy
+import scipy
 from pyamg.util.utils import print_table
 
 def print_cycle_history(resvec, ml, verbose=False, plotting=False):
@@ -33,7 +33,7 @@ def print_cycle_history(resvec, ml, verbose=False, plotting=False):
             factor of 10, based on the geometric mean of the convergence factors
             and on the cycle complexity
     """
-    resvec = array(resvec)
+    resvec = numpy.array(resvec)
     factors = resvec[1:]/resvec[0:-1]
 
     print '---Convergence Summary---------------------------------------'
@@ -44,7 +44,7 @@ def print_cycle_history(resvec, ml, verbose=False, plotting=False):
     print 'Operator Complexity: %6.3f' % ml.operator_complexity()
     print '    Grid Complexity: %6.3f' % ml.grid_complexity()
     print 'avg geo conv factor: %6.3f' % avg_convergence_factor
-    print '               work: %6.3f' % (-ml.cycle_complexity() / log10(avg_convergence_factor))
+    print '               work: %6.3f' % (-ml.cycle_complexity() / scipy.log10(avg_convergence_factor))
     print ''
 
     total_nnz =  sum([level.A.nnz for level in ml.levels])
@@ -66,11 +66,11 @@ def print_cycle_history(resvec, ml, verbose=False, plotting=False):
                 ifactors = iresvec[1:]/iresvec[0:-1]                # running list of factors
 
                 ifactor = ifactors[-1]                              # current arith mean
-                aafactor = mean(ifactors)                           # running arith mean
+                aafactor = numpy.mean(ifactors)                     # running arith mean
                 gafactor = (iresvec[-1]/iresvec[0])**(1.0/(i+1))    # geo mean
 
                 ocx = ml.cycle_complexity()
-                iwork = - ocx / log10(gafactor)                        # current work-per-digit
+                iwork = - ocx / scipy.log10(gafactor)                        # current work-per-digit
 
                 plist = (i, ifactor, aafactor, gafactor, iwork)
                 print '%-10d %-10.3f %-10.3f %-10.3f %-10.3f' % plist
@@ -111,9 +111,9 @@ def print_scalability(factors,complexity,nnz,nlist,plotting=False,title='Scalabi
 
     table.append(["n","nnz","rho","OpCx","Work"])
     run=0
-    work = zeros((len(nlist),1)).ravel()
+    work = numpy.zeros((len(nlist),1)).ravel()
     for n in nlist:
-        work[run]=-complexity[run]/log10(factors[run]);
+        work[run]=-complexity[run]/scipy.log10(factors[run]);
         table.append([ str(int(n)), str(int(nnz[run])), ('%1.3f'%factors[run]), ('%1.3f'%complexity[run]), ('%1.3f'%work[run]) ])
         run+=1
 

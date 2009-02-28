@@ -3,36 +3,38 @@ Test the scalability of SA for rotated diffusion while
 highlighting the performance of different strength measures.
 Try different values for classic_theta and ode_theta.
 """
-from numpy import array, random, zeros, ravel
-from scipy import rand, pi
+import numpy
+import scipy
+
 from pyamg import smoothed_aggregation_solver
 from pyamg.gallery import stencil_grid
+from pyamg.gallery.diffusion import diffusion_stencil_2d
+
 from convergence_tools import print_scalability
-from diffusion_stencil import diffusion_stencil
 
 if(__name__=="__main__"):
 
     # Ensure repeatability of tests
-    random.seed(625)
+    numpy.random.seed(625)
     
     # Grid sizes to test
-    nlist = [40,70,100,130,160]
-    nlist = [100,200,300,400,500,600]
+    #nlist = [40,70,100,130,160]
+    nlist = [100,200,300,400]
 
-    factors_classic    =zeros((len(nlist),1)).ravel()
-    complexity_classic =zeros((len(nlist),1)).ravel()
-    nnz_classic        =zeros((len(nlist),1)).ravel()
-    sizelist_classic   =zeros((len(nlist),1)).ravel()
+    factors_classic    = numpy.zeros((len(nlist),1)).ravel()
+    complexity_classic = numpy.zeros((len(nlist),1)).ravel()
+    nnz_classic        = numpy.zeros((len(nlist),1)).ravel()
+    sizelist_classic   = numpy.zeros((len(nlist),1)).ravel()
         
-    factors_ode    =zeros((len(nlist),1)).ravel()
-    complexity_ode =zeros((len(nlist),1)).ravel()
-    nnz_ode        =zeros((len(nlist),1)).ravel()
-    sizelist_ode   =zeros((len(nlist),1)).ravel()
+    factors_ode    = numpy.zeros((len(nlist),1)).ravel()
+    complexity_ode = numpy.zeros((len(nlist),1)).ravel()
+    nnz_ode        = numpy.zeros((len(nlist),1)).ravel()
+    sizelist_ode   = numpy.zeros((len(nlist),1)).ravel()
     
     run=0
 
     # Smoothed Aggregation Parameters
-    beta = pi/8.0                                       # Angle of rotation
+    theta = scipy.pi/8.0                                # Angle of rotation
     epsilon = 0.001                                     # Anisotropic coefficient
     mcoarse = 10                                        # Max coarse grid size
     prepost = ('gauss_seidel',                          # pre/post smoother
@@ -49,12 +51,12 @@ if(__name__=="__main__"):
         print "Running Grid = (%d x %d)" % (nx, ny)
 
         # Rotated Anisotropic Diffusion Operator
-        stencil = diffusion_stencil('FE',eps=epsilon,beta=beta)
+        stencil = diffusion_stencil_2d(type='FE',epsilon=epsilon,theta=theta)
         A = stencil_grid(stencil, (nx,ny), format='csr')
 
         # Random initial guess, zero RHS
-        x0 = rand(A.shape[0])
-        b = zeros((A.shape[0],))
+        x0 = scipy.rand(A.shape[0])
+        b = numpy.zeros((A.shape[0],))
 
         # Classic SA strength measure
         ml = smoothed_aggregation_solver(A, max_coarse=mcoarse, coarse_solver='pinv2', 
@@ -85,7 +87,7 @@ if(__name__=="__main__"):
     print "Emphasis on Robustness of Strength Measures and Drop Tolerances"
     print "Rotated Anisotropic Diffusion in 2D"
     print "Anisotropic Coefficient = %1.3e" % epsilon
-    print "Rotation Angle = %1.3f" % beta
+    print "Rotation Angle = %1.3f" % theta
 
     # Print Tables
     print_scalability(factors_classic, complexity_classic, 
