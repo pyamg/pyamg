@@ -21,7 +21,12 @@ if(__name__=="__main__"):
     numpy.random.seed(625)
 
     # Generate system and solver
-    n = int(sys.argv[1])
+    if len(sys.argv)<2:
+        n=20
+    else:
+        n = int(sys.argv[1])
+
+    # setup 1d poisson problem
     A = poisson((n,), format='csr')
     ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2')
         
@@ -40,4 +45,3 @@ if(__name__=="__main__"):
         oneD_P_vis(ml, fig_num=30, level=0, interp=False)
 
     pylab.show()
-
