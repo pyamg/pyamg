@@ -1,8 +1,8 @@
-from numpy import ones, zeros, median, where
-from scipy import rand
+import numpy
+import scipy
 from scipy.sparse.linalg import lobpcg
 
-from pylab import gca, show, figure
+import pylab
 
 from pyamg import smoothed_aggregation_solver
 
@@ -15,7 +15,7 @@ if meshnum==1:
     V,E = mesh.uniform_tri(20,6)
 if meshnum==2:
     from scipy.io import loadmat
-    mesh = loadmat('crack_mesh_2.mat')
+    mesh = loadmat('crack_mesh.mat')
     V=mesh['V']
     E=mesh['E']
 
@@ -26,24 +26,24 @@ ml = smoothed_aggregation_solver(A, coarse_solver='pinv2',max_coarse=10)
 M = ml.aspreconditioner()
 
 # solve for lowest two modes: constant vector and Fiedler vector
-X = rand(A.shape[0], 2) 
-(eval,evec,res) = lobpcg(A, X, M=M, tol=1e-12, largest=False, \
-        verbosityLevel=1, retResidualNormsHistory=True)
+X = scipy.rand(A.shape[0], 2) 
+(eval,evec,res) = lobpcg(A, X, M=None, tol=1e-12, largest=False, \
+        verbosityLevel=0, retResidualNormsHistory=True)
 
 fiedler = evec[:,1]
 
 # use the median of the Fiedler vector as a the separator
-vmed = median(fiedler)
-v = zeros((A.shape[0],))
-K = where(fiedler>vmed)[0]
+vmed = numpy.median(fiedler)
+v = numpy.zeros((A.shape[0],))
+K = numpy.where(fiedler<=vmed)[0]
 v[K]=-1
-K = where(fiedler>vmed)[0]
+K = numpy.where(fiedler>vmed)[0]
 v[K]=1
 
 # plot the mesh and partition
 trimesh(V,E)
-sub = gca()
+sub = pylab.gca()
 sub.hold(True)
 sub.scatter(V[:,0],V[:,1],marker='o',s=50,c=v)
 #sub.scatter(V[:,0],V[:,1],marker='o',s=50,c=fiedler)
-show()
+pylab.show()

@@ -1,6 +1,7 @@
 # Examples of AMG as a preconditioner
 
-from scipy import array, rand
+import scipy
+import numpy
 from pyamg.gallery import linear_elasticity, poisson
 from pyamg import smoothed_aggregation_solver
 
@@ -22,7 +23,7 @@ for name,A,B in trials:
     print mls
 
     # Create random right hand side
-    b = rand(A.shape[0],1)
+    b = scipy.rand(A.shape[0],1)
     
     # Solve Ax=b with no acceleration ('standalone' solver)
     standalone_residuals = []
@@ -33,17 +34,17 @@ for name,A,B in trials:
     x = mls.solve(b, tol=1e-10, accel='cg', residuals=accelerated_residuals)
     
     # Compute relative residuals
-    standalone_residuals  = array(standalone_residuals)/standalone_residuals[0]  
-    accelerated_residuals = array(accelerated_residuals)/accelerated_residuals[0]  
+    standalone_residuals  = numpy.array(standalone_residuals)/standalone_residuals[0]  
+    accelerated_residuals = numpy.array(accelerated_residuals)/accelerated_residuals[0]  
     
     # Plot convergence history
-    from pylab import figure, title, xlabel, ylabel, semilogy, legend, show
-    figure()
-    title('Convergence History (%s)' % name)
-    xlabel('Iteration')
-    ylabel('Relative Residual')
-    semilogy(standalone_residuals,  label='Standalone',  linestyle='None', marker='.')
-    semilogy(accelerated_residuals, label='Accelerated', linestyle='None', marker='.')
-    legend()
-    show()
+    import pylab
+    pylab.figure()
+    pylab.title('Convergence History (%s)' % name)
+    pylab.xlabel('Iteration')
+    pylab.ylabel('Relative Residual')
+    pylab.semilogy(standalone_residuals,  label='Standalone',  linestyle='None', marker='.')
+    pylab.semilogy(accelerated_residuals, label='Accelerated', linestyle='None', marker='.')
+    pylab.legend()
+    pylab.show()
 
