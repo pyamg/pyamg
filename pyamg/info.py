@@ -1,5 +1,5 @@
 """
-TODO Describe AMG solvers
+AMG solvers
 """
 
 postpone_import = 1
