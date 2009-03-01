@@ -2,10 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import asarray, rank, prod, cumprod, zeros, vstack, unique, \
-        searchsorted
-
-from scipy.sparse import dia_matrix
+import numpy
+import scipy
 
 __all__ = ['stencil_grid']
 
@@ -73,26 +71,26 @@ def stencil_grid(S, grid, dtype=None, format=None):
     
     """
 
-    S    = asarray(S, dtype=dtype)
+    S = numpy.asarray(S, dtype=dtype)
     grid = tuple(grid)
 
-    if not (asarray(S.shape) % 2 == 1).all():
+    if not (numpy.asarray(S.shape) % 2 == 1).all():
         raise ValueError('all stencil dimensions must be odd')
     
-    if len(grid) != rank(S):
+    if len(grid) != numpy.rank(S):
         raise ValueError('stencil rank must equal number of grid dimensions')
     
     if min(grid) < 1:
         raise ValueError('grid dimensions must be positive')
     
-    N_v = prod(grid)     # number of vertices in the mesh
-    N_s = (S != 0).sum() # number of nonzero stencil entries
+    N_v = numpy.prod(grid)  # number of vertices in the mesh
+    N_s = (S != 0).sum()    # number of nonzero stencil entries
 
     # diagonal offsets 
-    diags = zeros(N_s, dtype=int)  
+    diags = numpy.zeros(N_s, dtype=int)  
 
     # compute index offset of each DoF within the stencil
-    strides = cumprod( [1] + list(reversed(grid)) )[:-1]
+    strides = numpy.cumprod( [1] + list(reversed(grid)) )[:-1]
     indices = S.nonzero()
     for i,s in zip(indices,S.shape):
         i -= s // 2
@@ -101,7 +99,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
 
     data = S[ S != 0 ].repeat(N_v).reshape(N_s,N_v)
 
-    indices = vstack(indices).T
+    indices = numpy.vstack(indices).T
 
     # zero boundary connections
     for index,diag in zip(indices,data):
@@ -123,18 +121,18 @@ def stencil_grid(S, grid, dtype=None, format=None):
         data  = data[mask]
     
     # sum duplicate diagonals
-    if len(unique(diags)) != len(diags):
-        new_diags = unique(diags)
-        new_data  = zeros( (len(new_diags),data.shape[1]), dtype=data.dtype)
+    if len(numpy.unique(diags)) != len(diags):
+        new_diags = numpy.unique(diags)
+        new_data  = numpy.zeros( (len(new_diags),data.shape[1]), dtype=data.dtype)
 
         for dia,dat in zip(diags,data):
-            n = searchsorted(new_diags,dia)
+            n = numpy.searchsorted(new_diags,dia)
             new_data[n,:] += dat
         
         diags = new_diags
         data  = new_data
 
-    return dia_matrix( (data,diags), shape=(N_v,N_v)).asformat(format)
+    return scipy.sparse.dia_matrix((data,diags), shape=(N_v,N_v)).asformat(format)
 
 
 if __name__ == '__main__':

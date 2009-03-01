@@ -16,8 +16,7 @@ A = [1          0        ]
 
 """
 
-from numpy import array, zeros
-from scipy import cos, sin
+import numpy
 
 __docformat__ = "restructuredtext en"
 
@@ -78,8 +77,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
             c = cos(theta)
             s = sin(theta)
         """
-        C = cos(theta)
-        S = sin(theta)
+        C = numpy.cos(theta)
+        S = numpy.sin(theta)
         CS = C*S
         CC = C**2
         SS = S**2
@@ -90,9 +89,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         d =  (-4*eps + 2)*CC + ( 2*eps - 4)*SS
         e =  ( 8*eps + 8)*CC + ( 8*eps + 8)*SS
         
-        stencil = array([[a,b,c],
-                         [d,e,d],
-                         [c,b,a]]) / 6.0
+        stencil = numpy.array([[a,b,c],
+                               [d,e,d],
+                               [c,b,a]]) / 6.0
 
     elif type == 'FD':
         """FD approximation to:
@@ -110,8 +109,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
             [                                                            ]
             [  -1/2(eps - 1) c s    -(c^2 + eps s^2)  1/2(eps - 1) c s   ]
         """
-        C = cos(theta)
-        S = sin(theta)
+        C = numpy.cos(theta)
+        S = numpy.sin(theta)
         CC = C**2
         SS = S**2
         CS = C*S
@@ -122,8 +121,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         d = -(eps*CC + SS)
         e =  2.0*(eps + 1)
 
-        stencil = array([[a,b,c],
-                         [d,e,d],
-                         [c,b,a]])
+        stencil = numpy.array([[a,b,c],
+                               [d,e,d],
+                               [c,b,a]])
 
     return stencil
+

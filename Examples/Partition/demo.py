@@ -12,7 +12,7 @@ meshnum = 2
 
 if meshnum==1:
     from pyamg.gallery import mesh
-    V,E = mesh.uniform_tri(20,6)
+    V,E = mesh.regular_triangle_mesh(20,6)
 if meshnum==2:
     from scipy.io import loadmat
     mesh = loadmat('crack_mesh.mat')

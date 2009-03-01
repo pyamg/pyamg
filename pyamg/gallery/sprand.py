@@ -1,37 +1,32 @@
-from numpy.random import random_integers
-from scipy import rand, randn, ones, array
-from scipy.sparse import csr_matrix, tril
-from pyamg.util.utils import symmetric_rescaling, diag_sparse
+"""Random sparse matrices"""
 
-__all__ = ['sprand', 'sprand_spd']
+import numpy
+import scipy
+
+__all__ = ['sprand']
 __docformat__ = "restructuredtext en"
 
 #TODO add sprandn
 
-def _rand_sparse(grid, density, format='csr'):
-    """Helper function for sprand, sprandn
-    """
-    m = grid[0]
-    n = grid[1]
+def _rand_sparse(m, n, density, format='csr'):
+    """Helper function for sprand, sprandn"""
 
     nnz = max( min( int(m*n*density), m*n), 0)
 
-    row  = random_integers(low=0, high=m-1, size=nnz)
-    col  = random_integers(low=0, high=n-1, size=nnz)
-    data = ones(nnz, dtype=float)
-
-    A = csr_matrix( (data,(row,col)), shape=(m,n) )
+    row  = numpy.random.random_integers(low=0, high=m-1, size=nnz)
+    col  = numpy.random.random_integers(low=0, high=n-1, size=nnz)
+    data = numpy.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together
-    return csr_matrix( (data,(row,col)), shape=(m,n) )
+    return scipy.sparse.csr_matrix((data,(row,col)), shape=(m,n))
 
-def sprand(grid, density, format='csr'):
+def sprand(m, n, density, format='csr'):
     """Returns a random sparse matrix.
 
     Parameters
     ----------
-    grid : tuple of integers
-        grid dimensions e.g. (100,100)
+    m, n : int
+        shape of the result
     density : float
         target a matrix with nnz(A) = m*n*density, 0<=density<=1
     format : string
@@ -52,70 +47,64 @@ def sprand(grid, density, format='csr'):
      [ 0.06545295  0.          0.32022103  0.75251759  0.        ]]
 
     """
-    grid = tuple(grid)
+    m,n = int(m),int(n)
 
-    dim = len(grid) # grid dimension
+    # get sparsity pattern
+    A = _rand_sparse(m, n, density, format='csr')
 
-    if(dim != 2 or min(grid) < 1):
-        raise ValueError('invalid grid shape: %s' % str(grid))
+    # replace data with random values
+    A.data = scipy.rand(A.nnz)
 
-    A = _rand_sparse(grid, density, format='csr')
-
-    A.data = rand(A.nnz)
     return A.asformat(format)
 
-def sprand_spd(grid, density, format='csr'):
-    """Returns a random sparse, symmetric semi-positive definite matrix, with
-    row sum zero
 
-    Parameters
-    ----------
-    grid : tuple of integers
-        grid dimensions e.g. (100,100)
-    density : float
-        target a matrix with nnz(A) = m*n*density, 0<=density<=1
-    format : string
-        sparse matrix format to return, e.g. "csr", "coo", etc.
-
-    Returns
-    -------
-    A : sparse, s.p.d. matrix
-        m x n sparse matrix with positive diagonal and negative off-diagonals
-        with row sum 0.
-
-    Examples
-    --------
-    >>> print sprand((5,5),3/5.0).todense()
-    [[ 2.28052355  0.         -0.72223852 -0.73750262 -0.82078241]
-     [ 0.          0.74648788 -0.52911585  0.         -0.21737203]
-     [-0.72223852 -0.52911585  1.25135436  0.          0.        ]
-     [-0.73750262  0.          0.          0.73750262  0.        ]
-     [-0.82078241 -0.21737203  0.          0.          1.03815444]]
-
-    See Also
-    --------
-    pyamg.classical.cr.binormalize
-
-    """
-    grid = tuple(grid)
-
-    dim = len(grid) # grid dimension
-
-    if(dim != 2 or min(grid) < 1):
-        raise ValueError('invalid grid shape: %s' % str(grid))
-
-    A = _rand_sparse(grid, density, format='csr')
-    A.data = -1.0*rand(A.nnz)
-
-    A = tril(A,-1)
-
-    A = A + A.T
-
-    d = -array(A.sum(axis=1)).ravel()
-
-    D = diag_sparse(d)
-    A = A + D
-
-    # TODO : will a rescaling preserve spd here?
-    #D_sqrt,D_sqrt_inv,A = symmetric_rescaling(A)
-    return A.asformat(format)
+## currently returns positive semi-definite matrices
+#def sprand_spd(m, n, density, a=1.0, b=2.0, format='csr'):
+#    """Returns a random sparse, symmetric positive definite matrix
+#   
+#    Parameters
+#    ----------
+#    n : int
+#        shape of the result
+#    density : float
+#        target a matrix with nnz(A) = m*n*density, 0<=density<=1
+#    a,b : float
+#        eigenvalues of the result will lie in the range [a,b]
+#    format : string
+#        sparse matrix format to return, e.g. "csr", "coo", etc.
+#
+#    Returns
+#    -------
+#    A : sparse, s.p.d. matrix
+#        n x n sparse matrix with eigenvalues in the interval [a,b]
+#
+#    Examples
+#    --------
+#
+#    See Also
+#    --------
+#    pyamg.classical.cr.binormalize
+#
+#    """
+#    # get sparsity pattern
+#    A = _rand_sparse(n, n, density, format='csr')
+#
+#    A.data = scipy.rand(A.nnz)
+#
+#    A = scipy.sparse.tril(A, -1)
+#
+#    A = A + A.T
+#
+#    d = numpy.array(A.sum(axis=1)).ravel()
+#
+#    from pyamg.util.utils import symmetric_rescaling, diag_sparse
+#
+#    D = diag_sparse(d)
+#    A = D - A
+#
+#    # A now has zero row sums
+#    D_sqrt,D_sqrt_inv,A = symmetric_rescaling(A)
+#    
+#    # A now has unit diagonals
+#
+#    return A.asformat(format)
