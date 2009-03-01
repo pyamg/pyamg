@@ -131,8 +131,8 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     #######
     # 3.5 #
     # single node aggregates
-    sums  = array(Agg.sum(axis=0)).ravel()
-    E2V_c = where(sums==1)[0]
+    sums  = numpy.array(Agg.sum(axis=0)).ravel()
+    E2V_c = numpy.where(sums==1)[0]
     Nel_c = len(E2V_c)
 
     #####
