@@ -1,13 +1,10 @@
-from numpy import array, zeros, ones, sqrt, ravel, abs, max, dot, arange, conjugate
-from scipy.sparse import csr_matrix
+from numpy import array, zeros, sqrt, ravel, abs, max, dot, arange, conjugate, hstack, isnan, isinf 
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
-from scipy import hstack, ceil, isnan, isinf
-from scipy.linalg import solve
 from warnings import warn
 from pyamg.util.linalg import norm
 from pyamg import multigridtools
-import scipy.sparse
+import scipy
 
 __docformat__ = "restructuredtext en"
 
@@ -305,7 +302,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         #   system in the magical world of scipy
         #piv = arange(inner+1)
         #y = lu_solve((H[0:(inner+1),0:(inner+1)], piv), g[0:(inner+1)], trans=0)
-        y = solve(H[0:(inner+1),0:(inner+1)], g[0:(inner+1)])
+        y = scipy.linalg.solve(H[0:(inner+1),0:(inner+1)], g[0:(inner+1)])
         
         # Use Horner like Scheme to map solution, y, back to original space.
         # Note that we do not use the last reflector.

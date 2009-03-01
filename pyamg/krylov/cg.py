@@ -1,4 +1,4 @@
-from numpy import inner, conjugate, asarray, int, ceil
+from numpy import inner, conjugate, asarray 
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm

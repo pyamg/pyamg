@@ -1,9 +1,8 @@
-from numpy import array, zeros, dot, conjugate
-from scipy.sparse import csr_matrix, isspmatrix
+from numpy import array, inner, conjugate, ceil, asmatrix
+from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.linalg.interface import aslinearoperator
-from scipy import ceil, asmatrix
 from warnings import warn
 from pyamg.util.linalg import norm
 
@@ -82,8 +81,9 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
 
     # Store the conjugate transpose explicitly as it will be used much later on
     if isspmatrix(A):
-        AH = A.tocsr().conjugate().transpose()
+        AH = A.H
     else:
+        #TODO avoid doing this since A may be a different sparse type 
         AH = aslinearoperator(asmatrix(A).H)
     
     # Convert inputs to linear system, with error checking  
@@ -114,10 +114,6 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     normb = norm(b) 
     if normb == 0:
         pass
-    #    if callback != None:
-    #        callback(0.0)
-    #
-    #    return (postprocess(zeros((dimen,), dtype=xtype)),0)
     else:
         tol = tol*normb
 
@@ -140,7 +136,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Apply preconditioner and calculate initial search direction
     z = M*rhat
     p = z.copy()
-    old_zr = dot(conjugate(z), rhat)
+    old_zr = inner(conjugate(z), rhat)
 
     for iter in range(maxiter):
 
@@ -148,7 +144,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         w = A*p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
-        alpha = old_zr/dot(conjugate(w), w)
+        alpha = old_zr / inner(conjugate(w), w)
         
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
@@ -163,7 +159,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         z = M*rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
-        new_zr = dot(conjugate(z), rhat)
+        new_zr = inner(conjugate(z), rhat)
         beta = new_zr / old_zr
         old_zr = new_zr
 

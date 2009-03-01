@@ -1,9 +1,8 @@
-from numpy import array, zeros, dot, conjugate
-from scipy.sparse import csr_matrix, isspmatrix
+from numpy import array, inner, conjugate, ceil, asmatrix
+from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.linalg.interface import aslinearoperator
-from scipy import ceil, asmatrix
 from warnings import warn
 from pyamg.util.linalg import norm
 
@@ -82,8 +81,9 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     
     # Store the conjugate transpose explicitly as it will be used much later on
     if isspmatrix(A):
-        AH = A.tocsr().conjugate().transpose()
+        AH = A.H
     else:
+        #TODO avoid doing this since A may be a different sparse type 
         AH = aslinearoperator(asmatrix(A).H)
 
     # Convert inputs to linear system, with error checking  
@@ -139,12 +139,12 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     # Apply preconditioner and calculate initial search direction
     z = M*r
     p = AH*z
-    old_zr = dot(conjugate(z), r)
+    old_zr = inner(conjugate(z), r)
 
     for iter in range(maxiter):
 
         # alpha = (z_j, r_j) / (p_j, p_j)
-        alpha = old_zr/dot(conjugate(p), p)
+        alpha = old_zr / inner(conjugate(p), p)
         
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
@@ -156,7 +156,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         z = M*r
 
         # beta = (z_{j+1}, r_{j+1}) / (z_j, r_j)
-        new_zr = dot(conjugate(z), r)
+        new_zr = inner(conjugate(z), r)
         beta = new_zr / old_zr
         old_zr = new_zr
 

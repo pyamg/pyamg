@@ -1,10 +1,5 @@
-from numpy import array, zeros,  inner, conjugate, ravel
-from scipy.sparse import csr_matrix, isspmatrix
-from scipy.sparse.sputils import upcast
+from numpy import array, inner, conjugate, ravel
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.linalg.interface import aslinearoperator
-from scipy import ceil, asmatrix, rand
-from warnings import warn
 from pyamg.util.linalg import norm
 
 __docformat__ = "restructuredtext en"
