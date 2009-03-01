@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import arange, ones, zeros, asarray, abs
+import numpy
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 
 from pyamg import multigridtools
@@ -133,9 +133,9 @@ def smoothed_aggregation_solver(A, B=None,
         raise ValueError('expected square matrix')
 
     if B is None:
-        B = ones((A.shape[0],1), dtype=A.dtype) # use constant vector
+        B = numpy.ones((A.shape[0],1), dtype=A.dtype) # use constant vector
     else:
-        B = asarray(B, dtype=A.dtype)
+        B = numpy.asarray(B, dtype=A.dtype)
     
     if isinstance(aggregate,tuple) and aggregate[0] == 'predefined':
         # predefined aggregation operators
@@ -187,7 +187,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
 
     # In SA, strength represents "distance", so we take magnitude of complex values
     if C.dtype == complex:
-        C.data = abs(C.data)
+        C.data = numpy.abs(C.data)
 
     ##
     # aggregation
@@ -279,11 +279,11 @@ def sa_filtered_matrix(A,theta):
 ##            # for non-scalar problems, use pre-defined blocks in aggregation
 ##            # the strength of connection matrix is based on the 1-norms of the blocks
 ##
-##            B  = csr_matrix((ones(num_dofs),blocks,arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
+##            B  = csr_matrix((numpy.ones(num_dofs),blocks,numpy.arange(num_dofs + 1)),shape=(num_dofs,num_blocks))
 ##            Bt = B.T.tocsr()
 ##
 ##            #1-norms of blocks entries of A
-##            Block_A = Bt * csr_matrix((abs(A.data),A.indices,A.indptr),shape=A.shape) * B
+##            Block_A = Bt * csr_matrix((numpy.abs(A.data),A.indices,A.indptr),shape=A.shape) * B
 ##
 ##            S = symmetric_strength_of_connection(Block_A,theta)
 ##            S.data[:] = 1

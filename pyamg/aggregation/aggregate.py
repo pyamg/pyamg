@@ -2,9 +2,9 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import arange, ones, ones_like, empty
+import numpy
+import scipy
 from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr, isspmatrix_csc
-from scipy import real
 from pyamg import multigridtools
 from pyamg.graph import lloyd_cluster
 
@@ -65,7 +65,7 @@ def standard_aggregation(C):
     index_type = C.indptr.dtype
     num_rows   = C.shape[0]
 
-    Tj = empty(num_rows, dtype=index_type) #stores the aggregate #s
+    Tj = numpy.empty(num_rows, dtype=index_type) #stores the aggregate #s
     
     fn = multigridtools.standard_aggregation
 
@@ -78,14 +78,14 @@ def standard_aggregation(C):
         if Tj.min() == -1:
             # some nodes not aggregated
             mask = Tj != -1
-            row  = arange( num_rows, dtype=index_type )[mask]
+            row  = numpy.arange( num_rows, dtype=index_type )[mask]
             col  = Tj[mask]
-            data = ones(len(col), dtype='int8')
+            data = numpy.ones(len(col), dtype='int8')
             return coo_matrix( (data,(row,col)), shape=shape).tocsr()
         else:
             # all nodes aggregated
-            Tp = arange( num_rows+1, dtype=index_type)
-            Tx = ones( len(Tj), dtype='int8')
+            Tp = numpy.arange( num_rows+1, dtype=index_type)
+            Tx = numpy.ones( len(Tj), dtype='int8')
             return csr_matrix( (Tx,Tj,Tp), shape=shape)
 
 
@@ -155,7 +155,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if distance == 'unit':
-        data = ones_like(C.data).astype(float)
+        data = numpy.ones_like(C.data).astype(float)
     elif distance == 'abs':
         data = abs(C.data)
     elif distance == 'inv':
@@ -168,7 +168,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         raise ValueError('unrecognized value distance=%s' % distance)
     
     if C.dtype == complex:
-        data = real(data)
+        data = scipy.real(data)
 
     assert(data.min() >= 0)
 
@@ -180,6 +180,6 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
     row  = (clusters >= 0).nonzero()[0]
     col  = clusters[row]
-    data = ones(len(row), dtype='int8')
+    data = numpy.ones(len(row), dtype='int8')
     AggOp = coo_matrix( (data,(row,col)), shape=(G.shape[0],num_seeds)).tocsr()
     return AggOp

@@ -2,8 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import zeros, zeros_like, hstack, dot, conjugate
-from numpy.random import rand
+import numpy
+import scipy
 from scipy.sparse import bsr_matrix
 
 from pyamg.multilevel import multilevel_solver
@@ -125,7 +125,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         
         # Normalize x and add to candidate list
         x = (1.0/norm(x))*x
-        B = hstack((B,x))
+        B = numpy.hstack((B,x))
 
     ###
     # improve candidates
@@ -141,7 +141,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
                 
                 # Normalize x and add to candidate list
                 x = (1.0/norm(x))*x
-                B = hstack((B,x))
+                B = numpy.hstack((B,x))
 
     return smoothed_aggregation_solver(A, mat_flag=mat_flag, B=B, presmoother=prepostsmoother, 
                                        postsmoother=prepostsmoother, smooth=smooth,**kwargs)
@@ -193,11 +193,11 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
     def relax(A,x):
         fn, kwargs = unpack_arg(prepostsmoother)
         if fn == 'gauss_seidel':
-            gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            gauss_seidel(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            kaczmarz_gauss_seidel(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gmres':
-            x[:] = (gmres(A, zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
+            x[:] = (gmres(A, numpy.zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 
@@ -205,9 +205,9 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
 
     #step 1
     A_l = A
-    x   = rand(A_l.shape[0],1)
+    x   = scipy.rand(A_l.shape[0],1)
     if A_l.dtype == complex:
-        x = x + 1.0j*rand(A_l.shape[0],1)
+        x = x + 1.0j*scipy.rand(A_l.shape[0],1)
 
     #step 2
     relax(A_l,x)
@@ -267,14 +267,14 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
             x_hat = x.copy()                                                   #step 4g
             relax(A_l,x)                                                       #step 4h
             if pdef == True:
-                x_A_x = dot(conjugate(x).T,A_l*x)
-                xhat_A_xhat = dot(conjugate(x_hat).T,A_l*x_hat)
+                x_A_x = numpy.dot(numpy.conjugate(x).T,A_l*x)
+                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
             else:
                 # use A.H A innerproduct
                 Ax = A_l*x; Axhat = A_l*x_hat;
-                x_A_x = dot(conjugate(Ax).T,Ax)
-                xhat_A_xhat = dot(conjugate(x_hat).T,A_l*x_hat)
+                x_A_x = numpy.dot(numpy.conjugate(Ax).T,Ax)
+                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
 
             if err_ratio < epsilon:                                            #step 4i
@@ -318,10 +318,10 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
     
     levels = ml.levels
 
-    x = rand(levels[0].A.shape[0],1)
+    x = scipy.rand(levels[0].A.shape[0],1)
     if levels[0].A.dtype == complex:
-        x = x + 1.0j*rand(levels[0].A.shape[0],1)
-    b = zeros_like(x)
+        x = x + 1.0j*scipy.rand(levels[0].A.shape[0],1)
+    b = numpy.zeros_like(x)
 
     x = ml.solve(b, x0=x, tol=1e-10, maxiter=candidate_iters)
 
@@ -331,12 +331,12 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
         M,N  = P.shape
         K    = P.blocksize[0]
         bnnz = P.indptr[-1]
-        data = zeros( (bnnz, K+1, K), dtype=P.dtype )
+        data = numpy.zeros( (bnnz, K+1, K), dtype=P.dtype )
         data[:,:-1,:] = P.data
         return bsr_matrix( (data, P.indices, P.indptr), shape=( (K+1)*(M/K), N) )
 
     def expand_candidates(B_old,x):
-        B = zeros( (x.shape[0], B_old.shape[1] + 1), dtype=x.dtype)
+        B = numpy.zeros( (x.shape[0], B_old.shape[1] + 1), dtype=x.dtype)
 
         B[:B_old.shape[0],:B_old.shape[1]] = B_old
         B[:,-1] = x.reshape(-1)
@@ -381,18 +381,18 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
         solver = multilevel_solver(levels[i+1:])
         setup_smoothers(solver, presmoother=prepostsmoother, postsmoother=prepostsmoother)
 
-        x = solver.solve(zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
+        x = solver.solve(numpy.zeros_like(x), x0=x, tol=1e-12, maxiter=candidate_iters)
 
     
     fn, kwargs = unpack_arg(prepostsmoother)
     for lvl in reversed(levels[:-2]):
         x = lvl.P * x
         if fn == 'gauss_seidel':
-            gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            gauss_seidel(lvl.A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(lvl.A, x, zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            kaczmarz_gauss_seidel(lvl.A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gmres':
-            x[:] = (gmres(lvl.A, zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
+            x[:] = (gmres(lvl.A, numpy.zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 

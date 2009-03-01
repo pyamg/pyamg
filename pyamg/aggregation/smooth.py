@@ -2,8 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import ones, zeros, ravel, asarray, conjugate
-
+import numpy
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr
 from scipy.linalg import pinv2
 
@@ -278,14 +277,14 @@ def Satisfy_Constraints(U, B, BtBinv):
     num_blocks = U.indices.shape[0]
     num_block_rows = U.shape[0]/RowsPerBlock
 
-    UB = ravel(U*B)
+    UB = numpy.ravel(U*B)
 
     # Apply constraints, noting that we need the conjugate of B 
     # for use as Bi.H in local projection
     pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
             num_blocks, num_block_rows, 
-            conjugate(ravel(B)), UB, ravel(BtBinv), 
-            U.indptr, U.indices, ravel(U.data))
+            numpy.conjugate(numpy.ravel(B)), UB, numpy.ravel(BtBinv), 
+            U.indptr, U.indices, numpy.ravel(U.data))
         
     return U
 
@@ -368,7 +367,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         raise TypeError("T must be csr_matrix or bsr_matrix")
 
     if Atilde is None:
-        Atilde = csr_matrix( (ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
+        Atilde = csr_matrix( (numpy.ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
 
     if not isspmatrix_csr(Atilde):
         raise TypeError("Atilde must be csr_matrix")
@@ -395,7 +394,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     #====================================================================
     # Expand the allowed sparsity pattern for P through multiplication by Atilde
     T.sort_indices()
-    Sparsity_Pattern = csr_matrix( (ones(T.indices.shape), T.indices, T.indptr), 
+    Sparsity_Pattern = csr_matrix( (numpy.ones(T.indices.shape), T.indices, T.indptr), 
                                     shape=(T.shape[0]/T.blocksize[0],T.shape[1]/T.blocksize[1])  )
     Atilde.data[:] = 1.0
     for i in range(degree):
@@ -414,19 +413,20 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     RowsPerBlock = Sparsity_Pattern.blocksize[0]
     Nnodes = Nfine/RowsPerBlock
 
-    BtBinv = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
+    BtBinv = numpy.zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
     BsqCols = sum(range(NullDim+1))
-    Bsq = zeros((Ncoarse,BsqCols), dtype=B.dtype)
+    Bsq = numpy.zeros((Ncoarse,BsqCols), dtype=B.dtype)
     counter = 0
     for i in range(NullDim):
         for j in range(i,NullDim):
-            Bsq[:,counter] = conjugate(ravel(asarray(B[:,i])))*ravel(asarray(B[:,j]))
+            Bsq[:,counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i])))*numpy.ravel(numpy.asarray(B[:,j]))
             counter = counter + 1
     
-    pyamg.multigridtools.calc_BtB(NullDim, Nnodes, ColsPerBlock, ravel(asarray(Bsq)), 
-        BsqCols, ravel(asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
+    pyamg.multigridtools.calc_BtB(NullDim, Nnodes, ColsPerBlock,
+            numpy.ravel(numpy.asarray(Bsq)), 
+        BsqCols, numpy.ravel(numpy.asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
     # pinv_array inverts each block in BtBinv
-    pyamg.multigridtools.pinv_array(ravel(BtBinv), Nnodes, NullDim, 'F')
+    pyamg.multigridtools.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
     #====================================================================
     
     #====================================================================
@@ -435,7 +435,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     i = 0
     if SPD:
         # Preallocate
-        AP = bsr_matrix((zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+        AP = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                          shape=(Sparsity_Pattern.shape) )
 
         #Apply CG with diagonal preconditioning
@@ -445,7 +445,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         #   Equivalent to R = -A*T;    R = R.multiply(Sparsity_Pattern)
         #   with the added constraint that R has an explicit 0 wherever 
         #   R is 0 and Sparsity_Pattern is not
-        R = bsr_matrix((zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+        R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                         shape=(Sparsity_Pattern.shape) )
         # This gives us the same sparsity data structures as T in BSC format.
         # It has the added benefit of TBSC.data looking like T.tobsc().data, but 
@@ -454,9 +454,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         TBSC = -1.0*T.T.tobsr()
         TBSC.sort_indices()
         A.sort_indices()
-        pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,     ravel(A.data), 
-                                                  TBSC.indptr, TBSC.indices,  ravel(TBSC.data),
-                                                  R.indptr,    R.indices,     ravel(R.data),      
+        pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,
+                numpy.ravel(A.data), 
+                                                  TBSC.indptr, TBSC.indices,
+                                                  numpy.ravel(TBSC.data),
+                                                  R.indptr,    R.indices,
+                                                  numpy.ravel(R.data),      
                                                   T.shape[0],  T.blocksize[0],T.blocksize[1])
         del TBSC
         
@@ -475,7 +478,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #Apply diagonal preconditioner
             Z = scale_rows(R, Dinv)
     
-            #Frobenius innerproduct of (R,Z) = sum( conjugate(rk).*zk)
+            #Frobenius innerproduct of (R,Z) = sum( numpy.conjugate(rk).*zk)
             newsum = (R.conjugate().multiply(Z)).sum()
                 
             #P is the search direction, not the prolongator, which is T.    
@@ -497,9 +500,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #   Equivalent to:  AP = A*P;    AP = AP.multiply(Sparsity_Pattern)
             #   with the added constraint that explicit zeros are in AP wherever 
             #   AP = 0 and Sparsity_Pattern does not
-            pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,      ravel(A.data), 
-                                                      PBSC.indptr, PBSC.indices,   ravel(PBSC.data),
-                                                      AP.indptr,   AP.indices,     ravel(AP.data),      
+            pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,
+                    numpy.ravel(A.data), 
+                                                      PBSC.indptr,
+                                                      PBSC.indices,   numpy.ravel(PBSC.data),
+                                                      AP.indptr,   AP.indices,
+                                                      numpy.ravel(AP.data),      
                                                       T.shape[0],  T.blocksize[0], T.blocksize[1])
 
             # Enforce AP*B = 0
@@ -524,7 +530,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         Ah.sort_indices()
         
         # Preallocate
-        AP = bsr_matrix((zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+        AP = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                           shape=(Sparsity_Pattern.shape) )
 
         # D for A.H*A
@@ -534,7 +540,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         #   Equivalent to R = -Ah*(A*T);    R = R.multiply(Sparsity_Pattern)
         #   with the added constraint that R has an explicit 0 wherever 
         #   R is 0 and Sparsity_Pattern is not
-        R = bsr_matrix((zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+        R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                         shape=(Sparsity_Pattern.shape) )
         # This gives us the same sparsity data structures as T in BSC format
         # It has the added benefit of TBSC.data looking like T.tobsc().data, but 
@@ -542,9 +548,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         # which is needed for the gemm in incomplete_BSRmatmat.
         ATBSC = -1.0*(A*T).T.tobsr()
         ATBSC.sort_indices()
-        pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,    Ah.indices,    ravel(Ah.data), 
-                                                  ATBSC.indptr, ATBSC.indices, ravel(ATBSC.data),
-                                                  R.indptr,    R.indices,    ravel(R.data),      
+        pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,    Ah.indices,
+                numpy.ravel(Ah.data), 
+                                                  ATBSC.indptr, ATBSC.indices,
+                                                  numpy.ravel(ATBSC.data),
+                                                  R.indptr,    R.indices,
+                                                  numpy.ravel(R.data),      
                                                   T.shape[0],   T.blocksize[0],T.blocksize[1])
         del ATBSC
 
@@ -585,9 +594,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(Sparsity_Pattern)
             #  with the added constraint that explicit zeros are in AP wherever 
             #  AP = 0 and Sparsity_Pattern does not
-            pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,     Ah.indices,     ravel(Ah.data), 
-                                                      AP_BSC.indptr, AP_BSC.indices, ravel(AP_BSC.data),
-                                                      AP.indptr,     AP.indices,     ravel(AP.data),      
+            pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,
+                    Ah.indices,     numpy.ravel(Ah.data), 
+                                                      AP_BSC.indptr,
+                                                      AP_BSC.indices, numpy.ravel(AP_BSC.data),
+                                                      AP.indptr,
+                                                      AP.indices,     numpy.ravel(AP.data),      
                                                       T.shape[0],    T.blocksize[0], T.blocksize[1])
             
             # Enforce AP*B = 0
