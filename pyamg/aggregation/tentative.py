@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 import numpy
 from scipy.sparse import isspmatrix_csr, bsr_matrix
-from pyamg import multigridtools
+from pyamg import amg_core
 
 __all__ = ['fit_candidates']
 
@@ -34,7 +34,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     See Also
     --------
-    multigridtools.fit_candidates
+    amg_core.fit_candidates
     
     Notes
     -----
@@ -139,7 +139,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     
     AggOp_csc = AggOp.tocsc()
     
-    fn = multigridtools.fit_candidates 
+    fn = amg_core.fit_candidates 
     fn(N_fine, N_coarse, K1, K2, \
        AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(), \
        B.ravel(), R.ravel(), tol)

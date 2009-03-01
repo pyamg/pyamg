@@ -99,7 +99,7 @@ import scipy
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
-from pyamg import multigridtools
+from pyamg import amg_core
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
@@ -129,7 +129,7 @@ def RS(S):
  
     See Also
     --------
-    multigridtools.rs_cf_splitting
+    amg_core.rs_cf_splitting
 
     References
     ----------
@@ -144,7 +144,7 @@ def RS(S):
 
     splitting = numpy.empty( S.shape[0], dtype='intc' )
 
-    multigridtools.rs_cf_splitting(S.shape[0],
+    amg_core.rs_cf_splitting(S.shape[0],
             S.indptr, S.indices,  
             T.indptr, T.indices, 
             splitting)
@@ -281,7 +281,7 @@ def MIS(G, weights, maxiter=None):
 
     See Also
     --------
-    fn = multigridtools.maximal_independent_set_parallel
+    fn = amg_core.maximal_independent_set_parallel
  
     """
 
@@ -290,7 +290,7 @@ def MIS(G, weights, maxiter=None):
     mis    = numpy.empty( G.shape[0], dtype='intc' )
     mis[:] = -1
     
-    fn = multigridtools.maximal_independent_set_parallel
+    fn = amg_core.maximal_independent_set_parallel
         
     if maxiter is None:
         fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights)

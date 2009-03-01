@@ -46,7 +46,7 @@
  * Examples
  * --------
  * >>> from scipy.sparse import csr_matrix
- * >>> from pyamg.multigridtools import apply_distance_filter
+ * >>> from pyamg.amg_core import apply_distance_filter
  * >>> from scipy import array
  * >>> # Graph in CSR where entries in row i represent distances from dof i
  * >>> indptr = array([0,3,6,9])
@@ -119,7 +119,7 @@ void apply_distance_filter(const I n_row,
  * Examples
  * --------
  * >>> from scipy.sparse import bsr_matrix, csr_matrix
- * >>> from pyamg.multigridtools import min_blocks
+ * >>> from pyamg.amg_core import min_blocks
  * >>> from numpy import zeros, array, ravel, round
  * >>> from scipy import rand
  * >>> row  = array([0,2,4,6])
@@ -543,7 +543,7 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  *
  * Examples
  * --------
- * >>> from pyamg.multigridtools import incomplete_matmat
+ * >>> from pyamg.amg_core import incomplete_matmat
  * >>> from scipy import arange, eye, ones
  * >>> from scipy.sparse import csr_matrix, csc_matrix
  * >>>

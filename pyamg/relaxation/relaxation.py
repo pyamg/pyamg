@@ -8,7 +8,7 @@ import numpy
 from scipy import sparse
 
 from pyamg.util.utils import type_prep, get_diagonal
-from pyamg import multigridtools
+from pyamg import amg_core
 
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
@@ -231,7 +231,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     if sparse.isspmatrix_csr(A):
         for iter in xrange(iterations):
-            multigridtools.gauss_seidel(A.indptr, A.indices, A.data,
+            amg_core.gauss_seidel(A.indptr, A.indices, A.data,
                                         x, b,
                                         row_start, row_stop, row_step)
     else:
@@ -241,7 +241,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start = row_start / R
         row_stop  = row_stop  / R
         for iter in xrange(iterations):
-            multigridtools.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
+            amg_core.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
                                               x, b,
                                               row_start, row_stop, row_step,
                                               R)
@@ -309,7 +309,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     for iter in xrange(iterations):
-        multigridtools.jacobi(A.indptr, A.indices, A.data,
+        amg_core.jacobi(A.indptr, A.indices, A.data,
                               x, b, temp,
                               row_start, row_stop, row_step,
                               omega)
@@ -460,7 +460,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
         raise ValueError('valid sweep directions are \'forward\', \'backward\', and \'symmetric\'')
 
     for iter in xrange(iterations):
-        multigridtools.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+        amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
                                             x, b, indices,
                                             row_start, row_stop, row_step)
 
@@ -541,7 +541,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     
     for i in range(iterations):
         delta = (numpy.ravel(b - A*x)*numpy.ravel(Dinv)).astype(A.dtype)
-        multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
+        amg_core.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
     
@@ -607,7 +607,7 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     
     for i in range(iterations):
         delta = numpy.ravel(b - A*x).astype(A.dtype)
-        multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
+        amg_core.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                            x, b, delta, temp, row_start,
                                            row_stop, row_step, omega)
 
@@ -687,7 +687,7 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
     
     for i in range(iterations):
-        multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
+        amg_core.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
                                            x, b, row_start,
                                            row_stop, row_step, Dinv)
 

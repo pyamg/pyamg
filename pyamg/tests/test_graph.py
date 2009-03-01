@@ -8,7 +8,7 @@ from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import *
-from pyamg import multigridtools
+from pyamg import amg_core
 
 def canonical_graph(G):
     # convert to expected format
@@ -191,7 +191,7 @@ class TestVertexColorings(TestCase):
         assert_equal( (self.G1 - self.G1.T).nnz, 0) # make sure graph is symmetric
 
     def test_vertex_coloring_JP(self):
-        fn = multigridtools.vertex_coloring_jones_plassmann
+        fn = amg_core.vertex_coloring_jones_plassmann
 
         weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
         coloring = empty(5, dtype='intc')
@@ -204,7 +204,7 @@ class TestVertexColorings(TestCase):
         assert_equal( coloring, [2, 0, 1, 1, 2, 0] )
 
     def test_vertex_coloring_LDF(self):
-        fn = multigridtools.vertex_coloring_LDF
+        fn = amg_core.vertex_coloring_LDF
 
         weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
         coloring = empty(5, dtype='intc')

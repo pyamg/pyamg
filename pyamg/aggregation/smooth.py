@@ -9,7 +9,7 @@ from scipy.linalg import pinv2
 from pyamg.util.utils import scale_rows, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import UnAmal
-import pyamg.multigridtools
+import pyamg.amg_core
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
         'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
@@ -281,7 +281,7 @@ def Satisfy_Constraints(U, B, BtBinv):
 
     # Apply constraints, noting that we need the conjugate of B 
     # for use as Bi.H in local projection
-    pyamg.multigridtools.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
+    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
             num_blocks, num_block_rows, 
             numpy.conjugate(numpy.ravel(B)), UB, numpy.ravel(BtBinv), 
             U.indptr, U.indices, numpy.ravel(U.data))
@@ -422,11 +422,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             Bsq[:,counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i])))*numpy.ravel(numpy.asarray(B[:,j]))
             counter = counter + 1
     
-    pyamg.multigridtools.calc_BtB(NullDim, Nnodes, ColsPerBlock,
+    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock,
             numpy.ravel(numpy.asarray(Bsq)), 
         BsqCols, numpy.ravel(numpy.asarray(BtBinv)), Sparsity_Pattern.indptr, Sparsity_Pattern.indices)
     # pinv_array inverts each block in BtBinv
-    pyamg.multigridtools.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
+    pyamg.amg_core.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
     #====================================================================
     
     #====================================================================
@@ -454,7 +454,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         TBSC = -1.0*T.T.tobsr()
         TBSC.sort_indices()
         A.sort_indices()
-        pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,
+        pyamg.amg_core.incomplete_BSRmatmat(A.indptr,    A.indices,
                 numpy.ravel(A.data), 
                                                   TBSC.indptr, TBSC.indices,
                                                   numpy.ravel(TBSC.data),
@@ -500,7 +500,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #   Equivalent to:  AP = A*P;    AP = AP.multiply(Sparsity_Pattern)
             #   with the added constraint that explicit zeros are in AP wherever 
             #   AP = 0 and Sparsity_Pattern does not
-            pyamg.multigridtools.incomplete_BSRmatmat(A.indptr,    A.indices,
+            pyamg.amg_core.incomplete_BSRmatmat(A.indptr,    A.indices,
                     numpy.ravel(A.data), 
                                                       PBSC.indptr,
                                                       PBSC.indices,   numpy.ravel(PBSC.data),
@@ -548,7 +548,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         # which is needed for the gemm in incomplete_BSRmatmat.
         ATBSC = -1.0*(A*T).T.tobsr()
         ATBSC.sort_indices()
-        pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,    Ah.indices,
+        pyamg.amg_core.incomplete_BSRmatmat(Ah.indptr,    Ah.indices,
                 numpy.ravel(Ah.data), 
                                                   ATBSC.indptr, ATBSC.indices,
                                                   numpy.ravel(ATBSC.data),
@@ -594,7 +594,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(Sparsity_Pattern)
             #  with the added constraint that explicit zeros are in AP wherever 
             #  AP = 0 and Sparsity_Pattern does not
-            pyamg.multigridtools.incomplete_BSRmatmat(Ah.indptr,
+            pyamg.amg_core.incomplete_BSRmatmat(Ah.indptr,
                     Ah.indices,     numpy.ravel(Ah.data), 
                                                       AP_BSC.indptr,
                                                       AP_BSC.indices, numpy.ravel(AP_BSC.data),

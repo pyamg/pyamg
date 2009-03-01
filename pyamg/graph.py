@@ -6,7 +6,7 @@ import numpy
 import scipy
 from scipy import sparse
 
-import multigridtools
+import amg_core
 
 __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford', \
            'lloyd_cluster', 'connected_components']
@@ -66,15 +66,15 @@ def maximal_independent_set(G, algo='serial', k=None):
 
     if k is None:
         if algo == 'serial':
-            fn = multigridtools.maximal_independent_set_serial
+            fn = amg_core.maximal_independent_set_serial
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
-            fn = multigridtools.maximal_independent_set_parallel
+            fn = amg_core.maximal_independent_set_parallel
             fn(N, G.indptr, G.indices, -1, 1, 0, mis, scipy.rand(N))
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
-        fn = multigridtools.maximal_independent_set_k_parallel
+        fn = amg_core.maximal_independent_set_k_parallel
         fn(N, G.indptr, G.indices, k, mis, scipy.rand(N)) 
 
 
@@ -111,13 +111,13 @@ def vertex_coloring(G, method='MIS'):
     coloring = numpy.empty(N, dtype='intc')
 
     if method == 'MIS':
-        fn = multigridtools.vertex_coloring_mis
+        fn = amg_core.vertex_coloring_mis
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
-        fn = multigridtools.vertex_coloring_jones_plassmann
+        fn = amg_core.vertex_coloring_jones_plassmann
         fn(N, G.indptr, G.indices, coloring, scipy.rand(N) )
     elif method == 'LDF':
-        fn = multigridtools.vertex_coloring_LDF
+        fn = amg_core.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, scipy.rand(N) )
     else:
         raise ValueError('unknown method (%s)' % method)
@@ -168,7 +168,7 @@ def bellman_ford(G, seeds, maxiter=None):
     while maxiter is None or iter < maxiter:
         old_distances[:] = distances
 
-        multigridtools.bellman_ford( N, G.indptr, G.indices, G.data,
+        amg_core.bellman_ford( N, G.indptr, G.indices, G.data,
                                     distances, nearest_seed)
         
         if (old_distances == distances).all():
@@ -224,7 +224,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     for i in range(maxiter):
         last_seeds = seeds.copy()
 
-        multigridtools.lloyd_cluster(N, G.indptr, G.indices, G.data, \
+        amg_core.lloyd_cluster(N, G.indptr, G.indices, G.data, \
                 len(seeds), distances, clusters, seeds)
 
         if (seeds == last_seeds).all():
@@ -263,7 +263,7 @@ def breadth_first_search(G, seed):
     level = numpy.empty(N, G.indptr.dtype)
     level[:] = -1
 
-    BFS = multigridtools.breadth_first_search
+    BFS = amg_core.breadth_first_search
     BFS(G.indptr, G.indices, int(seed), order, level)
 
     return order,level
@@ -308,7 +308,7 @@ def connected_components(G):
     #Check symmetry?
     components = numpy.empty(N, G.indptr.dtype)
     
-    fn = multigridtools.connected_components
+    fn = amg_core.connected_components
     fn(N, G.indptr, G.indices, components)
 
     return components
