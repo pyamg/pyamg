@@ -11,11 +11,7 @@ vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 __docformat__ = "restructuredtext en"
 
 import warnings
-
-from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
-        random, uint8, kron, arange, diff, c_, where, arange, issubdtype, \
-        integer, mean, sum, prod, ravel, hstack, vstack, invert, repeat, nonzero
-
+import numpy
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix, triu
 from pyamg.graph import vertex_coloring
 from vtk_writer import write_basic_mesh, write_vtu
@@ -95,7 +91,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
 
     # account for 0 rows.  mark them as solitary aggregates
     if len(Agg.indices) != Agg.shape[0]:
-        new_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
+        new_aggs = numpy.array(Agg.sum(axis=1),dtype=int).ravel()
         new_aggs[full_aggs==1] = Agg.indices    # keep existing aggregate IDs
         new_aggs[full_aggs==0] = Agg.shape[1]   # fill in singletons maxID+1
         ElementAggs = new_aggs[E2V]
@@ -106,7 +102,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     # 2 #
     # find all aggregates encompassing full elements
     # mask[i] == True if all vertices in element i belong to the same aggregate
-    mask = where( abs(diff(ElementAggs)).max(axis=1) == 0 )[0]
+    mask = numpy.where( abs(numpy.diff(ElementAggs)).max(axis=1) == 0 )[0]
     #mask = (ElementAggs[:,:] == ElementAggs[:,0]).all(axis=1)
     E2V_a = E2V[mask,:]   # elements where element is full
     Nel_a = E2V_a.shape[0]
@@ -117,8 +113,8 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
  
     # construct vertex to vertex graph
     col = E2V.ravel()
-    row = kron(arange(0,E2V.shape[0]),ones((E2V.shape[1],),dtype=int))
-    data = ones((len(col),))
+    row = numpy.kron(numpy.arange(0,E2V.shape[0]),numpy.ones((E2V.shape[1],),dtype=int))
+    data = numpy.ones((len(col),))
     if len(row)!=len(col):
         raise ValueError('Problem constructing vertex-to-vertex map')
     V2V = coo_matrix((data,(row,col)),shape=(E2V.shape[0],E2V.max()+1))
@@ -126,7 +122,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     V2V = triu(V2V,1).tocoo()
 
     # get all the edges
-    edges = vstack((V2V.row,V2V.col)).T
+    edges = numpy.vstack((V2V.row,V2V.col)).T
 
     # all the edges in the same aggregate
     E2V_b = edges[Agg.indices[V2V.row] == Agg.indices[V2V.col]]
@@ -142,9 +138,9 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     #####
     # 4 #
     # now write out the elements and edges
-    colors_a = 3*ones((Nel_a,))  # color triangles with threes
-    colors_b = 2*ones((Nel_b,))  # color edges with twos
-    colors_c = 1*ones((Nel_c,))  # color the vertices with ones
+    colors_a = 3*numpy.ones((Nel_a,))  # color triangles with threes
+    colors_b = 2*numpy.ones((Nel_b,))  # color edges with twos
+    colors_c = 1*numpy.ones((Nel_c,))  # color the vertices with ones
 
     Cells  =  {1:E2V_c, 3:E2V_b, key:E2V_a}
     cdata  =  {1:colors_c, 3:colors_b, key:colors_a} # make sure it's a tuple
@@ -215,7 +211,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     N        = Verts.shape[0]
     Ndof     = len(splitting) / N
 
-    E2V = arange(0,N,dtype=int)
+    E2V = numpy.arange(0,N,dtype=int)
 
     ## adjust name in case of multiple variables
     a = fname.split('.')
@@ -242,8 +238,8 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
                              cdata=cdata, fname=new_fname)
         elif output=='matplotlib':
             from pylab import figure, show, plot, xlabel, ylabel, title, legend, axis
-            cdataF = where(cdata==0)[0]
-            cdataC = where(cdata==1)[0]
+            cdataF = numpy.where(cdata==0)[0]
+            cdataC = numpy.where(cdata==1)[0]
             xC = Verts[cdataC,0]
             yC = Verts[cdataC,1]
             xF = Verts[cdataF,0]
@@ -262,11 +258,11 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
 def check_input(Verts=None,E2V=None,Agg=None,A=None,splitting=None,mesh_type=None):
     """Check input for local functions"""
     if Verts is not None:
-        if not issubdtype(Verts.dtype,float):
+        if not numpy.issubdtype(Verts.dtype,float):
             raise ValueError('Verts should be of type float')
 
     if E2V is not None:
-        if not issubdtype(E2V.dtype,integer):
+        if not numpy.issubdtype(E2V.dtype,numpy.integer):
             raise ValueError('E2V should be of type integer')
         if E2V.min() != 0:
             warnings.warn('element indices begin at %d' % E2V.min() )
