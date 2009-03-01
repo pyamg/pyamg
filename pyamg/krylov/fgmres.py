@@ -3,7 +3,7 @@ from numpy import array, zeros, sqrt, ravel, abs, max, dot, arange, conjugate, h
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
-from pyamg import multigridtools
+from pyamg import amg_core
 import scipy
 
 __docformat__ = "restructuredtext en"
@@ -201,7 +201,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             #for j in range(inner-1,-1,-1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            multigridtools.apply_householders(v, ravel(W), dimen, inner-1, -1, -1)
+            amg_core.apply_householders(v, ravel(W), dimen, inner-1, -1, -1)
  
             #Apply preconditioner
             v = ravel(M*v)
@@ -217,7 +217,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             # Factor in all Householder orthogonal reflections on new search direction
             #for j in range(inner+1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            multigridtools.apply_householders(v, ravel(W), dimen, 0, inner+1, 1)
+            amg_core.apply_householders(v, ravel(W), dimen, 0, inner+1, 1)
       
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
@@ -245,7 +245,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             
             if inner > 0:
                 # Apply all previous Given's Rotations to v
-                multigridtools.apply_givens(Q, v, dimen, inner)
+                amg_core.apply_givens(Q, v, dimen, inner)
 
             # Calculate the next Given's rotation, where j = inner
             #  Note that if max_inner = dimen, then this is unnecessary for the last inner 

@@ -7,7 +7,7 @@ from warnings import warn
 import numpy
 from scipy import sparse
 
-import multigridtools
+import amg_core
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
 
@@ -78,7 +78,7 @@ def classical_strength_of_connection(A, theta=0.0):
     Sj = numpy.empty_like(A.indices)
     Sx = numpy.empty_like(A.data)
 
-    fn = multigridtools.classical_strength_of_connection
+    fn = amg_core.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
     return sparse.csr_matrix((Sx,Sj,Sp), shape=A.shape)
@@ -156,7 +156,7 @@ def symmetric_strength_of_connection(A, theta=0):
         Sj = numpy.empty_like(A.indices)
         Sx = numpy.empty_like(A.data)
 
-        fn = multigridtools.symmetric_strength_of_connection
+        fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
         
         return sparse.csr_matrix((Sx,Sj,Sp),A.shape)
@@ -516,7 +516,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         AtildeCSC.sort_indices()
         mask.sort_indices()
         Atilde.sort_indices()
-        multigridtools.incomplete_matmat(Atilde.indptr,    Atilde.indices,    Atilde.data, 
+        amg_core.incomplete_matmat(Atilde.indptr,    Atilde.indices,    Atilde.data, 
                                          AtildeCSC.indptr, AtildeCSC.indices, AtildeCSC.data,
                                          mask.indptr,      mask.indices,      mask.data,      
                                          dimen)
@@ -605,7 +605,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
                 counter = counter + 1        
         
         # Use constrained min problem to define strength
-        multigridtools.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
+        amg_core.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
                                            Atilde.shape[0],
                                            numpy.ravel(numpy.asarray(B)), 
                                            numpy.ravel(numpy.asarray((D_A * numpy.conjugate(B)).T)), 
@@ -621,7 +621,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     
     #Apply drop tolerance
     if epsilon != numpy.inf:
-        multigridtools.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
+        amg_core.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
     
     # Set diagonal to 1.0, as each point is strongly connected to itself.
@@ -637,7 +637,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         n_blocks = Atilde.indices.shape[0]
         blocksize = Atilde.blocksize[0]*Atilde.blocksize[1]
         CSRdata = numpy.zeros((n_blocks,))
-        multigridtools.min_blocks(n_blocks, blocksize, numpy.ravel(numpy.asarray(Atilde.data)), CSRdata)
+        amg_core.min_blocks(n_blocks, blocksize, numpy.ravel(numpy.asarray(Atilde.data)), CSRdata)
         #Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
         Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
     

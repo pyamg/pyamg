@@ -1,5 +1,5 @@
 /* -*- C -*-  (not really, but good for syntax highlighting) */
-%module multigridtools
+%module amg_core
 
  /* why does SWIG complain about int arrays? a typecheck is provided */
 #pragma SWIG nowarn=467

@@ -10,7 +10,7 @@ from scipy.linalg import pinv2, pinv
 
 from pyamg.gallery import poisson, linear_elasticity, load_example, stencil_grid
 from pyamg.strength import *
-from pyamg.multigridtools import incomplete_matmat
+from pyamg.amg_core import incomplete_matmat
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows
 

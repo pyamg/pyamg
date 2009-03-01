@@ -777,7 +777,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  *
  * Examples
  * --------
- * >>> from pyamg.multigridtools import pinv_array
+ * >>> from pyamg.amg_core import pinv_array
  * >>> from scipy import arange, ones, array, dot
  * >>> A = array([arange(1,5, dtype=float).reshape(2,2), ones((2,2),dtype=float)])
  * >>> Ac = A.copy()

@@ -882,7 +882,7 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
  *
  * Examples
  * --------
- * >>> from pyamg.multigridtools import incomplete_BSRmatmat
+ * >>> from pyamg.amg_core import incomplete_BSRmatmat
  * >>> from scipy import arange, eye, ones, ravel
  * >>> from scipy.sparse import bsr_matrix
  * >>>

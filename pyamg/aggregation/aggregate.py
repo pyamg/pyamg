@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 import numpy
 import scipy
 from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr, isspmatrix_csc
-from pyamg import multigridtools
+from pyamg import amg_core
 from pyamg.graph import lloyd_cluster
 
 __all__ = ['standard_aggregation','lloyd_aggregation']
@@ -52,7 +52,7 @@ def standard_aggregation(C):
 
     See Also
     --------
-    multigridtools.standard_aggregation
+    amg_core.standard_aggregation
 
     """
 
@@ -67,7 +67,7 @@ def standard_aggregation(C):
 
     Tj = numpy.empty(num_rows, dtype=index_type) #stores the aggregate #s
     
-    fn = multigridtools.standard_aggregation
+    fn = amg_core.standard_aggregation
 
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj)
 
@@ -144,7 +144,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
     See Also
     --------
-    multigridtools.standard_aggregation
+    amg_core.standard_aggregation
 
     """
 

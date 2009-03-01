@@ -10,7 +10,7 @@ from scipy.sparse import bsr_matrix, csr_matrix
 from pyamg.aggregation.smooth import Satisfy_Constraints
 from pyamg.gallery import poisson, linear_elasticity, load_example, gauge_laplacian
 from pyamg.aggregation import smoothed_aggregation_solver
-from pyamg.multigridtools import incomplete_BSRmatmat
+from pyamg.amg_core import incomplete_BSRmatmat
 
 class TestEnergyMin(TestCase):
     def test_incomplete_BSRmatmat(self):

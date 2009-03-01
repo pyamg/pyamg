@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 import numpy
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 
-from pyamg import multigridtools
+from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import setup_smoothers
 from pyamg.util.utils import symmetric_rescaling, diag_sparse
@@ -263,7 +263,7 @@ def sa_filtered_matrix(A,theta):
     if isspmatrix_csr(A): 
         #TODO rework this
         raise NotImplementedError('blocks not handled yet')
-        Sp,Sj,Sx = multigridtools.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
+        Sp,Sj,Sx = amg_core.symmetric_strength_of_connection(A.shape[0],theta,A.indptr,A.indices,A.data)
         return csr_matrix((Sx,Sj,Sp),shape=A.shape)
     elif ispmatrix_bsr(A):
         raise NotImplementedError('blocks not handled yet')

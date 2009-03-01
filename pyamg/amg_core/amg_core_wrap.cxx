@@ -2495,11 +2495,11 @@ static swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 #endif
 
 /*-----------------------------------------------
-              @(target):= _multigridtools.so
+              @(target):= _amg_core.so
   ------------------------------------------------*/
-#define SWIG_init    init_multigridtools
+#define SWIG_init    init_amg_core
 
-#define SWIG_name    "_multigridtools"
+#define SWIG_name    "_amg_core"
 
 #define SWIGVERSION 0x010334 
 #define SWIG_VERSION SWIGVERSION
