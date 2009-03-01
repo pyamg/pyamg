@@ -26,17 +26,15 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     """
     Parameters
     ----------
-    type : {'FE','FD'}
-        Specifies the discretization as Q1 finite element (FE) or 2nd order
-        finite difference (FD)
-    dim : {1,2,3}
-        The dimension of the problem.  2D or 3D
     epsilon  : float, optional
         Anisotropic diffusion coefficient: -div A grad u, 
         where A = [1 0; 0 epsilon].  The default is isotropic, epsilon=1.0
     theta : float, optional
         Rotation angle `theta` in radians defines -div Q A Q^T grad,
         where Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].  
+    type : {'FE','FD'}
+        Specifies the discretization as Q1 finite element (FE) or 2nd order
+        finite difference (FD)
         The default is `theta` = 0.0
 
     Returns
@@ -55,7 +53,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     Examples
     --------
     >>> from diffusion_stencil import diffusion_stencil
-    >>> sten = diffusion_stencil('FD',dim=2,epsilon=0.0001,theta=pi/6)
+    >>> sten = diffusion_stencil('FD',epsilon=0.0001,theta=pi/6)
     >>> print sten
 
     """

@@ -1,7 +1,7 @@
 """Compute coefficients for polynomial smoothers
 """
 
-import numpy as np
+import numpy
 
 __docformat__ = "restructuredtext en"
 
@@ -38,16 +38,16 @@ def chebyshev_polynomial_coefficients(a, b, degree):
         raise ValueError('invalid interval [%s,%s]' % (a,b))
 
     # Chebyshev roots for the interval [-1,1]
-    std_roots = np.cos( np.pi * (np.arange(degree) + 0.5)/ degree )
+    std_roots = numpy.cos( numpy.pi * (numpy.arange(degree) + 0.5)/ degree )
 
     # Chebyshev roots for the interval [a,b]
     scaled_roots = 0.5 * (b-a) * (1 + std_roots) + a
     
     # Compute monic polynomial coefficients of polynomial with scaled roots
-    scaled_poly  = np.poly(scaled_roots)
+    scaled_poly  = numpy.poly(scaled_roots)
 
     # Scale coefficients to enforce C(0) = 1.0
-    scaled_poly /= np.polyval(scaled_poly, 0)
+    scaled_poly /= numpy.polyval(scaled_poly, 0)
 
     return scaled_poly
 
@@ -85,22 +85,22 @@ def mls_polynomial_coefficients(rho, degree):
     >>> print "Roots of the Prolongation Smoother: \\n" + str(mls[1])
     """
     
-    std_roots = np.cos( np.pi * (np.arange(degree) + 0.5)/ degree )
+    std_roots = numpy.cos( numpy.pi * (numpy.arange(degree) + 0.5)/ degree )
     #print std_roots
 
-    roots = rho/2.0 * (1.0 - np.cos(2*np.pi*(np.arange(degree,dtype='float64') + 1)/(2.0*degree+1.0)))
+    roots = rho/2.0 * (1.0 - numpy.cos(2*numpy.pi*(numpy.arange(degree,dtype='float64') + 1)/(2.0*degree+1.0)))
     #print roots
     roots = 1.0/roots
 
-    #S_coeffs = list(-np.poly(roots)[1:][::-1])
+    #S_coeffs = list(-numpy.poly(roots)[1:][::-1])
 
-    S = np.poly(roots)[::-1]             #monomial coefficients of S error propagator
+    S = numpy.poly(roots)[::-1]             #monomial coefficients of S error propagator
     
     SSA_max = rho/((2.0*degree+1.0)**2)    #upper bound on the spectral radius of S^2A
-    S_hat = np.polymul(S,S) #monomial coefficients of \hat{S} propagator
-    S_hat = np.hstack(( (-1.0/SSA_max)*S_hat, [1]) )
+    S_hat = numpy.polymul(S,S) #monomial coefficients of \hat{S} propagator
+    S_hat = numpy.hstack(( (-1.0/SSA_max)*S_hat, [1]) )
 
-    coeffs = np.polymul(S_hat,S)          #coefficients for combined error propagator i.e. \hat{S}S
+    coeffs = numpy.polymul(S_hat,S)          #coefficients for combined error propagator i.e. \hat{S}S
     coeffs = -coeffs[:-1]                    #coefficients for smoother
 
     return (coeffs,roots)

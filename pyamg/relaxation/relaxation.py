@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-import numpy as np
+import numpy
 from scipy import sparse
 
 from pyamg.util.utils import type_prep, get_diagonal
@@ -72,9 +72,9 @@ def make_system(A, x, b, formats=None):
         else:
             A = sparse.csr_matrix(A).asformat(formats[0])
 
-    if not isinstance(x, np.ndarray):
+    if not isinstance(x, numpy.ndarray):
         raise ValueError('expected numpy array for argument x')
-    if not isinstance(b, np.ndarray):
+    if not isinstance(b, numpy.ndarray):
         raise ValueError('expected numpy array for argument b')
 
     M,N = A.shape
@@ -93,8 +93,8 @@ def make_system(A, x, b, formats=None):
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
 
-    x = np.ravel(x)
-    b = np.ravel(b)
+    x = numpy.ravel(x)
+    b = numpy.ravel(b)
 
     return A,x,b
 
@@ -154,7 +154,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
-    x_old = np.empty_like(x)
+    x_old = numpy.empty_like(x)
 
     for i in range(iterations):
         x_old[:] = x
@@ -241,7 +241,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start = row_start / R
         row_stop  = row_stop  / R
         for iter in xrange(iterations):
-            multigridtools.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
+            multigridtools.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
                                               x, b,
                                               row_start, row_stop, row_step,
                                               R)
@@ -303,7 +303,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     if (row_stop - row_start) * row_step <= 0:  #no work to do
         return
 
-    temp = np.empty_like(x)
+    temp = numpy.empty_like(x)
     
     # Create uniform type, and convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
@@ -440,7 +440,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
 
-    indices = np.asarray(indices, dtype='intc')
+    indices = numpy.asarray(indices, dtype='intc')
 
     #if indices.min() < 0:
     #    raise ValueError('row index (%d) is invalid' % indices.min())
@@ -530,7 +530,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    temp = np.zeros_like(x)
+    temp = numpy.zeros_like(x)
     
     # Dinv for A*A.H
     Dinv = get_diagonal(A, norm_eq=2, inv=True)
@@ -540,7 +540,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
     
     for i in range(iterations):
-        delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
+        delta = (numpy.ravel(b - A*x)*numpy.ravel(Dinv)).astype(A.dtype)
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
@@ -600,13 +600,13 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
     
-    temp = np.zeros_like(x)
+    temp = numpy.zeros_like(x)
     
     # Create uniform type, and convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
     
     for i in range(iterations):
-        delta = np.ravel(b - A*x).astype(A.dtype)
+        delta = numpy.ravel(b - A*x).astype(A.dtype)
         multigridtools.kaczmarz_jacobi(A.indptr, A.indices, A.data,
                                            x, b, delta, temp, row_start,
                                            row_stop, row_step, omega)
@@ -684,7 +684,7 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
     # Dinv for A*A.H
-    Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
+    Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
     
     for i in range(iterations):
         multigridtools.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,

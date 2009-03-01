@@ -3,8 +3,8 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-import numpy as np
-import scipy as sp
+import numpy
+import scipy
 import scipy.sparse as sparse
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
@@ -38,8 +38,8 @@ def norm(x):
     #TODO check dimensions of x
     #TODO speedup complex case
 
-    x = np.ravel(x)
-    return np.sqrt( np.inner(x.conj(),x).real )
+    x = numpy.ravel(x)
+    return numpy.sqrt( numpy.inner(x.conj(),x).real )
 
 def infinity_norm(A):
     """
@@ -79,17 +79,17 @@ def infinity_norm(A):
 
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
         #avoid copying index and ptr arrays
-        abs_A = A.__class__((np.abs(A.data),A.indices,A.indptr),shape=A.shape)
-        return (abs_A * np.ones((A.shape[1]),dtype=A.dtype)).max()
+        abs_A = A.__class__((numpy.abs(A.data),A.indices,A.indptr),shape=A.shape)
+        return (abs_A * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
     elif sparse.isspmatrix(A):
-        return (A.abs() * np.ones((A.shape[1]),dtype=A.dtype)).max()
+        return (A.abs() * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
     else:
         return norm(A,inf)
 
 def residual_norm(A, x, b):
     """Compute ||b - A*x||"""
 
-    return norm(np.ravel(b) - A*np.ravel(x))
+    return norm(numpy.ravel(b) - A*numpy.ravel(x))
 
 
 def axpy(x,y,a=1.0):
@@ -160,15 +160,15 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
 
     maxiter = min(A.shape[0],maxiter)
 
-    sp.random.seed(0)  #make results deterministic
+    scipy.random.seed(0)  #make results deterministic
 
-    v0  = sp.rand(A.shape[1],1)
+    v0  = scipy.rand(A.shape[1],1)
     if A.dtype == complex:
-        v0 = v0 + 1.0j * sp.rand(A.shape[1],1)
+        v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
 
     v0 /= norm(v0)
 
-    H  = np.zeros((maxiter+1,maxiter), dtype=A.dtype)
+    H  = numpy.zeros((maxiter+1,maxiter), dtype=A.dtype)
     V = [v0]
 
     for j in range(maxiter):
@@ -179,7 +179,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
                 H[j-1,j] = beta
                 w -= beta * V[-2]
 
-            alpha = np.dot(np.conjugate(np.ravel(w)), np.ravel(V[-1]))
+            alpha = numpy.dot(numpy.conjugate(numpy.ravel(w)), numpy.ravel(V[-1]))
             H[j,j] = alpha
             w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
             
@@ -197,7 +197,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
         else:
             #orthogonalize against Vs
             for i,v in enumerate(V):
-                H[i,j] = np.dot(np.conjugate(np.ravel(v)), np.ravel(w))
+                H[i,j] = numpy.dot(numpy.conjugate(numpy.ravel(v)), numpy.ravel(w))
                 w = w - H[i,j]*v
 
             H[j+1,j] = norm(w)
@@ -276,7 +276,7 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     """
 
     ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
-    return np.max(np.abs(ev))
+    return numpy.max(numpy.abs(ev))
 
 
 def condest(A, tol=0.1, maxiter=25, symmetric=False):
@@ -318,7 +318,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     ev = _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
-    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
+    return numpy.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
 
 def cond(A):
     """Returns condition number of A
@@ -359,7 +359,7 @@ def cond(A):
     from scipy.linalg import svd
 
     U, Sigma, Vh = svd(A)
-    return np.max(Sigma)/min(Sigma)
+    return numpy.max(Sigma)/min(Sigma)
 
 
 def issymm(A, tol=1e-6):
@@ -393,15 +393,15 @@ def issymm(A, tol=1e-6):
     """
     
     if sparse.isspmatrix(A):
-        diff = np.ravel((A - A.H).data)
+        diff = numpy.ravel((A - A.H).data)
     else:
-        A = np.asmatrix(A)
-        diff = np.ravel(A - A.H)
+        A = numpy.asmatrix(A)
+        diff = numpy.ravel(A - A.H)
 
-    if np.max(diff.shape) == 0:
+    if numpy.max(diff.shape) == 0:
         return 0
     
-    max_entry = np.max(np.abs(diff)) 
+    max_entry = numpy.max(numpy.abs(diff)) 
     if max_entry < tol:
         return 0
     else:

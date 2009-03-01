@@ -3,9 +3,9 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from numpy import mat, int32, ravel, arange, asarray, sqrt, \
-                  zeros, ones, array, isscalar, conjugate
-from scipy import rand, rank, real, imag, mat, union1d,ceil                  
+
+import numpy
+import scipy
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
@@ -53,18 +53,18 @@ def profile_solver(ml, accel=None, **kwargs):
     >>> print res
     """
     A = ml.levels[0].A
-    b = A * rand(A.shape[0],1)
+    b = A * scipy.rand(A.shape[0],1)
     residuals = []
 
     if accel is None:
         x_sol = ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
-            residuals.append( norm(ravel(b) - ravel(A*x)) )
+            residuals.append( norm(numpy.ravel(b) - numpy.ravel(A*x)) )
         M = ml.aspreconditioner(cycle=kwargs.get('cycle','V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
-    return asarray(residuals)
+    return numpy.asarray(residuals)
 
 def diag_sparse(A):
     """
@@ -95,9 +95,9 @@ def diag_sparse(A):
     if isspmatrix(A):
         return A.diagonal()
     else:
-        if(rank(A)!=1):
+        if(numpy.rank(A)!=1):
             raise ValueError,'input diagonal array expected to be rank 1'
-        return csr_matrix((asarray(A),arange(len(A)),arange(len(A)+1)),(len(A),len(A)))
+        return csr_matrix((numpy.asarray(A),numpy.arange(len(A)),numpy.arange(len(A)+1)),(len(A),len(A)))
 
 def scale_rows(A,v,copy=True):
     """
@@ -142,7 +142,7 @@ def scale_rows(A,v,copy=True):
     """
     from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
 
-    v = ravel(v)
+    v = numpy.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M,N = A.shape
@@ -151,15 +151,15 @@ def scale_rows(A,v,copy=True):
 
         if copy:
             A = A.copy()
-            A.data = asarray(A.data,dtype=upcast(A.dtype,v.dtype))
+            A.data = numpy.asarray(A.data,dtype=upcast(A.dtype,v.dtype))
         else:
-            v = asarray(v,dtype=A.dtype)
+            v = numpy.asarray(v,dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
         else:
             R,C = A.blocksize
-            bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices, ravel(A.data), v)
+            bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -210,7 +210,7 @@ def scale_columns(A,v,copy=True):
     """
     from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
 
-    v = ravel(v)
+    v = numpy.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M,N = A.shape
@@ -219,15 +219,15 @@ def scale_columns(A,v,copy=True):
 
         if copy:
             A = A.copy()
-            A.data = asarray(A.data,dtype=upcast(A.dtype,v.dtype))
+            A.data = numpy.asarray(A.data,dtype=upcast(A.dtype,v.dtype))
         else:
-            v = asarray(v,dtype=A.dtype)
+            v = numpy.asarray(v,dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
         else:
             R,C = A.blocksize
-            bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices, ravel(A.data), v)
+            bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -289,10 +289,10 @@ def symmetric_rescaling(A,copy=True):
         mask = D == 0
 
         if A.dtype != complex:
-            D_sqrt = sqrt(abs(D))
+            D_sqrt = numpy.sqrt(abs(D))
         else:
             # We can take square roots of negative numbers
-            D_sqrt = sqrt(D)
+            D_sqrt = numpy.sqrt(D)
         
         D_sqrt_inv = 1.0/D_sqrt
         D_sqrt_inv[mask] = 0
@@ -344,8 +344,8 @@ def type_prep(upcast_type, varlist):
     '''
     varlist = to_type(upcast_type, varlist)
     for i in range(len(varlist)):
-        if isscalar(varlist[i]):
-            varlist[i] = array([varlist[i]])
+        if numpy.isscalar(varlist[i]):
+            varlist[i] = numpy.array([varlist[i]])
     
     return varlist
 
@@ -382,13 +382,13 @@ def to_type(upcast_type, varlist):
 
     '''
 
-    #convert_type = type(array([0], upcast_type)[0])
+    #convert_type = type(numpy.array([0], upcast_type)[0])
         
     for i in range(len(varlist)):
 
         # convert scalars to complex
-        if isscalar(varlist[i]):
-            varlist[i] = array([varlist[i]], upcast_type)[0]
+        if numpy.isscalar(varlist[i]):
+            varlist[i] = numpy.array([varlist[i]], upcast_type)[0]
         else:
             # convert sparse and dense mats to complex
             try:
@@ -447,9 +447,9 @@ def get_diagonal(A, norm_eq=False, inv=False):
     if norm_eq == 1:
         # This transpose involves almost no work, use csr data structures as csc, or vice versa
         At = A.T    
-        D = (At.multiply(At.conjugate()))*ones((At.shape[0],))
+        D = (At.multiply(At.conjugate()))*numpy.ones((At.shape[0],))
     elif norm_eq == 2:    
-        D = (A.multiply(A.conjugate()))*ones((A.shape[0],))
+        D = (A.multiply(A.conjugate()))*numpy.ones((A.shape[0],))
     else:
         D = A.diagonal()
         
@@ -464,7 +464,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
     Unamalgamate a CSR A with blocks of 1's.  
 
-    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock)
+    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock))
 
     Parameters
     ----------
@@ -492,7 +492,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     >>> A.todense()
     >>> UnAmal(A,2,2).todense()
     """
-    data = ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
+    data = numpy.ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
     return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
 
 def print_table(table, title='', delim='|', centering='center', col_padding=2, header=True, headerchar='-'):
@@ -591,7 +591,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
         #                Total Column Width            Total Col Delimiter Widths
         if len(headerchar) == 0:
             headerchard = ' '
-        table_str += headerchar*int(ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+        table_str += headerchar*int(scipy.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
         
         table = table[1:]
 
@@ -653,30 +653,30 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             A = A.tocsc()
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
-            nonzero_rowcols = union1d(nonzero_rows, nonzero_cols)
-            A = mat(A.todense())
+            nonzero_rowcols = scipy.union1d(nonzero_rows, nonzero_cols)
+            A = numpy.mat(A.todense())
             A = A[nonzero_rowcols,:][:,nonzero_rowcols]
         else:
-            A = mat(A.todense())
+            A = numpy.mat(A.todense())
 
         e = eigvals(A)
         c = cond(A)
-        lambda_min = min(real(e))
-        lambda_max = max(real(e))
-        num_neg = max(e[real(e) < 0.0].shape)
-        num_pos = max(e[real(e) > 0.0].shape)
+        lambda_min = min(scipy.real(e))
+        lambda_max = max(scipy.real(e))
+        num_neg = max(e[scipy.real(e) < 0.0].shape)
+        num_pos = max(e[scipy.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min), ('%1.3f' % lambda_max), str(num_neg), str(num_pos), ('%1.2e' % c)])
         
-        lambda_min = min(imag(e))
-        lambda_max = max(imag(e))
-        num_neg = max(e[imag(e) < 0.0].shape)
-        num_pos = max(e[imag(e) > 0.0].shape)
+        lambda_min = min(scipy.imag(e))
+        lambda_max = max(scipy.imag(e))
+        num_neg = max(e[scipy.imag(e) < 0.0].shape)
+        num_pos = max(e[scipy.imag(e) > 0.0].shape)
         imag_table.append([str(i), ('%1.3f' % lambda_min), ('%1.3f' % lambda_max), str(num_neg), str(num_pos), ('%1.2e' % c)])
 
         if plot:
             import pylab
             pylab.figure(i+1)
-            pylab.plot(real(e), imag(e), 'kx')
+            pylab.plot(scipy.real(e), scipy.imag(e), 'kx')
             handle = pylab.title('Level %d Spectrum' % i)
             handle.set_fontsize(19)
             handle = pylab.xlabel('real(eig)')
@@ -735,7 +735,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
 
     #preallocate rbm
-    rbm = mat(zeros((numNodes*numPDEs, numcols)))
+    rbm = numpy.mat(numpy.zeros((numNodes*numPDEs, numcols)))
     
     for node in range(numNodes):
         dof = node*numPDEs
@@ -799,7 +799,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 #        if fn in name_to_handle:
 #            # convert string into function handle
 #            fn = name_to_handle[fn] 
-#        #elif isinstance(fn, type(ones)):
+#        #elif isinstance(fn, type(numpy.ones)):
 #        #    pass     
 #        elif callable(fn):
 #            # if fn is itself a function handle

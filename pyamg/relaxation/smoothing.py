@@ -1,6 +1,12 @@
 """Method to create pre- and post-smoothers on the levels of a multilevel_solver
 """
 
+import relaxation
+from chebyshev import chebyshev_polynomial_coefficients
+from pyamg.util.utils import scale_rows
+from pyamg.util.linalg import approximate_spectral_radius
+from pyamg.krylov import gmres, cgne, cgnr, cg
+
 __docformat__ = "restructuredtext en"
 
 __all__ = ['setup_smoothers', 'change_smoothers']#, 'smootherlist_tostring', 'smootherlists_tostring']
@@ -248,14 +254,6 @@ def change_smoothers(ml, presmoother, postsmoother):
     for j in range(i+1, len(ml.levels[:-1])):
         ml.levels[j].postsmoother = setup_postsmoother(ml.levels[j], **kwargs)
 
-
-from numpy import array, zeros, ones, ravel
-import relaxation
-from chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows
-from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.krylov import gmres, cgne, cgnr, cg
-
 def rho_D_inv_A(A):
     """
     Return the (approx.) spectral radius of D^-1 * A 
@@ -432,7 +430,6 @@ def smootherlist_tostring(sm):
             out += '        None\n' 
 
     return out
-
 
 def smootherlists_tostring(smlist):
     '''

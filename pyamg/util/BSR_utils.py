@@ -4,7 +4,7 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from numpy import mat, int32, zeros
+import numpy
 
 __all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
 
@@ -48,7 +48,7 @@ def BSR_Get_Row(A, i):
     z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
     
     
-    colindx = zeros((1, z.__len__()), dtype=int32)
+    colindx = numpy.zeros((1, z.__len__()), dtype=numpy.int32)
     counter = 0
     
     for j in range(rowstart, rowend):
@@ -58,7 +58,7 @@ def BSR_Get_Row(A, i):
         colindx[0,counter:(counter+increment)] = coloffset + indys
         counter += increment
     
-    return mat(z).T, colindx[0,:]
+    return numpy.mat(z).T, colindx[0,:]
     
 def BSR_Row_WriteScalar(A, i, x): 
     """
