@@ -2,9 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import array, dot, multiply, power, sqrt, sum, ones, arange, \
-        abs, inf, ceil, zeros, where, bool
-from numpy.random import rand
+import numpy
+import scipy
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, csr_matrix, spdiags
 
@@ -61,29 +60,29 @@ def CR(S, method='habituated',maxiter=20):
 
     # initializaitons    
     alpha = 0.0     # coarsening ratio, quota
-    beta = inf      # quality criterion
-    beta1 = inf     # quality criterion, older
-    beta2 = inf     # quality criterion, oldest
+    beta = numpy.inf      # quality criterion
+    beta1 = numpy.inf     # quality criterion, older
+    beta2 = numpy.inf     # quality criterion, oldest
     n=S.shape[0]    # problem size
     nC = 0          # number of current Coarse points
-    rhs = zeros((n,1)); # rhs for Ae=0
+    rhs = numpy.zeros((n,1)); # rhs for Ae=0
 
     if not isspmatrix(S): raise TypeError('expecting sparse matrix')
 
     S = binormalize(S)
     
-    splitting = zeros( (S.shape[0],1), dtype=int )
+    splitting = numpy.zeros( (S.shape[0],1), dtype=int )
    
     # out iterations ---------------
     for m in range(0,maxiter):
 
         mu = 0.0        # convergence rate
-        E = zeros((n,1))  # slowness measure
+        E = numpy.zeros((n,1))  # slowness measure
 
         # random iterations ---------------
         for k in range(0,ntests):
 
-            e  = 0.5*( 1 + rand(n,1))
+            e  = 0.5*( 1 + scipy.rand(n,1))
             e[splitting>0] = 0
 
             enorm = norm(e)
@@ -92,7 +91,7 @@ def CR(S, method='habituated',maxiter=20):
             for l in range(0,nrelax):
 
                 if method == 'habituated':
-                    gauss_seidel(S,e,zeros((n,1)),iterations=1)
+                    gauss_seidel(S,e,numpy.zeros((n,1)),iterations=1)
                     e[splitting>0]=0
                 elif method == 'concurrent':
                     raise NotImplementedError, 'not implemented: need an F-smoother'
@@ -110,7 +109,7 @@ def CR(S, method='habituated',maxiter=20):
             # end relax
 
             # check slowness
-            E = where( abs(e)>E, abs(e), E )
+            E = numpy.where( numpy.abs(e)>E, numpy.abs(e), E )
 
             # update convergence rate
             mu = mu + enorm/enorm_old
@@ -125,7 +124,7 @@ def CR(S, method='habituated',maxiter=20):
         # quality criterion
         beta2 = beta1
         beta1 = beta
-        beta = power(max([mu, 0.1]), 1.0 / W)
+        beta = numpy.power(max([mu, 0.1]), 1.0 / W)
         
         # check if we're doing well
         if (beta>beta1 and beta1>beta2) or m==(maxiter-1) or max(E)<1e-13:
@@ -139,21 +138,21 @@ def CR(S, method='habituated',maxiter=20):
         else:
             alpha = (1-alphai) * alpha + alphai * (1/gamma)
 
-        nCmax = ceil( alpha * n )
+        nCmax = numpy.ceil( alpha * n )
 
-        L = ceil( G * E / E.max() ).ravel()
+        L = numpy.ceil( G * E / E.max() ).ravel()
 
         binid=G
 
         # add whole bins (and tdepth nodes) at a time
-        u = zeros((n,1))
+        u = numpy.zeros((n,1))
         while nC < nCmax:
             if delta > 0:
                 raise NotImplementedError
             if tdepth != 1:
                 raise NotImplementedError
 
-            (roots,) = where(L==binid)
+            (roots,) = numpy.where(L==binid)
 
             for root in roots:
                 if L[root]>=0:
@@ -167,8 +166,8 @@ def CR(S, method='habituated',maxiter=20):
             #u[:]=0.0
             #u[roots] = 1.0
             #for depth in range(0,tdepth):
-            #    u = abs(S) * u
-            #(troots,tmp) = where(u>0)
+            #    u = numpy.abs(S) * u
+            #(troots,tmp) = numpy.where(u>0)
 
     return splitting.ravel()
 
@@ -222,7 +221,7 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     n  = A.shape[0]
     it = 0
-    x = ones((n,1)).ravel()
+    x = numpy.ones((n,1)).ravel()
 
     # 1.
     B = A.multiply(A).tocsc()  # power(A,2) inconsistent for numpy, scipy.sparse
@@ -230,7 +229,7 @@ def binormalize( A, tol=1e-5, maxiter=10):
     
     # 2.
     beta    = B * x
-    betabar = (1.0/n) * dot(x,beta)
+    betabar = (1.0/n) * numpy.dot(x,beta)
     stdev = rowsum_stdev(x,beta)
 
     #3
@@ -246,14 +245,14 @@ def binormalize( A, tol=1e-5, maxiter=10):
                 return A
             else:
                 # see equation (12)
-                xnew = (2*c0)/(-c1 - sqrt(c1*c1 - 4*c0*c2))
+                xnew = (2*c0)/(-c1 - numpy.sqrt(c1*c1 - 4*c0*c2))
             dx = xnew - x[i]
 
             # here we assume input matrix is symmetric since we grab a row of B
             # instead of a column
             ii = B.indptr[i]
             iii = B.indptr[i+1]
-            dot_Bcol = dot(x[B.indices[ii:iii]],B.data[ii:iii])
+            dot_Bcol = numpy.dot(x[B.indices[ii:iii]],B.data[ii:iii])
 
             betabar = betabar + (1.0/n)*dx*(dot_Bcol + beta[i] + d[i]*dx)
             beta[B.indices[ii:iii]] += dx*B.data[ii:iii]
@@ -264,12 +263,12 @@ def binormalize( A, tol=1e-5, maxiter=10):
         it+=1
 
     # rescale for unit 2-norm
-    d = sqrt(x)
+    d = numpy.sqrt(x)
     D = spdiags( d.ravel(), [0], n,n)
     C = D * A * D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)
-    scale = sqrt((1.0/n) * sum(beta))
+    scale = numpy.sqrt((1.0/n) * numpy.sum(beta))
     return (1/scale)*C
 
 
@@ -295,6 +294,6 @@ def rowsum_stdev(x,beta):
 
     """
     n=x.size
-    betabar = (1.0/n) * dot(x,beta)
-    stdev   = sqrt((1.0/n)*sum(power(multiply(x,beta) - betabar,2)))
+    betabar = (1.0/n) * numpy.dot(x,beta)
+    stdev   = numpy.sqrt((1.0/n)*numpy.sum(numpy.power(numpy.multiply(x,beta) - betabar,2)))
     return stdev/betabar

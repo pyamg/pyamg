@@ -3,10 +3,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from numpy import empty, empty_like
-
+import numpy
 from scipy.sparse import csr_matrix, isspmatrix_csr
-
 from pyamg import multigridtools
 
 __all__ = ['direct_interpolation']
@@ -45,14 +43,14 @@ def direct_interpolation(A, C, splitting):
     if not isspmatrix_csr(C): 
         raise TypeError('expected csr_matrix for C')
 
-    Pp = empty_like( A.indptr )
+    Pp = numpy.empty_like( A.indptr )
 
     multigridtools.rs_direct_interpolation_pass1( A.shape[0],
             C.indptr, C.indices, splitting,  Pp)
 
     nnz = Pp[-1]
-    Pj = empty( nnz, dtype=Pp.dtype )
-    Px = empty( nnz, dtype=A.dtype )
+    Pj = numpy.empty( nnz, dtype=Pp.dtype )
+    Px = numpy.empty( nnz, dtype=A.dtype )
 
     multigridtools.rs_direct_interpolation_pass2( A.shape[0],
             A.indptr, A.indices, A.data,

@@ -94,7 +94,8 @@ References
 
 """
 
-from scipy import ones, empty, rand, ravel
+import numpy
+import scipy
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
@@ -141,7 +142,7 @@ def RS(S):
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
-    splitting = empty( S.shape[0], dtype='intc' )
+    splitting = numpy.empty( S.shape[0], dtype='intc' )
 
     multigridtools.rs_cf_splitting(S.shape[0],
             S.indptr, S.indices,  
@@ -286,7 +287,7 @@ def MIS(G, weights, maxiter=None):
 
     if not isspmatrix_csr(G): raise TypeError('expected csr_matrix')
 
-    mis    = empty( G.shape[0], dtype='intc' )
+    mis    = numpy.empty( G.shape[0], dtype='intc' )
     mis[:] = -1
     
     fn = multigridtools.maximal_independent_set_parallel
@@ -350,14 +351,14 @@ def preprocess(S, coloring_method = None):
     G = S + T           # form graph (must be symmetric)
     G.data[:] = 1
 
-    weights   = ravel(T.sum(axis=1))  # initial weights
+    weights   = numpy.ravel(T.sum(axis=1))  # initial weights
     #weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
-        weights  = weights + rand(len(weights))
+        weights  = weights + scipy.rand(len(weights))
     else:
         coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
-        weights  = weights + (rand(len(weights)) + coloring)/num_colors
+        weights  = weights + (scipy.rand(len(weights)) + coloring)/num_colors
 
     return (weights,G,S,T)
