@@ -1,0 +1,16 @@
+Full installation documentions are available at http://www.pyamg.com
+
+Typically, the following is sufficient:
+
+% sudo python setup.py install
+
+
+To verify a successful installation of PyAMG:
+% python
+>>> import pyamg
+>>> pyamg.test()
+
+To run a simple AMG example:
+%python
+>>> import pyamg
+>>> pyamg.demo()
