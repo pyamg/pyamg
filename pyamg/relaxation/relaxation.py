@@ -465,7 +465,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
                                             row_start, row_stop, row_step)
 
 def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
-    """Perform Kaczmarz Jacobi iterations on the linear system A A^T x = A^Tb
+    """Perform Kaczmarz Jacobi iterations on the linear system A A.H x = A.H b
        (Also known as Cimmino relaxation)
     
     Parameters
@@ -546,7 +546,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
                                        row_stop, row_step, omega)  
     
 def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
-    """Perform Kaczmarz Richardson iterations on the linear system A A^T x = A^Tb
+    """Perform Kaczmarz Richardson iterations on the linear system A A.H x = A.H b
     
     Parameters
     ----------
@@ -611,8 +611,8 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
                                            x, b, delta, temp, row_start,
                                            row_stop, row_step, omega)
 
-def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
-    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A^T x = A^Tb
+def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
+    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A.H x = A.H b
     
     Parameters
     ----------
@@ -626,6 +626,8 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
+    Dinv : { ndarray}
+        Inverse of diag(A A.H),  (length N)
 
     Returns
     -------
@@ -671,22 +673,23 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     
     A,x,b = make_system(A, x, b, formats=['csr'])
     
+    # Dinv for A*A.H
+    if Dinv == None:
+        Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
+    
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(x),1
     elif sweep == 'backward':
         row_start,row_stop,row_step = len(x)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward')
-            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='backward')
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=Dinv)
+            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='backward', Dinv=Dinv)
         return
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
-    # Dinv for A*A.H
-    Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
-    
-    for i in range(iterations):
+    for i in xrange(iterations):
         amg_core.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
                                            x, b, row_start,
                                            row_stop, row_step, Dinv)

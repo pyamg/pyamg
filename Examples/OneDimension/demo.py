@@ -32,7 +32,7 @@ if(__name__=="__main__"):
         
     # Profile this solver for 5 iterations
     oneD_profile(ml, grid=scipy.linspace(0,1,n), x0=scipy.rand(n,), \
-                 soln=numpy.zeros((n,)), b=numpy.zeros((n,)), iter=10)
+                 b=numpy.zeros((n,)), iter=10)
     
     # Plot the fine level's aggregates
     oneD_coarse_grid_vis(ml, fig_num=20, level=0)
