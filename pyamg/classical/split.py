@@ -124,8 +124,6 @@ def RS(S):
     >>> from pyamg.classical import RS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = RS(S)
-    >>> splitting
-    array([0, 1, 0, 1, 0, 1, 0])
  
     See Also
     --------
@@ -172,8 +170,6 @@ def PMIS(S):
     >>> from pyamg.classical import PMIS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMIS(S)
-    >>> splitting
-    array([0, 1, 0, 0, 1, 0, 1])
  
     See Also
     --------
@@ -217,8 +213,6 @@ def PMISc(S, method='JP'):
     >>> from pyamg.classical import PMISc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMISc(S)
-    >>> splitting
-    array([1, 0, 1, 0, 1, 0, 1])
  
     See Also
     --------
@@ -276,8 +270,6 @@ def MIS(G, weights, maxiter=None):
     >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> w = numpy.ones((G.shape[0],1)).ravel()
     >>> mis = MIS(G,w)
-    >>> mis
-    array([1, 0, 1, 0, 1, 0, 1])
 
     See Also
     --------

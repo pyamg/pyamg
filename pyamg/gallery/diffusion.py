@@ -54,9 +54,11 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     --------
     >>> import scipy
     >>> from pyamg.gallery.diffusion import diffusion_stencil_2d
-    >>> sten = diffusion_stencil_2d('FD',epsilon=0.0001,theta=scipy.pi/6)
+    >>> sten = diffusion_stencil_2d(epsilon=0.0001,theta=scipy.pi/6,type='FD')
     >>> print sten
-
+    [[-0.2164847 -0.750025   0.2164847]
+     [-0.250075   2.0002    -0.250075 ]
+     [ 0.2164847 -0.750025  -0.2164847]]
 
     """
     

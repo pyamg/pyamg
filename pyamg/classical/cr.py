@@ -37,15 +37,11 @@ def CR(S, method='habituated',maxiter=20):
 
     Examples
     --------
-    >>> from numpy import linspace, meshgrid
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical.cr import CR
-    >>> from pylab import imshow, show
-    >>> n = 20
-    >>> A = poisson((n,n),format='csr')
+    >>> A = poisson((20,20),format='csr')
     >>> splitting = CR(A)
-    >>> imshow(splitting.reshape((n,n)),interpolation='nearest')
-    >>> show()
+
     """
     # parameters (paper notation)
     ntests = 3      # (nu) number of random tests to do per iteration
@@ -200,11 +196,10 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import binormalize
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
-    >>> print C.multiply(C).sum(axis=1)
         
     References
     ----------

@@ -36,10 +36,10 @@ def direct_interpolation(A, C, splitting):
     >>> P = direct_interpolation(A,A,numpy.array([1,0,1,0,1]))
     >>> P.todense()
     matrix([[ 1. ,  0. ,  0. ],
-        [ 0.5,  0.5,  0. ],
-        [ 0. ,  1. ,  0. ],
-        [ 0. ,  0.5,  0.5],
-        [ 0. ,  0. ,  1. ]])
+            [ 0.5,  0.5,  0. ],
+            [ 0. ,  1. ,  0. ],
+            [ 0. ,  0.5,  0.5],
+            [ 0. ,  0. ,  1. ]])
 
 
     """
