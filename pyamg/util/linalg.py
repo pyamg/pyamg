@@ -67,14 +67,15 @@ def infinity_norm(A):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.linalg import infinity_norm
-    >>> n=100
-    >>> e = ones((n,1)).ravel()
+    >>> n=10
+    >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n)
     >>> print infinity_norm(A)
+    4.0
     """
 
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
@@ -82,7 +83,7 @@ def infinity_norm(A):
         abs_A = A.__class__((numpy.abs(A.data),A.indices,A.indptr),shape=A.shape)
         return (abs_A * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
     elif sparse.isspmatrix(A):
-        return (A.abs() * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
+        return (abs(A) * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
     else:
         return norm(A,inf)
 
@@ -267,12 +268,13 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     Examples
     --------
     >>> from pyamg.util.linalg import approximate_spectral_radius
-    >>> from scipy import rand
+    >>> import numpy
     >>> from scipy.linalg import eigvals, norm
-    >>> A = rand(10,10)
+    >>> A = numpy.array([[1,0],[0,1]])
     >>> print approximate_spectral_radius(A,maxiter=3)
+    1.0
     >>> print max([norm(x) for x in eigvals(A)])
-
+    1.0
     """
 
     ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
@@ -309,10 +311,10 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     Examples
     --------
-    >>> from scipy import rand
+    >>> import numpy
     >>> from pyamg.util.linalg import condest
-    >>> condest(rand(5,5))
-
+    >>> condest(numpy.array([[1,0],[0,2]]))
+    1.0
     
     """
 
@@ -343,9 +345,10 @@ def cond(A):
 
     Examples
     --------
-    >>> from scipy import rand
+    >>> import numpy
     >>> from pyamg.util.linalg import cond
-    >>> cond(rand(5,5))
+    >>> condest(numpy.array([[1,0],[0,2]]))
+    1.0
 
     """  
 
@@ -383,12 +386,14 @@ def issymm(A, tol=1e-6):
 
     Examples
     --------
-    >>> from scipy import rand
+    >>> import numpy
     >>> from pyamg.util.linalg import issymm
-    >>> issymm(rand(5,5))
+    >>> issymm(numpy.array([[1,2],[1,1]]))
+    1
     
     >>> from pyamg.gallery import poisson
     >>> issymm(poisson((10,10)))
+    0
 
     """
     

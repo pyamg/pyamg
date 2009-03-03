@@ -38,19 +38,19 @@ def profile_solver(ml, accel=None, **kwargs):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy
     >>> from scipy.sparse import spdiags
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
-    >>> e = ones((n,1)).ravel()
+    >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n)
-    >>> b = A*ones(A.shape[0])
+    >>> b = A*numpy.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
-    >>> print res
+ 
     """
     A = ml.levels[0].A
     b = A * scipy.rand(A.shape[0],1)
@@ -87,10 +87,14 @@ def diag_sparse(A):
 
     Examples
     --------
-    >>> from scipy import rand
+    >>> import numpy
     >>> from pyamg.util.utils import diag_sparse
-    >>> d = rand(6,1).ravel()
+    >>> d = 2.0*numpy.ones((3,)).ravel()
     >>> print diag_sparse(d).todense()
+    [[ 2.  0.  0.]
+     [ 0.  2.  0.]
+     [ 0.  0.  2.]]
+
     """
     if isspmatrix(A):
         return A.diagonal()
@@ -131,14 +135,14 @@ def scale_rows(A,v,copy=True):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import scale_rows
     >>> n=5
-    >>> e = ones((n,1)).ravel()
+    >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_rows(A,5*ones((A.shape[0],1))).todense()
+    >>> B = scale_rows(A,5*numpy.ones((A.shape[0],1)))
     """
     from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
 
@@ -199,14 +203,20 @@ def scale_columns(A,v,copy=True):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import scale_columns
     >>> n=5
-    >>> e = ones((n,1)).ravel()
+    >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*ones((A.shape[1],1))).todense()
+    >>> print scale_columns(A,5*numpy.ones((A.shape[1],1))).todense()
+    [[ 10.  -5.   0.   0.]
+     [ -5.  10.  -5.   0.]
+     [  0.  -5.  10.  -5.]
+     [  0.   0.  -5.  10.]
+     [  0.   0.   0.  -5.]]
+
     """
     from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
 
@@ -271,15 +281,21 @@ def symmetric_rescaling(A,copy=True):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import symmetric_rescaling
     >>> n=5
-    >>> e = ones((n,1)).ravel()
+    >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
     >>> print DAD.todense()
+    [[ 1.  -0.5  0.   0.   0. ]
+     [-0.5  1.  -0.5  0.   0. ]
+     [ 0.  -0.5  1.  -0.5  0. ]
+     [ 0.   0.  -0.5  1.  -0.5]
+     [ 0.   0.   0.  -0.5  1. ]]
+
     """
     if isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A):
         if A.shape[0] != A.shape[1]:
@@ -307,7 +323,7 @@ def symmetric_rescaling(A,copy=True):
 
 
 def type_prep(upcast_type, varlist):
-    '''
+    """
     Loop over all elements of varlist and convert them to upcasttype
     The only difference with pyamg.util.utils.to_type(...), is that scalars
     are wrapped into (1,0) arrays.  This is desirable when passing 
@@ -333,15 +349,15 @@ def type_prep(upcast_type, varlist):
 
     Examples
     --------
-    >>> from scipy import ones, complex128, rand
+    >>> import numpy
     >>> from pyamg.util.utils import type_prep 
     >>> from scipy.sparse.sputils import upcast
-    >>> x = ones((5,1))
-    >>> y = 1.0j*rand(5,1)
+    >>> x = numpy.ones((5,1))
+    >>> y = 2.0j*numpy.ones((5,1))
     >>> z = 2.3
-    >>> type_prep(upcast(x.dtype, y.dtype), [x, y, z])
+    >>> varlist = type_prep(upcast(x.dtype, y.dtype), [x, y, z])
 
-    '''
+    """
     varlist = to_type(upcast_type, varlist)
     for i in range(len(varlist)):
         if numpy.isscalar(varlist[i]):
@@ -351,7 +367,7 @@ def type_prep(upcast_type, varlist):
 
 
 def to_type(upcast_type, varlist):
-    '''
+    """
     Loop over all elements of varlist and convert them to upcasttype
 
     Parameters
@@ -373,14 +389,14 @@ def to_type(upcast_type, varlist):
 
     Examples
     --------
-    >>> from scipy import ones, complex128, rand
+    >>> import numpy
     >>> from pyamg.util.utils import to_type  
     >>> from scipy.sparse.sputils import upcast
-    >>> x = ones((5,1))
-    >>> y = 1.0j*rand(5,1)
-    >>> to_type(upcast(x.dtype, y.dtype), [x, y])
+    >>> x = numpy.ones((5,1))
+    >>> y = 2.0j*numpy.ones((5,1))
+    >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
 
-    '''
+    """
 
     #convert_type = type(numpy.array([0], upcast_type)[0])
         
@@ -402,7 +418,7 @@ def to_type(upcast_type, varlist):
 
 
 def get_diagonal(A, norm_eq=False, inv=False):
-    ''' Return the diagonal or inverse of diagonal for 
+    """ Return the diagonal or inverse of diagonal for 
         A, (A.H A) or (A A.H)
     
     Parameters
@@ -430,12 +446,15 @@ def get_diagonal(A, norm_eq=False, inv=False):
     --------
     >>> from pyamg.util.utils import get_diagonal
     >>> from pyamg.gallery import poisson
-    >>> A = poisson( (15,15), format='csr' )
+    >>> A = poisson( (5,), format='csr' )
     >>> D = get_diagonal(A)
+    >>> print D
+    [ 2.  2.  2.  2.  2.]
     >>> D = get_diagonal(A, norm_eq=1, inv=True)
+    >>> print D
+    [ 0.2         0.16666667  0.16666667  0.16666667  0.2       ]
 
-
-    '''
+    """
     
     #if not isspmatrix(A):
     if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
@@ -490,7 +509,17 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     >>> data = array([1,2,3,4,5,6])
     >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
     >>> A.todense()
+    matrix([[1, 0, 2],
+            [0, 0, 3],
+            [4, 5, 6]])
     >>> UnAmal(A,2,2).todense()
+    matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
+            [ 1.,  1.,  0.,  0.,  1.,  1.],
+            [ 0.,  0.,  0.,  0.,  1.,  1.],
+            [ 0.,  0.,  0.,  0.,  1.,  1.],
+            [ 1.,  1.,  1.,  1.,  1.,  1.],
+            [ 1.,  1.,  1.,  1.,  1.,  1.]])
+
     """
     data = numpy.ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
     return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
@@ -534,10 +563,10 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     --------
     >>> from pyamg.util.utils import print_table
     >>> table = [ ['cos(0)', 'cos(pi/2)', 'cos(pi)'], ['0.0', '1.0', '0.0'] ]
-    >>> print print_table(table)
-    >>> print print_table(table, delim='||')
-    >>> print print_table(table, headerchar='*')
-    >>> print print_table(table, col_padding=6, centering='left')
+    >>> table1 = print_table(table)                 # string to print
+    >>> table2 = print_table(table, delim='||')
+    >>> table3 = print_table(table, headerchar='*')
+    >>> table4 = print_table(table, col_padding=6, centering='left')
     
     """
     
@@ -607,7 +636,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
 
 
 def hierarchy_spectrum(mg, filter=True, plot=False):
-    '''
+    """
     Examine a multilevel hierarchy's spectrum
 
     Parameters
@@ -626,18 +655,27 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     This can be useful for troubleshooting and when examining how your 
     problem's nature changes from level to level
 
-
     Examples
     --------
     >>> from pyamg import smoothed_aggregation_solver
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import hierarchy_spectrum
-    >>> A = poisson( (15,15), format='csr' )
-    >>> ml = smoothed_aggregation_solver(A, max_coarse=5)
+    >>> A = poisson( (1,), format='csr' )
+    >>> ml = smoothed_aggregation_solver(A)
     >>> hierarchy_spectrum(ml)
-    >>> hierarchy_spectrum(ml, plot=True)
+    <BLANKLINE>
+     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A) 
+    -------------------------------------------------------------------------------------
+       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00 
+    <BLANKLINE>
+    <BLANKLINE>
+     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A) 
+    -------------------------------------------------------------------------------------
+       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00 
+    <BLANKLINE>
 
-    '''
+
+    """
     
     real_table = [ ['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0', 'num re(eig) > 0', 'cond_2(A)'] ]
     imag_table = [ ['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0', 'num im(eig) > 0', 'cond_2(A)'] ]
@@ -714,8 +752,28 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
     Examples
     --------
+    >>> import numpy
     >>> from pyamg.util.utils import Coord2RBM
-    >>> Coord2RBM(3,6,array([0,1,2]),array([0,1,2]),array([0,1,2]))
+    >>> a = numpy.array([0,1,2]) 
+    >>> Coord2RBM(3,6,a,a,a)
+    matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
+            [ 0.,  1.,  0., -0.,  0.,  0.],
+            [ 0.,  0.,  1.,  0., -0.,  0.],
+            [ 0.,  0.,  0.,  1.,  0.,  0.],
+            [ 0.,  0.,  0.,  0.,  1.,  0.],
+            [ 0.,  0.,  0.,  0.,  0.,  1.],
+            [ 1.,  0.,  0.,  0.,  1., -1.],
+            [ 0.,  1.,  0., -1.,  0.,  1.],
+            [ 0.,  0.,  1.,  1., -1.,  0.],
+            [ 0.,  0.,  0.,  1.,  0.,  0.],
+            [ 0.,  0.,  0.,  0.,  1.,  0.],
+            [ 0.,  0.,  0.,  0.,  0.,  1.],
+            [ 1.,  0.,  0.,  0.,  2., -2.],
+            [ 0.,  1.,  0., -2.,  0.,  2.],
+            [ 0.,  0.,  1.,  2., -2.,  0.],
+            [ 0.,  0.,  0.,  1.,  0.,  0.],
+            [ 0.,  0.,  0.,  0.,  1.,  0.],
+            [ 0.,  0.,  0.,  0.,  0.,  1.]])
     """
 
     #check inputs

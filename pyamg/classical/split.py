@@ -272,12 +272,12 @@ def MIS(G, weights, maxiter=None):
     --------
     >>> from pyamg import poisson
     >>> from pyamg.classical import MIS
-    >>> from numpy import ones
+    >>> import numpy
     >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
-    >>> w = ones((G.shape[0],1)).ravel()
+    >>> w = numpy.ones((G.shape[0],1)).ravel()
     >>> mis = MIS(G,w)
     >>> mis
-    >>> array([1, 0, 1, 0, 1, 0, 1])
+    array([1, 0, 1, 0, 1, 0, 1])
 
     See Also
     --------

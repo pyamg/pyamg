@@ -56,13 +56,13 @@ def classical_strength_of_connection(A, theta=0.0):
 
     Examples
     --------
-    >>> from numpy import array
+    >>> import numpy
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import classical_strength_of_connection
     >>> n=3
-    >>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>                  [-1.0, 8.0,-1.0],
-    >>>                  [-1.0,-1.0,-1.0]])
+    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    ...                        [-1.0, 8.0,-1.0],
+    ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = classical_strength_of_connection(A, 0.0)
 
@@ -134,13 +134,13 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Examples
     --------
-    >>> from numpy import array
+    >>> import numpy
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import symmetric_strength_of_connection
     >>> n=3
-    >>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>                  [-1.0, 8.0,-1.0],
-    >>>                  [-1.0,-1.0,-1.0]])
+    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    ...                        [-1.0, 8.0,-1.0],
+    ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = symmetric_strength_of_connection(A, 0.0)
     """
@@ -225,13 +225,13 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     Examples
     --------
-    >>> from numpy import array
+    >>> import numpy
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import energy_based_strength_of_connection
     >>> n=3
-    >>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>                  [-1.0, 8.0,-1.0],
-    >>>                  [-1.0,-1.0,-1.0]])
+    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    ...                        [-1.0, 8.0,-1.0],
+    ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = energy_based_strength_of_connection(A, 0.0)
     """
@@ -355,15 +355,15 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
     Examples
     --------
-    >>> from numpy import array
+    >>> import numpy
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import ode_strength_of_connection
     >>> n=3
-    >>> stencil = array([[-1.0,-1.0,-1.0],
-    >>>                  [-1.0, 8.0,-1.0],
-    >>>                  [-1.0,-1.0,-1.0]])
+    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    ...                        [-1.0, 8.0,-1.0],
+    ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
-    >>> S = ode_strength_of_connection(A, ones((A.shape[0],1)))
+    >>> S = ode_strength_of_connection(A, numpy.ones((A.shape[0],1)))
     """
     # many imports for ode_strength_of_connection, so moved the imports local
     from pyamg.util.utils  import scale_rows

@@ -72,42 +72,39 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
 
     Examples
     --------
-    >>> Verts = array([[0.0,0.0],
-                  [1.0,0.0],
-                  [2.0,0.0],
-                  [0.0,1.0],
-                  [1.0,1.0],
-                  [2.0,1.0],
-                  [0.0,2.0],
-                  [1.0,2.0],
-                  [2.0,2.0],
-                  [0.0,3.0],
-                  [1.0,3.0],
-                  [2.0,3.0]])
-    >>> E2V = array([[0,4,3],
-                 [0,1,4],
-                 [1,5,4],
-                 [1,2,5],
-                 [3,7,6],
-                 [3,4,7],
-                 [4,8,7],
-                 [4,5,8],
-                 [6,10,9],
-                 [6,7,10],
-                 [7,11,10],
-                 [7,8,11]])
-    >>> E2edge = array([[0,1]])
-    >>> E2point = array([2,3,4,5])
-
+    >>> import numpy
+    >>> Verts = numpy.array([[0.0,0.0],
+    ...                      [1.0,0.0],
+    ...                      [2.0,0.0],
+    ...                      [0.0,1.0],
+    ...                      [1.0,1.0],
+    ...                      [2.0,1.0],
+    ...                      [0.0,2.0],
+    ...                      [1.0,2.0],
+    ...                      [2.0,2.0],
+    ...                      [0.0,3.0],
+    ...                      [1.0,3.0],
+    ...                      [2.0,3.0]])
+    >>> E2V = numpy.array([[0,4,3],
+    ...                    [0,1,4],
+    ...                    [1,5,4],
+    ...                    [1,2,5],
+    ...                    [3,7,6],
+    ...                    [3,4,7],
+    ...                    [4,8,7],
+    ...                    [4,5,8],
+    ...                    [6,10,9],
+    ...                    [6,7,10],
+    ...                    [7,11,10],
+    ...                    [7,8,11]])
+    >>> E2edge = numpy.array([[0,1]])
+    >>> E2point = numpy.array([2,3,4,5])
     >>> Cells = {5:E2V,3:E2edge,1:E2point}
-
-    >>> pdata=ones((12,2))
-    >>> pvdata=ones((12*3,2))
-
-    >>> cdata={5:ones((12,2)),3:ones((1,2)),1:ones((4,2))}
-    >>> cvdata={5:ones((3*12,2)),3:ones((3*1,2)),1:ones((3*4,2))}
-
-    >>> write_vtu( 'test.vtu', Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None)
+    >>> pdata=numpy.ones((12,2))
+    >>> pvdata=numpy.ones((12*3,2))
+    >>> cdata={5:numpy.ones((12,2)),3:numpy.ones((1,2)),1:numpy.ones((4,2))}
+    >>> cvdata={5:numpy.ones((3*12,2)),3:numpy.ones((3*1,2)),1:numpy.ones((3*4,2))}
+    >>> write_vtu(Verts=Verts, Cells=Cells, fname='test.vtu')
 
     See Also
     --------
@@ -363,7 +360,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     fname.close()
 
 
-def write_basic_mesh(Verts, E2V=None, mesh_type='tri', pdata=None, pvdata=None, \
+def write_basic_mesh(Verts, E2V=None, mesh_type='tri', \
+        pdata=None, pvdata=None, \
         cdata=None, cvdata=None, fname='output.vtk'):
     """
     Write mesh file for basic types of elements
@@ -399,37 +397,36 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri', pdata=None, pvdata=None, 
 
     Examples
     --------
-    >>> Verts = array([[0.0,0.0],
-                       [1.0,0.0],
-                       [2.0,0.0],
-                       [0.0,1.0],
-                       [1.0,1.0],
-                       [2.0,1.0],
-                       [0.0,2.0],
-                       [1.0,2.0],
-                       [2.0,2.0],
-                       [0.0,3.0],
-                       [1.0,3.0],
-                       [2.0,3.0]])
-    >>> E2V = array([[0,4,3],
-                     [0,1,4],
-                     [1,5,4],
-                     [1,2,5],
-                     [3,7,6],
-                     [3,4,7],
-                     [4,8,7],
-                     [4,5,8],
-                     [6,10,9],
-                     [6,7,10],
-                     [7,11,10],
-                     [7,8,11]])
-    >>> 
-    >>> pdata=ones((12,2))
-    >>> pvdata=ones((12*3,2))
-    >>> cdata=ones((12,2))
-    >>> cvdata=ones((3*12,2))
-    >>> 
-    >>> write_basic_mesh( 'test.vtu', Verts, E2V=E2V, mesh_type='tri',pdata=pdata, pvdata=pvdata, cdata=cdata, cvdata=cvdata)
+    >>> import numpy
+    >>> Verts = numpy.array([[0.0,0.0],
+    ...                      [1.0,0.0],
+    ...                      [2.0,0.0],
+    ...                      [0.0,1.0],
+    ...                      [1.0,1.0],
+    ...                      [2.0,1.0],
+    ...                      [0.0,2.0],
+    ...                      [1.0,2.0],
+    ...                      [2.0,2.0],
+    ...                      [0.0,3.0],
+    ...                      [1.0,3.0],
+    ...                      [2.0,3.0]])
+    >>> E2V = numpy.array([[0,4,3],
+    ...                    [0,1,4],
+    ...                    [1,5,4],
+    ...                    [1,2,5],
+    ...                    [3,7,6],
+    ...                    [3,4,7],
+    ...                    [4,8,7],
+    ...                    [4,5,8],
+    ...                    [6,10,9],
+    ...                    [6,7,10],
+    ...                    [7,11,10],
+    ...                    [7,8,11]])
+    >>> pdata=numpy.ones((12,2))
+    >>> pvdata=numpy.ones((12*3,2))
+    >>> cdata=numpy.ones((12,2))
+    >>> cvdata=numpy.ones((3*12,2))
+    >>> write_basic_mesh(Verts, E2V=E2V, mesh_type='tri',pdata=pdata, pvdata=pvdata, cdata=cdata, cvdata=cvdata, fname='test.vtu')
 
     See Also
     --------

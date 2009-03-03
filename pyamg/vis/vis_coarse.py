@@ -183,14 +183,14 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
 
     Examples
     --------
-    >>> from numpy import array, ones
-    >>> from python.vis.vis_coarse import vis_splitting
+    >>> import numpy
+    >>> from pyamg.vis.vis_coarse import vis_splitting
     >>> fname = 'example_mesh.vtu'
-    >>> Verts = array([[0.0,0.0],
-    >>>               [1.0,0.0],
-    >>>               [0.0,1.0],
-    >>>               [1.0,1.0]])
-    >>> splitting = array([0,1,0,1,1,0,1,0])    # two variables
+    >>> Verts = numpy.array([[0.0,0.0],
+    ...                      [1.0,0.0],
+    ...                      [0.0,1.0],
+    ...                      [1.0,1.0]])
+    >>> splitting = numpy.array([0,1,0,1,1,0,1,0])    # two variables
     >>> vis_splitting(Verts,splitting,output='matplotlib',fname=fname)
 
     >>> from pyamg.classical import RS
