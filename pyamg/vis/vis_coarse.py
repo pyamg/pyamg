@@ -185,13 +185,12 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     --------
     >>> import numpy
     >>> from pyamg.vis.vis_coarse import vis_splitting
-    >>> fname = 'example_mesh.vtu'
     >>> Verts = numpy.array([[0.0,0.0],
     ...                      [1.0,0.0],
     ...                      [0.0,1.0],
     ...                      [1.0,1.0]])
     >>> splitting = numpy.array([0,1,0,1,1,0,1,0])    # two variables
-    >>> vis_splitting(Verts,splitting,output='matplotlib',fname=fname)
+    >>> vis_splitting(Verts,splitting,output='vtk',fname='output.vtu')
 
     >>> from pyamg.classical import RS
     >>> from pyamg.vis.vis_coarse import vis_splitting
@@ -202,7 +201,6 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     >>> E2V = data['elements']
     >>> splitting = RS(A)
     >>> vis_splitting(Verts=V,splitting=splitting,output='vtk',fname='output.vtu')
-    >>> vis_splitting(Verts=V,splitting=splitting,output='matplotlib')
 
     """
 

@@ -52,9 +52,11 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
     Examples
     --------
-    >>> from diffusion_stencil import diffusion_stencil
-    >>> sten = diffusion_stencil('FD',epsilon=0.0001,theta=pi/6)
+    >>> import scipy
+    >>> from pyamg.gallery.diffusion import diffusion_stencil_2d
+    >>> sten = diffusion_stencil_2d('FD',epsilon=0.0001,theta=scipy.pi/6)
     >>> print sten
+
 
     """
     

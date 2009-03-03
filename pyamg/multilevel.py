@@ -135,7 +135,7 @@ class multilevel_solver:
           level   unknowns     nonzeros
             0        10000        49600 [52.88%]
             1         5000        44202 [47.12%]
-
+        <BLANKLINE>
         """
 
         self.levels = levels
@@ -280,7 +280,8 @@ class multilevel_solver:
 
         Examples
         --------
-        >>> from pyamg import smoothed_aggregation_solver, poisson
+        >>> from pyamg.aggregation import smoothed_aggregation_solver
+        >>> from pyamg.gallery import poisson
         >>> from scipy.sparse.linalg import cg
         >>> from scipy import rand
         >>> A = poisson((100,100), format='csr')           # matrix
@@ -340,7 +341,8 @@ class multilevel_solver:
         Examples
         --------
         >>> from numpy import ones
-        >>> from pyamg import ruge_stuben_solver, poisson
+        >>> from pyamg import ruge_stuben_solver
+        >>> from pyamg.gallery import poisson
         >>> A = poisson((100,100), format='csr')
         >>> b = A*ones(A.shape[0])
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
@@ -511,7 +513,7 @@ def coarse_grid_solver(solver):
     >>> from numpy import ones
     >>> from scipy.sparse import spdiags
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.multlevel import coarse_grid_solver
+    >>> from pyamg import coarse_grid_solver
     >>> A = poisson((10,10), format='csr')
     >>> b = A*ones(A.shape[0])
     >>> cgs = coarse_grid_solver('lu')

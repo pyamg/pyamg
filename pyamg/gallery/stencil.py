@@ -42,9 +42,6 @@ def stencil_grid(S, grid, dtype=None, format=None):
     >>> stencil = [-1,2,-1]  # 1D Poisson stencil
     >>> grid = (5,)          # 1D grid with 5 vertices
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')   
-    >>> A
-    <5x5 sparse matrix of type '<type 'numpy.float64'>'
-    	with 13 stored elements in Compressed Sparse Row format>
     >>> A.todense()
     matrix([[ 2., -1.,  0.,  0.,  0.],
             [-1.,  2., -1.,  0.,  0.],
@@ -55,9 +52,6 @@ def stencil_grid(S, grid, dtype=None, format=None):
     >>> stencil = [[0,-1,0],[-1,4,-1],[0,-1,0]] # 2D Poisson stencil
     >>> grid = (3,3)                            # 2D grid with shape 3x3
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')   
-    >>> A
-    <9x9 sparse matrix of type '<type 'numpy.float64'>'
-    	with 33 stored elements in Compressed Sparse Row format>
     >>> A.todense()
     matrix([[ 4., -1.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
             [-1.,  4., -1.,  0., -1.,  0.,  0.,  0.,  0.],

@@ -120,7 +120,7 @@ def RS(S):
         
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import RS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = RS(S)
@@ -168,7 +168,7 @@ def PMIS(S):
         
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import PMIS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMIS(S)
@@ -213,7 +213,7 @@ def PMISc(S, method='JP'):
         
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import PMISc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMISc(S)
@@ -270,7 +270,7 @@ def MIS(G, weights, maxiter=None):
         
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import MIS
     >>> import numpy
     >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
@@ -345,7 +345,7 @@ def preprocess(S, coloring_method = None):
         raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
 
     N = S.shape[0]
-    S = csr_matrix( (ones(S.nnz,dtype='int8'),S.indices,S.indptr), shape=(N,N))
+    S = csr_matrix( (numpy.ones(S.nnz,dtype='int8'),S.indices,S.indptr), shape=(N,N))
     T = S.T.tocsr()     #transpose S for efficient column access
 
     G = S + T           # form graph (must be symmetric)

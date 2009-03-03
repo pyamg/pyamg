@@ -46,14 +46,17 @@ def make_system(A, x, b, formats=None):
     --------
     >>> from pyamg.relaxation.relaxation import make_system 
     >>> from pyamg.gallery import poisson
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> x = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
-    >>> print "x.shape = " + str(x.shape)
-    >>> print "b.shape = " + str(b.shape)
-    >>> print "A.format = " + A.format
+    >>> print str(x.shape)
+    (100,)
+    >>> print str(b.shape)
+    (100,)
+    >>> print A.format
+    csc
     """
 
     if formats is None:
@@ -130,27 +133,23 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> from pyamg.relaxation import sor
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> x0 = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
-    >>> r0 = norm(b - A*x0)
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print "Initial Residual:  %1.2e"%r0
-    >>> print "Residual After 10 SOR Sweeps:  %1.2e"%norm(b-A*x0)
-    >>>
+    >>> print norm(b-A*x0)
+    3.03888724811
+    >>> #
     >>> ## Use SOR as the multigrid smoother 
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-                coarse_solver='pinv2', max_coarse=50,
-                presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}), 
-                postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}), 
+    ...         postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
+    >>> x0 = numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
@@ -192,27 +191,23 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> x0 = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
-    >>> r0 = norm(b - A*x0)
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print "Initial Residual:  %1.2e"%r0
-    >>> print "Residual After 10 Gauss-Seidel Sweeps:  %1.2e"%norm(b-A*x0)
-    >>> 
+    >>> print norm(b-A*x0)
+    4.00733716236
+    >>> #
     >>> ## Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('gauss_seidel', {'sweep':'symmetric'}), 
-    >>>         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('gauss_seidel', {'sweep':'symmetric'}), 
+    ...         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
@@ -273,27 +268,23 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> x0 = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
-    >>> r0 = norm(b - A*x0)
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print "Initial Residual:  %1.2e"%r0
-    >>> print "Residual After 10 w-Jacobi Sweeps:  %1.2e"%norm(b-A*x0)
-    >>> 
+    >>> print norm(b-A*x0)
+    5.83475132751
+    >>> #
     >>> ## Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}), 
-    >>>         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}), 
+    ...         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
 
@@ -363,20 +354,17 @@ def polynomial(A, x, b, coeffients, iterations=1):
     >>> ## which automatically calculates the correct coefficients.
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> from pyamg import smoothed_aggregation_solver
-    >>> A = poisson((50,50), format='csr')
-    >>> b = rand(A.shape[0],1)
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('chebyshev', {'degree':3, 'iterations':1}), 
-    >>>         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> import numpy
+    >>> from pyamg.aggregation import smoothed_aggregation_solver
+    >>> A = poisson((10,10), format='csr')
+    >>> b = numpy.ones((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('chebyshev', {'degree':3, 'iterations':1}), 
+    ...         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=None)
 
@@ -427,10 +415,10 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from numpy import array
+    >>> import numpy
     >>> A = poisson((4,), format='csr')
-    >>> x = array([0.0, 0.0, 0.0, 0.0])
-    >>> b = array([0.0, 1.0, 2.0, 3.0])
+    >>> x = numpy.array([0.0, 0.0, 0.0, 0.0])
+    >>> b = numpy.array([0.0, 1.0, 2.0, 3.0])
     >>> gauss_seidel_indexed(A, x, b, [0,1,2,3])                #relax all four rows, in order
     >>> gauss_seidel_indexed(A, x, b, [0,1])                    #relax first two rows
     >>> gauss_seidel_indexed(A, x, b, [2,0])                    #relax row 2, then row 0
@@ -503,27 +491,23 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
+    >>> import numpy
     >>> A = poisson((50,50), format='csr')
-    >>> x0 = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
-    >>> r0 = norm(b - A*x0)
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> kaczmarz_jacobi(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print "Initial Residual:  %1.2e"%r0
-    >>> print "Residual After 10 Kaczmarz-Jacobi Sweeps:  %1.2e"%norm(b-A*x0)
-    >>> 
+    >>> print norm(b-A*x0)
+    49.3886046066
+    >>> #
     >>> ## Use Kaczmarz Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}), 
-    >>>         postsmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}), 
+    ...         postsmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     A,x,b = make_system(A, x, b, formats=['csr'])
     
@@ -580,19 +564,16 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg import smoothed_aggregation_solver
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> b = rand(A.shape[0],1)
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}), 
-    >>>         postsmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> b = numpy.ones((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}), 
+    ...         postsmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
 
     A,x,b = make_system(A, x, b, formats=['csr'])
@@ -648,27 +629,23 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, ones, array, mean
-    >>> A = poisson((50,50), format='csr')
-    >>> x0 = zeros((A.shape[0],1))
-    >>> b = rand(A.shape[0],1)
-    >>> r0 = norm(b - A*x0)
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
     >>> kaczmarz_gauss_seidel(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print "Initial Residual:  %1.2e"%r0
-    >>> print "Residual After 10 Kaczmarz Gauss-Seidel Sweeps:  %1.2e"%norm(b-A*x0)
-    >>> 
+    >>> print norm(b-A*x0)
+    8.47576806771
+    >>> #
     >>> ## Use Kaczmarz Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)),
-    >>>         coarse_solver='pinv2', max_coarse=50,
-    >>>         presmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}), 
-    >>>         postsmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}))
-    >>> x0=zeros((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}), 
+    ...         postsmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}))
+    >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
     
     A,x,b = make_system(A, x, b, formats=['csr'])

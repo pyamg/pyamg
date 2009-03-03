@@ -77,13 +77,15 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     
     Examples
     --------
-    >>> from pyamg.krylov import *
-    >>> from scipy import rand
-    >>> import pyamg
-    >>> A = pyamg.poisson((50,50))
-    >>> b = rand(A.shape[0],)
-    >>> (x,flag) = gmres(A,b, maxiter=200, tol=1e-8)
-    >>> print pyamg.util.linalg.norm(b - A*x)
+    >>> from pyamg.krylov.gmres import gmres
+    >>> from pyamg.util.linalg import norm
+    >>> import numpy 
+    >>> from pyamg.gallery import poisson
+    >>> A = poisson((10,10))
+    >>> b = numpy.ones((A.shape[0],))
+    >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8)
+    >>> print norm(b - A*x)
+    6.5428213057
 
     References
     ----------

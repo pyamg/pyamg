@@ -59,29 +59,18 @@ def setup_smoothers(ml, presmoother, postsmoother):
     Examples
     --------
     >>> from pyamg.relaxation.smoothing import setup_smoothers
-    >>> from pyamg import poisson, smoothed_aggregation_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.aggregation import smoothed_aggregation_solver
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, zeros, mean, array
-    >>> A = poisson((100,100), format='csr')
-    >>> b = rand(A.shape[0])
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> b = numpy.ones((A.shape[0],1))
     >>> ml = smoothed_aggregation_solver(A)
-    >>> ## Gauss-Seidel with default options
-    >>> setup_smoothers(ml, presmoother='gauss_seidel', postsmoother='gauss_seidel')  
-    >>> residuals=[]
-    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
-    >>> 
-    >>> ## Two iterations of symmetric Gauss-Seidel
     >>> pre  = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
     >>> post = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
     >>> setup_smoothers(ml, presmoother=pre, postsmoother=post)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     """
 
     # interpret arguments
@@ -176,40 +165,33 @@ def change_smoothers(ml, presmoother, postsmoother):
 
     Examples
     --------
-    >>> from pyamg import poisson, smoothed_aggregation_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.aggregation import smoothed_aggregation_solver
     >>> from pyamg.relaxation.smoothing import change_smoothers
     >>> from pyamg.util.linalg import norm
     >>> from scipy import rand, array, mean
-    >>> A = poisson((50,50), format='csr')
+    >>> A = poisson((10,10), format='csr')
     >>> b = rand(A.shape[0],)
     >>> ml = smoothed_aggregation_solver(A, max_coarse=10)
+    >>> #
     >>> ## Set all levels to use gauss_seidel's defaults
     >>> smoothers = 'gauss_seidel'
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
-    >>> 
+    >>> #
     >>> ## Set all levels to use three iterations of gauss_seidel's defaults
     >>> smoothers = ('gauss_seidel', {'iterations' : 3})
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=None)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
-    >>> 
+    >>> #
     >>> ## Set level 0 to use gauss_seidel's defaults, and all  
     >>> ## subsequent levels to use 5 iterations of cgnr
     >>> smoothers = ['gauss_seidel', ('cgnr', {'maxiter' : 5})]
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> residuals = array(residuals)
-    >>> print "Relative Residual After AMG Solve:  %1.2e"%(norm(b-A*x)/norm(b))
-    >>> print "Average Residual Reduction Factor %1.2f"%mean(residuals[1:]/residuals[0:-1])
     '''
 
     # interpret arguments into list
@@ -268,10 +250,12 @@ def rho_D_inv_A(A):
 
     Examples
     --------
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
-    >>> A = poisson((50,50), format='csr')
-    >>> print "Approximate rho(D^{-1} A) = %1.2f"%rho_D_inv_A(A)
+    >>> import numpy
+    >>> A = numpy.array([[1,0,0],[0,2,0],[0,0,3]])
+    >>> print rho_D_inv_A(A)
+    1.0
     """
 
     D = A.diagonal()
@@ -401,10 +385,25 @@ def smootherlist_tostring(sm):
     >>> from pyamg.relaxation.smoothing import smootherlist_tostring
     >>> sm = 'gauss_seidel'
     >>> print smootherlist_tostring(sm)
+        Level 0 to N Smoother = gauss_seidel
+          User Paramters:
+            None
+    <BLANKLINE>
     >>> sm = ('gauss_seidel', {'iterations' : 3})
     >>> print smootherlist_tostring(sm)
+        Level 0 to N Smoother = gauss_seidel
+          User Paramters:
+            iterations = 3
+    <BLANKLINE>
     >>> sm = [('gauss_seidel', {'iterations' : 3}), ('gmres', {'maxiter' : 5})]
     >>> print smootherlist_tostring(sm)
+        Level 0 Smoother = gauss_seidel
+          User Paramters:
+            iterations = 3
+        Level 1 to N Smoother = gmres
+          User Paramters:
+            maxiter = 5
+    <BLANKLINE>
     '''
 
     # interpret argument into list
@@ -458,8 +457,33 @@ def smootherlists_tostring(smlist):
     >>> from pyamg.relaxation.smoothing import smootherlists_tostring
     >>> sm = [('gauss_seidel', {'iterations' : 3}), ('gmres', {'maxiter' : 5})]
     >>> print smootherlists_tostring(sm)
+    Smoothing Strategy 1
+        Level 0 to N Smoother = gauss_seidel
+          User Paramters:
+            iterations = 3
+    <BLANKLINE>
+    Smoothing Strategy 2
+        Level 0 to N Smoother = gmres
+          User Paramters:
+            maxiter = 5
+    <BLANKLINE>
+    <BLANKLINE>
     >>> sm = [ [('gauss_seidel', {'iterations' : 3}), 'gmres'], ('cgnr', {'maxiter' : 5})]
     >>> print smootherlists_tostring(sm)
+    Smoothing Strategy 1
+        Level 0 Smoother = gauss_seidel
+          User Paramters:
+            iterations = 3
+        Level 1 to N Smoother = gmres
+          User Paramters:
+            None
+    <BLANKLINE>
+    Smoothing Strategy 2
+        Level 0 to N Smoother = cgnr
+          User Paramters:
+            maxiter = 5
+    <BLANKLINE>
+    <BLANKLINE>
 
     '''
     
