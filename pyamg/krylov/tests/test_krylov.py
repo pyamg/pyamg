@@ -1,10 +1,16 @@
 from pyamg.testing import *
-from pyamg.krylov import gmres, fgmres, cgne, cgnr, cg, bicgstab
+from pyamg.krylov import *
 from numpy import array, zeros, ones
 from scipy import mat
 from scipy.linalg import solve
 from pyamg.util.linalg import norm
 import pyamg
+
+for method in ['cg', 'bicgstab', 'gmres', 'fgmres', 'cgne', 'cgnr']:
+    # running the doctests seems to mess up the import of the krylov method
+    fn = eval(method)
+    if not callable(fn):
+        vars()[method] = getattr(fn, method)
 
 class TestKrylov(TestCase):
     def setUp(self):
