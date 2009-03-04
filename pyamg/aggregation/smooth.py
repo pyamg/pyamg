@@ -376,7 +376,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
     >>> T.todense()
     >>> A = poisson((10,),format='csr')
-    >>> P = energy_prolongation_smoother(A,T,A,numpy.ones((2,1)))
+    >>> P = energy_prolongation_smoother(A,T,A,numpy.ones((2,1), dtype=float))
     >>> P.todense()
 
     References
@@ -410,7 +410,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         raise TypeError("T must be csr_matrix or bsr_matrix")
 
     if Atilde is None:
-        Atilde = csr_matrix( (numpy.ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
+        AtildeCopy = csr_matrix( (numpy.ones(len(A.indices)), A.indices.copy(), A.indptr.copy()), shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
+    else:
+        AtildeCopy = Atilde.copy()
 
     if not isspmatrix_csr(Atilde):
         raise TypeError("Atilde must be csr_matrix")
@@ -439,10 +441,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     T.sort_indices()
     Sparsity_Pattern = csr_matrix( (numpy.ones(T.indices.shape), T.indices, T.indptr), 
                                     shape=(T.shape[0]/T.blocksize[0],T.shape[1]/T.blocksize[1])  )
-    Atilde.data[:] = 1.0
+    AtildeCopy.data[:] = 1.0
     for i in range(degree):
-        Sparsity_Pattern = Atilde*Sparsity_Pattern
+        Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
     
+    del AtildeCopy
     #UnAmal returns a BSR matrix
     Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
     Sparsity_Pattern.sort_indices()
@@ -514,7 +517,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             return jacobi_prolongation_smoother(Atilde, T)
         
         #Calculate max norm of the residual
-        resid = abs(R.data.flatten()).max()
+        if R.data.shape[0] == 0:
+            resid = 0.0
+        else:
+            resid = abs(R.data).max()
         #print "Energy Minimization of Prolongator --- Iteration 0 --- r = " + str(resid)
 
         while i < maxiter and resid > tol:
@@ -564,7 +570,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             R = R - alpha*AP
             
             i += 1
-            resid = abs(R.data).max()
+            if R.data.shape[0] == 0:
+                resid = 0.0
+            else:
+                resid = abs(R.data).max()
             #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
      
     else:   
@@ -608,7 +617,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             return jacobi_prolongation_smoother(Atilde, T)
         
         #Calculate max norm of the residual
-        resid = abs(R.data.flatten()).max()
+        if R.data.shape[0] == 0:
+            resid = 0.0
+        else:
+            resid = abs(R.data).max()
         #print "Energy Minimization of Prolongator --- Iteration 0 --- r = " + str(resid)
 
         while i < maxiter and resid > tol:
@@ -658,7 +670,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
             R = R - alpha*AP
             
             i += 1
-            resid = abs(R.data).max()
+            if R.data.shape[0] == 0:
+                resid = 0.0
+            else:
+                resid = abs(R.data).max()
             #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
     
 #====================================================================
