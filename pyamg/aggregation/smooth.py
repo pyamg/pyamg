@@ -370,14 +370,26 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
     >>> import numpy
-    >>> data = numpy.ones((10,))
-    >>> row = numpy.arange(0,10)
-    >>> col = numpy.kron([0,1],numpy.ones((5,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
-    >>> T.todense()
-    >>> A = poisson((10,),format='csr')
+    >>> data = numpy.ones((6,))
+    >>> row = numpy.arange(0,6)
+    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
+    >>> print T.todense()
+    [[ 1.  0.]
+     [ 1.  0.]
+     [ 1.  0.]
+     [ 0.  1.]
+     [ 0.  1.]
+     [ 0.  1.]]
+    >>> A = poisson((6,),format='csr')
     >>> P = energy_prolongation_smoother(A,T,A,numpy.ones((2,1), dtype=float))
-    >>> P.todense()
+    >>> print P.todense()
+    [[ 1.          0.        ]
+     [ 1.          0.        ]
+     [ 0.66666667  0.33333333]
+     [ 0.33333333  0.66666667]
+     [ 0.          1.        ]
+     [ 0.          1.        ]]
 
     References
     ----------

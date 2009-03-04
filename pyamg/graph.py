@@ -292,14 +292,14 @@ def connected_components(G):
 
     Examples
     --------
-    >>> connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
-    array([0, 0, 0])
-    >>> connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
-    array([0, 0, 1])
-    >>> connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
-    array([0, 1, 2])
-    >>> connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
-    array([0, 0, 1, 1])
+    >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    [0 0 0]
+    >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    [0 0 1]
+    >>> print connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    [0 1 2]
+    >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    [0 0 1 1]
 
     """    
     G = asgraph(G)
