@@ -442,7 +442,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
         else
         {   U[0] = A[0]/normA; }
         
-        return 0.0;
+        return 0;
     }
   
     // Workspace
