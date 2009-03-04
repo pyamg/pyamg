@@ -34,9 +34,10 @@ def BSR_Get_Row(A, i):
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> print BSR_Get_Row(B,2)
-    (matrix([[3],
-            [3]]), array([4, 5]))
+    >>> Brow = BSR_Get_Row(B,2)
+    >>> print Brow[1]
+    [4 5]
+
     """
     
     blocksize = A.blocksize[0]
