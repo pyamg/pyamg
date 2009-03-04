@@ -102,11 +102,12 @@ def smoothed_aggregation_solver(A, B=None,
 
     Examples
     --------
-    >>> from pyamg import smoothed_aggregation_solver, poisson
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
-    >>> from scipy import rand
+    >>> import numpy
     >>> A = poisson((100,100), format='csr')           # matrix
-    >>> b = rand(A.shape[0])                           # random RHS
+    >>> b = numpy.ones((A.shape[0]))                         # random RHS
     >>> ml = smoothed_aggregation_solver(A)            # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
     >>> x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG

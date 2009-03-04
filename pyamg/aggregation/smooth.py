@@ -39,18 +39,29 @@ def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     Examples
     --------
     >>> from pyamg.aggregation import jacobi_prolongation_smoother
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> from numpy import ones, arange, kron
-    >>> data = ones((10,))
-    >>> row = arange(0,10)
-    >>> col = kron([0,1],ones((5,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> import numpy
+    >>> data = numpy.ones((6,))
+    >>> row = numpy.arange(0,6)
+    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
-    >>> A = poisson((10,),format='csr')
-    >>> A.todense()
+    matrix([[ 1.,  0.],
+            [ 1.,  0.],
+            [ 1.,  0.],
+            [ 0.,  1.],
+            [ 0.,  1.],
+            [ 0.,  1.]])
+    >>> A = poisson((6,),format='csr')
     >>> P = jacobi_prolongation_smoother(A,T)
     >>> P.todense()
+    matrix([[ 0.64930164,  0.        ],
+            [ 1.        ,  0.        ],
+            [ 0.64930164,  0.35069836],
+            [ 0.35069836,  0.64930164],
+            [ 0.        ,  1.        ],
+            [ 0.        ,  0.64930164]])
 
     """
 
@@ -91,18 +102,29 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     Examples
     --------
     >>> from pyamg.aggregation import richardson_prolongation_smoother
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> from numpy import ones, arange, kron
-    >>> data = ones((10,))
-    >>> row = arange(0,10)
-    >>> col = kron([0,1],ones((5,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> import numpy
+    >>> data = numpy.ones((6,))
+    >>> row = numpy.arange(0,6)
+    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
-    >>> A = poisson((10,),format='csr')
-    >>> A.todense()
+    matrix([[ 1.,  0.],
+            [ 1.,  0.],
+            [ 1.,  0.],
+            [ 0.,  1.],
+            [ 0.,  1.],
+            [ 0.,  1.]])
+    >>> A = poisson((6,),format='csr')
     >>> P = richardson_prolongation_smoother(A,T)
     >>> P.todense()
+    matrix([[ 0.64930164,  0.        ],
+            [ 1.        ,  0.        ],
+            [ 0.64930164,  0.35069836],
+            [ 0.35069836,  0.64930164],
+            [ 0.        ,  1.        ],
+            [ 0.        ,  0.64930164]])
 
     """
 
@@ -136,18 +158,29 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     Examples
     --------
     >>> from pyamg.aggregation import kaczmarz_jacobi_prolongation_smoother
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> from numpy import ones, arange, kron
-    >>> data = ones((10,))
-    >>> row = arange(0,10)
-    >>> col = kron([0,1],ones((5,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> import numpy
+    >>> data = numpy.ones((6,))
+    >>> row = numpy.arange(0,6)
+    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
-    >>> A = poisson((10,),format='csr')
-    >>> A.todense()
+    matrix([[ 1.,  0.],
+            [ 1.,  0.],
+            [ 1.,  0.],
+            [ 0.,  1.],
+            [ 0.,  1.],
+            [ 0.,  1.]])
+    >>> A = poisson((6,),format='csr')
     >>> P = kaczmarz_jacobi_prolongation_smoother(A,T)
     >>> P.todense()
+    matrix([[ 0.78365913,  0.        ],
+            [ 1.19831246, -0.09014203],
+            [ 0.72957391,  0.27042609],
+            [ 0.27042609,  0.72957391],
+            [-0.09014203,  1.19831246],
+            [ 0.        ,  0.78365913]])
 
     """
 
@@ -200,18 +233,29 @@ def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     Examples
     --------
     >>> from pyamg.aggregation import kaczmarz_richardson_prolongation_smoother
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> from numpy import ones, arange, kron
-    >>> data = ones((10,))
-    >>> row = arange(0,10)
-    >>> col = kron([0,1],ones((5,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
+    >>> import numpy
+    >>> data = numpy.ones((6,))
+    >>> row = numpy.arange(0,6)
+    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
-    >>> A = poisson((10,),format='csr')
-    >>> A.todense()
+    matrix([[ 1.,  0.],
+            [ 1.,  0.],
+            [ 1.,  0.],
+            [ 0.,  1.],
+            [ 0.,  1.],
+            [ 0.,  1.]])
+    >>> A = poisson((6,),format='csr')
     >>> P = kaczmarz_richardson_prolongation_smoother(A,T)
     >>> P.todense()
+    matrix([[ 0.81551599,  0.        ],
+            [ 1.18448401, -0.09224201],
+            [ 0.72327398,  0.27672602],
+            [ 0.27672602,  0.72327398],
+            [-0.09224201,  1.18448401],
+            [ 0.        ,  0.81551599]])
 
     """
 
@@ -266,7 +310,7 @@ def Satisfy_Constraints(U, B, BtBinv):
     Update is computed by orthogonally (in 2-norm) projecting 
     out the components of span(B) in U in a row-wise fashion.
 
-    Examples
+    See Also
     --------
     See the function energy_prolongation_smoother in smooth.py 
 
@@ -323,17 +367,16 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     Examples
     --------
     >>> from pyamg.aggregation import energy_prolongation_smoother
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> from numpy import ones, arange, kron
-    >>> data = ones((10,))
-    >>> row = arange(0,10)
-    >>> col = kron([0,1],ones((5,)))
+    >>> import numpy
+    >>> data = numpy.ones((10,))
+    >>> row = numpy.arange(0,10)
+    >>> col = numpy.kron([0,1],numpy.ones((5,)))
     >>> T = coo_matrix((data,(row,col)),shape=(10,2)).tocsr()
     >>> T.todense()
     >>> A = poisson((10,),format='csr')
-    >>> A.todense()
-    >>> P = energy_prolongation_smoother(A,T,A,ones((2,1)))
+    >>> P = energy_prolongation_smoother(A,T,A,numpy.ones((2,1)))
     >>> P.todense()
 
     References

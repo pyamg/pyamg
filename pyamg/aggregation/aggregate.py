@@ -27,7 +27,7 @@ def standard_aggregation(C):
     Examples
     --------
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import standard_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.todense()
@@ -123,7 +123,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     Examples
     --------
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg import poisson
+    >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.todense()

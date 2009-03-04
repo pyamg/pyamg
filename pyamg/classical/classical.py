@@ -52,18 +52,10 @@ def ruge_stuben_solver(A,
 
     Examples
     --------
-    >>> from pyamg import poisson, ruge_stuben_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg import ruge_stuben_solver
     >>> A = poisson((10,),format='csr')
-    >>> ml = ruge_stuben_solver(A,max_coarse=1)
-    >>> ml
-    Number of Levels:     4
-    Operator Complexity:  1.643
-    Grid Complexity:      1.800
-    level   unknowns     nonzeros
-    0           10           28 [60.87%]
-    1            5           13 [28.26%]
-    2            2            4 [ 8.70%]
-    3            1            1 [ 2.17%]
+    >>> ml = ruge_stuben_solver(A,max_coarse=3)
 
     References
     ----------

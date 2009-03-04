@@ -86,16 +86,13 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
         
     Examples
     --------
-    >>> from pyamg import stencil_grid
+    >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.aggregation import adaptive_sa_solver
-    >>> from numpy.random import rand
+    >>> import numpy
     >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
     >>> asa = adaptive_sa_solver(A,num_candidates=1)
-    >>> print asa
     >>> residuals=[]
-    >>> x=asa.solve(b=rand(A.shape[0]),x0=rand(A.shape[0]),residuals=residuals)
-    >>> factor = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-    >>> print factor
+    >>> x=asa.solve(b=numpy.ones((A.shape[0],)),x0=numpy.ones((A.shape[0],)),residuals=residuals)
 
     References
     ----------
