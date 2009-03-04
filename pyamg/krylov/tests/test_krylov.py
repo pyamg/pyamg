@@ -6,11 +6,6 @@ from scipy.linalg import solve
 from pyamg.util.linalg import norm
 import pyamg
 
-for method in ['cg', 'bicgstab', 'gmres', 'fgmres', 'cgne', 'cgnr']:
-    # running the doctests seems to mess up the import of the krylov method
-    fn = eval(method)
-    if not callable(fn):
-        vars()[method] = getattr(fn, method)
 
 class TestKrylov(TestCase):
     def setUp(self):
