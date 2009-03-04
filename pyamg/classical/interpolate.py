@@ -33,7 +33,8 @@ def direct_interpolation(A, C, splitting):
     >>> from pyamg.classical import direct_interpolation
     >>> import numpy
     >>> A = poisson((5,),format='csr')
-    >>> P = direct_interpolation(A,A,numpy.array([1,0,1,0,1]))
+    >>> splitting = numpy.array([1,0,1,0,1], dtype='intc') 
+    >>> P = direct_interpolation(A, A, splitting)
     >>> print P.todense()
     [[ 1.   0.   0. ]
      [ 0.5  0.5  0. ]
