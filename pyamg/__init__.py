@@ -53,6 +53,7 @@ Utility tools
 -------------
 
   test        --- Run pyamg unittests (requires nose unittest framework)
+  bench       --- Run pyamg benchmarks (requires nose unittest framework) 
   __version__ --- pyamg version string
 
 """
