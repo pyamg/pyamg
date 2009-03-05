@@ -28,6 +28,7 @@ figure(figsize=(6,6))
 axis('equal')
 lineplot(V, E[inner_edges], linewidths=3.0)
 lineplot(V, E[outer_edges], linewidths=0.2)
-scatter(V[:,0], V[:,1], c=numpy.ones(V.shape[0]), s=100.0)
+scatter(V[:,0], V[:,1], c='r', s=100.0)
+#scatter(V[:,0], V[:,1], c=numpy.ones(V.shape[0]), s=100.0)
 show()
  

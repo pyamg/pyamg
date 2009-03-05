@@ -14,6 +14,7 @@ E = numpy.vstack((A.tocoo().row,A.tocoo().col)).T  # edges of the matrix graph
 
 # Use Ruge-Stuben Splitting Algorithm
 mls = ruge_stuben_solver(A, max_levels=2, max_coarse=1, CF='RS')
+print mls
 
 # The CF splitting, 1 == C-node and 0 == F-node
 splitting = mls.levels[0].splitting
