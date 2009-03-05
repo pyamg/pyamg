@@ -1,4 +1,4 @@
-Full installation documentions are available at http://www.pyamg.com
+Full installation documentions are available at http://www.pyamg.org
 
 Typically, the following is sufficient:
 
