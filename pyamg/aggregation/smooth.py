@@ -426,7 +426,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     else:
         AtildeCopy = Atilde.copy()
 
-    if not isspmatrix_csr(Atilde):
+    if not isspmatrix_csr(AtildeCopy):
         raise TypeError("Atilde must be csr_matrix")
 
     if T.blocksize[0] != A.blocksize[0]:
@@ -436,7 +436,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
         raise ValueError("B is the candidates for the coarse grid. \
                             num_rows(b) = num_cols(T)")
 
-    if min(T.nnz, Atilde.nnz, A.nnz) == 0:
+    if min(T.nnz, AtildeCopy.nnz, A.nnz) == 0:
         return T
     
     #====================================================================
@@ -457,7 +457,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     for i in range(degree):
         Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
     
-    del AtildeCopy
     #UnAmal returns a BSR matrix
     Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
     Sparsity_Pattern.sort_indices()
@@ -526,7 +525,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     
         if R.nnz == 0:
             print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
-            return jacobi_prolongation_smoother(Atilde, T)
+            return jacobi_prolongation_smoother(AtildeCopy, T)
         
         #Calculate max norm of the residual
         if R.data.shape[0] == 0:
@@ -626,7 +625,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, SPD=True, maxiter=4, tol=1e-8,
     
         if R.nnz == 0:
             print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Calling Default Prolongator Smoother\n"
-            return jacobi_prolongation_smoother(Atilde, T)
+            return jacobi_prolongation_smoother(AtildeCopy, T)
         
         #Calculate max norm of the residual
         if R.data.shape[0] == 0:
