@@ -10,7 +10,8 @@ $ python oneD_diffusion.py  npts
 """
 import numpy
 import scipy
-from pyamg import poisson, smoothed_aggregation_solver
+from pyamg import smoothed_aggregation_solver
+from pyamg.gallery import poisson
 from oneD_tools import *
 import pylab
 import sys
