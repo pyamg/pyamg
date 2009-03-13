@@ -384,7 +384,7 @@ class multilevel_solver:
                     if cb is not None:
                         cb(x)
 
-            return accel(A, b, x0=x0, tol=tol, M=M, callback=callback)[0]
+            return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M, callback=callback)[0]
         
         else:
             # Scale tol by normb
