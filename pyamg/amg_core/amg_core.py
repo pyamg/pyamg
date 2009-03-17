@@ -396,6 +396,21 @@ def kaczmarz_gauss_seidel(*args):
     """
   return _amg_core.kaczmarz_gauss_seidel(*args)
 
+def nr_gauss_seidel(*args):
+  """
+    nr_gauss_seidel(int Ap, int Aj, float Ax, float x, float z, int col_start, 
+        int col_stop, int col_step, float Tx)
+    nr_gauss_seidel(int Ap, int Aj, double Ax, double x, double z, int col_start, 
+        int col_stop, int col_step, double Tx)
+    nr_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper z, int col_start, 
+        int col_stop, int col_step, npy_cfloat_wrapper Tx)
+    nr_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper z, int col_start, 
+        int col_stop, int col_step, npy_cdouble_wrapper Tx)
+    """
+  return _amg_core.nr_gauss_seidel(*args)
+
 def apply_householders(*args):
   """
     apply_householders(float z, float B, int n, int start, int stop, int step)

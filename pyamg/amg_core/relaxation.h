@@ -337,7 +337,7 @@ void kaczmarz_jacobi(const I Ap[],
 
 /*
  * Perform Kaczmarz Gauss-Seidel on the linear system A x = b
- * This effective carries out Gauss-Seidel on A A^T x = A^T b
+ * This effective carries out Gauss-Seidel on A A.H x = b
  * 
  * Parameters
  * ----------
@@ -352,7 +352,7 @@ void kaczmarz_jacobi(const I Ap[],
  * b : {array}
  *  right hand side
  * Tx : {array}
- *  inverse(diag(A))
+ *  inverse(diag(A A.H))
  * row_start,stop,step : {int}
  *  controls which rows to iterate over
  *
@@ -394,5 +394,74 @@ void kaczmarz_gauss_seidel(const I Ap[],
     }
 
 }
+
+
+/*
+ * Perform NR Gauss-Seidel on the linear system A x = b
+ * This effective carries out Gauss-Seidel on A.H A x = A.H b
+ * 
+ * Parameters
+ * ----------
+ * Ap : {int array}
+ *  index pointer for CSC matrix A
+ * Aj : {int array}
+ *  row indices for CSC matrix A
+ * Ax : {array}
+ *  value array for CSC matrix A
+ * x : {array}
+ *  current guess to the linear system
+ * z : {array}
+ *  initial residual
+ * Tx : {array}
+ *  inverse(diag(A.H A))
+ * col_start,stop,step : {int}
+ *  controls which rows to iterate over
+ *
+ * Returns
+ * -------
+ * x is modified in place in an additive, not overwiting fashion
+ *
+ * Notes
+ * -----
+ * Primary calling routine is nr_gass_seidel in relaxation.py
+ */
+template<class I, class T, class F>
+void nr_gauss_seidel(const I Ap[], 
+                     const I Aj[], 
+                     const T Ax[],
+                           T  x[],
+                           T  z[],
+                     const I col_start,
+                     const I col_stop,
+                     const I col_step,
+                     const T Tx[])
+{
+    //rename
+    const T * D_inv = Tx;
+    T * r = z;
+    
+    for(I i = col_start; i != col_stop; i+=col_step)
+    {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        
+        // delta = < A e_i, r > 
+        T delta = 0.0;
+        for(I j = start; j < end; j++)
+        {   delta += conjugate(Ax[j])*r[Aj[j]]; }
+        
+        // delta /=  (A.H A)_{ii}
+        delta *= D_inv[i];
+
+        // update entry in x forcing < A.H b - A.H A x, e_i > = 0
+        x[i] += delta;
+        
+        // r -= delta A e_i
+        for(I j = start; j < end; j++)
+        {   r[Aj[j]] -= delta*Ax[j]; }
+    }
+
+}
+
 
 #endif

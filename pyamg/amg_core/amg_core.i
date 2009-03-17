@@ -244,6 +244,7 @@ INSTANTIATE_COMPLEX(jacobi)
 INSTANTIATE_BOTH(gauss_seidel_indexed)
 INSTANTIATE_COMPLEX(kaczmarz_jacobi)
 INSTANTIATE_COMPLEX(kaczmarz_gauss_seidel)
+INSTANTIATE_COMPLEX(nr_gauss_seidel)
 
 INSTANTIATE_COMPLEX(apply_householders)
 INSTANTIATE_COMPLEX(householder_hornerscheme)

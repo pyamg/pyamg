@@ -50,6 +50,7 @@ def setup_smoothers(ml, presmoother, postsmoother):
         kaczmarz_gauss_seidel
         kaczmarz_jacobi
         kaczmarz_richardson
+        nr_gauss_seidel
         cg
         gmres
         cgne
@@ -335,6 +336,11 @@ def setup_kaczmarz_richardson(lvl, iterations=1, omega=1.0):
     omega = omega/approximate_spectral_radius(lvl.A)**2
     def smoother(A,x,b):
         relaxation.kaczmarz_richardson(A, x, b, iterations=iterations, omega=omega)
+    return smoother
+
+def setup_nr_gauss_seidel(lvl, iterations=1, sweep='forward'):
+    def smoother(A,x,b):
+        relaxation.nr_gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None, residuals=None):

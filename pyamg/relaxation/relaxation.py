@@ -12,7 +12,7 @@ from pyamg import amg_core
 
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
-__all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel']
+__all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel', 'nr_gauss_seidel']
 __all__ += ['gauss_seidel_indexed'] 
 
 def make_system(A, x, b, formats=None):
@@ -593,7 +593,7 @@ def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
                                            row_stop, row_step, omega)
 
 def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
-    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A.H x = A.H b
+    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A.H x = b
     
     Parameters
     ----------
@@ -670,6 +670,88 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
         amg_core.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
                                            x, b, row_start,
                                            row_stop, row_step, Dinv)
+
+def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
+    """Perform Gauss-Seidel iterations on the linear system A.H A x = A.H b
+    
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : { ndarray }
+        Approximate solution (length N)
+    b : { ndarray }
+        Right-hand side (length N)
+    iterations : { int }
+        Number of iterations to perform
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
+    Dinv : { ndarray}
+        Inverse of diag(A.H A),  (length N)
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+    
+    References
+    ----------
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+       Second Edition", SIAM, pp. 247-9, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
+ 
+    
+    Examples
+    --------
+    >>> ## Use NR Gauss-Seidel as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
+    >>> nr_gauss_seidel(A, x0, b, iterations=10, sweep='symmetric')
+    >>> print norm(b-A*x0)
+    8.45044864352
+    >>> #
+    >>> ## Use NR Gauss-Seidel as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+             coarse_solver='pinv2', max_coarse=50,
+             presmoother=('nr_gauss_seidel', {'sweep' : 'symmetric'}), 
+             postsmoother=('nr_gauss_seidel', {'sweep' : 'symmetric'}))
+    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    """
+    
+    A,x,b = make_system(A, x, b, formats=['csc'])
+    
+    # Dinv for A.H*A
+    if Dinv == None:
+        Dinv = numpy.ravel(get_diagonal(A, norm_eq=1, inv=True))
+    
+    if sweep == 'forward':
+        col_start,col_stop,col_step = 0,len(x),1
+    elif sweep == 'backward':
+        col_start,col_stop,col_step = len(x)-1,-1,-1 
+    elif sweep == 'symmetric':
+        for iter in xrange(iterations):
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=Dinv)
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='backward', Dinv=Dinv)
+        return
+    else:
+        raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
+
+    ##
+    # Calculate initial residual
+    r = b - A*x
+
+    for i in xrange(iterations):
+        amg_core.nr_gauss_seidel(A.indptr, A.indices, A.data,
+                                           x, r, col_start,
+                                           col_stop, col_step, Dinv)
+
 
 #from pyamg.utils import dispatcher
 #dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

@@ -559,6 +559,87 @@ class TestRelaxation(TestCase):
         self.assert_(resid1 < 0.2 and resid2 < 0.2)
         self.assert_(allclose(resid1,resid2))
 
+    def test_nr_gauss_seidel_bsr(self):
+        cases = []
+
+        for N in [1,2,3,4,5,6,10]:
+            A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr()
+            
+            divisors = [ n for n in range(1,N+1) if N % n == 0 ]
+
+            x_csr = arange(N).astype(numpy.float64)
+            b = x_csr**2
+            nr_gauss_seidel(A,x_csr,b)
+
+            for D in divisors:
+                B = A.tobsr(blocksize=(D,D))
+                x_bsr = arange(N).astype(numpy.float64)
+                nr_gauss_seidel(B,x_bsr,b)
+                assert_almost_equal(x_bsr,x_csr)
+               
+    def test_nr_gauss_seidel(self):
+        scipy.random.seed(0)
+
+        cases = []
+        cases.append( poisson( (4,), format='csr' ) )
+        cases.append( poisson( (4,4), format='csr' ) )
+
+        temp = asmatrix( rand(1,1) )
+        cases.append( csr_matrix( temp) )
+        temp = asmatrix( rand(2,2) )
+        cases.append( csr_matrix( temp) )
+        temp = asmatrix( rand(4,4) )
+        cases.append( csr_matrix( temp) )
+
+        # reference implementation
+        def gold(A,x,b,iterations,sweep):
+            A = mat(A.todense())
+            AA = A.H*A
+
+            L = tril(AA,k=0)
+            U = triu(AA,k=0)
+
+            for i in range(iterations):
+                if sweep == 'forward':
+                    x = x + (solve(L, A.H*(b - A*x) ))
+                elif sweep == 'backward':
+                    x = x + (solve(U, A.H*(b - A*x) ))
+                else:
+                    x = x + (solve(L, A.H*(b - A*x) ))
+                    x = x + (solve(U, A.H*(b - A*x) ))
+            return x            
+        
+        for A in cases:
+
+            b = asmatrix(rand(A.shape[0],1))
+            x = asmatrix(rand(A.shape[0],1))
+
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='forward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
+            
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='backward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='backward') )
+            
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
+
+        #forward and backward passes should give same result with x=ones(N),b=zeros(N)
+        N = 100
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        x = ones(N)
+        b = zeros(N)
+        nr_gauss_seidel(A,x,b,iterations=200,sweep='forward')
+        resid1 = numpy.linalg.norm(A*x,2)
+        x = ones(N)
+        nr_gauss_seidel(A,x,b,iterations=200,sweep='backward')
+        resid2 = numpy.linalg.norm(A*x,2)
+        self.assert_(resid1 < 0.2 and resid2 < 0.2)
+        self.assert_(allclose(resid1,resid2))
+
+
 
 # Test complex arithmetic
 class TestComplexRelaxation(TestCase):
@@ -972,6 +1053,96 @@ class TestComplexRelaxation(TestCase):
         resid2 = numpy.linalg.norm(A*x,2)
         self.assert_(resid1 < 0.3 and resid2 < 0.3)
         self.assert_(allclose(resid1,resid2))
+
+    def test_nr_gauss_seidel_bsr(self):
+        cases = []
+
+        for N in [1,2,3,4,5,6,10]:
+            A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr()
+            A.data = A.data + 1.0j*1e-3*rand(A.data.shape[0],) 
+            
+            divisors = [ n for n in range(1,N+1) if N % n == 0 ]
+
+            x_csr = (arange(N) + 1.0j*1e-3*rand(N,)).astype(A.dtype)
+            x_bsr = x_csr.copy()
+            b = x_csr**2
+            nr_gauss_seidel(A,x_csr,b)
+
+            for D in divisors:
+                B = A.tobsr(blocksize=(D,D))
+                x_bsr_temp = x_bsr.copy()
+                nr_gauss_seidel(B,x_bsr_temp,b)
+                assert_almost_equal(x_bsr_temp,x_csr)
+               
+    def test_nr_gauss_seidel(self):
+        scipy.random.seed(0)
+
+        cases = []
+        A = poisson( (4,), format='csr' ); A.data = A.data + 1.0j*1e-3*rand(A.data.shape[0],)
+        cases.append(A)
+        A = poisson( (4,4), format='csr' ); A.data = A.data + 1.0j*1e-3*rand(A.data.shape[0],)
+        cases.append(A.tobsr(blocksize=(2,2))) 
+
+        temp = asmatrix( rand(1,1) ) + 1.0j*asmatrix( rand(1,1) )
+        cases.append( csr_matrix( temp) )
+        temp = asmatrix( rand(2,2) ) + 1.0j*asmatrix( rand(2,2) )
+        cases.append( csr_matrix( temp) )
+        temp = asmatrix( rand(4,4) ) + 1.0j*asmatrix( rand(4,4) )
+        cases.append( csr_matrix( temp) )
+
+        # reference implementation
+        def gold(A,x,b,iterations,sweep):
+            A = mat(A.todense())
+            AA = A.H*A
+
+            L = tril(AA,k=0)
+            U = triu(AA,k=0)
+
+            for i in range(iterations):
+                if sweep == 'forward':
+                    x = x + (solve(L, A.H*(b - A*x) ))
+                elif sweep == 'backward':
+                    x = x + (solve(U, A.H*(b - A*x) ))
+                else:
+                    x = x + (solve(L, A.H*(b - A*x) ))
+                    x = x + (solve(U, A.H*(b - A*x) ))
+            return x               
+
+
+        for A in cases:
+
+            b = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
+            x = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
+
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='forward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
+            
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='backward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='backward') )
+            
+            x_copy = x.copy()
+            nr_gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
+
+        #forward and backward passes should give same result with x=ones(N),b=zeros(N)
+        N = 100
+        A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N,format='csr')
+        A.data = A.data + 1.0j*A.data
+        x = ones(N).astype(A.dtype)
+        x = x + 1.0j*x
+        b = zeros(N).astype(A.dtype)
+        nr_gauss_seidel(A,x,b,iterations=200,sweep='forward')
+        resid1 = numpy.linalg.norm(A*x,2)
+        
+        x = ones(N).astype(A.dtype)
+        x = x + 1.0j*x
+        nr_gauss_seidel(A,x,b,iterations=200,sweep='backward')
+        resid2 = numpy.linalg.norm(A*x,2)
+        self.assert_(resid1 < 0.3 and resid2 < 0.3)
+        self.assert_(allclose(resid1,resid2))
+
 
 
 #class TestDispatch(TestCase):
