@@ -267,9 +267,10 @@ void gauss_seidel_indexed(const I Ap[],
 }
 
 /*
- * Perform Kaczmarz Jacobi on the linear system A x = b
- * This effective carries out weighted-Jacobi on A A^T x = A^T b
- * 
+ * Perform NE Jacobi on the linear system A x = b
+ * This effectively carries out weighted-Jacobi on A A^T x = A^T b
+ * (also known as Cimmino's relaxation)
+ *
  * Parameters
  * ----------
  * Ap : {int array}
@@ -300,21 +301,20 @@ void gauss_seidel_indexed(const I Ap[],
  *
  * Notes
  * -----
- * Primary calling routines are kaczmarz_jacobi 
- * and kaczmarz_richardson in relaxation.py
+ * Primary calling routine is jacobi_ne in relaxation.py
  */
 template<class I, class T, class F>
-void kaczmarz_jacobi(const I Ap[], 
-                     const I Aj[], 
-                     const T Ax[],
-                           T  x[],
-                     const T  b[],
-                     const T Tx[],
-                           T temp[],
-                     const I row_start,
-                     const I row_stop,
-                     const I row_step,
-                     const T omega[])
+void jacobi_ne(const I Ap[], 
+               const I Aj[], 
+               const T Ax[],
+                     T  x[],
+               const T  b[],
+               const T Tx[],
+                     T temp[],
+               const I row_start,
+               const I row_stop,
+               const I row_step,
+               const T omega[])
 {
     //rename
     const T * delta = Tx;
@@ -336,8 +336,8 @@ void kaczmarz_jacobi(const I Ap[],
 }
 
 /*
- * Perform Kaczmarz Gauss-Seidel on the linear system A x = b
- * This effective carries out Gauss-Seidel on A A.H x = b
+ * Perform NE Gauss-Seidel on the linear system A x = b
+ * This effectively carries out Gauss-Seidel on A A.H x = b
  * 
  * Parameters
  * ----------
@@ -353,6 +353,9 @@ void kaczmarz_jacobi(const I Ap[],
  *  right hand side
  * Tx : {array}
  *  inverse(diag(A A.H))
+ * omega : {float}
+ *  relaxation parameter 
+ *  (if not 1.0, then algorithm becomes SOR)
  * row_start,stop,step : {int}
  *  controls which rows to iterate over
  *
@@ -362,10 +365,10 @@ void kaczmarz_jacobi(const I Ap[],
  *
  * Notes
  * -----
- * Primary calling routine is kaczmarz_gass_seidel in relaxation.py
+ * Primary calling routine is gass_seidel_ne in relaxation.py
  */
 template<class I, class T, class F>
-void kaczmarz_gauss_seidel(const I Ap[], 
+void gauss_seidel_ne(const I Ap[], 
                      const I Aj[], 
                      const T Ax[],
                            T  x[],
@@ -373,7 +376,8 @@ void kaczmarz_gauss_seidel(const I Ap[],
                      const I row_start,
                      const I row_stop,
                      const I row_step,
-                     const T Tx[])
+                     const T Tx[],
+                     const F omega)
 {
     //rename
     const T * D_inv = Tx;
@@ -387,7 +391,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
         T delta = 0.0;
         for(I j = start; j < end; j++)
         {   delta += Ax[j]*x[Aj[j]]; }
-        delta = (b[i] - delta)*D_inv[i];
+        delta = (b[i] - delta)*D_inv[i]*omega;
 
         for(I j = start; j < end; j++)
         {   x[Aj[j]] += conjugate(Ax[j])*delta; }
@@ -398,7 +402,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
 
 /*
  * Perform NR Gauss-Seidel on the linear system A x = b
- * This effective carries out Gauss-Seidel on A.H A x = A.H b
+ * This effectively carries out Gauss-Seidel on A.H A x = A.H b
  * 
  * Parameters
  * ----------
@@ -414,6 +418,9 @@ void kaczmarz_gauss_seidel(const I Ap[],
  *  initial residual
  * Tx : {array}
  *  inverse(diag(A.H A))
+ * omega : {float}
+ *  relaxation parameter 
+ *  (if not 1.0, then algorithm becomes SOR)
  * col_start,stop,step : {int}
  *  controls which rows to iterate over
  *
@@ -426,7 +433,7 @@ void kaczmarz_gauss_seidel(const I Ap[],
  * Primary calling routine is nr_gass_seidel in relaxation.py
  */
 template<class I, class T, class F>
-void nr_gauss_seidel(const I Ap[], 
+void gauss_seidel_nr(const I Ap[], 
                      const I Aj[], 
                      const T Ax[],
                            T  x[],
@@ -434,7 +441,8 @@ void nr_gauss_seidel(const I Ap[],
                      const I col_start,
                      const I col_stop,
                      const I col_step,
-                     const T Tx[])
+                     const T Tx[],
+                     const F omega)
 {
     //rename
     const T * D_inv = Tx;
@@ -450,8 +458,8 @@ void nr_gauss_seidel(const I Ap[],
         for(I j = start; j < end; j++)
         {   delta += conjugate(Ax[j])*r[Aj[j]]; }
         
-        // delta /=  (A.H A)_{ii}
-        delta *= D_inv[i];
+        // delta /=  omega*(A.H A)_{ii}
+        delta *= (D_inv[i]*omega);
 
         // update entry in x forcing < A.H b - A.H A x, e_i > = 0
         x[i] += delta;

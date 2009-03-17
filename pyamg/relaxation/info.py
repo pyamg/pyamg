@@ -21,7 +21,7 @@ PyAMG implements relaxation methods of the following varieties:
     2. Gauss-Seidel iteration
     3. Successive Over-Relaxation
     4. Polynomial smoothing (e.g. Chebyshev)
-    5. Kaczmarz iteration
+    5. Jacobi and Gauss-Seidel on the normal equations (A.H A and A A.H)
     6. Krylov methods: gmres, cg, cgnr, cgne
     7. No pre- or postsmoother
 

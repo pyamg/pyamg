@@ -15350,7 +15350,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_jacobi_ne__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -15395,7 +15395,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:kaczmarz_jacobi",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:jacobi_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -15458,17 +15458,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_jacobi" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "jacobi_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "kaczmarz_jacobi" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "jacobi_ne" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "kaczmarz_jacobi" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi_ne" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   {
@@ -15481,7 +15481,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_1(PyObject *SWIGUNUSEDPARM(self
     
     arg11 = (float*) array11->data;
   }
-  kaczmarz_jacobi< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,arg7,arg8,arg9,arg10,(float const (*))arg11);
+  jacobi_ne< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,arg7,arg8,arg9,arg10,(float const (*))arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -15549,7 +15549,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_jacobi_ne__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -15594,7 +15594,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:kaczmarz_jacobi",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:jacobi_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -15657,17 +15657,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_jacobi" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "jacobi_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "kaczmarz_jacobi" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "jacobi_ne" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "kaczmarz_jacobi" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi_ne" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   {
@@ -15680,7 +15680,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_2(PyObject *SWIGUNUSEDPARM(self
     
     arg11 = (double*) array11->data;
   }
-  kaczmarz_jacobi< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,arg7,arg8,arg9,arg10,(double const (*))arg11);
+  jacobi_ne< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,arg7,arg8,arg9,arg10,(double const (*))arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -15748,7 +15748,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_jacobi_ne__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -15793,7 +15793,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:kaczmarz_jacobi",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:jacobi_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -15856,17 +15856,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_jacobi" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "jacobi_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "kaczmarz_jacobi" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "jacobi_ne" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "kaczmarz_jacobi" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi_ne" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   {
@@ -15879,7 +15879,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_3(PyObject *SWIGUNUSEDPARM(self
     
     arg11 = (npy_cfloat_wrapper*) array11->data;
   }
-  kaczmarz_jacobi< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,(npy_cfloat_wrapper const (*))arg6,arg7,arg8,arg9,arg10,(npy_cfloat_wrapper const (*))arg11);
+  jacobi_ne< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,(npy_cfloat_wrapper const (*))arg6,arg7,arg8,arg9,arg10,(npy_cfloat_wrapper const (*))arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -15947,7 +15947,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_jacobi_ne__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -15992,7 +15992,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:kaczmarz_jacobi",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:jacobi_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -16055,17 +16055,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_jacobi" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "jacobi_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "kaczmarz_jacobi" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "jacobi_ne" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "kaczmarz_jacobi" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "jacobi_ne" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   {
@@ -16078,7 +16078,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi__SWIG_4(PyObject *SWIGUNUSEDPARM(self
     
     arg11 = (npy_cdouble_wrapper*) array11->data;
   }
-  kaczmarz_jacobi< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,(npy_cdouble_wrapper const (*))arg6,arg7,arg8,arg9,arg10,(npy_cdouble_wrapper const (*))arg11);
+  jacobi_ne< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,(npy_cdouble_wrapper const (*))arg6,arg7,arg8,arg9,arg10,(npy_cdouble_wrapper const (*))arg11);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -16146,7 +16146,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_jacobi_ne(PyObject *self, PyObject *args) {
   int argc;
   PyObject *argv[12];
   int ii;
@@ -16205,7 +16205,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
                           _v = (is_array(argv[10]) && PyArray_CanCastSafely(PyArray_TYPE(argv[10]),PyArray_FLOAT)) ? 1 : 0;
                         }
                         if (_v) {
-                          return _wrap_kaczmarz_jacobi__SWIG_1(self, args);
+                          return _wrap_jacobi_ne__SWIG_1(self, args);
                         }
                       }
                     }
@@ -16267,7 +16267,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
                           _v = (is_array(argv[10]) && PyArray_CanCastSafely(PyArray_TYPE(argv[10]),PyArray_DOUBLE)) ? 1 : 0;
                         }
                         if (_v) {
-                          return _wrap_kaczmarz_jacobi__SWIG_2(self, args);
+                          return _wrap_jacobi_ne__SWIG_2(self, args);
                         }
                       }
                     }
@@ -16329,7 +16329,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
                           _v = (is_array(argv[10]) && PyArray_CanCastSafely(PyArray_TYPE(argv[10]),PyArray_CFLOAT)) ? 1 : 0;
                         }
                         if (_v) {
-                          return _wrap_kaczmarz_jacobi__SWIG_3(self, args);
+                          return _wrap_jacobi_ne__SWIG_3(self, args);
                         }
                       }
                     }
@@ -16391,7 +16391,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
                           _v = (is_array(argv[10]) && PyArray_CanCastSafely(PyArray_TYPE(argv[10]),PyArray_CDOUBLE)) ? 1 : 0;
                         }
                         if (_v) {
-                          return _wrap_kaczmarz_jacobi__SWIG_4(self, args);
+                          return _wrap_jacobi_ne__SWIG_4(self, args);
                         }
                       }
                     }
@@ -16406,17 +16406,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_jacobi(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_jacobi'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'jacobi_ne'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    kaczmarz_jacobi< int,float,float >(int const [],int const [],float const [],float [],float const [],float const [],float [],int const,int const,int const,float const [])\n"
-    "    kaczmarz_jacobi< int,double,double >(int const [],int const [],double const [],double [],double const [],double const [],double [],int const,int const,int const,double const [])\n"
-    "    kaczmarz_jacobi< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],int const,int const,int const,npy_cfloat_wrapper const [])\n"
-    "    kaczmarz_jacobi< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],int const,int const,int const,npy_cdouble_wrapper const [])\n");
+    "    jacobi_ne< int,float,float >(int const [],int const [],float const [],float [],float const [],float const [],float [],int const,int const,int const,float const [])\n"
+    "    jacobi_ne< int,double,double >(int const [],int const [],double const [],double [],double const [],double const [],double [],int const,int const,int const,double const [])\n"
+    "    jacobi_ne< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],int const,int const,int const,npy_cfloat_wrapper const [])\n"
+    "    jacobi_ne< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],int const,int const,int const,npy_cdouble_wrapper const [])\n");
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_ne__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -16427,6 +16427,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
   int arg7 ;
   int arg8 ;
   float *arg9 ;
+  float arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -16444,6 +16445,8 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  float val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -16453,8 +16456,9 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:kaczmarz_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -16502,17 +16506,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "kaczmarz_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_ne" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "kaczmarz_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_ne" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -16525,7 +16529,12 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPAR
     
     arg9 = (float*) array9->data;
   }
-  kaczmarz_gauss_seidel< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,(float const (*))arg9);
+  ecode10 = SWIG_AsVal_float(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_ne" "', argument " "10"" of type '" "float""'");
+  } 
+  arg10 = static_cast< float >(val10);
+  gauss_seidel_ne< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,(float const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -16583,7 +16592,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_ne__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -16594,6 +16603,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
   int arg7 ;
   int arg8 ;
   double *arg9 ;
+  double arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -16611,6 +16621,8 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  double val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -16620,8 +16632,9 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:kaczmarz_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -16669,17 +16682,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "kaczmarz_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_ne" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "kaczmarz_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_ne" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -16692,7 +16705,12 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPAR
     
     arg9 = (double*) array9->data;
   }
-  kaczmarz_gauss_seidel< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,(double const (*))arg9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_ne" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  gauss_seidel_ne< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,(double const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -16750,7 +16768,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_ne__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -16761,6 +16779,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPAR
   int arg7 ;
   int arg8 ;
   npy_cfloat_wrapper *arg9 ;
+  float arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -16778,6 +16797,8 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPAR
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  float val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -16787,8 +16808,9 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPAR
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:kaczmarz_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -16836,17 +16858,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPAR
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "kaczmarz_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_ne" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "kaczmarz_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_ne" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -16859,7 +16881,12 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPAR
     
     arg9 = (npy_cfloat_wrapper*) array9->data;
   }
-  kaczmarz_gauss_seidel< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,arg6,arg7,arg8,(npy_cfloat_wrapper const (*))arg9);
+  ecode10 = SWIG_AsVal_float(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_ne" "', argument " "10"" of type '" "float""'");
+  } 
+  arg10 = static_cast< float >(val10);
+  gauss_seidel_ne< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,arg6,arg7,arg8,(npy_cfloat_wrapper const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -16917,7 +16944,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_ne__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -16928,6 +16955,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPAR
   int arg7 ;
   int arg8 ;
   npy_cdouble_wrapper *arg9 ;
+  double arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -16945,6 +16973,8 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPAR
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  double val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -16954,8 +16984,9 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPAR
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:kaczmarz_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_ne",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -17003,17 +17034,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPAR
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "kaczmarz_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_ne" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "kaczmarz_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_ne" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "kaczmarz_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_ne" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -17026,7 +17057,12 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPAR
     
     arg9 = (npy_cdouble_wrapper*) array9->data;
   }
-  kaczmarz_gauss_seidel< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,arg6,arg7,arg8,(npy_cdouble_wrapper const (*))arg9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_ne" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  gauss_seidel_ne< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,arg6,arg7,arg8,(npy_cdouble_wrapper const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -17084,17 +17120,17 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_ne(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[10];
+  PyObject *argv[11];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 9); ii++) {
+  for (ii = 0; (ii < argc) && (ii < 10); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -17135,7 +17171,13 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_FLOAT)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_kaczmarz_gauss_seidel__SWIG_1(self, args);
+                      {
+                        int res = SWIG_AsVal_float(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_ne__SWIG_1(self, args);
+                      }
                     }
                   }
                 }
@@ -17146,7 +17188,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -17187,7 +17229,13 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_DOUBLE)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_kaczmarz_gauss_seidel__SWIG_2(self, args);
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_ne__SWIG_2(self, args);
+                      }
                     }
                   }
                 }
@@ -17198,7 +17246,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -17239,7 +17287,13 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_CFLOAT)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_kaczmarz_gauss_seidel__SWIG_3(self, args);
+                      {
+                        int res = SWIG_AsVal_float(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_ne__SWIG_3(self, args);
+                      }
                     }
                   }
                 }
@@ -17250,7 +17304,7 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -17291,7 +17345,13 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_CDOUBLE)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_kaczmarz_gauss_seidel__SWIG_4(self, args);
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_ne__SWIG_4(self, args);
+                      }
                     }
                   }
                 }
@@ -17304,17 +17364,17 @@ SWIGINTERN PyObject *_wrap_kaczmarz_gauss_seidel(PyObject *self, PyObject *args)
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'kaczmarz_gauss_seidel'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel_ne'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    kaczmarz_gauss_seidel< int,float,float >(int const [],int const [],float const [],float [],float const [],int const,int const,int const,float const [])\n"
-    "    kaczmarz_gauss_seidel< int,double,double >(int const [],int const [],double const [],double [],double const [],int const,int const,int const,double const [])\n"
-    "    kaczmarz_gauss_seidel< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper const [],int const,int const,int const,npy_cfloat_wrapper const [])\n"
-    "    kaczmarz_gauss_seidel< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper const [],int const,int const,int const,npy_cdouble_wrapper const [])\n");
+    "    gauss_seidel_ne< int,float,float >(int const [],int const [],float const [],float [],float const [],int const,int const,int const,float const [],float const)\n"
+    "    gauss_seidel_ne< int,double,double >(int const [],int const [],double const [],double [],double const [],int const,int const,int const,double const [],double const)\n"
+    "    gauss_seidel_ne< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper const [],int const,int const,int const,npy_cfloat_wrapper const [],float const)\n"
+    "    gauss_seidel_ne< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper const [],int const,int const,int const,npy_cdouble_wrapper const [],double const)\n");
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_nr__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -17325,6 +17385,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   int arg7 ;
   int arg8 ;
   float *arg9 ;
+  float arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -17341,6 +17402,8 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  float val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -17350,8 +17413,9 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:nr_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_nr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -17394,17 +17458,17 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "nr_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_nr" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "nr_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_nr" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "nr_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_nr" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -17417,7 +17481,12 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_1(PyObject *SWIGUNUSEDPARM(self
     
     arg9 = (float*) array9->data;
   }
-  nr_gauss_seidel< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,arg5,arg6,arg7,arg8,(float const (*))arg9);
+  ecode10 = SWIG_AsVal_float(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_nr" "', argument " "10"" of type '" "float""'");
+  } 
+  arg10 = static_cast< float >(val10);
+  gauss_seidel_nr< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,arg4,arg5,arg6,arg7,arg8,(float const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -17465,7 +17534,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_nr__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -17476,6 +17545,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   int arg7 ;
   int arg8 ;
   double *arg9 ;
+  double arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -17492,6 +17562,8 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  double val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -17501,8 +17573,9 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:nr_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_nr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -17545,17 +17618,17 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "nr_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_nr" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "nr_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_nr" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "nr_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_nr" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -17568,7 +17641,12 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_2(PyObject *SWIGUNUSEDPARM(self
     
     arg9 = (double*) array9->data;
   }
-  nr_gauss_seidel< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,arg5,arg6,arg7,arg8,(double const (*))arg9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_nr" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  gauss_seidel_nr< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,arg4,arg5,arg6,arg7,arg8,(double const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -17616,7 +17694,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_nr__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -17627,6 +17705,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   int arg7 ;
   int arg8 ;
   npy_cfloat_wrapper *arg9 ;
+  float arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -17643,6 +17722,8 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  float val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -17652,8 +17733,9 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:nr_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_nr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -17696,17 +17778,17 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "nr_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_nr" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "nr_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_nr" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "nr_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_nr" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -17719,7 +17801,12 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_3(PyObject *SWIGUNUSEDPARM(self
     
     arg9 = (npy_cfloat_wrapper*) array9->data;
   }
-  nr_gauss_seidel< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,arg5,arg6,arg7,arg8,(npy_cfloat_wrapper const (*))arg9);
+  ecode10 = SWIG_AsVal_float(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_nr" "', argument " "10"" of type '" "float""'");
+  } 
+  arg10 = static_cast< float >(val10);
+  gauss_seidel_nr< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,arg4,arg5,arg6,arg7,arg8,(npy_cfloat_wrapper const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -17767,7 +17854,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_nr__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -17778,6 +17865,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   int arg7 ;
   int arg8 ;
   npy_cdouble_wrapper *arg9 ;
+  double arg10 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -17794,6 +17882,8 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   int ecode8 = 0 ;
   PyArrayObject *array9 = NULL ;
   int is_new_object9 ;
+  double val10 ;
+  int ecode10 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -17803,8 +17893,9 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
   PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:nr_gauss_seidel",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:gauss_seidel_nr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -17847,17 +17938,17 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self
   }
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "nr_gauss_seidel" "', argument " "6"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "gauss_seidel_nr" "', argument " "6"" of type '" "int""'");
   } 
   arg6 = static_cast< int >(val6);
   ecode7 = SWIG_AsVal_int(obj6, &val7);
   if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "nr_gauss_seidel" "', argument " "7"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "gauss_seidel_nr" "', argument " "7"" of type '" "int""'");
   } 
   arg7 = static_cast< int >(val7);
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "nr_gauss_seidel" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "gauss_seidel_nr" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   {
@@ -17870,7 +17961,12 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel__SWIG_4(PyObject *SWIGUNUSEDPARM(self
     
     arg9 = (npy_cdouble_wrapper*) array9->data;
   }
-  nr_gauss_seidel< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,arg5,arg6,arg7,arg8,(npy_cdouble_wrapper const (*))arg9);
+  ecode10 = SWIG_AsVal_double(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "gauss_seidel_nr" "', argument " "10"" of type '" "double""'");
+  } 
+  arg10 = static_cast< double >(val10);
+  gauss_seidel_nr< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,arg4,arg5,arg6,arg7,arg8,(npy_cdouble_wrapper const (*))arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -17918,17 +18014,17 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_gauss_seidel_nr(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[10];
+  PyObject *argv[11];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 9); ii++) {
+  for (ii = 0; (ii < argc) && (ii < 10); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -17969,7 +18065,13 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_FLOAT)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_nr_gauss_seidel__SWIG_1(self, args);
+                      {
+                        int res = SWIG_AsVal_float(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_nr__SWIG_1(self, args);
+                      }
                     }
                   }
                 }
@@ -17980,7 +18082,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -18021,7 +18123,13 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_DOUBLE)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_nr_gauss_seidel__SWIG_2(self, args);
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_nr__SWIG_2(self, args);
+                      }
                     }
                   }
                 }
@@ -18032,7 +18140,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -18073,7 +18181,13 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_CFLOAT)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_nr_gauss_seidel__SWIG_3(self, args);
+                      {
+                        int res = SWIG_AsVal_float(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_nr__SWIG_3(self, args);
+                      }
                     }
                   }
                 }
@@ -18084,7 +18198,7 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
       }
     }
   }
-  if (argc == 9) {
+  if (argc == 10) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -18125,7 +18239,13 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
                       _v = (is_array(argv[8]) && PyArray_CanCastSafely(PyArray_TYPE(argv[8]),PyArray_CDOUBLE)) ? 1 : 0;
                     }
                     if (_v) {
-                      return _wrap_nr_gauss_seidel__SWIG_4(self, args);
+                      {
+                        int res = SWIG_AsVal_double(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        return _wrap_gauss_seidel_nr__SWIG_4(self, args);
+                      }
                     }
                   }
                 }
@@ -18138,12 +18258,12 @@ SWIGINTERN PyObject *_wrap_nr_gauss_seidel(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'nr_gauss_seidel'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'gauss_seidel_nr'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    nr_gauss_seidel< int,float,float >(int const [],int const [],float const [],float [],float [],int const,int const,int const,float const [])\n"
-    "    nr_gauss_seidel< int,double,double >(int const [],int const [],double const [],double [],double [],int const,int const,int const,double const [])\n"
-    "    nr_gauss_seidel< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper [],int const,int const,int const,npy_cfloat_wrapper const [])\n"
-    "    nr_gauss_seidel< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper [],int const,int const,int const,npy_cdouble_wrapper const [])\n");
+    "    gauss_seidel_nr< int,float,float >(int const [],int const [],float const [],float [],float [],int const,int const,int const,float const [],float const)\n"
+    "    gauss_seidel_nr< int,double,double >(int const [],int const [],double const [],double [],double [],int const,int const,int const,double const [],double const)\n"
+    "    gauss_seidel_nr< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper [],npy_cfloat_wrapper [],int const,int const,int const,npy_cfloat_wrapper const [],float const)\n"
+    "    gauss_seidel_nr< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper [],npy_cdouble_wrapper [],int const,int const,int const,npy_cdouble_wrapper const [],double const)\n");
   return NULL;
 }
 
@@ -22897,45 +23017,53 @@ static PyMethodDef SwigMethods[] = {
 		"gauss_seidel_indexed(int Ap, int Aj, double Ax, double x, double b, int Id, \n"
 		"    int row_start, int row_stop, int row_step)\n"
 		""},
-	 { (char *)"kaczmarz_jacobi", _wrap_kaczmarz_jacobi, METH_VARARGS, (char *)"\n"
-		"kaczmarz_jacobi(int Ap, int Aj, float Ax, float x, float b, float Tx, \n"
+	 { (char *)"jacobi_ne", _wrap_jacobi_ne, METH_VARARGS, (char *)"\n"
+		"jacobi_ne(int Ap, int Aj, float Ax, float x, float b, float Tx, \n"
 		"    float temp, int row_start, int row_stop, int row_step, \n"
 		"    float omega)\n"
-		"kaczmarz_jacobi(int Ap, int Aj, double Ax, double x, double b, double Tx, \n"
+		"jacobi_ne(int Ap, int Aj, double Ax, double x, double b, double Tx, \n"
 		"    double temp, int row_start, int row_stop, \n"
 		"    int row_step, double omega)\n"
-		"kaczmarz_jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
+		"jacobi_ne(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
 		"    npy_cfloat_wrapper b, npy_cfloat_wrapper Tx, \n"
 		"    npy_cfloat_wrapper temp, int row_start, \n"
 		"    int row_stop, int row_step, npy_cfloat_wrapper omega)\n"
-		"kaczmarz_jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
+		"jacobi_ne(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
 		"    npy_cdouble_wrapper b, npy_cdouble_wrapper Tx, \n"
 		"    npy_cdouble_wrapper temp, int row_start, \n"
 		"    int row_stop, int row_step, npy_cdouble_wrapper omega)\n"
 		""},
-	 { (char *)"kaczmarz_gauss_seidel", _wrap_kaczmarz_gauss_seidel, METH_VARARGS, (char *)"\n"
-		"kaczmarz_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, \n"
-		"    int row_stop, int row_step, float Tx)\n"
-		"kaczmarz_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, \n"
-		"    int row_stop, int row_step, double Tx)\n"
-		"kaczmarz_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
+	 { (char *)"gauss_seidel_ne", _wrap_gauss_seidel_ne, METH_VARARGS, (char *)"\n"
+		"gauss_seidel_ne(int Ap, int Aj, float Ax, float x, float b, int row_start, \n"
+		"    int row_stop, int row_step, float Tx, \n"
+		"    float omega)\n"
+		"gauss_seidel_ne(int Ap, int Aj, double Ax, double x, double b, int row_start, \n"
+		"    int row_stop, int row_step, double Tx, \n"
+		"    double omega)\n"
+		"gauss_seidel_ne(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
 		"    npy_cfloat_wrapper b, int row_start, \n"
-		"    int row_stop, int row_step, npy_cfloat_wrapper Tx)\n"
-		"kaczmarz_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
+		"    int row_stop, int row_step, npy_cfloat_wrapper Tx, \n"
+		"    float omega)\n"
+		"gauss_seidel_ne(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
 		"    npy_cdouble_wrapper b, int row_start, \n"
-		"    int row_stop, int row_step, npy_cdouble_wrapper Tx)\n"
+		"    int row_stop, int row_step, npy_cdouble_wrapper Tx, \n"
+		"    double omega)\n"
 		""},
-	 { (char *)"nr_gauss_seidel", _wrap_nr_gauss_seidel, METH_VARARGS, (char *)"\n"
-		"nr_gauss_seidel(int Ap, int Aj, float Ax, float x, float z, int col_start, \n"
-		"    int col_stop, int col_step, float Tx)\n"
-		"nr_gauss_seidel(int Ap, int Aj, double Ax, double x, double z, int col_start, \n"
-		"    int col_stop, int col_step, double Tx)\n"
-		"nr_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
+	 { (char *)"gauss_seidel_nr", _wrap_gauss_seidel_nr, METH_VARARGS, (char *)"\n"
+		"gauss_seidel_nr(int Ap, int Aj, float Ax, float x, float z, int col_start, \n"
+		"    int col_stop, int col_step, float Tx, \n"
+		"    float omega)\n"
+		"gauss_seidel_nr(int Ap, int Aj, double Ax, double x, double z, int col_start, \n"
+		"    int col_stop, int col_step, double Tx, \n"
+		"    double omega)\n"
+		"gauss_seidel_nr(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, \n"
 		"    npy_cfloat_wrapper z, int col_start, \n"
-		"    int col_stop, int col_step, npy_cfloat_wrapper Tx)\n"
-		"nr_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
+		"    int col_stop, int col_step, npy_cfloat_wrapper Tx, \n"
+		"    float omega)\n"
+		"gauss_seidel_nr(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, \n"
 		"    npy_cdouble_wrapper z, int col_start, \n"
-		"    int col_stop, int col_step, npy_cdouble_wrapper Tx)\n"
+		"    int col_stop, int col_step, npy_cdouble_wrapper Tx, \n"
+		"    double omega)\n"
 		""},
 	 { (char *)"apply_householders", _wrap_apply_householders, METH_VARARGS, (char *)"\n"
 		"apply_householders(float z, float B, int n, int start, int stop, int step)\n"

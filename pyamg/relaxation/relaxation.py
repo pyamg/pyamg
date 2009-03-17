@@ -12,7 +12,7 @@ from pyamg import amg_core
 
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
-__all__ += ['kaczmarz_jacobi', 'kaczmarz_richardson', 'kaczmarz_gauss_seidel', 'nr_gauss_seidel']
+__all__ += ['jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']
 __all__ += ['gauss_seidel_indexed'] 
 
 def make_system(A, x, b, formats=None):
@@ -452,8 +452,8 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
                                             x, b, indices,
                                             row_start, row_stop, row_step)
 
-def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
-    """Perform Kaczmarz Jacobi iterations on the linear system A A.H x = A.H b
+def jacobi_ne(A, x, b, iterations=1, omega=1.0):
+    """Perform Jacobi iterations on the linear system A A.H x = A.H b
        (Also known as Cimmino relaxation)
     
     Parameters
@@ -487,7 +487,7 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     
     Examples
     --------
-    >>> ## Use Kaczmarz Jacobi as a Stand-Alone Solver
+    >>> ## Use NE Jacobi as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -495,16 +495,16 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     >>> A = poisson((50,50), format='csr')
     >>> x0 = numpy.zeros((A.shape[0],1))
     >>> b = numpy.ones((A.shape[0],1))
-    >>> kaczmarz_jacobi(A, x0, b, iterations=10, omega=2.0/3.0)
+    >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
     >>> print norm(b-A*x0)
     49.3886046066
     >>> #
-    >>> ## Use Kaczmarz Jacobi as the Multigrid Smoother
+    >>> ## Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
-    ...         presmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}), 
-    ...         postsmoother=('kaczmarz_jacobi', {'iterations' : 2, 'omega' : 4.0/3.0}))
+    ...         presmoother=('jacobi_ne', {'iterations' : 2, 'omega' : 4.0/3.0}), 
+    ...         postsmoother=('jacobi_ne', {'iterations' : 2, 'omega' : 4.0/3.0}))
     >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
@@ -525,76 +525,15 @@ def kaczmarz_jacobi(A, x, b, iterations=1, omega=1.0):
     
     for i in range(iterations):
         delta = (numpy.ravel(b - A*x)*numpy.ravel(Dinv)).astype(A.dtype)
-        amg_core.kaczmarz_jacobi(A.indptr, A.indices, A.data,
+        amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                                        x, b, delta, temp, row_start,
                                        row_stop, row_step, omega)  
     
-def kaczmarz_richardson(A, x, b, iterations=1, omega=1.0):
-    """Perform Kaczmarz Richardson iterations on the linear system A A.H x = A.H b
-    
-    Parameters
-    ----------
-    A : csr_matrix
-        Sparse NxN matrix
-    x : ndarray
-        Approximate solution (length N)
-    b : ndarray
-        Right-hand side (length N)
-    iterations : int
-        Number of iterations to perform
-    omega : scalar
-        Damping parameter
 
-    Returns
-    -------
-    Nothing, x will be modified in place.
-    
-    References
-    ----------
-    .. [1] Brandt, Ta'asan.  
-       "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
-       1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026; NASA-CR-178026;
+def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0, Dinv=None):
+    """Perform Gauss-Seidel iterations on the linear system A A.H x = b
+       (Also known as Kaczmarz relaxation)
 
-    .. [2] Kaczmarz.  Angenaeherte Aufloesung von Systemen Linearer Gleichungen. 
-       Bull. Acad.  Polon. Sci. Lett. A 35, 355-57.  1937 
- 
-    Examples
-    --------
-    >>> ## Use Kaczmarz Richardson as the Multigrid Smoother
-    >>> from pyamg import smoothed_aggregation_solver
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.util.linalg import norm
-    >>> import numpy
-    >>> A = poisson((10,10), format='csr')
-    >>> b = numpy.ones((A.shape[0],1))
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
-    ...         presmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}), 
-    ...         postsmoother=('kaczmarz_richardson', {'iterations' : 2, 'omega' : 5.0/3.0}))
-    >>> x0=numpy.zeros((A.shape[0],1))
-    >>> residuals=[]
-    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
-    """
-
-    A,x,b = make_system(A, x, b, formats=['csr'])
-    
-    sweep = slice(None)
-    (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
-    
-    temp = numpy.zeros_like(x)
-    
-    # Create uniform type, and convert possibly complex scalars to length 1 arrays
-    [omega] = type_prep(A.dtype, [omega])
-    
-    for i in range(iterations):
-        delta = numpy.ravel(b - A*x).astype(A.dtype)
-        amg_core.kaczmarz_jacobi(A.indptr, A.indices, A.data,
-                                           x, b, delta, temp, row_start,
-                                           row_stop, row_step, omega)
-
-def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
-    """Perform Kaczmarz Gauss-Seidel iterations on the linear system A A.H x = b
-    
     Parameters
     ----------
     A : csr_matrix
@@ -607,6 +546,9 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
+    omega : { float}
+        Relaxation parameter typically in (0, 2)
+        if omega != 1.0, then algorithm becomes SOR on A A.H
     Dinv : { ndarray}
         Inverse of diag(A A.H),  (length N)
 
@@ -625,7 +567,7 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
     
     Examples
     --------
-    >>> ## Use Kaczmarz Gauss-Seidel as a Stand-Alone Solver
+    >>> ## Use NE Gauss-Seidel as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -633,16 +575,16 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
     >>> A = poisson((10,10), format='csr')
     >>> x0 = numpy.zeros((A.shape[0],1))
     >>> b = numpy.ones((A.shape[0],1))
-    >>> kaczmarz_gauss_seidel(A, x0, b, iterations=10, sweep='symmetric')
+    >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
     >>> print norm(b-A*x0)
     8.47576806771
     >>> #
-    >>> ## Use Kaczmarz Gauss-Seidel as the Multigrid Smoother
+    >>> ## Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
-    ...         presmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}), 
-    ...         postsmoother=('kaczmarz_gauss_seidel', {'sweep' : 'symmetric'}))
+    ...         presmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}), 
+    ...         postsmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}))
     >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
@@ -660,18 +602,18 @@ def kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
         row_start,row_stop,row_step = len(x)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=Dinv)
-            kaczmarz_gauss_seidel(A, x, b, iterations=1, sweep='backward', Dinv=Dinv)
+            gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=omega, Dinv=Dinv)
+            gauss_seidel_ne(A, x, b, iterations=1, sweep='backward', omega=omega, Dinv=Dinv)
         return
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
 
     for i in xrange(iterations):
-        amg_core.kaczmarz_gauss_seidel(A.indptr, A.indices, A.data,
+        amg_core.gauss_seidel_ne(A.indptr, A.indices, A.data,
                                            x, b, row_start,
-                                           row_stop, row_step, Dinv)
+                                           row_stop, row_step, Dinv, omega)
 
-def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
+def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0, Dinv=None):
     """Perform Gauss-Seidel iterations on the linear system A.H A x = A.H b
     
     Parameters
@@ -686,6 +628,9 @@ def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
+    omega : { float}
+        Relaxation parameter typically in (0, 2)
+        if omega != 1.0, then algorithm becomes SOR on A.H A
     Dinv : { ndarray}
         Inverse of diag(A.H A),  (length N)
 
@@ -710,16 +655,16 @@ def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
     >>> A = poisson((10,10), format='csr')
     >>> x0 = numpy.zeros((A.shape[0],1))
     >>> b = numpy.ones((A.shape[0],1))
-    >>> nr_gauss_seidel(A, x0, b, iterations=10, sweep='symmetric')
+    >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
     >>> print norm(b-A*x0)
     8.45044864352
     >>> #
     >>> ## Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
-             coarse_solver='pinv2', max_coarse=50,
-             presmoother=('nr_gauss_seidel', {'sweep' : 'symmetric'}), 
-             postsmoother=('nr_gauss_seidel', {'sweep' : 'symmetric'}))
+    ...      coarse_solver='pinv2', max_coarse=50,
+    ...      presmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}), 
+    ...      postsmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}))
     >>> x0=numpy.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
@@ -737,8 +682,8 @@ def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
         col_start,col_stop,col_step = len(x)-1,-1,-1 
     elif sweep == 'symmetric':
         for iter in xrange(iterations):
-            nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=Dinv)
-            nr_gauss_seidel(A, x, b, iterations=1, sweep='backward', Dinv=Dinv)
+            gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=omega, Dinv=Dinv)
+            gauss_seidel_nr(A, x, b, iterations=1, sweep='backward', omega=omega, Dinv=Dinv)
         return
     else:
         raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
@@ -748,9 +693,9 @@ def nr_gauss_seidel(A, x, b, iterations=1, sweep='forward', Dinv=None):
     r = b - A*x
 
     for i in xrange(iterations):
-        amg_core.nr_gauss_seidel(A.indptr, A.indices, A.data,
+        amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,
                                            x, r, col_start,
-                                           col_stop, col_step, Dinv)
+                                           col_stop, col_step, Dinv, omega)
 
 
 #from pyamg.utils import dispatcher

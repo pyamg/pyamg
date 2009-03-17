@@ -37,9 +37,9 @@ def setup_smoothers(ml, presmoother, postsmoother):
       'method' is the name of a supported smoother and 'opts' a dict of
       keyword arguments to the smoother.  See the Examples section for
       illustrations of the format.
-    - Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
-      Kaczmarz-Richardson methods is scaled by the spectral radius of 
-      the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - Parameter 'omega' of the Jacobi, Richardson, and jacobi_ne
+      methods is scaled by the spectral radius of the matrix on 
+      each level.  Therefore 'omega' should be in the interval (0,2).
     - Available smoother methods::
 
         gauss_seidel
@@ -47,10 +47,9 @@ def setup_smoothers(ml, presmoother, postsmoother):
         richardson
         sor
         chebyshev
-        kaczmarz_gauss_seidel
-        kaczmarz_jacobi
-        kaczmarz_richardson
-        nr_gauss_seidel
+        gauss_seidel_nr
+        gauss_seidel_ne
+        jacobi_ne
         cg
         gmres
         cgne
@@ -143,9 +142,9 @@ def change_smoothers(ml, presmoother, postsmoother):
 
     Notes
     -----
-    - Parameter 'omega' of the Jacobi, Richardson, Kaczmarz-Jacobi, and
-      Kaczmarz-Richardson methods is scaled by the spectral radius of 
-      the matrix on each level.  Therefore 'omega' should be in the interval (0,2).
+    - Parameter 'omega' of the Jacobi, Richardson, and jacobi_ne
+      methods is scaled by the spectral radius of the matrix on 
+      each level.  Therefore 'omega' should be in the interval (0,2).
     - This function is most differs from setup_smoothers in that it allows 
       for different smoothing strategies on different levels.
     - Available smoother methods::
@@ -155,9 +154,9 @@ def change_smoothers(ml, presmoother, postsmoother):
         richardson
         sor
         chebyshev
-        kaczmarz_gauss_seidel
-        kaczmarz_jacobi
-        kaczmarz_richardson
+        gauss_seidel_nr
+        gauss_seidel_ne
+        jacobi_ne
         cg
         gmres
         cgne
@@ -321,26 +320,20 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3, iterat
         relaxation.polynomial(A, x, b, coeffients=coeffients, iterations=iterations)
     return smoother
 
-def setup_kaczmarz_jacobi(lvl, iterations=1, omega=1.0):
+def setup_jacobi_ne(lvl, iterations=1, omega=1.0):
     omega = omega/rho_D_inv_A(lvl.A)**2
     def smoother(A,x,b):
-        relaxation.kaczmarz_jacobi(A, x, b, iterations=iterations, omega=omega)
+        relaxation.jacobi_ne(A, x, b, iterations=iterations, omega=omega)
     return smoother
 
-def setup_kaczmarz_gauss_seidel(lvl, iterations=1, sweep='forward'):
+def setup_gauss_seidel_ne(lvl, iterations=1, sweep='forward', omega=1.0):
     def smoother(A,x,b):
-        relaxation.kaczmarz_gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
+        relaxation.gauss_seidel_ne(A, x, b, iterations=iterations, sweep=sweep, omega=omega)
     return smoother
 
-def setup_kaczmarz_richardson(lvl, iterations=1, omega=1.0):
-    omega = omega/approximate_spectral_radius(lvl.A)**2
+def setup_gauss_seidel_nr(lvl, iterations=1, sweep='forward', omega=1.0):
     def smoother(A,x,b):
-        relaxation.kaczmarz_richardson(A, x, b, iterations=iterations, omega=omega)
-    return smoother
-
-def setup_nr_gauss_seidel(lvl, iterations=1, sweep='forward'):
-    def smoother(A,x,b):
-        relaxation.nr_gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
+        relaxation.gauss_seidel_nr(A, x, b, iterations=iterations, sweep=sweep, omega=omega)
     return smoother
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None, residuals=None):

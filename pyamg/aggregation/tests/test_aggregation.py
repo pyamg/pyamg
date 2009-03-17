@@ -105,14 +105,15 @@ class TestComplexParameters(TestCase):
             self.run_cases( {'aggregate' : aggregate} )
     
     def test_prolongation_smoother(self): 
-        for smooth in ['jacobi','richardson','kaczmarz_jacobi', 'kaczmarz_richardson', ('energy', {'SPD' : False})]:
+        for smooth in ['jacobi','richardson','jacobi_ne', ('energy', {'SPD' : False})]:
             self.run_cases( {'smooth' : smooth} )
 
     def test_smoothers(self): 
         smoothers = []
         smoothers.append('gauss_seidel')
         smoothers.append( ('gauss_seidel',{'sweep' : 'symmetric'}) )
-        smoothers.append( ('kaczmarz_gauss_seidel',{'sweep' : 'symmetric'}) )
+        smoothers.append( ('gauss_seidel_ne',{'sweep' : 'symmetric'}) )
+        smoothers.append( ('gauss_seidel_nr',{'sweep' : 'symmetric'}) )
 
         for pre in smoothers:
             for post in smoothers:

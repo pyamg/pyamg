@@ -12,8 +12,7 @@ from pyamg.util.utils import UnAmal
 import pyamg.amg_core
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
-        'energy_prolongation_smoother', 'kaczmarz_richardson_prolongation_smoother',
-        'kaczmarz_jacobi_prolongation_smoother']
+        'energy_prolongation_smoother', 'jacobi_ne_prolongation_smoother']
 
 def jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     """Jacobi prolongation smoother
@@ -136,8 +135,9 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     return P
 
-def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
-    """Jacobi prolongation smoother for the normal equations (i.e. Kaczmarz)
+def jacobi_ne_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+    """Jacobi prolongation smoother for the normal equations A A.H 
+       (also known as Cimmino relaxation)
    
     Parameters
     ----------
@@ -157,7 +157,7 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     Examples
     --------
-    >>> from pyamg.aggregation import kaczmarz_jacobi_prolongation_smoother
+    >>> from pyamg.aggregation import jacobi_ne_prolongation_smoother
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
     >>> import numpy
@@ -173,7 +173,7 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
             [ 0.,  1.],
             [ 0.,  1.]])
     >>> A = poisson((6,),format='csr')
-    >>> P = kaczmarz_jacobi_prolongation_smoother(A,T)
+    >>> P = jacobi_ne_prolongation_smoother(A,T)
     >>> P.todense()
     matrix([[ 0.78365913,  0.        ],
             [ 1.19831246, -0.09014203],
@@ -211,80 +211,9 @@ def kaczmarz_jacobi_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     return P
 
-def kaczmarz_richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
-    """Richardson prolongation smoother for the normal equations (i.e. Kaczmarz)
-   
-    Parameters
-    ----------
-    S : {csr_matrix, bsr_matrix}
-        Sparse NxN matrix used for smoothing.  Typically, A or the
-        "filtered matrix" obtained from A by lumping weak connections
-        onto the diagonal of A.
-    T : {csr_matrix, bsr_matrix}
-        Tentative prolongator
-    omega : {scalar}
-        Damping parameter
-
-    Returns
-    -------
-    P : {csr_matrix, bsr_matrix}
-        Smoothed (final) prolongator 
-
-    Examples
-    --------
-    >>> from pyamg.aggregation import kaczmarz_richardson_prolongation_smoother
-    >>> from pyamg.gallery import poisson
-    >>> from scipy.sparse import coo_matrix
-    >>> import numpy
-    >>> data = numpy.ones((6,))
-    >>> row = numpy.arange(0,6)
-    >>> col = numpy.kron([0,1],numpy.ones((3,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> T.todense()
-    matrix([[ 1.,  0.],
-            [ 1.,  0.],
-            [ 1.,  0.],
-            [ 0.,  1.],
-            [ 0.,  1.],
-            [ 0.,  1.]])
-    >>> A = poisson((6,),format='csr')
-    >>> P = kaczmarz_richardson_prolongation_smoother(A,T)
-    >>> P.todense()
-    matrix([[ 0.81551599,  0.        ],
-            [ 1.18448401, -0.09224201],
-            [ 0.72327398,  0.27672602],
-            [ 0.27672602,  0.72327398],
-            [-0.09224201,  1.18448401],
-            [ 0.        ,  0.81551599]])
-
-    """
-
-    # Approximate Spectral radius by defining a matvec for S*S.H
-    ST = S.conjugate().T.asformat(S.format)
-    class matvec_mat:
-    
-        def __init__(self, matvec, shape, dtype):
-            self.shape = shape
-            self.matvec = matvec
-            self.__mul__ = matvec
-            self.dtype = dtype
-    
-    def matmul(A,B,x):
-        return A*(B*x)
-    
-    StS_matmul = lambda x:matmul(ST, S, x)
-    StS = matvec_mat(StS_matmul, S.shape, S.dtype)
-    omega = omega/approximate_spectral_radius(StS)
-
-    P = T
-    for i in range(degree):
-        P = P - omega*(ST*(S*P))
-
-    return P
 
 
 """ sa_energy_min + helper functions minimize the energy of a tentative prolongator for use in SA """
-
 
 ########################################################################################################
 #   Helper function for the energy minimization prolongator generation routine

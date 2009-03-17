@@ -16,8 +16,7 @@ from pyamg.strength import classical_strength_of_connection, \
 from aggregate import standard_aggregation, lloyd_aggregation
 from tentative import fit_candidates
 from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
-        energy_prolongation_smoother, kaczmarz_richardson_prolongation_smoother, \
-        kaczmarz_jacobi_prolongation_smoother
+        energy_prolongation_smoother, jacobi_ne_prolongation_smoother
 
 __all__ = ['smoothed_aggregation_solver']
 
@@ -56,7 +55,7 @@ def smoothed_aggregation_solver(A, B=None,
         defines a three-level hierarchy where the dimensions of A, Agg0 and
         Agg1 are compatible, i.e.  Agg0.shape[1] == A.shape[0] and
         Agg1.shape[1] == Agg0.shape[0].
-    smooth : ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
+    smooth : ['jacobi', 'richardson', 'energy', 'jacobi_ne', None]
         Method used used to smooth the tentative prolongator.
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
@@ -217,10 +216,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth):
         #from scipy import conjugate
         #R = energy_prolongation_smoother(A.H.asformat(A.format), T, C, conjugate(B), **kwargs).H
         P = energy_prolongation_smoother(A, T, C, B, **kwargs)
-    elif fn == 'kaczmarz_richardson':
-        P = kaczmarz_richardson_prolongation_smoother(A, T, **kwargs)
-    elif fn == 'kaczmarz_jacobi':
-        P = kaczmarz_jacobi_prolongation_smoother(A, T, **kwargs)
+    elif fn == 'jacobi_ne':
+        P = jacobi_ne_prolongation_smoother(A, T, **kwargs)
     elif fn is None:
         P = T
     else:

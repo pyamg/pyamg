@@ -362,54 +362,62 @@ def gauss_seidel_indexed(*args):
     """
   return _amg_core.gauss_seidel_indexed(*args)
 
-def kaczmarz_jacobi(*args):
+def jacobi_ne(*args):
   """
-    kaczmarz_jacobi(int Ap, int Aj, float Ax, float x, float b, float Tx, 
+    jacobi_ne(int Ap, int Aj, float Ax, float x, float b, float Tx, 
         float temp, int row_start, int row_stop, int row_step, 
         float omega)
-    kaczmarz_jacobi(int Ap, int Aj, double Ax, double x, double b, double Tx, 
+    jacobi_ne(int Ap, int Aj, double Ax, double x, double b, double Tx, 
         double temp, int row_start, int row_stop, 
         int row_step, double omega)
-    kaczmarz_jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+    jacobi_ne(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
         npy_cfloat_wrapper b, npy_cfloat_wrapper Tx, 
         npy_cfloat_wrapper temp, int row_start, 
         int row_stop, int row_step, npy_cfloat_wrapper omega)
-    kaczmarz_jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+    jacobi_ne(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
         npy_cdouble_wrapper b, npy_cdouble_wrapper Tx, 
         npy_cdouble_wrapper temp, int row_start, 
         int row_stop, int row_step, npy_cdouble_wrapper omega)
     """
-  return _amg_core.kaczmarz_jacobi(*args)
+  return _amg_core.jacobi_ne(*args)
 
-def kaczmarz_gauss_seidel(*args):
+def gauss_seidel_ne(*args):
   """
-    kaczmarz_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
-        int row_stop, int row_step, float Tx)
-    kaczmarz_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
-        int row_stop, int row_step, double Tx)
-    kaczmarz_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+    gauss_seidel_ne(int Ap, int Aj, float Ax, float x, float b, int row_start, 
+        int row_stop, int row_step, float Tx, 
+        float omega)
+    gauss_seidel_ne(int Ap, int Aj, double Ax, double x, double b, int row_start, 
+        int row_stop, int row_step, double Tx, 
+        double omega)
+    gauss_seidel_ne(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
         npy_cfloat_wrapper b, int row_start, 
-        int row_stop, int row_step, npy_cfloat_wrapper Tx)
-    kaczmarz_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        int row_stop, int row_step, npy_cfloat_wrapper Tx, 
+        float omega)
+    gauss_seidel_ne(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
         npy_cdouble_wrapper b, int row_start, 
-        int row_stop, int row_step, npy_cdouble_wrapper Tx)
+        int row_stop, int row_step, npy_cdouble_wrapper Tx, 
+        double omega)
     """
-  return _amg_core.kaczmarz_gauss_seidel(*args)
+  return _amg_core.gauss_seidel_ne(*args)
 
-def nr_gauss_seidel(*args):
+def gauss_seidel_nr(*args):
   """
-    nr_gauss_seidel(int Ap, int Aj, float Ax, float x, float z, int col_start, 
-        int col_stop, int col_step, float Tx)
-    nr_gauss_seidel(int Ap, int Aj, double Ax, double x, double z, int col_start, 
-        int col_stop, int col_step, double Tx)
-    nr_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+    gauss_seidel_nr(int Ap, int Aj, float Ax, float x, float z, int col_start, 
+        int col_stop, int col_step, float Tx, 
+        float omega)
+    gauss_seidel_nr(int Ap, int Aj, double Ax, double x, double z, int col_start, 
+        int col_stop, int col_step, double Tx, 
+        double omega)
+    gauss_seidel_nr(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
         npy_cfloat_wrapper z, int col_start, 
-        int col_stop, int col_step, npy_cfloat_wrapper Tx)
-    nr_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        int col_stop, int col_step, npy_cfloat_wrapper Tx, 
+        float omega)
+    gauss_seidel_nr(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
         npy_cdouble_wrapper z, int col_start, 
-        int col_stop, int col_step, npy_cdouble_wrapper Tx)
+        int col_stop, int col_step, npy_cdouble_wrapper Tx, 
+        double omega)
     """
-  return _amg_core.nr_gauss_seidel(*args)
+  return _amg_core.gauss_seidel_nr(*args)
 
 def apply_householders(*args):
   """

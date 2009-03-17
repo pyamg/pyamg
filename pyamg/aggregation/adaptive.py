@@ -8,7 +8,7 @@ from scipy.sparse import bsr_matrix
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection
-from pyamg.relaxation import gauss_seidel, kaczmarz_gauss_seidel
+from pyamg.relaxation import gauss_seidel, gauss_seidel_ne
 from pyamg.relaxation.smoothing import setup_smoothers
 from pyamg.krylov import gmres
 
@@ -17,7 +17,7 @@ from pyamg.util.linalg import norm
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation
 from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother, \
-     kaczmarz_richardson_prolongation_smoother, kaczmarz_jacobi_prolongation_smoother
+                   jacobi_ne_prolongation_smoother
 from tentative import fit_candidates
 
 __all__ = ['adaptive_sa_solver']
@@ -55,7 +55,7 @@ def adaptive_sa_solver(A, mat_flag='hermitian', pdef=True,
     prepostsmoother : {string or dict} 
         Pre- and post-smoother used in the adaptive method
     smooth : {string or dict }
-        ['jacobi', 'richardson', 'energy', 'kaczmarz_jacobi', 'kaczmarz_richardson', None]
+        ['jacobi', 'richardson', 'energy', 'jacobi_ne', None]
         Method used used to smooth the tentative prolongator.
     
     Other Parameters
@@ -191,8 +191,8 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
         fn, kwargs = unpack_arg(prepostsmoother)
         if fn == 'gauss_seidel':
             gauss_seidel(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
-        elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'gauss_seidel_ne':
+            gauss_seidel_ne(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gmres':
             x[:] = (gmres(A, numpy.zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
@@ -239,10 +239,8 @@ def initial_setup_stage(A, mat_flag, pdef, candidate_iters, epsilon, max_levels,
             P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
         elif fn == 'energy':
             P_l = energy_prolongation_smoother(A_l, T_l, None, x, **kwargs)
-        elif fn == 'kaczmarz_richardson':
-            P_l = kaczmarz_richardson_prolongation_smoother(A_l, T_l, **kwargs)
-        elif fn == 'kaczmarz_jacobi':
-            P_l = kaczmarz_jacobi_prolongation_smoother(A_l, T_l, **kwargs)
+        elif fn == 'jacobi_ne':
+            P_l = jacobi_ne_prolongation_smoother(A_l, T_l, **kwargs)
         elif fn == None:
             P_l = T_l
         else:
@@ -353,10 +351,8 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
             levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
         elif fn == 'energy':
             levels[i].P = energy_prolongation_smoother(levels[i].A, T, None, R, **kwargs)
-        elif fn == 'kaczmarz_richardson':
-            levels[i].P = kaczmarz_richardson_prolongation_smoother(levels[i].A, T, **kwargs)
-        elif fn == 'kaczmarz_jacobi':
-            levels[i].P = kaczmarz_jacobi_prolongation_smoother(levels[i].A, T, **kwargs)
+        elif fn == 'jacobi_ne':
+            levels[i].P = jacobi_ne_prolongation_smoother(levels[i].A, T, **kwargs)
         elif fn == None:
             levels[i].P = T
         else:
@@ -386,8 +382,8 @@ def general_setup_stage(ml, mat_flag, candidate_iters, prepostsmoother, smooth):
         x = lvl.P * x
         if fn == 'gauss_seidel':
             gauss_seidel(lvl.A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
-        elif fn == 'kaczmarz_gauss_seidel':
-            kaczmarz_gauss_seidel(lvl.A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+        elif fn == 'gauss_seidel_ne':
+            gauss_seidel_ne(lvl.A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gmres':
             x[:] = (gmres(lvl.A, numpy.zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
         else:

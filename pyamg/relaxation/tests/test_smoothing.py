@@ -10,19 +10,19 @@ methods = ['gauss_seidel',
            'richardson',
            'sor',
            'chebyshev',
-           'kaczmarz_gauss_seidel',
-           'kaczmarz_jacobi',
-           'kaczmarz_richardson']
+           'gauss_seidel_ne',
+           'jacobi_ne',
+           'gauss_seidel_nr']
 
 methods2 = [('gauss_seidel', 'richardson'),
             ('gauss_seidel', 'jacobi'),
             ('chebyshev', 'sor'),
             (['gauss_seidel', 'chebyshev'], ['sor', 'jacobi']),
-            ('kaczmarz_gauss_seidel', 'kaczmarz_jacobi'),
-            (['kaczmarz_gauss_seidel', 'kaczmarz_richardson'], 'kaczmarz_jacobi'),
+            ('gauss_seidel_ne', 'jacobi_ne'),
+            (['gauss_seidel_ne', 'gauss_seidel_nr'], 'jacobi_ne'),
             ('cgnr', 'cgne'),
             ( ('gauss_seidel', {'iterations' : 3}), None),
-            ( [('kaczmarz_gauss_seidel', {'iterations' : 2}), ('gmres', {'maxiter' : 3})], None),
+            ( [('gauss_seidel_ne', {'iterations' : 2}), ('gmres', {'maxiter' : 3})], None),
             ( None, ['cg', 'cgnr', 'cgne']) ]
     
 class TestSmoothing(TestCase):
