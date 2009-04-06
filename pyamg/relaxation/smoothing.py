@@ -206,6 +206,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         raise ValueError,'Unrecognized postsmoother'
 
     # set ml.levels[i].presmoother = presmoother[i]
+    i = 0
     for i in range( min(len(presmoother), len(ml.levels[:-1])) ):
         # unpack presmoother[i]
         fn,kwargs = unpack_arg(presmoother[i])
@@ -222,6 +223,7 @@ def change_smoothers(ml, presmoother, postsmoother):
 
 
     # set ml.levels[i].postsmoother = postsmoother[i]
+    i = 0
     for i in range( min(len(postsmoother), len(ml.levels[:-1])) ):
         # unpack postsmoother[i]
         fn,kwargs = unpack_arg(postsmoother[i])

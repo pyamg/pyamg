@@ -294,7 +294,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
             col = Atilde.indices[j]
             vj = v[col].copy()
             v[col] = 0.0
-            #         =  (||v_j||_A - ||v||_A) / ||v||_A
+            #   =  (||v_j||_A - ||v||_A) / ||v||_A
             val = numpy.sqrt(numpy.conjugate(v).T * A * v)/denom - 1.0
             
             # Negative values generally imply a weak connection
