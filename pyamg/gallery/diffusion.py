@@ -6,7 +6,7 @@ rotated anisotropic diffusion (FD).
 The stencils include redundancy to maintain readability for simple cases (e.g.
 isotropic diffusion).
 
--div Q A Q grad u
+-div Q A Q^T grad u
 
 Q = [cos(theta) -sin(theta)]
     [sin(theta)  cos(theta)]
