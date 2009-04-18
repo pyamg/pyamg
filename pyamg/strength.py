@@ -596,7 +596,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         # For use in computing local B_i^H*B, precompute the element-wise multiply of 
         #   each column of B with each other column.  We also scale by 2.0 
         #   to account for BDB's eventual use in a constrained minimization problem
-        BDBCols = numpy.sum(range(NullDim+1))
+        BDBCols = int(numpy.sum(range(NullDim+1)))
         BDB = numpy.zeros((dimen,BDBCols), dtype=A.dtype)
         counter = 0
         for i in range(NullDim):
