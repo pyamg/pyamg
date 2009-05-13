@@ -23,7 +23,7 @@ if(__name__=="__main__"):
 
     # Generate system and solver
     if len(sys.argv)<2:
-        n=20
+        n=10
     else:
         n = int(sys.argv[1])
 

@@ -11,7 +11,7 @@ __all__ = ['oneD_P_vis', 'oneD_coarse_grid_vis', 'oneD_profile']
 
 import pylab
 from numpy import ravel, zeros, ones, min, abs, array, max, pi
-from scipy import imag, real, linspace, exp, rand, sqrt
+from scipy import imag, real, linspace, exp, rand, sqrt, mod
 from scipy.sparse import bsr_matrix
 from scipy.linalg import solve 
 from pyamg.util.linalg import norm
@@ -50,13 +50,14 @@ def update_rcparams(fig_width_pt=700.0):
     fig_size =  [fig_width,fig_height]
 
     params = {'backend': 'ps',
-              'axes.labelsize': 18,
-              'text.fontsize': 18,
-              'axes.titlesize' : 18,
-              'legend.fontsize': 14,
-              'xtick.labelsize': 14,
-              'ytick.labelsize': 14,
+              'axes.labelsize': 24,
+              'text.fontsize': 24,
+              'axes.titlesize' : 24,
+              'legend.fontsize': 22,
+              'xtick.labelsize': 22,
+              'ytick.labelsize': 22,
               'text.usetex': True,
+              'linewidth' : 2,
               'figure.figsize': fig_size}
     
     pylab.rcParams.update(params)
@@ -155,7 +156,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, iter=1, cycle='V', fig_num=1):
         pylab.xticks(array(range(1,resratio.shape[0]+1)))
 
 
-def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
+def oneD_coarse_grid_vis(mg, fig_num=1, level=0):
     '''
     Visualize the aggregates on level=level in terms of 
     the aggregates' fine grid representation
@@ -166,9 +167,6 @@ def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
          visualize the components of mg
     fig_num : int
         figure number from which to begin plotting
-    x : array
-        grid for the level on which to visualize
-        if None, then an evenly space grid on [0,1] is assumed
     level : int
         level on which to visualize
 
@@ -194,6 +192,9 @@ def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
     >>>pylab.show()
 
     '''
+    
+    update_rcparams()
+    colors = ['b', 'r', 'g', 'k', 'c', 'm', 'y']
 
     if level > (len(mg.levels)-2):
         raise ValueError("Level %d has no AggOp" % level)
@@ -206,26 +207,25 @@ def oneD_coarse_grid_vis(mg, fig_num=1, x=None, level=0):
 
     AggOp = AggOp.tocsc()
 
-    # Default regular grid on 0 to 1
-    if x == None:
-        x = linspace(0,1,ndof)
+    # Default grid
+    x = array(range(ndof))
 
     # Plot each aggregate
     pylab.figure(fig_num)
     for i in range(AggOp.shape[1]):
         aggi = AggOp[:,i].indices
-        pylab.plot(x[aggi], i*ones((aggi.shape[0],)), marker='o')
+        pylab.plot(x[aggi], i*ones((aggi.shape[0],)), colors[mod(i, len(colors))], marker='o', linewidth=2, markersize=12)
     
     title_string='Level ' + str(level) + ' Aggregates'
     if level != 0:
         title_string += '\nMapped to Finest Level'
     pylab.title(title_string)
-    pylab.xlabel('Grid')
+    pylab.xlabel('DOF')
     pylab.ylabel('Aggregate Number')
     pylab.axis([min(x)-.05, max(x)+.05, -1, AggOp.shape[1]])
     
 
-def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
+def oneD_P_vis(mg, fig_num=1, level=0, interp=False):
     '''
     Visualize the basis functions of P (i.e. columns) from level=level
     
@@ -235,9 +235,6 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
         visualize the components of mg
     fig_num : int
         figure number from which to begin plotting
-    x : array like
-        grid for the level on which to visualize
-        if None, then an evenly space grid on [0,1] is assumed
     level : int
         level on which to visualize
     interp : {True, False}
@@ -270,6 +267,9 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
     >>>pylab.show()
     '''
     
+    update_rcparams()
+    colors = ['b', 'r', 'g', 'k', 'c', 'm', 'y']
+
     if level > (len(mg.levels)-2):
         raise ValueError("Level %d has no P" % level)
 
@@ -287,9 +287,8 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
     blocks = P.blocksize[1]
     P = P.tocsc()
 
-    # Default regular grid on 0 to 1
-    if x == None:
-        x = linspace(0,1,ndof)
+    # Default grid
+    x = array(range(ndof))
     
     # Grab and plot each aggregate's part of a basis function together
     for i in range(0, P.shape[1], blocks):
@@ -298,13 +297,12 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
         for j in range(blocks):
             pylab.figure(fig_num+j)
             p2 = ravel(p[:,j])
-            pylab.plot(x[p2!=0], real(p2[p2!=0.0]), marker='o')
-            axline = pylab.axhline(color='k')
+            pylab.plot(x[p2!=0], real(p2[p2!=0.0]), colors[mod(i, len(colors))], marker='o', linewidth=2, markersize=12)
             title_string = ('Level ' + str(level) + '\nReal Part of %d-th Local Interp Fcn' % j)
             if interp and (level != 0):
                 title_string += '\nInterpolated to Finest Level'
             pylab.title(title_string)
-            pylab.xlabel('Grid')
+            pylab.xlabel('DOF')
             pylab.ylabel('real(Local Interp Fcn)')
             ax = array(pylab.axis()); ax[0] = min(x); ax[1] = max(x)
             ax = pylab.axis(ax)
@@ -312,8 +310,7 @@ def oneD_P_vis(mg, fig_num=1, x=None, level=0, interp=False):
             if P.dtype == complex:
                 pylab.figure(fig_num+10+j)
                 p2 = ravel(p[:,j])
-                pylab.plot(x[p2!=0], imag(p2[p2!=0.0]), marker='o')
-                axline = pylab.axhline(color='k')
+                pylab.plot(x[p2!=0], imag(p2[p2!=0.0]), colors[mod(i, len(colors))], marker='o', linewidth=2, markersize=12)
                 title_string = ('Level ' + str(level) + '\nImag Part of %d-th Local Interp Fcn' % j)
                 if interp and (level != 0):
                     title_string += '\nInterpolated to Finest Level'

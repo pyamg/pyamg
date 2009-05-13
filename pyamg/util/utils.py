@@ -598,7 +598,10 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
 
     # Print Title
     if len(title) > 0:
-        table_str += str.center(title, ttwidth) + '\n'
+        title = title.split("\n")
+        for i in range(len(title)):
+            table_str += str.center(title[i], ttwidth) + '\n'
+        table_str += "\n"
 
     # Choose centering scheme
     centering = centering.lower()
