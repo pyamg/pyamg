@@ -2,13 +2,14 @@ from pyamg.testing import *
 
 import numpy
 import scipy
-from scipy.sparse import spdiags, csr_matrix
+from scipy.sparse import spdiags, csr_matrix, bsr_matrix
 from scipy import arange, ones, zeros, array, allclose, zeros_like, \
         tril, diag, triu, rand, asmatrix, mat
 from scipy.linalg import solve
 
 from pyamg.gallery    import poisson
 from pyamg.relaxation import *
+from pyamg.util.utils import get_block_diag
 
 # Ignore efficiency warnings
 import warnings
@@ -20,7 +21,8 @@ class TestCommonRelaxation(TestCase):
         self.cases = []
         self.cases.append( (gauss_seidel,          (),               {}) )
         self.cases.append( (jacobi,                (),               {}) )
-        self.cases.append( (jacobi_ne,       (),               {}) )
+        self.cases.append( (block_jacobi,          (),               {}) )
+        self.cases.append( (jacobi_ne,             (),               {}) )
         self.cases.append( (sor,                   (0.5,),           {}) )
         self.cases.append( (gauss_seidel_indexed,  ([1,0],),         {}) )
         self.cases.append( (polynomial,            ([0.6,0.1],),     {}) )
@@ -1098,6 +1100,109 @@ class TestComplexRelaxation(TestCase):
         self.assert_(resid1 < 0.3 and resid2 < 0.3)
         self.assert_(allclose(resid1,resid2))
 
+# Test both complex and real arithmetic
+# for block_jacobi and block_gauss_seidel
+class TestBlockRelaxation(TestCase):
+
+    def test_block_jacobi(self):
+        scipy.random.seed(0)
+        
+        # All real valued tests
+        cases = []
+        #A = csr_matrix(scipy.zeros((1,1)))
+        #cases.append( (A,1) )
+        A = csr_matrix(scipy.rand(1,1))
+        cases.append( (A,1) )
+        A = csr_matrix(scipy.zeros((2,2)))
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        A = csr_matrix(scipy.rand(2,2))
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        A = csr_matrix(scipy.zeros((3,3)))
+        cases.append( (A,1) )
+        cases.append( (A,3) )
+        A = csr_matrix(scipy.rand(3,3))
+        cases.append( (A,1) )
+        cases.append( (A,3) )
+        A = poisson( (4,4), format='csr')
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        cases.append( (A,4) )
+        A = array([[ 9.1,  9.8,  9.6,  0. ,  3.6,  0. ],
+                   [18.2, 19.6,  0. ,  0. ,  1.7,  2.8],
+                   [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+                   [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+                   [ 0. ,  0. ,  0. ,  4.2,  1. ,  1.1],
+                   [ 0. ,  0. ,  9.1,  0. ,  0. ,  9.3]])
+        A = csr_matrix(A)
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        cases.append( (A,3) )
+
+        # reference implementation of 1 iteration
+        def gold(A,x,b,blocksize,omega):
+            
+            A = csr_matrix(A)
+            temp = x.copy()
+            Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
+            D = get_block_diag(A, blocksize=blocksize, inv_flag=False)
+            A_no_D = A - bsr_matrix( (D, scipy.arange(Dinv.shape[0]), scipy.arange(Dinv.shape[0] + 1)), shape=A.shape)           
+            A_no_D = csr_matrix(A_no_D)
+
+            for i in range(0, A.shape[0], blocksize):
+                r = A_no_D[i:(i+blocksize),:]*temp
+                r = scipy.mat(Dinv[i/blocksize,:,:])*scipy.mat(scipy.ravel(b[i:(i+blocksize)]) - scipy.ravel(r)).reshape(-1,1)
+                x[i:(i+blocksize)] = (1.0 - omega)*temp[i:(i+blocksize)] + omega*scipy.ravel(r)
+
+            return x            
+
+        
+        for A,blocksize in cases:
+            b = rand(A.shape[0])
+            x = rand(A.shape[0])
+            x_copy = x.copy()
+            block_jacobi(A, x, b, blocksize=blocksize, iterations=1, omega=1.1)
+            assert_almost_equal( x, gold(A, x_copy, b, blocksize, 1.1), decimal=4 )
+        
+        # check for aggreement between jacobi and block jacobi with blocksize==1...?
+        A = poisson( (4,5), format='csr')
+        b = rand(A.shape[0])
+        x = rand(A.shape[0])
+        x_copy = x.copy()
+        block_jacobi(A, x, b, blocksize=1, iterations=2, omega=1.1)
+        jacobi(A, x_copy, b, iterations=2, omega=1.1)
+        assert_almost_equal( x, x_copy, decimal=4 )
+
+
+        # complex valued tests
+        cases = []
+        A = csr_matrix(scipy.rand(3,3) + 1.0j*scipy.rand(3,3))
+        cases.append( (A,1) )
+        cases.append( (A,3) )
+        A = poisson( (4,4), format='csr')
+        A.data = A.data + 1.0j*scipy.rand(A.data.shape[0])
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        cases.append( (A,4) )
+        A = array([[ 9.1j,  9.8j,  9.6,  0. ,  3.6,  0. ],
+                   [18.2j, 19.6j,  0. ,  0. ,  1.7,  2.8],
+                   [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+                   [ 0. ,  0. ,  0. ,  0. ,  0. ,  0. ],
+                   [ 0. ,  0. ,  0. ,  4.2, 1.0j,  1.1],
+                   [ 0. ,  0. ,  9.1,  0. ,  0. ,  9.3]])
+        A = csr_matrix(A)
+        cases.append( (A,1) )
+        cases.append( (A,2) )
+        cases.append( (A,3) )
+
+        for A,blocksize in cases:
+            b = rand(A.shape[0]) + 1.0j*rand(A.shape[0])
+            x = rand(A.shape[0]) + 1.0j*rand(A.shape[0])
+            x_copy = x.copy()
+            block_jacobi(A, x, b, blocksize=blocksize, iterations=1, omega=1.1)
+            assert_almost_equal( x, gold(A, x_copy, b, blocksize, 1.1), decimal=4 )
+        
 
 
 #class TestDispatch(TestCase):

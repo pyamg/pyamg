@@ -11,10 +11,11 @@ from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm, cond
 from scipy.linalg import eigvals
+from pyamg.amg_core import pinv_array
 
 __all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
-           'print_table']
+           'print_table', 'get_block_diag']
 
 def profile_solver(ml, accel=None, **kwargs):
     """
@@ -478,6 +479,81 @@ def get_diagonal(A, norm_eq=False, inv=False):
         return Dinv
     else:
         return D
+
+def get_block_diag(A, blocksize, inv_flag=True):
+    """
+    Return the block diagonal of A, in array form
+
+    Parameters
+    ----------
+    A : csr_matrix
+        assumed to be square
+    blocksize : int
+        square block size for the diagonal
+    inv_flag : bool
+        if True, return the inverse of the block diagonal
+
+    Returns
+    -------
+    block_diag : array
+        block diagonal of A in array form, 
+        array size is (A.shape[0]/blocksize, blocksize, blocksize)
+
+    Examples
+    --------
+    >>> from scipy import arange
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.util import get_block_diag
+    >>> A = csr_matrix(arange(36).reshape(6,6))
+    >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
+    >>> print block_diag_inv
+    [[[  0.   1.]
+      [  6.   7.]]
+
+     [[ 14.  15.]
+      [ 20.  21.]]
+
+     [[ 28.  29.]
+      [ 34.  35.]]]
+    >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
+    >>> print block_diag_inv
+    [[[ -1.16666667e+00   1.66666667e-01]
+      [  1.00000000e+00   1.41149570e-17]]
+
+     [[ -3.50000000e+00   2.50000000e+00]
+      [  3.33333333e+00  -2.33333333e+00]]
+
+     [[ -5.83333333e+00   4.83333333e+00]
+      [  5.66666667e+00  -4.66666667e+00]]]
+
+    """
+
+    if not isspmatrix(A):
+        raise TypeError('Expected sparse matrix')
+    if A.shape[0] != A.shape[1]:
+        raise ValueError("Expected square matrix")
+    if scipy.mod(A.shape[0], blocksize) != 0:
+        raise ValueError("blocksize and A.shape must be compatible")
+
+    if not isspmatrix_bsr(A):
+        A = bsr_matrix(A, blocksize=(blocksize,blocksize))
+    if A.blocksize != (blocksize,blocksize):
+        A = A.tobsr(blocksize=(blocksize,blocksize))
+
+    A = A.asfptype()
+    block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize), dtype=A.dtype)
+    
+    diag_entries = csr_matrix((scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr), shape=(A.shape[0]/blocksize, A.shape[0]/blocksize)).diagonal()
+    diag_entries -= 1
+    nonzero_mask = (diag_entries != -1)
+    diag_entries = diag_entries[nonzero_mask]
+    if diag_entries.shape != (0,):
+        block_diag[nonzero_mask,:,:] = A.data[diag_entries,:,:]
+
+    if inv_flag:
+        pinv_array(block_diag, block_diag.shape[0], block_diag.shape[1], 'T')
+
+    return block_diag
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """

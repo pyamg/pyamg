@@ -353,6 +353,27 @@ def jacobi(*args):
     """
   return _amg_core.jacobi(*args)
 
+def block_jacobi(*args):
+  """
+    block_jacobi(int Ap, int Aj, float Ax, float x, float b, float Tx, 
+        float temp, int row_start, int row_stop, int row_step, 
+        float omega, int blocksize)
+    block_jacobi(int Ap, int Aj, double Ax, double x, double b, double Tx, 
+        double temp, int row_start, int row_stop, 
+        int row_step, double omega, int blocksize)
+    block_jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, npy_cfloat_wrapper Tx, 
+        npy_cfloat_wrapper temp, int row_start, 
+        int row_stop, int row_step, npy_cfloat_wrapper omega, 
+        int blocksize)
+    block_jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, npy_cdouble_wrapper Tx, 
+        npy_cdouble_wrapper temp, int row_start, 
+        int row_stop, int row_step, npy_cdouble_wrapper omega, 
+        int blocksize)
+    """
+  return _amg_core.block_jacobi(*args)
+
 def gauss_seidel_indexed(*args):
   """
     gauss_seidel_indexed(int Ap, int Aj, float Ax, float x, float b, int Id, 

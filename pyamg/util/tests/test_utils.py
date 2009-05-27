@@ -2,7 +2,7 @@ from pyamg.testing import *
 
 from numpy import matrix, array, diag, zeros, sqrt, abs, ravel
 from scipy import rand, linalg, real, imag, mat, diag, isscalar, ones
-from scipy.sparse import csr_matrix, isspmatrix
+from scipy.sparse import csr_matrix, isspmatrix, bsr_matrix
 
 from pyamg.util.utils import *
 from pyamg.util.utils import symmetric_rescaling
@@ -78,6 +78,64 @@ class TestUtils(TestCase):
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
+
+    def test_get_block_diag(self):
+        from scipy import arange, ravel, array
+        from scipy.sparse import csr_matrix
+        A = csr_matrix(arange(1,37, dtype=float).reshape(6,6))
+        block_diag = get_block_diag(A, blocksize=1, inv_flag=False)
+        assert_array_almost_equal(ravel(block_diag), A.diagonal())
+
+        block_diag = get_block_diag(A, blocksize=2, inv_flag=False)
+        answer = array([[[  1.,   2.],
+                         [  7.,   8.]],
+                        [[ 15.,  16.],
+                         [ 21.,  22.]],
+                        [[ 29.,  30.],
+                         [ 35.,  36.]]])
+        assert_array_almost_equal(ravel(block_diag), ravel(answer))
+
+        block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
+        answer = array([[[-1.33333333,  0.33333333],
+                         [ 1.16666667, -0.16666667]],
+                        [[-3.66666667,  2.66666667],
+                         [ 3.5       , -2.5       ]],
+                        [[-6.        ,  5.        ],
+                         [ 5.83333333, -4.83333333]]])
+        assert_array_almost_equal(ravel(block_diag_inv), ravel(answer), decimal=3)
+
+        # try with singular (1,1) block, a zero (2,2) block and a zero (0,2) block
+        A = bsr_matrix(array([ 1.,  2.,  3.,  4.,  0.,  0.,
+                               5.,  6.,  7.,  8.,  0.,  0.,
+                               9., 10., 11., 11., 12., 13.,
+                              14., 15., 16., 16., 18., 19.,
+                              20., 21., 22., 23.,  0.,  0.,
+                              26., 27., 28., 29.,  0.,  0.,]).reshape(6,6), blocksize=(3,3))
+        block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
+        answer = array([[[-1.5       ,  0.5       ],
+                         [ 1.25      , -0.25      ]],
+                        [[ 0.01458886,  0.02122016],
+                         [ 0.01458886,  0.02122016]],
+                        [[ 0.        ,  0.        ],
+                         [ 0.        ,  0.        ]]])
+        assert_array_almost_equal(ravel(block_diag_inv), ravel(answer), decimal=3)
+
+        # try with different types of zero blocks
+        A = bsr_matrix(array([ 0.,  0.,  3.,  4.,  0.,  0.,
+                               0.,  0.,  7.,  8.,  0.,  0.,
+                               0.,  0.,  0.,  0.,  0.,  0.,
+                               0.,  0.,  0.,  0.,  0.,  0.,
+                               0.,  0.,  0.,  0., 22., 23.,
+                               0.,  0.,  0.,  0., 28., 29.,]).reshape(6,6), blocksize=(2,2))
+        block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
+        answer = array([[[ 0.        ,  0.        ],
+                         [ 0.        ,  0.        ]],
+                        [[ 0.        ,  0.        ],
+                         [ 0.        ,  0.        ]],
+                        [[22.        , 23.        ],
+                         [28.        , 29.        ]]])
+        assert_array_almost_equal(ravel(block_diag_inv), ravel(answer), decimal=3)
+
 
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):

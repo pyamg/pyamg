@@ -748,7 +748,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
 }
 
  /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
- * Routine is designed to inverst many small matrices at once.
+ * Routine is designed to invert many small matrices at once.
  * Parameters
  * ----------
  * Ax : {float|complex array}  

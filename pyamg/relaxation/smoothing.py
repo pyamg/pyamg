@@ -1,9 +1,10 @@
 """Method to create pre- and post-smoothers on the levels of a multilevel_solver
 """
 
+import scipy
 import relaxation
 from chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows
+from pyamg.util.utils import scale_rows, get_block_diag
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 
@@ -43,7 +44,9 @@ def setup_smoothers(ml, presmoother, postsmoother):
     - Available smoother methods::
 
         gauss_seidel
+        block_gauss_seidel
         jacobi
+        block_jacobi
         richardson
         sor
         chebyshev
@@ -150,7 +153,9 @@ def change_smoothers(ml, presmoother, postsmoother):
     - Available smoother methods::
 
         gauss_seidel
+        block_gauss_seidel
         jacobi
+        block_jacobi
         richardson
         sor
         chebyshev
@@ -266,6 +271,52 @@ def rho_D_inv_A(A):
     D_inv_A = scale_rows(A, D_inv, copy=True)
     return approximate_spectral_radius(D_inv_A)
 
+
+def rho_block_D_inv_A(A, Dinv):
+    """
+    Return the (approx.) spectral radius of block D^-1 * A 
+    
+    Parameters
+    ----------
+    A : {sparse-matrix}
+        size NxN
+    Dinv : {array}
+        Inverse of diagonal blocks of A
+        size (N/blocksize, blocksize, blocksize)
+
+    Returns
+    -------
+    approximate spectral radius of (Dinv A)
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.relaxation.smoothing import rho_block_D_inv_A
+    >>> from pyamg.util.utils import get_block_diag
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> Dinv = get_block_diag(A, blocksize=4, inv_flag=True)
+    >>> print rho_block_D_inv_A(A, Dinv)
+    1.72254828808
+    """
+    from scipy.sparse.linalg import LinearOperator
+    
+    blocksize = Dinv.shape[1]
+    if Dinv.shape[1] != Dinv.shape[2]:
+        raise ValueError('Dinv has incorrect dimensions')
+    elif Dinv.shape[0] != A.shape[0]/blocksize:
+        raise ValueError('Dinv and A have incompatible dimensions')
+    
+    Dinv = scipy.sparse.bsr_matrix( (Dinv, scipy.arange(Dinv.shape[0]), scipy.arange(Dinv.shape[0] + 1)), shape=A.shape)
+    
+    # Don't explicitly form Dinv*A
+    def matvec(x):
+        return Dinv*(A*x)
+    D_inv_A = LinearOperator(A.shape, matvec, dtype=A.dtype)
+    
+    return approximate_spectral_radius(D_inv_A)
+
+
 """
     The following setup_smoother_name functions are helper functions
     for parsing user input and assigning each level the appropriate smoother
@@ -300,6 +351,14 @@ def setup_jacobi(lvl, iterations=1, omega=1.0):
     omega = omega/rho_D_inv_A(lvl.A)
     def smoother(A,x,b):
         relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
+    return smoother
+
+def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=1):
+    if Dinv == None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+    def smoother(A,x,b):
+        relaxation.block_jacobi(A, x, b, iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
     return smoother
 
 def setup_richardson(lvl, iterations=1, omega=1.0):
