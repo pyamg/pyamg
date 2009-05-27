@@ -87,7 +87,7 @@ void gauss_seidel(const I Ap[],
  *
  */
 template<class I, class T, class F>
-void block_gauss_seidel(const I Ap[], 
+void bsr_gauss_seidel(const I Ap[], 
                         const I Aj[], 
                         const T Ax[],
                               T  x[],
@@ -565,5 +565,86 @@ void block_jacobi(const I Ap[],
     delete[] v;
     delete[] rsum;
 }
+
+/*
+ *  Perform one iteration of block Gauss-Seidel relaxation on 
+ *  the linear system Ax = b, where A is stored in BSR format 
+ *  and x and b are column vectors.  
+ *
+ *  Refer to gauss_seidel for additional information regarding
+ *  row_start, row_stop, and row_step.
+ *
+ *  Parameters
+ *      Ap[]       - BSR row pointer
+ *      Aj[]       - BSR index array
+ *      Ax[]       - BSR data array, blocks assumed square
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      Tx[]       - Inverse of each diagonal block of A stored
+ *                   as a (n/blocksize, blocksize, blocksize) array
+ *      row_start  - beginning of the sweep
+ *      row_stop   - end of the sweep (i.e. one past the last unknown)
+ *      row_step   - stride used during the sweep (may be negative)
+ *      blocksize  - dimension of sqare blocks in BSR matrix A
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void block_gauss_seidel(const I Ap[], 
+                        const I Aj[], 
+                        const T Ax[],
+                              T  x[],
+                        const T  b[],
+                        const T Tx[],
+                        const I row_start,
+                        const I row_stop,
+                        const I row_step,
+                        const I blocksize)
+{
+    // Rename
+    const T * Dinv = Tx;
+
+    T zero = 0.0;
+    T *rsum = new T[blocksize];
+    T *v = new T[blocksize];
+    I blocksize_sq = blocksize*blocksize;
+
+    // Begin block Gauss-Seidel sweep
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        std::fill(&(rsum[0]), &(rsum[blocksize]), zero);
+        
+        // Carry out a block dot product between block row i and x
+        for(I jj = start; jj < end; jj++){
+            I j = Aj[jj];
+            if (i == j)
+                //diagonal, do nothing
+                continue;
+            else
+                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F', 
+                     &(x[j*blocksize]),      blocksize, 1,         'F', 
+                     &(v[0]),                blocksize, 1,         'F');
+
+                for(I k = 0; k < blocksize; k++) {
+                    rsum[k] += v[k]; }
+        }
+        
+        // x[i*blocksize:(i+1)*blocksize] = (Dinv[i*blocksize_sq : (i+1)*blocksize_sq]*(b[i*blocksize:(i+1)*blocksize] - rsum[0:blocksize]));
+        I iblocksize = i*blocksize;
+        for(I k = 0; k < blocksize; k++) {
+            rsum[k] = b[iblocksize + k] - rsum[k]; }
+        
+        gemm(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F', 
+             &(rsum[0]),              blocksize, 1,         'F', 
+             &(x[iblocksize]),        blocksize, 1,         'F');
+    }
+
+    delete[] v;
+    delete[] rsum;
+}
+
 
 #endif

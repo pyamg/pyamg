@@ -13,7 +13,7 @@ from pyamg import amg_core
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
 __all__ += ['jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']
-__all__ += ['gauss_seidel_indexed', 'block_jacobi'] 
+__all__ += ['gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel'] 
 
 def make_system(A, x, b, formats=None):
     """
@@ -236,7 +236,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start = row_start / R
         row_stop  = row_stop  / R
         for iter in xrange(iterations):
-            amg_core.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
+            amg_core.bsr_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
                                               x, b,
                                               row_start, row_stop, row_step,
                                               R)
@@ -381,6 +381,84 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
                               x, b, numpy.ravel(Dinv), temp,
                               row_start, row_stop, row_step,
                               omega, blocksize)
+
+def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1, Dinv=None):
+    """Perform block Gauss-Seidel iteration on the linear system Ax=b
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    iterations : int
+        Number of iterations to perform
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
+    Dinv : array
+        Array holding block diagonal inverses of A 
+        size (N/blocksize, blocksize, blocksize)
+    blocksize : int
+        Desired dimension of blocks
+
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Examples
+    --------
+    >>> ## Use Gauss-Seidel as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
+    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
+    >>> print norm(b-A*x0)
+    0.958333817624
+    >>> #
+    >>> ## Use Gauss-Seidel as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...        coarse_solver='pinv2', max_coarse=50,
+    ...        presmoother=('block_gauss_seidel', {'sweep':'symmetric', 'blocksize' : 4}), 
+    ...        postsmoother=('block_gauss_seidel', {'sweep':'symmetric', 'blocksize' : 4}))
+    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    """
+    A,x,b = make_system(A, x, b, formats=['csr','bsr'])
+    A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    if Dinv == None:
+        Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
+    elif Dinv.shape[0] != A.shape[0]/blocksize:
+        raise ValueError('Dinv and A have incompatible dimensions')
+    elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
+        raise ValueError('Dinv and blocksize are incompatible')
+
+    if sweep == 'forward':
+        row_start,row_stop,row_step = 0,len(x)/blocksize,1
+    elif sweep == 'backward':
+        row_start,row_stop,row_step = len(x)/blocksize-1,-1,-1 
+    elif sweep == 'symmetric':
+        for iter in xrange(iterations):
+            block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=blocksize, Dinv=Dinv)
+            block_gauss_seidel(A, x, b, iterations=1, sweep='backward',blocksize=blocksize, Dinv=Dinv)
+        return
+    else:
+        raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
+
+
+    for iter in xrange(iterations):
+        amg_core.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
+                                    x, b, numpy.ravel(Dinv),
+                                    row_start, row_stop, row_step, blocksize)
 
 
 def polynomial(A, x, b, coeffients, iterations=1):

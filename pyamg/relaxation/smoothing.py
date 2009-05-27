@@ -361,6 +361,13 @@ def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=1):
         relaxation.block_jacobi(A, x, b, iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
     return smoother
 
+def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, blocksize=1):
+    if Dinv == None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    def smoother(A,x,b):
+        relaxation.block_gauss_seidel(A, x, b, iterations=iterations, Dinv=Dinv, blocksize=blocksize, sweep=sweep)
+    return smoother
+
 def setup_richardson(lvl, iterations=1, omega=1.0):
     omega = omega/approximate_spectral_radius(lvl.A)
     def smoother(A,x,b):

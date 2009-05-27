@@ -304,20 +304,20 @@ def min_blocks(*args):
     """
   return _amg_core.min_blocks(*args)
 
-def block_gauss_seidel(*args):
+def bsr_gauss_seidel(*args):
   """
-    block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
+    bsr_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 
         int row_stop, int row_step, int blocksize)
-    block_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
+    bsr_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, int row_start, 
         int row_stop, int row_step, int blocksize)
-    block_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+    bsr_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
         npy_cfloat_wrapper b, int row_start, 
         int row_stop, int row_step, int blocksize)
-    block_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+    bsr_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
         npy_cdouble_wrapper b, int row_start, 
         int row_stop, int row_step, int blocksize)
     """
-  return _amg_core.block_gauss_seidel(*args)
+  return _amg_core.bsr_gauss_seidel(*args)
 
 def gauss_seidel(*args):
   """
@@ -373,6 +373,25 @@ def block_jacobi(*args):
         int blocksize)
     """
   return _amg_core.block_jacobi(*args)
+
+def block_gauss_seidel(*args):
+  """
+    block_gauss_seidel(int Ap, int Aj, float Ax, float x, float b, float Tx, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize)
+    block_gauss_seidel(int Ap, int Aj, double Ax, double x, double b, double Tx, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize)
+    block_gauss_seidel(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, npy_cfloat_wrapper Tx, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize)
+    block_gauss_seidel(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, npy_cdouble_wrapper Tx, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize)
+    """
+  return _amg_core.block_gauss_seidel(*args)
 
 def gauss_seidel_indexed(*args):
   """
