@@ -2,6 +2,7 @@
 #define GRAPH_H
 
 #include <algorithm>
+#include <stack>
 #include <cassert>
 #include <limits>
 
@@ -632,7 +633,6 @@ void breadth_first_search(const I Ap[],
                     N++;
                 }
             }
-
         }
 
         level_begin = level_end;
@@ -640,24 +640,6 @@ void breadth_first_search(const I Ap[],
         current_level++;
     }
 
-}
-
-
-template <class I>
-void connected_components_helper(const I Ap[], 
-                                 const I Aj[],
-                                 const I i,
-                                 const I component,
-                                       I components[])
-{
-    components[i] = component;
-
-    for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
-        const I j = Aj[jj];
-        if(components[j] == -1){
-            connected_components_helper(Ap, Aj, j, component, components);
-        }
-    }
 }
 
 
@@ -675,22 +657,41 @@ void connected_components_helper(const I Ap[],
  *
  */
 template <class I>
-void connected_components(const I num_nodes,
-                          const I Ap[], 
-                          const I Aj[],
-                                I components[])
+I connected_components(const I num_nodes,
+                       const I Ap[], 
+                       const I Aj[],
+                             I components[])
 {
     std::fill(components, components + num_nodes, -1);
-
+    std::stack<I> DFS;
     I component = 0;
 
-    for(I i = 0; i < num_nodes; i++){
-        if(components[i] == -1){
-            connected_components_helper(Ap, Aj, i, component, components);
+    for(I i = 0; i < num_nodes; i++)
+    {
+        if(components[i] == -1)
+        {
+            DFS.push(i);
+            components[i] = component;
+
+            while (!DFS.empty())
+            {
+                I top = DFS.top();
+                DFS.pop();
+    
+                for(I jj = Ap[top]; jj < Ap[top + 1]; jj++){
+                    const I j = Aj[jj];
+                    if(components[j] == -1){
+                        DFS.push(j);
+                        components[j] = component;
+                    }
+                }
+            }
+
             component++;
         }
     }
 
+    return component;
 }
 
 #endif
