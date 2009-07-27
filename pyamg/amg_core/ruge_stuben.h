@@ -141,6 +141,12 @@ void rs_cf_splitting(const I n_nodes,
 
     std::fill(splitting, splitting + n_nodes, U_NODE);
 
+    // all nodes with no neighbors become F nodes
+    for(I i = 0; i < n_nodes; i++){
+        if (lambda[i] == 0 || (lambda[i] == 1 && Tj[Tp[i]] == i))
+            splitting[i] = F_NODE;
+    }
+
     //Now add elements to C and F, in decending order of lambda
     for(I top_index = n_nodes - 1; top_index != -1; top_index--){
         I i        = index_to_node[top_index];
