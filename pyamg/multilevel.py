@@ -297,7 +297,7 @@ class multilevel_solver:
         dtype = self.levels[0].A.dtype
 
         def matvec(b):
-            return self.solve(b, maxiter=1, cycle=cycle)
+            return self.solve(b, maxiter=1, cycle=cycle, tol=1e-12)
                     
         return LinearOperator(shape, matvec, dtype=dtype)
 
@@ -415,7 +415,7 @@ class multilevel_solver:
 
         self.first_pass=True
 
-        while len(residuals) <= maxiter and residuals[-1]/residuals[0] > tol:
+        while len(residuals) <= maxiter and residuals[-1] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
