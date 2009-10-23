@@ -1,4 +1,4 @@
-from numpy import array, zeros, sqrt, ravel, abs, max, arange, conjugate, hstack, isnan, isinf, iscomplex, real
+from numpy import array, zeros, sqrt, ravel, abs, max, arange, conjugate, hstack, isnan, isinf, iscomplex, real, dtype
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 import scipy.lib.blas as blas
@@ -131,9 +131,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
 
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
-    if xtype == scipy.complex64 or xtype == scipy.complex128 or xtype == scipy.complex192:
+    if dtype(xtype).kind == 'c':
+        # complex type
         [axpy,dotu,dotc,scal] = blas.get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal'], (x))
     else:    
+        # real type
         [axpy,dotu,dotc,scal] = blas.get_blas_funcs(['axpy', 'dot', 'dot',  'scal'], (x))
 
     # Make full use of direct access to blas by defining own norm
