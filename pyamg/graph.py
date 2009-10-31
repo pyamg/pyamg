@@ -313,3 +313,71 @@ def connected_components(G):
 
     return components
 
+def symmetric_rcm(A):
+    """
+    Symmetric Reverse Cutthill-McKee
+    Get a pseudo-peripheral node, then call BFS
+
+    return a symmetric permuted matrix
+
+    Example
+    -------
+    >>> import pylab
+    >>> from pyamg.gallery import sprand
+    >>> from pyamg.graph import symmetric_rcm
+    >>> n = 200 
+    >>> density = 1.0/n
+    >>> A = sprand(n, n, density, format='csr')
+    >>> S = A + A.T
+    >>> pylab.figure()
+    >>> pylab.subplot(121)
+    >>> pylab.spy(S,marker='.')
+    >>> pylab.subplot(122)
+    >>> pylab.spy(symmetric_rcm(S),marker='.')
+
+    See Also
+    --------
+    pseudo_peripheral_node
+    """
+    n = A.shape[0]
+
+    root, order, level = pseudo_peripheral_node(A)
+
+    Perm = sparse.spidentity(n)
+    p = level.argsort()
+    Perm = Perm[p,:]
+
+    return Perm*A*Perm.T
+    
+def pseudo_peripheral_node(A):
+    """
+    Algorithm in Saad
+    """
+    import numpy
+    from pyamg.graph import breadth_first_search
+    n = A.shape[0]
+
+    valence = numpy.diff(A.indptr)
+
+    # select an initial node x, set delta = 0
+    x = int(numpy.random.rand() * n)
+    delta = 0
+
+    while 1:
+        # do a level-set traversal from x
+        order, level = breadth_first_search(A,x)
+
+        # select a node y in the last level with min degree
+        maxlevel = level.max()
+        lastnodes = numpy.where(level == maxlevel)[0]
+        lastnodesvalence = valence[lastnodes]
+        minlastnodesvalence = lastnodesvalence.min()
+        y = numpy.where(lastnodesvalence == minlastnodesvalence)[0][0]
+        y = lastnodes[y]
+
+        # if d(x,y)>delta, set, and go to bfs above
+        if level[y]>delta:
+            x = y
+            delta = level[y]
+        else:
+            return x, order, level
