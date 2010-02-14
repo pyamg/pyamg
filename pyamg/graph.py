@@ -208,7 +208,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
         seeds = numpy.random.permutation(N)[:seeds]
         seeds = seeds.astype('intc')
     else: 
-        seeds = numpy.asarray(seeds, dtype='intc', copy=True)
+        seeds = numpy.array(seeds, dtype='intc')
 
     if len(seeds) < 1:
         raise ValueError('at least one seed is required')
