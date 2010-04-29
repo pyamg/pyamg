@@ -67,7 +67,7 @@ def CR(S, method='habituated',maxiter=20):
 
     S = binormalize(S)
     
-    splitting = numpy.zeros( (S.shape[0],1), dtype=int )
+    splitting = numpy.zeros( (S.shape[0],1), dtype='intc' )
    
     # out iterations ---------------
     for m in range(0,maxiter):
