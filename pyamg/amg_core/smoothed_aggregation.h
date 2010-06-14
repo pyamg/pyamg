@@ -787,9 +787,10 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
     I Ablocksize = brows*brows;
     I blocksize = brows*bcols;
     I Aoffset = Ablocksize*Ap[row];
-    T blockproduct[blocksize];
     I rowstart = Ap[row];
     I rowend = Ap[row+1];
+    
+    T * blockproduct = new T[blocksize];
 
     // sum will be incremented by block multiplies each time an entry in 
     // this row of A matches up with an entry in this column of B
@@ -820,6 +821,9 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
 
         Aoffset += Ablocksize;
     }
+    
+    delete[] blockproduct;
+
     return;
 }
 
