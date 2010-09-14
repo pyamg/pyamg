@@ -8,6 +8,7 @@ def configuration(parent_package='',top_path=None):
     config = Configuration('amg_core', parent_package, top_path)
 
     config.add_extension('_amg_core', 
+            define_macros=[('__STDC_FORMAT_MACROS', 1)], 
             sources=['amg_core_wrap.cxx'])
             #extra_info = lapack_opt)
 
