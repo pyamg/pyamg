@@ -13,12 +13,12 @@ __all__ = ['gmres_mgs']
 
 def apply_givens(Q, v, k):
     ''' 
-    Apply the first k Given's rotations in Q to v 
+    Apply the first k Givens rotations in Q to v 
     
     Parameters
     ----------
     Q : {list} 
-        list of consecutive 2x2 Given's rotations 
+        list of consecutive 2x2 Givens rotations 
     v : {array}
         vector to apply the rotations to
     k : {int}
@@ -30,8 +30,8 @@ def apply_givens(Q, v, k):
 
     Notes
     -----
-    This routine is specialized for GMRES.  It assumes that the first Given's
-    rotation is for dofs 0 and 1, the second Given's rotation is for dofs 1 and 2,
+    This routine is specialized for GMRES.  It assumes that the first Givens
+    rotation is for dofs 0 and 1, the second Givens rotation is for dofs 1 and 2,
     and so on.
     '''
 
@@ -213,13 +213,13 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     # Begin GMRES
     for outer in xrange(max_outer):
         
-        # Preallocate for Given's Rotations, Hessenberg matrix and Krylov Space
+        # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(dimen*max_inner).  
         # NOTE:  We are dealing with row-major matrices, so we traverse in a row-major fashion, 
         #        i.e., H and V's transpose is what we store.
-        Q = []                                                 # Given's Rotations
+        Q = []                                                 # Givens Rotations
         H = zeros( (max_inner+1, max_inner+1), dtype=xtype)    # Upper Hessenberg matrix, which is then 
-                                                               #   converted to upper tri with Given's Rots 
+                                                               #   converted to upper tri with Givens Rots 
         V = zeros( (max_inner+1, dimen), dtype=xtype)          # Krylov Space
         vs = []                                                # vs store the pointers to each column of V.
                                                                #   This saves a considerable amount of time.
@@ -267,11 +267,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
             if H[inner, inner+1] != 0.0:
                 v[:] = scal(1.0/H[inner, inner+1], v)
             
-            # Apply previous Given's rotations to H
+            # Apply previous Givens rotations to H
             if inner > 0:
                 apply_givens(Q, H[inner,:], inner)
                 
-            # Calculate and apply next complex-valued Given's Rotation
+            # Calculate and apply next complex-valued Givens Rotation
             # ==> Note that if max_inner = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  
             if inner != dimen-1:
@@ -293,11 +293,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
                     Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype)
                     Q.append(Qblock)
                     
-                    # Apply Given's Rotation to g, 
+                    # Apply Givens Rotation to g, 
                     #   the RHS for the linear system in the Krylov Subspace.
                     g[inner:inner+2] = scipy.dot(Qblock, g[inner:inner+2])
                     
-                    # Apply effect of Given's Rotation to H
+                    # Apply effect of Givens Rotation to H
                     H[inner, inner] = dotu(Qblock[0,:], H[inner, inner:inner+2]) 
                     H[inner, inner+1] = 0.0
                   

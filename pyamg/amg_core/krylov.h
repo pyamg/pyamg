@@ -107,14 +107,14 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
 }
 
 
-/* Apply the first nrot Given's rotations in B to x
+/* Apply the first nrot Givens rotations in B to x
  *
  * Parameters
  * ----------
  * x : {float array}
  *  n-vector to be operated on
  * B : {float array} 
- *  Each 4 entries represent a Given's rotation
+ *  Each 4 entries represent a Givens rotation
  *  length nrot*4
  * n : {int}
  *  dimensionality of x

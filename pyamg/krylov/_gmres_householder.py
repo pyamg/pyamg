@@ -182,8 +182,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
     
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg matrix
         # Space required is O(dimen*max_inner)
-        Q = zeros( (4*max_inner,), dtype=xtype)               # Given's Rotations
-        H = zeros( (max_inner, max_inner), dtype=xtype)       # upper Hessenberg matrix (actually made upper tri with Given's Rotations) 
+        Q = zeros( (4*max_inner,), dtype=xtype)               # Givens Rotations
+        H = zeros( (max_inner, max_inner), dtype=xtype)       # upper Hessenberg matrix (actually made upper tri with Givens Rotations) 
         W = zeros( (max_inner, dimen), dtype=xtype)           # Householder reflectors
         W[0,:] = w
     
@@ -221,7 +221,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
             #  Note that if max_inner = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  Here we do not need to calculate a
-            #     Householder reflector or Given's rotation because nnz(v) is already the
+            #     Householder reflector or Givens rotation because nnz(v) is already the
             #     desired length, i.e. we do not need to zero anything out.
             if inner != dimen-1:
                 if inner < (max_inner-1):
@@ -243,17 +243,17 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
             
 
             if inner > 0:
-                # Apply all previous Given's Rotations to v
+                # Apply all previous Givens Rotations to v
                 amg_core.apply_givens(Q, v, dimen, inner)
 
-            # Calculate the next Given's rotation, where j = inner
+            # Calculate the next Givens rotation, where j = inner
             #  Note that if max_inner = dimen, then this is unnecessary for the last inner 
             #     iteration, when inner = dimen-1.  Here we do not need to calculate a
-            #     Householder reflector or Given's rotation because nnz(v) is already the
+            #     Householder reflector or Givens rotation because nnz(v) is already the
             #     desired length, i.e. we do not need to zero anything out.
             if inner != dimen-1:
                 if v[inner+1] != 0:
-                    # Calculate terms for complex 2x2 Given's Rotation
+                    # Calculate terms for complex 2x2 Givens Rotation
                     # Note that abs(x) takes the complex modulus
                     h1 = v[inner]; h2 = v[inner+1];
                     h1_mag = abs(h1); h2_mag = abs(h2);
@@ -269,13 +269,13 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
                     Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype) 
                     Q[(inner*4) : ((inner+1)*4)] = ravel(Qblock).copy()
                     
-                    # Apply Given's Rotation to g, 
+                    # Apply Givens Rotation to g, 
                     #   the RHS for the linear system in the Krylov Subspace.
                     #   Note that this dot does a matrix multiply, not an actual
                     #   dot product where a conjugate transpose is taken
                     g[inner:inner+2] = dot(Qblock, g[inner:inner+2])
                     
-                    # Apply effect of Given's Rotation to v
+                    # Apply effect of Givens Rotation to v
                     v[inner] = dot(Qblock[0,:], v[inner:inner+2]) 
                     v[inner+1] = 0.0
             
