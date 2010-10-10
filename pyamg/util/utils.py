@@ -9,13 +9,14 @@ import scipy
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
         isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
 from scipy.sparse.sputils import upcast
-from pyamg.util.linalg import norm, cond
+from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
-from pyamg.amg_core import pinv_array
+import pyamg.amg_core
 
 __all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
-           'print_table', 'get_block_diag']
+           'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
+           'symmetric_rescaling_sa', 'relaxation_as_linear_operator']
 
 def profile_solver(ml, accel=None, **kwargs):
     """
@@ -323,6 +324,83 @@ def symmetric_rescaling(A,copy=True):
         return symmetric_rescaling(csr_matrix(A))
 
 
+def symmetric_rescaling_sa(A, B, BH=None):
+    """
+    Scale the matrix symmetrically::
+
+        A = D^{-1/2} A D^{-1/2}
+
+    where D=diag(A).  The left multiplication is accomplished through
+    scale_rows and the right multiplication is done through scale columns.
+    
+    The candidates B and BH are scaled accordingly::
+
+        B = D^{1/2} B
+        BH = D^{1/2} BH
+
+    Parameters
+    ----------
+    A : {sparse matrix}
+        Sparse matrix with N rows
+    B : {array}
+        N x m array
+    BH : {None, array}
+        If A.symmetry == 'nonsymmetric, then BH must be an N x m array.
+        Otherwsie, BH is ignored.
+
+    Returns
+    -------
+    Appropriately scaled A, B and BH, i.e.,
+    A = D^{-1/2} A D^{-1/2},  B = D^{1/2} B,  and BH = D^{1/2} BH
+
+    Notes
+    -----
+    - if A is not csr, it is converted to csr and sent to scale_rows
+
+    Examples
+    --------
+    >>> import numpy
+    >>> from scipy.sparse import spdiags
+    >>> from pyamg.util.utils import symmetric_rescaling_sa
+    >>> n=5
+    >>> e = numpy.ones((n,1)).ravel()
+    >>> data = [ -1*e, 2*e, -1*e ]
+    >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
+    >>> B = e.copy().reshape(-1,1)
+    >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
+    >>> print DAD.todense()
+    [[ 1.  -0.5  0.   0.   0. ]
+     [-0.5  1.  -0.5  0.   0. ]
+     [ 0.  -0.5  1.  -0.5  0. ]
+     [ 0.   0.  -0.5  1.  -0.5]
+     [ 0.   0.   0.  -0.5  1. ]]
+    >>> print DB
+    [[ 1.41]
+     [ 1.41]
+     [ 1.41]
+     [ 1.41]
+     [ 1.41]]
+    """
+    
+    ##
+    # rescale A
+    [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
+    ##
+    # scale candidates
+    for i in range(B.shape[1]):
+        B[:,i] = numpy.ravel(B[:,i])*numpy.ravel(D_sqrt) 
+
+    if hasattr(A, 'symmetry'):    
+        if A.symmetry == 'nonsymmetric':
+            if BH == None:
+                raise ValueError("BH should be an n x m array")
+            else:
+                for i in range(BH.shape[1]):
+                    BH[:,i] = numpy.ravel(BH[:,i])*numpy.ravel(D_sqrt) 
+    
+    return [A,B,BH]
+
+
 def type_prep(upcast_type, varlist):
     """
     Loop over all elements of varlist and convert them to upcasttype
@@ -534,16 +612,32 @@ def get_block_diag(A, blocksize, inv_flag=True):
         raise ValueError("Expected square matrix")
     if scipy.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
-
+    
+    ##
+    # If the block diagonal of A already exists, return that
+    if hasattr(A, 'block_D_inv') and inv_flag:
+        if (A.block_D_inv.shape[1] == blocksize) and (A.block_D_inv.shape[2] == blocksize) and \
+        (A.block_D_inv.shape[0] == A.shape[0]/blocksize):
+            return A.block_D_inv
+    elif hasattr(A, 'block_D') and (not inv_flag):
+        if (A.block_D.shape[1] == blocksize) and (A.block_D.shape[2] == blocksize) and \
+        (A.block_D.shape[0] == A.shape[0]/blocksize):
+            return A.block_D
+    
+    ##
+    # Convert to BSR
     if not isspmatrix_bsr(A):
         A = bsr_matrix(A, blocksize=(blocksize,blocksize))
     if A.blocksize != (blocksize,blocksize):
         A = A.tobsr(blocksize=(blocksize,blocksize))
-
+    
+    ##
+    # Peel off block diagonal by extracting block entries from the now BSR matrix A
     A = A.asfptype()
     block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize), dtype=A.dtype)
     
-    diag_entries = csr_matrix((scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr), shape=(A.shape[0]/blocksize, A.shape[0]/blocksize)).diagonal()
+    diag_entries = csr_matrix((scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr), \
+                                shape=(A.shape[0]/blocksize, A.shape[0]/blocksize)).diagonal()
     diag_entries -= 1
     nonzero_mask = (diag_entries != -1)
     diag_entries = diag_entries[nonzero_mask]
@@ -551,9 +645,70 @@ def get_block_diag(A, blocksize, inv_flag=True):
         block_diag[nonzero_mask,:,:] = A.data[diag_entries,:,:]
 
     if inv_flag:
-        pinv_array(block_diag, block_diag.shape[0], block_diag.shape[1], 'T')
+        ## 
+        # Invert each block 
+        if block_diag.shape[1] < 7:
+            # This specialized routine lacks robustness for large matrices
+            pyamg.amg_core.pinv_array(block_diag, block_diag.shape[0], block_diag.shape[1], 'T')
+        else:
+            pinv_array(block_diag)
+        A.block_D_inv = block_diag
+    else:
+        A.block_D = block_diag
 
     return block_diag
+
+def amalgamate(A, blocksize):
+    """
+    Amalgamate matrix A
+    
+    Parameters
+    ----------
+    A : csr_matrix
+        Matrix to amalgamate
+    blocksize : int
+        blocksize to use while amalgamating
+
+    Returns
+    -------
+    A_amal : csr_matrix
+        Amalgamated  matrix A, first, convert A to BSR with square blocksize 
+        and then return CSR matrix using the resulting BSR indptr and indices
+    
+    Notes
+    -----
+    inverse operation of UnAmal for square matrices
+    
+    Examples
+    --------
+    >>> from numpy import array
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.util.utils import amalgamate
+    >>> row = array([0,0,1])
+    >>> col = array([0,2,1])
+    >>> data = array([1,2,3])
+    >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
+    >>> A.todense()
+    matrix([[1, 0, 2, 0],
+            [0, 3, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]])
+    >>> amalgamate(A,2).todense()
+    matrix([[ 1.,  1.],
+            [ 0.,  0.]])
+
+
+    """
+
+    if blocksize == 1:
+        return A
+    elif scipy.mod(A.shape[0], blocksize) != 0:
+        raise ValueError("Incompatible blocksize")
+    
+    A = A.tobsr(blocksize=(blocksize,blocksize))        
+    A.sort_indices()
+    return csr_matrix( (numpy.ones(A.indices.shape), A.indices, A.indptr), 
+                       shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]) )
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
@@ -599,6 +754,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
     data = numpy.ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
     return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
+
 
 def print_table(table, title='', delim='|', centering='center', col_padding=2, header=True, headerchar='-'):
     """
@@ -923,6 +1079,85 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
             rbm[dof+ii, jj] *= -1.0
     
     return rbm
+
+
+def relaxation_as_linear_operator(method, A, b):
+    """
+    Create a linear operator that applies a relaxation method for the 
+    given right-hand-side
+
+    Parameters
+    ----------
+    methods : {tuple or string}
+        Relaxation descriptor: Each tuple must be of the form ('method','opts')
+        where 'method' is the name of a supported smoother, e.g., gauss_seidel,
+        and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
+        {'sweep':symmetric}.  If string, must be that of a supported smoother,
+        e.g., gauss_seidel.
+
+    Returns
+    -------
+    linear operator that applies the relaxation method to a vector for a 
+    fixed right-hand-side, b.
+
+    Notes
+    -----
+    This method is primarily used to improve B during the aggregation setup phase.
+    Here b = 0, and each relaxation call can improve the quality of B, especially near
+    the boundaries.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import relaxation_as_linear_operator
+    >>> import numpy
+    >>> A = poisson((100,100), format='csr')           # matrix
+    >>> B = numpy.ones((A.shape[0],1))                   # Candidate vector
+    >>> b = numpy.zeros((A.shape[0]))                  # RHS
+    >>> relax = relaxation_as_linear_operator('gauss_seidel', A, b)
+    >>> B = relax*B
+
+    """
+    from pyamg import relaxation
+    from scipy.sparse.linalg.interface import LinearOperator
+    import pyamg.multilevel
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
+    
+    ##
+    # setup variables
+    accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor', 'gauss_seidel_ne', \
+                        'gauss_seidel_nr', 'jacobi', 'block_jacobi', 'richardson', 'schwarz',
+                        'strength_based_schwarz']
+    b = numpy.array(b, dtype=A.dtype)
+    fn, kwargs = unpack_arg(method)
+    lvl = pyamg.multilevel_solver.level()
+    lvl.A = A
+    
+    ##
+    # Retrieve setup call from relaxation.smoothing for this relaxation method
+    if not accepted_methods.__contains__(fn):
+        raise NameError("invalid relaxation method: ", fn)
+    try:
+        setup_smoother = eval('relaxation.smoothing.setup_' + fn)
+    except NameError, ne:
+        raise NameError("invalid presmoother method: ", fn)
+    ##
+    # Get relaxation routine that takes only (A, x, b) as parameters
+    relax = setup_smoother(lvl, **kwargs)
+
+    ##
+    # Define matvec
+    def matvec(x):
+        xcopy = x.copy()
+        relax(A, xcopy, b)
+        return xcopy
+
+    return LinearOperator(A.shape, matvec, dtype=A.dtype)
+
 
 
 #from functools import partial, update_wrapper

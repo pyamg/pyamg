@@ -13,6 +13,79 @@
  *  Strength values are assumed to be "distance"-like, i.e. the smaller the 
  *  value the stronger the connection
  *
+ *    Strength values are _Not_ evaluated relatively, i.e. an off-diagonal 
+ *    entry A[i,j] is a strong connection iff
+ *
+ *            S[i,j] <= epsilon,   where k != i
+ *  
+ *   Also, set the diagonal to 1.0, as each node is perfectly close to itself
+ *
+ * Parameters
+ * ----------
+ * n_row : {int}
+ *      Dimension of matrix, S
+ * epsilon : {float}
+ *      Drop tolerance
+ * Sp : {int array}
+ *      Row pointer array for CSR matrix S
+ * Sj : {int array}
+ *      Col index array for CSR matrix S
+ * Sx : {float|complex array}
+ *      Value array for CSR matrix S
+ *
+ * Returns
+ * -------
+ * Sx is modified in place such that the above dropping strategy has been applied
+ * There will be explicit zero entries for each weak connection
+ *
+ * Notes
+ * -----
+ * Principle calling routines are strength of connection routines, e.g.,
+ * distance_strength_of_connection(.)
+ *
+ * Examples
+ * --------
+ * >>> from scipy.sparse import csr_matrix
+ * >>> from pyamg.amg_core import apply_absolute_distance_filter
+ * >>> from scipy import array
+ * >>> # Graph in CSR where entries in row i represent distances from dof i
+ * >>> indptr = array([0,3,6,9])
+ * >>> indices = array([0,1,2,0,1,2,0,1,2])
+ * >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
+ * >>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
+ * >>> print "Matrix Before Applying Filter\n" + str(S.todense())
+ * >>> apply_absolute_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
+ * >>> print "Matrix After Applying Filter\n" + str(S.todense())
+ */          
+template<class I, class T>
+void apply_absolute_distance_filter(const I n_row,
+                           const T epsilon,
+                           const I Sp[],    const I Sj[], T Sx[])
+{
+    //Loop over rows
+    for(I i = 0; i < n_row; i++)
+    {
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
+    
+        //Apply drop tol to row i
+        for(I jj = row_start; jj < row_end; jj++){
+            if(Sj[jj] == i){
+                Sx[jj] = 1.0;  //Set diagonal to 1.0 
+            } else if(Sx[jj] >= epsilon){
+                Sx[jj] = 0.0;  //Set weak connection to 0.0
+            }
+        } //end for
+
+    }
+}
+
+
+/*
+ * Return a filtered strength-of-connection matrix by applying a drop tolerance
+ *  Strength values are assumed to be "distance"-like, i.e. the smaller the 
+ *  value the stronger the connection
+ *
  *    An off-diagonal entry A[i,j] is a strong connection iff
  *
  *            S[i,j] <= epsilon * min( S[i,k] )   where k != i
@@ -209,6 +282,8 @@ void min_blocks(const I n_blocks, const I blocksize,
  *      sum(range(NullDim+1)), i.e. number of columns in b
  * NullDim : {int}
  *      Number of nullspace vectors
+ * tol : {float}
+ *      Used to determine when values are numerically zero
  *
  * Returns
  * -------
@@ -234,7 +309,8 @@ void min_blocks(const I n_blocks, const I blocksize,
 template<class I, class T, class F>
 void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
                          const I nrows, const T x[],     const T y[], 
-                         const T b[],   const I BDBCols, const I NullDim)
+                         const T b[],   const I BDBCols, const I NullDim,
+                         const F tol)
 {
     //Compute maximum row length
     I max_length = 0;
@@ -372,6 +448,30 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
               RHS,  NullDim,       1, 'F', 
              zhat,   length,       1, 'F');
         
+        //Need to filter out numericall zero values in zhat, because the sign of each
+        //entry is very important in the below angle calc.  First, find the maximum value 
+        //in zhat to scale the tolerance with.  Then, whenever the real or imag part of
+        //zhat is less than this tolerance, set that real or imag part to zero.
+        F max_zhat = 0.0;
+        for(I jj = rowstart, zcounter = 0; jj < rowend; jj++, zcounter++)
+        {
+            F curr_norm = mynorm(zhat[zcounter]);
+            if (curr_norm > max_zhat) {
+                max_zhat = curr_norm; }
+        }
+        F tol_i = tol*max_zhat;
+        for(I jj = rowstart, zcounter = 0; jj < rowend; jj++, zcounter++)
+        {
+            if (mynorm(real(zhat[zcounter])) < tol_i) {
+                T curr_val = zhat[zcounter];
+                zhat[zcounter] = zero_real(curr_val); }
+            if (mynorm(imag(zhat[zcounter])) < tol_i) {
+                T curr_val = zhat[zcounter];
+                zhat[zcounter] = zero_imag(curr_val); }
+        }
+        
+
+        //Now, calculate strength-of-connection
         for(I jj = rowstart, zcounter = 0; jj < rowend; jj++, zcounter++)
         {
             //Strongly connected to self

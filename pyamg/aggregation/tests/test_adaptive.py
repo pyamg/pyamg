@@ -19,7 +19,7 @@ class TestAdaptiveSA(TestCase):
     def test_poisson(self):
         A = poisson( (100,100), format='csr' )
 
-        asa = adaptive_sa_solver(A, num_candidates = 1)
+        [asa,work] = adaptive_sa_solver(A, num_candidates = 1)
         sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
 
         b = rand(A.shape[0])
@@ -40,7 +40,7 @@ class TestAdaptiveSA(TestCase):
     def test_elasticity(self):
         A,B = linear_elasticity( (100,100), format='bsr' )
 
-        asa = adaptive_sa_solver(A, num_candidates = 3, \
+        [asa,work] = adaptive_sa_solver(A, num_candidates = 3, \
                 improvement_iters=5,prepostsmoother=('gauss_seidel',{'sweep':'symmetric','iterations':2}))
         sa  = smoothed_aggregation_solver(A, B=B )
 
@@ -77,12 +77,13 @@ class TestComplexAdaptiveSA(TestCase):
         Ai = 1.0j*A
         cases.append((Ai, 0.75))
         
-        # imaginary shift 
-        Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        cases.append((Ai,0.75))
+        ## JBS:  Not sure if this is a valid test case
+        ## imaginary shift 
+        #Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
+        #cases.append((Ai,0.75))
 
         for A,rratio in cases:
-            asa = adaptive_sa_solver(A, num_candidates = 1, mat_flag='symmetric')
+            [asa,work] = adaptive_sa_solver(A, num_candidates = 1, symmetry='symmetric')
             #sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
     
             b = zeros((A.shape[0],))

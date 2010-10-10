@@ -19,14 +19,15 @@ warnings.simplefilter('ignore',SparseEfficiencyWarning)
 class TestCommonRelaxation(TestCase):
     def setUp(self):
         self.cases = []
-        self.cases.append( (gauss_seidel,          (),               {}) )
-        self.cases.append( (jacobi,                (),               {}) )
-        self.cases.append( (block_jacobi,          (),               {}) )
-        self.cases.append( (block_gauss_seidel,    (),               {}) )
-        self.cases.append( (jacobi_ne,             (),               {}) )
-        self.cases.append( (sor,                   (0.5,),           {}) )
-        self.cases.append( (gauss_seidel_indexed,  ([1,0],),         {}) )
-        self.cases.append( (polynomial,            ([0.6,0.1],),     {}) )
+        self.cases.append( (gauss_seidel,              (),               {}) )
+        self.cases.append( (jacobi,                    (),               {}) )
+        self.cases.append( (block_jacobi,              (),               {}) )
+        self.cases.append( (block_gauss_seidel,        (),               {}) )
+        self.cases.append( (jacobi_ne,                 (),               {}) )
+        self.cases.append( (schwarz,                   (),               {}) )
+        self.cases.append( (sor,                       (0.5,),           {}) )
+        self.cases.append( (gauss_seidel_indexed,      ([1,0],),         {}) )
+        self.cases.append( (polynomial,                ([0.6,0.1],),     {}) )
 
 
     def test_single_precision(self):
@@ -598,6 +599,55 @@ class TestRelaxation(TestCase):
         self.assert_(allclose(resid1,resid2))
 
 
+    def test_schwarz_gold(self):
+        scipy.random.seed(0)
+
+        cases = []
+        cases.append( poisson( (4,), format='csr' ) )
+        cases.append( poisson( (4,4), format='csr' ) )
+        A = poisson( (8,8), format='csr' ) 
+        A.data[0] = 10.0; A.data[1] = -0.5; A.data[3] = -0.5
+        cases.append( A )
+
+        temp = asmatrix( rand(1,1) )
+        cases.append( csr_matrix( temp.T * temp) )
+        temp = asmatrix( rand(2,2) )
+        cases.append( csr_matrix( temp.T * temp) )
+        temp = asmatrix( rand(4,4) )
+        cases.append( csr_matrix( temp.T * temp) )
+
+        # reference implementation
+        def gold(A,x,b,iterations):
+            A = csr_matrix(A)
+
+            ##
+            # Default is pointwise iteration with each subdomain a point's neighborhood 
+            # in the matrix graph
+            subdomains = [A.indices[A.indptr[i]:A.indptr[i+1]] for i in range(A.shape[0]) ]
+                
+            ##
+            # extract each subdomain's block from the matrix
+            subblocks = [ scipy.linalg.pinv2(( (A[subdomains[i],:]).tocsc()[:,subdomains[i]] ).todense())\
+                          for i in range(len(subdomains)) ]    
+            
+            ##
+            # Multiplicative Schwarz iterations
+            for j in xrange(iterations):
+                for i in xrange(len(subdomains)):
+                    x[subdomains[i]] = scipy.dot(subblocks[i], (b[subdomains[i]] - A[subdomains[i],:]*x)) + \
+                                       x[subdomains[i]]
+
+            return x
+
+        for A in cases:
+
+            b = asmatrix(rand(A.shape[0],1))
+            x = asmatrix(rand(A.shape[0],1))
+
+            x_copy = x.copy()
+            schwarz(A, x, b, iterations=1)
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1) )
+            
 
 # Test complex arithmetic
 class TestComplexRelaxation(TestCase):
@@ -685,6 +735,51 @@ class TestComplexRelaxation(TestCase):
                 gauss_seidel(B,x_bsr_temp,b)
                 assert_almost_equal(x_bsr_temp,x_csr)
 
+    def test_schwarz_gold(self):
+        scipy.random.seed(0)
+
+        cases = []
+        A = poisson( (4,), format='csr' ); A.data = A.data + 1.0j*1e-3*rand(A.data.shape[0],)
+        cases.append(A)
+        A = poisson( (4,4), format='csr' ); A.data = A.data + 1.0j*1e-3*rand(A.data.shape[0],)
+        cases.append(A); 
+
+        temp = asmatrix( rand(1,1) ) + 1.0j*asmatrix( rand(1,1) )
+        cases.append( csr_matrix( temp.H * temp) )
+        temp = asmatrix( rand(2,2) ) + 1.0j*asmatrix( rand(2,2) )
+        cases.append( csr_matrix( temp.H * temp) )
+        temp = asmatrix( rand(4,4) ) + 1.0j*asmatrix( rand(4,4) )
+        cases.append( csr_matrix( temp.H * temp) )
+
+        # reference implementation
+        def gold(A,x,b,iterations):
+            A = csr_matrix(A)
+            ##
+            # Default is pointwise iteration with each subdomain a point's neighborhood 
+            # in the matrix graph
+            subdomains = [A.indices[A.indptr[i]:A.indptr[i+1]] for i in range(A.shape[0]) ]
+            ##
+            # extract each subdomain's block from the matrix
+            subblocks = [ scipy.linalg.pinv2(( (A[subdomains[i],:]).tocsc()[:,subdomains[i]] ).todense())\
+                          for i in range(len(subdomains)) ]    
+            ##
+            # Multiplicative Schwarz iterations
+            for j in xrange(iterations):
+                for i in xrange(len(subdomains)):
+                    x[subdomains[i]] = scipy.dot(subblocks[i], (b[subdomains[i]] - A[subdomains[i],:]*x)) + \
+                                       x[subdomains[i]]
+            return x
+
+
+        for A in cases:
+
+            b = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
+            x = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
+
+            x_copy = x.copy()
+            schwarz(A, x, b, iterations=1)
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1) )
+            
     def test_gauss_seidel_new(self):
         scipy.random.seed(0)
 
@@ -1100,6 +1195,7 @@ class TestComplexRelaxation(TestCase):
         resid2 = numpy.linalg.norm(A*x,2)
         self.assert_(resid1 < 0.3 and resid2 < 0.3)
         self.assert_(allclose(resid1,resid2))
+
 
 # Test both complex and real arithmetic
 # for block_jacobi and block_gauss_seidel

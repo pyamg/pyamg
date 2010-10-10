@@ -1,103 +1,20 @@
 """Method to create pre- and post-smoothers on the levels of a multilevel_solver
 """
 
+import numpy
 import scipy
 import relaxation
 from chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows, get_block_diag
+from pyamg.util.utils import scale_rows, get_block_diag, UnAmal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
+from pyamg import amg_core
+import scipy.lib.lapack as la
 
 __docformat__ = "restructuredtext en"
 
-__all__ = ['setup_smoothers', 'change_smoothers']#, 'smootherlist_tostring', 'smootherlists_tostring']
+__all__ = ['change_smoothers']
 
-
-def setup_smoothers(ml, presmoother, postsmoother):
-    """Initialize pre- and post- smoothers throughout a multilevel_solver
-
-    For each level of the multilevel_solver 'ml' (except the coarsest level),
-    initialize the .presmoother() and .postsmoother() methods used in the 
-    multigrid cycle.
-
-    Parameters
-    ----------
-    ml : multilevel_solver
-        Data structure that stores the multigrid hierarchy.
-    pre, post : smoother configuration
-        See "Smoother Configuration" below for available options
-
-    Returns
-    -------
-    Nothing, ml will be changed in place.
-
-    Notes
-    -----
-    - Arguments 'pre' and 'post' can be the name of a supported smoother, 
-      e.g. "gauss_seidel" or a tuple of the form ('method','opts') where 
-      'method' is the name of a supported smoother and 'opts' a dict of
-      keyword arguments to the smoother.  See the Examples section for
-      illustrations of the format.
-    - Parameter 'omega' of the Jacobi, Richardson, and jacobi_ne
-      methods is scaled by the spectral radius of the matrix on 
-      each level.  Therefore 'omega' should be in the interval (0,2).
-    - Available smoother methods::
-
-        gauss_seidel
-        block_gauss_seidel
-        jacobi
-        block_jacobi
-        richardson
-        sor
-        chebyshev
-        gauss_seidel_nr
-        gauss_seidel_ne
-        jacobi_ne
-        cg
-        gmres
-        cgne
-        cgnr
-        None
-
-    Examples
-    --------
-    >>> from pyamg.relaxation.smoothing import setup_smoothers
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.aggregation import smoothed_aggregation_solver
-    >>> from pyamg.util.linalg import norm
-    >>> import numpy
-    >>> A = poisson((10,10), format='csr')
-    >>> b = numpy.ones((A.shape[0],1))
-    >>> ml = smoothed_aggregation_solver(A)
-    >>> pre  = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
-    >>> post = ('gauss_seidel', {'iterations': 2, 'sweep':'symmetric'})
-    >>> setup_smoothers(ml, presmoother=pre, postsmoother=post)
-    >>> residuals=[]
-    >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    """
-
-    # interpret arguments
-    if isinstance(presmoother, str):
-        presmoother = (presmoother,{})
-    if isinstance(postsmoother, str):
-        postsmoother = (postsmoother,{})
-
-    # get function handles
-    try:
-        setup_presmoother = eval('setup_' + presmoother[0])
-    except NameError, ne:
-        raise NameError("invalid presmoother method: ", presmoother[0])
-    try:
-        setup_postsmoother = eval('setup_' + postsmoother[0])
-    except NameError, ne:
-        raise NameError("invalid postsmoother method: ", postsmoother[0])
-
-    for lvl in ml.levels[:-1]:
-        lvl.presmoother  = setup_presmoother(lvl, **presmoother[1])
-        lvl.postsmoother = setup_postsmoother(lvl, **postsmoother[1])
-
-
-# Helper fcn for unpacking smoother descriptions
 def unpack_arg(v):
     if isinstance(v,tuple):
         return v[0],v[1]
@@ -148,8 +65,10 @@ def change_smoothers(ml, presmoother, postsmoother):
     - Parameter 'omega' of the Jacobi, Richardson, and jacobi_ne
       methods is scaled by the spectral radius of the matrix on 
       each level.  Therefore 'omega' should be in the interval (0,2).
-    - This function is most differs from setup_smoothers in that it allows 
-      for different smoothing strategies on different levels.
+    - By initializing the smoothers after the hierarchy has been setup, allows
+      for "algebraically" directed relaxation, such as strength_based_schwarz,
+      which uses only the strong connections of a degree-of-freedom to define
+      overlapping regions
     - Available smoother methods::
 
         gauss_seidel
@@ -166,6 +85,8 @@ def change_smoothers(ml, presmoother, postsmoother):
         gmres
         cgne
         cgnr
+        schwarz
+        strength_based_schwarz
         None
 
     Examples
@@ -264,12 +185,16 @@ def rho_D_inv_A(A):
     >>> print rho_D_inv_A(A)
     1.0
     """
-
-    D = A.diagonal()
-    D_inv = 1.0 / D
-    D_inv[D == 0] = 0
-    D_inv_A = scale_rows(A, D_inv, copy=True)
-    return approximate_spectral_radius(D_inv_A)
+    
+    if not hasattr(A, 'rho_D_inv'):
+        D = A.diagonal()
+        D_inv = 1.0 / D
+        D_inv[D == 0] = 0
+        D_inv_A = scale_rows(A, D_inv, copy=True)
+        
+        A.rho_D_inv = approximate_spectral_radius(D_inv_A)
+    
+    return A.rho_D_inv
 
 
 def rho_block_D_inv_A(A, Dinv):
@@ -299,28 +224,32 @@ def rho_block_D_inv_A(A, Dinv):
     >>> print rho_block_D_inv_A(A, Dinv)
     1.72254828808
     """
-    from scipy.sparse.linalg import LinearOperator
-    
-    blocksize = Dinv.shape[1]
-    if Dinv.shape[1] != Dinv.shape[2]:
-        raise ValueError('Dinv has incorrect dimensions')
-    elif Dinv.shape[0] != A.shape[0]/blocksize:
-        raise ValueError('Dinv and A have incompatible dimensions')
-    
-    Dinv = scipy.sparse.bsr_matrix( (Dinv, scipy.arange(Dinv.shape[0]), scipy.arange(Dinv.shape[0] + 1)), shape=A.shape)
-    
-    # Don't explicitly form Dinv*A
-    def matvec(x):
-        return Dinv*(A*x)
-    D_inv_A = LinearOperator(A.shape, matvec, dtype=A.dtype)
-    
-    return approximate_spectral_radius(D_inv_A)
 
+    if not hasattr(A, 'rho_block_D_inv'):
+        from scipy.sparse.linalg import LinearOperator
+        
+        blocksize = Dinv.shape[1]
+        if Dinv.shape[1] != Dinv.shape[2]:
+            raise ValueError('Dinv has incorrect dimensions')
+        elif Dinv.shape[0] != A.shape[0]/blocksize:
+            raise ValueError('Dinv and A have incompatible dimensions')
+        
+        Dinv = scipy.sparse.bsr_matrix( (Dinv, \
+                scipy.arange(Dinv.shape[0]), scipy.arange(Dinv.shape[0]+1)), shape=A.shape)
+        
+        # Don't explicitly form Dinv*A
+        def matvec(x):
+            return Dinv*(A*x)
+        D_inv_A = LinearOperator(A.shape, matvec, dtype=A.dtype)
+        
+        A.rho_block_D_inv = approximate_spectral_radius(D_inv_A)
+
+    return A.rho_block_D_inv
 
 """
-    The following setup_smoother_name functions are helper functions
-    for parsing user input and assigning each level the appropriate smoother
-    for the above functions, "change_smoothers" and "setup_smoothers".
+    The following setup_smoother_name functions are helper functions for
+    parsing user input and assigning each level the appropriate smoother for
+    the above functions "change_smoothers".
 
     The standard interface is
 
@@ -339,34 +268,120 @@ def rho_block_D_inv_A(A, Dinv):
 
     Examples
     --------
-    See change_smoothers and setup_smoothers above
+    See change_smoothers above
 
 """
 def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
     def smoother(A,x,b):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
-
+        
 def setup_jacobi(lvl, iterations=1, omega=1.0):
     omega = omega/rho_D_inv_A(lvl.A)
     def smoother(A,x,b):
         relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
     return smoother
 
-def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=1):
-    if Dinv == None:
-        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-    omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
+    
+    if not scipy.sparse.isspmatrix_csr(lvl.A):
+        A = lvl.A.tocsr()
+    else:
+        A = lvl.A
+
+    if subdomain is None or subdomain_ptr is None:
+        subdomain_ptr = A.indptr.copy()
+        subdomain = A.indices.copy()
+        
+
+    ##
+    # Extract each subdomain's block from the matrix
+    if inv_subblock is None or inv_subblock_ptr is None:
+        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=int)
+        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
+        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
+        
+        ##
+        # Extract each block column from A
+        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
+        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
+                          inv_subblock_ptr, subdomain, subdomain_ptr, 
+                          subdomain_ptr.shape[0]-1, A.shape[0])
+        
+        ##
+        # Invert each block column
+        [my_pinv] = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
+        for i in xrange(subdomain_ptr.shape[0]-1):
+            m = blocksize[i]
+            rhs = scipy.eye(m,m, dtype=A.dtype)
+            [v,pseudo,s,rank,info] = \
+                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), rhs)
+            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
+
     def smoother(A,x,b):
-        relaxation.block_jacobi(A, x, b, iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+        relaxation.schwarz(A, x, b, iterations=iterations, subdomain=subdomain, \
+                           subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,\
+                           inv_subblock_ptr=inv_subblock_ptr)
     return smoother
 
-def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, blocksize=1):
-    if Dinv == None:
-        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-    def smoother(A,x,b):
-        relaxation.block_gauss_seidel(A, x, b, iterations=iterations, Dinv=Dinv, blocksize=blocksize, sweep=sweep)
-    return smoother
+
+def setup_strength_based_schwarz(lvl, iterations=1):
+    # Use the overlapping regions defined by the the strength of connection matrix C 
+    # for the overlapping Schwarz method
+    C = lvl.C.tocsr()
+    subdomain_ptr = C.indptr.copy()
+    subdomain = C.indices.copy()
+
+    return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain, subdomain_ptr=subdomain_ptr)
+
+
+def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None):
+    ##
+    # Determine Blocksize
+    if blocksize == None and Dinv == None:
+        if scipy.sparse.isspmatrix_csr(lvl.A):
+            blocksize = 1
+        elif scipy.sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize == None:
+        blocksize = Dinv.shape[1]
+    
+    if blocksize == 1:
+        # Block Jacobi is equivalent to normal Jacobi
+        return setup_jacobi(lvl, iterations=iterations, omega=omega)
+    else:
+        # Use Block Jacobi
+        if Dinv == None:
+            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+        def smoother(A,x,b):
+            relaxation.block_jacobi(A, x, b, iterations=iterations, omega=omega, \
+                                    Dinv=Dinv, blocksize=blocksize)
+        return smoother
+
+def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, blocksize=None):
+    ##
+    # Determine Blocksize
+    if blocksize == None and Dinv == None:
+        if scipy.sparse.isspmatrix_csr(lvl.A):
+            blocksize = 1
+        elif scipy.sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize == None:
+        blocksize = Dinv.shape[1]
+
+    if blocksize == 1:
+        # Block GS is equivalent to normal GS
+        return setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
+    else:
+        # Use Block GS       
+        if Dinv == None:
+            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+        def smoother(A,x,b):
+            relaxation.block_gauss_seidel(A, x, b, iterations=iterations, \
+                               Dinv=Dinv, blocksize=blocksize, sweep=sweep)
+
+        return smoother
 
 def setup_richardson(lvl, iterations=1, omega=1.0):
     omega = omega/approximate_spectral_radius(lvl.A)
@@ -429,142 +444,4 @@ def setup_None(lvl):
         pass
     return smoother
 
-def smootherlist_tostring(sm):
-    '''
-    Parameters
-    ----------
-    sm : {string, tuple, list}
-        A valid smoothing strategy input for change_smoothers.
-        See change_smoothers documentation and Examples section for format examples.
-
-    Returns
-    -------
-    string that when printed describes the smoothing strategy, sm, in readable format
-
-    Notes
-    -----
-    Designed for running numerical tests on various pre/post smoothing 
-    strategies so that the test scripts can generate readable output on 
-    the multilevel method.
-
-    Examples
-    --------
-    >>> from pyamg.relaxation.smoothing import smootherlist_tostring
-    >>> sm = 'gauss_seidel'
-    >>> print smootherlist_tostring(sm)
-        Level 0 to N Smoother = gauss_seidel
-          User Paramters:
-            None
-    <BLANKLINE>
-    >>> sm = ('gauss_seidel', {'iterations' : 3})
-    >>> print smootherlist_tostring(sm)
-        Level 0 to N Smoother = gauss_seidel
-          User Paramters:
-            iterations = 3
-    <BLANKLINE>
-    >>> sm = [('gauss_seidel', {'iterations' : 3}), ('gmres', {'maxiter' : 5})]
-    >>> print smootherlist_tostring(sm)
-        Level 0 Smoother = gauss_seidel
-          User Paramters:
-            iterations = 3
-        Level 1 to N Smoother = gmres
-          User Paramters:
-            maxiter = 5
-    <BLANKLINE>
-    '''
-
-    # interpret argument into list
-    if isinstance(sm, str) or isinstance(sm, tuple) or (sm == None):
-        sm = [sm]
-    elif not isinstance(sm, list):
-        return "Smoothing Strategy Unrecognized\n\n"
-        
-    out = ""    
-    for i in range(len(sm)):
-        fn, kwargs= unpack_arg(sm[i])
-        
-        if i == (len(sm)-1):
-            out += "    Level %d to N Smoother = %s\n" % (i,fn)
-        else:    
-            out += "    Level %d Smoother = %s\n" % (i,fn)
-        
-        out += "      User Paramters:\n"
-        for param in kwargs:
-            out += '        ' + param + " = " + str(kwargs[param]) + '\n'
-        
-        if kwargs == {}:
-            out += '        None\n' 
-
-    return out
-
-def smootherlists_tostring(smlist):
-    '''
-    Parameters
-    ----------
-    sm : {list}
-        List of valid smoothing strategy inputs for change_smoothers
-        See change_smoothers documentation and Examples section for format examples.
-        
-    Returns
-    -------
-    string that when printed describes all of the smoothing strategies 
-    in smlist in readable format
-
-    Notes
-    -----
-    Designed for running numerical tests on various pre/post smoothing 
-    strategies so that the test scripts can generate readable output on 
-    the multilevel method.
-    
-    Different from smootherlist_tostring in that this function handles
-    multiple smoothing strategies.
-
-    Examples
-    --------
-    >>> from pyamg.relaxation.smoothing import smootherlists_tostring
-    >>> sm = [('gauss_seidel', {'iterations' : 3}), ('gmres', {'maxiter' : 5})]
-    >>> print smootherlists_tostring(sm)
-    Smoothing Strategy 1
-        Level 0 to N Smoother = gauss_seidel
-          User Paramters:
-            iterations = 3
-    <BLANKLINE>
-    Smoothing Strategy 2
-        Level 0 to N Smoother = gmres
-          User Paramters:
-            maxiter = 5
-    <BLANKLINE>
-    <BLANKLINE>
-    >>> sm = [ [('gauss_seidel', {'iterations' : 3}), 'gmres'], ('cgnr', {'maxiter' : 5})]
-    >>> print smootherlists_tostring(sm)
-    Smoothing Strategy 1
-        Level 0 Smoother = gauss_seidel
-          User Paramters:
-            iterations = 3
-        Level 1 to N Smoother = gmres
-          User Paramters:
-            None
-    <BLANKLINE>
-    Smoothing Strategy 2
-        Level 0 to N Smoother = cgnr
-          User Paramters:
-            maxiter = 5
-    <BLANKLINE>
-    <BLANKLINE>
-
-    '''
-    
-    # interpret argument into list
-    if isinstance(smlist, str) or isinstance(smlist, tuple) or (smlist == None):
-        smlist = [smlist]
-    elif not isinstance(smlist, list):
-        return "Smoothing Strategy Unrecognized\n\n"
-
-    outstr = ""
-    for i in range(len(smlist)):
-        outstr += "Smoothing Strategy %d\n" % (i+1)
-        outstr += smootherlist_tostring(smlist[i])
-        outstr += '\n'
-
-    return outstr
 

@@ -5,11 +5,105 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 import numpy
+import pyamg
+from pyamg.util.utils import scale_rows, scale_columns
 from scipy import sparse
 
 import amg_core
 
-__all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection']
+__all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection', 'distance_strength_of_connection']
+
+
+def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
+    """
+    Distance based strength-of-connection
+
+    Parameters
+    ---------- 
+    A : {csr_matrix}
+        Sparse NxN matrix in CSR format
+    V : {array}
+        Vertices of the fine level dof's.  
+        More than hack-like assumes that boundary dofs are for x,y == 1 or 0
+    relative_drop : {bool}
+        If false, then a connection must be within a distance of theta
+        from a point to be strongly connected.
+        If true, then the closest connection is always strong, and other points
+        must be within theta _times_ the smallest distance to be considered strong
+
+    Returns
+    -------
+    C : {csr_matrix}
+        C(i,j) = distance(point_i, point_j)
+        Strength of connection matrix where strength values are
+        distances, i.e. the smaller the value, the stronger the connection.
+        Sparsity pattern of C is copied from A.
+        
+
+    Notes
+    -----
+    theta is a drop tolerance that is applied row-wise
+    
+    Examples
+    --------
+    >>> import scipy
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> from pyamg.strength import distance_strength_of_connection
+    >>> data = pyamg.gallery.load_example('airfoil')
+    >>> A = data['A'].tocsr()
+    >>> B = scipy.array(data['B'],dtype=float)
+    >>> S = distance_strength_of_connection(data['A'], data['vertices'])
+    >>> b = scipy.rand(data['A'].shape[0],)
+    >>> print "Use distance strength on level 0, and symmetric on coarse levels"
+    >>> strength = [('distance', {'V' : data['vertices']}), 'symmetric']
+    >>> sa = smoothed_aggregation_solver(A, B, strength=strength, max_coarse=10)
+    >>> x = sa.solve(b)
+    >>> print scipy.linalg.norm(b - A*x)
+    
+    """
+    
+    three_d = False
+    if V.shape[1] == 3:
+        if V[:,2].any():
+            three_d = True
+
+    ##
+    # Amalgamate for the supernode case
+    if sparse.isspmatrix_bsr(A):
+        dimen = A.shape[0]/A.blocksize[0]
+        A = sparse.csr_matrix( (numpy.ones((A.data.shape[0],)), A.indices, A.indptr), \
+                               shape=(dimen,dimen))
+
+    ##
+    # Create two arrays for differencing the different coordinates such 
+    # that C(i,j) = distance(point_i, point_j)
+    A = A.tocsr()
+    cols = A.indices
+    rows = numpy.repeat(numpy.arange(A.shape[0]), A.indptr[1:] - A.indptr[0:-1])
+    
+    ##
+    # Insert difference for each coordinate into C
+    C = (V[rows,0] - V[cols,0])**2 + (V[rows,1] - V[cols,1])**2
+    if three_d:
+        C = C + (V[rows,2] - V[cols,2])**2
+    C = numpy.sqrt(C)
+    C[C < 1e-6] = 1e-6
+    
+    C = sparse.csr_matrix((C, A.indices.copy(), A.indptr.copy()), shape=A.shape)
+    
+    ##
+    #Apply drop tolerance
+    if relative_drop == True:
+        if theta != numpy.inf:
+            amg_core.apply_distance_filter(C.shape[0], theta, C.indptr, C.indices, C.data)
+            C.eliminate_zeros()
+    else:
+        amg_core.apply_absolute_distance_filter(C.shape[0], theta, C.indptr, C.indices, C.data)
+        C.eliminate_zeros()
+    
+    C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
+    return C
+
 
 def classical_strength_of_connection(A, theta=0.0):
     """
@@ -80,7 +174,7 @@ def classical_strength_of_connection(A, theta=0.0):
 
     fn = amg_core.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
-
+    
     return sparse.csr_matrix((Sx,Sj,Sp), shape=A.shape)
 
 
@@ -159,7 +253,8 @@ def symmetric_strength_of_connection(A, theta=0):
         fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
         
-        return sparse.csr_matrix((Sx,Sj,Sp),A.shape)
+
+        return sparse.csr_matrix((Sx,Sj,Sp), shape=A.shape)
 
     elif sparse.isspmatrix_bsr(A):
         M,N = A.shape
@@ -170,13 +265,13 @@ def symmetric_strength_of_connection(A, theta=0):
 
         if theta == 0:
             data = numpy.ones(len(A.indices), dtype=A.dtype)
-            return sparse.csr_matrix((data, A.indices, A.indptr), shape=(M/R,N/C))
+            return sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()), shape=(M/R,N/C))
         else:
-            # the strength of connection matrix is based on the 
-            # Frobenius norms of the blocks
-            data = (numpy.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1) 
-            A = sparse.csr_matrix((data, A.indices, A.indptr), shape=(M/R,N/C))
-            return symmetric_strength_of_connection(A, theta)
+           # the strength of connection matrix is based on the 
+           # Frobenius norms of the blocks
+           data = (numpy.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1) 
+           A = sparse.csr_matrix((data, A.indices, A.indptr), shape=(M/R,N/C))
+           return symmetric_strength_of_connection(A, theta)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix') 
 
@@ -326,7 +421,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 
-def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
+def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, symmetrize_measure=True):
     """Construct an AMG strength of connection matrix using an ODE-based measure
 
     Parameters
@@ -341,6 +436,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         ODE num time steps, step size is assumed to be 1/rho(DinvA)
     proj_type : {'l2','D_A'}
         Define norm for constrained min prob, i.e. define projection
+    block_flag : {boolean}
+        If True, use a block D inverse as preconditioner for A during 
+        weighted-Jacobi
    
     Returns
     -------
@@ -366,9 +464,10 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     >>> S = ode_strength_of_connection(A, numpy.ones((A.shape[0],1)))
     """
     # many imports for ode_strength_of_connection, so moved the imports local
-    from pyamg.util.utils  import scale_rows
+    from pyamg.util.utils  import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
     from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
+    
 
     #====================================================================
     #Check inputs
@@ -386,15 +485,28 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     #B must be in mat format, this isn't a deep copy
     Bmat = numpy.mat(B)
 
-    # Amat must be in CSR format, be devoid of 0's and have sorted indices
-    # Number of PDEs per point is defined implicitly by block size
-    if not sparse.isspmatrix_csr(A):
-       csrflag = False
-       numPDEs = A.blocksize[0]
-       A = A.tocsr()
+    # Pre-process A.  We need A in CSR, to be devoid of explicit 0's and have sorted indices
+    if (not sparse.isspmatrix_csr(A)):
+        csrflag = False
+        numPDEs = A.blocksize[0]
+        D = A.diagonal();
+        # Calculate Dinv*A
+        if block_flag:
+            Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
+            Dinv = sparse.bsr_matrix( (Dinv, numpy.arange(Dinv.shape[0]), numpy.arange(Dinv.shape[0]+1)), shape = A.shape)
+            Dinv_A = (Dinv*A).tocsr()
+        else:
+            Dinv = 1.0 / D
+            Dinv[D == 0] = 1.0
+            Dinv_A  = scale_rows(A, Dinv, copy=True)
+        A = A.tocsr()
     else:
         csrflag = True
         numPDEs = 1
+        D = A.diagonal();
+        Dinv = 1.0 / D
+        Dinv[D == 0] = 1.0
+        Dinv_A  = scale_rows(A, Dinv, copy=True)
 
     A.eliminate_zeros()
     A.sort_indices()
@@ -406,10 +518,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     NullDim = Bmat.shape[1]
         
     #Get spectral radius of Dinv*A, this will be used to scale the time step size for the ODE 
-    D = A.diagonal();
-    Dinv = 1.0 / D
-    Dinv[D == 0] = 1.0
-    Dinv_A  = scale_rows(A, Dinv, copy=True)
     rho_DinvA = approximate_spectral_radius(Dinv_A)
     
     #Calculate D_A for later use in the minimization problem
@@ -523,6 +631,8 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         del AtildeCSC, Atilde
         Atilde = mask            
+        Atilde.eliminate_zeros()
+        Atilde.sort_indices()
 
     del Dinv, Dinv_A
            
@@ -550,27 +660,29 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         # Use shortcut to solve constrained min problem if B is only a vector
         # Strength(i,j) = | 1 - (z(i)/b(j))/(z(j)/b(i)) |
         # These ratios can be calculated by diagonal row and column scalings
-        
-        #Create necessary Diagonal matrices
+
+        # Create necessary vectors for scaling Atilde
+        #   Its not clear what to do where B == 0.  This is an
+        #   an easy programming solution, that may make sense.
+        Bmat_forscaling = numpy.ravel(Bmat)
+        Bmat_forscaling[Bmat_forscaling == 0] = 1.0
         DAtilde = Atilde.diagonal();
-        DAtildeDivB = numpy.array(DAtilde) / numpy.array(Bmat).reshape(DAtilde.shape)
-        DAtildeDivB[numpy.ravel(Bmat) == 0] = 1.0
-        DAtildeDivB = sparse.spdiags( [DAtildeDivB], [0], dimen, dimen, format = 'csr')
-        DiagB = sparse.spdiags( [numpy.array(Bmat).flatten()], [0], dimen, dimen, format = 'csr')
+        DAtildeDivB = numpy.ravel(DAtilde) / Bmat_forscaling 
 
         # Calculate best approximation, z_tilde, in span(B)
+        #   Importantly, scale_rows and scale_columns leave zero entries
+        #   in the matrix.  For previous implementations this was useful  
+        #   because we assume data and Atilde.data are the same length below
         data = Atilde.data.copy()
         Atilde.data[:] = 1.0
+        Atilde = scale_rows(Atilde, DAtildeDivB)
+        Atilde = scale_columns(Atilde, numpy.ravel(Bmat_forscaling))
 
-        Atilde = DAtildeDivB*Atilde
-        Atilde = Atilde*DiagB
-
-        #if angle in the complex plane between z and z_tilde is 
+        # If angle in the complex plane between z and z_tilde is 
         #   greater than 90 degrees, then weak.  We can just look at the
         #   dot product to determine if angle is greater than 90 degrees.
         angle = numpy.real(Atilde.data)*numpy.real(data) + numpy.imag(Atilde.data)*numpy.imag(data)
-        angle[angle < 0.0] = True
-        angle[angle >= 0.0] = False
+        angle = angle < 0.0
         angle = numpy.array(angle, dtype=bool)
 
         #Calculate Approximation ratio
@@ -578,9 +690,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
         
         # If approximation ratio is less than tol, then weak connection
         weak_ratio = (numpy.abs(Atilde.data) < 1e-4)
-
+        
         #Calculate Approximation error
-        Atilde.data = abs( 1.0 - Atilde.data)
+        Atilde.data = abs( 1.0 - Atilde.data )
         
         # Set small ratios and large angles to weak
         Atilde.data[weak_ratio] = 0.0
@@ -603,15 +715,22 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
             for j in range(i,NullDim):
                 BDB[:,counter] = 2.0 * (numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i]))) * numpy.ravel(numpy.asarray(D_A * B[:,j])) )
                 counter = counter + 1        
+
+        ##
+        # Choose tolerance for dropping "numerically zero" values later
+        t = Atilde.dtype.char
+        eps = numpy.finfo(numpy.float).eps
+        feps = numpy.finfo(numpy.single).eps
+        _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+        tol = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
         
         # Use constrained min problem to define strength
         amg_core.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
                                            Atilde.shape[0],
                                            numpy.ravel(numpy.asarray(B)), 
-                                           numpy.ravel(numpy.asarray((D_A * numpy.conjugate(B)).T)), 
+                                           numpy.ravel(numpy.asarray((D_A * numpy.conjugate(B)).T)),
                                            numpy.ravel(numpy.asarray(BDB)),
-                                           BDBCols,
-                                           NullDim)
+                                           BDBCols, NullDim, tol)
         
         Atilde.eliminate_zeros()
     #===================================================================
@@ -620,6 +739,9 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     Atilde.data = numpy.array(numpy.real(Atilde.data), dtype=float)
     
     #Apply drop tolerance
+    if symmetrize_measure:
+        Atilde = 0.5*(Atilde + Atilde.T)
+    
     if epsilon != numpy.inf:
         amg_core.apply_distance_filter(dimen, epsilon, Atilde.indptr, Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()

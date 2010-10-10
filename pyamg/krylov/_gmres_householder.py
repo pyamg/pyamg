@@ -32,7 +32,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
     restrt : {None, int}
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -101,6 +101,10 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
 
     # Choose type
     xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
+    if restrt is not None:
+        restrt=int(restrt)
+    if maxiter is not None:
+        maxiter=int(maxiter)
 
     # Should norm(r) be kept
     if residuals == []:
@@ -127,17 +131,6 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
             maxiter = min(dimen, 40)
         max_inner = maxiter
 
-    # Scale tol by normb
-    normb = norm(b) 
-    if normb == 0:
-        pass
-    #    if callback != None:
-    #        callback(0.0)
-    #
-    #    return (postprocess(zeros((dimen,)), dtype=xtype),0)
-    else:
-        tol = tol*normb
-
     # Is this a one dimensional matrix?
     if dimen == 1:
         entry = ravel(A*array([1.0], dtype=xtype))
@@ -163,6 +156,11 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
     #if isnan(r).any() or isinf(r).any():
     #    warn('inf or nan after application of preconditioner')
     #    return(postprocess(x), -1)
+
+    # Scale tol by ||r_0||_2, we use the preconditioned residual
+    # because this is left preconditioned GMRES.
+    if normr != 0.0:
+        tol = tol*normr    
     
     # Use separate variable to track iterations.  If convergence fails, we cannot 
     # simply report niter = (outer-1)*max_outer + inner.  Numerical error could cause 
@@ -184,7 +182,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
         # Space required is O(dimen*max_inner)
         Q = zeros( (4*max_inner,), dtype=xtype)               # Givens Rotations
         H = zeros( (max_inner, max_inner), dtype=xtype)       # upper Hessenberg matrix (actually made upper tri with Givens Rotations) 
-        W = zeros( (max_inner, dimen), dtype=xtype)           # Householder reflectors
+        W = zeros( (max_inner+1, dimen), dtype=xtype)         # Householder reflectors
         W[0,:] = w
     
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
@@ -283,6 +281,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
             #   the LHS for the linear system in the Krylov Subspace
             H[:,inner] = v[0:max_inner]
 
+            niter += 1
+             
             # Don't update normr if last inner iteration, because 
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
@@ -295,8 +295,6 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
                     callback( normr )
                 if keep_r:
                     residuals.append(normr)
-            
-            niter += 1
             
         # end inner loop, back to outer loop
 

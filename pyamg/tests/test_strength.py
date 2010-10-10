@@ -1,7 +1,7 @@
 from pyamg.testing import *
 
 import numpy
-from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt, finfo
+from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt, finfo, abs
 from scipy import rand, real, imag, mat, zeros, sign, eye, arange
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags, coo_matrix
 import scipy.sparse
@@ -51,6 +51,29 @@ class TestStrengthOfConnection(TestCase):
 
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
+
+    def test_distance_strength_of_connection(self):
+        data = load_example('airfoil')
+        cases = []
+        cases.append( (data['A'].tocsr(), data['vertices']) )
+
+        for (A,V) in cases:
+            for theta in [1.5, 2.0, 2.5]:
+                result = distance_strength_of_connection(A, V, theta=theta)
+                expected = reference_distance_strength_of_connection(A, V, theta=theta)
+                assert_equal( result.nnz,       expected.nnz)
+                assert_array_almost_equal( result.todense(), expected.todense() )
+
+        for (A,V) in cases:
+            for theta in [0.5, 1.0, 1.5]:
+                result = distance_strength_of_connection(A, V, theta=theta, \
+                                            relative_drop=False)
+                expected = reference_distance_strength_of_connection(A, V, \
+                                            theta=theta, relative_drop=False)
+                assert_equal( result.nnz,       expected.nnz)
+                assert_array_almost_equal( result.todense(), expected.todense() )
+
+
 
     def test_incomplete_matmat(self):
         # Test a critical helper routine for ode_strength_of_connection(...)
@@ -231,17 +254,27 @@ class TestStrengthOfConnection(TestCase):
         cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
         
         for ca in cases:
-            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
-            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            scipy.random.seed(0)  #make results deterministic
+            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+                                 k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
+            scipy.random.seed(0)  #make results deterministic
+            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+                                 k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal( result.todense(), expected.todense() )
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        scipy.random.seed(0)  #make results deterministic
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, \
+                           k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
-        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        result_scaled = ode_strength_of_connection( (D*A*D).tobsr(blocksize=(2,2)), Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
+        D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], \
+                         [0], A.shape[0], A.shape[0], format = 'csr')
+        Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], \
+                                [0], A.shape[0], A.shape[0], format = 'csr')
+        scipy.random.seed(0)  #make results deterministic
+        result_scaled = ode_strength_of_connection( (D*A*D).tobsr(blocksize=(2,2)), \
+                  Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
 
@@ -306,34 +339,48 @@ class TestComplexStrengthOfConnection(TestCase):
         cases.append({'A' : Absr.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
         
         for ca in cases:
-            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
-            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], k=ca['k'], proj_type=ca['proj'])
+            scipy.random.seed(0)  #make results deterministic
+            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+                                 k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
+            scipy.random.seed(0)  #make results deterministic
+            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+                                                           k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal( result.todense(), expected.todense() )
 
         # Test Scale Invariance for a single candidate
         A = 1.0j*poisson( (5,5), format='csr')
         B = 1.0j*arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        scipy.random.seed(0)  #make results deterministic
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        result_scaled = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
+        scipy.random.seed(0)  #make results deterministic
+        result_scaled = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
         
         # Test that the l2 and D_A are the same for the 1 candidate case
-        resultDA = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
-        resultl2 = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="l2")
+        scipy.random.seed(0)  #make results deterministic
+        resultDA = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+                            k=2, proj_type="D_A", symmetrize_measure=False)
+        scipy.random.seed(0)  #make results deterministic
+        resultl2 = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+                              k=2, proj_type="l2", symmetrize_measure=False)
         assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
 
         # Test Scale Invariance for multiple candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')
         A = 1.0j*A
         B = 1.0j*B
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A")
+        scipy.random.seed(0)  #make results deterministic
+        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, \
+                                     proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        result_scaled = ode_strength_of_connection((D*A*D).tobsr(blocksize=(2,2)), Dinv*B, epsilon=4.0, k=2, proj_type="D_A")
+        scipy.random.seed(0)  #make results deterministic
+        result_scaled = ode_strength_of_connection((D*A*D).tobsr(blocksize=(2,2)), Dinv*B, \
+                                epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
 
@@ -367,7 +414,8 @@ def reference_classical_strength_of_connection(A, theta):
     S.row  = S.row[mask]
     S.col  = S.col[mask]
     S.data = S.data[mask]
-
+    
+    #S = S + scipy.sparse.eye(S.shape[0], S.shape[0], format="csr")
     return S.tocsr()
     
 
@@ -395,6 +443,7 @@ def reference_symmetric_strength_of_connection(A, theta):
     S.col  = S.col[mask]
     S.data = S.data[mask]
 
+    #S = S + scipy.sparse.eye(S.shape[0], S.shape[0], format="csr")
     return S.tocsr()
 
 
@@ -402,7 +451,9 @@ def reference_symmetric_strength_of_connection(A, theta):
 def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
     All python reference implementation for ODE Strength of Connection
-    If doing imaginary test, both A and B should be imaginary type upon entry
+    
+    --> If doing imaginary test, both A and B should be imaginary type upon entry
+    --> This does the "unsymmetrized" version of the ode measure
     """
    
     #number of PDEs per point is defined implicitly by block size
@@ -440,8 +491,8 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
 
     #====================================================================
     #Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
-    #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are also
-    #  in the same PDE as i.
+    #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are 
+    #  also in the same PDE as i.
 
     mask = A.copy()
 
@@ -466,7 +517,15 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
     # Calculate strength based on constrained min problem of
     LHS = mat(zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
     RHS = mat(zeros((NullDim+1, 1)), dtype=A.dtype)
-   
+    
+    ##
+    # Choose tolerance for dropping "numerically zero" values later
+    t = Atilde.dtype.char
+    eps = numpy.finfo(numpy.float).eps
+    feps = numpy.finfo(numpy.single).eps
+    _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+    tol = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+
     for i in range(dimen):
        
         #Get rowptrs and col indices from Atilde
@@ -504,24 +563,29 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             #Calc Soln to Min Problem
             x = mat(pinv(LHS))*RHS
             
-            #Calc best constrained approximation to zi with span(Bi).  
+            # Calc best constrained approximation to zi with span(Bi), and filter out 
+            # "numerically" zero values.  This is important because we look only at the
+            # sign of values below when calculating angle.
             zihat = Bi*x[:-1]
-            
-            #if angle in the complex plane between individual entries is 
+            tol_i = max(abs(zihat))*tol
+            zihat.real[ abs(zihat.real) < tol_i ] = 0.0
+            if numpy.iscomplexobj(zihat):
+                zihat.imag[ abs(zihat.imag) < tol_i ] = 0.0
+
+            # if angle in the complex plane between individual entries is 
             #   greater than 90 degrees, then weak.  We can just look at the
             #   dot product to determine if angle is greater than 90 degrees.
             angle = real(ravel(zihat))*real(ravel(zi)) + imag(ravel(zihat))*imag(ravel(zi))
-            angle[angle < 0.0] = True
-            angle[angle >= 0.0] = False
+            angle = angle < 0.0
             angle = array(angle, dtype=bool)
-
+            
             #Calculate approximation ratio
             zi = zihat/zi
            
-            # If the ratio is small, then weak
+            # If the ratio is small, then weak connection
             zi[abs(zi) <= 1e-4] = 1e100 
 
-            # If angle is greater than 90 degrees, then weak
+            # If angle is greater than 90 degrees, then weak connection
             zi[angle] = 1e100
 
             #Calculate Relative Approximation Error
@@ -557,5 +621,59 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
                              Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
 
     return Atilde
+
+
+def reference_distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
+    ''' 
+    Reference routine for distance based strength of connection
+    '''
+    
+    # deal with the supernode case
+    if isspmatrix_bsr(A):
+        dimen = A.shape[0]/A.blocksize[0]
+        C = csr_matrix( (numpy.ones((A.data.shape[0],)), A.indices, A.indptr), \
+                               shape=(dimen,dimen))
+    else:
+        A = A.tocsr()
+        dimen = A.shape[0]
+        C = A.copy()
+        C.data = numpy.real(C.data)
+    
+    if V.shape[1] == 2:
+        three_d = False
+    elif V.shape[1] == 3:
+        three_d = True
+
+    for i in range(dimen):
+        rowstart = C.indptr[i]
+        rowend = C.indptr[i+1]
+        pt_i = V[i,:]
+        for j in range(rowstart, rowend):
+            if C.indices[j] == i:
+                # ignore the diagonal entry by making it large
+                C.data[j] = numpy.finfo(numpy.float).max 
+            else:
+                # distance between entry j and i
+                pt_j = V[C.indices[j],:]
+                dist = (pt_i[0] - pt_j[0])**2
+                dist += (pt_i[1] - pt_j[1])**2
+                if three_d:
+                    dist += (pt_i[2] - pt_j[2])**2
+                C.data[j] = numpy.sqrt(dist)
+
+        # apply drop tolerance
+        this_row = C.data[rowstart:rowend]
+        if relative_drop:
+            tol_i = theta*this_row.min()
+            this_row[this_row > tol_i] = 0.0
+        else:
+            this_row[this_row > theta] = 0.0
+
+        C.data[rowstart:rowend] = this_row 
+
+    C.eliminate_zeros()
+    C = C + 2.0*scipy.sparse.eye(C.shape[0], C.shape[1], format='csr')
+    return C
+
 
 

@@ -153,7 +153,6 @@ I standard_aggregation(const I n_row,
         }
     }
 
-
     //Pass #2
     // Add unaggregated nodes to any neighboring aggregate
     for(I i = 0; i < n_row; i++){
@@ -167,11 +166,11 @@ I standard_aggregation(const I n_row,
                 x[i] = -xj;
                 break;
             }
-        }   
+        }
     }
    
     next_aggregate--; 
-
+    
     //Pass #3
     for(I i = 0; i < n_row; i++){
         const I xi = x[i];
@@ -202,10 +201,60 @@ I standard_aggregation(const I n_row,
         }  
         next_aggregate++;
     }
+    
 
     return next_aggregate; //number of aggregates
 }
 
+
+/*
+ * Compute aggregates for a matrix A stored in CSR format
+ *
+ * Parameters:
+ *   n_row         - number of rows in A
+ *   Ap[n_row + 1] - CSR row pointer
+ *   Aj[nnz]       - CSR column indices
+ *    x[n_row]     - aggregate numbers for each node
+ *
+ * Returns:
+ *  The number of aggregates (== max(x[:]) + 1 )
+ *
+ * Notes:
+ * Differs from standard aggregation.  Each dof is considered.  
+ * If it has been aggregated, skip over.  Otherwise, put dof 
+ * and any unaggregated neighbors in an aggregate.  Results 
+ * in possibly much higher complexities.
+ */
+template <class I>
+I naive_aggregation(const I n_row,
+                       const I Ap[], 
+                       const I Aj[],
+                             I  x[])
+{
+    // x[n] == 0 means i-th node has not been aggregated
+    std::fill(x, x + n_row, 0);
+
+    I next_aggregate = 1; // number of aggregates + 1
+
+    for(I i = 0; i < n_row; i++){
+        if(x[i]){ continue; } //already marked
+        else
+        {
+            const I row_start = Ap[i];
+            const I row_end   = Ap[i+1];
+
+           //Make an aggregate out of this node and its unaggregated neighbors
+           x[i] = next_aggregate;
+           for(I jj = row_start; jj < row_end; jj++){
+               if(!x[Aj[jj]]){
+                   x[Aj[jj]] = next_aggregate;}
+           }
+           next_aggregate++;
+        }
+    }
+
+    return (next_aggregate-1); //number of aggregates
+}
 
 
 /*
@@ -335,7 +384,7 @@ void fit_candidates_common(const I n_row,
                 
                 R_start[K2 * bi + bj] = dot_prod;
             } // end orthogonalize bj against previous columns
-
+            
 
             //compute norm of column bj
             norm_j = 0;
@@ -358,6 +407,12 @@ void fit_candidates_common(const I n_row,
                 R_start[K2 * bj + bj] = norm_j;
             } else {
                 scale = 0;
+                
+                // JBS code...explicitly zero out this column of R
+                //for(I bi = 0; bi <= bj; bi++){
+                //    R_start[K2 * bi + bj] = 0.0; 
+                //}
+                // Nathan's code that just sets the diagonal entry of R to 0
                 R_start[K2 * bj + bj] = 0;
             }
             {
@@ -429,11 +484,13 @@ void fit_candidates_complex(const I n_row,
  * This implements the python code:
  *
  *   # U is a BSR matrix, B is num_block_rows x ColsPerBlock x ColsPerBlock
- *   # UB is num_block_rows x RowsPerBlock x ColsPerBlock,  BtBinv is num_block_rows x ColsPerBlock x ColsPerBlock
+ *   # UB is num_block_rows x RowsPerBlock x ColsPerBlock,  BtBinv is 
+ *        num_block_rows x ColsPerBlock x ColsPerBlock
  *   B  = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
  *   UB = asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1])
  *
- *   rows = csr_matrix((U.indices,U.indices,U.indptr), shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
+ *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
+ *           shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
  *   for n,j in enumerate(U.indices):
  *      i = rows[n]
  *      Bi  = mat(B[j])
@@ -477,7 +534,8 @@ void fit_candidates_complex(const I n_row,
 
 template<class I, class T, class F>
 void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, const I num_blocks,
-                                const I num_block_rows, const T x[], const T y[], const T z[], const I Sp[], const I Sj[], T Sx[])
+                                const I num_block_rows, const T x[], const T y[], const T z[], 
+                                const I Sp[], const I Sj[], T Sx[])
 {
     //Rename to something more familiar
     const T * Bt = x;
@@ -556,7 +614,7 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
  *
  * Return
  * ------
- * BtB[i] = B_i.H*B_i in row major format
+ * BtB[i] = B_i.H*B_i in __column__ major format
  * where B_i is B[colindices,:], colindices = all the nonzero
  * column indices for block row i in S
  *
@@ -579,7 +637,7 @@ void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
     const I NullDimSq  = NullDim*NullDim;
     const I work_size  = 5*NullDim + 10;
 
-    T * BtB_loc       = new T[NullDimSq];
+    T * BtB_loc   = new T[NullDimSq];
     T * work      = new T[work_size];
     T * sing_vals = new T[NullDim];
     T * identity  = new T[NullDimSq];

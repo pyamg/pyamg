@@ -33,7 +33,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
     restrt : {None, int}
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -135,17 +135,6 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         elif maxiter == None:
             maxiter = min(dimen, 40)
         max_inner = maxiter
-
-    # Scale tol by normb
-    normb = norm(b) 
-    if normb == 0:
-        pass
-    #    if callback != None:
-    #        callback(0.0)
-    #
-    #    return (postprocess(zeros((dimen,), dtype=xtype)), 0)
-    else:
-        tol = tol*normb
    
     # Is this a one dimensional matrix?
     if dimen == 1:
@@ -164,6 +153,11 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             callback(norm(r))
         
         return (postprocess(x), 0)
+
+    # Scale tol by ||r_0||_2, we don't use the preconditioned 
+    # residual because this is right preconditioned GMRES.
+    if normr != 0.0:
+        tol = tol*normr    
 
     # Use separate variable to track iterations.  If convergence fails, we cannot 
     # simply report niter = (outer-1)*max_outer + inner.  Numerical error could cause 

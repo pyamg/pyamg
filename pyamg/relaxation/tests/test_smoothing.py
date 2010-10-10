@@ -12,7 +12,9 @@ methods = ['gauss_seidel',
            'chebyshev',
            'gauss_seidel_ne',
            'jacobi_ne',
-           'gauss_seidel_nr']
+           'gauss_seidel_nr',
+           'schwarz',
+           'strength_based_schwarz']
 
 methods2 = [('gauss_seidel', 'richardson'),
             ('gauss_seidel', 'jacobi'),
@@ -21,6 +23,7 @@ methods2 = [('gauss_seidel', 'richardson'),
             ('gauss_seidel_ne', 'jacobi_ne'),
             (['gauss_seidel_ne', 'gauss_seidel_nr'], 'jacobi_ne'),
             ('cgnr', 'cgne'),
+            ('schwarz', 'strength_based_schwarz'),
             ( ('gauss_seidel', {'iterations' : 3}), None),
             ( [('gauss_seidel_ne', {'iterations' : 2}), ('gmres', {'maxiter' : 3})], None),
             ( None, ['cg', 'cgnr', 'cgne']) ]

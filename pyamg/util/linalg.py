@@ -6,11 +6,13 @@ from warnings import warn
 import numpy
 import scipy
 import scipy.sparse as sparse
+from scipy.linalg.lapack import get_lapack_funcs
+from scipy.linalg import calc_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
-           'condest', 'cond', 'issymm']
+           'condest', 'cond', 'issymm', 'pinv_array']
 
-def norm(x):
+def norm(x, pnorm='2'):
     """
     2-norm of a vector
     
@@ -18,6 +20,8 @@ def norm(x):
     ----------
     x : array_like
         Vector of complex or real values
+    
+    pnorm : 
 
     Returns
     -------
@@ -37,9 +41,15 @@ def norm(x):
 
     #TODO check dimensions of x
     #TODO speedup complex case
-
+    
     x = numpy.ravel(x)
-    return numpy.sqrt( numpy.inner(x.conj(),x).real )
+    
+    if pnorm == '2':
+        return numpy.sqrt( numpy.inner(x.conj(),x).real )
+    elif pnorm == 'inf':
+        return numpy.max(numpy.abs(x))
+    else:
+        raise ValueError('Only the 2-norm and infinity-norm are supported')
 
 def infinity_norm(A):
     """
@@ -85,7 +95,7 @@ def infinity_norm(A):
     elif sparse.isspmatrix(A):
         return (abs(A) * numpy.ones((A.shape[1]),dtype=A.dtype)).max()
     else:
-        return norm(A,inf)
+        return numpy.dot(numpy.abs(A), numpy.ones((A.shape[1],),dtype=A.dtype)).max()
 
 def residual_norm(A, x, b):
     """Compute ||b - A*x||"""
@@ -156,12 +166,18 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
 
     A = aslinearoperator(A) # A could be dense or sparse, or something weird
 
+    ##
+    # Choose tolerance for deciding if break-down has occurred
+    t = A.dtype.char
+    eps = numpy.finfo(numpy.float).eps
+    feps = numpy.finfo(numpy.single).eps
+    _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+    breakdown = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
     maxiter = min(A.shape[0],maxiter)
-
-    scipy.random.seed(0)  #make results deterministic
 
     v0  = scipy.rand(A.shape[1],1)
     if A.dtype == complex:
@@ -187,7 +203,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
             beta = norm(w)
             H[j+1,j] = beta
 
-            if (H[j+1,j] < 1e-10): 
+            if (H[j+1,j] < breakdown): 
                 break
             
             w /= beta
@@ -203,7 +219,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
 
             H[j+1,j] = norm(w)
             
-            if (H[j+1,j] < 1e-10): 
+            if (H[j+1,j] < breakdown): 
                 break
             
             w = w/H[j+1,j] 
@@ -276,10 +292,17 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     >>> print max([norm(x) for x in eigvals(A)])
     1.0
     """
+    
+    if not hasattr(A, 'rho'):
+        ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
+        rho = numpy.max(numpy.abs(ev))
+        if sparse.isspmatrix(A):
+            A.rho = rho
+        
+        return rho
 
-    ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
-    return numpy.max(numpy.abs(ev))
-
+    else:
+        return A.rho
 
 def condest(A, tol=0.1, maxiter=25, symmetric=False):
     """Estimates the condition number of A
@@ -365,20 +388,25 @@ def cond(A):
     return numpy.max(Sigma)/min(Sigma)
 
 
-def issymm(A, tol=1e-6):
+def issymm(A, fast_check=True, tol=1e-6):
     """Returns 0 if A is Hermitian symmetric to within tol
 
     Parameters
     ----------
     A   : {dense or sparse matrix}
         e.g. array, matrix, csr_matrix, ...
+    fast_check : {bool}
+        If True, use the heuristic < Ax, y> = < x, Ay>
+        for random vectors x and y to check for symmetry.
+        If False, compute A - A.H.
     tol : {float}
         Symmetry tolerance
 
     Returns
     -------
-    0                if symmetric
-    max( \|A - A.H\| ) if unsymmetric
+    0                        if symmetric
+    max( \|A - A.H\| )       if unsymmetric and fast_check=False
+    abs( <Ax, y> - <x, Ay> ) if unsymmetric and fast_check=False
 
     Notes
     -----
@@ -396,19 +424,110 @@ def issymm(A, tol=1e-6):
     0
 
     """
-    
-    if sparse.isspmatrix(A):
-        diff = numpy.ravel((A - A.H).data)
-    else:
+    # convert to matrix type
+    if not sparse.isspmatrix(A):
         A = numpy.asmatrix(A)
-        diff = numpy.ravel(A - A.H)
 
-    if numpy.max(diff.shape) == 0:
-        return 0
-    
-    max_entry = numpy.max(numpy.abs(diff)) 
-    if max_entry < tol:
-        return 0
+    if fast_check:
+        x = scipy.rand(A.shape[0],1)
+        y = scipy.rand(A.shape[0],1)
+        if A.dtype == complex:
+            x += 1.0j*scipy.rand(A.shape[0],1)
+            y += 1.0j*scipy.rand(A.shape[0],1)
+        diff = float( numpy.abs(numpy.dot( (A*x).conjugate().T, y) - \
+                                numpy.dot(x.conjugate().T, A*y)) )
+
     else:
-        return max_entry
+        # compute the difference, A - A.H
+        if sparse.isspmatrix(A):
+            diff = numpy.ravel((A - A.H).data)
+        else:
+            diff = numpy.ravel(A - A.H)
+
+        if numpy.max(diff.shape) == 0:
+            diff = 0
+        else:
+            diff = numpy.max(numpy.abs(diff)) 
+        
+    if diff < tol:
+        diff = 0
+    
+    return diff
+
+def pinv_array(a, cond=None):
+    """Calculate the Moore-Penrose pseudo inverse of each block of 
+        the three dimensional array a.
+
+    Parameters
+    ----------
+    a   : {dense array}
+        Is of size (n, m, m)
+    cond : {float}
+        Used by *gelss to filter numerically zeros singular values.
+        If None, a suitable value is chosen for you.
+
+    Returns
+    -------
+    Nothing, a is modified in place so that a[k] holds the pseudoinverse
+    of that block.
+    
+    Notes
+    -----
+    By using lapack wrappers, this can be much faster for large n, than
+    directly calling pinv2
+
+    Examples
+    --------
+    >>> import numpy
+    >>> from pyamg.util.linalg import pinv_array
+    >>> a = numpy.array([[[1.,2.],[1.,1.]], [[1.,1.],[3.,3.]]])
+    >>> ac = a.copy()
+    >>> pinv_array(a)
+    >>> print numpy.dot(a[0], ac[0])
+    [[  1.00000000e+00  -2.22044605e-16]
+     [  4.44089210e-16   1.00000000e+00]]
+
+    >>>print(numpy.dot(a[1], ac[1]))
+    [[ 0.5  0.5]
+     [ 0.5  0.5]]  
+
+    """
+    
+    n = a.shape[0]
+    m = a.shape[1]
+
+    if m == 1:
+        ##
+        # Pseudo-inverse of 1 x 1 matrices is trivial
+        zero_entries = (a == 0.0).nonzero()[0]
+        a[:] = 1.0/a
+        a[zero_entries] = 0.0
+        del zero_entries
+    
+    else: 
+        ##
+        # The block size is greater than 1
+        
+        ##
+        # Create necessary arrays and function pointers for calculating pinv
+        gelss, = get_lapack_funcs(('gelss',), (numpy.ones((1,), dtype=a.dtype)) )
+        RHS = numpy.eye(m, dtype=a.dtype)
+        lwork = calc_lwork.gelss(gelss.prefix, m, m, m)[1]
+        
+        ##
+        # Choose tolerance for which singular values are zero in *gelss below
+        if cond is None:
+            t = a.dtype.char
+            eps = numpy.finfo(numpy.float).eps
+            feps = numpy.finfo(numpy.single).eps
+            _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+            cond = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+
+        ## 
+        # Invert each block of a
+        for kk in xrange(n):
+            v, a[kk], s, rank, info = gelss(a[kk], RHS, cond=cond, 
+                              lwork=lwork, overwrite_a=True, overwrite_b=False)
+
+
 

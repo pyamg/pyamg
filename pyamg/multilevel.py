@@ -165,7 +165,8 @@ class multilevel_solver:
         return output
 
     def cycle_complexity(self, cycle='V'):
-        """Cycle complexity of this Multigrid hierarchy
+        """Cycle complexity of this multigrid hierarchy for V(1,1), W(1,1) and 
+           F(1,1) cycles when simple relaxation methods are used.
        
         Cycle complexity is an approximate measure of the number of
         floating point operations (FLOPs) required to perform a single 
@@ -191,9 +192,11 @@ class multilevel_solver:
         (each) equal to the number of nonzeros in the matrix on that level.
         This assumption holds for smoothers like Jacobi and Gauss-Seidel.
         However, the true cycle complexity of cycle using more expensive 
-        methods, like symmetric Gauss-Seidel and Chebyshev smoothers will 
-        be underestimated.
+        methods, like block Gauss-Seidel will be underestimated.
         
+        Additionally, if the cycle used in practice isn't a (1,1)-cycle,
+        then this cost estimate will be off.
+
         """
         cycle = str(cycle).upper()
 
@@ -408,13 +411,15 @@ class multilevel_solver:
         from pyamg.util.utils import to_type
         tp = upcast(b.dtype, x.dtype, self.levels[0].A.dtype)
         [b, x] = to_type(tp, [b, x])
+        b = numpy.ravel(b)
+        x = numpy.ravel(x)
         
         A = self.levels[0].A
 
         residuals.append(residual_norm(A,x,b))
 
         self.first_pass=True
-
+        
         while len(residuals) <= maxiter and residuals[-1] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level

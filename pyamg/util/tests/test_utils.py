@@ -1,11 +1,11 @@
 from pyamg.testing import *
 
 from numpy import matrix, array, diag, zeros, sqrt, abs, ravel
-from scipy import rand, linalg, real, imag, mat, diag, isscalar, ones
-from scipy.sparse import csr_matrix, isspmatrix, bsr_matrix
+from scipy import rand, linalg, real, imag, mat, diag, isscalar, ones, hstack
+from scipy.sparse import csr_matrix, isspmatrix, bsr_matrix, isspmatrix_bsr, spdiags
 
+import pyamg
 from pyamg.util.utils import *
-from pyamg.util.utils import symmetric_rescaling
 
 class TestUtils(TestCase):
     def test_diag_sparse(self):
@@ -61,6 +61,49 @@ class TestUtils(TestCase):
 
             D_sqrt,D_sqrt_inv = diag_sparse(D_sqrt),diag_sparse(D_sqrt_inv)
             assert_almost_equal((D_sqrt_inv*A*D_sqrt_inv).todense(), DAD.todense())
+    
+    def test_symmetric_rescaling_sa(self):
+        cases = []
+        # case 1
+        e = ones((5,1)).ravel()
+        data = [ -1*e, 2*e, -1*e ]
+        A = spdiags(data,[-1,0,1],5,5).tocsr()
+        B = e.copy().reshape(-1,1)
+        DAD_answer = array([[ 1. ,-0.5, 0. , 0. , 0. ],
+                            [-0.5, 1. ,-0.5, 0. , 0. ],
+                            [ 0. ,-0.5, 1. ,-0.5, 0. ],
+                            [ 0. , 0. ,-0.5, 1. ,-0.5],
+                            [ 0. , 0. , 0. ,-0.5, 1. ]])
+        DB_answer = sqrt(2*e.reshape(-1,1))
+        #            matrix   B    BH   expected matrix  expected B  expected BH 
+        cases.append( (A,     B,  None,   DAD_answer,      DB_answer,   None) )
+
+        # case 2
+        A2 = A.copy()
+        A2.symmetry = 'nonsymmetric'
+        cases.append( (A2, B.copy(), B.copy(), DAD_answer, DB_answer, DB_answer) )
+        
+        # case 3
+        A3 = A.copy()
+        A3.symmetry = 'hermitian'
+        cases.append( (A3, B.copy(), None, DAD_answer, DB_answer, None) )
+
+        # case 4
+        B4 = hstack( (B.copy(), 2*B.copy()) )
+        DB4_answer = sqrt(2)*B4
+        A4 = A.copy()
+        A4.symmetry = 'nonsymmetric'
+        cases.append( (A4, B4, B4.copy(), DAD_answer, DB4_answer, DB4_answer) )
+        
+
+        for case in cases:
+            [A,B,BH,DAD_answer,DB_answer,DBH_answer] = case
+            
+            [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=BH)
+            assert_array_almost_equal(DAD.todense(), DAD_answer)
+            assert_array_almost_equal(DB, DB_answer)
+            if DBH_answer != None:
+                assert_array_almost_equal(DBH, DBH_answer)
 
 
     def test_profile_solver(self):
@@ -137,6 +180,58 @@ class TestUtils(TestCase):
         assert_array_almost_equal(ravel(block_diag_inv), ravel(answer), decimal=3)
 
 
+    def test_relaxation_as_linear_operator(self):
+        As = []
+        bs =[]
+        xs = []
+        methods = ['gauss_seidel', 'jacobi', 'block_gauss_seidel', 'block_jacobi']
+        params = [{}, {'iterations' : 2}]
+        As.append(pyamg.gallery.poisson( (10,10), format='csr'))
+        As.append(1.0j*pyamg.gallery.poisson( (10,10), format='csr'))
+        As.append(1.0j*pyamg.gallery.elasticity.linear_elasticity( (20,20) )[0] )
+        As.append(pyamg.gallery.elasticity.linear_elasticity( (20,20) )[0] )
+        for A in As:
+            if A.dtype == 'complex':
+                xs.append(rand(A.shape[0],1)+1.0j*rand(A.shape[0],1))
+                bs.append(rand(A.shape[0],1)+1.0j*rand(A.shape[0],1))
+            else:
+                bs.append(rand(A.shape[0],1))
+                xs.append(rand(A.shape[0],1))
+
+        for method in methods:
+            for kwargs in params:    
+                for (A,x,b) in zip(As,xs,bs):
+                    kwargs_linop = dict(kwargs)
+                    ##
+                    # run relaxation as a linear operator
+                    if kwargs_linop == dict({}):
+                        relax = relaxation_as_linear_operator(method, A, b)
+                    else:
+                        relax = relaxation_as_linear_operator((method,kwargs_linop), A, b)
+                    x_linop = relax*x
+                    
+                    ##
+                    # manually run the relaxation routine
+                    relax2 = eval('pyamg.relaxation.' + method)
+                    x_gold = x.copy()
+                    blockflag = False
+                    kwargs_gold = dict(kwargs)
+                    # deal with block matrices
+                    if method.startswith('block') and isspmatrix_bsr(A):
+                        blockflag = True
+                        kwargs_gold['blocksize'] = A.blocksize[0]
+                    # deal with omega and jacobi
+                    # --> note that we assume the default setup for jacobi uses omega = 1/rho
+                    if method.endswith('jacobi'):
+                        if blockflag:
+                            kwargs_gold['omega'] = 1.0/A.rho_block_D_inv
+                        else:
+                            kwargs_gold['omega'] = 1.0/A.rho_D_inv
+
+                    relax2(A,x_gold,b,**kwargs_gold)
+                    
+                    assert_array_almost_equal(x_linop, x_gold)
+
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):
         #check sparse -> array
@@ -172,6 +267,32 @@ class TestComplexUtils(TestCase):
 
             D_sqrt,D_sqrt_inv = diag_sparse(D_sqrt),diag_sparse(D_sqrt_inv)
             assert_almost_equal((D_sqrt_inv*A*D_sqrt_inv).todense(), DAD.todense())
+
+    def test_symmetric_rescaling_sa(self):
+        cases = []
+        # case 1
+        e = 1.0j*ones((5,1)).ravel()
+        data = [ -1*e, 2*e, -1*e ]
+        A = 1.0j*spdiags(data,[-1,0,1],5,5).tocsr()
+        B = e.copy().reshape(-1,1)
+        DAD_answer = array([[ 1. ,-0.5, 0. , 0. , 0. ],
+                            [-0.5, 1. ,-0.5, 0. , 0. ],
+                            [ 0. ,-0.5, 1. ,-0.5, 0. ],
+                            [ 0. , 0. ,-0.5, 1. ,-0.5],
+                            [ 0. , 0. , 0. ,-0.5, 1. ]])
+        DB_answer = sqrt(2)*1.0j*e.reshape(-1,1)
+        #            matrix   B    BH   expected matrix  expected B  expected BH 
+        cases.append( (A,     B,  None,   DAD_answer,      DB_answer,   None) )
+
+        for case in cases:
+            [A,B,BH,DAD_answer,DB_answer,DBH_answer] = case
+            
+            [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=BH)
+            assert_array_almost_equal(DAD.todense(), DAD_answer)
+            assert_array_almost_equal(DB, DB_answer)
+            if DBH_answer != None:
+                assert_array_almost_equal(DBH, DBH_answer)
+
 
     def test_get_diagonal(self):
         cases = []

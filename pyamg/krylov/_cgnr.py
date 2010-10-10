@@ -26,7 +26,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
     maxiter : int
         maximum number of allowed iterations
     xtype : type
@@ -112,13 +112,6 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         warn('maximimum allowed inner iterations (maxiter) are the 130% times the number of degress of freedom')
         maxiter = int(ceil(1.3*dimen)) + 2
 
-    # Scale tol by normb
-    normb = norm(b) 
-    if normb == 0:
-        pass
-    else:
-        tol = tol*normb
-
     # Prep for method
     r = b - A*x
     rhat = AH*r
@@ -132,7 +125,12 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
             callback(x)
         
         return (postprocess(x), 0)
+
+    # Scale tol by ||r_0||_2
+    if normr != 0.0:
+        tol = tol*normr    
    
+
     # Begin CGNR
 
     # Apply preconditioner and calculate initial search direction

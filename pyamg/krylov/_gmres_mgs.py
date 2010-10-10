@@ -1,4 +1,4 @@
-from numpy import array, zeros, sqrt, ravel, abs, max, arange, conjugate, hstack, isnan, isinf, iscomplex, real, dtype
+from numpy import array, zeros, sqrt, ravel, abs, max, arange, conjugate, hstack, isnan, isinf, iscomplex, real, iscomplexobj
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 import scipy.lib.blas as blas
@@ -55,7 +55,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
     restrt : {None, int}
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -128,11 +128,15 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
 
     # Choose type
     xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
+    if restrt is not None:
+        restrt=int(restrt)
+    if maxiter is not None:
+        maxiter=int(maxiter)
 
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
-    if dtype(xtype).kind == 'c':
-        # complex type
+    
+    if iscomplexobj( zeros((1,),dtype=xtype) ):
         [axpy,dotu,dotc,scal] = blas.get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal'], (x))
     else:    
         # real type
@@ -168,17 +172,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
             maxiter = min(dimen, 40)
         max_inner = maxiter
 
-    # Scale tol by normb
-    normb = norm(b) 
-    if normb == 0:
-        pass
-    #    if callback != None:
-    #        callback(0.0)
-    #
-    #    return (postprocess(zeros((dimen,)), dtype=xtype),0)
-    else:
-        tol = tol*normb
-
     # Is this a one dimensional matrix?
     if dimen == 1:
         entry = ravel(A*array([1.0], dtype=xtype))
@@ -205,6 +198,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     #    warn('inf or nan after application of preconditioner')
     #    return(postprocess(x), -1)
     
+    # Scale tol by ||r_0||_2, we use the preconditioned residual
+    # because this is left preconditioned GMRES.
+    if normr != 0.0:
+        tol = tol*normr    
+
     # Use separate variable to track iterations.  If convergence fails, we cannot 
     # simply report niter = (outer-1)*max_outer + inner.  Numerical error could cause 
     # the inner loop to halt while the actual ||r|| > tol.
@@ -301,6 +299,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
                     H[inner, inner] = dotu(Qblock[0,:], H[inner, inner:inner+2]) 
                     H[inner, inner+1] = 0.0
                   
+            niter += 1
+            
             # Don't update normr if last inner iteration, because 
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
@@ -313,8 +313,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
                     callback( normr )
                 if keep_r:
                     residuals.append(normr)
-            
-            niter += 1
             
         # end inner loop, back to outer loop
 

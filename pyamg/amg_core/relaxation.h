@@ -646,5 +646,186 @@ void block_gauss_seidel(const I Ap[],
     delete[] rsum;
 }
 
+/*
+ *  Extract diagonal blocks from A and insert into a linear array.
+ *  This is a helper function for overlapping_schwarz_csr.
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *                   __must be sorted for each row__
+ *      Ax[]       - CSR data array, blocks assumed square
+ *      Tx[]       - Inverse of each diagonal block of A, stored in
+ *                   row major
+ *      Tp[]       - Pointer array into Tx indicating where the
+ *                   diagonal blocks start and stop
+ *      Sj[]       - Indices of each subdomain 
+ *                   __must be sorted over each subdomain__
+ *      Sp[]       - Pointer array indicating where each subdomain
+ *                   starts and stops
+ *      nsdomains  - Number of subdomains
+ *      nrows      - Number of rows
+ *  
+ *  Returns:
+ *      Nothing, Tx will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void extract_subblocks(const I Ap[], 
+                       const I Aj[], 
+                       const T Ax[],
+                             T Tx[],
+                       const I Tp[], 
+                       const I Sj[], 
+                       const I Sp[],
+                       const I nsdomains,
+                       const I nrows)
+{
+    // Initialize Tx to zero
+    T zero = 0.0;
+    std::fill(&(Tx[0]), &(Tx[Tp[nsdomains]]), zero);
+    
+    // Loop over each subdomain
+    for(I i = 0; i < nsdomains; i++) {
+        // Calculate the smallest and largest column index for this 
+        // diagonal block
+        I lower = Sj[Sp[i]];
+        I upper = Sj[Sp[i+1]-1];
+        
+        I Tx_offset = Tp[i];
+        I row_length = Sp[i+1] - Sp[i];
+        
+        // Loop over subdomain i
+        for(I j = Sp[i]; j < Sp[i+1]; j++) {
+            // Peel off this row from A and insert into Tx
+            I row = Sj[j];
+            I start = Ap[row];
+            I end = Ap[row+1];
+            I local_col = 0;
+            I placeholder = Sp[i];
+
+            for(I k = start; k < end; k++) {
+                I col = Aj[k];
+                
+                // Must decide if col is a member of this subdomain, and while
+                // doing so, track the current local column number from 0 to
+                // row_length
+                if ((col >= lower) && (col <= upper) ) {
+                    while(placeholder < Sp[i+1]){
+                        if(Sj[placeholder] == col) {
+                            //insert into Tx
+                            Tx[Tx_offset + local_col] = Ax[k];
+                            local_col++;
+                            placeholder++;
+                            break;
+                        }
+                        else if (Sj[placeholder] > col ){
+                            break;
+                        }
+                        else{ 
+                            local_col++; 
+                            placeholder++;
+                        }
+                    }
+                }
+            }
+
+            Tx_offset += row_length;
+        }
+    }
+}
+
+
+/*
+ *  Perform one iteration of an overlapping Schwarz relaxation on 
+ *  the linear system Ax = b, where A is stored in CSR format 
+ *  and x and b are column vectors.  
+ *
+ *  Refer to gauss_seidel for additional information regarding
+ *  row_start, row_stop, and row_step.
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array, blocks assumed square
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      Tx[]       - Inverse of each diagonal block of A, stored in
+ *                   row major
+ *      Tp[]       - Pointer array into Tx indicating where the
+ *                   diagonal blocks start and stop
+ *      Sj[]       - Indices of each subdomain 
+ *                   __must be sorted over each subdomain__
+ *      Sp[]       - Pointer array indicating where each subdomain
+ *                   starts and stops
+ *      nsdomains  - Number of subdomains
+ *      nrows      - Number of rows
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void overlapping_schwarz_csr(const I Ap[], 
+                             const I Aj[], 
+                             const T Ax[],
+                                   T  x[],
+                             const T  b[],
+                             const T Tx[],
+                             const I Tp[], 
+                             const I Sj[], 
+                             const I Sp[],
+                                   I nsdomains,
+                                   I nrows)
+{
+
+    T zero = 0.0;
+    T *rsum = new T[nrows];
+    T *Dinv_rsum = new T[nrows];
+    I Scounter = 0;
+    
+    // Begin loop over the subdomains
+    for(I domptr = 0; domptr < nsdomains; domptr++) {
+        
+        I counter = 0;
+        std::fill(&(rsum[0]), &(rsum[nrows]), zero);
+        std::fill(&(Dinv_rsum[0]), &(Dinv_rsum[nrows]), zero);
+        I size_domain = Sp[domptr+1] - Sp[domptr];
+
+        // Begin block calculation of the residual
+        for(I j = Sp[domptr]; j < Sp[domptr+1]; j++) {
+            // For this row, calculate the residual
+            I row = Sj[j];
+            I start = Ap[row];
+            I end   = Ap[row+1];
+            for(I jj = start; jj < end; jj++){
+                rsum[counter] -= Ax[jj]*x[Aj[jj]];
+            }
+
+            // Account for the RHS
+            rsum[counter] += b[row];
+            counter++;
+        }
+
+        // Multiply block residual with block inverse of A
+        gemm(&(Tx[Scounter]), size_domain, size_domain, 'F', 
+             &(rsum[0]),      size_domain,   1,         'F', 
+             &(Dinv_rsum[0]), size_domain,   1,         'F');
+        
+        Scounter += size_domain*size_domain; 
+            
+        // Add to x
+        counter = 0;
+        for(I j = Sp[domptr]; j < Sp[domptr+1]; j++) {
+            x[Sj[j]] += Dinv_rsum[counter];
+            counter++;
+            }
+        
+    }
+
+    delete[] rsum;
+    delete[] Dinv_rsum;
+}
+
 
 #endif

@@ -6,12 +6,13 @@ from warnings import warn
 
 import numpy
 from scipy import sparse
+import scipy
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
 from pyamg import amg_core
+import scipy.lib.lapack as la
 
-
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
+__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'schwarz']
 __all__ += ['jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']
 __all__ += ['gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel'] 
 
@@ -165,6 +166,127 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
         x     += x_old
 
 
+def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
+    """Perform Overlapping multiplicative Schwarz on 
+       the linear system Ax=b
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    iterations : int
+        Number of iterations to perform
+    subdomain : {int array}
+        Linear array containing each subdomain's elements
+    subdomain_ptr : {int array}
+        Pointer in subdomain, such that 
+        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]]
+        contains the _sorted_ indices in subdomain i
+    inv_subblock : {int_array}
+        Linear array containing each subdomain's 
+        inverted diagonal block of A
+    inv_subblock_ptr : {int array}
+        Pointer in inv_subblock, such that 
+        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
+        contains the inverted diagonal block of A for the
+        i-th subdomain in _row_ major order
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Notes
+    -----
+    If subdomains is None, then a point-wise iteration takes place,
+    with the overlapping region defined by each degree-of-freedom's
+    neighbors in the matrix graph.
+
+    If subdomains is not None, but subblocks is, then the subblocks 
+    are formed internally.
+
+    Currently only supports CSR matrices
+
+    Examples
+    --------
+    >>> ## Use Overlapping Schwarz as a Stand-Alone Solver
+    >>> from pyamg.relaxation import *
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.linalg import norm
+    >>> import numpy
+    >>> A = poisson((10,10), format='csr')
+    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> b = numpy.ones((A.shape[0],1))
+    >>> schwarz(A, x0, b, iterations=10)
+    >>> print norm(b-A*x0)
+    6.11603700921
+    >>> #
+    >>> ## Schwarz as the Multigrid Smoother
+    >>> from pyamg import smoothed_aggregation_solver
+    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         presmoother='schwarz', 
+    ...         postsmoother='schwarz')
+    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> residuals=[]
+    >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
+    """
+    A,x,b = make_system(A, x, b, formats=['csr'])
+
+    if subdomain is None and inv_subblock is not None:
+        raise ValueError("inv_subblock must be None if subdomain is None")
+    
+    ##
+    # Default is point-wise iteration with each subdomain a point's neighborhood 
+    # in the matrix graph
+    if subdomain is None:
+        subdomain_ptr = A.indptr.copy()
+        subdomain = A.indices.copy()
+
+    ##
+    # Extract each subdomain's block from the matrix
+    if inv_subblock is None:
+        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=int)
+        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
+        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
+        
+        ##
+        # Extract each block column from A
+        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
+        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
+                          inv_subblock_ptr, subdomain, subdomain_ptr, 
+                          subdomain_ptr.shape[0]-1, A.shape[0])
+        
+        ##
+        # Choose tolerance for which singular values are zero in *gelss below
+        t = A.dtype.char
+        eps = numpy.finfo(numpy.float).eps
+        feps = numpy.finfo(numpy.single).eps
+        _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+        cond = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+
+        ##
+        # Invert each block column
+        my_pinv, = la.get_lapack_funcs(('gelss',), (numpy.ones((1,), dtype=A.dtype)) )
+        for i in xrange(subdomain_ptr.shape[0]-1):
+            m = blocksize[i]
+            rhs = scipy.eye(m,m, dtype=A.dtype)
+            [v,pseudo,s,rank,info] = \
+                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), 
+                        rhs, cond=cond, overwrite_a=True, overwrite_b=True)
+            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
+    
+    ##
+    # Call C code, need to make sure that subdomains are sorted and unique
+    amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
+                                     x, b, inv_subblock, inv_subblock_ptr,
+                                     subdomain, subdomain_ptr,
+                                     subdomain_ptr.shape[0]-1, A.shape[0])
+    
+
 def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     """Perform Gauss-Seidel iteration on the linear system Ax=b
 
@@ -209,7 +331,9 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
-    A,x,b = make_system(A, x, b, formats=['csr','bsr'])
+    #A,x,b = make_system(A, x, b, formats=['csr','bsr'])
+    A,x,b = make_system(A, x, b, formats=['csr'])
+    A = A.tocsr()
 
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(x),1
@@ -237,9 +361,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_stop  = row_stop  / R
         for iter in xrange(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
-                                              x, b,
-                                              row_start, row_stop, row_step,
-                                              R)
+                                        x, b, row_start, row_stop, row_step, R)
 
 
 def jacobi(A, x, b, iterations=1, omega=1.0):
@@ -300,10 +422,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     for iter in xrange(iterations):
-        amg_core.jacobi(A.indptr, A.indices, A.data,
-                              x, b, temp,
-                              row_start, row_stop, row_step,
-                              omega)
+        amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
+                              row_start, row_stop, row_step, omega)
 
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     """Perform block Jacobi iteration on the linear system Ax=b
@@ -434,7 +554,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1, Dinv
     """
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
-
+    
     if Dinv == None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != A.shape[0]/blocksize:

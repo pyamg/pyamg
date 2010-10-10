@@ -144,6 +144,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
         if numpy.rank(Cells[key])!=2:
             Cells[key] = Cells[key].reshape((Cells[key].size,1))
         if vtk_cell_info[key] != Cells[key].shape[1]:
+            # TODO: (Luke) offset is undefined 
             raise ValueError('cell array has %d columns, expected %d' % (offset, vtk_cell_info[key]) )
 
     # check pdata

@@ -1,6 +1,6 @@
 from pyamg.testing import *
 
-from numpy import matrix, array, diag, zeros, sqrt, abs, ravel
+from numpy import matrix, array, diag, zeros, sqrt, abs, ravel, zeros_like
 from scipy import rand, linalg, real, imag, mat, diag, random
 from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
@@ -165,29 +165,75 @@ class TestComplexLinalg(TestCase):
     def test_issymm(self):
         # make tests repeatable
         random.seed(0)
-        
+        cases = []
         # 1x1
-        A = mat(rand(1,1))
-        assert_equal(issymm(A), 0.0)
-        A = mat(1.0j*rand(1,1))
-        assert_equal(issymm(A), max(abs(ravel(A - A.H))))
-        
+        cases.append( mat(rand(1,1)) )
+        cases.append( mat(1.0j*rand(1,1)) )
         # 2x2
-        A = mat(array([[1.0, 0.0], [2.0, 1.0]]))
-        assert_equal(issymm(A), max(abs(ravel(A-A.H))) )
+        A = array([[1.0, 0.0], [2.0, 1.0]])
         Ai = 1.0j*A
-        assert_equal(issymm(Ai), max(abs(ravel(Ai-Ai.H))))
+        cases.append(A)
+        cases.append(Ai)
         A = A + Ai
-        assert_equal(issymm(A), max(abs(ravel(A-A.H))))
-        assert_equal(issymm(A+A.H), 0.0)
-        
+        cases.append(A)
+        cases.append(A + A.conjugate().T)
         # 3x3
         A = mat(rand(3,3))
-        assert_equal(issymm(A), max(abs(ravel(A-A.H))) )
-        Ai = mat(1.0j*rand(3,3))
-        assert_equal(issymm(Ai), max(abs(ravel(Ai-Ai.H))))
+        Ai = 1.0j*rand(3,3)
+        cases.append(A)
+        cases.append(Ai)
         A = A + Ai
-        assert_equal(issymm(A), max(abs(ravel(A-A.H))))
-        assert_equal(issymm(A+A.H), 0.0)
+        cases.append(A)
+        cases.append(A + A.H)
 
+        # dense arrays
+        for A in cases:
+            assert_equal(issymm(A, fast_check=False), \
+                         max(abs(ravel(mat(A)-mat(A).H))) )
+            assert_equal( (issymm(A, fast_check=True) > 0.0), \
+                          (issymm(A, fast_check=False) > 0.0) )
+
+        # csr arrays
+        for A in cases:
+            A = csr_matrix(A)
+            diff = (A-A.H).data
+            if max(diff.shape) == 0:
+                diff = 0.0
+            else:
+                diff = max(abs(ravel(diff)) )
+            assert_equal(issymm(A, fast_check=False), diff )
+            assert_equal( (issymm(A, fast_check=True) > 0.0), \
+                          (issymm(A, fast_check=False) > 0.0) )
+
+    def test_pinv_array(self):
+        from scipy.linalg import pinv2
+        
+        tests = []
+        tests.append(rand(1,1,1))
+        tests.append(rand(3,1,1))
+        tests.append(rand(1,2,2))
+        tests.append(rand(3,2,2))
+        tests.append(rand(1,3,3))
+        tests.append(rand(3,3,3))
+        A = rand(1,3,3)
+        A[0,0,:] = A[0,1,:]
+        tests.append(A)
+
+        tests.append(rand(1,1,1) + 1.0j*rand(1,1,1))
+        tests.append(rand(3,1,1) + 1.0j*rand(3,1,1))
+        tests.append(rand(1,2,2) + 1.0j*rand(1,2,2))
+        tests.append(rand(3,2,2) + 1.0j*rand(3,2,2))
+        tests.append(rand(1,3,3) + 1.0j*rand(1,3,3))
+        tests.append(rand(3,3,3) + 1.0j*rand(3,3,3))
+        A = rand(1,3,3) + 1.0j*rand(1,3,3)
+        A[0,0,:] = A[0,1,:]
+        tests.append(A)
+
+        for test in tests:
+            pinv_test = zeros_like(test)
+            for i in range(pinv_test.shape[0]):
+                pinv_test[i] = pinv2(test[i])
+            
+            pinv_array(test)
+            assert_array_almost_equal(test, pinv_test, decimal=4)
 

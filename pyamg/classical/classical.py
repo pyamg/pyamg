@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 from scipy.sparse import csr_matrix
 
 from pyamg.multilevel import multilevel_solver
-from pyamg.relaxation.smoothing import setup_smoothers
+from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
                            symmetric_strength_of_connection, \
                            ode_strength_of_connection
@@ -76,7 +76,7 @@ def ruge_stuben_solver(A,
         extend_hierarchy(levels, strength, CF)
 
     ml = multilevel_solver(levels, **kwargs)
-    setup_smoothers(ml, presmoother, postsmoother)
+    change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 # internal function

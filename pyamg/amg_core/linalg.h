@@ -84,6 +84,29 @@ inline float mynormsq(const npy_cfloat_wrapper& x)
 inline double mynormsq(const npy_cdouble_wrapper& x)
     { return (x.real*x.real + x.imag*x.imag); }
 
+/* 
+ * Return the input, but with the real part zeroed out
+ */
+inline float zero_real(float& x)
+    { return 0.0; }
+inline double zero_real(double& x)
+    { return 0.0; }
+inline npy_cfloat_wrapper zero_real(npy_cfloat_wrapper& x)
+    { x.real = 0.0; return x; }
+inline npy_cdouble_wrapper zero_real(npy_cdouble_wrapper& x)
+    { x.real = 0.0; return x; }
+
+/* 
+ * Return the input, but with the imag part zeroed out
+ */
+inline float zero_imag(float& x)
+    { return x; }
+inline double zero_imag(double& x)
+    { return x; }
+inline npy_cfloat_wrapper zero_imag(npy_cfloat_wrapper& x)
+    { x.imag = 0.0; return x; }
+inline npy_cdouble_wrapper zero_imag(npy_cdouble_wrapper& x)
+    { x.imag = 0.0; return x; }
 
 
 /*******************************************************************
@@ -407,7 +430,8 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * the system, Q_i^H Ax.H Ax Q_i.  Despite the normal equations 
  * appearing here, the actual method can be quite accurate.  
  * However, the method is slower than Golub-Reinsch for all 
- * but very small matrices.
+ * but very small matrices.  For larger matrices, use 
+ * scipy.linalg.pinv or pyamg.util.linalg.pinv_array.
  *
  * References
  * ----------
@@ -454,10 +478,10 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     I count = 1;
     I sweep = 0;
 
-    // Always do at least 12 sweeps
-    I sweepmax = std::max(8*n, 12);
+    // Always do at least  30 sweeps
+    I sweepmax = std::max(15*n, 30);
 
-    F tolerance = 10.0*m*std::numeric_limits<F>::epsilon();
+    F tolerance = sqrt((F)m)*std::numeric_limits<F>::epsilon();
 
     // Set V to the identity matrix
     for(i = 0; i < nsq; i++)
@@ -629,8 +653,9 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
         
         if(j == 0)
         {
-            F alpha = std::max(2000.0, 100.0*std::max(m,n)*std::numeric_limits<F>::epsilon()*curr_norm);
-            sigma_tol = alpha*std::numeric_limits<F>::epsilon();
+            // For j==0, curr_norm is sigma_max
+            F alpha = 50.0/sqrt(sqrt(std::numeric_limits<F>::epsilon()));
+            sigma_tol = alpha*curr_norm*std::numeric_limits<F>::epsilon();
         }
 
         // Determine if singular value is zero

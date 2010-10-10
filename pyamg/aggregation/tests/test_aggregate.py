@@ -1,13 +1,13 @@
 from pyamg.testing import *
 
-import numpy
-from numpy import array, ones, arange, empty, array_split
+import numpy, scipy
+from numpy import array, ones, arange, empty, array_split, zeros
 
 from scipy.sparse import csr_matrix, spdiags
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
-from pyamg.aggregation.aggregate import standard_aggregation
+from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
 
 
 class TestAggregate(TestCase):
@@ -44,6 +44,22 @@ class TestAggregate(TestCase):
         result   = standard_aggregation(S)
         expected = array([[0],[0],[0],[0]])
         assert_equal(result.todense(),expected)
+
+    def test_naive_aggregation(self):
+        for A in self.cases:
+            S = symmetric_strength_of_connection(A)
+            
+            expected = reference_naive_aggregation(S)
+            result   = naive_aggregation(S)
+
+            assert_equal( (result - expected).nnz, 0 )
+    
+        # S is diagonal - no DoFs aggregated
+        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
+        result   = naive_aggregation(S)
+        expected = numpy.eye(4)
+        assert_equal(result.todense(),expected)
+
         
 
 class TestComplexAggregate(TestCase):
@@ -61,6 +77,15 @@ class TestComplexAggregate(TestCase):
             
             expected = reference_standard_aggregation(S)
             result   = standard_aggregation(S)
+
+            assert_equal( (result - expected).nnz, 0 )
+    
+    def test_naive_aggregation(self):
+        for A in self.cases:
+            S = symmetric_strength_of_connection(A)
+            
+            expected = reference_naive_aggregation(S)
+            result   = naive_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
 
@@ -114,6 +139,38 @@ def reference_standard_aggregation(C):
             j += 1
 
     assert(len(R) == 0)
+
+    Pj = aggregates
+    Pp = arange(n+1)
+    Px = ones(n)
+
+    return csr_matrix((Px,Pj,Pp))
+
+#####################################
+def reference_naive_aggregation(C):
+    S = array_split(C.indices,C.indptr[1:-1])
+    n = C.shape[0]
+    aggregates    = empty(n, dtype=C.indices.dtype)
+    aggregates[:] = -1 # aggregates[j] denotes the aggregate j is in
+    R = zeros( (0,) )  # R stores already aggregated nodes
+    j = 0              # j is the aggregate counter
+
+
+    # Only one aggregation pass
+    for i,row in enumerate(S):
+        
+        # if i isn't already aggregated, grab all his neighbors
+        if aggregates[i] == -1:
+            unaggregated_neighbors = numpy.setdiff1d(row, R)
+            aggregates[unaggregated_neighbors] = j
+            aggregates[i] = j
+            j += 1
+            R = numpy.union1d(R, unaggregated_neighbors)
+            R = numpy.union1d(R, numpy.array([i]))
+        else:
+            pass
+    
+    assert(numpy.unique(R).shape[0] == n)
 
     Pj = aggregates
     Pp = arange(n+1)

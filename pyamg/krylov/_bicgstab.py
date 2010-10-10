@@ -21,7 +21,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
     maxiter : int
         maximum number of allowed iterations
     xtype : type
@@ -84,11 +84,6 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
 
-    # Scale tol by normb
-    normb = norm(b) 
-    if normb != 0:
-        tol = tol*normb
-
     # Prep for method
     r = b - A*x
     normr = norm(r)
@@ -99,6 +94,10 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     # Is initial guess sufficient?
     if normr < tol:
         return (postprocess(x), 0)
+
+    # Scale tol by ||r_0||_2
+    if normr != 0.0:
+        tol = tol*normr    
    
     # Is this a one dimensional matrix?
     if A.shape[0] == 1:

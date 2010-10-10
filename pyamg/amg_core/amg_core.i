@@ -220,6 +220,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %enddef
  
  
+INSTANTIATE_INDEX(naive_aggregation)
 INSTANTIATE_INDEX(standard_aggregation)
 INSTANTIATE_INDEX(rs_cf_splitting)
 INSTANTIATE_INDEX(rs_direct_interpolation_pass1)
@@ -236,6 +237,7 @@ INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
 INSTANTIATE_COMPLEX(ode_strength_helper)
 INSTANTIATE_COMPLEX(incomplete_matmat)
 INSTANTIATE_BOTH(apply_distance_filter)
+INSTANTIATE_BOTH(apply_absolute_distance_filter)
 INSTANTIATE_BOTH(min_blocks)
 
 INSTANTIATE_COMPLEX(bsr_gauss_seidel)
@@ -247,6 +249,8 @@ INSTANTIATE_BOTH(gauss_seidel_indexed)
 INSTANTIATE_COMPLEX(jacobi_ne)
 INSTANTIATE_COMPLEX(gauss_seidel_ne)
 INSTANTIATE_COMPLEX(gauss_seidel_nr)
+INSTANTIATE_COMPLEX(overlapping_schwarz_csr)
+INSTANTIATE_COMPLEX(extract_subblocks)
 
 INSTANTIATE_COMPLEX(apply_householders)
 INSTANTIATE_COMPLEX(householder_hornerscheme)

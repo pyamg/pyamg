@@ -18,7 +18,8 @@ def direct_interpolation(A, C, splitting):
     A : {csr_matrix}
         NxN matrix in CSR format
     C : {csr_matrix}
-        Strength-of-Connection matrix
+        Strength-of-Connection matrix 
+        Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
 
