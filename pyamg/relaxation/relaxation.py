@@ -331,9 +331,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
-    #A,x,b = make_system(A, x, b, formats=['csr','bsr'])
-    A,x,b = make_system(A, x, b, formats=['csr'])
-    A = A.tocsr()
+    A,x,b = make_system(A, x, b, formats=['csr','bsr'])
 
     if sweep == 'forward':
         row_start,row_stop,row_step = 0,len(x),1
@@ -350,8 +348,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     if sparse.isspmatrix_csr(A):
         for iter in xrange(iterations):
-            amg_core.gauss_seidel(A.indptr, A.indices, A.data,
-                                        x, b,
+            amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                         row_start, row_stop, row_step)
     else:
         R,C = A.blocksize
