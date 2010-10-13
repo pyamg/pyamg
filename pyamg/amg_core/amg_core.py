@@ -332,6 +332,25 @@ def bsr_gauss_seidel(*args):
     """
   return _amg_core.bsr_gauss_seidel(*args)
 
+def bsr_jacobi(*args):
+  """
+    bsr_jacobi(int Ap, int Aj, float Ax, float x, float b, float temp, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize, float omega)
+    bsr_jacobi(int Ap, int Aj, double Ax, double x, double b, double temp, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize, double omega)
+    bsr_jacobi(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, npy_cfloat_wrapper temp, 
+        int row_start, int row_stop, int row_step, 
+        int blocksize, npy_cfloat_wrapper omega)
+    bsr_jacobi(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, npy_cdouble_wrapper temp, 
+        int row_start, int row_stop, 
+        int row_step, int blocksize, npy_cdouble_wrapper omega)
+    """
+  return _amg_core.bsr_jacobi(*args)
+
 def gauss_seidel(*args):
   """
     gauss_seidel(int Ap, int Aj, float Ax, float x, float b, int row_start, 

@@ -137,7 +137,7 @@ void bsr_gauss_seidel(const I Ap[],
             else {
                 // do a dense multiply of this block times x and accumulate in rsum
                 gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F', 
-                     &(x[col]),    blocksize,   1,       'F', 
+                     &(x[col]),     blocksize,   1,       'F', 
                      &(Axloc[0]),   blocksize,   1,       'F');
                 for(I m = 0; m < blocksize; m++) {
                     rsum[m] -= Axloc[m]; }
@@ -235,6 +235,127 @@ void jacobi(const I Ap[],
         }
     }
 }
+
+/*
+ *  Perform one iteration of Jacobi relaxation on the linear
+ *  system Ax = b, where A is stored in Block CSR format and x and b
+ *  are column vectors.  This method applies pointwise relaxation
+ *  to the BSR as opposed to \"block relaxation\".
+ *
+ *  Refer to jacobi for additional information regarding
+ *  row_start, row_stop, and row_step.
+ *
+ *  Parameters
+ *      Ap[]       - BSR row pointer
+ *      Aj[]       - BSR index array
+ *      Ax[]       - BSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      temp[]     - temporary vector the same size as x
+ *      row_start  - beginning of the sweep (block row index)
+ *      row_stop   - end of the sweep (i.e. one past the last unknown)
+ *      row_step   - stride used during the sweep (may be negative)
+ *      blocksize  - BSR blocksize (blocks must be square)
+ *      omega      - damping parameter
+ *  
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void bsr_jacobi(const I Ap[], 
+                const I Aj[], 
+                const T Ax[],
+                      T  x[],
+                const T  b[],
+                      T temp[],
+                const I row_start,
+                const I row_stop,
+                const I row_step,
+                const I blocksize,
+                const T omega[])
+{
+    I B2 = blocksize*blocksize;
+    T *rsum = new T[blocksize];
+    T *Axloc = new T[blocksize];
+    T zero = 0.0;
+    T one = 1.0;
+    T omega2 = omega[0];
+    
+    // Determine if this is a forward, or backward sweep
+    I step, step_start, step_end;
+    if (row_step < 0){
+        step = -1;
+        step_start = blocksize-1;
+        step_end = -1;
+    }
+    else{
+        step = 1;
+        step_start = 0;
+        step_end = blocksize;
+    }
+
+    // copy x to temp
+    for(I i = 0; i < abs(row_stop-row_start)*blocksize; i += step) {
+        temp[i] = x[i];
+    }
+
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        I diag_ptr = -1;
+        
+
+        // initialize rsum to b, then later subtract A*x
+        for(I k = 0; k < blocksize; k++) {
+            rsum[k] = b[i*blocksize+k]; }
+        
+        // loop over row i
+        for(I jj = start; jj < end; jj++){
+            // extract column entry 
+            I j = Aj[jj];
+            // absolute column entry for the start of this block
+            I col = j*blocksize;
+            
+            if (i == j){    //point to where in Ax the diagonal block starts
+                diag_ptr = jj*B2; }
+            else {
+                // do a dense multiply of this block times x and accumulate in rsum
+                gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F', 
+                     &(temp[col]),  blocksize,   1,       'F', 
+                     &(Axloc[0]),   blocksize,   1,       'F');
+                for(I m = 0; m < blocksize; m++) {
+                    rsum[m] -= Axloc[m]; }
+            }
+        }
+        
+        // Carry out point-wise GS over the diagonal block,
+        // all the other blocks have been factored into rsum.
+        if (diag_ptr != -1) {
+            for(I k = step_start; k != step_end; k+=step){
+                T diag = 1.0;
+                for(I kk = step_start; kk != step_end; kk+=step){
+                    if(k == kk){
+                        // diagonal entry
+                        diag = Ax[k*blocksize + kk + diag_ptr]; }
+                    else{
+                        // off-diag entry
+                        rsum[k] -= Ax[k*blocksize + kk + diag_ptr]*temp[i*blocksize+kk]; }
+                }
+                x[i*blocksize+k] = (one - omega2) * temp[i*blocksize+k] + omega2 * rsum[k]/diag;    
+            }
+        } 
+        //else {
+        //    //TODO raise error? inform user no diagonal block?
+        //}
+
+    } // end outer-most for loop
+
+    delete[] rsum;
+    delete[] Axloc;
+}// end function
+
+
 
 /*
  *  Perform one iteration of Gauss-Seidel relaxation on the linear

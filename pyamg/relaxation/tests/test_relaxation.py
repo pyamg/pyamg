@@ -180,6 +180,31 @@ class TestRelaxation(TestCase):
         jacobi(A,x,b,omega=1.0/3.0)
         assert_almost_equal(x,2.0/3.0*x_copy + 1.0/3.0*array([5.5,11.0,15.5]))
 
+
+    def test_jacobi_bsr(self):
+        cases = []
+        for N in [1,2,3,4,5,6,10]:
+            cases.append( spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr() )
+            cases.append( elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            C = csr_matrix( rand(N,N) )
+            cases.append( C*C.H )
+            C = sprand(N*2,N*2,0.3) + eye(N*2,N*2)
+            cases.append( C*C.H )
+
+        for A in cases:
+            divisors = [ n for n in range(1,A.shape[0]+1) if A.shape[0] % n == 0 ]
+
+            x_csr = arange(A.shape[0]).astype(numpy.float64)
+            b = x_csr**2
+            jacobi(A,x_csr,b)
+
+            for D in divisors:
+                B = A.tobsr(blocksize=(D,D))
+                x_bsr = arange(B.shape[0]).astype(numpy.float64)
+                jacobi(B,x_bsr,b)
+                assert_almost_equal(x_bsr,x_csr)
+
+
     def test_gauss_seidel_bsr(self):
         sweeps = ['forward', 'backward', 'symmetric']
         cases = []
@@ -723,7 +748,37 @@ class TestComplexRelaxation(TestCase):
         jacobi(A,x,b,omega=1.0/3.0)
         assert_almost_equal(x,soln)
         
+    def test_jacobi_bsr(self):
+        cases = []
+        for N in [1,2,3,4,5,6,10]:
+            #
+            C = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr()
+            C.data = C.data + 1.0j*1e-3*rand(C.data.shape[0],) 
+            cases.append( C )
+            #
+            cases.append( 1.0j*elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            #
+            C = csr_matrix( rand(N,N) + 1.0j*rand(N,N) )
+            cases.append( C*C.H )
+            #
+            C = sprand(N*2,N*2,0.3) + 1.0j*sprand(N*2,N*2,0.3) + eye(N*2,N*2)
+            cases.append( C*C.H )
+
+
+        for A in cases:
+            divisors = [ n for n in range(1,A.shape[0]+1) if A.shape[0] % n == 0 ]
             
+            x0 = (arange(A.shape[0]) + 1.0j*1e-3*rand(A.shape[0],)).astype(A.dtype)
+            x_csr = x0.copy()
+            b = x_csr**2
+            jacobi(A,x_csr,b)
+            
+            for D in divisors:
+                B = A.tobsr(blocksize=(D,D))
+                x_bsr = x0.copy()
+                jacobi(B,x_bsr,b)
+                assert_almost_equal(x_bsr,x_csr)
+
             
     def test_gauss_seidel_bsr(self):
         sweeps = ['forward', 'backward', 'symmetric']
@@ -757,8 +812,6 @@ class TestComplexRelaxation(TestCase):
                     x_bsr = x0.copy()
                     gauss_seidel(B,x_bsr,b,sweep=sweep)
                     assert_almost_equal(x_bsr,x_csr)
-
-
 
 
     def test_schwarz_gold(self):

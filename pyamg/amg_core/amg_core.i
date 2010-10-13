@@ -241,6 +241,7 @@ INSTANTIATE_BOTH(apply_absolute_distance_filter)
 INSTANTIATE_BOTH(min_blocks)
 
 INSTANTIATE_COMPLEX(bsr_gauss_seidel)
+INSTANTIATE_COMPLEX(bsr_jacobi)
 INSTANTIATE_COMPLEX(gauss_seidel)
 INSTANTIATE_COMPLEX(jacobi)
 INSTANTIATE_COMPLEX(block_jacobi)

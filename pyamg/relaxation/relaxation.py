@@ -405,7 +405,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
-    A,x,b = make_system(A, x, b, formats=['csr'])
+    A,x,b = make_system(A, x, b, formats=['csr', 'bsr'])
 
     sweep = slice(None)
     (row_start,row_stop,row_step) = sweep.indices(A.shape[0])
@@ -418,9 +418,20 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     # Create uniform type, and convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    for iter in xrange(iterations):
-        amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
-                              row_start, row_stop, row_step, omega)
+    if sparse.isspmatrix_csr(A):
+        for iter in xrange(iterations):
+            amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
+                               row_start, row_stop, row_step, omega)
+    else:
+        R,C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        row_start = row_start / R
+        row_stop  = row_stop  / R
+        for iter in xrange(iterations):
+            amg_core.bsr_jacobi(A.indptr, A.indices, numpy.ravel(A.data),
+                     x, b, temp, row_start, row_stop, row_step, R, omega)
+
 
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     """Perform block Jacobi iteration on the linear system Ax=b
