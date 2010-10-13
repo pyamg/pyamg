@@ -4,6 +4,7 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from pyamg import amg_core
+import scipy.lib.blas as blas
 import scipy
 
 __docformat__ = "restructuredtext en"
@@ -135,6 +136,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         elif maxiter == None:
             maxiter = min(dimen, 40)
         max_inner = maxiter
+    
+    # Get fast access to underlying BLAS routines
+    [rotg] = blas.get_blas_funcs(['rotg'], (x))
    
     # Is this a one dimensional matrix?
     if dimen == 1:
@@ -250,20 +254,8 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
             #     desired length, i.e. we do not need to zero anything out.
             if inner != dimen-1:
                 if v[inner+1] != 0:
-                    # Calculate terms for complex 2x2 Givens Rotation
-                    # Note that abs(x) takes the complex modulus
-                    h1 = v[inner]; h2 = v[inner+1];
-                    h1_mag = abs(h1); h2_mag = abs(h2);
-                    if h1_mag < h2_mag:
-                        mu = h1/h2
-                        tau = conjugate(mu)/abs(mu)
-                    else:    
-                        mu = h2/h1
-                        tau = mu/abs(mu)
-
-                    denom = sqrt( h1_mag**2 + h2_mag**2 )               
-                    c = h1_mag/denom; s = h2_mag*tau/denom; 
-                    Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype) 
+                    [c,s] = rotg(v[inner], v[inner+1])
+                    Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
                     Q[(inner*4) : ((inner+1)*4)] = ravel(Qblock).copy()
 
                     # Apply Givens Rotation to g, 

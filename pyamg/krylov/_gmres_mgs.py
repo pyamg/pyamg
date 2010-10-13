@@ -135,12 +135,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
 
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
-    
     if iscomplexobj( zeros((1,),dtype=xtype) ):
-        [axpy,dotu,dotc,scal] = blas.get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal'], (x))
+        [axpy,dotu,dotc,scal,rotg] = blas.get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal', 'rotg'], (x))
     else:    
         # real type
-        [axpy,dotu,dotc,scal] = blas.get_blas_funcs(['axpy', 'dot', 'dot',  'scal'], (x))
+        [axpy,dotu,dotc,scal,rotg] = blas.get_blas_funcs(['axpy', 'dot', 'dot',  'scal', 'rotg'], (x))
 
     # Make full use of direct access to blas by defining own norm
     def norm(z):
@@ -274,21 +273,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
             #     iteration, when inner = dimen-1.  
             if inner != dimen-1:
                 if H[inner, inner+1] != 0:
-                    h1 = H[inner, inner]; 
-                    h2 = H[inner, inner+1];
-                    h1_mag = abs(h1)
-                    h2_mag = abs(h2)
-                    if h1_mag < h2_mag:
-                        mu = h1/h2
-                        tau = conjugate(mu)/abs(mu)
-                    else:    
-                        mu = h2/h1
-                        tau = mu/abs(mu)
-
-                    denom = sqrt( h1_mag**2 + h2_mag**2 )               
-                    c = h1_mag/denom
-                    s = h2_mag*tau/denom; 
-                    Qblock = array([[c, conjugate(s)], [-s, c]], dtype=xtype)
+                    [c,s] = rotg(H[inner, inner], H[inner, inner+1])
+                    Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
                     Q.append(Qblock)
                     
                     # Apply Givens Rotation to g, 
@@ -368,7 +354,7 @@ if __name__ == '__main__':
     from pyamg.gallery import poisson
     from numpy.random import random
     from pyamg.util.linalg import norm
-    A = poisson( (75,75), dtype=float,format='csr') 
+    A = poisson( (125,125), dtype=float,format='csr') 
     #A.data = A.data + 0.001j*rand(A.data.shape[0])
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
@@ -378,7 +364,7 @@ if __name__ == '__main__':
 
     print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
     t1=time.time()
-    (x,flag) = gmres_mgs(A,b,x0,tol=1e-8,maxiter=240)
+    (x,flag) = gmres_mgs(A,b,x0,tol=1e-8,maxiter=500)
     t2=time.time()
     print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
     print 'norm = %g'%(norm(b - A*x))
