@@ -246,6 +246,48 @@ def rho_block_D_inv_A(A, Dinv):
 
     return A.rho_block_D_inv
 
+def matrix_asformat(lvl, name, format, blocksize=None):
+    '''
+    This routine looks for the matrix "name" in the specified format as a
+    member of the level instance, lvl.  For example, if name='A', format='bsr'
+    and blocksize=(4,4), and if lvl.Absr44 exists with the correct blocksize,
+    then lvl.Absr is returned.  If the matrix doesn't already exist, lvl.name
+    is converted to the desired format, and made a member of lvl.
+    
+    Only create such persistent copies of a matrix for routines such as
+    presmoothing and postsmoothing, where the matrix conversion is done every
+    cycle.
+
+    Calling this function will _dramatically_ increase your memory costs.
+    '''
+    
+    desired_matrix = 'lvl.' + name + format
+    if format == 'bsr':
+        desired_matrix +=  str(blocksize[0])+str(blocksize[1])
+    base_matrix = 'lvl.' + name
+
+    if hasattr(lvl, desired_matrix[4:]):
+        # if lvl already contains lvl.name+format
+        pass
+    elif eval(base_matrix).format == format and format != 'bsr':
+        # is base_matrix already in the correct format?
+        exec desired_matrix +' = '+ base_matrix
+    elif eval(base_matrix).format == format and format == 'bsr':
+        # make sure blocksize is correct
+        if eval(base_matrix).blocksize != blocksize:
+            exec desired_matrix +' = '+ base_matrix+'.to'+format+'(blocksize='+str(blocksize)+')'
+        else:
+            exec desired_matrix +' = '+ base_matrix
+    elif format == 'bsr':
+        # convert
+        exec desired_matrix +' = '+ base_matrix+'.to'+format+'(blocksize='+str(blocksize)+')'
+    else: 
+        # convert
+        exec desired_matrix + ' = lvl.' + name + '.to' + format + '()'
+
+    return eval(desired_matrix)
+
+
 """
     The following setup_smoother_name functions are helper functions for
     parsing user input and assigning each level the appropriate smoother for
@@ -404,19 +446,22 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3, iterat
     return smoother
 
 def setup_jacobi_ne(lvl, iterations=1, omega=1.0):
-    omega = omega/rho_D_inv_A(lvl.A)**2
+    Acsr = matrix_asformat(lvl, 'A', 'csr')
+    omega = omega/rho_D_inv_A(Acsr)**2
     def smoother(A,x,b):
-        relaxation.jacobi_ne(A, x, b, iterations=iterations, omega=omega)
+        relaxation.jacobi_ne(Acsr, x, b, iterations=iterations, omega=omega)
     return smoother
 
 def setup_gauss_seidel_ne(lvl, iterations=1, sweep='forward', omega=1.0):
+    Acsr = matrix_asformat(lvl, 'A', 'csr')
     def smoother(A,x,b):
-        relaxation.gauss_seidel_ne(A, x, b, iterations=iterations, sweep=sweep, omega=omega)
+        relaxation.gauss_seidel_ne(Acsr, x, b, iterations=iterations, sweep=sweep, omega=omega)
     return smoother
 
 def setup_gauss_seidel_nr(lvl, iterations=1, sweep='forward', omega=1.0):
+    Acsc = matrix_asformat(lvl, 'A', 'csc')
     def smoother(A,x,b):
-        relaxation.gauss_seidel_nr(A, x, b, iterations=iterations, sweep=sweep, omega=omega)
+        relaxation.gauss_seidel_nr(Acsc, x, b, iterations=iterations, sweep=sweep, omega=omega)
     return smoother
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None, residuals=None):

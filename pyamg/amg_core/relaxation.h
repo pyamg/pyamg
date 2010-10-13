@@ -464,7 +464,7 @@ void gauss_seidel_ne(const I Ap[],
  *
  * Notes
  * -----
- * Primary calling routine is nr_gass_seidel in relaxation.py
+ * Primary calling routine is gauss_seidel_nr in relaxation.py
  */
 template<class I, class T, class F>
 void gauss_seidel_nr(const I Ap[], 
