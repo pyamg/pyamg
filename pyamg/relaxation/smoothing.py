@@ -258,7 +258,8 @@ def matrix_asformat(lvl, name, format, blocksize=None):
     presmoothing and postsmoothing, where the matrix conversion is done every
     cycle.
 
-    Calling this function will _dramatically_ increase your memory costs.
+    Calling this function can _dramatically_ increase your memory costs.
+    Be careful with it's usage.
     '''
     
     desired_matrix = 'lvl.' + name + format
@@ -287,6 +288,78 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
     return eval(desired_matrix)
 
+
+#Appends
+#A.schwarz_tuple = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr) to
+#the matrix passed in If this tuple already exists, return it, otherwise compute
+#it Should work for passing in both A and the Strength matrix C Make sure to
+#wrap an Acsr into the schwarz call
+
+#make sure that it handles passing in preset subdomain stuff, and recomputing it
+
+#If subdomain and subdomain_ptr are passed in, check to see that they are the
+#same as any preexisting subdomain and subdomain_ptr?
+
+def schwarz_parameters(A, subdomain=None, subdomain_ptr=None, 
+                       inv_subblock=None, inv_subblock_ptr=None):
+    '''
+    Helper function for setting up Schwarz relaxation.  This function avoids
+    recomputing the subdomains and block inverses manytimes, e.g., it avoids
+    a costly double computation when setting up pre and post smoothing with Schwarz.
+    
+    Parameters
+    ----------
+    A {csr_matrix}
+
+    Returns
+    -------
+    A.schwarz_parameters[0] is subdomain
+    A.schwarz_parameters[1] is subdomain_ptr
+    A.schwarz_parameters[2] is inv_subblock
+    A.schwarz_parameters[3] is inv_subblock_ptr
+    '''
+    
+    # Check if A has a pre-existing set of Schwarz parameters
+    if hasattr(A, 'schwarz_parameters'):
+        if subdomain != None and subdomain_ptr != None:
+            # check that the existing parameters correspond to the same subdomains
+            if numpy.array(A.schwarz_parameters[0] == subdomain).all() and \
+               numpy.array(A.schwarz_parameters[1] == subdomain_ptr).all():
+                return A.schwarz_parameters
+        else:
+            return A.schwarz_parameters
+    
+    # Default is to use the overlapping regions defined by A's sparsity pattern
+    if subdomain is None or subdomain_ptr is None:
+        subdomain_ptr = A.indptr.copy()
+        subdomain = A.indices.copy()
+
+    ##
+    # Extract each subdomain's block from the matrix
+    if inv_subblock is None or inv_subblock_ptr is None:
+        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=int)
+        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
+        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
+        
+        ##
+        # Extract each block column from A
+        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
+        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
+                          inv_subblock_ptr, subdomain, subdomain_ptr, 
+                          subdomain_ptr.shape[0]-1, A.shape[0])
+        
+        ##
+        # Invert each block column
+        [my_pinv] = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
+        for i in xrange(subdomain_ptr.shape[0]-1):
+            m = blocksize[i]
+            rhs = scipy.eye(m,m, dtype=A.dtype)
+            [v,pseudo,s,rank,info] = \
+                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), rhs)
+            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
+
+    A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
+    return A.schwarz_parameters
 
 """
     The following setup_smoother_name functions are helper functions for
@@ -324,41 +397,12 @@ def setup_jacobi(lvl, iterations=1, omega=1.0):
         relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
     return smoother
 
-def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
-    
-    if not scipy.sparse.isspmatrix_csr(lvl.A):
-        A = lvl.A.tocsr()
-    else:
-        A = lvl.A
+def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, \
+                  inv_subblock=None, inv_subblock_ptr=None):
 
-    if subdomain is None or subdomain_ptr is None:
-        subdomain_ptr = A.indptr.copy()
-        subdomain = A.indices.copy()
-        
-
-    ##
-    # Extract each subdomain's block from the matrix
-    if inv_subblock is None or inv_subblock_ptr is None:
-        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=int)
-        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
-        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
-        
-        ##
-        # Extract each block column from A
-        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
-        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
-                          inv_subblock_ptr, subdomain, subdomain_ptr, 
-                          subdomain_ptr.shape[0]-1, A.shape[0])
-        
-        ##
-        # Invert each block column
-        [my_pinv] = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
-        for i in xrange(subdomain_ptr.shape[0]-1):
-            m = blocksize[i]
-            rhs = scipy.eye(m,m, dtype=A.dtype)
-            [v,pseudo,s,rank,info] = \
-                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), rhs)
-            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
+    Acsr = matrix_asformat(lvl, 'A', 'csr')
+    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
+            schwarz_parameters(Acsr, subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
 
     def smoother(A,x,b):
         relaxation.schwarz(A, x, b, iterations=iterations, subdomain=subdomain, \
@@ -374,7 +418,8 @@ def setup_strength_based_schwarz(lvl, iterations=1):
     subdomain_ptr = C.indptr.copy()
     subdomain = C.indices.copy()
 
-    return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain, subdomain_ptr=subdomain_ptr)
+    return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain, \
+                         subdomain_ptr=subdomain_ptr)
 
 
 def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None):
