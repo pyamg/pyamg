@@ -329,7 +329,7 @@ void bsr_jacobi(const I Ap[],
             }
         }
         
-        // Carry out point-wise GS over the diagonal block,
+        // Carry out point-wise jacobi over the diagonal block,
         // all the other blocks have been factored into rsum.
         if (diag_ptr != -1) {
             for(I k = step_start; k != step_end; k+=step){
