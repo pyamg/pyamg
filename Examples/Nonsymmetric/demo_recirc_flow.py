@@ -1,6 +1,8 @@
+""" 
+Test the convergence of a small recirculating flow problem that generates a
+nonsymmetric matrix 
 """
-Test the convergence of a 100x100 anisotropic diffusion equation
-"""
+
 import numpy
 import scipy
 
