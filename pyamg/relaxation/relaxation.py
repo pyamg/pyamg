@@ -249,7 +249,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
     ##
     # Extract each subdomain's block from the matrix
     if inv_subblock is None:
-        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=int)
+        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=A.indices.dtype)
         blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
         inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
         
@@ -258,7 +258,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
         inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
         amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
                           inv_subblock_ptr, subdomain, subdomain_ptr, 
-                          subdomain_ptr.shape[0]-1, A.shape[0])
+                          int(subdomain_ptr.shape[0]-1), A.shape[0])
         
         ##
         # Choose tolerance for which singular values are zero in *gelss below
