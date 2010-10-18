@@ -179,10 +179,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     ----------------
     cycle_type : ['V','W','F']
         Structrure of multigrid cycle
-    presmoother  : ['gauss_seidel', 'jacobi', ... ]
-        Premoother used during multigrid cycling
-    postsmoother : ['gauss_seidel', 'jacobi', ... ]
-        Postmoother used during multigrid cycling
     coarse_solver : ['splu','lu', ... ]
         Solver used at the coarsest level of the MG hierarchy 
 
@@ -290,10 +286,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     ##
     # Preprocess parameters
-    Bimprove = preprocess_Bimprove(Bimprove, A, max_levels)
     max_levels, max_coarse, strength = preprocess_str_or_agg(strength, max_levels, max_coarse)
-    smooth = preprocess_smooth(smooth, max_levels)
     max_levels, max_coarse, aggregate = preprocess_str_or_agg(aggregate, max_levels, max_coarse)
+    Bimprove = preprocess_Bimprove(Bimprove, A, max_levels)
+    smooth = preprocess_smooth(smooth, max_levels)
    
     ##
     # Symmetrically rescale A

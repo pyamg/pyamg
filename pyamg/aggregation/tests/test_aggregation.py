@@ -435,5 +435,47 @@ class TestComplexSolverPerformance(TestCase):
             #print "Complex Test:   %1.3e,  %1.3e,  %d,  %1.3e" % \
             #    (avg_convergence_ratio, c_factor, len(ml.levels), ml.operator_complexity())
             assert(avg_convergence_ratio < c_factor)
+    
+    def test_nonhermitian(self):
+        # problem data
+        data = load_example('helmholtz_2D')
+        A = data['A'].tocsr()
+        B = data['B']
+        numpy.random.seed(625)
+        x0 = scipy.rand(A.shape[0]) + 1.0j*scipy.rand(A.shape[0])
+        b = A*scipy.rand(A.shape[0]) + 1.0j*(A*scipy.rand(A.shape[0]))
+        # solver parameters
+        smooth=('energy', {'krylov' : 'gmres'})
+        SA_build_args={'max_coarse':25, 'coarse_solver':'pinv2', 'symmetry':'symmetric'}
+        SA_solve_args={'cycle':'V', 'maxiter':20, 'tol':1e-8}
+        strength=[('ode', {'k':2, 'epsilon':2.0})]
+        smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
+        # Construct solver with nonsymmetric parameters
+        sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
+           strength=strength, presmoother=smoother, postsmoother=smoother, **SA_build_args)
+        residuals = []
+        # stand-alone solve
+        x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
+        residuals = array(residuals)
+        avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+        assert(avg_convergence_ratio < 0.85)
+        # accelerated solve
+        residuals = []
+        x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres', **SA_solve_args)
+        residuals = array(residuals)
+        avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+        assert(avg_convergence_ratio < 0.6)
+
+        # test that nonsymmetric parameters give the same result as symmetric parameters
+        # for the complex-symmetric matrix A
+        strength='symmetric'
+        SA_build_args['symmetry'] = 'nonsymmetric'
+        sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+        SA_build_args['symmetry'] = 'symmetric'
+        sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+        for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
+            assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )
 
 

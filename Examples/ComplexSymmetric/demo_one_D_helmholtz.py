@@ -26,7 +26,7 @@ if __name__ == '__main__':
     x0 = scipy.rand(A.shape[0])
     b = numpy.zeros_like(x0)
     
-    # Solver Parameters, note the solver is complex symmetric, not Hermitian.
+    # Solver Parameters, note the matrix is complex-symmetric, not Hermitian.
     # Hence, symmetry = 'symmetric'.
     smooth=('energy', {'krylov' : 'gmres'})
     SA_solve_args={'cycle':'W', 'maxiter':20, 'tol':1e-8, 'accel' : 'gmres'}

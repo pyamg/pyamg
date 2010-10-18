@@ -11,7 +11,8 @@ from scipy import sparse
 
 import amg_core
 
-__all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', 'ode_strength_of_connection', 'distance_strength_of_connection']
+__all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', \
+           'ode_strength_of_connection', 'distance_strength_of_connection']
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
@@ -24,7 +25,6 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         Sparse NxN matrix in CSR format
     V : {array}
         Vertices of the fine level dof's.  
-        More than hack-like assumes that boundary dofs are for x,y == 1 or 0
     relative_drop : {bool}
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.

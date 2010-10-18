@@ -5,6 +5,12 @@ discontinuous Galerkin method.  The polynomial order is 5.  To utilize the
 visualization capabilities, you need to have paraview and scikits.delaunay
 installed.
 
+References
+----------
+[1] L. N. Olson and J. B. Schroder.  Smoothed Aggregation Multigrid Solvers for
+High-Order Discontinuous Galerkin Methods.  Journal of Computational Physics.
+Submitted 2010. 
+
 """
 import numpy
 import scipy
