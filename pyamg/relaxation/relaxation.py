@@ -9,6 +9,7 @@ from scipy import sparse
 import scipy
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
+from pyamg.relaxation.smoothing import schwarz_parameters
 from pyamg import amg_core
 import scipy.lib.lapack as la
 
@@ -222,7 +223,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
     >>> b = numpy.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
     >>> print norm(b-A*x0)
-    6.11603700921
+    0.126326160522
     >>> #
     >>> ## Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -240,48 +241,15 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
         raise ValueError("inv_subblock must be None if subdomain is None")
     
     ##
-    # Default is point-wise iteration with each subdomain a point's neighborhood 
-    # in the matrix graph
-    if subdomain is None:
-        subdomain_ptr = A.indptr.copy()
-        subdomain = A.indices.copy()
+    # If no subdomains are defined, the default is to use the sparsity pattern of A
+    # to define the overlapping regions
+    (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr) = \
+        schwarz_parameters(A, subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
 
-    ##
-    # Extract each subdomain's block from the matrix
-    if inv_subblock is None:
-        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape, dtype=A.indices.dtype)
-        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
-        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
-        
-        ##
-        # Extract each block column from A
-        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
-        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
-                          inv_subblock_ptr, subdomain, subdomain_ptr, 
-                          int(subdomain_ptr.shape[0]-1), A.shape[0])
-        
-        ##
-        # Choose tolerance for which singular values are zero in *gelss below
-        t = A.dtype.char
-        eps = numpy.finfo(numpy.float).eps
-        feps = numpy.finfo(numpy.single).eps
-        _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
-        cond = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
-
-        ##
-        # Invert each block column
-        my_pinv, = la.get_lapack_funcs(('gelss',), (numpy.ones((1,), dtype=A.dtype)) )
-        for i in xrange(subdomain_ptr.shape[0]-1):
-            m = blocksize[i]
-            rhs = scipy.eye(m,m, dtype=A.dtype)
-            [v,pseudo,s,rank,info] = \
-                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), 
-                        rhs, cond=cond, overwrite_a=True, overwrite_b=True)
-            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
-    
     ##
     # Call C code, need to make sure that subdomains are sorted and unique
-    amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
+    for iter in xrange(iterations):
+        amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
                                      x, b, inv_subblock, inv_subblock_ptr,
                                      subdomain, subdomain_ptr,
                                      subdomain_ptr.shape[0]-1, A.shape[0])

@@ -347,7 +347,14 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
         amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock, 
                           inv_subblock_ptr, subdomain, subdomain_ptr, 
                           int(subdomain_ptr.shape[0]-1), A.shape[0])
-        
+        ##
+        # Choose tolerance for which singular values are zero in *gelss below
+        t = A.dtype.char
+        eps = numpy.finfo(numpy.float).eps
+        feps = numpy.finfo(numpy.single).eps
+        _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
+        cond = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+
         ##
         # Invert each block column
         [my_pinv] = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
@@ -355,7 +362,8 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
             m = blocksize[i]
             rhs = scipy.eye(m,m, dtype=A.dtype)
             [v,pseudo,s,rank,info] = \
-                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), rhs)
+                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), 
+                        rhs, cond=cond)
             inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
 
     A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
