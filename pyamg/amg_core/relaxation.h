@@ -157,7 +157,8 @@ void bsr_gauss_seidel(const I Ap[],
                         // off-diag entry
                         rsum[k] -= Ax[k*blocksize + kk + diag_ptr]*x[i*blocksize+kk]; }
                 }
-                x[i*blocksize+k] = rsum[k]/diag;    
+                if (diag != 0){
+                    x[i*blocksize+k] = rsum[k]/diag; }
             }
         } 
         //else {
@@ -342,7 +343,8 @@ void bsr_jacobi(const I Ap[],
                         // off-diag entry
                         rsum[k] -= Ax[k*blocksize + kk + diag_ptr]*temp[i*blocksize+kk]; }
                 }
-                x[i*blocksize+k] = (one - omega2) * temp[i*blocksize+k] + omega2 * rsum[k]/diag;    
+                if (diag != 0){
+                    x[i*blocksize+k] = (one - omega2) * temp[i*blocksize+k] + omega2 * rsum[k]/diag; }
             }
         } 
         //else {
