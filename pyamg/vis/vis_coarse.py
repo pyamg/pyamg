@@ -52,7 +52,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     Examples
     --------
     >>> from pyamg.aggregation import standard_aggregation
-    >>> from vis_coarse import vis_aggregate_groups
+    >>> from pyamg.vis.vis_coarse import vis_aggregate_groups
     >>> from pyamg.gallery import load_example
     >>> data = load_example('unit_square')
     >>> A = data['A'].tocsr()
@@ -63,7 +63,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
 
 
     >>> from pyamg.aggregation import standard_aggregation
-    >>> from vis_coarse import vis_aggregate_groups
+    >>> from pyamg.vis.vis_coarse import vis_aggregate_groups
     >>> from pyamg.gallery import load_example
     >>> data = load_example('unit_cube')
     >>> A = data['A'].tocsr()
