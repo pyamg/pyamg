@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 import numpy
 import scipy
-from scipy.sparse import bsr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
+from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection
@@ -202,7 +202,13 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     """
     
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
-        raise TypeError('argument A must have type csr_matrix or bsr_matrix')
+        try:
+            A = csr_matrix(A)
+            print 'Implicit conversion of A to CSR in pyamg.adaptive_sa_solver'
+        except:
+            raise TypeError('Argument A must have type csr_matrix or bsr_matrix,\
+                             or be convertible to csr_matrix')
+
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
@@ -235,11 +241,12 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                       smooth=smooth, strength=strength, max_levels=max_levels, 
                       max_coarse=max_coarse, aggregate=aggregate, 
                       coarse_solver=coarse_solver, Bimprove=None, **kwargs)
-        # Set strength-of-connection and aggregation
-        aggregate=[ ('predefined', {'AggOp':sa.levels[i].AggOp.tocsr()}) \
-                                    for i in range(len(sa.levels)-1) ]
-        strength =[ ('predefined', {'C':sa.levels[i].C.tocsr()}) \
-                                    for i in range(len(sa.levels)-1) ]
+        if len(sa.levels) > 1:
+            # Set strength-of-connection and aggregation
+            aggregate=[ ('predefined', {'AggOp':sa.levels[i].AggOp.tocsr()}) \
+                                        for i in range(len(sa.levels)-1) ]
+            strength =[ ('predefined', {'C':sa.levels[i].C.tocsr()}) \
+                                        for i in range(len(sa.levels)-1) ]
 
     ##
     # Develop additional candidates
@@ -301,7 +308,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
             # Normalize B
             B = (1.0/norm(B, 'inf'))*B
             
-
     return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry, presmoother=prepostsmoother,
                                        postsmoother=prepostsmoother, smooth=smooth, 
                                        coarse_solver=coarse_solver,  aggregate=aggregate, 
@@ -497,8 +503,9 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
     ##
     # Set predefined strength of connection and aggregation
-    aggregate = [ ('predefined', {'AggOp' : AggOps[i]}) for i in range(len(AggOps)) ]
-    strength = [('predefined', {'C' : StrengthOps[i]}) for i in range(len(StrengthOps))]
+    if len(AggOps) > 1:
+        aggregate = [ ('predefined', {'AggOp' : AggOps[i]}) for i in range(len(AggOps)) ]
+        strength = [('predefined', {'C' : StrengthOps[i]}) for i in range(len(StrengthOps))]
 
     return x,aggregate,strength  #first candidate
 

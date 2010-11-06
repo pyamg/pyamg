@@ -258,8 +258,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
        http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
+
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
-        raise TypeError('argument A must have type csr_matrix or bsr_matrix')
+        try:
+            A = csr_matrix(A)
+            print 'Implicit conversion of A to CSR in pyamg.smoothed_aggregation_solver'
+        except:
+            raise TypeError('Argument A must have type csr_matrix or bsr_matrix,\
+                             or be convertible to csr_matrix')
 
     A = A.asfptype()
     

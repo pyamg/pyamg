@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -69,8 +69,20 @@ def ruge_stuben_solver(A,
     """
 
     levels = [ multilevel_solver.level() ]
+    
+    # convert A to csr
+    if not isspmatrix_csr(A):
+        try:
+            A = csr_matrix(A)
+            print 'Implicit conversion of A to CSR in pyamg.ruge_stuben_solver'
+        except:
+            raise TypeError('Argument A must have type csr_matrix, or be convertible to csr_matrix')
+    # preprocess A
+    A = A.asfptype()
+    if A.shape[0] != A.shape[1]:
+        raise ValueError('expected square matrix')
 
-    levels[-1].A = csr_matrix(A)
+    levels[-1].A = A
     
     while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF)
