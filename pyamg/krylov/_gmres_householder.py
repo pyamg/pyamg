@@ -101,7 +101,16 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
     dimen = A.shape[0]
 
     # Choose type
-    xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
+    if not hasattr(A, 'dtype'):
+        Atype = upcast(x.dtype, b.dtype)
+    else:
+        Atype = A.dtype
+    if not hasattr(M, 'dtype'):
+        Mtype = upcast(x.dtype, b.dtype)
+    else:
+        Mtype = M.dtype
+    xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
+    
     if restrt is not None:
         restrt=int(restrt)
     if maxiter is not None:

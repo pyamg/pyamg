@@ -93,7 +93,15 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     dimen = A.shape[0]
     
     # Choose type
-    xtype = upcast(A.dtype, x.dtype, b.dtype, M.dtype)
+    if not hasattr(A, 'dtype'):
+        Atype = upcast(x.dtype, b.dtype)
+    else:
+        Atype = A.dtype
+    if not hasattr(M, 'dtype'):
+        Mtype = upcast(x.dtype, b.dtype)
+    else:
+        Mtype = M.dtype
+    xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
 
     # Should norm(r) be kept
     if residuals == []:
