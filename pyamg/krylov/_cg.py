@@ -1,4 +1,5 @@
-from numpy import inner, conjugate, asarray 
+import numpy
+from numpy import inner, conjugate, asarray, mod, ravel
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
@@ -78,12 +79,20 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
 
     n = len(b)
-    # Determine maxiter
+
+    # determine maxiter
     if maxiter is None:
         maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     
+    # choose tolerance for numerically zero values
+    t = A.dtype.char
+    eps = numpy.finfo(numpy.float).eps
+    feps = numpy.finfo(numpy.single).eps
+    _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1, 'i':2}
+    numerically_zero = {0: feps*1e3, 1: eps*1e6, 2: eps*1e6}[_array_precision[t]]
+
     # setup method
     r  = b - A*x
     z  = M*r
@@ -100,8 +109,10 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
     # Scale tol by ||r_0||_2
     if normr != 0.0:
-        tol = tol*normr    
+        tol = tol*normr
    
+    # How often should r be recomputed
+    recompute_r = 8
 
     iter = 0
 
@@ -109,14 +120,29 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
         Ap = A*p
 
         rz_old = rz
-        
-        alpha = rz/inner(conjugate(Ap), p)  # 3  (step # in Saad's pseudocode)
-        x    += alpha * p                   # 4
-        r    -= alpha * Ap                  # 5
-        z     = M*r                         # 6
-        rz    = inner(conjugate(r), z)          
-        beta  = rz/rz_old                   # 7
-        p    *= beta                        # 8
+                                                  # Step # in Saad's pseudocode
+        pAp = inner(conjugate(Ap), p)             # check curvature of A
+        if pAp < 0.0:
+            warn("\nIndefinite matrix detected in CG, aborting\n")
+            return (postprocess(x), -1)
+
+        alpha = rz/pAp                            # 3  
+        x    += alpha * p                         # 4
+
+        if mod(iter, recompute_r) and iter > 0:   # 5
+            r-= alpha * Ap                  
+        else:
+            r = b - A*x
+
+        z     = M*r                               # 6
+        rz    = inner(conjugate(r), z)
+
+        if rz < 0.0:                              # check curvature of M
+            warn("\nIndefinite preconditioner detected in CG, aborting\n")
+            return (postprocess(x), -1)
+
+        beta  = rz/rz_old                         # 7
+        p    *= beta                              # 8
         p    += z
 
         iter += 1
@@ -131,7 +157,12 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
         if normr < tol:
             return (postprocess(x), 0)
-
+        elif rz == 0.0:
+            # important to test after testing normr < tol. rz == 0.0 is an
+            # indicator of convergence when r = 0.0
+            warn("\nSingular preconditioner detected in CG, ceasing iterations\n")
+            return (postprocess(x), -1)
+        
         if iter == maxiter:
             return (postprocess(x), iter)
 
