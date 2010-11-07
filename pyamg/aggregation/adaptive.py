@@ -155,8 +155,11 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     smooth : ['jacobi', 'richardson', 'energy', None]
         Method used used to smooth the tentative prolongator.  See
         smoothed_aggregation_solver(...) documentation
-    coarse_solver : ['splu','lu', ... ]
-        Solver used at the coarsest level of the MG hierarchy 
+    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+        Solver used at the coarsest level of the MG hierarchy.
+            Optionally, may be a tuple (fn, args), where fn is a string such as
+        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        arguments to be passed to fn.
     eliminate_local : {tuple}
         Length 2 tuple.  If the first entry is True, then eliminate candidates
         where they aren't needed locally, using the second entry of the tuple

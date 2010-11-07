@@ -57,6 +57,17 @@ def ruge_stuben_solver(A,
     >>> A = poisson((10,),format='csr')
     >>> ml = ruge_stuben_solver(A,max_coarse=3)
 
+    Notes
+    -----
+    
+    "coarse_solver" is an optional argument and is the solver used at the
+    coarsest grid.  The default is a pseudo-inverse.  Most simply,
+    coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
+    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple 
+    (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
+    function, and args is a dictionary of arguments to be passed to fn.
+
+
     References
     ----------
     .. [1] Trottenberg, U., Oosterlee, C. W., and Schuller, A., 

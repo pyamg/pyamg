@@ -111,6 +111,21 @@ class TestSolverPerformance(TestCase):
             assert(avg_convergence_ratio < 0.20)
 
 
+    def test_matrix_formats(self):
+
+        # Do dense, csr, bsr and csc versions of A all yield the same solver
+        A = poisson( (7,7), format='csr')
+        cases = [ A.tobsr(blocksize=(1,1)) ]
+        cases.append(A.tocsc())
+        cases.append(A.todense())
+        
+        rs_old = ruge_stuben_solver(A,max_coarse=10)
+        for AA in cases:
+            rs_new = ruge_stuben_solver(AA,max_coarse=10)
+            assert( abs( ravel( rs_old.levels[-1].A.todense() -
+                         rs_new.levels[-1].A.todense() )).max() < 0.01 )
+            rs_old = rs_new
+
 
 ################################################
 ##   reference implementations for unittests  ##

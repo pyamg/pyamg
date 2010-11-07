@@ -1,7 +1,7 @@
 from pyamg.testing import *
 
 import scipy.sparse
-from numpy import arange, ones, zeros, array, eye, vstack, diff
+from numpy import arange, ones, zeros, array, eye, vstack, diff, random, ravel
 from scipy import rand
 from scipy.sparse import csr_matrix
 
@@ -58,6 +58,25 @@ class TestAdaptiveSA(TestCase):
         #print "ASA convergence (Elasticity)",conv_asa
         #print "SA convergence (Elasticity)",conv_sa
         assert( conv_asa < 1.1 * conv_sa ) 
+
+
+    def test_matrix_formats(self):
+
+        # Do dense, csr, bsr and csc versions of A all yield the same solver
+        A = poisson( (7,7), format='csr')
+        cases = [ A.tobsr(blocksize=(1,1)) ]
+        cases.append(A.tocsc())
+        cases.append(A.todense())
+        
+        random.seed(0)
+        sa_old = adaptive_sa_solver(A,initial_candidates=ones((49,1)),max_coarse=10)[0]
+        for AA in cases:
+            random.seed(0)
+            sa_new = adaptive_sa_solver(AA,initial_candidates=ones((49,1)),max_coarse=10)[0]
+            assert( abs( ravel( sa_old.levels[-1].A.todense() -
+                         sa_new.levels[-1].A.todense() )).max() < 0.01 )
+            sa_old = sa_new
+
        
 
 class TestComplexAdaptiveSA(TestCase):

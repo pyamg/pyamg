@@ -76,25 +76,30 @@ class multilevel_solver:
         ----------
         levels : level array
             Array of level objects that contain A, R, and P.
-        solver: {string, callable}
-            The solver method is either a string such as 'splu' or 'pinv' of a 
-            callable object which received parameters (A, b) and returns an 
-            (approximate or exact) solution to the linear system Ax = b. 
-            The set of valid string arguments is listed below.  The default 
-            'pinv2' is robust, but expands the coarse level matrix into a 
-            dense format.  Therefore, larger coarse level systems should use
-            sparse solvers like 'splu'.
-
+        coarse_solver: {string, callable, tuple}
+            The solver method is either (1) a string such as 'splu' or 'pinv'
+            of a callable object which receives only parameters (A, b) and
+            returns an (approximate or exact) solution to the linear system Ax
+            = b, or (2) a callable object that takes parameters (A,b) and
+            returns an (approximate or exact) solution to Ax = b, or (3) a
+            tuple of the form (string|callable, args), where args is a
+            dictionary of arguments to be passed to the function denoted by
+            string or callable.
+            
+            The set of valid string arguments is:
             - Sparse direct methods:
                 + splu         : sparse LU solver
             - Sparse iterative methods:
-                + the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
+                + the name of any method in scipy.sparse.linalg.isolve or
+                  pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
+                + relaxation method, such as 'gauss_seidel' or 'jacobi', 
+                  present in pyamg.relaxation
             - Dense methods:
                 + pinv     : pseudoinverse (QR)
                 + pinv2    : pseudoinverse (SVD)
                 + lu       : LU factorization 
                 + cholesky : Cholesky factorization
-    
+
         Notes
         -----
         If not defined, the R attribute on each level is set to the transpose of P.
@@ -426,7 +431,7 @@ class multilevel_solver:
                 x = self.coarse_solver(A, b)
             else:
                 self.__solve(0, x, b, cycle)
-
+            
             residuals.append(residual_norm(A,x,b))
 
             self.first_pass=False
@@ -487,21 +492,28 @@ class multilevel_solver:
 
 
 
-#TODO support (solver,opts) format also
 def coarse_grid_solver(solver):
     """Return a coarse grid solver suitable for multilevel_solver
     
     Parameters
     ----------
-    solver: {string, callable}
-        The solver method is either a string such as 'splu' or 'pinv' of a 
-        callable object which received parameters (A, b) and returns an 
-        (approximate or exact) solution to the linear system Ax = b. The set
-        of valid string arguments is:
+    solver: {string, callable, tuple}
+        The solver method is either (1) a string such as 'splu' or 'pinv' of a
+        callable object which receives only parameters (A, b) and returns an
+        (approximate or exact) solution to the linear system Ax = b, or (2) a
+        callable object that takes parameters (A,b) and returns an (approximate
+        or exact) solution to Ax = b, or (3) a tuple of the form 
+        (string|callable, args), where args is a dictionary of arguments to 
+        be passed to the function denoted by string or callable.
+        
+        The set of valid string arguments is:
         - Sparse direct methods:
             + splu         : sparse LU solver
         - Sparse iterative methods:
-            + the name of any method in scipy.sparse.linalg.isolve (e.g. 'cg')
+            + the name of any method in scipy.sparse.linalg.isolve or
+              pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
+            + relaxation method, such as 'gauss_seidel' or 'jacobi', 
+              present in pyamg.relaxation
         - Dense methods:
             + pinv     : pseudoinverse (QR)
             + pinv2    : pseudoinverse (SVD)
@@ -524,37 +536,75 @@ def coarse_grid_solver(solver):
     >>> cgs = coarse_grid_solver('lu')
     >>> x = cgs(A,b)
     """
+    
+    def unpack_arg(v):
+        if isinstance(v,tuple):
+            return v[0],v[1]
+        else:
+            return v,{}
 
-    #TODO add relaxation methods
+    solver,kwargs = unpack_arg(solver) 
     
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
-                self.P = getattr(scipy.linalg, solver)( A.todense() )
+                self.P = getattr(scipy.linalg, solver)( A.todense(), **kwargs )
             return numpy.dot(self.P,b)
     
     elif solver == 'lu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.linalg.lu_factor( A.todense() )
+                self.LU = scipy.linalg.lu_factor( A.todense(), **kwargs)
             return scipy.linalg.lu_solve(self.LU, b)
 
     elif solver == 'cholesky':
         def solve(self, A, b):
             if not hasattr(self, 'L'):
-                self.L = scipy.linalg.cho_factor( A.todense() )
+                self.L = scipy.linalg.cho_factor( A.todense(), **kwargs )
             return scipy.linalg.cho_solve(self.L, b)
     
     elif solver == 'splu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.sparse.linalg.splu( scipy.sparse.csc_matrix(A) )
+                self.LU = scipy.sparse.linalg.splu( scipy.sparse.csc_matrix(A), **kwargs )
             return self.LU.solve( numpy.ravel(b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
-        fn = getattr(scipy.sparse.linalg.isolve, solver)
+        from pyamg import krylov
+        if hasattr(krylov, solver):
+            fn = getattr(krylov, solver)
+        else:
+            fn = getattr(scipy.sparse.linalg.isolve, solver)
+    
         def solve(self, A, b):
-            return fn(A, b, tol=1e-12)[0]
+            if not kwargs.has_key('tol'):
+                t = A.dtype.char
+                eps = numpy.finfo(numpy.float).eps
+                feps = numpy.finfo(numpy.single).eps
+                _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1, 'i':2}
+                kwargs['tol'] = {0: feps*1e3, 1: eps*1e6, 2: eps*1e6}[_array_precision[t]]
+
+            return fn(A, b, **kwargs)[0]
+
+    elif solver in ['gauss_seidel', 'jacobi', 'block_gauss_seidel', 'schwarz', 
+                    'block_jacobi', 'richardson', 'sor', 'chebyshev', 'jacobi_ne', 
+                    'gauss_seidel_ne', 'gauss_seidel_nr']:
+            
+        if not kwargs.has_key('iterations'):
+            kwargs['iterations'] = 10
+        
+        def solve(self, A, b):
+            from pyamg.relaxation import smoothing
+            from pyamg import multilevel_solver
+            
+            lvl = multilevel_solver.level()
+            lvl.A = A
+            fn = eval('smoothing.setup_' + str(solver))
+            relax = fn(lvl, **kwargs)
+            x = numpy.zeros_like(b)
+            relax(A,x,b)
+            
+            return x
 
     elif solver is None:         
         # No coarse grid solve
@@ -563,7 +613,7 @@ def coarse_grid_solver(solver):
 
     elif callable(solver):
         def solve(self, A, b):
-            return solver(A, b)
+            return solver(A, b, **kwargs)
 
     else:
         raise ValueError,('unknown solver: %s' % solver)

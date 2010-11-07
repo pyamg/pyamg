@@ -115,8 +115,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
         presmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
-        Bimprove='default', max_levels = 10, max_coarse = 500, 
-        diag_scale=None, **kwargs):
+        Bimprove='default', max_levels = 10, max_coarse = 500, **kwargs):
     """
     Create a multilevel solver using Smoothed Aggregation (SA)
 
@@ -170,17 +169,16 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid. 
-    diag_scale : {boolean}
-        If True, symmetrically diagonally scale A to have a diagonal of 1.  The
-        candidates B are scaled to preserve the product AB.  The default is True
-        for symmetry='hermitian'.  False is used otherwise.
 
     Other Parameters
     ----------------
     cycle_type : ['V','W','F']
         Structrure of multigrid cycle
-    coarse_solver : ['splu','lu', ... ]
-        Solver used at the coarsest level of the MG hierarchy 
+    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+        Solver used at the coarsest level of the MG hierarchy.
+            Optionally, may be a tuple (fn, args), where fn is a string such as
+        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        arguments to be passed to fn.
 
     Returns
     -------
@@ -297,11 +295,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     Bimprove = preprocess_Bimprove(Bimprove, A, max_levels)
     smooth = preprocess_smooth(smooth, max_levels)
    
-    ##
-    # Symmetrically rescale A
-    if diag_scale == True or (diag_scale == None and symmetry == 'hermitian'):
-        [A,B,BH] = symmetric_rescaling_sa(A, B, BH)
-
     ##
     # Construct multilevel structure
     levels = []

@@ -2,7 +2,7 @@ from pyamg.testing import *
 
 import numpy
 import scipy.sparse
-from numpy import sqrt, ones, arange, array, abs, dot
+from numpy import sqrt, ones, arange, array, abs, dot, ravel
 from scipy import rand, pi, exp, hstack
 from scipy.sparse import csr_matrix, spdiags, coo_matrix, SparseEfficiencyWarning
 
@@ -64,6 +64,10 @@ class TestParameters(TestCase):
         solvers.append('splu')
         solvers.append('lu')
         solvers.append('cg')
+        solvers.append('gauss_seidel')
+        solvers.append('block_gauss_seidel')
+        solvers.append('gauss_seidel_nr')
+        solvers.append('jacobi')
 
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
@@ -373,6 +377,45 @@ class TestSolverPerformance(TestCase):
          strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )
+
+    def test_coarse_solver_opts(self):
+        # these tests are meant to test whether coarse solvers are correctly
+        # passed parameters
+        
+        A = poisson( (30,30), format='csr')
+        b = rand(A.shape[0],1)
+        
+        # for each pair, the first entry should yield an sa solver that
+        # converges in fewer iterations for a basic poisson problem
+        coarse_solver_pairs = [ (('jacobi',{'iterations':30}), 'jacobi') ]
+        coarse_solver_pairs.append( (('gauss_seidel',{'iterations':30}), 'gauss_seidel') )
+        coarse_solver_pairs.append( ('gauss_seidel', 'jacobi') )
+        coarse_solver_pairs.append( ('cg', ('cg',{'tol':1e-1})) )
+        coarse_solver_pairs.append( ('pinv2', ('pinv2',{'cond':1.0})) )
+
+        for coarse1,coarse2 in coarse_solver_pairs:
+            r1 = []
+            r2 = []
+            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1)
+            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2)
+            x1 = sa1.solve(b,residuals=r1)
+            x2 = sa2.solve(b,residuals=r2)
+            assert( (len(r1) + 5) < len(r2) )
+    
+    def test_matrix_formats(self):
+
+        # Do dense, csr, bsr and csc versions of A all yield the same solver
+        A = poisson( (7,7), format='csr')
+        cases = [ A.tobsr(blocksize=(1,1)) ]
+        cases.append(A.tocsc())
+        cases.append(A.todense())
+        
+        sa_old = smoothed_aggregation_solver(A,max_coarse=10)
+        for AA in cases:
+            sa_new = smoothed_aggregation_solver(AA,max_coarse=10)
+            assert( abs( ravel( sa_old.levels[-1].A.todense() -
+                         sa_new.levels[-1].A.todense() )).max() < 0.01 )
+            sa_old = sa_new
 
 
 class TestComplexSolverPerformance(TestCase):
