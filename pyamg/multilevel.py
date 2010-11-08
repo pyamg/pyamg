@@ -566,8 +566,18 @@ def coarse_grid_solver(solver):
     elif solver == 'splu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.sparse.linalg.splu( scipy.sparse.csc_matrix(A), **kwargs )
-            return self.LU.solve( numpy.ravel(b) )
+                # for multiple candidates in B, A will often have a couple zero
+                # rows/columns that must be removed
+                Acsc = A.tocsc()
+                Acsc.eliminate_zeros()
+                nonzero_cols = ( (Acsc.indptr[:-1] - Acsc.indptr[1:]) != 0).nonzero()[0]
+                Map = scipy.sparse.eye(Acsc.shape[0], Acsc.shape[1], format='csc')
+                Map = Map[:,nonzero_cols]
+                Acsc = Map.T.tocsc()*Acsc*Map
+                self.LU = scipy.sparse.linalg.splu(Acsc, **kwargs )
+                self.LU_Map = Map
+
+            return self.LU_Map*self.LU.solve( numpy.ravel(self.LU_Map.T*b) )
     
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
         from pyamg import krylov

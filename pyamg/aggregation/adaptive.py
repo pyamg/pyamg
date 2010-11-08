@@ -227,7 +227,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     max_levels, max_coarse, aggregate = preprocess_str_or_agg(aggregate, max_levels, max_coarse)
 
     ##
-    # Develop initial candidate(s)
+    # Develop initial candidate(s).  Note that any predefined aggregation is preserved.
     if initial_candidates == None:
         B,aggregate,strength = initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                 max_levels, max_coarse, aggregate, prepostsmoother, smooth, strength, work)
