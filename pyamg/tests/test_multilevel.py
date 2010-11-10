@@ -12,7 +12,7 @@ class TestMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append( csr_matrix(diag(arange(1,5))) )
+        cases.append( csr_matrix(diag(arange(1,5,dtype=float))) )
         cases.append( poisson( (4,),  format='csr') )
         cases.append( poisson( (4,4), format='csr') )
       

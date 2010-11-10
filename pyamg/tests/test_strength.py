@@ -523,8 +523,9 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
     t = Atilde.dtype.char
     eps = numpy.finfo(numpy.float).eps
     feps = numpy.finfo(numpy.single).eps
-    _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
-    tol = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+    geps = numpy.finfo(numpy.longfloat).eps
+    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G':2}
+    tol = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
     for i in range(dimen):
        

@@ -352,8 +352,9 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
         t = A.dtype.char
         eps = numpy.finfo(numpy.float).eps
         feps = numpy.finfo(numpy.single).eps
-        _array_precision = {'f': 0, 'd': 1, 'F': 0, 'D': 1}
-        cond = {0: feps*1e3, 1: eps*1e6}[_array_precision[t]]
+        geps = numpy.finfo(numpy.longfloat).eps
+        _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G':2}
+        cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
         ##
         # Invert each block column
