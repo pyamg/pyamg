@@ -6,6 +6,7 @@ from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
 
 from pyamg.util.linalg import *
+from pyamg import gallery
 
 class TestLinalg(TestCase):
     def test_norm(self):
@@ -55,8 +56,34 @@ class TestLinalg(TestCase):
             assert_almost_equal( approximate_spectral_radius(A,symmetric=True),   expected )
             assert_almost_equal( approximate_spectral_radius(Asp,symmetric=True), expected )
       
-        #TODO test larger matrices
-    
+        # test a larger matrix, and various parameter choices
+        cases =[]
+        A1 = gallery.poisson( (50,50), format='csr' )
+        cases.append( (A1, 7.99241331495) )
+        A2 = gallery.elasticity.linear_elasticity( (32,32), format='bsr' )[0]
+        cases.append( (A2, 536549.922189) )
+        for A,expected in cases:
+            # test that increasing maxiter increases accuracy
+            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=5, restart=0)
+            del A.rho
+            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=15, restart=0)
+            del A.rho
+            assert_equal( abs(ans2 - expected) < 0.5*abs(ans1 - expected), True )
+            # test that increasing restart increases accuracy
+            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=10, restart=0)
+            del A.rho
+            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=10, restart=1)
+            del A.rho
+            assert_equal( abs(ans2 - expected) < 0.8*abs(ans1 - expected), True  )
+            # test tol 
+            ans1 = approximate_spectral_radius(A, tol=0.1, maxiter=15, restart=5)
+            del A.rho
+            assert_equal( abs(ans1 - expected)/abs(expected) < 0.1, True  )
+            ans2 = approximate_spectral_radius(A, tol=0.001, maxiter=15, restart=5)
+            del A.rho
+            assert_equal( abs(ans2 - expected)/abs(expected) < 0.001, True  )
+            assert_equal( abs(ans2 - expected) < 0.1*abs(ans1 - expected), True  )
+
     def test_infinity_norm(self):
         A = matrix([[-4]])
         assert_equal(infinity_norm(csr_matrix(A)),4)

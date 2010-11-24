@@ -159,8 +159,14 @@ def axpy(x,y,a=1.0):
 #    
 #    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter, return_eigenvectors=False) )
 
-def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
-    """Used by approximate_spectral_radius and condest"""
+def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None):
+    """Used by approximate_spectral_radius and condest
+       
+       Returns approximate [eigenvectors, eigenvalues, H, V] where H and V are
+       the Hessenberg matrix and Krylov space, respectively, given by the
+       Arnoldi (Lanczos) process.
+
+       """
 
     from scipy.sparse.linalg import aslinearoperator
 
@@ -179,11 +185,14 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
         raise ValueError('expected square matrix')
 
     maxiter = min(A.shape[0],maxiter)
-
-    v0  = scipy.rand(A.shape[1],1)
-    if A.dtype == complex:
-        v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
-
+    
+    if initial_guess == None:
+        v0  = scipy.rand(A.shape[1],1)
+        if A.dtype == complex:
+            v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
+    else:
+        v0 = initial_guess
+    
     v0 /= norm(v0)
 
     H  = numpy.zeros((maxiter+1,maxiter), dtype=A.dtype)
@@ -239,12 +248,14 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None):
     
     #print "Approximated spectral radius in %d iterations" % (j + 1)
     
-    from scipy.linalg import eigvals
+    from scipy.linalg import eig
+    
+    Eigs,Vects = eig(H[:j+1,:j+1], left=False, right=True)
 
-    return eigvals(H[:j+1,:j+1])
+    return (Vects,Eigs,H,V)
 
 
-def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
+def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None):
     """
     Approximate the spectral radius of a matrix
 
@@ -254,9 +265,15 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     A : {dense or sparse matrix}
         E.g. csr_matrix, csc_matrix, ndarray, etc.
     tol : {scalar}
-        Tolerance of approximation (currently unused)
+        Relative tolerance of approximation, i.e., the error divided
+        by the approximate spectral radius is compared to tol.
     maxiter : {integer}
         Maximum number of iterations to perform
+    restart : {integer}
+        Number of restarted Arnoldi processes.  For example, a value of 0 will
+        run Arnoldi once, for maxiter iterations, and a value of 1 will restart
+        Arnoldi once, using the maximal eigenvector from the first Arnolid
+        process as the initial guess.
     symmetric : {boolean}
         True  - if A is symmetric
                 Lanczos iteration is used (more efficient)
@@ -287,7 +304,7 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     >>> from pyamg.util.linalg import approximate_spectral_radius
     >>> import numpy
     >>> from scipy.linalg import eigvals, norm
-    >>> A = numpy.array([[1,0],[0,1]])
+    >>> A = numpy.array([[1.,0.],[0.,1.]])
     >>> print approximate_spectral_radius(A,maxiter=3)
     1.0
     >>> print max([norm(x) for x in eigvals(A)])
@@ -295,8 +312,42 @@ def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=None):
     """
     
     if not hasattr(A, 'rho'):
-        ev = _approximate_eigenvalues(A, tol, maxiter, symmetric) 
-        rho = numpy.max(numpy.abs(ev))
+        
+        ## somehow more restart causes a nonsymmetric case to fail...look at this
+        ## what about A.dtype=int?  convert somehow?
+
+        if maxiter < 1:
+            raise ValueError,'expected maxiter > 0'
+        if restart < 0:
+            raise ValueError,'expected restart >= 0'
+        if A.dtype == int:
+            raise ValueError,'expected A to be float (complex or real)'
+        if A.shape[0] != A.shape[1]:
+            raise ValueError,'expected square A'
+
+        v0  = scipy.rand(A.shape[1],1)
+        if A.dtype == complex:
+            v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
+
+        for j in range(restart+1):
+            [evect, ev, H, V] = _approximate_eigenvalues(A, tol, maxiter, symmetric, 
+                                                      initial_guess=v0) 
+            # Calculate error in dominant eigenvector
+            nvecs = ev.shape[0]
+            max_index = numpy.abs(ev).argmax()
+            error = H[nvecs,nvecs-1]*evect[-1,max_index]
+            # error is a fast way of calculating the following line 
+            #error2 = ( A - ev[max_index]*scipy.mat(scipy.eye(A.shape[0],A.shape[1])) )*\
+            #         ( scipy.mat(scipy.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) ) 
+            #print str(error) + "    " + str(scipy.linalg.norm(e2))
+            if numpy.abs(error)/numpy.abs(ev[max_index]) < tol:
+                # halt if below relative tolerance
+                break
+            else:
+                v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:,max_index].reshape(-1,1))
+        # end j-loop
+
+        rho = numpy.abs(ev[max_index])
         if sparse.isspmatrix(A):
             A.rho = rho
         
@@ -342,7 +393,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     
     """
 
-    ev = _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    [evect, ev, H, V] = _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
     return numpy.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
 
