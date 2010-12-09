@@ -15,8 +15,7 @@ from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
 from pyamg.strength import classical_strength_of_connection, \
         symmetric_strength_of_connection, ode_strength_of_connection, \
         energy_based_strength_of_connection, distance_strength_of_connection
-from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation, \
-                      anisotropic_aggregation, anisotropic_postprocessing
+from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation
 from tentative import fit_candidates
 from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
         energy_prolongation_smoother
