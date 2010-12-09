@@ -15,8 +15,8 @@ from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
 from pyamg.strength import classical_strength_of_connection, \
         symmetric_strength_of_connection, ode_strength_of_connection, \
         energy_based_strength_of_connection, distance_strength_of_connection
-
-from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation
+from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation, \
+                      anisotropic_aggregation, anisotropic_postprocessing
 from tentative import fit_candidates
 from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
         energy_prolongation_smoother
@@ -331,17 +331,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
     if A.symmetry == "nonsymmetric":
         AH = A.H.asformat(A.format)
         BH = levels[-1].BH
-
-    ##
-    # Improve near null-sapce candidates
-    if Bimprove[len(levels)-1] is not None:
-        b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
-        B = relaxation_as_linear_operator(Bimprove[len(levels)-1], A, b) * B
-        levels[-1].B = B
-        if A.symmetry == "nonsymmetric":
-            BH = relaxation_as_linear_operator(Bimprove[len(levels)-1], AH, b) * BH 
-            levels[-1].BH = BH
-  
+ 
     ##
     # Begin constructing next level
     fn, kwargs = unpack_arg(strength[len(levels)-1])
@@ -388,6 +378,17 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
         AggOp = kwargs['AggOp'].tocsr()
     else:
         raise ValueError('unrecognized aggregation method %s' % str(fn))
+    
+    ##
+    # Improve near null-sapce candidates (important to place after the call to
+    # ode_strength_of_connection)
+    if Bimprove[len(levels)-1] is not None:
+        b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
+        B = relaxation_as_linear_operator(Bimprove[len(levels)-1], A, b) * B
+        levels[-1].B = B
+        if A.symmetry == "nonsymmetric":
+            BH = relaxation_as_linear_operator(Bimprove[len(levels)-1], AH, b) * BH 
+            levels[-1].BH = BH
 
     ##
     # tentative prolongator
