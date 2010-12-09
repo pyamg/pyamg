@@ -347,7 +347,7 @@ class TestSolverPerformance(TestCase):
         smooth=('energy', {'krylov' : 'gmres'})
         SA_build_args={'max_coarse':25, 'coarse_solver':'pinv2', 'symmetry':'nonsymmetric'}
         SA_solve_args={'cycle':'V', 'maxiter':20, 'tol':1e-8}
-        strength=[('ode', {'k':2, 'epsilon':4.0})]
+        strength=[('ode', {'k':2, 'epsilon':8.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
         # Construct solver with nonsymmetric parameters
         sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
@@ -357,13 +357,13 @@ class TestSolverPerformance(TestCase):
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        assert(avg_convergence_ratio < 0.6)
+        assert(avg_convergence_ratio < 0.65)
         # accelerated solve
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres', **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        assert(avg_convergence_ratio < 0.4)
+        assert(avg_convergence_ratio < 0.45)
 
         # test that nonsymmetric parameters give the same result as symmetric parameters
         # for poisson problem
