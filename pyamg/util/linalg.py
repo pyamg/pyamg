@@ -162,10 +162,11 @@ def axpy(x,y,a=1.0):
 def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None):
     """Used by approximate_spectral_radius and condest
        
-       Returns approximate [eigenvectors, eigenvalues, H, V] where H and V are
-       the Hessenberg matrix and Krylov space, respectively, given by the
-       Arnoldi (Lanczos) process.
-
+       Returns [W, E, H, V], where W and E are the eigenvectors and eigenvalues
+       of the Hessenberg matrix H, respectively, and V is the Krylov space.  E
+       is therefore the approximate eigenvalues of A.
+       
+       To obtain approximate eigenvectors of A, compute V*W.
        """
 
     from scipy.sparse.linalg import aslinearoperator
