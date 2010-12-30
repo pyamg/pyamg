@@ -381,18 +381,23 @@ class multilevel_solver:
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
+        
+            try: # try the PyAMG style interface which has a residuals parameter
+                return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M, callback=callback, 
+                             residuals=residuals)[0]
+            except: # try the scipy.sparse.linalg.isolve style interface, which requires
+                    # a call back function if a residual history is desired
+                
+                cb = callback
+                if residuals is not None:
+                    residuals[:] = [residual_norm(A,x,b)]
+                    def callback(x):
+                        if scipy.isscalar(x): residuals.append(x)
+                        else:                 residuals.append(residual_norm(A,x,b))
+                        if cb is not None:
+                            cb(x)
 
-            # wrap callback function to compute residuals
-            cb = callback
-            if residuals is not None:
-                residuals[:] = [residual_norm(A,x,b)]
-                def callback(x):
-                    if scipy.isscalar(x): residuals.append(x)
-                    else:                 residuals.append(residual_norm(A,x,b))
-                    if cb is not None:
-                        cb(x)
-
-            return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M, callback=callback)[0]
+                return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M, callback=callback)[0]
         
         else:
             # Scale tol by normb
