@@ -1,5 +1,5 @@
 import numpy
-from numpy import inner, conjugate, asarray, mod, ravel
+from numpy import inner, conjugate, asarray, mod, ravel, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
@@ -9,7 +9,8 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['cg']
 
-def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
+def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+       callback=None, residuals=None):
     '''Conjugate Gradient algorithm
     
     Solves the linear system Ax = b. Left preconditioning is supported.
@@ -23,19 +24,21 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        relative convergence tolerance, i.e. tol is scaled by the
+        preconditioner norm of r_0, or ||r_0||_M.
     maxiter : int
         maximum number of allowed iterations
     xtype : type
         dtype for the solution, default is automatic type detection
     M : {array, matrix, sparse matrix, LinearOperator}
-        n x n, inverted preconditioner, i.e. solve M A A.H x = b.
+        n x n, inverted preconditioner, i.e. solve M A x = b.
     callback : function
         User-supplied funtion is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residuals contains the residual norm history,
+        including the initial residual.  The preconditioner norm
+        is used, instead of the Euclidean norm.
      
     Returns
     -------    
@@ -56,6 +59,9 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.  A.psolve(..) is
     still supported as a legacy.
+
+    The residual in the preconditioner norm is both used for halting and
+    returned in the residuals list. 
 
     Examples
     --------
@@ -100,7 +106,8 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     p  = z.copy()
     rz = inner(conjugate(r), z)
     
-    normr = norm(r)
+    # use preconditioner norm
+    normr = sqrt(rz)
 
     if residuals is not None:
         residuals[:] = [normr] #initial residual 
@@ -108,7 +115,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
     if normr < tol:
         return (postprocess(x), 0)
 
-    # Scale tol by ||r_0||_2
+    # Scale tol by ||r_0||_M
     if normr != 0.0:
         tol = tol*normr
    
@@ -148,7 +155,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None,
 
         iter += 1
         
-        normr = norm(r)
+        normr = sqrt(rz)                          # use preconditioner norm
 
         if residuals is not None:
             residuals.append(normr)

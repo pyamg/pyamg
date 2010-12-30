@@ -55,7 +55,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        relative convergence tolerance, i.e. tol is scaled by the norm
+        of the initial preconditioned residual 
     restrt : {None, int}
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -71,10 +72,10 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
         n x n, inverted preconditioner, i.e. solve M A x = b.
     callback : function
         User-supplied funtion is called after each iteration as
-        callback( ||rk||_2 ), where rk is the current residual vector
+        callback( ||rk||_2 ), where rk is the current preconditioned residual vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residuals contains the preconditioned residual norm history,
+        including the initial residual.  
     reorth : boolean
         If True, then a check is made whether to reorthogonalize the Krylov 
         space each GMRES iteration
@@ -188,8 +189,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     # Prep for method
     r = b - ravel(A*x)
     normr = norm(r)
-    if keep_r:
-        residuals.append(normr)
     
     # Is initial guess sufficient?
     if normr <= tol:
@@ -201,6 +200,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     #Apply preconditioner
     r = ravel(M*r)
     normr = norm(r)
+    if keep_r:
+        residuals.append(normr)
     ## Check for nan, inf    
     #if isnan(r).any() or isinf(r).any():
     #    warn('inf or nan after application of preconditioner')

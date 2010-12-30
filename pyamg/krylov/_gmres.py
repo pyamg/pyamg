@@ -19,7 +19,8 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     x0 : {array, matrix}
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
+        relative convergence tolerance, i.e. tol is scaled by the norm
+        of the initial preconditioned residual 
     restrt : {None, int}
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -35,10 +36,10 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
         n x n, inverted preconditioner, i.e. solve M A x = b.
     callback : function
         User-supplied funtion is called after each iteration as
-        callback( ||rk||_2 ), where rk is the current residual vector
+        callback( ||rk||_2 ), where rk is the current preconditioned residual vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residuals contains the preconditioned residual norm history,
+        including the initial residual.  
     orthog : string
         'householder' calls _gmres_householder which uses Householder reflections
         to find the orthogonal basis for the Krylov space.

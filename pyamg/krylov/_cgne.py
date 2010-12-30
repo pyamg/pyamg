@@ -1,4 +1,4 @@
-from numpy import array, inner, conjugate, ceil, asmatrix
+from numpy import array, inner, conjugate, ceil, asmatrix, mod
 from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -11,7 +11,8 @@ __docformat__ = "restructuredtext en"
 __all__ = ['cgne']
 
 
-def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
+def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+         callback=None, residuals=None):
     '''Conjugate Gradient, Normal Error algorithm
 
     Applies CG to the normal equations, A.H A x = b. Left preconditioning 
@@ -109,6 +110,9 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
     else:
         keep_r = False
     
+    # How often should r be recomputed
+    recompute_r = 8
+
     # Check iteration numbers
     # CGNE suffers from loss of orthogonality quite easily, so we arbitarily let the method go up to 130% over the
     # theoretically necessary limit of maxiter=dimen
@@ -154,7 +158,10 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=Non
         x += alpha*p
 
         # r_{j+1} = r_j - alpha*w_j,   where w_j = A*p_j
-        r -= alpha*(A*p)
+        if mod(iter, recompute_r) and iter > 0:
+            r -= alpha*(A*p)
+        else:
+            r = b - A*x
 
         # z_{j+1} = M*r_{j+1}
         z = M*r
