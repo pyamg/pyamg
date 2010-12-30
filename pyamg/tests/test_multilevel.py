@@ -1,12 +1,18 @@
 from pyamg.testing import *
 
-from numpy import matrix, array, diag, arange, ones
+from numpy import matrix, array, diag, arange, ones, sqrt, dot, ravel
 from scipy import rand
 from scipy.linalg import norm
 from scipy.sparse import csr_matrix
 
 from pyamg.gallery import poisson
 from pyamg.multilevel import *
+
+def precon_norm(v, ml):
+    ''' helper function to calculate preconditioner norm of v '''
+    v = ravel(v)
+    w = ml.aspreconditioner()*v
+    return sqrt(dot(v.conjugate(),w))
 
 class TestMultilevel(TestCase):
     def test_coarse_grid_solver(self):
@@ -46,7 +52,8 @@ class TestMultilevel(TestCase):
         for cycle in ['V','W','F']:
             M = ml.aspreconditioner(cycle='V')
             x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)
-            assert(norm(b - A*x) < 1e-8*norm(b))
+            # cg satisfies convergence in the preconditioner norm
+            assert(precon_norm(b - A*x,ml) < 1e-8*precon_norm(b,ml))
 
 
     def test_accel(self):
@@ -57,8 +64,19 @@ class TestMultilevel(TestCase):
         b = rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)
-
-        for accel in ['cg', 'bicgstab', 'cgs', cg, bicgstab]:
+        
+        # cg halts based on the preconditioner norm
+        for accel in ['cg',cg]:
+            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
+            assert(precon_norm(b - A*x,ml) < 1e-8*precon_norm(b,ml))
+            residuals = []
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
+            assert(precon_norm(b - A*x,ml) < 1e-8*precon_norm(b,ml))
+            #print residuals
+            assert_almost_equal(precon_norm(b - A*x,ml), residuals[-1])
+        
+        # cgs and bicgstab use the Euclidean norm
+        for accel in ['bicgstab', 'cgs', bicgstab]:
             x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
             assert(norm(b - A*x) < 1e-8*norm(b))
             residuals = []
@@ -66,6 +84,7 @@ class TestMultilevel(TestCase):
             assert(norm(b - A*x) < 1e-8*norm(b))
             #print residuals
             assert_almost_equal(norm(b - A*x), residuals[-1])
+
 
     def test_cycle_complexity(self):
         # four levels
