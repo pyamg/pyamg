@@ -260,7 +260,7 @@ class TestStrengthOfConnection(TestCase):
             scipy.random.seed(0)  #make results deterministic
             expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'])
-            assert_array_almost_equal( result.todense(), expected.todense() )
+            assert_array_almost_equal( result.todense(), expected.todense(), decimal=4)
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')

@@ -366,7 +366,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     Dinv[D == 0] = 0.0
     Dinv = sparse.csc_matrix( (Dinv, (numpy.arange(A.shape[0]), numpy.arange(A.shape[1]))), shape=A.shape)
     DinvA = Dinv*A
-    omega = 1.0/approximate_spectral_radius(DinvA, maxiter=20)
+    omega = 1.0/approximate_spectral_radius(DinvA)
     del DinvA
 
     ## 
