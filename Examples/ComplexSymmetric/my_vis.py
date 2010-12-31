@@ -20,7 +20,7 @@ from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
 from scipy import array, zeros, mean, kron, ones, sparse, rand
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
 from os import system
-# have to manually install delaunay
+# have to manually install Delaunay
 from scikits import delaunay
 # pyamg
 from pyamg.vis import write_basic_mesh, write_vtu
@@ -127,7 +127,7 @@ def dg_vis(fname, Vert, E2V, Agg, mesh_type, A=None):
 
     Returns
     -------
-        - Writes data to two .vtk files for use in paraview (xml 0.1 format)
+        - Writes data to two .vtk files for use in Paraview (xml 0.1 format)
     
     Notes
     -----
@@ -193,7 +193,7 @@ def dg_vis(fname, Vert, E2V, Agg, mesh_type, A=None):
     write_basic_mesh(Vert, E2V=array(range(N)).reshape(N,1), mesh_type='vertex', pdata=pdata, fname=filename)
 
     # plot_type = 'primal', using a global Delaunay triangulation of the shrunken mesh,
-    #   we visualize the aggregates as if the global Delaunay triangulation defined a Continuous Galerkin
+    #   we visualize the aggregates as if the global Delaunay triangulation defined a continuous Galerkin
     #   mesh upon which our aggregates are defined.
     #circum_cent, edges, tri_pts, tri_nbs = delaunay.delaunay(Vert[:,0], Vert[:,1])
     #coarse_grid_vis(filename, Vert, tri_pts, Agg, A=A, plot_type='primal', mesh_type='tri')
@@ -231,12 +231,12 @@ def dg_vis(fname, Vert, E2V, Agg, mesh_type, A=None):
     Agg = csr_matrix(Agg)
 
     if E2V.max() >= Agg.shape[0]:
-        # remove elements with dirichlet BCs
+        # remove elements with Dirichlet BCs
         E2V = E2V[E2V.max(axis=1) < Agg.shape[0]]
 
     # Find elements with all vertices in same aggregate
     if len(Agg.indices) != Agg.shape[0]:
-        # account for 0 rows.  mark them as solitary aggregates
+        # account for 0 rows.  Mark them as solitary aggregates
         full_aggs = array(Agg.sum(axis=1),dtype=int).ravel()
         full_aggs[full_aggs==1] = Agg.indices
         full_aggs[full_aggs==0] = Agg.shape[1] + arange(0,Agg.shape[0]-Agg.nnz,dtype=int).ravel()
@@ -249,12 +249,12 @@ def dg_vis(fname, Vert, E2V, Agg, mesh_type, A=None):
     E2V3 = E2V[mask,:]
     Nel3 = E2V3.shape[0]
 
-    # 3 edges = 4 nodes.  find where the difference is 0 (bdy edge)
+    # 3 edges = 4 nodes.  Find where the difference is 0 (bdy edge)
     markedges = diff(c_[ElementAggs,ElementAggs[:,0]])
     markedges[mask,:]=1
     markedelements, markededges = where(markedges==0)
 
-    # now concatenate the edges (ie. first and next one (mod 3 index)
+    # now concatenate the edges (i.e. first and next one (mod 3 index)
     E2V2 = c_[[E2V[markedelements,markededges], 
                E2V[markedelements,(markededges+1)%3]]].T 
     Nel2 = E2V2.shape[0]
@@ -276,7 +276,7 @@ def my_vis(ml, V, error=None, fname="", E2V=None, Pcols=None):
 
     Parameters
     ----------
-    ml : {multilevel hiearchy}
+    ml : {multilevel hierarchy}
         defines the multilevel hierarchy to visualize
     V : {array}
         coordinate array (N x D)
@@ -295,7 +295,7 @@ def my_vis(ml, V, error=None, fname="", E2V=None, Pcols=None):
 
     Returns
     -------
-        - Writes data to .vtk files for use in paraview (xml 0.1 format)
+        - Writes data to .vtk files for use in Paraview (xml 0.1 format)
     
     Notes
     -----

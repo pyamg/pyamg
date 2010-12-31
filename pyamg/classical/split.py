@@ -56,7 +56,7 @@ Summary
 -------
 
 In general, methods that use a graph coloring perform better on structured 
-meshes [1].  Unstructured meshes do not appear to benefit substaintially 
+meshes [1].  Unstructured meshes do not appear to benefit substantially 
 from coloring.
 
     ========  ========  ========  ==========  

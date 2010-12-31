@@ -1,4 +1,4 @@
-# 3d example of viewing aggregates from SA using VTK
+# 3D example of viewing aggregates from SA using VTK
 from pyamg.aggregation import standard_aggregation
 from pyamg.vis import vis_coarse, vtk_writer
 from pyamg.gallery import load_example
@@ -22,8 +22,8 @@ vtk_writer.write_basic_mesh(Verts=V, E2V=E2V, \
                             mesh_type='tet', \
                             fname='output_mesh.vtu')
 
-# to use paraview:
-# start paraview: paraview --data=output_mesh.vtu
+# to use Paraview:
+# start Paraview: Paraview --data=output_mesh.vtu
 # apply
 # under display in the object inspector: 
 #           select wireframe representation

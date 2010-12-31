@@ -346,7 +346,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
         N x m array
     BH : {None, array}
         If A.symmetry == 'nonsymmetric, then BH must be an N x m array.
-        Otherwsie, BH is ignored.
+        Otherwise, BH is ignored.
 
     Returns
     -------
@@ -419,7 +419,7 @@ def type_prep(upcast_type, varlist):
 
     Returns
     -------
-    Returns upcasted varlist to upcast_type
+    Returns upcast-ed varlist to upcast_type
 
     Notes
     -----
@@ -459,7 +459,7 @@ def to_type(upcast_type, varlist):
 
     Returns
     -------
-    Returns upcasted varlist to upcast_type
+    Returns upcast-ed varlist to upcast_type
 
     Notes
     -----
@@ -786,7 +786,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     Notes
     -----
     The string for the table will have correctly justified columns
-    with extra paddding added into each column entry to ensure columns align.
+    with extra padding added into each column entry to ensure columns align.
     The characters to delimit the columns can be user defined.  This
     should be useful for printing convergence data from tests.
 

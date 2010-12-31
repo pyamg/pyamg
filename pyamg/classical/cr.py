@@ -47,14 +47,14 @@ def CR(S, method='habituated',maxiter=20):
     ntests = 3      # (nu) number of random tests to do per iteration
     nrelax = 4      # (eta) number of relaxation sweeps per test
 
-    smagic = 1.0    # (s) parameter in [1,5] to account for fillin 
+    smagic = 1.0    # (s) parameter in [1,5] to account for fill-in 
     gamma = 1.5     # (gamma) cycle index.  use 1.5 for 2d
     G = 30          # (G) number of equivalence classes (# of bins)
     tdepth = 1      # (t) drop depth on parse of L bins
     delta = 0       # (delta) drop threshold on parse of L bins
     alphai = 0.25   # (alpha_inc) quota increase
 
-    # initializaitons    
+    # initializations    
     alpha = 0.0     # coarsening ratio, quota
     beta = numpy.inf      # quality criterion
     beta1 = numpy.inf     # quality criterion, older
@@ -92,7 +92,7 @@ def CR(S, method='habituated',maxiter=20):
                 elif method == 'concurrent':
                     raise NotImplementedError, 'not implemented: need an F-smoother'
                 else:
-                    raise NotImplementedError, 'method not recognized.  need habituated or concurrent'
+                    raise NotImplementedError, 'method not recognized: need habituated or concurrent'
 
                 enorm_old = enorm
                 enorm     = norm(e)
@@ -128,7 +128,7 @@ def CR(S, method='habituated',maxiter=20):
 
         # now add points
         #
-        # update limit on addtions to splitting (C)
+        # update limit on additions to splitting (C)
         if alpha < 1e-13:
             alpha=0.25
         else:
@@ -140,7 +140,7 @@ def CR(S, method='habituated',maxiter=20):
 
         binid=G
 
-        # add whole bins (and tdepth nodes) at a time
+        # add whole bins (and t-depth nodes) at a time
         u = numpy.zeros((n,1))
         while nC < nCmax:
             if delta > 0:

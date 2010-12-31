@@ -147,7 +147,7 @@ void rs_cf_splitting(const I n_nodes,
             splitting[i] = F_NODE;
     }
 
-    //Now add elements to C and F, in decending order of lambda
+    //Now add elements to C and F, in descending order of lambda
     for(I top_index = n_nodes - 1; top_index != -1; top_index--){
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];

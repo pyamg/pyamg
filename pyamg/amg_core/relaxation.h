@@ -65,7 +65,7 @@ void gauss_seidel(const I Ap[],
 /*
  *  Perform one iteration of Gauss-Seidel relaxation on the linear
  *  system Ax = b, where A is stored in Block CSR format and x and b
- *  are column vectors.  This method applies pointwise relaxation
+ *  are column vectors.  This method applies point-wise relaxation
  *  to the BSR as opposed to \"block relaxation\".
  *
  *  Refer to gauss_seidel for additional information regarding
@@ -162,7 +162,7 @@ void bsr_gauss_seidel(const I Ap[],
             }
         } 
         //else {
-        //    //TODO raise error? inform user no diagonal block?
+        //    //TODO raise error? Inform user no diagonal block?
         //}
 
     } // end outer-most for loop
@@ -240,7 +240,7 @@ void jacobi(const I Ap[],
 /*
  *  Perform one iteration of Jacobi relaxation on the linear
  *  system Ax = b, where A is stored in Block CSR format and x and b
- *  are column vectors.  This method applies pointwise relaxation
+ *  are column vectors.  This method applies point-wise relaxation
  *  to the BSR as opposed to \"block relaxation\".
  *
  *  Refer to jacobi for additional information regarding
@@ -348,7 +348,7 @@ void bsr_jacobi(const I Ap[],
             }
         } 
         //else {
-        //    //TODO raise error? inform user no diagonal block?
+        //    //TODO raise error? Inform user no diagonal block?
         //}
 
     } // end outer-most for loop
@@ -454,7 +454,7 @@ void gauss_seidel_indexed(const I Ap[],
  *
  * Returns
  * -------
- * x is modified in place in an additive, not overwiting fashion
+ * x is modified in place in an additive, not overwriting fashion
  *
  * Notes
  * -----
@@ -518,7 +518,7 @@ void jacobi_ne(const I Ap[],
  *
  * Returns
  * -------
- * x is modified in place in an additive, not overwiting fashion
+ * x is modified in place in an additive, not overwriting fashion
  *
  * Notes
  * -----
@@ -583,7 +583,7 @@ void gauss_seidel_ne(const I Ap[],
  *
  * Returns
  * -------
- * x is modified in place in an additive, not overwiting fashion
+ * x is modified in place in an additive, not overwriting fashion
  *
  * Notes
  * -----
@@ -742,7 +742,7 @@ void block_jacobi(const I Ap[],
  *      row_start  - beginning of the sweep
  *      row_stop   - end of the sweep (i.e. one past the last unknown)
  *      row_step   - stride used during the sweep (may be negative)
- *      blocksize  - dimension of sqare blocks in BSR matrix A
+ *      blocksize  - dimension of square blocks in BSR matrix A
  *  
  *  Returns:
  *      Nothing, x will be modified in place

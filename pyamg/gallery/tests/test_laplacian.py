@@ -79,7 +79,7 @@ class TestGaugeLaplacian(TestCase):
             diff = A - A.H
             assert_equal(diff.data, array([]))
 
-            # Check for Definiteness
+            # Check for definiteness
             e = eigvals(A.todense())
             if beta == 0.0:
                 # Here, semi-definiteness

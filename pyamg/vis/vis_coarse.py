@@ -89,8 +89,8 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     # 1 #
     # Find elements with all vertices in same aggregate
 
-    # account for 0 rows.  mark them as solitary aggregates
-    # TODO: (Luke) full_aggs is not definied, I think its just a mask
+    # account for 0 rows.  Mark them as solitary aggregates
+    # TODO: (Luke) full_aggs is not defined, I think its just a mask
     #       indicated with rows are not 0.
     if len(Agg.indices) != Agg.shape[0]:
         full_aggs = ((Agg.indptr[1:] - Agg.indptr[:-1]) == 0).nonzero()[0]

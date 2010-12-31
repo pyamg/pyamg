@@ -14,7 +14,7 @@ def demo():
     B = None                                # no near-null spaces guesses for SA
     b = scipy.rand(A.shape[0],1)            # a random right-hand side
 
-    # Construct solver using AMG based on Smoothed Aggregation (SA) and disply info
+    # Construct solver using AMG based on Smoothed Aggregation (SA) and display info
     mls = smoothed_aggregation_solver(A, B=B)
     print mls
         

@@ -30,7 +30,7 @@ def trimesh(vertices, indices, labels=False):
                                         'verticalalignment' : 'center'})
 
 def graph_laplacian(V,E):
-    # build graph laplacian
+    # build graph Laplacian
     from numpy import kron, ones, zeros, array
     from scipy.sparse import coo_matrix
     Nel = E.shape[0]

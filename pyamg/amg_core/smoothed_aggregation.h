@@ -259,7 +259,7 @@ I naive_aggregation(const I n_row,
 
 /*
  *  Given a set of near-nullspace candidates stored in the columns of B, and
- *  an aggregation opertor stored in A using BSR format, this method computes
+ *  an aggregation operator stored in A using BSR format, this method computes
  *      Ax : the data array of the tentative prolongator in BSR format
  *      R : the coarse level near-nullspace candidates
  *
@@ -286,7 +286,7 @@ I naive_aggregation(const I n_row,
  *  Notes:
  *      - Storage for Ax and R must be preallocated.
  *      - The tol parameter is applied to the candidates restricted to each
- *      aggregate to discard (redundant) numerically linear dependancies. 
+ *      aggregate to discard (redundant) numerically linear dependencies. 
  *      For instance, if the restriction of two different fine-level candidates
  *      to a single aggregate are equal, then the second candidate will not
  *      contribute to the range of A.
@@ -399,7 +399,7 @@ void fit_candidates_common(const I n_row,
            
 
             //normalize column bj if, after orthogonalization, its
-            //euclidean norm exceeds the threshold. otherwise set 
+            //euclidean norm exceeds the threshold. Otherwise set 
             //column bj to 0.
             T scale;
             if(norm_j > threshold_j){
@@ -678,7 +678,7 @@ void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
                     BtBcounter += NullDim + 1;
                     BsqCounter += (NullDim - m);
                 }
-                // Do work in computing offdiagonals of BtB_loc, noting that BtB_loc is Hermitian and that
+                // Do work in computing off-diagonals of BtB_loc, noting that BtB_loc is Hermitian and that
                 // svd_solve needs BtB_loc in column-major form, because svd_solve is Fortran
                 BsqCounter = k*BsqCols;
                 for(I m = 0; m < NullDim; m++)  // Loop over cols
@@ -792,7 +792,7 @@ inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
 
 
 /* For use in incomplete_BSRmatmat(...)
- * Calcuate <A_{row,:}, B_{:, col}>
+ * Calculate <A_{row,:}, B_{:, col}>
  *
  * Parameters
  * ----------
@@ -856,7 +856,7 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
     {   sum[index] = 0.0; }
 
     // Loop over row=row of A, looking for entries in column=col 
-    // of B that line up for the innerproduct
+    // of B that line up for the inner-product
     for(I colptr = rowstart; colptr < rowend; colptr++)
     {
         // Return if there are no more entries in this column of B
@@ -886,7 +886,7 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
 }
 
 
-/* Calculate A*B = S, but only at the pre-exitsting sparsity
+/* Calculate A*B = S, but only at the pre-existing sparsity
  * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
  *
  * A must be in BSR, B must be in BSC and S must be in CSR
@@ -925,7 +925,7 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
  *
  * Returns
  * -------
- * Sx is modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ * Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
  *
  * Notes
  * -----
@@ -940,7 +940,7 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
  *
  * Principle calling routine is energy_prolongation_smoother(...) in
  * smooth.py.  Here is is used to calculate the descent direction
- * A*P_tent, but only within an accepted sparsity pattery.
+ * A*P_tent, but only within an accepted sparsity pattern.
  *
  * Examples
  * --------

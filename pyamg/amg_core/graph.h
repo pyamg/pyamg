@@ -15,7 +15,7 @@
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
  *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (ouput)
+ *       C         - value used to mark non-MIS vertices   (output)
  *       F         - value used to mark MIS vertices       (output)
  *      x[]        - state of each vertex
  *
@@ -68,7 +68,7 @@ I maximal_independent_set_serial(const I num_rows,
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
  *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (ouput)
+ *       C         - value used to mark non-MIS vertices   (output)
  *       F         - value used to mark MIS vertices       (output)
  *      x[]        - state of each vertex
  *      y[]        - random values for each vertex
@@ -646,7 +646,7 @@ void breadth_first_search(const I Ap[],
 /*
  *  Compute the connected components of a graph stored in CSR format.
  *
- *  Vertices beloning to each component are marked with a unique integer
+ *  Vertices belonging to each component are marked with a unique integer
  *  in the range [0,K), where K is the number of components.
  *
  *  Parameters

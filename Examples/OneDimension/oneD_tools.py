@@ -78,7 +78,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, iter=1, cycle='V', fig_num=1):
         initial guess to linear system, default is a random
     b : array
         right hand side to linear system, default is all zeros
-        Note that if b is not all zeros and soln is not provided,
+        Note that if b is not all zeros and solution is not provided,
         A must be inverted in order to plot the error
     iter : int
         number of cycle iterations, default is 1
@@ -109,7 +109,7 @@ def oneD_profile(mg, grid=None, x0=None, b=None, iter=1, cycle='V', fig_num=1):
     >>> oneD_profile(ml, b=rand(128,), x0=zeros((128,)), iter=5); pylab.show()
     '''
 
-    # use good plotting paramters
+    # use good plotting parameters
     update_rcparams()
 
     A = mg.levels[0].A

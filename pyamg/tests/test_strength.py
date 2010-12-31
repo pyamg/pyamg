@@ -24,7 +24,7 @@ class TestStrengthOfConnection(TestCase):
         for N in [2,3,5]:
             self.cases.append( csr_matrix(rand(N,N)) )
 
-        # poisson problems in 1D and 2D
+        # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             self.cases.append( poisson( (N,), format='csr') )
         for N in [2,3,5,7,10,11]:
@@ -288,7 +288,7 @@ class TestComplexStrengthOfConnection(TestCase):
         for N in [2,3,5]:
             self.cases.append( csr_matrix(rand(N,N)) + csr_matrix(1.0j*rand(N,N)))
 
-        # poisson problems in 1D and 2D
+        # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             A = poisson( (N,), format='csr'); A.data = A.data + 1.0j*A.data;
             self.cases.append(A)
@@ -564,7 +564,7 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             #Calc Soln to Min Problem
             x = mat(pinv(LHS))*RHS
             
-            # Calc best constrained approximation to zi with span(Bi), and filter out 
+            # Calculate best constrained approximation to zi with span(Bi), and filter out 
             # "numerically" zero values.  This is important because we look only at the
             # sign of values below when calculating angle.
             zihat = Bi*x[:-1]
@@ -595,7 +595,7 @@ def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2")
             # important to make "perfect" connections explicitly nonzero
             zi[zi < sqrt_near_zero] = 1e-4                 
 
-            #Calculate and applydrop-tol.  Ignore diagonal by making it very large
+            #Calculate and apply drop-tol.  Ignore diagonal by making it very large
             zi[iInRow] = 1e5
             drop_tol = min(zi)*epsilon
             zi[zi > drop_tol] = 0.0

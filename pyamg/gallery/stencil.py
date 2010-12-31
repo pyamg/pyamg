@@ -83,7 +83,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
     # diagonal offsets 
     diags = numpy.zeros(N_s, dtype=int)  
 
-    # compute index offset of each DoF within the stencil
+    # compute index offset of each dof within the stencil
     strides = numpy.cumprod( [1] + list(reversed(grid)) )[:-1]
     indices = S.nonzero()
     for i,s in zip(indices,S.shape):

@@ -70,7 +70,7 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
     
     def get_aggregate_weights(AggOp, A, z, nPDEs, ndof):
         """
-        Calculate local aggregate quantaties
+        Calculate local aggregate quantities
         Return a vector of length num_aggregates where entry i is
         (card(agg_i)/A.shape[0]) ( <Az, z>/rho(A) )
         """
@@ -273,7 +273,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
         for i in range(improvement_iters):
             for j in range(B.shape[1]):
-                # Run a V-cycle built on everthing except candidate j, while using 
+                # Run a V-cycle built on everything except candidate j, while using 
                 # candidate j as the initial guess 
                 x0 = B[:,0]
                 B  = B[:,1:]
@@ -417,7 +417,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         if C_l.dtype == complex:
             C_l.data = numpy.abs(C_l.data)
         
-        # C_lreate a unified strength framework so that large values represent strong
+        # Create a unified strength framework so that large values represent strong
         # connections and small values represent weak connections
         if (fn == 'ode') or (fn == 'energy_based'):
             C_l.data = 1.0/C_l.data
@@ -473,7 +473,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                 xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
             else:
-                # use A.H A innerproduct
+                # use A.H A inner-product
                 Ax = A_l*x; Axhat = A_l*x_hat;
                 x_A_x = numpy.dot(numpy.conjugate(Ax).T,Ax)
                 xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)

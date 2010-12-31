@@ -2,7 +2,7 @@
 
 Test the convergence of a small diffusion problem discretized with the local
 discontinuous Galerkin method.  The polynomial order is 5.  To utilize the
-visualization capabilities, you need to have paraview and scikits.delaunay
+visualization capabilities, you need to have Paraview and scikits.delaunay
 installed.
 
 References
@@ -92,7 +92,7 @@ except:
 # generate visualization files    
 print "\n\n*************************************************************"
 print "*************************************************************"
-print "Generating visualization files in .vtu format for use with paraview."
+print "Generating visualization files in .vtu format for use with Paraview."
 print "\nAll values from coarse levels are interpolated using the aggregates,\n" +\
       "i.e., there is no fixed geometric hierarchy.  Additionally, the mesh\n" +\
       "has been artificially shrunk towards each element's barycenter, in order\n" +\

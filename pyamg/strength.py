@@ -308,7 +308,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     where v_j = v, such that entry j in v has been zeroed out.  As is common,
     larger values imply a stronger connection.
     
-    Current implemenation is a very slow pure-python implementation for 
+    Current implementation is a very slow pure-python implementation for 
     experimental purposes, only.
 
     References
@@ -519,7 +519,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
         
     #Get spectral radius of Dinv*A, this will be used to scale the time step size for the ODE 
     rho_DinvA = approximate_spectral_radius(Dinv_A)
-    
+
     #Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
         D_A = sparse.spdiags( [D], [0], dimen, dimen, format = 'csr')

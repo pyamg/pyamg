@@ -31,7 +31,7 @@ def planewaves(X, Y, omega=1.0, angles=[0.0]):
     X,Y : {array}
         Coordinate vectors
     omega : {float}
-        Helmholtz wave number, laplace(u) + omega^2 u = f
+        Helmholtz wave number, Laplace(u) + omega^2 u = f
     angles : {list}
         List of angles in [0, 2 pi] from which to generate planewaves
     
@@ -289,7 +289,7 @@ def smoothed_aggregation_helmholtz_solver(A, planewaves, use_constant=(True, {'l
                 Bcoarse2 = relaxation_as_linear_operator(Bimprove[0], A, zeros_0)*Bcoarse2
             
             ##
-            # Restrict Bocarse2 to current level
+            # Restrict Bcoarse2 to current level
             for i in range(len(levels)-1):
                 Bcoarse2 = levels[i].R*Bcoarse2
             # relax after restriction

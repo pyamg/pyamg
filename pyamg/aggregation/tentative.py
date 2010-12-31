@@ -17,7 +17,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
         Describes the sparsity pattern of the tentative prolongator.
         Has dimension (#blocks, #aggregates)
     B : array
-        The near-nullspace candidates stored in columnwise fashion.
+        The near-nullspace candidates stored in column-wise fashion.
         Has dimension (#blocks * blocksize, #candidates)
     tol : scalar
         Threshold for eliminating local basis functions.
@@ -39,7 +39,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     Notes
     -----
         Assuming that each row of AggOp contains exactly one non-zero entry,
-        i.e. all unknowns belong to an aggregate, then Q and R statisfy the 
+        i.e. all unknowns belong to an aggregate, then Q and R satisfy the 
         relationship B = Q*R.  In other words, the near-nullspace candidates
         are represented exactly by the tentative prolongator.
 
@@ -130,7 +130,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     
     N_fine,N_coarse = AggOp.shape
 
-    K1 = B.shape[0] / N_fine  # DoF per supernode (e.g. 3 for 3d vectors)
+    K1 = B.shape[0] / N_fine  # dof per supernode (e.g. 3 for 3d vectors)
     K2 = B.shape[1]           # candidates
 
     # the first two dimensions of R and Qx are collapsed later

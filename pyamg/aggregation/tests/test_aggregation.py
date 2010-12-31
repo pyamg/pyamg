@@ -76,7 +76,7 @@ class TestComplexParameters(TestCase):
     def setUp(self):
         self.cases = []
         
-        # Consider "helmholtz" like problems with an imaginary shift so that the operator 
+        # Consider "Helmholtz" like problems with an imaginary shift so that the operator 
         #   should still be SPD in a sense and SA should perform well.
         # There are better near nullspace vectors than the default, 
         #   but a constant should give a convergent solver, nonetheless.
@@ -283,7 +283,7 @@ class TestSolverPerformance(TestCase):
 
     def test_Bimprove(self):
         ##
-        # test Bimprove for the poisson problem and elasticity, where rho_scale is 
+        # test Bimprove for the Poisson problem and elasticity, where rho_scale is 
         # the amount that each successive Bimprove option should improve convergence
         # over the previous Bimprove option.
         Bimproves = [None, [('block_gauss_seidel', {'iterations' : 4, 'sweep':'symmetric'})] ]
@@ -366,7 +366,7 @@ class TestSolverPerformance(TestCase):
         assert(avg_convergence_ratio < 0.45)
 
         # test that nonsymmetric parameters give the same result as symmetric parameters
-        # for poisson problem
+        # for Poisson problem
         A = poisson( (25,25), format='csr')
         strength='symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
@@ -385,8 +385,8 @@ class TestSolverPerformance(TestCase):
         A = poisson( (30,30), format='csr')
         b = rand(A.shape[0],1)
         
-        # for each pair, the first entry should yield an sa solver that
-        # converges in fewer iterations for a basic poisson problem
+        # for each pair, the first entry should yield an SA solver that
+        # converges in fewer iterations for a basic Poisson problem
         coarse_solver_pairs = [ (('jacobi',{'iterations':30}), 'jacobi') ]
         coarse_solver_pairs.append( (('gauss_seidel',{'iterations':30}), 'gauss_seidel') )
         coarse_solver_pairs.append( ('gauss_seidel', 'jacobi') )

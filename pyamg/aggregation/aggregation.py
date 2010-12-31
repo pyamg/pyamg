@@ -207,8 +207,8 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     
     - The parameters smooth, strength, aggregate, presmoother, postsmoother can
       be varied on a per level basis.  For different methods on different
-      levels, use a list as input so that the ith entry defines the method at
-      the ith level.  If there are more levels in the hierarchy than list
+      levels, use a list as input so that the i-th entry defines the method at
+      the i-th level.  If there are more levels in the hierarchy than list
       entries, the last entry will define the method for all levels lower.
       
       Examples are:
@@ -301,7 +301,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     levels[-1].A = A          # matrix
    
     ##
-    # Append near null-space candidates
+    # Append near nullspace candidates
     levels[-1].B = B          # right candidates
     if A.symmetry == 'nonsymmetric':
         levels[-1].BH = BH    # left candidates
@@ -314,7 +314,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     return ml
 
 def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
-    """Service routine to implement the strenth of connection, aggregation,
+    """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
     """
@@ -379,7 +379,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
         raise ValueError('unrecognized aggregation method %s' % str(fn))
     
     ##
-    # Improve near null-sapce candidates (important to place after the call to
+    # Improve near nullspace candidates (important to place after the call to
     # ode_strength_of_connection)
     if Bimprove[len(levels)-1] is not None:
         b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
@@ -437,13 +437,13 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
     levels[-1].P     = P       # smoothed prolongator
     levels[-1].R     = R       # restriction operator 
 
-    A = R * A * P              # galerkin operator
+    A = R * A * P              # Galerkin operator
     A.symmetry = symmetry
     
     levels.append( multilevel_solver.level() )
     levels[-1].A = A
        
-    levels[-1].B = B           # right near null-space candidates
+    levels[-1].B = B           # right near nullspace candidates
     if A.symmetry == "nonsymmetric":
-        levels[-1].BH = BH     # left near null-space candidates
+        levels[-1].BH = BH     # left near nullspace candidates
 

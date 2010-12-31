@@ -8,7 +8,7 @@ from pyamg.util.utils import print_table
 def print_cycle_history(resvec, ml, verbose=False, plotting=False):
     """
     Shows a summary of the complexity, convergence factors, and total work
-    along with a verbose mode highlighited each iteration.
+    along with a verbose mode highlighted each iteration.
 
     Parameters
     ----------
@@ -66,10 +66,10 @@ def print_cycle_history(resvec, ml, verbose=False, plotting=False):
 
                 ifactor = ifactors[-1]                              # current arith mean
                 aafactor = numpy.mean(ifactors)                     # running arith mean
-                gafactor = (iresvec[-1]/iresvec[0])**(1.0/(i+1))    # geo mean
+                gafactor = (iresvec[-1]/iresvec[0])**(1.0/(i+1))    # geometric mean
 
                 ocx = ml.cycle_complexity()
-                iwork = - ocx / scipy.log10(gafactor)                        # current work-per-digit
+                iwork = - ocx / scipy.log10(gafactor)               # current work-per-digit
 
                 plist = (i, ifactor, aafactor, gafactor, iwork)
                 print '%-10d %-10.3f %-10.3f %-10.3f %-10.3f' % plist

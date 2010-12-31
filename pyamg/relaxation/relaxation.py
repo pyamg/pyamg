@@ -557,7 +557,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1, Dinv
                                     row_start, row_stop, row_step, blocksize)
 
 
-def polynomial(A, x, b, coeffients, iterations=1):
+def polynomial(A, x, b, coefficients, iterations=1):
     """Apply a polynomial smoother to the system Ax=b
 
 
@@ -569,7 +569,7 @@ def polynomial(A, x, b, coeffients, iterations=1):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    coeffients : {array_like}
+    coefficients : {array_like}
         Coefficients of the polynomial.  See Notes section for details.
     iterations : int
         Number of iterations to perform
@@ -581,8 +581,8 @@ def polynomial(A, x, b, coeffients, iterations=1):
     Notes
     -----
     The smoother has the form  x[:] = x + p(A) (b - A*x) where p(A) is a 
-    polynomial in A whose scalar coeffients are specified (in decending 
-    order) by argument 'coeffients'.
+    polynomial in A whose scalar coefficients are specified (in descending 
+    order) by argument 'coefficients'.
 
     - Richardson iteration p(A) = c_0:
         polynomial_smoother(A, x, b, [c_0])
@@ -627,9 +627,9 @@ def polynomial(A, x, b, coeffients, iterations=1):
         else:
             residual = (b - A*x)
 
-        h = coeffients[0]*residual
+        h = coefficients[0]*residual
     
-        for c in coeffients[1:]:
+        for c in coefficients[1:]:
             h = c*residual + A*h
     
         x += h

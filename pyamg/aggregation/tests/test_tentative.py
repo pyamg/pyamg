@@ -10,7 +10,7 @@ class TestFitCandidates(TestCase):
     def setUp(self):
         self.cases = []
 
-        ### tests where AggOp includes all DOFs
+        ### tests where AggOp includes all dofs
         # one candidate
         self.cases.append((csr_matrix((ones(5),array([0,0,0,1,1]),arange(6)),shape=(5,2)), ones((5,1)) ))
         self.cases.append((csr_matrix((ones(5),array([1,1,0,0,0]),arange(6)),shape=(5,2)), ones((5,1)) ))
@@ -34,7 +34,7 @@ class TestFitCandidates(TestCase):
         self.cases.append((csr_matrix((ones(3),array([0,1,1]),arange(4)),shape=(3,2)), vstack((ones(9),arange(9))).T ))
         self.cases.append((csr_matrix((ones(5),array([2,0,2,1,1]),arange(6)),shape=(5,3)), vstack((ones(10),arange(10))).T ))
 
-        ### tests where AggOp excludes some DOFs
+        ### tests where AggOp excludes some dofs
         # one candidate
         self.cases.append((csr_matrix((ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),shape=(5,2)), ones((5,1)) ))
         self.cases.append((csr_matrix((ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),shape=(5,2)), vstack((ones(5),arange(5))).T ))
@@ -68,7 +68,7 @@ class TestFitCandidates(TestCase):
 
     def test_all_cases(self):
         def mask_candidate(AggOp,candidates):
-            #mask out all DOFs that are not included in the aggregation
+            #mask out all dofs that are not included in the aggregation
             candidates[diff(AggOp.indptr) == 0,:] = 0
 
         for AggOp,fine_candidates in self.cases:

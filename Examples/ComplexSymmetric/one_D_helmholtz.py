@@ -13,7 +13,7 @@ def min_wave(A, omega, x, tol=1e-5, maxiter=25):
     parameters
     ----------
     A {matrix}
-        1D Helmholtz Operatoer
+        1D Helmholtz Operator
     omega {scalar}
         Wavenumber used to discretize Helmholtz problem
     x {array}
@@ -105,8 +105,8 @@ def one_D_helmholtz(h, omega=1.0, nplane_waves=2):
     # Create complex-valued system
     complexA = reA + 1.0j*imA
     
-    # For this case, the cg (continuous Galerkin) case is the default elements and vertices
-    # because there is no dg mesh to speak of
+    # For this case, the CG (continuous Galerkin) case is the default elements and vertices
+    # because there is no DG mesh to speak of
     elements = None
     vertices = hstack((linspace(-1.0,1.0,h).reshape(-1,1), zeros((h,1))))
     

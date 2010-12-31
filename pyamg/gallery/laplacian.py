@@ -61,7 +61,7 @@ def poisson(grid, spacing=None, dtype=float, format=None):
     return stencil_grid(stencil, grid, format=format)
 
 def gauge_laplacian(npts, spacing=1.0, beta=0.1):
-    """Construct a Gauge Laplacian from Quantum Chromodynamics for regualar 2D grids
+    """Construct a Gauge Laplacian from Quantum Chromodynamics for regular 2D grids
 
     Note that this function is not written efficiently, but should be 
     fine for N x N grids where N is in the low hundreds.
@@ -96,7 +96,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
 
     """
 
-    # The gauge laplacian has the same sparsity structure as a normal
+    # The gauge Laplacian has the same sparsity structure as a normal
     # Laplacian, so we start out with a Poisson Operator
     N = npts
     A = poisson( (N,N),  format='coo', dtype=complex)

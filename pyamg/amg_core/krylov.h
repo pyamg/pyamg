@@ -59,7 +59,7 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
  *
  * for j in range(inner,-1,-1):
  *  z[j] += y[j]
- *  # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
+ *  # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*update
  *  z = z - 2.0*dot(conjugate(B[j,:]), update)*B[j,:]
  *
  * Parameters
@@ -124,7 +124,7 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
  * Returns
  * -------
  * x is modified in place to reflect the application of the nrot 
- * rotations in B.  It is assumed that the the first rotation operates on 
+ * rotations in B.  It is assumed that the first rotation operates on 
  * degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
  * and so on
  *

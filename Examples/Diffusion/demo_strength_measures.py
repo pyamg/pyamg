@@ -18,7 +18,7 @@ if(__name__=="__main__"):
     numpy.random.seed(625)
     
     # Grid sizes to test
-    #nlist = [40,70,100,130,160]
+    # nlist = [40,70,100,130,160]
     nlist = [100,200,300,400]
 
     factors_classic    = numpy.zeros((len(nlist),1)).ravel()

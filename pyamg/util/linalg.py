@@ -105,7 +105,7 @@ def residual_norm(A, x, b):
 
 def axpy(x,y,a=1.0):
     """
-    Quick level-1 call to blas::
+    Quick level-1 call to BLAS
     y = a*x+y
 
     Parameters
@@ -273,7 +273,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
     restart : {integer}
         Number of restarted Arnoldi processes.  For example, a value of 0 will
         run Arnoldi once, for maxiter iterations, and a value of 1 will restart
-        Arnoldi once, using the maximal eigenvector from the first Arnolid
+        Arnoldi once, using the maximal eigenvector from the first Arnoldi
         process as the initial guess.
     symmetric : {boolean}
         True  - if A is symmetric
@@ -414,7 +414,7 @@ def cond(A):
 
     Notes
     -----
-    The condition number measures how large of a change in the 
+    The condition number measures how large of a change in 
     the problems solution is caused by a change in problem's input.
     Large condition numbers indicate that small perturbations 
     and numerical errors are magnified greatly when solving the system.

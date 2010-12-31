@@ -15,7 +15,7 @@ def chebyshev_polynomial_coefficients(a, b, degree):
     a,b : float
         The left and right endpoints of the interval.
     degree : int
-        Degree of desired chebyshev polynomial
+        Degree of desired Chebyshev polynomial
 
     Returns
     -------

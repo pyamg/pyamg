@@ -127,7 +127,7 @@ inline npy_cdouble_wrapper zero_imag(npy_cdouble_wrapper& x)
  *
  * Return
  * ------
- * conjuate(x).T y
+ * conjugate(x).T y
  *
  */
 template<class I, class T>
@@ -205,7 +205,7 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
  *
  * Notes
  * -----
- * There is a fair amount of hardcoding to make this routine very 
+ * There is a fair amount of hard-coding to make this routine very 
  * fast for small (<10) square matrices, although it works for general 
  * m x n matrices.
  *
@@ -312,7 +312,7 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  * Btrans : {char}
  *      Not Used
  * Sx : {float|complex array} 
- *      Output array, Contents are overwitten
+ *      Output array, Contents are overwritten
  * Srows : {int}
  *      Number of rows of S
  * Scols : {int}
@@ -414,7 +414,7 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * V : {array}
  *      Orthogonal n x n matrix, V, stored in col major
  * U : {array}
- *      Orthogonal m x nmatrix, U, stored in col major
+ *      Orthogonal m x n matrix, U, stored in col major
  * S : {array}
  *      Singular values
  * int : {int}
@@ -584,7 +584,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                     }
                 }
 
-                // Carry out Jacobi Rotations to orgthogonalize column's j and k in U
+                // Carry out Jacobi Rotations to orthogonalize column's j and k in U
                 else
                 {
                     // calculate rotation angles for 
@@ -787,7 +787,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  * Return
  * ------
  * Ax : {array}
- *      Ax is modified in place with the pseduo-inverse replacing each
+ *      Ax is modified in place with the pseduoinverse replacing each
  *      block of Ax.  Ax is returned in row-major form for Python
  *
  * Notes

@@ -35,7 +35,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     M : {array, matrix, sparse matrix, LinearOperator}
         n x n, inverted preconditioner, i.e. solve M A.H A x = b.
     callback : function
-        User-supplied funtion is called after each iteration as
+        User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
         residuals has the residual norm history,
@@ -113,15 +113,15 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # How often should r be recomputed
     recompute_r = 8
 
-    # Check iteration numbers
-    # CGNE suffers from loss of orthogonality quite easily, so we arbitarily let the method go up to 130% over the
+    # Check iteration numbers. CGNR suffers from loss of orthogonality quite
+    # easily, so we arbitrarily let the method go up to 130% over the
     # theoretically necessary limit of maxiter=dimen
     if maxiter == None:
         maxiter = int(ceil(1.3*dimen)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > (1.3*dimen):
-        warn('maximimum allowed inner iterations (maxiter) are the 130% times the number of degress of freedom')
+        warn('maximum allowed inner iterations (maxiter) are the 130% times the number of dofs')
         maxiter = int(ceil(1.3*dimen)) + 2
 
     # Prep for method

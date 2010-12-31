@@ -12,9 +12,9 @@ def regular_triangle_mesh(nx, ny):
     Parameters
     ----------
     nx : int
-       Number of nodes in the x direction
+       Number of nodes in the x-direction
     ny : int
-       Number of nodes in the y direction
+       Number of nodes in the y-direction
 
     Returns
     -------

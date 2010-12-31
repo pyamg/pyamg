@@ -81,7 +81,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
     weighting : {string}
         'block', 'diagonal' or 'local' weighting for constructing the Jacobi D
         'local': Uses a local row-wise weight based on the Gershgorin estimate.
-          Avoids any potential underdamping due to inaccurate spectral radius
+          Avoids any potential under-damping due to inaccurate spectral radius
           estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A  
         'diagonal': Classic Jacobi D = diagonal(A)
@@ -325,7 +325,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         This is the sparsity pattern constraint to enforce on the 
         eventual prolongator
     maxiter : int
-        maximumn number of iterations
+        maximum number of iterations
     tol : float
         residual tolerance for A T = 0
     weighting : {string}
@@ -388,7 +388,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
     Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolgonator\n"
+        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolongator\n"
         return T
     
     #Calculate Frobenius norm of the residual
@@ -403,7 +403,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         else:
             Z = Dinv*R
 
-        #Frobenius innerproduct of (R,Z) = sum( numpy.conjugate(rk).*zk)
+        #Frobenius inner-product of (R,Z) = sum( numpy.conjugate(rk).*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
             
         #P is the search direction, not the prolongator, which is T.    
@@ -436,7 +436,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
         
-        #Frobenius innerproduct of (P, AP)
+        #Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
 
         #Update the prolongator, T
@@ -483,7 +483,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         This is the sparsity pattern constraint to enforce on the 
         eventual prolongator
     maxiter : int
-        maximumn number of iterations
+        maximum number of iterations
     tol : float
         residual tolerance for A T = 0
     weighting : {string}
@@ -552,7 +552,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     Satisfy_Constraints(R, B, BtBinv)
  
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolgonator\n"
+        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolongator\n"
         return T
     
     #Calculate Frobenius norm of the residual
@@ -614,7 +614,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
         
-        #Frobenius innerproduct of (P, AP)
+        #Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
  
         #Update the prolongator, T
@@ -637,12 +637,12 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
 def apply_givens(Q, v, k):
     ''' 
-    Apply the first k Given's rotations in Q to v 
+    Apply the first k Givens rotations in Q to v 
     
     Parameters
     ----------
     Q : {list} 
-        list of consecutive 2x2 Given's rotations 
+        list of consecutive 2x2 Givens rotations 
     v : {array}
         vector to apply the rotations to
     k : {int}
@@ -654,8 +654,8 @@ def apply_givens(Q, v, k):
 
     Notes
     -----
-    This routine is specialized for GMRES.  It assumes that the first Given's
-    rotation is for dofs 0 and 1, the second Given's rotation is for dofs 1 and 2,
+    This routine is specialized for GMRES.  It assumes that the first Givens
+    rotation is for dofs 0 and 1, the second Givens rotation is for dofs 1 and 2,
     and so on.
     '''
 
@@ -693,7 +693,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
         This is the sparsity pattern constraint to enforce on the 
         eventual prolongator
     maxiter : int
-        maximumn number of iterations
+        maximum number of iterations
     tol : float
         residual tolerance for A T = 0
     weighting : {string}
@@ -716,14 +716,14 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     # Preallocate space for new search directions
     AV = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), shape=(Sparsity_Pattern.shape) )
 
-    # Preallocate for Given's Rotations, Hessenberg matrix and Krylov Space
+    # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
     xtype = scipy.sparse.sputils.upcast(A.dtype, T.dtype, B.dtype)
-    Q = []                                                 # Given's Rotations
+    Q = []                                                 # Givens Rotations
     V = []                                                 # Krylov Space
     vs = []                                                # vs store the pointers to each column of V.
                                                            #   This saves a considerable amount of time.
-    H = numpy.zeros( (maxiter+1, maxiter+1), dtype=xtype)      # Upper Hessenberg matrix, which is then 
-                                                           #   converted to upper tri with Given's Rots 
+    H = numpy.zeros( (maxiter+1, maxiter+1), dtype=xtype)  # Upper Hessenberg matrix, which is then 
+                                                           #   converted to upper tri with Givens Rots 
 
 
     # GMRES will be run with diagonal preconditioning
@@ -772,7 +772,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolgonator\n"
+        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level.  Returning tentative prolongator\n"
         return T
     
     # This is the RHS vector for the problem in the Krylov Space
@@ -826,15 +826,15 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
         # Frobenius Norm
         H[i+1,i] = numpy.sqrt( (V[i+1].data.conjugate()*V[i+1].data).sum() )
         
-        # Check for breadown
+        # Check for breakdown
         if H[i+1,i] != 0.0:
             V[i+1] = (1.0/H[i+1,i])*V[i+1]
 
-        # Apply previous Given's rotations to H
+        # Apply previous Givens rotations to H
         if i > 0:
             apply_givens(Q, H[:,i], i)
             
-        # Calculate and apply next complex-valued Given's Rotation
+        # Calculate and apply next complex-valued Givens Rotation
         if H[i+1, i] != 0:
             h1 = H[i, i]; 
             h2 = H[i+1, i];
@@ -853,11 +853,11 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
             Qblock = numpy.array([[c, numpy.conjugate(s)], [-s, c]], dtype=xtype)
             Q.append(Qblock)
             
-            # Apply Given's Rotation to g, 
+            # Apply Givens Rotation to g, 
             #   the RHS for the linear system in the Krylov Subspace.
             g[i:i+2] = scipy.dot(Qblock, g[i:i+2])
             
-            # Apply effect of Given's Rotation to H
+            # Apply effect of Givens Rotation to H
             H[i,     i] = scipy.dot(Qblock[0,:], H[i:i+2, i]) 
             H[i+1, i] = 0.0
             
@@ -909,12 +909,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, krylov='cg', maxiter=4, tol=1e
     weighting : {string}
         'block', 'diagonal' or 'local' construction of the diagonal preconditioning
         'local': Uses a local row-wise weight based on the Gershgorin estimate.
-          Avoids any potential underdamping due to inaccurate spectral radius
+          Avoids any potential under-damping due to inaccurate spectral radius
           estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A  
         'diagonal': Use inverse of the diagonal of A
     reorthogonalize : {boolean}
-        If True, then reorthogonalize the columns of P after smoothing.
+        If True, then re-orthogonalize the columns of P after smoothing.
         Each block column (corresponding to an aggregate) is orthogonalized
         locally.
 

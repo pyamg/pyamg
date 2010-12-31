@@ -206,7 +206,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     
     Parameters
     ----------
-    verticies : array_like
+    vertices : array_like
         array of vertices of a triangle or tets
     elements : array_like
         array of vertex indices for tri or tet elements

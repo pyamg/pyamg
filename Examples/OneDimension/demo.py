@@ -27,7 +27,7 @@ if(__name__=="__main__"):
     else:
         n = int(sys.argv[1])
 
-    # setup 1d poisson problem
+    # setup 1D Poisson problem
     A = poisson((n,), format='csr')
     ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2')
         

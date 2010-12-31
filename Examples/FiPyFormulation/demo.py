@@ -11,7 +11,7 @@ L = dx * nx
 mesh = Grid2D(dx=dx, dy=dy, nx=nx, ny=ny)
 phi = CellVariable(name = "solution variable", mesh = mesh, value = 0.)
 
-# Apply Dirichlet boundary conditions (else Neumann by defualt)
+# Apply Dirichlet boundary conditions (else Neumann by default)
 valueTopLeft = 0
 valueBottomRight = 1
 x, y = mesh.getFaceCenters()

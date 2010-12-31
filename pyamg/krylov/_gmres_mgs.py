@@ -71,13 +71,13 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     M : {array, matrix, sparse matrix, LinearOperator}
         n x n, inverted preconditioner, i.e. solve M A x = b.
     callback : function
-        User-supplied funtion is called after each iteration as
+        User-supplied function is called after each iteration as
         callback( ||rk||_2 ), where rk is the current preconditioned residual vector
     residuals : list
         residuals contains the preconditioned residual norm history,
         including the initial residual.  
     reorth : boolean
-        If True, then a check is made whether to reorthogonalize the Krylov 
+        If True, then a check is made whether to re-orthogonalize the Krylov 
         space each GMRES iteration
 
     Returns
@@ -151,7 +151,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
         # real type
         [axpy,dotu,dotc,scal,rotg] = blas.get_blas_funcs(['axpy', 'dot', 'dot',  'scal', 'rotg'], (x))
 
-    # Make full use of direct access to blas by defining own norm
+    # Make full use of direct access to BLAS by defining own norm
     def norm(z):
         return sqrt( real(dotc(z,z)) )
 
@@ -169,13 +169,13 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
         else:
             max_outer = 1
         if restrt > dimen:
-            warn('Setting number of inner iterations (restrt) to maximimum allowed, which is A.shape[0] ')
+            warn('Setting number of inner iterations (restrt) to maximum allowed, which is A.shape[0] ')
             restrt = dimen
         max_inner = restrt
     else:
         max_outer = 1
         if maxiter > dimen:
-            warn('Setting number of inner iterations (maxiter) to maximimum allowed, which is A.shape[0] ')
+            warn('Setting number of inner iterations (maxiter) to maximum allowed, which is A.shape[0] ')
             maxiter = dimen
         elif maxiter == None:
             maxiter = min(dimen, 40)
@@ -262,7 +262,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
             normv = norm(v)
             H[inner, inner+1] = normv
 
-            # Reorthogonalize
+            # Re-orthogonalize
             if (reorth == True) and ( normv_old == normv_old + 0.001*normv):
                 for k in xrange(inner+1):
                     vk = vs[k]

@@ -176,7 +176,7 @@ void apply_distance_filter(const I n_row,
  *      Block data structure of BSR matrix, S
  *      Sx is (n_blocks x blocksize) in length
  * Tx : {float|complex array}
- *      modified inplace for output
+ *      modified in place for output
  *
  * Returns
  * ------
@@ -237,9 +237,9 @@ void min_blocks(const I n_blocks, const I blocksize,
  *       (B*x)|_i = z|_i, i.e. they are equal at point i
  *        z = (I - (t/k) Dinv A)^k delta_i
  *   
- * Strength is defined as the relative point-wise approx. error between
+ * Strength is defined as the relative point-wise approximation error between
  * B*x and z.  B is the near-nullspace candidates.  The constrained min problem
- * is also restricted to consider B*x and z only at the nonozeros of column i of A
+ * is also restricted to consider B*x and z only at the nonzeros of column i of A
  *    
  * Can use either the D_A inner product, or l2 inner-prod in the minimization 
  * problem. Using D_A gives scale invariance.  This choice is reflected in 
@@ -448,7 +448,7 @@ void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
               RHS,  NullDim,       1, 'F', 
              zhat,   length,       1, 'F');
         
-        //Need to filter out numericall zero values in zhat, because the sign of each
+        //Need to filter out numerically zero values in zhat, because the sign of each
         //entry is very important in the below angle calc.  First, find the maximum value 
         //in zhat to scale the tolerance with.  Then, whenever the real or imag part of
         //zhat is less than this tolerance, set that real or imag part to zero.
@@ -591,8 +591,8 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
 }
 
 
-/* Calculate A*B = S, but only at the pre-exitsting sparsity
- * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
+/* Calculate A*B = S, but only at the pre-existing sparsity
+ * pattern of S, i.e. do an exact, but incomplete mat-mat multiply.
  *
  * A must be in CSR, B must be in CSC and S must be in CSR
  * Indices for A, B and S must be sorted

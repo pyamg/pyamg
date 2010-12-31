@@ -1,5 +1,5 @@
 ''' 
-Example driver script for solver_diagnotistics.py, which tries different parameter
+Example driver script for solver_diagnostics.py, which tries different parameter
 combinations for smoothed_aggregation_solver(...).  The goal is to find appropriate
 SA parameter settings for an arbitrary problem.
 
@@ -9,7 +9,7 @@ Explore 4 different matrices: CSR matrix for basic isotropic diffusion
                               CSR matrix for a nonsymmetric recirculating flow problem  
 
 Run with 
-    >>> python solver_diagonstics_driver.py
+    >>> python solver_diagnostics_driver.py
 and examine the on-screen output and file output.
 
 '''
@@ -42,7 +42,7 @@ solver_diagnostics(A, fname='rotated_ani_diffusion_diagnostics.txt',
                    definiteness='positive')
  
 ##
-# Try a basic elasticiy problem
+# Try a basic elasticity problem
 # --> Try V- and W-cycles by specifying cycle_list
 # --> Don't specify symmetry and definiteness and allow for auto-detection
 A = gallery.linear_elasticity((30,30))[0].tobsr(blocksize=(2,2))

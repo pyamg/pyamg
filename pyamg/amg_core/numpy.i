@@ -11,7 +11,7 @@
 /* The following code originally appeared in
  * enthought/kiva/agg/src/numeric.i written by Eric Jones.  It was
  * translated from C++ to C by John Hunter.  Bill Spotz has modified
- * it slightly to fix some minor bugs, upgrade to numpy (all
+ * it slightly to fix some minor bugs, upgrade to NumPy (all
  * versions), add some comments and some functionality.
  */
 
@@ -91,7 +91,7 @@ const char* typecode_string(int typecode) {
   return typecode < 24 ? type_names[typecode] : type_names[24];
 }
 
-/* Make sure input has correct numpy type.  Allow character and byte
+/* Make sure input has correct NumPy type.  Allow character and byte
  * to match.  Also allow int and long to match.  This is deprecated.
  * You should use PyArray_EquivTypenums() instead.
  */
@@ -210,7 +210,7 @@ int require_contiguous(PyArrayObject* ary) {
   return contiguous;
 }
 
-/* Require that a numpy array is not byte-swapped.  If the array is
+/* Require that a NumPy array is not byte-swapped.  If the array is
  * not byte-swapped, return 1.  Otherwise, set the python error string
  * and return 0.
  */

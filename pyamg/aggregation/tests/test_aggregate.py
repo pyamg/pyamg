@@ -19,7 +19,7 @@ class TestAggregate(TestCase):
         for N in [2,3,5]:
             self.cases.append( csr_matrix(rand(N,N)) )
 
-        # poisson problems in 1D and 2D
+        # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             self.cases.append( poisson( (N,), format='csr') )
         for N in [2,3,5,7,10,11]:
@@ -39,7 +39,7 @@ class TestAggregate(TestCase):
 
             assert_equal( (result - expected).nnz, 0 )
     
-        # S is diagonal - no DoFs aggregated
+        # S is diagonal - no dofs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
         result   = standard_aggregation(S)
         expected = array([[0],[0],[0],[0]])
@@ -54,7 +54,7 @@ class TestAggregate(TestCase):
 
             assert_equal( (result - expected).nnz, 0 )
     
-        # S is diagonal - no DoFs aggregated
+        # S is diagonal - no dofs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
         result   = naive_aggregation(S)
         expected = numpy.eye(4)
@@ -66,7 +66,7 @@ class TestComplexAggregate(TestCase):
     def setUp(self):
         self.cases = []
 
-        # poisson problems in 2D
+        # Poisson problems in 2D
         for N in [2,3,5,7,10,11]:
             A = poisson( (N,N), format='csr'); A.data = A.data + 0.001j*rand(A.nnz)
             self.cases.append(A)

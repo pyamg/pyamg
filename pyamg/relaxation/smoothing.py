@@ -421,7 +421,7 @@ def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, \
 
 
 def setup_strength_based_schwarz(lvl, iterations=1):
-    # Use the overlapping regions defined by the the strength of connection matrix C 
+    # Use the overlapping regions defined by the strength of connection matrix C 
     # for the overlapping Schwarz method
     C = lvl.C.tocsr()
     subdomain_ptr = C.indptr.copy()
@@ -482,7 +482,7 @@ def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, bloc
 def setup_richardson(lvl, iterations=1, omega=1.0):
     omega = omega/approximate_spectral_radius(lvl.A)
     def smoother(A,x,b):
-        relaxation.polynomial(A, x, b, coeffients=[omega], iterations=iterations)
+        relaxation.polynomial(A, x, b, coefficients=[omega], iterations=iterations)
     return smoother
 
 def setup_sor(lvl, omega=0.5, iterations=1, sweep='forward'):
@@ -494,9 +494,9 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3, iterat
     rho = approximate_spectral_radius(lvl.A)
     a = rho * lower_bound
     b = rho * upper_bound
-    coeffients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1] # drop the constant coefficient
+    coefficients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1] # drop the constant coefficient
     def smoother(A,x,b):
-        relaxation.polynomial(A, x, b, coeffients=coeffients, iterations=iterations)
+        relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
     return smoother
 
 def setup_jacobi_ne(lvl, iterations=1, omega=1.0):

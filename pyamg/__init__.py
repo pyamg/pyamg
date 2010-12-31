@@ -8,7 +8,7 @@ try:
 except ImportError, e:
     msg = """Error importing pyamg: you cannot import pyamg while
     being in pyamg source directory; please exit the pyamg source
-    tree first, and relaunch your python intepreter."""
+    tree first, and relaunch your python interpreter."""
     raise ImportError(msg)
 
 

@@ -22,7 +22,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
     '''Flexible Generalized Minimum Residual Method (fGMRES)
 
     fGMRES iteratively refines the initial solution guess to the
-    system Ax = b.  fGMRES is flexibile in the sense thatthe right 
+    system Ax = b.  fGMRES is flexible in the sense that the right 
     preconditioner (M) can vary from iteration to iteration.
 
     Parameters
@@ -50,7 +50,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         n x n, inverted preconditioner, i.e. solve A M x = b.
         M need not be stationary for fgmres
     callback : function
-        User-supplied funtion is called after each iteration as
+        User-supplied function is called after each iteration as
         callback( ||rk||_2 ), where rk is the current residual vector
     residuals : list
         residuals has the residual norm history,
@@ -78,7 +78,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
           as opposed to explicitly constructing the matrix.  A.psolve(..) is
           still supported as a legacy.
 
-        - fGMRES allows for nonstationary preconditioners, as opposed to GMRES
+        - fGMRES allows for non-stationary preconditioners, as opposed to GMRES
 
         - For robustness, Householder reflections are used to orthonormalize the Krylov Space
           Givens Rotations are used to provide the residual norm each iteration
@@ -133,13 +133,13 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         else:
             max_outer = 1
         if restrt > dimen:
-            warn('Setting number of inner iterations (restrt) to maximimum allowed, which is A.shape[0] ')
+            warn('Setting number of inner iterations (restrt) to maximum allowed, which is A.shape[0] ')
             restrt = dimen
         max_inner = restrt
     else:
         max_outer = 1
         if maxiter > dimen:
-            warn('Setting number of inner iterations (maxiter) to maximimum allowed, which is A.shape[0] ')
+            warn('Setting number of inner iterations (maxiter) to maximum allowed, which is A.shape[0] ')
             maxiter = dimen
         elif maxiter == None:
             maxiter = min(dimen, 40)
@@ -202,7 +202,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=Non
         g[0] = -beta
     
         for inner in range(max_inner):
-            # Calcute Krylov vector in two steps
+            # Calculate Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
             v = -2.0*conjugate(w[inner])*w
             v[inner] += 1.0

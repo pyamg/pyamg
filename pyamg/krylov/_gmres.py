@@ -35,7 +35,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=None
     M : {array, matrix, sparse matrix, LinearOperator}
         n x n, inverted preconditioner, i.e. solve M A x = b.
     callback : function
-        User-supplied funtion is called after each iteration as
+        User-supplied function is called after each iteration as
         callback( ||rk||_2 ), where rk is the current preconditioned residual vector
     residuals : list
         residuals contains the preconditioned residual norm history,

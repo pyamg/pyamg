@@ -469,7 +469,7 @@ def set_attributes(d,elm):
 
 def a2s(a):
     """
-    helper funciton: Convert to string
+    helper function: Convert to string
     """
     str=''
     return str.join(['%g '%(v) for v in a.ravel()])

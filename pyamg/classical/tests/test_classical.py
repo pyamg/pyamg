@@ -21,7 +21,7 @@ class TestRugeStubenFunctions(TestCase):
         for N in [2,3,5]:
             self.cases.append( csr_matrix(rand(N,N)) )
 
-        # poisson problems in 1D and 2D
+        # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             self.cases.append( poisson( (N,), format='csr') )
         for N in [2,3,5,7,10,11]:

@@ -32,7 +32,7 @@ X = scipy.rand(A.shape[0], 2)
 
 fiedler = evec[:,1]
 
-# use the median of the Fiedler vector as a the separator
+# use the median of the Fiedler vector as the separator
 vmed = numpy.median(fiedler)
 v = numpy.zeros((A.shape[0],))
 K = numpy.where(fiedler<=vmed)[0]

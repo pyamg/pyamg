@@ -71,7 +71,7 @@ def sprand(m, n, density, format='csr'):
 #
 #    Returns
 #    -------
-#    A : sparse, s.p.d. matrix
+#    A : sparse, SPD matrix
 #        n x n sparse matrix with eigenvalues in the interval [a,b]
 #
 #    Examples

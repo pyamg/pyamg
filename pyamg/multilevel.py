@@ -244,7 +244,7 @@ class multilevel_solver:
 
 
     def operator_complexity(self):
-        """Operator complexity of this multigrid heirarchy 
+        """Operator complexity of this multigrid hierarchy 
 
         Defined as:
             Number of nonzeros in the matrix on all levels / 
@@ -254,7 +254,7 @@ class multilevel_solver:
         return sum([level.A.nnz for level in self.levels])/float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
-        """Grid complexity of this multigrid heirarchy 
+        """Grid complexity of this multigrid hierarchy 
         
         Defined as:
             Number of unknowns on all levels / 

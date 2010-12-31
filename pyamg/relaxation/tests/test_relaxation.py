@@ -654,7 +654,7 @@ class TestRelaxation(TestCase):
             A = csr_matrix(A)
 
             ##
-            # Default is pointwise iteration with each subdomain a point's neighborhood 
+            # Default is point-wise iteration with each subdomain a point's neighborhood 
             # in the matrix graph
             subdomains = [A.indices[A.indptr[i]:A.indptr[i+1]] for i in range(A.shape[0]) ]
                 
@@ -834,7 +834,7 @@ class TestComplexRelaxation(TestCase):
         def gold(A,x,b,iterations):
             A = csr_matrix(A)
             ##
-            # Default is pointwise iteration with each subdomain a point's neighborhood 
+            # Default is point-wise iteration with each subdomain a point's neighborhood 
             # in the matrix graph
             subdomains = [A.indices[A.indptr[i]:A.indptr[i+1]] for i in range(A.shape[0]) ]
             ##
@@ -1341,7 +1341,7 @@ class TestBlockRelaxation(TestCase):
             block_jacobi(A, x, b, blocksize=blocksize, iterations=1, omega=1.1)
             assert_almost_equal( x, gold(A, x_copy, b, blocksize, 1.1), decimal=4 )
         
-        # check for aggreement between jacobi and block jacobi with blocksize=1
+        # check for agreement between jacobi and block jacobi with blocksize=1
         A = poisson( (4,5), format='csr')
         b = rand(A.shape[0])
         x = rand(A.shape[0])
