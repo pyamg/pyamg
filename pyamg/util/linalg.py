@@ -10,7 +10,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg import calc_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
-           'condest', 'cond', 'issymm', 'pinv_array']
+           'condest', 'cond', 'ishermitian', 'pinv_array']
 
 def norm(x, pnorm='2'):
     """
@@ -441,8 +441,8 @@ def cond(A):
     return numpy.max(Sigma)/min(Sigma)
 
 
-def issymm(A, fast_check=True, tol=1e-6):
-    """Returns 0 if A is Hermitian symmetric to within tol
+def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
+    """Returns True if A is Hermitian to within tol
 
     Parameters
     ----------
@@ -450,32 +450,35 @@ def issymm(A, fast_check=True, tol=1e-6):
         e.g. array, matrix, csr_matrix, ...
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
-        for random vectors x and y to check for symmetry.
+        for random vectors x and y to check for conjugate symmetry.
         If False, compute A - A.H.
     tol : {float}
         Symmetry tolerance
 
+    verbose: {bool}
+        prints
+        max( \|A - A.H\| )       if nonhermitian and fast_check=False
+        abs( <Ax, y> - <x, Ay> ) if nonhermitian and fast_check=False
+
     Returns
     -------
-    0                        if symmetric
-    max( \|A - A.H\| )       if unsymmetric and fast_check=False
-    abs( <Ax, y> - <x, Ay> ) if unsymmetric and fast_check=False
+    True                        if hermitian
+    False                       if nonhermitian
 
     Notes
     -----
-    This function applies a simple test of Hermitian symmetry
+    This function applies a simple test of conjugate symmetry
 
     Examples
     --------
     >>> import numpy
-    >>> from pyamg.util.linalg import issymm
-    >>> issymm(numpy.array([[1,2],[1,1]]))
-    1
+    >>> from pyamg.util.linalg import ishermitian
+    >>> ishermitian(numpy.array([[1,2],[1,1]]))
+    False
     
     >>> from pyamg.gallery import poisson
-    >>> issymm(poisson((10,10)))
-    0
-
+    >>> ishermitian(poisson((10,10)))
+    True
     """
     # convert to matrix type
     if not sparse.isspmatrix(A):
@@ -504,6 +507,11 @@ def issymm(A, fast_check=True, tol=1e-6):
         
     if diff < tol:
         diff = 0
+        return True
+    else:
+        if verbose:
+            print dff
+        return False
     
     return diff
 

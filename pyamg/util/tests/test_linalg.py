@@ -189,48 +189,51 @@ class TestComplexLinalg(TestCase):
             c = condest(A)
             assert_almost_equal(exact, c)
 
-    def test_issymm(self):
+    def test_ishermitian(self):
         # make tests repeatable
         random.seed(0)
-        cases = []
+        casesT = []
+        casesF = []
         # 1x1
-        cases.append( mat(rand(1,1)) )
-        cases.append( mat(1.0j*rand(1,1)) )
+        casesT.append( mat(rand(1,1)) )
+        casesF.append( mat(1.0j*rand(1,1)) )
         # 2x2
         A = array([[1.0, 0.0], [2.0, 1.0]])
         Ai = 1.0j*A
-        cases.append(A)
-        cases.append(Ai)
+        casesF.append(A)
+        casesF.append(Ai)
         A = A + Ai
-        cases.append(A)
-        cases.append(A + A.conjugate().T)
+        casesF.append(A)
+        casesT.append(A + A.conjugate().T)
         # 3x3
         A = mat(rand(3,3))
         Ai = 1.0j*rand(3,3)
-        cases.append(A)
-        cases.append(Ai)
+        casesF.append(A)
+        casesF.append(Ai)
         A = A + Ai
-        cases.append(A)
-        cases.append(A + A.H)
+        casesF.append(A)
+        casesT.append(A + A.H)
 
-        # dense arrays
-        for A in cases:
-            assert_equal(issymm(A, fast_check=False), \
-                         max(abs(ravel(mat(A)-mat(A).H))) )
-            assert_equal( (issymm(A, fast_check=True) > 0.0), \
-                          (issymm(A, fast_check=False) > 0.0) )
+        for A in casesT:
+            # dense arrays
+            assert_equal(ishermitian(A, fast_check=False), True)
+            assert_equal(ishermitian(A, fast_check=True), True)
 
-        # csr arrays
-        for A in cases:
+            # csr arrays
             A = csr_matrix(A)
-            diff = (A-A.H).data
-            if max(diff.shape) == 0:
-                diff = 0.0
-            else:
-                diff = max(abs(ravel(diff)) )
-            assert_equal(issymm(A, fast_check=False), diff )
-            assert_equal( (issymm(A, fast_check=True) > 0.0), \
-                          (issymm(A, fast_check=False) > 0.0) )
+            assert_equal(ishermitian(A, fast_check=False), True)
+            assert_equal(ishermitian(A, fast_check=True), True)
+
+        for A in casesF:
+            # dense arrays
+            assert_equal(ishermitian(A, fast_check=False), False)
+            assert_equal(ishermitian(A, fast_check=True), False)
+
+            # csr arrays
+            A = csr_matrix(A)
+            assert_equal(ishermitian(A, fast_check=False), False)
+            assert_equal(ishermitian(A, fast_check=True), False)
+
 
     def test_pinv_array(self):
         from scipy.linalg import pinv2
