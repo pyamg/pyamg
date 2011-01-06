@@ -467,7 +467,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
     from pyamg.util.utils  import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
     from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
-    
 
     #====================================================================
     #Check inputs
@@ -513,7 +512,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
 
     #====================================================================
     # Handle preliminaries for the algorithm
-    
     dimen = A.shape[1]
     NullDim = Bmat.shape[1]
         
@@ -526,7 +524,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
     else:
         D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
     #====================================================================
-    
     
     #====================================================================
     # Calculate (I - delta_t Dinv A)^k  
@@ -560,25 +557,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
     # If the total number of time steps is a power of two, then there is  
     # a very efficient computational short-cut.  Otherwise, we support  
     # other numbers of time steps, through an inefficient algorithm.
-    if False:
-        # Use Chebyshev polynomial of order k
-        # Poly coefficients, ignore the last (constant) coefficient
-        bound = approximate_spectral_radius(A)
-        coefficents = -chebyshev_polynomial_coefficients(bound/30.0, 1.1*bound, k)[:-1]
-
-        # Generate Poly, coeff lists the coefficients in descending order
-        Atilde = coefficents[0]*I
-        for c in coefficents[1:]:
-            Atilde = c*I + A*Atilde 
-        
-        #Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
-        mask.data[:] = 1.0
-        Atilde = Atilde.multiply(mask)
-        Atilde.eliminate_zeros()
-        Atilde.sort_indices()
-        del mask
-
-    elif ninc > 0: 
+    if ninc > 0: 
         warn("The most efficient time stepping for the ODE Strength Method"\
               " is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
     
@@ -597,10 +576,6 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
         Atilde.eliminate_zeros()
         Atilde.sort_indices()
 
-        ##Check matrix Atilde^k vs. above    
-        #Atilde2 = (((I - (1.0/rho_DinvA)*Dinv_A).T)**k).multiply(mask)
-        #differ = ravel((Atilde2 - Atilde).todense())
-        #print "Sum(Abs(differ)) is " + str(sum(abs(differ)))       
         del mask
 
     elif nsquare == 0:
