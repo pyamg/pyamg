@@ -219,7 +219,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %template(f_name)   f_name<int,double>;
 %enddef
  
- 
+INSTANTIATE_INDEX(cljp_naive_splitting)
 INSTANTIATE_INDEX(naive_aggregation)
 INSTANTIATE_INDEX(standard_aggregation)
 INSTANTIATE_INDEX(rs_cf_splitting)

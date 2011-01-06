@@ -240,6 +240,188 @@ void rs_cf_splitting(const I n_nodes,
 }
 
 /*
+ *  Compute a CLJP splitting
+ *
+ *  Parameters
+ *      n          - number of rows in A (number of vertices)
+ *      Sp[]       - CSR row pointer (strength matrix)
+ *      Sj[]       - CSR index array
+ *      Tp[]       - CSR row pointer (transpose of the strength matrix)
+ *      Tj[]       - CSR index array
+ *      splitting  - array to store the C/F splitting
+ *      colorflag  - flag to indicate coloring
+ *  
+ *  Notes:
+ *      The splitting array must be preallocated.
+ *      CLJP naive since it requires the transpose.
+ */
+
+template<class I>
+void cljp_naive_splitting(const I n,
+                          const I Sp[], const I Sj[],
+                          const I Tp[], const I Tj[], 
+                          I splitting[],
+                          const I colorflag)
+{
+  // initialize sizes
+  int ncolors;
+  I unassigned = n;
+  I nD;
+  int nnz = Sp[n];
+
+  // initialize vectors
+  // complexity = 5n
+  // storage = 4n
+  std::vector<int> edgemark(nnz,1);
+  std::vector<int> coloring(n);
+  std::vector<double> weight(n);
+  std::vector<I> D(n,0);      // marked nodes  in the ind set
+  std::vector<I> Dlist(n,0);      // marked nodes  in the ind set
+  std::fill(splitting, splitting + n, U_NODE);
+  int * c_dep_cache = new int[n];
+  std::fill_n(c_dep_cache, n, -1);
+
+  // INITIALIZE WEIGHTS
+  // complexity = O(n^2)?!? for coloring
+  // or
+  // complexity = n for random
+  if(colorflag==1){ // with coloring
+    //vertex_coloring_jones_plassmann(n, Sp, Sj, &coloring[0],&weight[0]);
+    //vertex_coloring_IDO(n, Sp, Sj, &coloring[0]);
+    vertex_coloring_mis(n, Sp, Sj, &coloring[0]);
+    ncolors = *std::max_element(coloring.begin(), coloring.end()) + 1;
+    for(I i=0; i < n; i++){
+      weight[i] = double(coloring[i])/double(ncolors);
+    }
+  }
+  else {
+    srand(2448422);
+    for(I i=0; i < n; i++){
+      weight[i] = double(rand())/RAND_MAX;
+    }
+  }
+
+  for(I i=0; i < n; i++){
+    for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+      I j = Sj[jj];
+      if(i != j) {
+        weight[j]++;
+      }
+    }
+  }
+  // end INITIALIZE WEIGHTS
+
+  // SELECTION LOOP
+  I pass = 0;
+  while(unassigned > 0){
+    pass++;
+
+    // SELECT INDEPENDENT SET
+    // find i such that w_i > w_j for all i in union(S_i,S_i^T)
+    nD = 0;
+    for(I i=0; i<n; i++){
+      if(splitting[i]==U_NODE){
+        D[i] = 1;
+        // check row (S_i^T)
+        for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+          I j = Sj[jj];
+          if(splitting[j]==U_NODE && weight[j]>weight[i]){
+            D[i] = 0;
+            break;
+          }
+        }
+        // check col (S_i)
+        if(D[i] == 1) {
+          for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
+            I j = Tj[jj];
+            if(splitting[j]==U_NODE && weight[j]>weight[i]){
+              D[i] = 0;
+              break;
+            }
+          }
+        }
+        if(D[i] == 1) {
+          Dlist[nD] = i;
+          unassigned--;
+          nD++;
+        }
+      }
+      else{
+        D[i]=0;
+      }
+    } // end for 
+    for(I i = 0; i < nD; i++) {
+      splitting[Dlist[i]] = C_NODE;
+    }
+    // end SELECT INDEPENDENT SET
+
+    // UPDATE WEIGHTS
+    // P5
+    // nbrs that influence C points are not good C points
+    for(I iD=0; iD < nD; iD++){
+      I c = Dlist[iD];
+      for(I jj = Sp[c]; jj < Sp[c+1]; jj++){
+        I j = Sj[jj];
+        // c <---j
+        if(splitting[j]==U_NODE && edgemark[jj] != 0){
+          edgemark[jj] = 0;  // "remove" edge
+          weight[j]--;
+          if(weight[j]<1){
+            splitting[j] = F_NODE;
+            unassigned--;
+          }
+        }
+      }
+    } // end P5
+
+    // P6 
+    // If k and j both depend on c, a C point, and j influces k, then j is less
+    // valuable as a C point.
+    for(I iD=0; iD < nD; iD++){
+      I c = Dlist[iD];
+      for(I jj = Tp[c]; jj < Tp[c+1]; jj++){
+        I j = Tj[jj];
+        if(splitting[j]==U_NODE)                 // j <---c
+          c_dep_cache[j] = c;
+      }
+
+      for(I jj = Tp[c]; jj < Tp[c+1]; jj++) {
+        I j = Tj[jj];
+        for(I kk = Sp[j]; kk < Sp[j+1]; kk++) {
+          I k = Sj[kk];
+          if(splitting[k] == U_NODE && edgemark[kk] != 0) { // j <---k
+            // does c ---> k ?
+            if(c_dep_cache[k] == c) {
+              edgemark[kk] = 0; // remove edge
+              weight[k]--;
+              if(weight[k] < 1) {
+                splitting[k] = F_NODE;
+                unassigned--;
+                //kk = Tp[j+1]; // to break second loop
+              }
+            }
+          }
+        }
+      }
+    } // end P6
+  } 
+  // end SELECTION LOOP
+
+  for(I i = 0; i < Sp[n]; i++){
+    if(edgemark[i] == 0){
+      edgemark[i] = -1;
+    }
+  }
+  for(I i = 0; i < n; i++){
+    if(splitting[i] == U_NODE){
+      splitting[i] = F_NODE;
+    }
+  }
+  delete[] c_dep_cache;
+}
+
+
+/*
  *   Produce the Ruge-Stuben prolongator using "Direct Interpolation"
  *
  *

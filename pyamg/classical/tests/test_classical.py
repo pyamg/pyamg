@@ -71,6 +71,34 @@ class TestRugeStubenFunctions(TestCase):
             ## strongly depend (i.e. the number of k's where (2) holds)
             #Y = (S*S.T) - X
             #assert( Y.nnz == 0 or Y.data.min() > 0 )
+
+    def test_cljp_splitting(self):
+        for A in self.cases:
+            S = classical_strength_of_connection(A, 0.0)
+
+            splitting = split.CLJP( S )
+
+            assert( splitting.min() >= 0 )     #could be all 1s
+            assert_equal( splitting.max(), 1 ) 
+
+            S.data[:] = 1
+
+            # check that all F-nodes are strongly connected to a C-node
+            assert( (splitting + S*splitting).min() > 0 )
+
+    def test_cljpc_splitting(self):
+        for A in self.cases:
+            S = classical_strength_of_connection(A, 0.0)
+
+            splitting = split.CLJPc( S )
+
+            assert( splitting.min() >= 0 )     #could be all 1s
+            assert_equal( splitting.max(), 1 ) 
+
+            S.data[:] = 1
+
+            # check that all F-nodes are strongly connected to a C-node
+            assert( (splitting + S*splitting).min() > 0 )
    
     def test_direct_interpolation(self):
         for A in self.cases:

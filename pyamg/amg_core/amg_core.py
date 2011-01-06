@@ -52,6 +52,13 @@ F_NODE = _amg_core.F_NODE
 C_NODE = _amg_core.C_NODE
 U_NODE = _amg_core.U_NODE
 
+def cljp_naive_splitting(*args):
+  """
+    cljp_naive_splitting(int n, int Sp, int Sj, int Tp, int Tj, int splitting, 
+        int colorflag)
+    """
+  return _amg_core.cljp_naive_splitting(*args)
+
 def naive_aggregation(*args):
   """naive_aggregation(int n_row, int Ap, int Aj, int x) -> int"""
   return _amg_core.naive_aggregation(*args)

@@ -229,21 +229,93 @@ def PMISc(S, method='JP'):
     return MIS(G, weights)
      
 
-def CLJP(S):
+def CLJP(S,color=False):
     """Compute a C/F splitting using the parallel CLJP algorithm
-    """
-    #weights,G,S,T = preprocess(S)
-    #weights += diff(G.indptr)
-    raise NotImplementedError
 
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+    color : bool
+        use the CLJP coloring approach
+
+    Returns
+    -------
+    splitting : array
+        Array of length of S of ones (coarse) and zeros (fine)
+        
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical import CLJP
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = CLJP(S)
+ 
+    See Also
+    --------
+    MIS, PMIS, CLJPc
+
+    References
+    ----------
+    .. [1] David M. Alber and Luke N. Olson
+       "Parallel coarse-grid selection"
+       Numerical Linear Algebra with Applications 2007; 14:611-643.
+
+    """
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+
+    colorid = 0
+    if color:
+        colorid = 1
+
+    T = S.T.tocsr()  #transpose S for efficient column access
+    splitting = numpy.empty( S.shape[0], dtype='intc' )
+
+    amg_core.cljp_naive_splitting(S.shape[0],
+                                        S.indptr, S.indices,
+                                        T.indptr, T.indices,  
+                                        splitting,
+                                        colorid)
+
+    return splitting
 
 def CLJPc(S):
     """Compute a C/F splitting using the parallel CLJP-c algorithm
     
     CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
     random weights with weights determined by a vertex coloring.
+
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+
+    Returns
+    -------
+    splitting : array
+        Array of length of S of ones (coarse) and zeros (fine)
+        
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical import CLJPc
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = CLJPc(S)
+ 
+    See Also
+    --------
+    MIS, PMIS, CLJP
+
+    References
+    ----------
+    .. [1] David M. Alber and Luke N. Olson
+       "Parallel coarse-grid selection"
+       Numerical Linear Algebra with Applications 2007; 14:611-643.
+
     """
-    raise NotImplementedError
+    return CLJP(S,color=True)
 
 def MIS(G, weights, maxiter=None):
     """Compute a maximal independent set of a graph in parallel

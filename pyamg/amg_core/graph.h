@@ -695,4 +695,3 @@ I connected_components(const I num_nodes,
 }
 
 #endif
-
