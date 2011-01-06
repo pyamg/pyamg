@@ -114,7 +114,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
         presmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
-        Bimprove='default', max_levels = 10, max_coarse = 500, **kwargs):
+        Bimprove='default', max_levels = 10, max_coarse = 500, keep=False, **kwargs):
     """
     Create a multilevel solver using Smoothed Aggregation (SA)
 
@@ -168,6 +168,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid. 
+    keep: {bool} : default False
+        Flag to indicate keeping extra operators in the hierarchy for
+        diagnostics.  For example, if True, then strength of connection (C),
+        tentative prolongation (T), and aggregation (AggOp) are kept.
 
     Other Parameters
     ----------------
@@ -307,13 +311,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
     
     while len(levels) < max_levels and levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove)
+        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep)
     
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
-def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
+def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
@@ -431,19 +435,20 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove):
             raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
 
 
-    levels[-1].C     = C       # strength of connection matrix
-    levels[-1].AggOp = AggOp   # aggregation operator
-    levels[-1].T     = T       # tentative prolongator
+    if keep:
+        levels[-1].C     = C       # strength of connection matrix
+        levels[-1].AggOp = AggOp   # aggregation operator
+        levels[-1].T     = T       # tentative prolongator
+
     levels[-1].P     = P       # smoothed prolongator
     levels[-1].R     = R       # restriction operator 
 
+    levels.append( multilevel_solver.level() )
     A = R * A * P              # Galerkin operator
     A.symmetry = symmetry
-    
-    levels.append( multilevel_solver.level() )
     levels[-1].A = A
-       
     levels[-1].B = B           # right near nullspace candidates
+
     if A.symmetry == "nonsymmetric":
         levels[-1].BH = BH     # left near nullspace candidates
 

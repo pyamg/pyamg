@@ -19,7 +19,7 @@ def ruge_stuben_solver(A,
                        CF='RS', 
                        presmoother=('gauss_seidel',{'sweep':'symmetric'}),
                        postsmoother=('gauss_seidel',{'sweep':'symmetric'}),
-                       max_levels=10, max_coarse=500, **kwargs):
+                       max_levels=10, max_coarse=500, keep=False, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
     Parameters
@@ -44,6 +44,10 @@ def ruge_stuben_solver(A,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
+    keep: {bool} : default False
+        Flag to indicate keeping extra operators in the hierarchy for
+        diagnostics.  For example, if True, then strength of connection (C) and
+        tentative prolongation (T) are kept.
 
     Returns
     -------
@@ -96,14 +100,14 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
     
     while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF)
+        extend_hierarchy(levels, strength, CF, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 # internal function
-def extend_hierarchy(levels, strength, CF):
+def extend_hierarchy(levels, strength, CF, keep):
     """ helper function for local methods """
     def unpack_arg(v):
         if isinstance(v,tuple):
@@ -138,10 +142,12 @@ def extend_hierarchy(levels, strength, CF):
 
     R = P.T.tocsr()
 
-    levels[-1].C = C                  # strength of connection matrix
+    if keep:
+        levels[-1].C = C                  # strength of connection matrix
+        levels[-1].splitting = splitting  # C/F splitting
+
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
-    levels[-1].splitting = splitting  # C/F splitting
 
     levels.append( multilevel_solver.level() )
 

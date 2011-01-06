@@ -111,7 +111,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         max_levels=10, max_coarse=100, aggregate='standard',
         prepostsmoother=('gauss_seidel', {'sweep':'symmetric'}),
         smooth=('jacobi', {}), strength='symmetric', coarse_solver='pinv2',
-        eliminate_local=(False, {'Ca' : 1.0}), **kwargs):
+        eliminate_local=(False, {'Ca' : 1.0}), keep=False, **kwargs):
     """
     Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
@@ -166,6 +166,10 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         to contain arguments to local elimination routine.  Given the rigid 
         sparse data structures, this doesn't help much, if at all, with 
         complexity.  Its more of a diagnostic utility.
+    keep: {bool} : default False
+        Flag to indicate keeping extra operators in the hierarchy for
+        diagnostics.  For example, if True, then strength of connection (C),
+        tentative prolongation (T), and aggregation (AggOp) are kept.
     
    
     Returns
@@ -243,7 +247,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                       presmoother=prepostsmoother, postsmoother=prepostsmoother, 
                       smooth=smooth, strength=strength, max_levels=max_levels, 
                       max_coarse=max_coarse, aggregate=aggregate, 
-                      coarse_solver=coarse_solver, Bimprove=None, **kwargs)
+                      coarse_solver=coarse_solver, Bimprove=None, keep=True, **kwargs)
         if len(sa.levels) > 1:
             # Set strength-of-connection and aggregation
             aggregate=[ ('predefined', {'AggOp':sa.levels[i].AggOp.tocsr()}) \
@@ -257,7 +261,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         x=general_setup_stage(smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                               presmoother=prepostsmoother, postsmoother=prepostsmoother,
                               smooth=smooth, coarse_solver=coarse_solver, 
-                              aggregate=aggregate, strength=strength, Bimprove=None, **kwargs),
+                              aggregate=aggregate, strength=strength,
+                              Bimprove=None, keep=True, **kwargs),
                          symmetry, candidate_iters, prepostsmoother, smooth, 
                          eliminate_local, coarse_solver, work)
         
@@ -280,7 +285,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                 sa_temp = smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                               presmoother=prepostsmoother, postsmoother=prepostsmoother, 
                               smooth=smooth, coarse_solver=coarse_solver, 
-                              aggregate=aggregate, strength=strength, Bimprove=None, **kwargs)
+                              aggregate=aggregate, strength=strength,
+                              Bimprove=None, keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0, tol=float(numpy.finfo(numpy.float).tiny), 
                                   maxiter=candidate_iters, cycle='V')
                 work[:]+=sa_temp.operator_complexity()*sa_temp.levels[0].A.nnz*candidate_iters*2
@@ -314,7 +320,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry, presmoother=prepostsmoother,
                                        postsmoother=prepostsmoother, smooth=smooth, 
                                        coarse_solver=coarse_solver,  aggregate=aggregate, 
-                                       strength=strength, Bimprove=None, **kwargs), work[0]/A.nnz]
+                                       strength=strength, Bimprove=None, keep=keep, **kwargs), work[0]/A.nnz]
 
      
 def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon, 

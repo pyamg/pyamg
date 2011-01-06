@@ -201,6 +201,10 @@ def oneD_coarse_grid_vis(mg, fig_num=1, level=0):
 
     # Retrieve and map Aggregate to finest level
     ndof = mg.levels[0].A.shape[0]
+
+    if not hasattr(mg.levels[level],'AggOp'):
+        raise ValueError('AggOp needed in hierarchy.  Run the setup with the \'keep\' flag')
+
     AggOp = mg.levels[level].AggOp
     for i in range(level-1,-1,-1):
         AggOp = mg.levels[i].AggOp*AggOp

@@ -423,7 +423,11 @@ def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, \
 def setup_strength_based_schwarz(lvl, iterations=1):
     # Use the overlapping regions defined by the strength of connection matrix C 
     # for the overlapping Schwarz method
-    C = lvl.C.tocsr()
+    if not hasattr(lvl,'C'):
+        C = lvl.A.tocsr()
+    else:
+        C = lvl.C.tocsr()
+
     subdomain_ptr = C.indptr.copy()
     subdomain = C.indices.copy()
 

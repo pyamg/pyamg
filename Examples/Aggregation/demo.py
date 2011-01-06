@@ -12,7 +12,7 @@ V = data['vertices'][:A.shape[0]]            # vertices of each variable
 E = numpy.vstack((A.tocoo().row,A.tocoo().col)).T  # edges of the matrix graph
 
 # Use Smoothed Aggregation Algorithm
-mls = smoothed_aggregation_solver(A, max_levels=2, max_coarse=1)
+mls = smoothed_aggregation_solver(A, max_levels=2, max_coarse=1, keep=True)
 
 # AggOp[i,j] is 1 iff node i belongs to aggregate j
 AggOp = mls.levels[0].AggOp
