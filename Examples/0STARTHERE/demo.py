@@ -37,6 +37,10 @@ print "\n\n\n\n\n"
 #
 # we can look at the data in each of the levels
 # e.g. the multigrid components on the finest (0) level
+#      A: operator on level 0
+#      P: prolongation operator mapping from level 1 to level 0
+#      R: restriction operator mapping from level 0 to level 1
+#      B: near null-space modes for level 0
 print dir(ml.levels[0])
 
 # e.g. the multigrid components on the coarsest (4) level
