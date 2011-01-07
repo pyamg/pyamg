@@ -84,4 +84,8 @@ from pylab import *
 semilogy(res1) 
 hold(True)
 semilogy(res2) 
+title('Residual Histories')
+legend(['Default Solver', 'Specialized Solver'])
+xlabel('Iteration')
+ylabel('Relative Residual')
 show()
