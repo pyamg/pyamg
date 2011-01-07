@@ -24,7 +24,7 @@ ml = smoothed_aggregation_solver(A)      # construct the multigrid hierarchy
 # Step 4: solve the system
 #------------------------------------------------------------------
 res1 = []
-x = ml.solve(b, tol=1e-6, residuals=res1)# solve Ax=b to a tolerance of 1e-6
+x = ml.solve(b, tol=1e-12, residuals=res1)# solve Ax=b to a tolerance of 1e-12
 
 #------------------------------------------------------------------
 # Step 5: print details
@@ -43,7 +43,6 @@ print dir(ml.levels[0])
 print dir(ml.levels[-1])
 # there are no interpoation operators (P,R) or smoothers on the coarsest level
 
-
 # check the size and type of the fine level operators
 print 'type = ',ml.levels[0].A.format
 print '   A = ',ml.levels[0].A.shape
@@ -51,13 +50,12 @@ print '   P = ',ml.levels[0].P.shape
 print '   R = ',ml.levels[0].R.shape
 print "\n\n\n\n\n"
 
-
 #------------------------------------------------------------------
 # Step 6: change the hierarchy
 #------------------------------------------------------------------
 # we can also change the details of the hierarchy
 ml = smoothed_aggregation_solver(A,        # the matrix
-        B=X.reshape(n*n,1),                # the representation of the near null space
+        B=X.reshape(n*n,1),                # the representation of the near null space (this is a poor choice)
         BH=None,                           # the representation of the left near null space
         symmetry='hermitian',              # indicate that the matrix is Hermitian
         strength='ode',                    # change the strength of connection 
