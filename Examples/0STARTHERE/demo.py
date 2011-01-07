@@ -2,17 +2,19 @@
 # Step 1: import scipy and pyamg packages
 #------------------------------------------------------------------
 from numpy import meshgrid, linspace
-from scipy import rand, sin, pi
+from scipy import rand, pi
 from scipy.linalg import norm
 from pyamg import *
-from pyamg.gallery import poisson
+from pyamg.gallery import stencil_grid
+from pyamg.gallery.diffusion import diffusion_stencil_2d
 
 #------------------------------------------------------------------
 # Step 2: setup up the system using pyamg.gallery
 #------------------------------------------------------------------
 n=200
 X,Y = meshgrid(linspace(0,1,n),linspace(0,1,n))
-A = poisson((n,n), format='csr')         # 2D Poisson problem on 500x500 grid
+stencil = diffusion_stencil_2d(type='FE',epsilon=0.001,theta=pi/3)
+A = stencil_grid(stencil, (n,n), format='csr')
 b = rand(A.shape[0])                     # pick a random right hand side
 
 #------------------------------------------------------------------
