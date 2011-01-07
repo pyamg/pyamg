@@ -13,7 +13,7 @@ from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
                              relaxation_as_linear_operator
 from pyamg.strength import classical_strength_of_connection, \
-        symmetric_strength_of_connection, ode_strength_of_connection, \
+        symmetric_strength_of_connection, evolution_strength_of_connection, \
         energy_based_strength_of_connection, distance_strength_of_connection
 from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation
 from tentative import fit_candidates
@@ -135,7 +135,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         Note that for the strictly real case, symmetric and hermitian are the same
         Note that this flag does not denote definiteness of the operator.
-    strength : ['symmetric', 'classical', 'ode', ('predefined', {'C' : csr_matrix}), None]
+    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,
@@ -348,8 +348,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep):
             C = amalgamate(C, A.blocksize[0])
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif fn == 'ode':
-        C = ode_strength_of_connection(A, B, **kwargs)
+    elif (fn == 'ode') or (fn == 'evolution'):
+        C = evolution_strength_of_connection(A, B, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':
@@ -365,7 +365,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep):
     
     # Create a unified strength framework so that large values represent strong
     # connections and small values represent weak connections
-    if (fn == 'ode') or (fn == 'distance') or (fn == 'energy_based'):
+    if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or (fn == 'energy_based'):
         C.data = 1.0/C.data
 
     ##
@@ -384,7 +384,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep):
     
     ##
     # Improve near nullspace candidates (important to place after the call to
-    # ode_strength_of_connection)
+    # evolution_strength_of_connection)
     if Bimprove[len(levels)-1] is not None:
         b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
         B = relaxation_as_linear_operator(Bimprove[len(levels)-1], A, b) * B

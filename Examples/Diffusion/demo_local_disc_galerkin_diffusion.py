@@ -68,7 +68,7 @@ if __name__ == '__main__':
     # the initial conforming aggregation step requires no prolongation smoothing
     smooth=[None, ('energy', {'krylov' : 'cg', 'maxiter' : p})]
     strength =[('distance', {'V' : data['vertices'], 'theta':5e-5, 'relative_drop':False}),\
-               ('ode', {'k':4, 'proj_type':'l2', 'epsilon':2.0})]
+               ('evolution', {'k':4, 'proj_type':'l2', 'epsilon':2.0})]
     sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, Bimprove=Bimprove,\
              strength=strength, presmoother=presmoother, aggregate=aggregate,\
              postsmoother=postsmoother, **SA_build_args)

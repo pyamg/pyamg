@@ -271,22 +271,22 @@ def symmetric_strength_of_connection(*args):
     """
   return _amg_core.symmetric_strength_of_connection(*args)
 
-def ode_strength_helper(*args):
+def evolution_strength_helper(*args):
   """
-    ode_strength_helper(float Sx, int Sp, int Sj, int nrows, float x, float y, 
+    evolution_strength_helper(float Sx, int Sp, int Sj, int nrows, float x, float y, 
         float b, int BDBCols, int NullDim, float tol)
-    ode_strength_helper(double Sx, int Sp, int Sj, int nrows, double x, double y, 
+    evolution_strength_helper(double Sx, int Sp, int Sj, int nrows, double x, double y, 
         double b, int BDBCols, int NullDim, double tol)
-    ode_strength_helper(npy_cfloat_wrapper Sx, int Sp, int Sj, int nrows, npy_cfloat_wrapper x, 
+    evolution_strength_helper(npy_cfloat_wrapper Sx, int Sp, int Sj, int nrows, npy_cfloat_wrapper x, 
         npy_cfloat_wrapper y, npy_cfloat_wrapper b, 
         int BDBCols, int NullDim, 
         float tol)
-    ode_strength_helper(npy_cdouble_wrapper Sx, int Sp, int Sj, int nrows, 
+    evolution_strength_helper(npy_cdouble_wrapper Sx, int Sp, int Sj, int nrows, 
         npy_cdouble_wrapper x, npy_cdouble_wrapper y, 
         npy_cdouble_wrapper b, int BDBCols, int NullDim, 
         double tol)
     """
-  return _amg_core.ode_strength_helper(*args)
+  return _amg_core.evolution_strength_helper(*args)
 
 def incomplete_matmat(*args):
   """

@@ -2569,7 +2569,7 @@ namespace swig {
 #include "smoothed_aggregation.h"
 #include "relaxation.h"
 #include "graph.h"
-#include "ode_strength.h"
+#include "evolution_strength.h"
 #include "krylov.h"
 #include "linalg.h"
 
@@ -10090,7 +10090,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_evolution_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   float *arg1 ;
   int *arg2 ;
@@ -10132,7 +10132,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:ode_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:evolution_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     temp1 = obj_to_array_no_conversion(obj0,PyArray_FLOAT);
     if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
@@ -10160,7 +10160,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(
   }
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "ode_strength_helper" "', argument " "4"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "evolution_strength_helper" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
   {
@@ -10195,20 +10195,20 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "ode_strength_helper" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "evolution_strength_helper" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "evolution_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_float(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "ode_strength_helper" "', argument " "10"" of type '" "float""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "evolution_strength_helper" "', argument " "10"" of type '" "float""'");
   } 
   arg10 = static_cast< float >(val10);
-  ode_strength_helper<int,float,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,arg8,arg9,arg10);
+  evolution_strength_helper<int,float,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(float const (*))arg5,(float const (*))arg6,(float const (*))arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) {
@@ -10266,7 +10266,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_evolution_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   double *arg1 ;
   int *arg2 ;
@@ -10308,7 +10308,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:ode_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:evolution_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     temp1 = obj_to_array_no_conversion(obj0,PyArray_DOUBLE);
     if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
@@ -10336,7 +10336,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(
   }
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "ode_strength_helper" "', argument " "4"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "evolution_strength_helper" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
   {
@@ -10371,20 +10371,20 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "ode_strength_helper" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "evolution_strength_helper" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "evolution_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_double(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "ode_strength_helper" "', argument " "10"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "evolution_strength_helper" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  ode_strength_helper<int,double,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,arg8,arg9,arg10);
+  evolution_strength_helper<int,double,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(double const (*))arg5,(double const (*))arg6,(double const (*))arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) {
@@ -10442,7 +10442,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_evolution_strength_helper__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   npy_cfloat_wrapper *arg1 ;
   int *arg2 ;
@@ -10484,7 +10484,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_3(PyObject *SWIGUNUSEDPARM(
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:ode_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:evolution_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     temp1 = obj_to_array_no_conversion(obj0,PyArray_CFLOAT);
     if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
@@ -10512,7 +10512,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_3(PyObject *SWIGUNUSEDPARM(
   }
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "ode_strength_helper" "', argument " "4"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "evolution_strength_helper" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
   {
@@ -10547,20 +10547,20 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_3(PyObject *SWIGUNUSEDPARM(
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "ode_strength_helper" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "evolution_strength_helper" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "evolution_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_float(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "ode_strength_helper" "', argument " "10"" of type '" "float""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "evolution_strength_helper" "', argument " "10"" of type '" "float""'");
   } 
   arg10 = static_cast< float >(val10);
-  ode_strength_helper<int,npy_cfloat_wrapper,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(npy_cfloat_wrapper const (*))arg7,arg8,arg9,arg10);
+  evolution_strength_helper<int,npy_cfloat_wrapper,float >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(npy_cfloat_wrapper const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(npy_cfloat_wrapper const (*))arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) {
@@ -10618,7 +10618,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_evolution_strength_helper__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   npy_cdouble_wrapper *arg1 ;
   int *arg2 ;
@@ -10660,7 +10660,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_4(PyObject *SWIGUNUSEDPARM(
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:ode_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:evolution_strength_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     temp1 = obj_to_array_no_conversion(obj0,PyArray_CDOUBLE);
     if (!temp1  || !require_contiguous(temp1) || !require_native(temp1)) SWIG_fail;
@@ -10688,7 +10688,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_4(PyObject *SWIGUNUSEDPARM(
   }
   ecode4 = SWIG_AsVal_int(obj3, &val4);
   if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "ode_strength_helper" "', argument " "4"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "evolution_strength_helper" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
   {
@@ -10723,20 +10723,20 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper__SWIG_4(PyObject *SWIGUNUSEDPARM(
   }
   ecode8 = SWIG_AsVal_int(obj7, &val8);
   if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "ode_strength_helper" "', argument " "8"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "evolution_strength_helper" "', argument " "8"" of type '" "int""'");
   } 
   arg8 = static_cast< int >(val8);
   ecode9 = SWIG_AsVal_int(obj8, &val9);
   if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "ode_strength_helper" "', argument " "9"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "evolution_strength_helper" "', argument " "9"" of type '" "int""'");
   } 
   arg9 = static_cast< int >(val9);
   ecode10 = SWIG_AsVal_double(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "ode_strength_helper" "', argument " "10"" of type '" "double""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "evolution_strength_helper" "', argument " "10"" of type '" "double""'");
   } 
   arg10 = static_cast< double >(val10);
-  ode_strength_helper<int,npy_cdouble_wrapper,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(npy_cdouble_wrapper const (*))arg7,arg8,arg9,arg10);
+  evolution_strength_helper<int,npy_cdouble_wrapper,double >(arg1,(int const (*))arg2,(int const (*))arg3,arg4,(npy_cdouble_wrapper const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(npy_cdouble_wrapper const (*))arg7,arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2) {
@@ -10794,7 +10794,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_evolution_strength_helper(PyObject *self, PyObject *args) {
   int argc;
   PyObject *argv[11];
   int ii;
@@ -10850,7 +10850,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_ode_strength_helper__SWIG_1(self, args);
+                        return _wrap_evolution_strength_helper__SWIG_1(self, args);
                       }
                     }
                   }
@@ -10908,7 +10908,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_ode_strength_helper__SWIG_2(self, args);
+                        return _wrap_evolution_strength_helper__SWIG_2(self, args);
                       }
                     }
                   }
@@ -10966,7 +10966,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_ode_strength_helper__SWIG_3(self, args);
+                        return _wrap_evolution_strength_helper__SWIG_3(self, args);
                       }
                     }
                   }
@@ -11024,7 +11024,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_ode_strength_helper__SWIG_4(self, args);
+                        return _wrap_evolution_strength_helper__SWIG_4(self, args);
                       }
                     }
                   }
@@ -11038,7 +11038,7 @@ SWIGINTERN PyObject *_wrap_ode_strength_helper(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'ode_strength_helper'.\n  Possible C/C++ prototypes are:\n    ode_strength_helper<(int,float,float)>(float [],int const [],int const [],int const,float const [],float const [],float const [],int const,int const,float const)\n    ode_strength_helper<(int,double,double)>(double [],int const [],int const [],int const,double const [],double const [],double const [],int const,int const,double const)\n    ode_strength_helper<(int,npy_cfloat_wrapper,float)>(npy_cfloat_wrapper [],int const [],int const [],int const,npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],int const,int const,float const)\n    ode_strength_helper<(int,npy_cdouble_wrapper,double)>(npy_cdouble_wrapper [],int const [],int const [],int const,npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],int const,int const,double const)\n");
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'evolution_strength_helper'.\n  Possible C/C++ prototypes are:\n    evolution_strength_helper<(int,float,float)>(float [],int const [],int const [],int const,float const [],float const [],float const [],int const,int const,float const)\n    evolution_strength_helper<(int,double,double)>(double [],int const [],int const [],int const,double const [],double const [],double const [],int const,int const,double const)\n    evolution_strength_helper<(int,npy_cfloat_wrapper,float)>(npy_cfloat_wrapper [],int const [],int const [],int const,npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],npy_cfloat_wrapper const [],int const,int const,float const)\n    evolution_strength_helper<(int,npy_cdouble_wrapper,double)>(npy_cdouble_wrapper [],int const [],int const [],int const,npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],npy_cdouble_wrapper const [],int const,int const,double const)\n");
   return NULL;
 }
 
@@ -28528,7 +28528,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"pinv_array", _wrap_pinv_array, METH_VARARGS, NULL},
 	 { (char *)"classical_strength_of_connection", _wrap_classical_strength_of_connection, METH_VARARGS, NULL},
 	 { (char *)"symmetric_strength_of_connection", _wrap_symmetric_strength_of_connection, METH_VARARGS, NULL},
-	 { (char *)"ode_strength_helper", _wrap_ode_strength_helper, METH_VARARGS, NULL},
+	 { (char *)"evolution_strength_helper", _wrap_evolution_strength_helper, METH_VARARGS, NULL},
 	 { (char *)"incomplete_matmat", _wrap_incomplete_matmat, METH_VARARGS, NULL},
 	 { (char *)"apply_distance_filter", _wrap_apply_distance_filter, METH_VARARGS, NULL},
 	 { (char *)"apply_absolute_distance_filter", _wrap_apply_absolute_distance_filter, METH_VARARGS, NULL},

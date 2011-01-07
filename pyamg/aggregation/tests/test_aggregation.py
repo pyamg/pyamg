@@ -38,7 +38,7 @@ class TestParameters(TestCase):
 
 
     def test_strength_of_connection(self): 
-        for strength in ['symmetric','ode']:
+        for strength in ['symmetric','evolution']:
             self.run_cases( {'strength' : strength} )
     
     def test_aggregation_method(self): 
@@ -347,7 +347,7 @@ class TestSolverPerformance(TestCase):
         smooth=('energy', {'krylov' : 'gmres'})
         SA_build_args={'max_coarse':25, 'coarse_solver':'pinv2', 'symmetry':'nonsymmetric'}
         SA_solve_args={'cycle':'V', 'maxiter':20, 'tol':1e-8}
-        strength=[('ode', {'k':2, 'epsilon':8.0})]
+        strength=[('evolution', {'k':2, 'epsilon':8.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
         # Construct solver with nonsymmetric parameters
         sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
@@ -491,7 +491,7 @@ class TestComplexSolverPerformance(TestCase):
         smooth=('energy', {'krylov' : 'gmres'})
         SA_build_args={'max_coarse':25, 'coarse_solver':'pinv2', 'symmetry':'symmetric'}
         SA_solve_args={'cycle':'V', 'maxiter':20, 'tol':1e-8}
-        strength=[('ode', {'k':2, 'epsilon':2.0})]
+        strength=[('evolution', {'k':2, 'epsilon':2.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
         # Construct solver with nonsymmetric parameters
         sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \

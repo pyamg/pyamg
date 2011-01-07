@@ -128,4 +128,3 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
                                [c,b,a]])
 
     return stencil
-

@@ -13,7 +13,7 @@
 #include "smoothed_aggregation.h"
 #include "relaxation.h"
 #include "graph.h"
-#include "ode_strength.h"
+#include "evolution_strength.h"
 #include "krylov.h"
 #include "linalg.h"
 %}
@@ -185,7 +185,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %include "smoothed_aggregation.h"
 %include "relaxation.h"
 %include "graph.h"
-%include "ode_strength.h"
+%include "evolution_strength.h"
 %include "krylov.h"
 %include "linalg.h"
  /*
@@ -234,7 +234,7 @@ INSTANTIATE_COMPLEX(incomplete_BSRmatmat)
 INSTANTIATE_COMPLEX(pinv_array)
 INSTANTIATE_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
-INSTANTIATE_COMPLEX(ode_strength_helper)
+INSTANTIATE_COMPLEX(evolution_strength_helper)
 INSTANTIATE_COMPLEX(incomplete_matmat)
 INSTANTIATE_BOTH(apply_distance_filter)
 INSTANTIATE_BOTH(apply_absolute_distance_filter)

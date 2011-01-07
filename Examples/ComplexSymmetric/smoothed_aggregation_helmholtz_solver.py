@@ -9,7 +9,7 @@ from scipy.sparse import isspmatrix_csr, isspmatrix_bsr
 from pyamg.multilevel import multilevel_solver
 from pyamg.util.utils import relaxation_as_linear_operator
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection, \
+from pyamg.strength import symmetric_strength_of_connection, evolution_strength_of_connection, \
                            distance_strength_of_connection
 from pyamg.aggregation.aggregation import extend_hierarchy, preprocess_Bimprove, \
                                         preprocess_str_or_agg, preprocess_smooth
@@ -127,7 +127,7 @@ def smoothed_aggregation_helmholtz_solver(A, planewaves, use_constant=(True, {'l
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         Note that for the strictly real case, symmetric and hermitian are the same
         Note that this flag does not denote definiteness of the operator.
-    strength : ['symmetric', 'classical', 'ode', ('predefined', {'C' : csr_matrix}), None]
+    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,

@@ -1,5 +1,5 @@
-#ifndef ODE_STRENGTH_H
-#define ODE_STRENGTH_H
+#ifndef EVOLUTION_STRENGTH_H
+#define EVOLUTION_STRENGTH_H
 
 #include <iterator>
 #include <algorithm>
@@ -113,7 +113,7 @@ void apply_absolute_distance_filter(const I n_row,
  * Notes
  * -----
  * Principle calling routines are strength of connection routines, e.g.
- * ode_strength_of_connection(...) in strength.py.  It is used to apply 
+ * evolution_strength_of_connection(...) in strength.py.  It is used to apply 
  * a drop tolerance.
  *
  * Examples
@@ -185,7 +185,7 @@ void apply_distance_filter(const I n_row,
  *
  * Notes
  * -----
- * Principle calling routine is ode_strength_of_connection(...) in strength.py.  
+ * Principle calling routine is evolution_strength_of_connection(...) in strength.py.  
  * In that routine, it is used to assign a strength of connection value between 
  * supernodes by setting the strength value to be the minimum nonzero in a block.
  *
@@ -298,16 +298,16 @@ void min_blocks(const I n_blocks, const I blocksize,
  *
  * b is used to save on the computation of each local minimization problem
  *
- * Principle calling routine is ode_strength_of_connection(...) in strength.py.  
+ * Principle calling routine is evolution_strength_of_connection(...) in strength.py.  
  * In that routine, it is used to calculate strength-of-connection for the case
  * of multiple near-nullspace modes.
  *
  * Examples
  * --------
- * See odes_strength_of_connection(...) in strength.py
+ * See evolution_strength_of_connection(...) in strength.py
  */
 template<class I, class T, class F>
-void ode_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
+void evolution_strength_helper(      T Sx[],  const I Sp[],    const I Sj[], 
                          const I nrows, const T x[],     const T y[], 
                          const T b[],   const I BDBCols, const I NullDim,
                          const F tol)
@@ -636,7 +636,7 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  * sparsity pattern is a subset of A*B, so this algorithm 
  * should work well.
  *
- * Principle calling routine is ode_strength_of_connection in 
+ * Principle calling routine is evolution_strength_of_connection in 
  * strength.py.  Here it is used to calculate S*S only at the 
  * sparsity pattern of the original operator.  This allows for
  * BIG cost savings.

@@ -8,7 +8,7 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
                            symmetric_strength_of_connection, \
-                           ode_strength_of_connection
+                           evolution_strength_of_connection
 
 from interpolate import direct_interpolation
 
@@ -26,7 +26,7 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'ode', None]
+    strength : ['symmetric', 'classical', 'evolution', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -123,8 +123,8 @@ def extend_hierarchy(levels, strength, CF, keep):
         C = symmetric_strength_of_connection(A,**kwargs)
     elif fn == 'classical':
         C = classical_strength_of_connection(A,**kwargs)
-    elif fn == 'ode':
-        raise NotImplementedError('ode method not supported for Classical AMG')
+    elif (fn == 'ode') or (fn == 'evolution'):
+        raise NotImplementedError('evolution method not supported for Classical AMG')
     elif fn is None:
         C = A
     else:

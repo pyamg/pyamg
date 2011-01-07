@@ -7,7 +7,7 @@ import scipy
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg.multilevel import multilevel_solver
-from pyamg.strength import symmetric_strength_of_connection, ode_strength_of_connection
+from pyamg.strength import symmetric_strength_of_connection, evolution_strength_of_connection
 from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne, \
                              gauss_seidel_indexed, jacobi, polynomial
 from pyamg.relaxation.smoothing import change_smoothers, rho_block_D_inv_A, rho_D_inv_A
@@ -146,7 +146,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Maximum number of variables permitted on the coarse grid.
     prepostsmoother : {string or dict} 
         Pre- and post-smoother used in the adaptive method
-    strength : ['symmetric', 'classical', 'ode', ('predefined', {'C' : csr_matrix}), None]
+    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  See smoothed_aggregation_solver(...) documentation.
     aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
@@ -410,8 +410,8 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')   # Diagonal must be nonzero
             if isspmatrix_bsr(A_l):
                 C_l = amalgamate(C, A_l.blocksize[0])
-        elif fn == 'ode':
-            C_l = ode_strength_of_connection(A_l, numpy.ones((A_l.shape[0],1),dtype=A.dtype),**kwargs)
+        elif (fn == 'ode') or (fn == 'evolution'):
+            C_l = evolution_strength_of_connection(A_l, numpy.ones((A_l.shape[0],1),dtype=A.dtype),**kwargs)
         elif fn == 'predefined':
             C_l = kwargs['C'].tocsr()
         elif fn is None:
@@ -425,7 +425,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         
         # Create a unified strength framework so that large values represent strong
         # connections and small values represent weak connections
-        if (fn == 'ode') or (fn == 'energy_based'):
+        if (fn == 'ode') or (fn == 'evolutin') or (fn == 'energy_based'):
             C_l.data = 1.0/C_l.data
 
         ##

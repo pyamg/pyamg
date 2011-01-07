@@ -1,7 +1,7 @@
 """
 Test the scalability of SA for rotated diffusion while 
 highlighting the performance of different strength measures.
-Try different values for classic_theta and ode_theta.
+Try different values for classic_theta and evolution_theta.
 """
 import numpy
 import scipy
@@ -42,7 +42,7 @@ if(__name__=="__main__"):
     smooth = ('energy', {'maxiter' : 6})                # Prolongation Smoother
     classic_theta = 0.0                                 # Classic Strength Measure
                                                         #    Drop Tolerance
-    ode_theta = 4.0                                     # ODE Strength Measure
+    evolution_theta = 4.0                                     # evolution Strength Measure
                                                         #    Drop Tolerance
 
     for n in nlist:
@@ -69,10 +69,10 @@ if(__name__=="__main__"):
         nnz_classic[run]        = A.nnz
         sizelist_classic[run]   = A.shape[0]
 
-        # ODE strength measure
+        # Evolution strength measure
         ml = smoothed_aggregation_solver(A, max_coarse=mcoarse, coarse_solver='pinv2', 
                                          presmoother=prepost, postsmoother=prepost, smooth=smooth,
-                                         strength=('ode', {'epsilon' : ode_theta, 'k' : 2}) )
+                                         strength=('evolution', {'epsilon' : evolution_theta, 'k' : 2}) )
         resvec = []
         x = ml.solve(b, x0=x0, maxiter=100, tol=1e-8, residuals=resvec)
         factors_ode[run]    = (resvec[-1]/resvec[0])**(1.0/len(resvec))
@@ -94,6 +94,6 @@ if(__name__=="__main__"):
          nnz_classic, sizelist_classic, plotting=False, 
          title='Classic Strength Measure DropTol = %1.2f' % classic_theta)
     print_scalability(factors_ode, complexity_ode, nnz_ode, sizelist_ode, 
-         plotting=False, title='ODE Strength Measure DropTol = %1.2f' % ode_theta)
+         plotting=False, title='Evolution Strength Measure DropTol = %1.2f' % evolution_theta)
 
 

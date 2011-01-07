@@ -31,7 +31,7 @@ if __name__ == '__main__':
     SA_build_args={'max_levels':10, 'max_coarse':25, 'coarse_solver':'pinv2', \
                    'symmetry':'hermitian'}
     SA_solve_args={'cycle':'V', 'maxiter':15, 'tol':1e-8}
-    strength=[('ode', {'k':2, 'epsilon':4.0})]
+    strength=[('evolution', {'k':2, 'epsilon':4.0})]
     presmoother =('gauss_seidel', {'sweep':'symmetric', 'iterations':1})
     postsmoother=('gauss_seidel', {'sweep':'symmetric', 'iterations':1})
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Now, construct and solve with nonsymmetric SA parameters 
     smooth=('energy', {'krylov' : 'gmres'})
     SA_build_args['symmetry'] = 'nonsymmetric'
-    strength=[('ode', {'k':2, 'epsilon':4.0})]
+    strength=[('evolution', {'k':2, 'epsilon':4.0})]
     presmoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
     postsmoother=('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
 

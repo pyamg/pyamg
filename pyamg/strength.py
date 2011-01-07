@@ -12,7 +12,9 @@ from scipy import sparse
 import amg_core
 
 __all__ = ['classical_strength_of_connection', 'symmetric_strength_of_connection', \
-           'ode_strength_of_connection', 'distance_strength_of_connection']
+           'evolution_strength_of_connection', 'distance_strength_of_connection', \
+           # deprecated:
+           'ode_strength_of_connection']
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
@@ -129,7 +131,7 @@ def classical_strength_of_connection(A, theta=0.0):
     See Also
     --------
     symmetric_strength_of_connection : symmetric measure used in SA
-    ode_strength_of_connection : relaxation based strength measure
+    evolution_strength_of_connection : relaxation based strength measure
 
     Notes
     -----
@@ -203,7 +205,7 @@ def symmetric_strength_of_connection(A, theta=0):
     See Also
     --------
     symmetric_strength_of_connection : symmetric measure used in SA
-    ode_strength_of_connection : relaxation based strength measure
+    evolution_strength_of_connection : relaxation based strength measure
 
     Notes
     -----
@@ -419,10 +421,13 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     
     return Atilde
 
-
-
+@numpy.deprecate
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, symmetrize_measure=True):
-    """Construct an AMG strength of connection matrix using an ODE-based measure
+    """Use evolution_strength_of_connection instead"""
+    return evolution_strength_of_connection(A, B, epsilon, k, proj_type, block_flag, symmetrize_measure)
+
+def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, symmetrize_measure=True):
+    """Construct an AMG strength of connection matrix using an Evolution-based measure
 
     Parameters
     ----------
@@ -455,15 +460,15 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
     --------
     >>> import numpy
     >>> from pyamg.gallery import stencil_grid
-    >>> from pyamg.strength import ode_strength_of_connection
+    >>> from pyamg.strength import evolution_strength_of_connection
     >>> n=3
     >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
     ...                        [-1.0, 8.0,-1.0],
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
-    >>> S = ode_strength_of_connection(A, numpy.ones((A.shape[0],1)))
+    >>> S = evolution_strength_of_connection(A, numpy.ones((A.shape[0],1)))
     """
-    # many imports for ode_strength_of_connection, so moved the imports local
+    # many imports for evolution_strength_of_connection, so moved the imports local
     from pyamg.util.utils  import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
     from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
@@ -558,7 +563,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
     # a very efficient computational short-cut.  Otherwise, we support  
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0: 
-        warn("The most efficient time stepping for the ODE Strength Method"\
+        warn("The most efficient time stepping for the Evolution Strength Method"\
               " is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
     
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
@@ -701,7 +706,7 @@ def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_fla
         tol = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
         
         # Use constrained min problem to define strength
-        amg_core.ode_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
+        amg_core.evolution_strength_helper(Atilde.data,         Atilde.indptr,     Atilde.indices, 
                                            Atilde.shape[0],
                                            numpy.ravel(numpy.asarray(B)), 
                                            numpy.ravel(numpy.asarray((D_A * numpy.conjugate(B)).T)),

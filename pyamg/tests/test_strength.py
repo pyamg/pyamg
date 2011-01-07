@@ -76,7 +76,7 @@ class TestStrengthOfConnection(TestCase):
 
 
     def test_incomplete_matmat(self):
-        # Test a critical helper routine for ode_strength_of_connection(...)
+        # Test a critical helper routine for evolution_strength_of_connection(...)
         # We test that (A*B).multiply(mask) = incomplete_matmat(A,B,mask)
         cases = []
 
@@ -211,7 +211,7 @@ class TestStrengthOfConnection(TestCase):
             assert_array_equal(exact.indices, result.indices)
 
 
-    def test_ode_strength_of_connection(self):
+    def test_evolution_strength_of_connection(self):
         # Params:  A, B, epsilon=4.0, k=2, proj_type="l2"
         cases = []
 
@@ -255,17 +255,17 @@ class TestStrengthOfConnection(TestCase):
         
         for ca in cases:
             scipy.random.seed(0)  #make results deterministic
-            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            result = evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
             scipy.random.seed(0)  #make results deterministic
-            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            expected = reference_evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal( result.todense(), expected.todense(), decimal=4)
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A,B) = linear_elasticity( (5,5), format='bsr')
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, \
+        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, \
                            k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], \
@@ -273,7 +273,7 @@ class TestStrengthOfConnection(TestCase):
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], \
                                 [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = ode_strength_of_connection( (D*A*D).tobsr(blocksize=(2,2)), \
+        result_scaled = evolution_strength_of_connection( (D*A*D).tobsr(blocksize=(2,2)), \
                   Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
@@ -318,7 +318,7 @@ class TestComplexStrengthOfConnection(TestCase):
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())
 
-    def test_ode_strength_of_connection(self):
+    def test_evolution_strength_of_connection(self):
         cases = [] 
 
         # Single near nullspace candidate
@@ -340,10 +340,10 @@ class TestComplexStrengthOfConnection(TestCase):
         
         for ca in cases:
             scipy.random.seed(0)  #make results deterministic
-            result = ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            result = evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
             scipy.random.seed(0)  #make results deterministic
-            expected = reference_ode_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            expected = reference_evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                                            k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal( result.todense(), expected.todense() )
 
@@ -351,20 +351,20 @@ class TestComplexStrengthOfConnection(TestCase):
         A = 1.0j*poisson( (5,5), format='csr')
         B = 1.0j*arange(1,A.shape[0]+1,dtype=float).reshape(-1,1)
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
+        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
+        result_scaled = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
         
         # Test that the l2 and D_A are the same for the 1 candidate case
         scipy.random.seed(0)  #make results deterministic
-        resultDA = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+        resultDA = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
                             k=2, proj_type="D_A", symmetrize_measure=False)
         scipy.random.seed(0)  #make results deterministic
-        resultl2 = ode_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+        resultl2 = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
                               k=2, proj_type="l2", symmetrize_measure=False)
         assert_array_almost_equal( resultDA.todense(), resultl2.todense() )
 
@@ -373,13 +373,13 @@ class TestComplexStrengthOfConnection(TestCase):
         A = 1.0j*A
         B = 1.0j*B
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = ode_strength_of_connection(A, B, epsilon=4.0, k=2, \
+        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, k=2, \
                                      proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0],2*A.shape[0],dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = ode_strength_of_connection((D*A*D).tobsr(blocksize=(2,2)), Dinv*B, \
+        result_scaled = evolution_strength_of_connection((D*A*D).tobsr(blocksize=(2,2)), Dinv*B, \
                                 epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal( result_scaled.todense(), result_unscaled.todense(), decimal=2 )
 
@@ -448,9 +448,9 @@ def reference_symmetric_strength_of_connection(A, theta):
 
 
 
-def reference_ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
+def reference_evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
-    All python reference implementation for ODE Strength of Connection
+    All python reference implementation for Evolution Strength of Connection
     
     --> If doing imaginary test, both A and B should be imaginary type upon entry
     --> This does the "unsymmetrized" version of the ode measure
