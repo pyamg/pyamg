@@ -43,6 +43,8 @@ print "\n\n\n\n\n"
 #      P: prolongation operator mapping from level 1 to level 0
 #      R: restriction operator mapping from level 0 to level 1
 #      B: near null-space modes for level 0
+#      presmoother: presmoothing function taking arguments (A,x,b)
+#      postsmoother: postsmoothing function taking arguments (A,x,b)
 print dir(ml.levels[0])
 
 # e.g. the multigrid components on the coarsest (4) level
