@@ -21,9 +21,10 @@ b = rand(A.shape[0])                     # pick a random right hand side
 ml = smoothed_aggregation_solver(A)      # construct the multigrid hierarchy
 
 #------------------------------------------------------------------
-# Step 4: setup of the multigrid hierarchy
+# Step 4: solve the system
 #------------------------------------------------------------------
-x = ml.solve(b, tol=1e-10)               # solve Ax=b to a tolerance of 1e-10
+res1 = []
+x = ml.solve(b, tol=1e-6, residuals=res1)# solve Ax=b to a tolerance of 1e-6
 
 #------------------------------------------------------------------
 # Step 5: print details
@@ -55,7 +56,7 @@ print "\n\n\n\n\n"
 # Step 6: change the hierarchy
 #------------------------------------------------------------------
 # we can also change the details of the hierarchy
-ml = smoothed_aggregation_solver(A, # the matrix
+ml = smoothed_aggregation_solver(A,        # the matrix
         B=X.reshape(n*n,1),                # the representation of the near null space
         BH=None,                           # the representation of the left near null space
         symmetry='hermitian',              # indicate that the matrix is Hermitian
@@ -72,8 +73,8 @@ ml = smoothed_aggregation_solver(A, # the matrix
 #------------------------------------------------------------------
 # Step 7: print details
 #------------------------------------------------------------------
-res = []                                 # keep the residual history in the solve
-x = ml.solve(b, tol=1e-12,residuals=res) # solve Ax=b to a tolerance of 1e-12
+res2 = []                                # keep the residual history in the solve
+x = ml.solve(b, tol=1e-12,residuals=res2)# solve Ax=b to a tolerance of 1e-12
 print ml                                 # print hierarchy information
 print "residual norm is", norm(b - A*x)  # compute norm of residual vector
 print "\n\n\n\n\n"
@@ -82,5 +83,7 @@ print "\n\n\n\n\n"
 # Step 8: plot convergence history
 #------------------------------------------------------------------
 from pylab import *
-semilogy(res)
+semilogy(res1) 
+hold(True)
+semilogy(res2) 
 show()
