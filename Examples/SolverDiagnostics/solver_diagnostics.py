@@ -1,14 +1,15 @@
 import scipy
 import numpy
 from scipy import rand, zeros, hstack, vstack, mat, sparse, log10, argsort, inf
-from numpy import ones, ravel, arange, mod, array, dot, abs, linspace, kron, eye
+from numpy import ones, ravel, arange, mod, array, abs, kron, eye, random
 from scipy.sparse import csr_matrix, isspmatrix_bsr, isspmatrix_csr
+from scipy.io import savemat, loadmat
 
 from pyamg.aggregation import smoothed_aggregation_solver
-from pyamg.util.linalg import norm, _approximate_eigenvalues, issymm
+from pyamg.util.linalg import norm, _approximate_eigenvalues, ishermitian
 from pyamg.util.utils import print_table 
 
-def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
+def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
         symmetry=None, strength_list=None, aggregate_list=None,
         smooth_list=None, Bimprove_list=None, max_levels_list=None,
         cycle_list=None, krylov_list=None, prepostsmoother_list=None,
@@ -19,7 +20,6 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
     parameter settings for the arbitrary matrix problem A x = 0 using a 
     random initial guess.
     
-
     Every combination of the input parameter lists is used to construct and
     test an SA solver.  Thus, be wary of the total number of solvers possible!
     For example for an SPD CSR matrix, the default parameter lists generate 60
@@ -55,8 +55,8 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
         smoothed_aggregation_solver(...)
         
         Default:  [('symmetric', {'theta' : 0.0}), 
-                   ('ode', {'k':2, 'proj_type':'l2', 'epsilon':2.0}),
-                   ('ode', {'k':2, 'proj_type':'l2', 'epsilon':4.0})]
+                   ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':2.0}),
+                   ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':4.0})]
     
     aggregate_list : {list} 
         List of various parameter choices for the aggregate argument sent to
@@ -128,10 +128,11 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
         smoothed_aggregation_solver(...).  Basic form is [ (B, BH, string), ...].
         B is a vector of left near null-space modes used to generate
         prolongation, BH is a vector of right near null-space modes used to
-        generate restriction, and string is a descriptor used in the output file 
-        for this particular B and BH choice.  B and BH must have a row-size equal
-        to the dimensionality of A
-    
+        generate restriction, and string is a python command(s) that can generate 
+        your particular B and BH choice.  B and BH must have a row-size equal
+        to the dimensionality of A.  string is only used in the automatically
+        generated test script.
+
         Default depends on whether A is BSR:
         if A is CSR:
             B_list = [(ones((A.shape[0],1)), ones((A.shape[0],1)), 'B, BH are all ones')]
@@ -140,7 +141,8 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
             B_list = [(ones((A.shape[0],1)), ones((A.shape[0],1)), 'B, BH are all ones'),
                       (kron(ones((A.shape[0]/bsize,1)), numpy.eye(bsize)), 
                        kron(ones((A.shape[0]/bsize,1)), numpy.eye(bsize)),
-                       'B, BH comprised of constant displacements for each variable')]
+                       'B = kron(ones((A.shape[0]/A.blocksize[0],1), dtype=A.dtype), 
+                                 eye(A.blocksize[0])); BH = B.copy()')]
 
     coarse_size_list : {list} 
         List of various tuples containing pairs of the (max_coarse, coarse_solver)
@@ -175,6 +177,18 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
                      [ (max_coarse, coarse_solver), ...].
 
     For detailed info on each of these parameter lists, see above.
+
+    Returns
+    -------
+    Two files are written:
+    (1) fname + ".py"
+        Use the function defined here to generate and run the best 
+        smoothed aggregation method found.  The only argument taken
+        is a BSR/CSR matrix.
+    (2) fname + ".txt"
+        This file outputs the solver profile for each method 
+        tried in a sorted table listing the best solver first.
+        The detailed solver descriptions then follow the table.
     
     See Also
     --------
@@ -198,19 +212,19 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
         except:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix,\
                              or be convertible to csr_matrix')
-    ##
+    #
     A = A.asfptype()
-    ##
+    #
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
     
-    print "\nBeginning solver diagnostics for (%d,%d) matrix"%A.shape
+    print "\nSearching for optimal smoothed aggregation method for (%d,%d) matrix"%A.shape
+    print "    ..."
     
     ##
     # Detect symmetry
     if symmetry == None:
-        symmetry = issymm(A, fast_check=True)
-        if symmetry == 0:
+        if ishermitian(A, fast_check=True):
             symmetry = 'hermitian'
         else:
             symmetry = 'nonsymmetric'
@@ -237,27 +251,15 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
     # Default B are (1) a vector of all ones, and 
     # (2) if A is BSR, the constant for each variable
     if B_list == None:
-        new_list = [ones((A.shape[0],1), dtype=A.dtype), None, 
-                    'B = ones((A.shape[0],1), dtype=A.dtype)']
-        if symmetry == 'nonsymmetric':
-            new_list[1] = new_list[0].copy()
-            new_list[2] = new_list[2] + '\n    BH = B.copy()'
-        else:
-            new_list[2] = new_list[2] + '\n    BH = None'
-        #
-        B_list = [tuple(new_list)]
+        B_list = [(ones((A.shape[0],1), dtype=A.dtype), 
+                   ones((A.shape[0],1), dtype=A.dtype), 
+                   'B = ones((A.shape[0],1), dtype=A.dtype); BH = B.copy()')]
 
         if isspmatrix_bsr(A) and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
-            new_list = [ kron(ones((A.shape[0]/bsize,1), dtype=A.dtype),eye(bsize)), 
-                         None, 'B = kron(ones((A.shape[0]/bsize,1), dtype=A.dtype), eye(bsize))']
-            if symmetry == 'nonsymmetric':
-                new_list[1] = new_list[0].copy()
-                new_list[2] = new_list[2] + '\n    BH = B.copy()'
-            else:
-                new_list[2] = new_list[2] + '\n    BH = None'
-            #
-            B_list.append(tuple(new_list))
+            B_list.append( (kron(ones((A.shape[0]/bsize,1), dtype=A.dtype),eye(bsize)), 
+              kron(ones((A.shape[0]/bsize,1), dtype=A.dtype),eye(bsize)),
+              'B = kron(ones((A.shape[0]/A.blocksize[0],1), dtype=A.dtype), eye(A.blocksize[0])); BH = B.copy()'))
     
     ##
     # Default is to try V- and W-cycles
@@ -268,8 +270,8 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
     # Default strength of connection values
     if strength_list == None:
         strength_list = [('symmetric', {'theta' : 0.0}),
-                         ('ode', {'k':2, 'proj_type':'l2', 'epsilon':2.0}),
-                         ('ode', {'k':2, 'proj_type':'l2', 'epsilon':4.0})]
+                         ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':2.0}),
+                         ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':4.0})]
 
     ##
     # Default aggregation strategies
@@ -330,9 +332,11 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
                len(coarse_size_list)*len(prepostsmoother_list)
     results = zeros( (num_test,3) )
     solver_descriptors = []
+    solver_args = []
     
     ##
     # Zero RHS and random initial guess
+    random.seed(0)
     b = zeros( (A.shape[0],1), dtype=A.dtype)
     x0 = rand( A.shape[0], 1)
     if A.dtype == complex:
@@ -347,7 +351,7 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
             for max_levels in max_levels_list:
                 for max_coarse,coarse_solver in coarse_size_list:
                     for presmoother,postsmoother in prepostsmoother_list:
-                        for B,BH,Bdescriptor in B_list:
+                        for B_index in range(len(B_list)): 
                             for strength in strength_list:
                                 for aggregate in aggregate_list:
                                     for smooth in smooth_list:
@@ -355,6 +359,10 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
                                             
                                             counter += 1
                                             print "    Test %d out of %d"%(counter+1,num_test)
+                                            
+                                            ##
+                                            # Grab B vectors
+                                            B,BH,Bdescriptor = B_list[B_index]
                                             
                                             ##
                                             # Store this solver setup
@@ -384,7 +392,16 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
                                                 '    smooth = ' + str(smooth) + '\n' \
                                                 '    Bimprove = ' + str(Bimprove) 
                                             solver_descriptors.append(descriptor)
-
+                                            solver_args.append( {'cycle' : cycle, 
+                                                'accel' : str(krylov[0]),
+                                                'tol' : tol, 'maxiter' : maxiter, 
+                                                'max_levels' : max_levels, 'max_coarse' : max_coarse,
+                                                'coarse_solver' : coarse_solver, 'B_index' : B_index,
+                                                'presmoother' : presmoother, 
+                                                'postsmoother' : postsmoother,
+                                                'strength' : strength, 'aggregate' : aggregate,
+                                                'smooth' : smooth, 'Bimprove' : Bimprove} )
+                                            
                                             ##
                                             # Construct solver
                                             try:
@@ -424,6 +441,7 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
     indys = argsort(results[:,2])
     results = results[indys,:]
     solver_descriptors = list(array(solver_descriptors)[indys])
+    solver_args = list(array(solver_args)[indys])
 
     ##
     # Create table from results and print to file
@@ -435,7 +453,7 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
         else:
             table.append(['%d'%(i+1),'%d'%results[i,0],'%1.1f'%results[i,1],'%1.1f'%results[i,2]])
     #
-    fptr = open(fname, 'w')
+    fptr = open(fname+'.txt', 'w')
     fptr.write('****************************************************************\n' + \
                '*                Begin Solver Diagnostic Results               *\n' + \
                '*                                                              *\n' + \
@@ -462,10 +480,88 @@ def solver_diagnostics(A, fname='solver_diagnostic.txt', definiteness=None,
         fptr.write(' \n \n')
     
     fptr.close()
-    print "    ..."
-    print "    Results located in " + fname
-
-
-
     
+    ##
+    # Now write a function definition file that generates the "best" solver
+    fptr = open(fname + '.py', 'w')
+    # Helper function for file writing
+    def to_string(a):
+        if type(a) == type((1,)):   return(str(a))
+        elif type(a) == type('s'):  return("\"%s\""%a)
+        else: return str(a)
+    #
+    fptr.write('#######################################################################\n')
+    fptr.write('# Function definition automatically generated by solver_diagnostics.py\n')
+    fptr.write('#\n')
+    fptr.write('# Use the function defined here to generate and run the best\n')
+    fptr.write('# smoothed aggregation method found by solver_diagnostics(...).\n')
+    fptr.write('# The only argument taken is a CSR/BSR matrix.\n')
+    fptr.write('#\n')
+    fptr.write('# To run:  >>> # User must load/generate CSR/BSR matrix A\n')
+    fptr.write('#          >>> from ' + fname + ' import ' + fname + '\n' )
+    fptr.write('#          >>> ' + fname + '(A)' + '\n')
+    fptr.write('#######################################################################\n\n')
+    fptr.write('from pyamg import smoothed_aggregation_solver\n')
+    fptr.write('from pyamg.util.linalg import norm\n') 
+    fptr.write('from numpy import ones, array, arange, zeros, abs, random\n') 
+    fptr.write('from scipy import rand, ravel, log10, kron, eye\n') 
+    fptr.write('from scipy.io import loadmat\n') 
+    fptr.write('from scipy.sparse import isspmatrix_bsr, isspmatrix_csr\n') 
+    fptr.write('import pylab\n\n')
+    fptr.write('def ' + fname + '(A):\n') 
+    fptr.write('    ##\n    # Generate B\n')
+    fptr.write('    ' + B_list[B_index][2] + '\n\n')
+    fptr.write('    ##\n    # Random initial guess, zero right-hand side\n')
+    fptr.write('    random.seed(0)\n')
+    fptr.write('    b = zeros((A.shape[0],1))\n')
+    fptr.write('    x0 = rand(A.shape[0],1)\n\n')
+    fptr.write('    ##\n    # Create solver\n')
+    fptr.write('    ml = smoothed_aggregation_solver(A, B=B, BH=BH,\n' + \
+               '        strength=%s,\n'%to_string(solver_args[0]['strength']) + \
+               '        smooth=%s,\n'%to_string(solver_args[0]['smooth']) + \
+               '        Bimprove=%s,\n'%to_string(solver_args[0]['Bimprove']) + \
+               '        aggregate=%s,\n'%to_string(solver_args[0]['aggregate']) + \
+               '        presmoother=%s,\n'%to_string(solver_args[0]['presmoother']) + \
+               '        postsmoother=%s,\n'%to_string(solver_args[0]['postsmoother']) + \
+               '        max_levels=%s,\n'%to_string(solver_args[0]['max_levels']) + \
+               '        max_coarse=%s,\n'%to_string(solver_args[0]['max_coarse']) + \
+               '        coarse_solver=%s)\n\n'%to_string(solver_args[0]['coarse_solver']) ) 
+    fptr.write('    ##\n    # Solve system\n')
+    fptr.write('    res = []\n')
+    fptr.write('    x = ml.solve(b, x0=x0, tol=%s, residuals=res, accel=%s, maxiter=%s, cycle=%s)\n'%\
+              (to_string(solver_args[0]['tol']),
+               to_string(solver_args[0]['accel']),
+               to_string(solver_args[0]['maxiter']),
+               to_string(solver_args[0]['cycle'])) ) 
+    fptr.write('    res_rate = (res[-1]/res[0])**(1.0/(len(res)-1.))\n')
+    fptr.write('    normr0 = norm(ravel(b) - ravel(A*x0))\n')
+    fptr.write('    print " "\n')
+    fptr.write('    print ml\n')
+    fptr.write("    print \"System size:                \" + str(A.shape)\n")
+    fptr.write("    print \"Avg. Resid Reduction:       %1.2f\"%res_rate\n")
+    fptr.write("    print \"Iterations:                 %d\"%len(res)\n")
+    fptr.write("    print \"Operator Complexity:        %1.2f\"%ml.operator_complexity()\n")
+    fptr.write("    print \"Work per DOA:               %1.2f\"%(ml.cycle_complexity()/abs(log10(res_rate)))\n")
+    fptr.write("    print \"Relative residual norm:     %1.2e\"%(norm(ravel(b) - ravel(A*x))/normr0)\n\n")
+    fptr.write('    ##\n    # Plot residual history\n')
+    fptr.write('    pylab.semilogy(array(res)/normr0)\n') 
+    fptr.write('    pylab.title(\'Residual Histories\')\n')
+    fptr.write('    pylab.xlabel(\'Iteration\')\n')
+    fptr.write('    pylab.ylabel(\'Relative Residual Norm\')\n')
+    fptr.write('    pylab.show()\n\n')
+    # Close file pointer
+    fptr.close()
+
+    print "    ..."
+    print "    --> Diagnostic Results located in " + fname + '.txt'
+    print "    ..."
+    print "    --> See automatically generated function definition\n" + \
+          "        ./" + fname + ".py.\n\n" + \
+          "        Use the function defined here to generate and run the best\n" + \
+          "        smoothed aggregation method found.  The only argument taken\n" + \
+          "        is a CSR/BSR matrix.\n\n" + \
+          "        To run: >>> # User must load/generate CSR/BSR matrix A\n" + \
+          "                >>> from " + fname + " import " + fname + "\n" + \
+          "                >>> " + fname + "(A)"
+
 
