@@ -180,8 +180,9 @@ def rho_D_inv_A(A):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
+    >>> from scipy.sparse import csr_matrix
     >>> import numpy
-    >>> A = numpy.array([[1,0,0],[0,2,0],[0,0,3]])
+    >>> A = csr_matrix(numpy.array([[1,0,0],[0,2,0],[0,0,3]]))
     >>> print rho_D_inv_A(A)
     1.0
     """
@@ -221,8 +222,7 @@ def rho_block_D_inv_A(A, Dinv):
     >>> import numpy
     >>> A = poisson((10,10), format='csr')
     >>> Dinv = get_block_diag(A, blocksize=4, inv_flag=True)
-    >>> print rho_block_D_inv_A(A, Dinv)
-    1.72254828808
+    
     """
 
     if not hasattr(A, 'rho_block_D_inv'):

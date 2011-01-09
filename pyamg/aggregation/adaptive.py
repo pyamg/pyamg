@@ -196,7 +196,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     >>> from pyamg.aggregation import adaptive_sa_solver
     >>> import numpy
     >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
-    >>> asa = adaptive_sa_solver(A,num_candidates=1)
+    >>> [asa,work] = adaptive_sa_solver(A,num_candidates=1)
     >>> residuals=[]
     >>> x=asa.solve(b=numpy.ones((A.shape[0],)),x0=numpy.ones((A.shape[0],)),residuals=residuals)
 

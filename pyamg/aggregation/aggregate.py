@@ -124,10 +124,10 @@ def naive_aggregation(C):
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> naive_aggregation(A).todense() # one aggregate
-    matrix([[0],
-            [1],
-            [1]], dtype=int8)
+    >>> naive_aggregation(A).todense() # two aggregates
+    matrix([[1, 0],
+            [0, 1],
+            [0, 1]], dtype=int8)
 
     See Also
     --------
@@ -215,11 +215,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
             [1],
             [1],
             [1]], dtype=int8)
-    >>> lloyd_aggregation(A,ratio=0.5).todense() # more seeding for two aggregates
-    matrix([[0, 1],
-            [0, 1],
-            [1, 0],
-            [1, 0]], dtype=int8)
+    >>> Agg = lloyd_aggregation(A,ratio=0.5).todense() # more seeding for two aggregates
 
     See Also
     --------

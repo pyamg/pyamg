@@ -111,7 +111,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
             [ 0.,  1.],
             [ 0.,  1.]])
     >>> A = poisson((6,),format='csr')
-    >>> P = jacobi_prolongation_smoother(A,T)
+    >>> P = jacobi_prolongation_smoother(A,T,A,numpy.ones((2,1)))
     >>> P.todense()
     matrix([[ 0.64930164,  0.        ],
             [ 1.        ,  0.        ],
@@ -950,7 +950,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, krylov='cg', maxiter=4, tol=1e
      [ 0.  1.]
      [ 0.  1.]]
     >>> A = poisson((6,),format='csr')
-    >>> P = energy_prolongation_smoother(A,T,A,numpy.ones((2,1), dtype=float))
+    >>> [P,B] = energy_prolongation_smoother(A,T,A,numpy.ones((2,1), dtype=float))
     >>> print P.todense()
     [[ 1.          0.        ]
      [ 1.          0.        ]

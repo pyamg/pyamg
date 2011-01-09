@@ -56,11 +56,10 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     >>> B = scipy.array(data['B'],dtype=float)
     >>> S = distance_strength_of_connection(data['A'], data['vertices'])
     >>> b = scipy.rand(data['A'].shape[0],)
-    >>> print "Use distance strength on level 0, and symmetric on coarse levels"
+    >>> # Use distance strength on level 0, and symmetric on coarse levels
     >>> strength = [('distance', {'V' : data['vertices']}), 'symmetric']
     >>> sa = smoothed_aggregation_solver(A, B, strength=strength, max_coarse=10)
     >>> x = sa.solve(b)
-    >>> print scipy.linalg.norm(b - A*x)
     
     """
     

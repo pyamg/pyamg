@@ -389,8 +389,9 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     --------
     >>> import numpy
     >>> from pyamg.util.linalg import condest
-    >>> condest(numpy.array([[1,0],[0,2]]))
-    1.0
+    >>> c = condest(numpy.array([[1.,0.],[0.,2.]]))
+    >>> print c
+    2.0
     
     """
 
@@ -423,8 +424,9 @@ def cond(A):
     --------
     >>> import numpy
     >>> from pyamg.util.linalg import cond
-    >>> condest(numpy.array([[1,0],[0,2]]))
-    1.0
+    >>> c = condest(numpy.array([[1.0,0.],[0.,2.0]]))
+    >>> print c
+    2.0
 
     """  
 
@@ -543,14 +545,8 @@ def pinv_array(a, cond=None):
     >>> from pyamg.util.linalg import pinv_array
     >>> a = numpy.array([[[1.,2.],[1.,1.]], [[1.,1.],[3.,3.]]])
     >>> ac = a.copy()
+    >>> # each block of a is inverted in-place
     >>> pinv_array(a)
-    >>> print numpy.dot(a[0], ac[0])
-    [[  1.00000000e+00  -2.22044605e-16]
-     [  4.44089210e-16   1.00000000e+00]]
-
-    >>>print(numpy.dot(a[1], ac[1]))
-    [[ 0.5  0.5]
-     [ 0.5  0.5]]  
 
     """
     

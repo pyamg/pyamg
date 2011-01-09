@@ -41,14 +41,14 @@ def profile_solver(ml, accel=None, **kwargs):
     Examples
     --------
     >>> import numpy
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import spdiags, csr_matrix
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
     >>> e = numpy.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n)
+    >>> A = csr_matrix(spdiags(data,[-1,0,1],n,n))
     >>> b = A*numpy.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
@@ -375,11 +375,11 @@ def symmetric_rescaling_sa(A, B, BH=None):
      [ 0.   0.  -0.5  1.  -0.5]
      [ 0.   0.   0.  -0.5  1. ]]
     >>> print DB
-    [[ 1.41]
-     [ 1.41]
-     [ 1.41]
-     [ 1.41]
-     [ 1.41]]
+    [[ 1.41421356]
+     [ 1.41421356]
+     [ 1.41421356]
+     [ 1.41421356]
+     [ 1.41421356]]
     """
     
     ##
@@ -587,23 +587,14 @@ def get_block_diag(A, blocksize, inv_flag=True):
     >>> print block_diag_inv
     [[[  0.   1.]
       [  6.   7.]]
-
+    <BLANKLINE>
      [[ 14.  15.]
       [ 20.  21.]]
-
+    <BLANKLINE>
      [[ 28.  29.]
       [ 34.  35.]]]
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
-    >>> print block_diag_inv
-    [[[ -1.16666667e+00   1.66666667e-01]
-      [  1.00000000e+00   1.41149570e-17]]
-
-     [[ -3.50000000e+00   2.50000000e+00]
-      [  3.33333333e+00  -2.33333333e+00]]
-
-     [[ -5.83333333e+00   4.83333333e+00]
-      [  5.66666667e+00  -4.66666667e+00]]]
-
+    
     """
 
     if not isspmatrix(A):

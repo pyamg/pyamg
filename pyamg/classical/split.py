@@ -248,10 +248,10 @@ def CLJP(S,color=False):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import CLJP
+    >>> from pyamg.classical.split import CLJP
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = CLJP(S)
- 
+
     See Also
     --------
     MIS, PMIS, CLJPc
@@ -300,7 +300,7 @@ def CLJPc(S):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import CLJPc
+    >>> from pyamg.classical.split import CLJPc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = CLJPc(S)
  

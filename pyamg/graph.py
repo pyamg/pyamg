@@ -323,17 +323,18 @@ def symmetric_rcm(A):
     Example
     -------
     >>> import pylab
-    >>> from pyamg.gallery import sprand
+    >>> from pyamg import gallery
     >>> from pyamg.graph import symmetric_rcm
     >>> n = 200 
     >>> density = 1.0/n
-    >>> A = sprand(n, n, density, format='csr')
+    >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
-    >>> pylab.figure()
-    >>> pylab.subplot(121)
-    >>> pylab.spy(S,marker='.')
-    >>> pylab.subplot(122)
-    >>> pylab.spy(symmetric_rcm(S),marker='.')
+    >>> # try the visualizations
+    >>> #pylab.figure()
+    >>> #pylab.subplot(121)
+    >>> #pylab.spy(S,marker='.')
+    >>> #pylab.subplot(122)
+    >>> #pylab.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------
