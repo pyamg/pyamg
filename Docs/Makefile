@@ -14,6 +14,9 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
 
+rst:
+	python sphinxext/generate_modules.py --suffix rst --dest-dir source ../pyamg/
+
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  html      to make standalone HTML files"

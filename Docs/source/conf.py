@@ -23,6 +23,7 @@ import sys, os
 
 # path to sphinxext in Numpy source director
 sys.path.append(os.path.abspath('../sphinxext'))
+sys.path.append(os.path.abspath('.'))
 
 # General configuration
 # ---------------------
