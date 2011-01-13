@@ -8,7 +8,7 @@ Welcome to PyAMG's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
 Indices and tables
 ==================
@@ -21,6 +21,6 @@ Modules
 =======
 
 .. toctree::
-   :maxdepth: 5
+  :maxdepth: 5
 
-   modules
+  modules

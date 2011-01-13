@@ -1,0 +1,25 @@
+### preamble
+###
+###
+Requirements:
+  Sphinx (sudo easy_install -U Sphinx)
+  
+The files in Docs such as
+
+  source/conf.py
+  source/index.rst
+  Makefile
+
+are created with sphinx-quickstart and are in the repo.  Then create the rst files:
+
+  python sphinxext/generate_modules.py --suffix rst --dest-dir source --maxdepth=5 ../pyamg/
+
+This is added to the Makefile.  The generate_modules.py script autogenerates .rst
+files for the pyamg module.
+
+
+
+### how to make the documentation
+###
+###
+make html

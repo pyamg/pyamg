@@ -15,7 +15,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest
 
 rst:
-	python sphinxext/generate_modules.py --suffix rst --dest-dir source ../pyamg/
+	python sphinxext/generate_modules.py --suffix rst --dest-dir source --maxdepth=5 ../build/lib.macosx-10.3-fat-2.6
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"

@@ -23,7 +23,12 @@ import sys, os
 
 # path to sphinxext in Numpy source director
 sys.path.append(os.path.abspath('../sphinxext'))
-sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('../../build/lib.macosx-10.3-fat-2.6'))
+
+for thing in sys.path:
+    print thing
+
+import pyamg
 
 # General configuration
 # ---------------------
