@@ -499,31 +499,31 @@ class multilevel_solver:
 
 def coarse_grid_solver(solver):
     """Return a coarse grid solver suitable for multilevel_solver
-    
+
     Parameters
     ----------
-    solver: {string, callable, tuple}
+    solver : {string, callable, tuple}
         The solver method is either (1) a string such as 'splu' or 'pinv' of a
         callable object which receives only parameters (A, b) and returns an
         (approximate or exact) solution to the linear system Ax = b, or (2) a
         callable object that takes parameters (A,b) and returns an (approximate
-        or exact) solution to Ax = b, or (3) a tuple of the form 
-        (string|callable, args), where args is a dictionary of arguments to 
+        or exact) solution to Ax = b, or (3) a tuple of the form
+        (string|callable, args), where args is a dictionary of arguments to
         be passed to the function denoted by string or callable.
-        
+
         The set of valid string arguments is:
-        - Sparse direct methods:
-            + splu         : sparse LU solver
-        - Sparse iterative methods:
-            + the name of any method in scipy.sparse.linalg.isolve or
-              pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
-            + relaxation method, such as 'gauss_seidel' or 'jacobi', 
-              present in pyamg.relaxation
-        - Dense methods:
-            + pinv     : pseudoinverse (QR)
-            + pinv2    : pseudoinverse (SVD)
-            + lu       : LU factorization 
-            + cholesky : Cholesky factorization
+            - Sparse direct methods:
+                + splu : sparse LU solver
+            - Sparse iterative methods:
+                + the name of any method in scipy.sparse.linalg.isolve or
+                  pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
+                + relaxation method, such as 'gauss_seidel' or 'jacobi',
+                  present in pyamg.relaxation
+            - Dense methods:
+                + pinv     : pseudoinverse (QR)
+                + pinv2    : pseudoinverse (SVD)
+                + lu       : LU factorization
+                + cholesky : Cholesky factorization
 
     Returns
     -------
@@ -541,7 +541,7 @@ def coarse_grid_solver(solver):
     >>> cgs = coarse_grid_solver('lu')
     >>> x = cgs(A,b)
     """
-    
+
     def unpack_arg(v):
         if isinstance(v,tuple):
             return v[0],v[1]
@@ -549,13 +549,13 @@ def coarse_grid_solver(solver):
             return v,{}
 
     solver,kwargs = unpack_arg(solver) 
-    
+
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
                 self.P = getattr(scipy.linalg, solver)( A.todense(), **kwargs )
             return numpy.dot(self.P,b)
-    
+
     elif solver == 'lu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
@@ -567,7 +567,7 @@ def coarse_grid_solver(solver):
             if not hasattr(self, 'L'):
                 self.L = scipy.linalg.cho_factor( A.todense(), **kwargs )
             return scipy.linalg.cho_solve(self.L, b)
-    
+
     elif solver == 'splu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
@@ -583,14 +583,14 @@ def coarse_grid_solver(solver):
                 self.LU_Map = Map
 
             return self.LU_Map*self.LU.solve( numpy.ravel(self.LU_Map.T*b) )
-    
+
     elif solver in ['bicg','bicgstab','cg','cgs','gmres','qmr','minres']:
         from pyamg import krylov
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
             fn = getattr(scipy.sparse.linalg.isolve, solver)
-    
+
         def solve(self, A, b):
             if not kwargs.has_key('tol'):
                 t = A.dtype.char
@@ -605,24 +605,24 @@ def coarse_grid_solver(solver):
     elif solver in ['gauss_seidel', 'jacobi', 'block_gauss_seidel', 'schwarz', 
                     'block_jacobi', 'richardson', 'sor', 'chebyshev', 'jacobi_ne', 
                     'gauss_seidel_ne', 'gauss_seidel_nr']:
-            
+
         if not kwargs.has_key('iterations'):
             kwargs['iterations'] = 10
-        
+
         def solve(self, A, b):
             from pyamg.relaxation import smoothing
             from pyamg import multilevel_solver
-            
+
             lvl = multilevel_solver.level()
             lvl.A = A
             fn = eval('smoothing.setup_' + str(solver))
             relax = fn(lvl, **kwargs)
             x = numpy.zeros_like(b)
             relax(A,x,b)
-            
+
             return x
 
-    elif solver is None:         
+    elif solver is None:
         # No coarse grid solve
         def solve(self, A, b):
             return 0*b  # should this return b instead?
@@ -633,7 +633,7 @@ def coarse_grid_solver(solver):
 
     else:
         raise ValueError,('unknown solver: %s' % solver)
-       
+
 
     class generic_solver:
         def __call__(self, A, b):

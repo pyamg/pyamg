@@ -144,7 +144,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    prepostsmoother : {string or dict} 
+    prepostsmoother : {string or dict}
         Pre- and post-smoother used in the adaptive method
     strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns
@@ -170,26 +170,26 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
-    
-   
+
     Returns
     -------
-    Smoothed aggregation solver with adaptively generated candidates
-    
-    Floating point value representing the "work" required to generate
-    the solver.  This value is the total cost of just relaxation, relative
-    to the fine grid.  The relaxation method used is assumed to symmetric 
-    Gauss-Seidel.
+    multilevel_solver : multilevel_solver
+        Smoothed aggregation solver with adaptively generated candidates
 
     Notes
     -----
+
+    - Floating point value representing the "work" required to generate
+      the solver.  This value is the total cost of just relaxation, relative
+      to the fine grid.  The relaxation method used is assumed to symmetric 
+      Gauss-Seidel.
 
     - Unlike the standard Smoothed Aggregation (SA) method, adaptive SA does
       not require knowledge of near-nullspace candidate vectors.  Instead, an
       adaptive procedure computes one or more candidates 'from scratch'.  This
       approach is useful when no candidates are known or the candidates have
       been invalidated due to changes to matrix A.
-        
+
     Examples
     --------
     >>> from pyamg.gallery import stencil_grid
@@ -206,6 +206,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
        "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
+
     """
     
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):

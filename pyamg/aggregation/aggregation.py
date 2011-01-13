@@ -135,18 +135,18 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         Note that for the strictly real case, symmetric and hermitian are the same
         Note that this flag does not denote definiteness of the operator.
-    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
+    strength : {list} : default ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,
-        all nonzero entries of the matrix are considered strong.  
-            See notes below for varying this parameter on a per level basis.  Also,
+        all nonzero entries of the matrix are considered strong.
+        See notes below for varying this parameter on a per level basis.  Also,
         see notes below for using a predefined strength matrix on each level.
-    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
+    aggregate : {list} : default ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
         Method used to aggregate nodes.  See notes below for varying this
         parameter on a per level basis.  Also, see notes below for using a
         predefined aggregation on each level.
-    smooth : ['jacobi', 'richardson', 'energy', None]
+    smooth : {list} : default ['jacobi', 'richardson', 'energy', None]
         Method used to smooth the tentative prolongator.  Method-specific
         parameters may be passed in using a tuple, e.g.  smooth=
         ('jacobi',{'filter' : True }).  See notes below for varying this
@@ -162,13 +162,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.
-            The list elements are relaxation descriptors of the form used for
+        The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid. 
-    keep: {bool} : default False
+    keep : {bool} : default False
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
@@ -194,49 +194,51 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     Notes
     -----
-    - The additional parameters are passed through as arguments to
-      multilevel_solver.  Refer to pyamg.multilevel_solver for additional
-      documentation.
+        - The additional parameters are passed through as arguments to
+          multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+          documentation.
 
-    - At each level, four steps are executed in order to define the coarser
-      level operator.
+        - At each level, four steps are executed in order to define the coarser
+          level operator.
 
-      1. Matrix A is given and used to derive a strength matrix, C.
-      2. Based on the strength matrix, indices are grouped or aggregated.
-      3. The aggregates define coarse nodes and a tentative prolongation 
-         operator T is defined by injection 
-      4. The tentative prolongation operator is smoothed by a relaxation
-         scheme to improve the quality and extent of interpolation from the
-         aggregates to fine nodes.
-    
-    - The parameters smooth, strength, aggregate, presmoother, postsmoother can
-      be varied on a per level basis.  For different methods on different
-      levels, use a list as input so that the i-th entry defines the method at
-      the i-th level.  If there are more levels in the hierarchy than list
-      entries, the last entry will define the method for all levels lower.
-      
-      Examples are:
-      smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
-      presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
-      aggregate=['standard', 'naive']
-      strength=[('symmetric', {'theta':0.25}), ('symmetric',{'theta':0.08})]
+          1. Matrix A is given and used to derive a strength matrix, C.
 
-    - Predefined strength of connection and aggregation schemes can be
-      specified.  These options are best used together, but aggregation can be
-      predefined while strength of connection is not.
+          2. Based on the strength matrix, indices are grouped or aggregated.
 
-      For predefined strength of connection, use a list consisting of tuples of
-      the form ('predefined', {'C' : C0}), where C0 is a csr_matrix and each
-      degree-of-freedom in C0 represents a supernode.  For instance to
-      predefine a three-level hierarchy, use [('predefined', {'C' : C0}),
-      ('predefined', {'C' : C1}) ].
-      
-      Similarly for predefined aggregation, use a list of tuples.  For instance
-      to predefine a three-level hierarchy, use [('predefined', {'AggOp' :
-      Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the dimensions of A,
-      Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] == A.shape[0] and
-      Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a csr_matrix.
+          3. The aggregates define coarse nodes and a tentative prolongation 
+             operator T is defined by injection 
 
+          4. The tentative prolongation operator is smoothed by a relaxation
+             scheme to improve the quality and extent of interpolation from the
+             aggregates to fine nodes.
+
+        - The parameters smooth, strength, aggregate, presmoother, postsmoother can
+          be varied on a per level basis.  For different methods on different
+          levels, use a list as input so that the i-th entry defines the method at
+          the i-th level.  If there are more levels in the hierarchy than list
+          entries, the last entry will define the method for all levels lower.
+
+          Examples are:
+          smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
+          presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
+          aggregate=['standard', 'naive']
+          strength=[('symmetric', {'theta':0.25}), ('symmetric',{'theta':0.08})]
+
+        - Predefined strength of connection and aggregation schemes can be
+          specified.  These options are best used together, but aggregation can be
+          predefined while strength of connection is not.
+
+          For predefined strength of connection, use a list consisting of tuples of
+          the form ('predefined', {'C' : C0}), where C0 is a csr_matrix and each
+          degree-of-freedom in C0 represents a supernode.  For instance to
+          predefine a three-level hierarchy, use [('predefined', {'C' : C0}),
+          ('predefined', {'C' : C1}) ].
+
+          Similarly for predefined aggregation, use a list of tuples.  For instance
+          to predefine a three-level hierarchy, use [('predefined', {'AggOp' :
+          Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the dimensions of A,
+          Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] == A.shape[0] and
+          Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a csr_matrix.
 
     Examples
     --------
