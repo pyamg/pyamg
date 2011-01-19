@@ -12,7 +12,7 @@ Many more solver parameters may be specified than outlined in the below
 examples.  Only the most basic are shown.
 
 Run with 
-    >>> python solver_diagnostics_driver.py
+    >>> python demo.py
 and examine the on-screen output and file output.
 '''
 
@@ -46,6 +46,7 @@ solver_diagnostics(A, fname='rot_ani_diff_diagnostic',
                    cycle_list=['V'],
                    symmetry='symmetric', 
                    definiteness='positive')
+
 ##
 # To run the best solver found above, uncomment next two lines
 #from rot_ani_diff_diagnostic import rot_ani_diff_diagnostic 

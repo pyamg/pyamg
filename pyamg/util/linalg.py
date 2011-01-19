@@ -21,7 +21,9 @@ def norm(x, pnorm='2'):
     x : array_like
         Vector of complex or real values
     
-    pnorm : 
+    pnorm : string
+        '2' calculates the 2-norm
+        'inf' calculates the infinity-norm
 
     Returns
     -------
@@ -32,7 +34,7 @@ def norm(x, pnorm='2'):
     -----
     - currently 1+ order of magnitude faster than scipy.linalg.norm(x), which calls
       sqrt(numpy.sum(real((conjugate(x)*x)),axis=0)) resulting in an extra copy
-    - only handles the 2-norm for vectors
+    - only handles the 2-norm and infinity-norm for vectors
 
     See Also
     --------
