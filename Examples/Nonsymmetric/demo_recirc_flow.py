@@ -13,7 +13,7 @@ from convergence_tools import print_cycle_history
 
 if __name__ == '__main__':
 
-    # Rotated Anisotropic Diffusion
+    # Recirculating flow, nonsymmetric matrix
     data = load_example('recirc_flow')
     A = data['A'].tocsr()
     B = data['B']

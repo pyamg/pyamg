@@ -494,8 +494,9 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         if A.dtype == complex:
             x += 1.0j*scipy.rand(A.shape[0],1)
             y += 1.0j*scipy.rand(A.shape[0],1)
-        diff = float( numpy.abs(numpy.dot( (A*x).conjugate().T, y) - \
-                                numpy.dot(x.conjugate().T, A*y)) )
+        xAy = numpy.dot( (A*x).conjugate().T, y)
+        xAty = numpy.dot(x.conjugate().T, A*y)
+        diff = float( numpy.abs(xAy - xAty) / numpy.sqrt(numpy.abs(xAy*xAty)) )
 
     else:
         # compute the difference, A - A.H
