@@ -7,7 +7,7 @@ from warnings import warn
 
 __docformat__ = "restructuredtext en"
 
-__all__ = ['minimial_residual']
+__all__ = ['minimal_residual']
 
 def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
        callback=None, residuals=None):
@@ -65,7 +65,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     Examples
     --------
-    >>> from pyamg.krylov.minimal_residual import minimal_residual
+    >>> from pyamg.krylov import minimal_residual
     >>> from pyamg.util.linalg import norm
     >>> import numpy 
     >>> from pyamg.gallery import poisson
@@ -73,7 +73,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> b = numpy.ones((A.shape[0],))
     >>> (x,flag) = minimal_residual(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
-    10.9370700187
+    7.26369350856
 
     References
     ----------
@@ -88,7 +88,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(2*len(b)) 
+        maxiter = int(len(b)) 
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     
@@ -129,9 +129,10 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             r = M*(b - A*x)
         else:
             r = r - alpha*p
-
+        
+        normr = norm(r)
         if residuals is not None:
-            residuals.append(norm(r))
+            residuals.append(normr)
         
         if callback is not None:
             callback(x)
@@ -143,28 +144,34 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             return (postprocess(x), iter)
 
 
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from pyamg import smoothed_aggregation_solver
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    resvec = []
-    sa = smoothed_aggregation_solver(A)
-    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=100,residuals=resvec)#, M=sa.aspreconditioner())
-    print "First five ||r|| " + str(resvec[0:5])
-    print "Last five ||r||  " + str(resvec[-5:])
-    print 'initial norm = %g'%(norm(b - A*x0))
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
+#if __name__ == '__main__':
+#    # from numpy import diag
+#    # A = random((4,4))
+#    # A = A*A.transpose() + diag([10,10,10,10])
+#    # b = random((4,1))
+#    # x0 = random((4,1))
+#
+#    from pyamg.gallery import stencil_grid
+#    from pyamg import smoothed_aggregation_solver
+#    from numpy.random import random
+#    from numpy import zeros_like, dot
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    x0 = random((A.shape[0],))
+#    b = zeros_like(x0) 
+#    
+#    # This function should always decrease (assuming zero RHS)
+#    fvals = []
+#    def callback(x):
+#        fvals.append( sqrt(dot( ravel(x), ravel(A*x.reshape(-1,1)) )) )
+#
+#    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    resvec = []
+#    sa = smoothed_aggregation_solver(A)
+#    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, M=sa.aspreconditioner())
+#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, callback=callback) 
+#    print 'Funcation values:  ' + str(fvals)
+#    print 'initial norm = %g'%(norm(b - A*x0))
+#    print 'norm = %g'%(norm(b - A*x))
+#    print 'info flag = %d'%(flag)
+#
 

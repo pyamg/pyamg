@@ -65,7 +65,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     Examples
     --------
-    >>> from pyamg.krylov.steepest_descent import steepest_descent
+    >>> from pyamg.krylov import steepest_descent
     >>> from pyamg.util.linalg import norm
     >>> import numpy 
     >>> from pyamg.gallery import poisson
@@ -73,7 +73,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> b = numpy.ones((A.shape[0],))
     >>> (x,flag) = steepest_descent(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
-    10.9370700187
+    7.89436429704
 
     References
     ----------
@@ -88,7 +88,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(2*len(b)) 
+        maxiter = int(len(b)) 
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     
@@ -159,44 +159,33 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if iter == maxiter:
             return (postprocess(x), iter)
 
-def steepest_descent2(A, b, x0, tol=1e-5, maxiter=None, xtype=None, M=None, 
-       callback=None, residuals=None):
-    b = ravel(b)
-    x = ravel(x0)
-    r = b - A*x
-    p = A*r
-    residuals.append(norm(r))
-    for i in range(maxiter):
-        alpha = inner(r,r) / inner(p,r)
-        x = x + alpha*r
-        r = r - alpha*p
-        p = A*r
-        residuals.append(norm(r))
-    
-    return (x,maxiter)
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from pyamg import smoothed_aggregation_solver
-    from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    print '\n\nTesting steepest descent with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    resvec = []
-    sa = smoothed_aggregation_solver(A)
-    (x,flag) = steepest_descent(A,b,x0,tol=1e-8,maxiter=100,residuals=resvec, M=sa.aspreconditioner())
-    print "First five ||r|| " + str(resvec[0:5])
-    print "Last five ||r||  " + str(resvec[-5:])
-    print 'initial norm = %g'%(norm(b - A*x0))
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
-
+#if __name__ == '__main__':
+#    # from numpy import diag
+#    # A = random((4,4))
+#    # A = A*A.transpose() + diag([10,10,10,10])
+#    # b = random((4,1))
+#    # x0 = random((4,1))
+#
+#    from pyamg.gallery import stencil_grid
+#    from pyamg import smoothed_aggregation_solver
+#    from numpy.random import random
+#    from numpy import ravel, inner
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    b = random((A.shape[0],))
+#    x0 = random((A.shape[0],))
+#    
+#    fvals = []
+#    def callback(x):
+#        x = ravel(x)
+#        fvals.append( 0.5*inner(x, A*x) - inner(ravel(b),x) )
+#
+#    print '\n\nTesting steepest descent with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    resvec = []
+#    sa = smoothed_aggregation_solver(A)
+#    (x,flag) = steepest_descent(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, M=sa.aspreconditioner(), callback=callback)
+#    print 'Funcation values:  ' + str(fvals)
+#    print 'initial norm = %g'%(norm(b - A*x0))
+#    print 'final norm = %g'%(norm(b - A*x))
+#    print 'info flag = %d'%(flag)
+#
 

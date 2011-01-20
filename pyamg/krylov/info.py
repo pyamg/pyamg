@@ -1,8 +1,8 @@
 """Krylov Solvers
 
-This module contains several Krylov subspace methods to solve
-linear systems iteratively.  These methods often use multigrid
-as a preconditioner to accelerate convergence to the solution.
+This module contains several Krylov subspace methods, in addition to two simple
+iterations, to solve linear systems iteratively.  These methods often use
+multigrid as a preconditioner to accelerate convergence to the solution.
 
 Functions
 ---------
@@ -12,6 +12,8 @@ Functions
     - cgnr
     - cg
     - bicgstab
+    - steepest descent, (simple iteration)
+    - minimial residual (MR), (simple iteration)
 
 
 References
