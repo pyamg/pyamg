@@ -142,6 +142,8 @@ def CR(S, method='habituated',maxiter=20):
 
         # add whole bins (and t-depth nodes) at a time
         u = numpy.zeros((n,1))
+        # TODO This loop may never halt...
+        #      Perhaps loop over nC < nCmax and binid > 0 ?
         while nC < nCmax:
             if delta > 0:
                 raise NotImplementedError

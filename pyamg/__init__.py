@@ -38,6 +38,7 @@ from multilevel import *
 from classical import ruge_stuben_solver
 from aggregation import smoothed_aggregation_solver
 from gallery import demo
+from _solveit import solveit
 
 __all__ = filter(lambda s:not s.startswith('_'),dir())
 __all__ += ['test', '__version__']
