@@ -12,9 +12,10 @@ __all__ = ['solveit']
 
 def solveit(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False, solver=None, verb=True):
     """
-    Solve the arbitrary system Ax=b, The matrix A can be non-Hermitian,
-    indefinite, Hermitian positive-definite, etc...  Generic and robust 
-    settings for smoothed_aggregation_solver(..) are used to invert A.
+    Solve the arbitrary system Ax=b with the best out-of-the box choice for a
+    solver.  The matrix A can be non-Hermitian, indefinite, Hermitian
+    positive-definite, complex, etc...  Generic and robust settings for
+    smoothed_aggregation_solver(..) are used to invert A.
 
 
     Parameters
@@ -41,6 +42,8 @@ def solveit(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False, solver=No
     -------
     x : {array}
         Solution to Ax = b   
+    ml : multilevel_solver
+        Optional return of the multilevel structure used for the solve.
 
     Notes
     -----
@@ -155,4 +158,3 @@ def solveit(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False, solver=No
         return (x.reshape(b.shape), solver)
     else:
         return x.reshape(b.shape)
-
