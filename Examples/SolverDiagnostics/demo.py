@@ -18,10 +18,8 @@ and examine the on-screen output and file output.
 from scipy import pi
 from pyamg import gallery 
 from pyamg.gallery import diffusion 
-from rot_ani_diff_diagnostic import rot_ani_diff_diagnostic
 stencil = diffusion.diffusion_stencil_2d(type='FE', epsilon=0.001, theta=2*pi/16.0)
 A = gallery.stencil_grid(stencil, (50,50), format='csr')
-rot_ani_diff_diagnostic(A)
 
 from pyamg import gallery
 from solver_diagnostics import solver_diagnostics
