@@ -23,7 +23,7 @@ class TestBlackbox(TestCase):
 
     def test_blackbox(self):
         for A,b in self.cases:
-            x = solve(A,b,verb=False)
+            x = solve(A,b,verb=False,maxiter=A.shape[0])
             assert( norm(b - A*x)/norm(b - A*rand(b.shape[0],)) < 1e-4 )
 
         ##
@@ -49,7 +49,7 @@ class TestBlackbox(TestCase):
  
         #(5) Run nonsymmetric example, make sure BH isn't None
         A,b = self.cases[2]
-        (x,ml) = solve(A,b,return_solver=True,verb=False)
+        (x,ml) = solve(A,b,return_solver=True,verb=False,maxiter=A.shape[0])
         assert(ml.levels[0].BH != None)
 
 

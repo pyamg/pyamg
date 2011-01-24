@@ -129,7 +129,9 @@ def solver_configuration(A, B=None, verb=True):
             config['B'] = numpy.ones((A.shape[0],1), dtype=A.dtype)
         
     elif (type(B) == type(numpy.zeros((1,)))) or (type(B) == type(scipy.mat(numpy.zeros((1,))))):
-        if B.shape[0] != A.shape[0] and B.shape[1] > 0:
+        if len(B.shape) == 1:
+            B = B.reshape(-1,1)
+        if (B.shape[0] != A.shape[0]) or (B.shape[1] == 0):
             raise TypeError('Invalid dimensions of B, B.shape[0] must equal A.shape[0]')
         else:
             config['B'] = numpy.array(B, dtype=A.dtype)
@@ -143,7 +145,7 @@ def solver_configuration(A, B=None, verb=True):
 
     
     ##
-    # Set non symmetry related parameters
+    # Set non-symmetry related parameters
     config['strength'] = ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':3.0})
     config['max_levels'] = 15
     config['max_coarse'] = 500
@@ -173,7 +175,7 @@ def solver(A, config):
     
     Notes
     -----
-    config must contain the following entries to be passed to 
+    config must contain the following parameter entries for 
     smoothed_aggregation_solver:
         symmetry, smooth, presmoother, postsmoother, B, strength, 
         max_levels, max_coarse, coarse_solver, aggregate, keep
