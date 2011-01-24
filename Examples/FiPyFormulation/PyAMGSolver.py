@@ -1,4 +1,4 @@
-from fipy.tools.pysparseMatrix import _PysparseMatrix
+from fipy.matrices.pysparseMatrix import _PysparseMeshMatrix
 from fipy.solvers.solver import Solver
 
 import numpy
@@ -25,15 +25,16 @@ class PyAMGSolver(Solver):
         else:
             self.MGSolveOpts = {}
 
-    def _getMatrixClass(self):
-        return _PysparseMatrix
-     
-    def _solve(self, L, x, b):
+    @property
+    def _matrixClass(self):
+        return _PysparseMeshMatrix
+
+    def _solve_(self, L, x, b):
         relres=[]
         
         # create scipy.sparse matrix view
-        (data,row,col) = L._getMatrix().find()
-        A = csr_matrix((data,(row,col)),shape=L._getMatrix().shape)
+        (data,row,col) = L.matrix.find()
+        A = csr_matrix((data,(row,col)),shape=L.matrix.shape)
 
         # solve and deep copy data
         ml = smoothed_aggregation_solver(A,**self.MGSetupOpts)
@@ -52,6 +53,9 @@ class PyAMGSolver(Solver):
             print 'MG residual history: ', relres
 
         self._raiseWarning(info, iter, relres)
+
+    def _solve(self):
+        self._solve_(self.matrix, self.var.numericValue, self.RHSvector)
             
     def _canSolveAssymetric(self):
         return False
