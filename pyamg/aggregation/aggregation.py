@@ -319,7 +319,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
-def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep):
+def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.

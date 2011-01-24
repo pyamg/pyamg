@@ -12,8 +12,8 @@ A = data['A']                                # matrix
 V = data['vertices'][:A.shape[0]]            # vertices of each variable
 E = numpy.vstack((A.tocoo().row,A.tocoo().col)).T  # edges of the matrix graph
 
-# Use Ruge-Stuben Splitting Algorithm
-mls = ruge_stuben_solver(A, max_levels=2, max_coarse=1, CF='RS')
+# Use Ruge-Stuben Splitting Algorithm (use 'keep' in order to retain the splitting)
+mls = ruge_stuben_solver(A, max_levels=2, max_coarse=1, CF='RS',keep=True)
 print mls
 
 # The CF splitting, 1 == C-node and 0 == F-node

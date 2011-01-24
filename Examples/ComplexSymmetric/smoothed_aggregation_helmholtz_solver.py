@@ -313,7 +313,7 @@ def smoothed_aggregation_helmholtz_solver(A, planewaves, use_constant=(True, {'l
         
         ##
         # Create and Append new level
-        extend_hierarchy(levels, strength, aggregate, smooth, [None for i in range(max_levels)] )
+        extend_hierarchy(levels, strength, aggregate, smooth, [None for i in range(max_levels)] ,keep=True)
     
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
