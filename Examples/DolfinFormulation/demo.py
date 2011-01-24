@@ -8,7 +8,11 @@
 
 ############################################################
 # Part I: Setup problem with Dolfin
-from dolfin import *
+try:
+    from dolfin import *
+except ImportError:
+    raise ImportError('Problem with Dolfin Installation')
+
 parameters.linear_algebra_backend = "uBLAS"
 
 # Define mesh, function space

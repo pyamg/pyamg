@@ -33,4 +33,3 @@ pylab.xlabel('Iteration')
 pylab.ylabel('Relative Residual')
 pylab.semilogy(relative_residuals, linestyle='None', marker='.')
 pylab.show()
-

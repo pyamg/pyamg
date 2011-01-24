@@ -29,7 +29,7 @@ if(__name__=="__main__"):
 
     # setup 1D Poisson problem
     A = poisson((n,), format='csr')
-    ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2')
+    ml=smoothed_aggregation_solver(A, max_coarse=5, coarse_solver='pinv2',keep=True)
         
     # Profile this solver for 5 iterations
     oneD_profile(ml, grid=scipy.linspace(0,1,n), x0=scipy.rand(n,), \

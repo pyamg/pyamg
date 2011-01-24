@@ -1,6 +1,10 @@
 # This example solves a diffusion problem and demonstrates the use of
 # applying boundary condition patches.
-from fipy import *
+try:
+    from fipy import *
+except ImportError:
+    raise ImportError('Problem with FiPy Installation')
+
 from PyAMGSolver import PyAMGSolver
 #
 nx = 20
