@@ -42,7 +42,7 @@ if __name__ == '__main__':
     strength=('symmetric', {'theta' : 0.1})
     SA_solve_args={'cycle':'W', 'maxiter':20, 'tol':1e-8, 'accel' : 'cg'}
     SA_build_args={'max_levels':10, 'max_coarse':25, 'coarse_solver':'pinv2', \
-                   'symmetry':'hermitian'}
+            'symmetry':'hermitian', 'keep':True}
     presmoother =('gauss_seidel', {'sweep':'symmetric', 'iterations':1})
     postsmoother=('gauss_seidel', {'sweep':'symmetric', 'iterations':1})
     
