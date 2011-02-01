@@ -10,7 +10,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg import calc_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
-           'condest', 'cond', 'ishermitian', 'pinv_array']
+           'condest', 'cond', 'ishermitian', 'pinv_array','tril', 'triu']
 
 def norm(x, pnorm='2'):
     """
@@ -164,9 +164,10 @@ def axpy(x,y,a=1.0):
 def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None):
     """Used by approximate_spectral_radius and condest
        
-       Returns [W, E, H, V], where W and E are the eigenvectors and eigenvalues
-       of the Hessenberg matrix H, respectively, and V is the Krylov space.  E
-       is therefore the approximate eigenvalues of A.
+       Returns [W, E, H, V, breakdown_flag], where W and E are the eigenvectors
+       and eigenvalues of the Hessenberg matrix H, respectively, and V is the
+       Krylov space.  breakdown_flag denotes whether Lanczos/Arnoldi suffered
+       breakdown.  E is therefore the approximate eigenvalues of A.
        
        To obtain approximate eigenvectors of A, compute V*W.
        """
@@ -183,6 +184,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     geps = numpy.finfo(numpy.longfloat).eps
     _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G':2}
     breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    breakdown_flag = False
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
@@ -217,6 +219,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             H[j+1,j] = beta
 
             if (H[j+1,j] < breakdown): 
+                breakdown_flag = True
                 break
             
             w /= beta
@@ -233,6 +236,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             H[j+1,j] = norm(w)
             
             if (H[j+1,j] < breakdown): 
+                breakdown_flag = True
                 break
             
             w = w/H[j+1,j] 
@@ -255,7 +259,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     
     Eigs,Vects = eig(H[:j+1,:j+1], left=False, right=True)
 
-    return (Vects,Eigs,H,V)
+    return (Vects,Eigs,H,V,breakdown_flag)
 
 
 def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None):
@@ -333,8 +337,8 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
             v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
 
         for j in range(restart+1):
-            [evect, ev, H, V] = _approximate_eigenvalues(A, tol, maxiter, symmetric, 
-                                                      initial_guess=v0) 
+            [evect, ev, H, V, breakdown_flag] = _approximate_eigenvalues(A, 
+                    tol, maxiter, symmetric, initial_guess=v0) 
             # Calculate error in dominant eigenvector
             nvecs = ev.shape[0]
             max_index = numpy.abs(ev).argmax()
@@ -343,7 +347,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
             #error2 = ( A - ev[max_index]*scipy.mat(scipy.eye(A.shape[0],A.shape[1])) )*\
             #         ( scipy.mat(scipy.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) ) 
             #print str(error) + "    " + str(scipy.linalg.norm(e2))
-            if numpy.abs(error)/numpy.abs(ev[max_index]) < tol:
+            if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or breakdown_flag:
                 # halt if below relative tolerance
                 break
             else:
@@ -397,7 +401,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     
     """
 
-    [evect, ev, H, V] = _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    [evect, ev, H, V, breakdown_flag] = _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
     return numpy.max([norm(x) for x in ev])/min([norm(x) for x in ev])      
 
@@ -590,5 +594,100 @@ def pinv_array(a, cond=None):
             v, a[kk], s, rank, info = gelss(a[kk], RHS, cond=cond, 
                               lwork=lwork, overwrite_a=True, overwrite_b=False)
 
+def tril(A):
+    """Return the lower triangle of A
+
+    Parameters
+    ----------
+    A  : {sparse matrix}
+        e.g. csr_matrix, csc_matrix, ...
+
+    Returns
+    -------
+    Lower triangle of A 
+
+    Notes
+    -----
+    This function carries out sparse conversions of A to COO and then back to
+    A's original format.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson 
+    >>> from pyamg.util.linalg import tril
+    >>> A = poisson((10,10))                
+    >>> L = tril(A)                         
+    """
+    
+    if not sparse.isspmatrix(A):
+        raise ValueError('Only sparse matrices supported')
+    
+    ##
+    # Take lower triangle of A
+    L = A.tocoo()
+    L.data[L.row < L.col] = 0.0
+    
+    ##
+    # Not all formats support the eliminate zeros functionality 
+    L = L.tocsr()
+    L.eliminate_zeros()
+
+    ##
+    # Convert L to format of A
+    format = A.format
+    if format == 'bsr':
+        L = L.tobsr(blocksize=A.blocksize)
+    else:
+        L = L.asformat(format) 
+
+    return L
+
+def triu(A):
+    """Return the upper triangle of A
+
+    Parameters
+    ----------
+    A  : {sparse matrix}
+        e.g. csr_matrix, csc_matrix, ...
+
+    Returns
+    -------
+    Upper triangle of A 
+
+    Notes
+    -----
+    This function carries out sparse conversions of A to COO and then back to
+    A's original format.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson 
+    >>> from pyamg.util.linalg import triu
+    >>> A = poisson((10,10))                
+    >>> U = triu(A)                         
+    """
+    
+    if not sparse.isspmatrix(A):
+        raise ValueError('Only sparse matrices supported')
+
+    ##
+    # Take lower triangle of A
+    U = A.tocoo()
+    U.data[U.row > U.col] = 0.0
+    
+    ##
+    # Not all formats support the eliminate zeros functionality 
+    U = U.tocsr()
+    U.eliminate_zeros()
+
+    ##
+    # Convert U to format of A
+    format = A.format
+    if format == 'bsr':
+        U = U.tobsr(blocksize=A.blocksize)
+    else:
+        U = U.asformat(format) 
+
+    return U
 
 
