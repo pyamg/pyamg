@@ -42,9 +42,10 @@ A, rhs = assemble_system(a,L,bcs=bc)
 # Part II: Solve with PyAMG
 from scipy.sparse import csr_matrix
 from pyamg import smoothed_aggregation_solver
+from numpy import intc
 (row,col,data) = A.data()   # get sparse data
-col = numpy.intc(col)
-row = numpy.intc(row)
+col = intc(col)
+row = intc(row)
 n = A.size(0)
 Asp = csr_matrix( (data,col,row), shape=(n,n))
 b = rhs.data()
