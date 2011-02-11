@@ -237,7 +237,7 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     ##
     # Detect definiteness
     if definiteness == None:
-        [EVect, Lambda, H, V] = _approximate_eigenvalues(A, 1e-6, 40)
+        [EVect, Lambda, H, V, breakdown_flag] = _approximate_eigenvalues(A, 1e-6, 40)
         if Lambda.min() < 0.0:
             definiteness = 'indefinite'
             print "    Detected indefiniteness"
