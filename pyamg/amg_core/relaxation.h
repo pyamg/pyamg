@@ -100,7 +100,7 @@ void bsr_gauss_seidel(const I Ap[],
     I B2 = blocksize*blocksize;
     T *rsum = new T[blocksize];
     T *Axloc = new T[blocksize];
-    T zero = 0.0;
+    //T zero = 0.0;
 
     // Determine if this is a forward, or backward sweep
     I step, step_start, step_end;
@@ -279,7 +279,7 @@ void bsr_jacobi(const I Ap[],
     I B2 = blocksize*blocksize;
     T *rsum = new T[blocksize];
     T *Axloc = new T[blocksize];
-    T zero = 0.0;
+    //T zero = 0.0;
     T one = 1.0;
     T omega2 = omega[0];
     
