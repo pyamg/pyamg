@@ -10,7 +10,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg import calc_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
-           'condest', 'cond', 'ishermitian', 'pinv_array','tril', 'triu']
+           'condest', 'cond', 'ishermitian', 'pinv_array']
 
 def norm(x, pnorm='2'):
     """
@@ -593,101 +593,4 @@ def pinv_array(a, cond=None):
         for kk in xrange(n):
             v, a[kk], s, rank, info = gelss(a[kk], RHS, cond=cond, 
                               lwork=lwork, overwrite_a=True, overwrite_b=False)
-
-def tril(A):
-    """Return the lower triangle of A
-
-    Parameters
-    ----------
-    A  : {sparse matrix}
-        e.g. csr_matrix, csc_matrix, ...
-
-    Returns
-    -------
-    Lower triangle of A 
-
-    Notes
-    -----
-    This function carries out sparse conversions of A to COO and then back to
-    A's original format.
-
-    Examples
-    --------
-    >>> from pyamg.gallery import poisson 
-    >>> from pyamg.util.linalg import tril
-    >>> A = poisson((10,10))                
-    >>> L = tril(A)                         
-    """
-    
-    if not sparse.isspmatrix(A):
-        raise ValueError('Only sparse matrices supported')
-    
-    ##
-    # Take lower triangle of A
-    L = A.tocoo()
-    L.data[L.row < L.col] = 0.0
-    
-    ##
-    # Not all formats support the eliminate zeros functionality 
-    L = L.tocsr()
-    L.eliminate_zeros()
-
-    ##
-    # Convert L to format of A
-    format = A.format
-    if format == 'bsr':
-        L = L.tobsr(blocksize=A.blocksize)
-    else:
-        L = L.asformat(format) 
-
-    return L
-
-def triu(A):
-    """Return the upper triangle of A
-
-    Parameters
-    ----------
-    A  : {sparse matrix}
-        e.g. csr_matrix, csc_matrix, ...
-
-    Returns
-    -------
-    Upper triangle of A 
-
-    Notes
-    -----
-    This function carries out sparse conversions of A to COO and then back to
-    A's original format.
-
-    Examples
-    --------
-    >>> from pyamg.gallery import poisson 
-    >>> from pyamg.util.linalg import triu
-    >>> A = poisson((10,10))                
-    >>> U = triu(A)                         
-    """
-    
-    if not sparse.isspmatrix(A):
-        raise ValueError('Only sparse matrices supported')
-
-    ##
-    # Take lower triangle of A
-    U = A.tocoo()
-    U.data[U.row > U.col] = 0.0
-    
-    ##
-    # Not all formats support the eliminate zeros functionality 
-    U = U.tocsr()
-    U.eliminate_zeros()
-
-    ##
-    # Convert U to format of A
-    format = A.format
-    if format == 'bsr':
-        U = U.tobsr(blocksize=A.blocksize)
-    else:
-        U = U.asformat(format) 
-
-    return U
-
 

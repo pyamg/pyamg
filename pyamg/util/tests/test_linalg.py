@@ -267,21 +267,3 @@ class TestComplexLinalg(TestCase):
             pinv_array(test)
             assert_array_almost_equal(test, pinv_test, decimal=4)
 
-
-    def test_tril_triu(self):
-        from pyamg.gallery import poisson 
-        from pyamg.util.linalg import tril, triu
-        A = poisson((10,10), format='csc')              
-        U = triu(A)
-        L = tril(A)
-
-        # correct format
-        assert(A.format == U.format)
-        assert(A.format == L.format)
-
-        # correct matrix splitting
-        diff = A - U - L
-        assert(diff.nnz == diff.shape[0])
-        assert( (diff.data == -4.0).all() )
-        assert( (diff.indices == arange(diff.shape[0])).all() )
-
