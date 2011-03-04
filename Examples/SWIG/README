@@ -1,0 +1,18 @@
+This is a basic stand-alone SWIG example to familiarize the user.
+
+To compile 
+  $ swig -c++ -python splinalg.i
+  $ python setup.py build
+  $ python setup.py install --home ./
+
+Then run testbasic.py, toggling between lusolve and lusolve_reference in
+precondition.py.
+
+To "SWIG" a new C++ function defined in foo.h
+- Don't edit numpy.i
+- Edit splinalg.i
+  -> inlcude foo.h at the top
+  -> instantiate foo as a templated routine at the bottom
+  -> add any new parameter names for arrays that foo.h uses as  
+     IN types, OUT types and IN_PLACE types 
+
