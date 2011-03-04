@@ -71,7 +71,7 @@ def lusolve_reference(L,U,r):
 
 def preconditioner_matvec(L,U):
     def matvec(x):
-        return lusolve_reference(L,U,x)
+        return lusolve(L,U,x)
     return LinearOperator(shape=L.shape,matvec=matvec)
 
 def basic(A,pname=None,omega=1.0):
