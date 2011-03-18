@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<gconf>
+	<entry name="display_line_numbers" mtime="1300476080" type="bool" value="true"/>
+</gconf>
