@@ -2,7 +2,7 @@ from scipy.io import loadmat
 
 data = loadmat('../../pyamg/gallery/example_data/recirc_flow.mat')
 
-A = data['A']
+A = data['A'].tocsr()
 
 from pyamg import *               
 import numpy
@@ -15,4 +15,6 @@ x = ml.solve(b,residuals=res)
 
 from pylab import *
 semilogy(res)
+xlabel('iteration')
+ylabel('residual norm')
 show()

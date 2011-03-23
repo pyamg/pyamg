@@ -6,5 +6,5 @@ sten = diffusion_stencil_2d(type='FD', \
        epsilon=0.001, theta=3.1416/3.0)
 A = stencil_grid(sten, (100,100), format='csr')
 # print the matrix stencil
-#print(A[5050,:].data)
-#print(sten)
+print(A[5050,:].data)
+print(sten)
