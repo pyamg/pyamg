@@ -99,12 +99,13 @@ def solver_configuration(A, B=None, verb=True):
     # Detect symmetry
     if ishermitian(A, fast_check=True):
         config['symmetry'] = 'hermitian'
+        if verb:
+            print "  Detected a Hermitian matrix"
     else:
         config['symmetry'] = 'nonsymmetric'
-    #
-    if verb:
-        print "  Detected a " + config['symmetry'] + " matrix"
-
+        if verb:
+            print "  Detected a non-Hermitian matrix"
+    
     ##
     # Symmetry dependent parameters
     if config['symmetry'] == 'hermitian':
