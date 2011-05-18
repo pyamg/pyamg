@@ -65,6 +65,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     - Parameter 'omega' of the Jacobi, Richardson, and jacobi_ne
       methods is scaled by the spectral radius of the matrix on 
       each level.  Therefore 'omega' should be in the interval (0,2).
+    - Parameter 'withrho' (default: True) controls whether the omega is
+      rescaled by the spectral radius in jacobi, block_jacobi, and jacobi_ne
     - By initializing the smoothers after the hierarchy has been setup, allows
       for "algebraically" directed relaxation, such as strength_based_schwarz,
       which uses only the strong connections of a degree-of-freedom to define
@@ -400,8 +402,9 @@ def setup_gauss_seidel(lvl, iterations=1, sweep='forward'):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
         
-def setup_jacobi(lvl, iterations=1, omega=1.0):
-    omega = omega/rho_D_inv_A(lvl.A)
+def setup_jacobi(lvl, iterations=1, omega=1.0, withrho=True):
+    if withrho:
+        omega = omega/rho_D_inv_A(lvl.A)
     def smoother(A,x,b):
         relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
     return smoother
@@ -435,7 +438,7 @@ def setup_strength_based_schwarz(lvl, iterations=1):
                          subdomain_ptr=subdomain_ptr)
 
 
-def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None):
+def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None, withrho=True):
     ##
     # Determine Blocksize
     if blocksize == None and Dinv == None:
@@ -448,12 +451,13 @@ def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None):
     
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_jacobi(lvl, iterations=iterations, omega=omega)
+        return setup_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
     else:
         # Use Block Jacobi
         if Dinv == None:
             Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+        if withrho:
+            omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
         def smoother(A,x,b):
             relaxation.block_jacobi(A, x, b, iterations=iterations, omega=omega, \
                                     Dinv=Dinv, blocksize=blocksize)
@@ -503,9 +507,10 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3, iterat
         relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
     return smoother
 
-def setup_jacobi_ne(lvl, iterations=1, omega=1.0):
+def setup_jacobi_ne(lvl, iterations=1, omega=1.0, withrho=True):
     Acsr = matrix_asformat(lvl, 'A', 'csr')
-    omega = omega/rho_D_inv_A(Acsr)**2
+    if withrho:
+        omega = omega/rho_D_inv_A(Acsr)**2
     def smoother(A,x,b):
         relaxation.jacobi_ne(Acsr, x, b, iterations=iterations, omega=omega)
     return smoother
