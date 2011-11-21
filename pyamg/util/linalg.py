@@ -200,7 +200,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     
     v0 /= norm(v0)
 
-    H  = numpy.zeros((maxiter+1,maxiter), dtype=A.dtype)
+    H  = numpy.zeros((maxiter+1,maxiter), dtype=v0.dtype)
     V = [v0]
 
     for j in range(maxiter):
@@ -496,8 +496,8 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         x = scipy.rand(A.shape[0],1)
         y = scipy.rand(A.shape[0],1)
         if A.dtype == complex:
-            x += 1.0j*scipy.rand(A.shape[0],1)
-            y += 1.0j*scipy.rand(A.shape[0],1)
+            x = x + 1.0j*scipy.rand(A.shape[0],1)
+            y = y + 1.0j*scipy.rand(A.shape[0],1)
         xAy = numpy.dot( (A*x).conjugate().T, y)
         xAty = numpy.dot(x.conjugate().T, A*y)
         diff = float( numpy.abs(xAy - xAty) / numpy.sqrt(numpy.abs(xAy*xAty)) )
