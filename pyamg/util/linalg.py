@@ -591,6 +591,6 @@ def pinv_array(a, cond=None):
         ## 
         # Invert each block of a
         for kk in xrange(n):
-            v, a[kk], s, rank, info = gelss(a[kk], RHS, cond=cond, 
+            v, a[kk], s, rank, work, info = gelss(a[kk], RHS, cond=cond, 
                               lwork=lwork, overwrite_a=True, overwrite_b=False)
 
