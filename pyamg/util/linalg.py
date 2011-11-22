@@ -591,6 +591,11 @@ def pinv_array(a, cond=None):
         ## 
         # Invert each block of a
         for kk in xrange(n):
-            v, a[kk], s, rank, work, info = gelss(a[kk], RHS, cond=cond, 
-                              lwork=lwork, overwrite_a=True, overwrite_b=False)
+            gelssoutput = gelss(a[kk], RHS, cond=cond, lwork=lwork, overwrite_a=True, overwrite_b=False)
+
+            if int(scipy.version.version.split('.')[1]) >= 10:
+                [v, a[kk], s, rank, work, info] = gelssoutput
+            else:
+                [v, a[kk], s, rank, info] = gelssoutput
+
 
