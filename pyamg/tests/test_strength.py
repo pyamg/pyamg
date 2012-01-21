@@ -475,7 +475,9 @@ def reference_evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type
 
     #Get spectral radius of Dinv*A, this is the time step size for the ODE
     D = A.diagonal();
-    Dinv = 1.0 / D
+    Dinv = numpy.zeros_like(D)
+    mask = (D != 0.0)
+    Dinv[mask] = 1.0 / D[mask]
     Dinv[D == 0] = 1.0
     Dinv_A  = scale_rows(A, Dinv, copy=True)
     rho_DinvA = approximate_spectral_radius(Dinv_A)

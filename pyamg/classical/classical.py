@@ -2,6 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+import scipy
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg.multilevel import multilevel_solver
@@ -89,7 +91,7 @@ def ruge_stuben_solver(A,
     if not isspmatrix_csr(A):
         try:
             A = csr_matrix(A)
-            print 'Implicit conversion of A to CSR in pyamg.ruge_stuben_solver'
+            warn("Implicit conversion of A to CSR", scipy.sparse.SparseEfficiencyWarning)
         except:
             raise TypeError('Argument A must have type csr_matrix, or be convertible to csr_matrix')
     # preprocess A

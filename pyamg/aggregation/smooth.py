@@ -5,9 +5,8 @@ __docformat__ = "restructuredtext en"
 import numpy
 import scipy
 from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags
-from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag
+from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, UnAmal
 from pyamg.util.linalg import approximate_spectral_radius, pinv_array
-from pyamg.util.utils import UnAmal
 import pyamg.amg_core
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother', 
@@ -154,10 +153,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
 
     if weighting == 'diagonal':
         # Use diagonal of S
-        D = S.diagonal()
-        D_inv = 1.0 / D
-        D_inv[D == 0] = 0
-
+        D_inv = get_diagonal(S, inv=True)
         D_inv_S = scale_rows(S, D_inv, copy=True)
         D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
     elif weighting == 'block':

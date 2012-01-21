@@ -304,7 +304,7 @@ def symmetric_rescaling(A,copy=True):
             raise ValueError,'expected square matrix'
 
         D = diag_sparse(A)
-        mask = D == 0
+        mask = (D != 0)
 
         if A.dtype != complex:
             D_sqrt = numpy.sqrt(abs(D))
@@ -312,8 +312,8 @@ def symmetric_rescaling(A,copy=True):
             # We can take square roots of negative numbers
             D_sqrt = numpy.sqrt(D)
         
-        D_sqrt_inv = 1.0/D_sqrt
-        D_sqrt_inv[mask] = 0
+        D_sqrt_inv = numpy.zeros_like(D_sqrt)
+        D_sqrt_inv[mask] = 1.0/D_sqrt[mask]
 
         DAD = scale_rows(A,D_sqrt_inv,copy=copy)
         DAD = scale_columns(DAD,D_sqrt_inv,copy=False)
@@ -552,8 +552,9 @@ def get_diagonal(A, norm_eq=False, inv=False):
         D = A.diagonal()
         
     if inv:
-        Dinv = 1.0 / D
-        Dinv[D == 0] = 0.0
+        Dinv = numpy.zeros_like(D)
+        mask = (D != 0.0)
+        Dinv[mask] = 1.0 / D[mask]
         return Dinv
     else:
         return D

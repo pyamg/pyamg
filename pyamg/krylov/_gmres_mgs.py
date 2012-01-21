@@ -1,7 +1,7 @@
 from numpy import array, zeros, sqrt, ravel, abs, max, arange, conjugate, hstack, isnan, isinf, iscomplex, real, iscomplexobj
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
-import scipy.lib.blas as blas
+from scipy.linalg import get_blas_funcs 
 from warnings import warn
 from pyamg import amg_core
 import scipy
@@ -146,10 +146,10 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
     if iscomplexobj( zeros((1,),dtype=xtype) ):
-        [axpy,dotu,dotc,scal,rotg] = blas.get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal', 'rotg'], (x))
+        [axpy,dotu,dotc,scal,rotg] = get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal', 'rotg'], [x])
     else:    
         # real type
-        [axpy,dotu,dotc,scal,rotg] = blas.get_blas_funcs(['axpy', 'dot', 'dot',  'scal', 'rotg'], (x))
+        [axpy,dotu,dotc,scal,rotg] = get_blas_funcs(['axpy', 'dot', 'dot',  'scal', 'rotg'], [x])
 
     # Make full use of direct access to BLAS by defining own norm
     def norm(z):

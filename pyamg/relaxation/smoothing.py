@@ -5,7 +5,7 @@ import numpy
 import scipy
 import relaxation
 from chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows, get_block_diag, UnAmal
+from pyamg.util.utils import scale_rows, get_block_diag, UnAmal, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 from pyamg import amg_core
@@ -190,11 +190,8 @@ def rho_D_inv_A(A):
     """
     
     if not hasattr(A, 'rho_D_inv'):
-        D = A.diagonal()
-        D_inv = 1.0 / D
-        D_inv[D == 0] = 0
+        D_inv = get_diagonal(A, inv=True)
         D_inv_A = scale_rows(A, D_inv, copy=True)
-        
         A.rho_D_inv = approximate_spectral_radius(D_inv_A)
     
     return A.rho_D_inv

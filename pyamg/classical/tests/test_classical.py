@@ -193,8 +193,13 @@ def reference_direct_interpolation(A,S,splitting):
 
     diag = A.diagonal()
 
-    alpha = sum_all_neg / sum_strong_neg
-    beta  = sum_all_pos / sum_strong_pos
+    mask = (sum_strong_neg != 0.0)
+    alpha = numpy.zeros_like(sum_all_neg)
+    alpha[mask] = sum_all_neg[mask] / sum_strong_neg[mask]
+    
+    mask = (sum_strong_pos != 0.0)
+    beta = numpy.zeros_like(sum_all_pos)
+    beta[mask]  = sum_all_pos[mask] / sum_strong_pos[mask]
 
     mask = sum_strong_pos == 0
     diag[mask] += sum_all_pos[mask]

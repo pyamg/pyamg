@@ -499,7 +499,9 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
             Dinv = sparse.bsr_matrix( (Dinv, numpy.arange(Dinv.shape[0]), numpy.arange(Dinv.shape[0]+1)), shape = A.shape)
             Dinv_A = (Dinv*A).tocsr()
         else:
-            Dinv = 1.0 / D
+            Dinv = numpy.zeros_like(D)
+            mask = (D != 0.0)
+            Dinv[mask] = 1.0 / D[mask]
             Dinv[D == 0] = 1.0
             Dinv_A  = scale_rows(A, Dinv, copy=True)
         A = A.tocsr()
@@ -507,7 +509,9 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
         csrflag = True
         numPDEs = 1
         D = A.diagonal();
-        Dinv = 1.0 / D
+        Dinv = numpy.zeros_like(D)
+        mask = (D != 0.0)
+        Dinv[mask] = 1.0 / D[mask]
         Dinv[D == 0] = 1.0
         Dinv_A  = scale_rows(A, Dinv, copy=True)
 

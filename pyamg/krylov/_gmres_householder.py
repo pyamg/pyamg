@@ -4,7 +4,7 @@ from scipy.sparse.sputils import upcast
 from warnings import warn
 from pyamg.util.linalg import norm
 from pyamg import amg_core
-import scipy.lib.blas as blas
+from scipy.linalg import get_blas_funcs 
 import scipy
 
 __docformat__ = "restructuredtext en"
@@ -143,7 +143,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
         max_inner = maxiter
 
     # Get fast access to underlying BLAS routines
-    [rotg] = blas.get_blas_funcs(['rotg'], (x))
+    [rotg] = get_blas_funcs(['rotg'], [x] )
 
     # Is this a one dimensional matrix?
     if dimen == 1:

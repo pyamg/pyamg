@@ -129,7 +129,7 @@ def axpy(x,y,a=1.0):
     The call to get_blas_funcs automatically determines the prefix for the blas
     call.
     """
-    from scipy.lib.blas import get_blas_funcs
+    from scipy.linalg import get_blas_funcs
 
     fn = get_blas_funcs(['axpy'], [x,y])[0]
     fn(x,y,a)
