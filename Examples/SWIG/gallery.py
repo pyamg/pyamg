@@ -83,9 +83,9 @@ def stencil_grid(S, grid, dtype=None, format=None):
     # diagonal offsets 
     diags = numpy.zeros(N_s, dtype=int)  
 
-    # compute index offset of each DoF within the stencil
+    # compute index offset of each dof within the stencil
     strides = numpy.cumprod( [1] + list(reversed(grid)) )[:-1]
-    indices = S.nonzero()
+    indices = tuple(i.copy() for i in S.nonzero())
     for i,s in zip(indices,S.shape):
         i -= s // 2
     for stride,coords in zip(strides, reversed(indices)):
@@ -127,6 +127,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
         data  = new_data
 
     return scipy.sparse.dia_matrix((data,diags), shape=(N_v,N_v)).asformat(format)
+
 
 def poisson(grid, spacing=None, dtype=float, format=None):
     """Returns a sparse matrix for the N-dimensional Poisson problem

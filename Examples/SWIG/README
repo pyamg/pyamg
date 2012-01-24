@@ -3,12 +3,34 @@ This is a basic stand-alone SWIG example to familiarize the user.
 To compile 
   $ swig -c++ -python splinalg.i
   $ python setup.py build
-  $ python setup.py install --home ./
+  $ python setup.py install --home=./
+
+  Add "splinalg" swig library to path.  In Bash, this is
+  $ export PYTHONPATH=$PYTHONPATH:$PWD/lib/python
+  In C-Shell, this is
+  setenv PATH ${PATH}:$PWD/lib/python:$PATH
 
 Then run testbasic.py, toggling between lusolve and lusolve_reference in
-precondition.py.
+precondition.py.  Around line 74, toggle between
 
-To "SWIG" a new C++ function defined in foo.h
+...
+def preconditioner_matvec(L,U):
+    def matvec(x):
+        return lusolve_reference(L,U,x)
+...
+
+And
+
+...
+def preconditioner_matvec(L,U):
+    def matvec(x):
+        return lusolve(L,U,x)
+...
+
+Note how much faster the lusolve option is when compared to lusolve_reference.
+
+
+In order to "SWIG" a new C++ function defined in foo.h
 - Don't edit numpy.i
 - Edit splinalg.i
   -> inlcude foo.h at the top

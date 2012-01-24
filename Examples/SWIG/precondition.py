@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, isspmatrix_csr, speye
+from scipy.sparse import csr_matrix, isspmatrix_csr
 from scipy.sparse import triu, tril, spdiags, eye
 from scipy.sparse.linalg import LinearOperator
 from numpy import zeros, dot
