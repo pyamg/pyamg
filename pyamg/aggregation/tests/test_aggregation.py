@@ -390,7 +390,7 @@ class TestSolverPerformance(TestCase):
         coarse_solver_pairs = [ (('jacobi',{'iterations':30}), 'jacobi') ]
         coarse_solver_pairs.append( (('gauss_seidel',{'iterations':30}), 'gauss_seidel') )
         coarse_solver_pairs.append( ('gauss_seidel', 'jacobi') )
-        coarse_solver_pairs.append( ('cg', ('cg',{'tol':1e-1})) )
+        coarse_solver_pairs.append( ('cg', ('cg',{'tol':10.0})) )
         coarse_solver_pairs.append( ('pinv2', ('pinv2',{'cond':1.0})) )
 
         for coarse1,coarse2 in coarse_solver_pairs:

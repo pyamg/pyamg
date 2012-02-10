@@ -152,15 +152,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
 
     # Prep for method
     r = b - ravel(A*x)
-    normr = norm(r)
     
-    # Is initial guess sufficient?
-    if normr <= tol:
-        if callback != None:    
-            callback(norm(r))
-        
-        return (postprocess(x), 0)
-
     #Apply preconditioner
     r = ravel(M*r)
     normr = norm(r)
@@ -170,6 +162,16 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=
     #if isnan(r).any() or isinf(r).any():
     #    warn('inf or nan after application of preconditioner')
     #    return(postprocess(x), -1)
+
+    # Check initial guess ( scaling by b, if b != 0, 
+    #   must account for case when norm(b) is very small)
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0
+    if normr < tol*normb:
+        if callback != None:    
+            callback(norm(r))
+        return (postprocess(x), 0)
 
     # Scale tol by ||r_0||_2, we use the preconditioned residual
     # because this is left preconditioned GMRES.

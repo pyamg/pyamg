@@ -100,7 +100,12 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     if residuals is not None:
         residuals[:] = [normr] 
     
-    if normr < tol:
+    # Check initial guess ( scaling by b, if b != 0, 
+    #   must account for case when norm(b) is very small)
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0
+    if normr < tol*normb:
         return (postprocess(x), 0)
 
     # Scale tol by ||r_0||_M
