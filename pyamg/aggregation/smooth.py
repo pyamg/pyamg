@@ -778,7 +778,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     
     # First Krylov vector
     # V[0] = r/normr
-    V.append((1.0/normr)*R)
+    if normr > 0.0:
+        V.append((1.0/normr)*R)
 
     #print "Energy Minimization of Prolongator --- Iteration 0 --- r = " + str(normr)
     i = -1
