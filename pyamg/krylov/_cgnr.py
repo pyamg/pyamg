@@ -156,7 +156,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Apply preconditioner and calculate initial search direction
     z = M*rhat
     p = z.copy()
-    old_zr = inner(conjugate(z), rhat)
+    old_zr = inner(z.conjugate(), rhat)
 
     for iter in range(maxiter):
 
@@ -164,7 +164,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         w = A*p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
-        alpha = old_zr / inner(conjugate(w), w)
+        alpha = old_zr / inner(w.conjugate(), w)
         
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
@@ -183,7 +183,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
-        new_zr = inner(conjugate(z), rhat)
+        new_zr = inner(z.conjugate(), rhat)
         beta = new_zr / old_zr
         old_zr = new_zr
 

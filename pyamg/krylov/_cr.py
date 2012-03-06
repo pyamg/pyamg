@@ -14,6 +14,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     '''Conjugate Residual algorithm
     
     Solves the linear system Ax = b. Left preconditioning is supported.
+    The matrix A must be Hermitian symmetric (but not necessarily definite).
 
     Parameters
     ----------
@@ -60,7 +61,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     as opposed to explicitly constructing the matrix.  A.psolve(..) is
     still supported as a legacy.
 
-    The residual in the preconditioner norm is both used for halting and
+    The 2-norm of the preconditioned residual is used both for halting and
     returned in the residuals list. 
 
     Examples
@@ -108,10 +109,10 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     r  = b - A*x
     z  = M*r
     p  = z.copy()
-    rz = inner(conjugate(r), z)
+    zz = inner(z.conjugate(), z)
 
     # use preconditioner norm
-    normr = sqrt(rz)
+    normr = sqrt(zz)
 
     if residuals is not None:
         residuals[:] = [normr] #initial residual 
@@ -135,14 +136,14 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     Ar = A*r
     Az = A*z
-    rAz = inner(conjugate(r),Az)
+    rAz = inner(r.conjugate(), Az)
     Ap = A*p
 
     while True:
 
         rAz_old = rAz
 
-        alpha   = rAz / inner(conjugate(Ap),Ap)       # 3
+        alpha   = rAz / inner(Ap.conjugate(), Ap)       # 3
         x      += alpha * p                           # 4
 
         if mod(iter, recompute_r) and iter > 0:       # 5
@@ -153,7 +154,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z       = M*r
 
         Az      = A*z
-        rAz     = inner(conjugate(r),Az)
+        rAz     = inner(r.conjugate(),Az)
 
         beta    = rAz/rAz_old                        # 6
 
@@ -165,8 +166,8 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         iter += 1
  
-        rz = inner(conjugate(r),z)
-        normr = sqrt(rz)                          # use preconditioner norm
+        zz = inner(z.conjugate(),z)
+        normr = sqrt(zz)                          # use preconditioner norm
 
         if residuals is not None:
             residuals.append(normr)
@@ -176,7 +177,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         if normr < tol:
             return (postprocess(x), 0)
-        elif rz == 0.0:
+        elif zz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
             warn("\nSingular preconditioner detected in CR, ceasing iterations\n")
@@ -201,18 +202,20 @@ if __name__ == '__main__':
     import time
     from pyamg.krylov._gmres import gmres
 
-    print '\n\nTesting CG with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+    print '\n\nTesting CR with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
     t1=time.time()
-    (x,flag) = cr(A,b,x0,tol=1e-8,maxiter=100)
+    r = []
+    (x,flag) = cr(A,b,x0,tol=1e-8,maxiter=100,residuals=r)
     t2=time.time()
-    print '%s took %0.3f ms' % ('cg', (t2-t1)*1000.0)
+    print '%s took %0.3f ms' % ('cr', (t2-t1)*1000.0)
     print 'norm = %g'%(norm(b - A*x))
     print 'info flag = %d'%(flag)
 
     t1=time.time()
-    (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
+    r2 = []
+    (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100,residuals=r2)
     t2=time.time()
-    print '%s took %0.3f ms' % ('cg', (t2-t1)*1000.0)
+    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
     print 'norm = %g'%(norm(b - A*x))
     print 'info flag = %d'%(flag)
 

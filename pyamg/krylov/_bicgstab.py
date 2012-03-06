@@ -116,7 +116,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     rstar = r.copy()
     p     = r.copy()
 
-    rrstarOld = inner(conjugate(rstar), r)
+    rrstarOld = inner(rstar.conjugate(), r)
 
     iter = 0
 
@@ -126,7 +126,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
         AMp = A*Mp
         
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
-        alpha = rrstarOld/inner(conjugate(rstar), AMp)
+        alpha = rrstarOld/inner(rstar.conjugate(), AMp)
         
         # s_j = r_j - alpha*A*M*p_j
         s   = r - alpha*AMp
@@ -134,7 +134,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
         AMs = A*Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
-        omega = inner(conjugate(AMs), s)/inner(conjugate(AMs), AMs)
+        omega = inner(AMs.conjugate(), s)/inner(AMs.conjugate(), AMs)
 
         # x_{j+1} = x_j +  alpha*M*p_j + omega*M*s_j
         x = x + alpha*Mp + omega*Ms
@@ -143,7 +143,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
         r = s - omega*AMs
 
         # beta_j = (r_{j+1}, rstar)/(r_j, rstar) * (alpha/omega)
-        rrstarNew = inner(conjugate(rstar), r)
+        rrstarNew = inner(rstar.conjugate(), r)
         beta      = (rrstarNew / rrstarOld) * (alpha / omega)
         rrstarOld = rrstarNew
 

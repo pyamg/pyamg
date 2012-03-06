@@ -126,12 +126,12 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         p = M*(A*r)
 
-        rMAr = inner(conjugate(p), r)                 # check curvature of M^-1 A
+        rMAr = inner(p.conjugate(), r)                 # check curvature of M^-1 A
         if rMAr < 0.0:
             warn("\nIndefinite matrix detected in minimal residual, aborting\n")
             return (postprocess(x), -1)
     
-        alpha = rMAr / inner(conjugate(p), p)
+        alpha = rMAr / inner(p.conjugate(), p)
         x = x + alpha*r
 
         if mod(iter, recompute_r) and iter > 0:

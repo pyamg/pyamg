@@ -13,9 +13,11 @@ class TestKrylov(TestCase):
     def setUp(self):
         self.cases=[]
         self.spd_cases=[]
+        self.symm_cases=[]
         
         #self.oblique = [gmres, fgmres, cgnr, krylov._gmres_householder.gmres_householder, krylov._gmres_mgs.gmres_mgs]
         self.oblique = [gmres_householder, gmres_mgs, gmres, fgmres, cgnr]
+        self.symm_oblique = [cr]
         self.orth = [cgne]
         self.inexact = [bicgstab]
         self.spd_orth = [cg]
@@ -26,6 +28,7 @@ class TestKrylov(TestCase):
         x0 = zeros((1,1))
         self.cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 1, 'reduction_factor' : 1e-10})
         self.spd_cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 1, 'reduction_factor' : 1e-10})
+        self.symm_cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 1, 'reduction_factor' : 1e-10})
 
 
         # 4x4 
@@ -37,6 +40,7 @@ class TestKrylov(TestCase):
         x0 = zeros((4,1))
         self.cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
         self.spd_cases.append({'A' : A.T*A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
+        self.symm_cases.append({'A' : A.T + A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
         
         # 4x4 Imaginary
         A = mat(A, dtype=complex)
@@ -48,6 +52,7 @@ class TestKrylov(TestCase):
         x0 = ones((4,1))
         self.cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
         self.spd_cases.append({'A' : A.H*A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
+        self.symm_cases.append({'A' : A.H + A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 4, 'reduction_factor' : 1e-10})
 
         # 10x10 
         A = mat([[-1.1,    0.,   0.,   0.,  3.9,  0.,   0.,  11.,  -1.,  0.],
@@ -64,36 +69,60 @@ class TestKrylov(TestCase):
         x0 = zeros((10,1))
         x0[4] = 11.1; x0[7] = -2.1
         self.cases.append({'A' : A, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 2, 'reduction_factor' : 0.98})
+        self.symm_cases.append({'A' : A + A.T, 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 2, 'reduction_factor' : 0.98})
         self.spd_cases.append({'A' : mat(pyamg.gallery.poisson((10,)).todense()), 'b' : b, 'x0' : x0, 'tol' : 1e-16, 'maxiter' : 2, 'reduction_factor' : 0.98})
 
     def test_gmres(self):
         # Ensure repeatability
         random.seed(0)
         
-        #  For small all-real matrices, Householder and MGS GMRES should give the same result
+        #  For small all-real matrices, Householder and MGS GMRES should give the same result, 
+        #  and for symmetric (but possibly indefinite) matrices CR and GMRES should give same result
         for maxiter in [1,2,3]:
             for i in range(1,6):
                 A = rand(i,i)
                 b = rand(i)
                 x0 = rand(i)
-
+                
+                # Test agreement between Householder and GMRES
                 (x, flag) = gmres_householder(A,b,x0=x0,maxiter=min(i,maxiter))
                 (x2, flag2) = gmres_mgs(A,b,x0=x0,maxiter=min(i,maxiter))
                 assert_array_almost_equal(x, x2,err_msg='Householder GMRES and MGS GMRES gave different results for small matrix')
                 assert_equal(flag,flag2,err_msg='Householder GMRES and MGS GMRES returned different convergence flags for small matrix')
+
+                # Test agreement between GMRES and CR
+                if A.shape[0] > 1:
+                    residuals2 = []
+                    (x2, flag2) = gmres_mgs(A+A.T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals2)
+                    residuals3 = []
+                    (x3, flag2) = cr(A+A.T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals3)
+                    assert_array_almost_equal(array(residuals3), array(residuals2), err_msg='CR and GMRES yield different residual vectors')
+                    assert_array_almost_equal(x2, x3, err_msg='CR and GMRES yield different answers')
+                
             
         #  For small complex-valued matrices, Householder and MGS GMRES should give the same result
+        #  and for symmetric (but possibly indefinite) matrices CR and GMRES should give same result
         for maxiter in [1,2,3]:
             for i in range(1,6):
                 A = rand(i,i) + 1.0j*rand(i,i)
                 b = rand(i) + 1.0j*rand(i)
                 x0 = rand(i) + 1.0j*rand(i)
 
+                # Test agreement between Householder and GMRES
                 (x, flag) = gmres_householder(A,b,x0=x0,maxiter=min(i,maxiter))
                 (x2, flag2) = gmres_mgs(A,b,x0=x0,maxiter=min(i,maxiter))
                 assert_array_almost_equal(x, x2,err_msg='Householder GMRES and MGS GMRES gave different results for small matrix')
                 assert_equal(flag,flag2,err_msg='Householder GMRES and MGS GMRES returned different convergence flags for small matrix')
 
+                # Test agreement between GMRES and CR
+                if A.shape[0] > 1:
+                    residuals2 = []
+                    (x2, flag2) = gmres_mgs(A+A.conjugate().T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals2)
+                    residuals3 = []
+                    (x3, flag2) = cr(A+A.conjugate().T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals3)
+                    assert_array_almost_equal(array(residuals3), array(residuals2), err_msg='CR and GMRES yield different residual vectors')
+                    assert_array_almost_equal(x2, x3, err_msg='CR and GMRES yield different answers')
+        
     def test_krylov(self):
         # Oblique projectors reduce the residual
         for method in self.oblique:
@@ -102,6 +131,14 @@ class TestKrylov(TestCase):
                 (xNew, flag) = method(A, b, x0=x0, tol=case['tol'], maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1,1)
                 assert_equal( (norm(b - A*xNew)/norm(b - A*x0)) < case['reduction_factor'], True, err_msg='Oblique Krylov Method Failed Test')
+        
+        # Oblique projectors reduce the residual, here we consider oblique projectors for symmetric matrices
+        for method in self.symm_oblique:
+            for case in self.symm_cases:
+                A = case['A']; b = case['b']; x0 = case['x0']
+                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'], maxiter=case['maxiter'])
+                xNew = xNew.reshape(-1,1)
+                assert_equal( (norm(b - A*xNew)/norm(b - A*x0)) < case['reduction_factor'], True, err_msg='Symmetric oblique Krylov Method Failed Test')
     
         # Orthogonal projectors reduce the error
         for method in self.orth:

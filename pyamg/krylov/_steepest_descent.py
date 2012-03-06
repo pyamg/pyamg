@@ -99,7 +99,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # setup method
     r  = b - A*x
     z  = M*r
-    rz = inner(conjugate(r), z)
+    rz = inner(r.conjugate(), z)
 
     # use preconditioner norm
     normr = sqrt(rz)
@@ -128,7 +128,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         iter = iter+1
 
         q = A*z
-        zAz = inner(conjugate(z), q)                # check curvature of A
+        zAz = inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
             warn("\nIndefinite matrix detected in steepest descent, aborting\n")
             return (postprocess(x), -1)
@@ -143,7 +143,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             r = r - alpha*q
         
         z = M*r
-        rz = inner(conjugate(r), z)
+        rz = inner(r.conjugate(), z)
         
         if rz < 0.0:                                # check curvature of M
             warn("\nIndefinite preconditioner detected in steepest descent, aborting\n")

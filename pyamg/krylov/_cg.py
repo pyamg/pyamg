@@ -108,7 +108,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     r  = b - A*x
     z  = M*r
     p  = z.copy()
-    rz = inner(conjugate(r), z)
+    rz = inner(r.conjugate(), z)
     
     # use preconditioner norm
     normr = sqrt(rz)
@@ -138,7 +138,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         rz_old = rz
                                                   # Step # in Saad's pseudocode
-        pAp = inner(conjugate(Ap), p)             # check curvature of A
+        pAp = inner(Ap.conjugate(), p)             # check curvature of A
         if pAp < 0.0:
             warn("\nIndefinite matrix detected in CG, aborting\n")
             return (postprocess(x), -1)
@@ -152,7 +152,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             r = b - A*x
 
         z     = M*r                               # 6
-        rz    = inner(conjugate(r), z)
+        rz    = inner(r.conjugate(), z)
 
         if rz < 0.0:                              # check curvature of M
             warn("\nIndefinite preconditioner detected in CG, aborting\n")

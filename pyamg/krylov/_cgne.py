@@ -155,12 +155,12 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Apply preconditioner and calculate initial search direction
     z = M*r
     p = AH*z
-    old_zr = inner(conjugate(z), r)
+    old_zr = inner(z.conjugate(), r)
 
     for iter in range(maxiter):
 
         # alpha = (z_j, r_j) / (p_j, p_j)
-        alpha = old_zr / inner(conjugate(p), p)
+        alpha = old_zr / inner(p.conjugate(), p)
         
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
@@ -175,7 +175,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*r
 
         # beta = (z_{j+1}, r_{j+1}) / (z_j, r_j)
-        new_zr = inner(conjugate(z), r)
+        new_zr = inner(z.conjugate(), r)
         beta = new_zr / old_zr
         old_zr = new_zr
 
