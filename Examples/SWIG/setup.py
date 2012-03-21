@@ -10,7 +10,7 @@ if flag[0]!=0:
     exit()
 
 from numpy.distutils.core import setup, Extension
-splinalg_module = Extension('_splinalg', sources=['splinalg_wrap.cxx'],)
+splinalg_module = Extension('_splinalg', sources=['splinalg_wrap.cxx'], define_macros=[('__STDC_FORMAT_MACROS', 1)],)
 setup (name = 'splinalg',
        version = '0.1',
        author      = "Luke Olson",
