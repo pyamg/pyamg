@@ -1,7 +1,8 @@
 ''' 
 Example driver script for solver_diagnostics.py, which tries different
-parameter combinations for smoothed_aggregation_solver(...).  The goal is to
-find appropriate SA parameter settings for an arbitrary matrix.
+parameter combinations for smoothed_aggregation_solver(...) and
+rootnode_solver(...).  The goal is to find appropriate parameter settings
+for an arbitrary matrix.
 
 Explore 4 different matrices: CSR matrix for basic isotropic diffusion
                               CSR matrix for basic rotated anisotropic diffusion
@@ -50,13 +51,16 @@ if choice == 2:
     ##
     # Try a basic rotated anisotropic diffusion problem from bilinear finite elements
     # --> Only use V-cycles by specifying cycle_list
-    # --> Specify symmetry and definiteness (the safest option) 
+    # --> Specify symmetry and definiteness (the safest option)
+    # --> Choose the rootnode_solver
+    from pyamg import rootnode_solver
     stencil = diffusion.diffusion_stencil_2d(type='FE', epsilon=0.001, theta=2*pi/16.0)
     A = gallery.stencil_grid(stencil, (50,50), format='csr')
     solver_diagnostics(A, fname='rot_ani_diff_diagnostic', 
                        cycle_list=['V'],
                        symmetry='symmetric', 
-                       definiteness='positive')
+                       definiteness='positive',
+                       solver=rootnode_solver)
 
     ##
     # To run the best solver found above, uncomment next two lines

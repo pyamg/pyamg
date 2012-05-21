@@ -7,11 +7,17 @@ import numpy
 import scipy
 
 from pyamg.gallery import load_example
-from pyamg import smoothed_aggregation_solver
+from pyamg import smoothed_aggregation_solver, rootnode_solver
 
 from convergence_tools import print_cycle_history
 
 if __name__ == '__main__':
+    
+    print "Test convergence of a small recirculating flow problem " + \
+          "that generates a nonsymmetric matrix "
+    choice = input('\n Input Choice:\n' + \
+               '1:  Run smoothed_aggregation_solver\n' + \
+               '2:  Run rootnode_solver\n' )
 
     # Recirculating flow, nonsymmetric matrix
     data = load_example('recirc_flow')
@@ -37,6 +43,18 @@ if __name__ == '__main__':
 
     ##
     # Construct solver and solve
+    if choice == 1:
+        sa_symmetric = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
+                   strength=strength, presmoother=presmoother, \
+                   postsmoother=postsmoother, **SA_build_args)
+    elif choice == 2:
+        sa_symmetric = rootnode_solver(A, B=B, smooth=smooth, \
+                   strength=strength, presmoother=presmoother, \
+                   postsmoother=postsmoother, **SA_build_args)
+    else:
+        raise ValueError("Enter a choice of 1 or 2")
+
+
     sa_symmetric = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
                    strength=strength, presmoother=presmoother, \
                    postsmoother=postsmoother, **SA_build_args)
@@ -48,7 +66,7 @@ if __name__ == '__main__':
 
     ##
     # Now, construct and solve with nonsymmetric SA parameters 
-    smooth=('energy', {'krylov' : 'gmres'})
+    smooth=('energy', {'krylov' : 'gmres', 'degree':2})
     SA_build_args['symmetry'] = 'nonsymmetric'
     strength=[('evolution', {'k':2, 'epsilon':4.0})]
     presmoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
@@ -56,9 +74,19 @@ if __name__ == '__main__':
 
     ##
     # Construct solver and solve
-    sa_nonsymmetric = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
+    ##
+    # Construct solver and solve
+    if choice == 1:
+        sa_nonsymmetric = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
                    strength=strength, presmoother=presmoother, \
                    postsmoother=postsmoother, **SA_build_args)
+    elif choice == 2:
+        sa_nonsymmetric = rootnode_solver(A, B=B, smooth=smooth, \
+                   strength=strength, presmoother=presmoother, \
+                   postsmoother=postsmoother, **SA_build_args)
+    else:
+        raise ValueError("Enter a choice of 1 or 2")
+
     resvec = []
     x = sa_nonsymmetric.solve(b, x0=x0, residuals=resvec, **SA_solve_args)
     print "\n*************************************************************"

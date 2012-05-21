@@ -5,11 +5,12 @@ from numpy import ones, ravel, arange, mod, array, abs, kron, eye, random
 from scipy.sparse import csr_matrix, isspmatrix_bsr, isspmatrix_csr
 from scipy.io import savemat, loadmat
 
-from pyamg.aggregation import smoothed_aggregation_solver
+from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
 from pyamg.util.linalg import norm, _approximate_eigenvalues, ishermitian
 from pyamg.util.utils import print_table 
 
-def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
+def solver_diagnostics(A, solver=smoothed_aggregation_solver, 
+        fname='solver_diagnostic', definiteness=None,
         symmetry=None, strength_list=None, aggregate_list=None,
         smooth_list=None, Bimprove_list=None, max_levels_list=None,
         cycle_list=None, krylov_list=None, prepostsmoother_list=None,
@@ -34,6 +35,9 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix in CSR or BSR format
     
+    solver : {smoothed_aggregation_solver, rootnode_solver}
+        Solver to run diagnostic on.  Currently, these two solvers are supported.
+
     fname : {string}
         File name where the diagnostic results are dumped
 
@@ -51,22 +55,19 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
         Default: detected by testing if A induces an inner-product
     
     strength_list : {list} 
-        List of various parameter choices for the strength argument sent to
-        smoothed_aggregation_solver(...)
+        List of various parameter choices for the strength argument sent to solver(...)
         
         Default:  [('symmetric', {'theta' : 0.0}), 
                    ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':2.0}),
                    ('evolution', {'k':2, 'proj_type':'l2', 'epsilon':4.0})]
     
     aggregate_list : {list} 
-        List of various parameter choices for the aggregate argument sent to
-        smoothed_aggregation_solver(...)
+        List of various parameter choices for the aggregate argument sent to solver(...)
 
         Default: ['standard']
     
     smooth_list : {list} 
-        List of various parameter choices for the smooth argument sent to
-        smoothed_aggregation_solver(...)
+        List of various parameter choices for the smooth argument sent to solver(...)
 
         Default depends on the symmetry and definiteness parameters:
         if definiteness == 'positive' and (symmetry=='hermitian' or symmetry=='symmetric'):
@@ -80,29 +81,25 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
             ('energy',{'krylov':'gmres','maxiter':3,'degree':3,'weighting':'local'})] 
 
     Bimprove_list : {list} 
-        List of various parameter choices for the Bimprove argument sent to
-        smoothed_aggregation_solver(...)
+        List of various parameter choices for the Bimprove argument sent to solver(...)
 
         Default: ['default', None]
 
     max_levels_list : {list} 
-        List of various parameter choices for the max_levels argument sent to
-        smoothed_aggregation_solver(...)
+        List of various parameter choices for the max_levels argument sent to solver(...)
         
         Default: [25]
     
     cycle_list : {list} 
-        List of various parameter choices for the cycle argument sent to 
-        smoothed_aggregation_solver.solve() 
+        List of various parameter choices for the cycle argument sent to solver.solve() 
         
         Default: ['V', 'W']
     
     krylov_list : {list} 
         List of various parameter choices for the krylov argument sent to
-        smoothed_aggregation_solver.solve().  Basic form is (string, dict),
-        where the string is a Krylov descriptor, e.g., 'cg' or 'gmres', and
-        dict is a dictionary of parameters like tol and maxiter.  The dictionary
-        dict may be empty.
+        solver.solve().  Basic form is (string, dict), where the string is a
+        Krylov descriptor, e.g., 'cg' or 'gmres', and dict is a dictionary of
+        parameters like tol and maxiter.  The dictionary dict may be empty.
       
         Default depends on the symmetry and definiteness parameters:
         if symmetry == 'nonsymmetric' or definiteness == 'indefinite':     
@@ -112,7 +109,7 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
 
     prepostsmoother_list : {list} 
         List of various parameter choices for the presmoother and postsmoother
-        arguments sent to smoothed_aggregation_solver(...).  Basic form is 
+        arguments sent to solver(...).  Basic form is 
         [ (presmoother_descriptor, postsmoother_descriptor), ...].
         
         Default depends on the symmetry parameter:
@@ -125,13 +122,12 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
         
     B_list : {list} 
         List of various B parameter choices for the B and BH arguments sent to
-        smoothed_aggregation_solver(...).  Basic form is [ (B, BH, string), ...].
-        B is a vector of left near null-space modes used to generate
-        prolongation, BH is a vector of right near null-space modes used to
-        generate restriction, and string is a python command(s) that can generate 
-        your particular B and BH choice.  B and BH must have a row-size equal
-        to the dimensionality of A.  string is only used in the automatically
-        generated test script.
+        solver(...).  Basic form is [ (B, BH, string), ...].  B is a vector of
+        left near null-space modes used to generate prolongation, BH is a
+        vector of right near null-space modes used to generate restriction, and
+        string is a python command(s) that can generate your particular B and
+        BH choice.  B and BH must have a row-size equal to the dimensionality
+        of A.  string is only used in the automatically generated test script.
 
         Default depends on whether A is BSR:
         if A is CSR:
@@ -146,14 +142,14 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
 
     coarse_size_list : {list} 
         List of various tuples containing pairs of the (max_coarse, coarse_solver)
-        parameters sent to smoothed_aggregation_solver(...).  
+        parameters sent to solver(...).  
 
         Default: [ (300, 'pinv') ]
 
     Notes
     -----
-    Only smoothed_aggregation_solver(...) is used.  The Ruge-Stuben solver
-    framework is not used.
+    Only smoothed_aggregation_solver(...) and rootnode_solver(...) are
+    supported.  The Ruge-Stuben solver framework is not used.
     
     60 total solvers are generated by the defaults for CSR SPD matrices.  For
     BSR SPD matrices, 120 total solvers are generated by the defaults.  A
@@ -208,7 +204,7 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            print 'Implicit conversion of A to CSR in pyamg.smoothed_aggregation_solver'
+            print 'Implicit conversion of A to CSR'
         except:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix,\
                              or be convertible to csr_matrix')
@@ -282,10 +278,14 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     # Default prolongation smoothers
     if smooth_list == None:
         if definiteness == 'positive' and (symmetry=='hermitian' or symmetry=='symmetric'):
-            smooth_list = ['jacobi', ('jacobi', {'filter' : True, 'weighting' : 'local'}),
-                           ('energy',{'krylov':'cg','maxiter':2,'degree':1,'weighting':'local'}),
-                           ('energy',{'krylov':'cg','maxiter':3,'degree':2,'weighting':'local'}),
-                           ('energy',{'krylov':'cg','maxiter':4,'degree':3,'weighting':'local'})]
+            if solver.func_name == 'smoothed_aggregation_solver':
+                smooth_list = ['jacobi', ('jacobi', {'filter' : True, 'weighting' : 'local'})]
+            else:
+                smooth_list = []
+            ##
+            smooth_list.append( ('energy',{'krylov':'cg','maxiter':2,'degree':1,'weighting':'local'}) )
+            smooth_list.append( ('energy',{'krylov':'cg','maxiter':3,'degree':2,'weighting':'local'}) )
+            smooth_list.append( ('energy',{'krylov':'cg','maxiter':4,'degree':3,'weighting':'local'}) )
         elif definiteness == 'indefinite' or symmetry=='nonsymmetric':
             smooth_list =[('energy',{'krylov':'gmres','maxiter':2,'degree':1,'weighting':'local'}),
                           ('energy',{'krylov':'gmres','maxiter':3,'degree':2,'weighting':'local'}),
@@ -405,12 +405,16 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
                                             ##
                                             # Construct solver
                                             try:
-                                                sa = smoothed_aggregation_solver(A, B=B, BH=BH,
-                                                  strength=strength, smooth=smooth,
-                                                  Bimprove=Bimprove, aggregate=aggregate,
-                                                  presmoother=presmoother, max_levels=max_levels,
-                                                  postsmoother=postsmoother, max_coarse=max_coarse,
-                                                  coarse_solver=coarse_solver)
+                                                sa = solver(A, B=B, BH=BH,
+                                                        strength=strength,
+                                                        smooth=smooth,
+                                                        Bimprove=Bimprove,
+                                                        aggregate=aggregate,
+                                                        presmoother=presmoother,
+                                                        max_levels=max_levels,
+                                                        postsmoother=postsmoother,
+                                                        max_coarse=max_coarse,
+                                                        coarse_solver=coarse_solver)
                                             
                                                 ##
                                                 # Solve system
@@ -472,8 +476,10 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     ##
     # Now print each solver descriptor to file
     fptr.write('\n****************************************************************\n' + \
-                 '*                 Begin Solver Descriptors                     *\n' + \
+                 '*                 Begin Solver Descriptors                     \n' + \
+                 '*       Solver used is ' + solver.func_name + '( )             \n' + \
                  '****************************************************************\n\n')
+
     for i in range(len(solver_descriptors)):
         fptr.write('Solver Descriptor %d\n'%(i+1))
         fptr.write(solver_descriptors[i])
@@ -501,7 +507,7 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     fptr.write('#          >>> from ' + fname + ' import ' + fname + '\n' )
     fptr.write('#          >>> ' + fname + '(A)' + '\n')
     fptr.write('#######################################################################\n\n')
-    fptr.write('from pyamg import smoothed_aggregation_solver\n')
+    fptr.write('from pyamg import ' + solver.func_name + '\n')
     fptr.write('from pyamg.util.linalg import norm\n') 
     fptr.write('from numpy import ones, array, arange, zeros, abs, random\n') 
     fptr.write('from scipy import rand, ravel, log10, kron, eye\n') 
@@ -516,7 +522,7 @@ def solver_diagnostics(A, fname='solver_diagnostic', definiteness=None,
     fptr.write('    b = zeros((A.shape[0],1))\n')
     fptr.write('    x0 = rand(A.shape[0],1)\n\n')
     fptr.write('    ##\n    # Create solver\n')
-    fptr.write('    ml = smoothed_aggregation_solver(A, B=B, BH=BH,\n' + \
+    fptr.write('    ml = ' + solver.func_name + '(A, B=B, BH=BH,\n' + \
                '        strength=%s,\n'%to_string(solver_args[0]['strength']) + \
                '        smooth=%s,\n'%to_string(solver_args[0]['smooth']) + \
                '        Bimprove=%s,\n'%to_string(solver_args[0]['Bimprove']) + \

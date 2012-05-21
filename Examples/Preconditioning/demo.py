@@ -3,7 +3,7 @@
 import scipy
 import numpy
 from pyamg.gallery import linear_elasticity, poisson
-from pyamg import smoothed_aggregation_solver
+from pyamg import smoothed_aggregation_solver, rootnode_solver
 
 # Create test cases
 trials = []
@@ -11,12 +11,22 @@ A,B = poisson((500,500), format='csr'), None
 trials.append( ('Poisson',A,B) )
 A,B = linear_elasticity((200,200), format='bsr')
 trials.append( ('Elasticity',A,B) )
-
+   
+print "Show advantages of accleration for two example problems"
+choice = input('\n Input Choice:\n' + \
+            '1:  Run smoothed_aggregation_solver\n' + \
+            '2:  Run rootnode_solver\n' )
+if choice == 1:
+    method = smoothed_aggregation_solver
+elif choice == 2:
+    method = rootnode_solver
+else:
+    raise ValueError("Enter a choice of 1 or 2")
 
 
 for name,A,B in trials:
     # Construct solver using AMG based on Smoothed Aggregation (SA)
-    mls = smoothed_aggregation_solver(A, B=B)
+    mls = method(A, B=B)
 
     # Display hierarchy information
     print 'Matrix: %s' % name
@@ -46,5 +56,6 @@ for name,A,B in trials:
     pylab.semilogy(standalone_residuals,  label='Standalone',  linestyle='None', marker='.')
     pylab.semilogy(accelerated_residuals, label='Accelerated', linestyle='None', marker='.')
     pylab.legend()
+    print "Close window for program to proceed.\n"
     pylab.show()
 

@@ -6,7 +6,7 @@ Try different values for classic_theta and evolution_theta.
 import numpy
 import scipy
 
-from pyamg import smoothed_aggregation_solver
+from pyamg import smoothed_aggregation_solver, rootnode_solver
 from pyamg.gallery import stencil_grid
 from pyamg.gallery.diffusion import diffusion_stencil_2d
 
@@ -18,7 +18,7 @@ if(__name__=="__main__"):
     numpy.random.seed(625)
     
     # Grid sizes to test
-    # nlist = [40,70,100,130,160]
+    #nlist = [40,70,100,130,160]
     nlist = [100,200,300,400]
 
     factors_classic    = numpy.zeros((len(nlist),1)).ravel()
@@ -31,6 +31,11 @@ if(__name__=="__main__"):
     nnz_ode        = numpy.zeros((len(nlist),1)).ravel()
     sizelist_ode   = numpy.zeros((len(nlist),1)).ravel()
     
+    factors_ode_root    = numpy.zeros((len(nlist),1)).ravel()
+    complexity_ode_root = numpy.zeros((len(nlist),1)).ravel()
+    nnz_ode_root        = numpy.zeros((len(nlist),1)).ravel()
+    sizelist_ode_root   = numpy.zeros((len(nlist),1)).ravel()
+
     run=0
 
     # Smoothed Aggregation Parameters
@@ -38,8 +43,8 @@ if(__name__=="__main__"):
     epsilon = 0.001                                     # Anisotropic coefficient
     mcoarse = 10                                        # Max coarse grid size
     prepost = ('gauss_seidel',                          # pre/post smoother
-               {'sweep':'symmetric', 'iterations':2})   
-    smooth = ('energy', {'maxiter' : 6})                # Prolongation Smoother
+               {'sweep':'symmetric', 'iterations':1})   
+    smooth = ('energy', {'maxiter' : 9, 'degree':3})    # Prolongation Smoother
     classic_theta = 0.0                                 # Classic Strength Measure
                                                         #    Drop Tolerance
     evolution_theta = 4.0                                     # evolution Strength Measure
@@ -80,11 +85,24 @@ if(__name__=="__main__"):
         nnz_ode[run]        = A.nnz
         sizelist_ode[run]   = A.shape[0]
 
+        # Evolution strength measure
+        ml = rootnode_solver(A, max_coarse=mcoarse, coarse_solver='pinv2', 
+                                presmoother=prepost, postsmoother=prepost, smooth=smooth,
+                                strength=('evolution', {'epsilon' : evolution_theta, 'k' : 2}) )
+        resvec = []
+        x = ml.solve(b, x0=x0, maxiter=100, tol=1e-8, residuals=resvec)
+        factors_ode_root[run]    = (resvec[-1]/resvec[0])**(1.0/len(resvec))
+        complexity_ode_root[run] = ml.operator_complexity()
+        nnz_ode_root[run]        = A.nnz
+        sizelist_ode_root[run]   = A.shape[0]
+
+
         run +=1
 
     # Print Problem Description
-    print "\nAMG Scalability Study for Ax = 0, x = rand"
-    print "Emphasis on Robustness of Strength Measures and Drop Tolerances"
+    print "\nAMG Scalability Study for Ax = 0, x_init = rand\n"
+    print "Emphasis on Robustness of Evolution Strength "
+    print "Measure and Root-Node Solver\n"
     print "Rotated Anisotropic Diffusion in 2D"
     print "Anisotropic Coefficient = %1.3e" % epsilon
     print "Rotation Angle = %1.3f" % theta
@@ -92,8 +110,10 @@ if(__name__=="__main__"):
     # Print Tables
     print_scalability(factors_classic, complexity_classic, 
          nnz_classic, sizelist_classic, plotting=False, 
-         title='Classic Strength Measure DropTol = %1.2f' % classic_theta)
+         title='Classic SA\nClassic Strength Measure DropTol = %1.2f' % classic_theta)
     print_scalability(factors_ode, complexity_ode, nnz_ode, sizelist_ode, 
-         plotting=False, title='Evolution Strength Measure DropTol = %1.2f' % evolution_theta)
+         plotting=False, title='Classic SA\nEvolution Strength Measure DropTol = %1.2f' % evolution_theta)
+    print_scalability(factors_ode_root, complexity_ode_root, nnz_ode_root, sizelist_ode_root, 
+         plotting=False, title='Root-Node Solver\nEvolution Strength Measure DropTol = %1.2f' % evolution_theta)
 
 
