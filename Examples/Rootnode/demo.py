@@ -31,11 +31,12 @@ from pylab import figure, axis, scatter, show, title
 ##
 # Plot the aggregation
 figure(figsize=(6,6))
-title('Finest-Level Aggregation')
+title('Finest-Level Aggregation\nC-pts in Red, F-pts in Blue')
 axis('equal')
 lineplot(V, E[inner_edges], linewidths=3.0)
 lineplot(V, E[outer_edges], linewidths=0.2)
-scatter(V[:,0], V[:,1], c='r', s=100.0)
+scatter(V[:,0][Fpts], V[:,1][Fpts], c='b', s=100.0)  #plot F-nodes in blue
+scatter(V[:,0][Cpts], V[:,1][Cpts], c='r', s=220.0)  #plot C-nodes in red
 
 ##
 # Plot the C/F splitting
