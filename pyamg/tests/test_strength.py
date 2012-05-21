@@ -27,7 +27,7 @@ class TestStrengthOfConnection(TestCase):
         # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             self.cases.append( poisson( (N,), format='csr') )
-        for N in [2,3,5,7,10,11]:
+        for N in [2,3,7,9]:
             self.cases.append( poisson( (N,N), format='csr') )
 
         for name in ['knot','airfoil','bar']:
@@ -222,13 +222,13 @@ class TestStrengthOfConnection(TestCase):
             cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
 
         # Ensure that anisotropic diffusion results in an anisotropic strength stencil
-        for N in [3,5,7,10]:
+        for N in [3,6,7]:
             A = spdiags([-ones(N*N), -0.001*ones(N*N), 2.002*ones(N*N),-0.001*ones(N*N),-ones(N*N)],[-N, -1, 0, 1, N], N*N, N*N, format='csr')
             B = ones((A.shape[0],1))
             cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 4.0, 'k' : 2, 'proj' : 'l2'})
             
         # Ensure that isotropic elasticity results in an isotropic stencil
-        for N in [3,5,7,10]:
+        for N in [3,6,7]:
             (A,B) = linear_elasticity( (N,N), format='bsr')
             cases.append({'A' : A.copy(), 'B' : B.copy(), 'epsilon' : 32.0, 'k' : 8, 'proj' : 'D_A'})
 
@@ -292,7 +292,7 @@ class TestComplexStrengthOfConnection(TestCase):
         for N in [2,3,5,7,10,11,19]:
             A = poisson( (N,), format='csr'); A.data = A.data + 1.0j*A.data;
             self.cases.append(A)
-        for N in [2,3,5,7,10,11]:
+        for N in [2,3,7,9]:
             A = poisson( (N,N), format='csr'); A.data = A.data + 1.0j*rand(A.data.shape[0],);
             self.cases.append(A)
 

@@ -434,9 +434,9 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         # aggregation
         fn, kwargs = unpack_arg(aggregate[len(As)-1])
         if fn == 'standard':
-            AggOp = standard_aggregation(C_l, **kwargs)
+            AggOp = standard_aggregation(C_l, **kwargs)[0]
         elif fn == 'lloyd':
-            AggOp = lloyd_aggregation(C_l, **kwargs)
+            AggOp = lloyd_aggregation(C_l, **kwargs)[0]
         elif fn == 'predefined':
             AggOp = kwargs['AggOp'].tocsr()
         else:
@@ -451,7 +451,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn == 'richardson':
             P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
         elif fn == 'energy':
-            P_l,x = energy_prolongation_smoother(A_l, T_l, C_l, x, **kwargs)
+            P_l = energy_prolongation_smoother(A_l, T_l, C_l, x, None, (False,{}), **kwargs)
         elif fn == None:
             P_l = T_l
         else:
@@ -598,7 +598,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn == 'richardson':
             levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
         elif fn == 'energy':
-            levels[i].P,R=energy_prolongation_smoother(levels[i].A, T, levels[i].C, R,**kwargs)
+            levels[i].P = energy_prolongation_smoother(levels[i].A, T, levels[i].C, R, None, (False,{}), **kwargs)
             x = R[:,-1].reshape(-1,1)
         elif fn == None:
             levels[i].P = T
@@ -626,8 +626,8 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn == 'richardson':
             levels[i+1].P = richardson_prolongation_smoother(levels[i+1].A, T_bridge, **kwargs)
         elif fn == 'energy':
-            levels[i+1].P,R_bridge = energy_prolongation_smoother(levels[i+1].A, T_bridge, \
-                                      levels[i+1].C, R_bridge, **kwargs)
+            levels[i+1].P = energy_prolongation_smoother(levels[i+1].A, T_bridge, \
+                                      levels[i+1].C, R_bridge, None, (False,{}), **kwargs)
         elif fn == None:
             levels[i+1].P = T_bridge
         else:

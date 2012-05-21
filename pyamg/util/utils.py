@@ -7,7 +7,7 @@ from warnings import warn
 import numpy
 import scipy
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
-        isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix
+        isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
@@ -16,7 +16,8 @@ import pyamg.amg_core
 __all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
-           'symmetric_rescaling_sa', 'relaxation_as_linear_operator']
+           'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
+           'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv']
 
 def profile_solver(ml, accel=None, **kwargs):
     """
@@ -1104,7 +1105,7 @@ def relaxation_as_linear_operator(method, A, b):
     >>> from pyamg.util.utils import relaxation_as_linear_operator
     >>> import numpy
     >>> A = poisson((100,100), format='csr')           # matrix
-    >>> B = numpy.ones((A.shape[0],1))                   # Candidate vector
+    >>> B = numpy.ones((A.shape[0],1))                 # Candidate vector
     >>> b = numpy.zeros((A.shape[0]))                  # RHS
     >>> relax = relaxation_as_linear_operator('gauss_seidel', A, b)
     >>> B = relax*B
@@ -1150,6 +1151,512 @@ def relaxation_as_linear_operator(method, A, b):
 
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
 
+def filter_operator(A, C, B, Bf, BtBinv=None):
+    """
+    Filter the matrix A according to the matrix graph of C,
+    while ensuring that the new, filtered A satisfies:  A_new*B = Bf.
+
+    A : {csr_matrix, bsr_matrix}
+        n x m matrix to filter
+    C : {csr_matrix, bsr_matrix}
+        n x m matrix representing the couplings in A to keep
+    B : {array}
+        m x k array of near nullspace vectors
+    Bf : {array}
+        n x k array of near nullspace vectors to place in span(A)
+    BtBinv : {None, array}
+        3 dimensional array such that,
+        BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted 
+        to the neighborhood (with respect to the matrix graph 
+        of C) of dof of i.  If None is passed in, this array is 
+        computed internally.
+        
+    Returns
+    -------
+    A : sparse matrix updated such that sparsity structure of A now matches
+    that of C, and that the relationship A*B = Bf holds.
+
+    Notes
+    -----
+    This procedure allows for certain important modes (i.e., Bf) to be placed
+    in span(A) by way of row-wise l2-projections that enforce the relationship
+    A*B = Bf.  This is useful for maintaining certain modes (e.g., the
+    constant) in the span of prolongation.
+
+    Examples
+    --------
+    >>> from numpy import ones, array
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.util.utils import filter_operator
+    >>> A = array([ [1.,1,1],[1,1,1],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
+    >>> C = array([ [1.,1,0],[1,1,0],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
+    >>> B = ones((3,1))
+    >>> Bf = ones((6,1))
+    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).todense()
+    matrix([[ 0.5,  0.5,  0. ],
+            [ 0.5,  0.5,  0. ],
+            [ 0. ,  1. ,  0. ],
+            [ 0. ,  1. ,  0. ],
+            [ 0. ,  0. ,  1. ],
+            [ 0. ,  0. ,  1. ]])
+
+    Notes
+    -----
+
+    This routine is primarily used in
+    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
+    generate a suitable initial guess for the energy-minimization process, when
+    root-node style SA is used.  Essentially, the tentative prolongator, T, is
+    processed by this routine to produce fine-grid nullspace vectors when
+    multiplying coarse-grid nullspace vectors, i.e., T*B = Bf.  This is
+    possible for any arbitrary vectors B and Bf, so long as the sparsity
+    structure of T is rich enough.
+
+    When generating initial guesses for root-node style prolongation operators,
+    this function is usually called before pyamg.uti.utils.scale_T
+    
+    """
+
+    ##
+    # First preprocess the parameters
+    Nfine = A.shape[0]
+    if A.shape[0] != C.shape[0]:
+        raise ValueError, 'A and C must be the same size'
+    if A.shape[1] != C.shape[1]:
+        raise ValueError, 'A and C must be the same size'
+
+    if isspmatrix_bsr(C):
+        isBSR = True
+        ColsPerBlock = C.blocksize[1]
+        RowsPerBlock = C.blocksize[0]
+        Nnodes = Nfine/RowsPerBlock
+        if not isspmatrix_bsr(A):
+            raise ValueError, 'A and C must either both be CSR or BSR'
+        elif (ColsPerBlock != A.blocksize[1]) or (RowsPerBlock != A.blocksize[0]):
+            raise ValueError, 'A and C must have same BSR blocksizes'
+    elif isspmatrix_csr(C):
+        isBSR = False
+        ColsPerBlock = 1
+        RowsPerBlock = 1
+        Nnodes = Nfine/RowsPerBlock
+        if not isspmatrix_csr(A):
+            raise ValueError, 'A and C must either both be CSR or BSR'
+    else:
+        raise ValueError, 'A and C must either both be CSR or BSR'
+
+    if len(Bf.shape) == 1:
+        Bf = Bf.reshape(-1,1)
+    if Bf.shape[0] != A.shape[0]:
+        raise ValueError, 'A and Bf must have the same first dimension'
+        
+    if len(B.shape) == 1:
+        B = B.reshape(-1,1)
+    if B.shape[0] != A.shape[1]:
+        raise ValueError, 'A and B must have matching dimensions such that A*B is computable'
+    
+    if B.shape[1] != Bf.shape[1]:
+        raise ValueError, 'B and Bf must have the same second dimension'
+    else:
+        NullDim = B.shape[1]
+    
+    if A.dtype == int:
+        A.data = numpy.array(A.data, dtype=float)
+    if B.dtype == int:
+        B.data = numpy.array(B.data, dtype=float)
+    if Bf.dtype == int:
+        Bf.data = numpy.array(Bf.data, dtype=float)
+    if (A.dtype != B.dtype) or (A.dtype != Bf.dtype):
+        raise TypeError, 'A, B and Bf must of the same dtype'
+
+    ##
+    # First, preprocess some values for filtering.  Construct array of
+    # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
+    # C. This array is used multiple times in Satisfy_Constraints(...).
+    if BtBinv == None:
+        BtBinv = compute_BtBinv(B, C)
+
+    ##
+    # Filter A according to C's matrix graph
+    C = C.copy()
+    C.data[:] = 1
+    A = A.multiply(C)
+    # add explicit zeros to A wherever C is nonzero, but A is zero
+    A = A.tocoo()
+    C = C.tocoo()
+    A.data = numpy.hstack((numpy.zeros(C.data.shape,dtype=A.dtype), A.data))
+    A.row = numpy.hstack((C.row, A.row))
+    A.col = numpy.hstack((C.col, A.col))
+    if isBSR:
+        A = A.tobsr((RowsPerBlock,ColsPerBlock))
+    else:
+        A = A.tocsr()
+
+    ##
+    # Calculate difference between A*B and Bf
+    diff = A*B - Bf
+
+    ##
+    # Right multiply each row i of A with 
+    # A_i <--- A_i - diff_i*inv(B_i.T B_i)*Bi.T 
+    # where A_i, and diff_i denote restriction to just row i, and B_i denotes
+    # restriction to multiple rows corresponding to the the allowed nz's for
+    # row i in A_i.  A_i also represents just the nonzeros for row i.
+    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
+            Nnodes, NullDim, 
+            numpy.conjugate(numpy.ravel(B)), numpy.ravel(diff), numpy.ravel(BtBinv), 
+            A.indptr, A.indices, numpy.ravel(A.data))
+    
+    A.eliminate_zeros()
+    return A
+
+def scale_T(T, P_I, I_F):
+    '''
+    Helper function that scales T with a right multiplication by a block
+    diagonal inverse, so that T is the identity at C-node rows.
+
+    Parameters
+    ----------
+    T : {bsr_matrix}
+        Tentative prolongator, with square blocks in the BSR data structure,
+        and a non-overlapping block-diagonal structure
+    P_I : {bsr_matrix}
+        Interpolation operator that carries out only simple injection from the coarse grid
+        to fine grid Cpts nodes
+    I_F : {bsr_matrix}
+        Identity operator on Fpts, i.e., the action of this matrix zeros 
+        out entries in a vector at all Cpts, leaving Fpts untouched
+
+    Returns
+    -------
+    T : {bsr_matrix}
+        Tentative prolongator scaled to be identity at C-pt nodes 
+
+    Examples
+    --------
+    >>> from scipy.sparse import csr_matrix, bsr_matrix
+    >>> from scipy import matrix, array
+    >>> from pyamg.util.utils import scale_T
+    >>> T = matrix([[ 1.0,  0.,   0. ],
+    ...             [ 0.5,  0.,   0. ],
+    ...             [ 0. ,  1.,   0. ],
+    ...             [ 0. ,  0.5,  0. ],
+    ...             [ 0. ,  0.,   1. ],
+    ...             [ 0. ,  0.,   0.25 ]])
+    >>> P_I = matrix([[ 0.,  0.,   0. ],
+    ...               [ 1.,  0.,   0. ],
+    ...               [ 0.,  1.,   0. ],
+    ...               [ 0.,  0.,   0. ],
+    ...               [ 0.,  0.,   0. ],
+    ...               [ 0.,  0.,   1. ]])
+    >>> I_F = matrix([[ 1.,  0.,  0.,  0.,  0.,  0.],
+    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...               [ 0.,  0.,  0.,  1.,  0.,  0.],
+    ...               [ 0.,  0.,  0.,  0.,  1.,  0.],
+    ...               [ 0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).todense()
+    matrix([[ 2. ,  0. ,  0. ],
+            [ 1. ,  0. ,  0. ],
+            [ 0. ,  1. ,  0. ],
+            [ 0. ,  0.5,  0. ],
+            [ 0. ,  0. ,  4. ],
+            [ 0. ,  0. ,  1. ]])
+
+    Notes
+    -----
+    This routine is primarily used in
+    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
+    generate a suitable initial guess for the energy-minimization process, when
+    root-node style SA is used.  This function, scale_T, takes an existing
+    tentative prolongator and ensures that it injects from the coarse-grid to
+    fine-grid root-nodes.  
+
+    When generating initial guesses for root-node style prolongation operators,
+    this function is usually called after pyamg.uti.utils.filter_operator
+    
+    This function assumes that the eventual coarse-grid nullspace vectors 
+    equal coarse-grid injection applied to the fine-grid nullspace vectors.
+
+    '''
+
+    if not isspmatrix_bsr(T):
+        raise TypeError('Expected BSR matrix T')
+    elif T.blocksize[0] != T.blocksize[1]: 
+        raise TypeError('Expected BSR matrix T with square blocks')
+    ##
+    if not isspmatrix_bsr(P_I):
+        raise TypeError('Expected BSR matrix P_I')
+    elif P_I.blocksize[0] != P_I.blocksize[1]: 
+        raise TypeError('Expected BSR matrix P_I with square blocks')
+    ##
+    if not isspmatrix_bsr(I_F):
+        raise TypeError('Expected BSR matrix I_F')
+    elif I_F.blocksize[0] != I_F.blocksize[1]: 
+        raise TypeError('Expected BSR matrix I_F with square blocks')
+    ##
+    if (I_F.blocksize[0] != P_I.blocksize[0]) or (I_F.blocksize[0] != T.blocksize[0]):
+        raise TypeError('Expected identical blocksize in I_F, P_I and T')
+ 
+    
+    ##
+    # Only do if we have a non-trivial coarse-grid
+    if P_I.nnz > 0:
+        ##
+        # Construct block diagonal inverse D
+        D = P_I.T*T
+        if D.nnz > 0:
+            # changes D in place
+            pinv_array(D.data)   
+        
+        ##
+        # Scale T to be identity at root-nodes
+        T = T*D
+        
+        ##
+        # Ensure coarse-grid injection
+        T = I_F*T + P_I
+
+    return T
+
+def get_Cpt_params(A, Cnodes, AggOp, T):
+    ''' Helper function that returns a dictionary of sparse matrices and arrays
+        which allow us to easily operate on Cpts and Fpts separately.
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Operator
+    Cnodes : {array}
+        Array of all root node indices.  This is an array of nodal indices,
+        not degree-of-freedom indices.  If the blocksize of T is 1, then 
+        nodal indices and degree-of-freedom indices coincide.
+    AggOp : {csr_matrix}
+        Aggregation operator corresponding to A
+    T : {bsr_matrix}
+        Tentative prolongator based on AggOp
+
+    Returns
+    -------
+    Dictionary containing these parameters:
+
+    P_I : {bsr_matrix}
+        Interpolation operator that carries out only simple injection from the coarse grid
+        to fine grid Cpts nodes
+    I_F : {bsr_matrix}
+        Identity operator on Fpts, i.e., the action of this matrix zeros 
+        out entries in a vector at all Cpts, leaving Fpts untouched
+    I_C : {bsr_matrix}
+        Identity operator on Cpts nodes, i.e., the action of this matrix zeros 
+        out entries in a vector at all Fpts, leaving Cpts untouched
+    Cpts : {array}
+        An array of all root node dofs, corresponding to the F/C splitting
+    Fpts : {array}
+        An array of all non root node dofs, corresponding to the F/C splitting
+
+    Example
+    -------
+    >>> from numpy import array
+    >>> from pyamg.util.utils import get_Cpt_params
+    >>> from pyamg.gallery import poisson
+    >>> from scipy.sparse import csr_matrix, bsr_matrix
+    >>> A = poisson((10,), format='csr')
+    >>> Cpts = array([3, 7])
+    >>> AggOp = ([[ 1., 0.], [ 1., 0.],
+    ...           [ 1., 0.], [ 1., 0.],
+    ...           [ 1., 0.], [ 0., 1.],
+    ...           [ 0., 1.], [ 0., 1.],
+    ...           [ 0., 1.], [ 0., 1.]])
+    >>> AggOp = csr_matrix(AggOp)
+    >>> T = AggOp.copy().tobsr()
+    >>> params = get_Cpt_params(A, Cpts, AggOp, T)
+    >>> params['P_I'].todense()
+    matrix([[ 0.,  0.],
+            [ 0.,  0.],
+            [ 0.,  0.],
+            [ 1.,  0.],
+            [ 0.,  0.],
+            [ 0.,  0.],
+            [ 0.,  0.],
+            [ 0.,  1.],
+            [ 0.,  0.],
+            [ 0.,  0.]])
+
+    Notes
+    -----
+    The principal calling routine is 
+    aggregation.smooth.energy_prolongation_smoother,
+    which uses the Cpt_param dictionary for root-node style
+    prolongation smoothing
+
+    '''
+
+    if not isspmatrix_bsr(A) and not isspmatrix_csr(A):
+        raise TypeError('Expected BSR or CSR matrix A')
+    if not isspmatrix_csr(AggOp):
+        raise TypeError('Expected CSR matrix AggOp')
+    if not isspmatrix_bsr(T):
+        raise TypeError('Expected BSR matrix T')
+    if T.blocksize[0] != T.blocksize[1]:
+        raise TypeError('Expected square blocksize for BSR matrix T')
+    if A.shape[0] != A.shape[1]: 
+        raise TypeError('Expected square matrix A')
+    if T.shape[0] != A.shape[0]: 
+        raise TypeError('Expected compatible dimensions for T and A, T.shape[0] = A.shape[0]')
+    if Cnodes.shape[0] != AggOp.shape[1]:
+        if AggOp.shape[1] > 1:
+            raise TypeError('Number of columns in AggOp must equal number of Cnodes') 
+
+    if isspmatrix_bsr(A) and A.blocksize[0] > 1:
+        ##
+        # Expand the list of Cpt nodes to a list of Cpt dofs
+        blocksize = A.blocksize[0]
+        Cpts = numpy.repeat(blocksize*Cnodes, blocksize)
+        for k in range(1, blocksize):
+            Cpts[range(k, Cpts.shape[0], blocksize)] += k
+    else:
+        blocksize = 1
+        Cpts = Cnodes
+    ##
+    Cpts = numpy.array(Cpts, dtype=int)
+    
+    ##
+    # More input checking
+    if Cpts.shape[0] != T.shape[1]:
+        if T.shape[1] > blocksize:
+            raise ValueError('Expected number of Cpts to match T.shape[1]') 
+    if blocksize != T.blocksize[0]:
+        raise ValueError('Expected identical blocksize in A and T')
+    if AggOp.shape[0] != T.shape[0]/blocksize:
+        raise ValueError('Number of rows in AggOp must equal number of fine-grid nodes') 
+
+    ##
+    # Create two maps, one for F points and one for C points
+    ncoarse = T.shape[1] 
+    I_C = eye(A.shape[0], A.shape[1], format='csr')
+    I_F = I_C.copy()
+    I_F.data[Cpts] = 0.0
+    I_F.eliminate_zeros()
+    I_C = I_C - I_F
+    I_C.eliminate_zeros()
+    
+    # Find Fpts, the complement of Cpts
+    Fpts = I_F.indices.copy()
+
+    ##
+    # P_I only injects from Cpts on the coarse grid to the fine grid
+    if I_C.nnz > 0:
+        indices = numpy.arange(ncoarse)
+    else:
+        indices = numpy.zeros((0,),dtype=T.indices.dtype)
+    P_I = csr_matrix( (I_C.data.copy(), indices, I_C.indptr.copy()), 
+                        shape=(I_C.shape[0], ncoarse) ) 
+    P_I = P_I.tobsr(T.blocksize)
+    
+    ##
+    # Use same blocksize as A
+    if isspmatrix_bsr(A):
+        I_C = I_C.tobsr(A.blocksize)
+        I_F = I_F.tobsr(A.blocksize)
+    else:
+        I_C = I_C.tobsr(blocksize=(1,1))
+        I_F = I_F.tobsr(blocksize=(1,1))
+  
+    return {'P_I':P_I, 'I_F':I_F, 'I_C':I_C, 'Cpts':Cpts, 'Fpts':Fpts} 
+
+def compute_BtBinv(B, C):
+    ''' Helper function that creates inv(B_i.T B_i) for each block row i in C, 
+        where B_i is B restricted to the sparsity pattern of block row i.
+
+    Parameters
+    ----------
+    B : {array}
+        (M,k) array, typically near-nullspace modes for coarse grid, i.e., B_c.
+    C : {csr_matrix, bsr_matrix}
+        Sparse NxM matrix, whose sparsity structure (i.e., matrix graph)
+        is used to determine BtBinv. 
+
+    Returns
+    -------
+    BtBinv : {array} 
+        BtBinv[i] = inv(B_i.T B_i), where B_i is B restricted to the nonzero
+        pattern of block row i in C.
+
+    Example
+    -------
+    >>> from numpy import array
+    >>> from scipy.sparse import bsr_matrix
+    >>> from pyamg.util.utils import compute_BtBinv
+    >>> T = array([[ 1.,  0.],
+    ...            [ 1.,  0.],
+    ...            [ 0.,  .5],
+    ...            [ 0.,  .25]])
+    >>> T = bsr_matrix(T)
+    >>> B = array([[1.],[2.]])
+    >>> compute_BtBinv(B, T)
+    array([[[ 1.  ]],
+    <BLANKLINE>
+           [[ 1.  ]],
+    <BLANKLINE>
+           [[ 0.25]],
+    <BLANKLINE>
+           [[ 0.25]]])
+
+    Notes
+    -----
+    The principal calling routines are
+    aggregation.smooth.energy_prolongation_smoother, and
+    util.utils.filter_operator.  
+    
+    BtBinv is used in the prolongation smoothing process that incorporates B
+    into the span of prolongation with row-wise projection operators.  It is
+    these projection operators that BtBinv is part of.
+
+    '''
+
+    if not isspmatrix_bsr(C) and not isspmatrix_csr(C):
+        raise TypeError('Expected bsr_matrix or csr_matrix for C')
+    if C.shape[1] != B.shape[0]:
+        raise TypeError('Expected matching dimensions such that C*B')
+    
+    ##
+    # Problem parameters
+    if isspmatrix_bsr(C):
+        ColsPerBlock = C.blocksize[1]
+        RowsPerBlock = C.blocksize[0]
+    else:
+        ColsPerBlock = 1
+        RowsPerBlock = 1
+    ##
+    Ncoarse = C.shape[1]
+    Nfine = C.shape[0]
+    NullDim = B.shape[1]
+    Nnodes = Nfine/RowsPerBlock
+    
+    ##
+    # Construct BtB
+    BtBinv = numpy.zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
+    BsqCols = sum(range(NullDim+1))
+    Bsq = numpy.zeros((Ncoarse,BsqCols), dtype=B.dtype)
+    counter = 0
+    for i in range(NullDim):
+        for j in range(i,NullDim):
+            Bsq[:,counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i]))) * \
+                             numpy.ravel(numpy.asarray(B[:,j]))
+            counter = counter + 1
+    ##
+    # This specialized C-routine calculates (B.T B) for each row using Bsq
+    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock, numpy.ravel(numpy.asarray(Bsq)), 
+    BsqCols, numpy.ravel(numpy.asarray(BtBinv)), C.indptr, C.indices)
+    
+    ## 
+    # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
+    # values in column-major form, thus necessitating the deep transpose
+    #   This is the old call to a specialized routine, but lacks robustness 
+    #   pyamg.amg_core.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
+    BtBinv = BtBinv.transpose((0,2,1)).copy()
+    pinv_array(BtBinv)
+    
+    return BtBinv
 
 
 #from functools import partial, update_wrapper

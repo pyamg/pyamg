@@ -97,6 +97,7 @@ void symmetric_strength_of_connection(const I n_row,
  *   Ap[n_row + 1] - CSR row pointer
  *   Aj[nnz]       - CSR column indices
  *    x[n_row]     - aggregate numbers for each node
+ *    y[n_row]     - will hold Cpts upon return
  *
  * Returns:
  *  The number of aggregates (== max(x[:]) + 1 )
@@ -111,7 +112,8 @@ template <class I>
 I standard_aggregation(const I n_row,
                        const I Ap[], 
                        const I Aj[],
-                             I  x[])
+                             I  x[],
+                             I  y[])
 {
     // Bj[n] == -1 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);
@@ -146,6 +148,7 @@ I standard_aggregation(const I n_row,
         else if (!has_aggregated_neighbors){
             //Make an aggregate out of this node and its neighbors
             x[i] = next_aggregate;
+            y[next_aggregate-1] = i;              //y stores a list of the Cpts
             for(I jj = row_start; jj < row_end; jj++){
                 x[Aj[jj]] = next_aggregate;
             }
@@ -191,6 +194,7 @@ I standard_aggregation(const I n_row,
         const I row_end   = Ap[i+1];
 
         x[i] = next_aggregate;
+        y[next_aggregate] = i;              //y stores a list of the Cpts
 
         for(I jj = row_start; jj < row_end; jj++){
             const I j = Aj[jj];
@@ -207,6 +211,7 @@ I standard_aggregation(const I n_row,
 }
 
 
+
 /*
  * Compute aggregates for a matrix A stored in CSR format
  *
@@ -215,6 +220,7 @@ I standard_aggregation(const I n_row,
  *   Ap[n_row + 1] - CSR row pointer
  *   Aj[nnz]       - CSR column indices
  *    x[n_row]     - aggregate numbers for each node
+ *    y[n_row]     - will hold Cpts upon return
  *
  * Returns:
  *  The number of aggregates (== max(x[:]) + 1 )
@@ -229,7 +235,8 @@ template <class I>
 I naive_aggregation(const I n_row,
                        const I Ap[], 
                        const I Aj[],
-                             I  x[])
+                             I  x[],
+                             I  y[])
 {
     // x[n] == 0 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);
@@ -249,6 +256,9 @@ I naive_aggregation(const I n_row,
                if(!x[Aj[jj]]){
                    x[Aj[jj]] = next_aggregate;}
            }
+           
+           //y stores a list of the Cpts
+           y[next_aggregate-1] = i;              
            next_aggregate++;
         }
     }
@@ -503,10 +513,10 @@ void fit_candidates_complex(const I n_row,
  *      rows per block in the BSR matrix, S
  * ColsPerBlock : {int}
  *      cols per block in the BSR matrix, S
- * num_blocks : {int}
- *      number of stored blocks in Sx
  * num_block_rows : {int}
  *      Number of block rows, S.shape[0]/RowsPerBlock
+ * NullDim : {int}
+ *      Null-space dimension, i.e., the number of columns in B
  * x : {float|complex array}
  *      Conjugate of near-nullspace vectors, B, in row major
  * y : {float|complex array}
@@ -533,9 +543,11 @@ void fit_candidates_complex(const I n_row,
  */          
 
 template<class I, class T, class F>
-void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, const I num_blocks,
-                                const I num_block_rows, const T x[], const T y[], const T z[], 
-                                const I Sp[], const I Sj[], T Sx[])
+void satisfy_constraints_helper(const I RowsPerBlock,  const I ColsPerBlock, 
+                                 const I num_block_rows,const I NullDim,      
+                                 const T x[],           const T y[], 
+                                 const T z[],           const I Sp[],         
+                                 const I Sj[],                T Sx[])
 {
     //Rename to something more familiar
     const T * Bt = x;
@@ -543,13 +555,15 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
     const T * BtBinv = z;
     
     //Declare
-    I block_size = RowsPerBlock*ColsPerBlock;
-    I ColsPerBlockSq = ColsPerBlock*ColsPerBlock;
+    I BlockSize = RowsPerBlock*ColsPerBlock;
+    I NullDimSq = NullDim*NullDim;
+    I NullDim_Cols = NullDim*ColsPerBlock;
+    I NullDim_Rows = NullDim*RowsPerBlock;
 
     //C will store an intermediate mat-mat product
-    std::vector<T> Update(block_size,0);
-    std::vector<T> C(ColsPerBlockSq,0);
-    for(I i = 0; i < ColsPerBlockSq; i++)
+    std::vector<T> Update(BlockSize,0);
+    std::vector<T> C(NullDim_Cols,0);
+    for(I i = 0; i < NullDim_Cols; i++)
     {   C[i] = 0.0; }
 
     //Begin Main Loop
@@ -560,17 +574,17 @@ void satisfy_constraints_helper(const I RowsPerBlock,   const I ColsPerBlock, co
 
         for(I j = rowstart; j < rowend; j++)
         {
-            // Calculate C = BtBinv[i*blocksize => (i+1)*blocksize]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
+            // Calculate C = BtBinv[i*NullDimSq => (i+1)*NullDimSq]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
             // Implicit transpose of conjugate(B_i) is done through gemm assuming Bt is in column major
-            gemm(&(BtBinv[i*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(Bt[Sj[j]*ColsPerBlockSq]), ColsPerBlock, ColsPerBlock, 'F', &(C[0]), ColsPerBlock, ColsPerBlock, 'T');
-            
-            //Calculate Sx[ j*block_size => (j+1)*blocksize ] =  UB[ i*block_size => (i+1)*blocksize ] * C
+            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, ColsPerBlock, 'F', &(C[0]), NullDim, ColsPerBlock, 'T');
+
+            // Calculate Sx[ j*BlockSize => (j+1)*blocksize ] =  UB[ i*BlockSize => (i+1)*blocksize ] * C
             // Note that C actually stores C^T in row major, or C in col major.  gemm assumes C is in col major, so we're OK
-            gemm(&(UB[i*block_size]), RowsPerBlock, ColsPerBlock, 'F', &(C[0]), ColsPerBlock, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F');
+            gemm(&(UB[i*NullDim_Rows]), RowsPerBlock, NullDim, 'F', &(C[0]), NullDim, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F');
             
             //Update Sx
-            for(I k = 0; k < block_size; k++)
-            {   Sx[j*block_size + k] -= Update[k]; }
+            for(I k = 0; k < BlockSize; k++)
+            {   Sx[j*BlockSize + k] -= Update[k]; }
         }
     }
 }
@@ -639,16 +653,7 @@ void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
 
     T * BtB_loc   = new T[NullDimSq];
     T * work      = new T[work_size];
-    T * sing_vals = new T[NullDim];
-    T * identity  = new T[NullDimSq];
     
-    //Build an identity matrix in col major format for the Fortran routine called in svd_solve
-    for(I i = 0; i < NullDimSq; i++)
-    {   identity[i] = 0.0;}
-    for(I i = 0; i < NullDimSq; i+= NullDim + 1)
-    {   identity[i] = 1.0;}
-
-
     //Loop over each row
     for(I i = 0; i < Nnodes; i++)
     {
@@ -706,8 +711,6 @@ void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
 
     delete[] BtB_loc; 
     delete[] work;
-    delete[] sing_vals; 
-    delete[] identity;
 }
 
 /* Helper function for my_BSRinner(...) where we search for the row-th entry 

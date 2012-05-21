@@ -44,7 +44,7 @@ class TestMultilevel(TestCase):
         from pyamg import smoothed_aggregation_solver
         from scipy.sparse.linalg import cg
 
-        A = poisson((100,100), format='csr')
+        A = poisson((50,50), format='csr')
         b = rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)
@@ -60,7 +60,7 @@ class TestMultilevel(TestCase):
         from pyamg import smoothed_aggregation_solver
         from pyamg.krylov import cg, bicgstab
 
-        A = poisson((100,100), format='csr')
+        A = poisson((50,50), format='csr')
         b = rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)

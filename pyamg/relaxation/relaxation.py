@@ -167,7 +167,8 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
         x     += x_old
 
 
-def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
+def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, 
+            inv_subblock=None, inv_subblock_ptr=None, sweep='forward'):
     """Perform Overlapping multiplicative Schwarz on 
        the linear system Ax=b
 
@@ -195,6 +196,8 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
         inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
         contains the inverted diagonal block of A for the
         i-th subdomain in _row_ major order
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
 
     Returns
     -------
@@ -246,13 +249,29 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None, inv_subbl
     (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr) = \
         schwarz_parameters(A, subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
 
+    if sweep == 'forward':
+        row_start,row_stop,row_step = 0,subdomain_ptr.shape[0]-1,1
+    elif sweep == 'backward':
+        row_start,row_stop,row_step = subdomain_ptr.shape[0]-2,-1,-1 
+    elif sweep == 'symmetric':
+        for iter in xrange(iterations):
+            schwarz(A, x, b, iterations=1, subdomain=subdomain, subdomain_ptr=subdomain_ptr, 
+                inv_subblock=inv_subblock, inv_subblock_ptr=inv_subblock_ptr, sweep='forward') 
+            schwarz(A, x, b, iterations=1, subdomain=subdomain, subdomain_ptr=subdomain_ptr, 
+                inv_subblock=inv_subblock, inv_subblock_ptr=inv_subblock_ptr, sweep='backward') 
+        return
+    else:
+        raise ValueError("valid sweep directions are 'forward', 'backward', and 'symmetric'")
+
     ##
     # Call C code, need to make sure that subdomains are sorted and unique
     for iter in xrange(iterations):
         amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
                                      x, b, inv_subblock, inv_subblock_ptr,
                                      subdomain, subdomain_ptr,
-                                     subdomain_ptr.shape[0]-1, A.shape[0])
+                                     subdomain_ptr.shape[0]-1, A.shape[0],
+                                     row_start,row_stop,row_step)
+    
     
 
 def gauss_seidel(A, x, b, iterations=1, sweep='forward'):

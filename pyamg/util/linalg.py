@@ -568,6 +568,7 @@ def pinv_array(a, cond=None):
         ##
         # Pseudo-inverse of 1 x 1 matrices is trivial
         zero_entries = (a == 0.0).nonzero()[0]
+        a[zero_entries] = 1.0
         a[:] = 1.0/a
         a[zero_entries] = 0.0
         del zero_entries

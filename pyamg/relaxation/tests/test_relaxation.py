@@ -183,9 +183,10 @@ class TestRelaxation(TestCase):
 
     def test_jacobi_bsr(self):
         cases = []
+        #JBS: remove some N
         for N in [1,2,3,4,5,6,10]:
             cases.append( spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr() )
-            cases.append( elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            cases.append( elasticity.linear_elasticity((N,N))[0].tocsr() )
             C = csr_matrix( rand(N,N) )
             cases.append( C*C.H )
             C = sprand(N*2,N*2,0.3) + eye(N*2,N*2)
@@ -210,7 +211,7 @@ class TestRelaxation(TestCase):
         cases = []
         for N in [1,2,3,4,5,6,10]:
             cases.append( spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr() )
-            cases.append( elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            cases.append( elasticity.linear_elasticity((N,N))[0].tocsr() )
             C = csr_matrix( rand(N,N) )
             cases.append( C*C.H )
             C = sprand(N*2,N*2,0.3) + eye(N*2,N*2)
@@ -426,6 +427,7 @@ class TestRelaxation(TestCase):
     def test_gauss_seidel_ne_bsr(self):
         cases = []
 
+        #JBS: remove some N
         for N in [1,2,3,4,5,6,10]:
             A = spdiags([2*ones(N),-ones(N),-ones(N)],[0,-1,1],N,N).tocsr()
             
@@ -650,9 +652,9 @@ class TestRelaxation(TestCase):
         cases.append( csr_matrix( temp.T * temp) )
 
         # reference implementation
-        def gold(A,x,b,iterations):
+        def gold(A,x,b,iterations,sweep='forward'):
             A = csr_matrix(A)
-
+            
             ##
             # Default is point-wise iteration with each subdomain a point's neighborhood 
             # in the matrix graph
@@ -663,10 +665,18 @@ class TestRelaxation(TestCase):
             subblocks = [ scipy.linalg.pinv2(( (A[subdomains[i],:]).tocsc()[:,subdomains[i]] ).todense())\
                           for i in range(len(subdomains)) ]    
             
+            if sweep == 'forward':
+                indices = range(len(subdomains))
+            elif sweep == 'backward':
+                indices = range(len(subdomains)-1,-1,-1)
+            elif sweep == 'symmetric':
+                indices = range(len(subdomains))
+                indices.extend( range(len(subdomains)-1,-1,-1) )
+
             ##
             # Multiplicative Schwarz iterations
             for j in xrange(iterations):
-                for i in xrange(len(subdomains)):
+                for i in indices:
                     x[subdomains[i]] = scipy.dot(subblocks[i], (b[subdomains[i]] - A[subdomains[i],:]*x)) + \
                                        x[subdomains[i]]
 
@@ -678,8 +688,16 @@ class TestRelaxation(TestCase):
             x = asmatrix(rand(A.shape[0],1))
 
             x_copy = x.copy()
-            schwarz(A, x, b, iterations=1)
-            assert_almost_equal( x, gold(A,x_copy,b,iterations=1) )
+            schwarz(A, x, b, iterations=1, sweep='forward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
+            
+            x_copy = x.copy()
+            schwarz(A, x, b, iterations=1, sweep='backward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='backward') )
+            
+            x_copy = x.copy()
+            schwarz(A, x, b, iterations=1, sweep='symmetric')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
             
 
 # Test complex arithmetic
@@ -756,7 +774,7 @@ class TestComplexRelaxation(TestCase):
             C.data = C.data + 1.0j*1e-3*rand(C.data.shape[0],) 
             cases.append( C )
             #
-            cases.append( 1.0j*elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            cases.append( 1.0j*elasticity.linear_elasticity((N,N))[0].tocsr() )
             #
             C = csr_matrix( rand(N,N) + 1.0j*rand(N,N) )
             cases.append( C*C.H )
@@ -789,7 +807,7 @@ class TestComplexRelaxation(TestCase):
             C.data = C.data + 1.0j*1e-3*rand(C.data.shape[0],) 
             cases.append( C )
             #
-            cases.append( 1.0j*elasticity.linear_elasticity((2*N,2*N))[0].tocsr() )
+            cases.append( 1.0j*elasticity.linear_elasticity((N,N))[0].tocsr() )
             #
             C = csr_matrix( rand(N,N) + 1.0j*rand(N,N) )
             cases.append( C*C.H )

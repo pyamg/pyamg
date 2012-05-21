@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix, spdiags, coo_matrix, SparseEfficiencyWarnin
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian, load_example
 
-from pyamg.aggregation.aggregation import smoothed_aggregation_solver
+from pyamg.aggregation.rootnode import rootnode_solver
 
 import warnings
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
@@ -24,7 +24,7 @@ class TestParameters(TestCase):
 
     def run_cases(self, opts):
         for A,B in self.cases:
-            ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
+            ml = rootnode_solver(A, B, max_coarse=5, **opts)
 
             numpy.random.seed(0) #make tests repeatable
 
@@ -46,7 +46,7 @@ class TestParameters(TestCase):
             self.run_cases( {'aggregate' : aggregate} )
     
     def test_prolongation_smoother(self): 
-        for smooth in ['jacobi','richardson','energy']:
+        for smooth in ['energy']:
             self.run_cases( {'smooth' : smooth} )
 
     def test_smoothers(self): 
@@ -87,7 +87,7 @@ class TestComplexParameters(TestCase):
 
     def run_cases(self, opts):
         for A,B in self.cases:
-            ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
+            ml = rootnode_solver(A, B, max_coarse=5, **opts)
 
             numpy.random.seed(0) #make tests repeatable
 
@@ -109,7 +109,7 @@ class TestComplexParameters(TestCase):
             self.run_cases( {'aggregate' : aggregate} )
     
     def test_prolongation_smoother(self): 
-        for smooth in ['jacobi','richardson', ('energy', {'krylov' : 'cgnr'}), ('energy', {'krylov' : 'gmres'})]:
+        for smooth in [('energy', {'krylov' : 'cgnr'}), ('energy', {'krylov' : 'gmres'})]:
             self.run_cases( {'smooth' : smooth} )
 
     def test_smoothers(self): 
@@ -133,104 +133,22 @@ class TestComplexParameters(TestCase):
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
 
-class TestPreprocess(TestCase):
-    
-    def test_preprocess_Bimprove(self):
-        from pyamg.aggregation.aggregation import preprocess_Bimprove
-        A = poisson( (100,), format='csr')
-        A.symmetry = 'hermitian'
-        # test 1
-        result = preprocess_Bimprove('default', A, 5)
-        assert_equal(result, [('block_gauss_seidel', {'sweep':'symmetric', 'iterations':4}), \
-                              None, None, None, None])
-        # test 2
-        A.symmetry = 'nonsymmetric'
-        result = preprocess_Bimprove('default', A, 5)
-        assert_equal(result, [('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':4}), \
-                              None, None, None, None])
-        # test 3
-        result = preprocess_Bimprove([('gauss_seidel', {})], A, 5)
-        assert_equal(result, [('gauss_seidel', {}) for i in range(5)])
-        # test 4
-        result = preprocess_Bimprove([('gauss_seidel', {}),None], A, 5)
-        assert_equal(result, [('gauss_seidel', {}), None, None, None, None]) 
-
-    def test_preprocess_smooth(self):
-        from pyamg.aggregation.aggregation import preprocess_smooth
-        # test 1
-        result = preprocess_smooth([('jacobi', {})], 5)
-        assert_equal(result, [('jacobi', {}) for i in range(5)])
-        # test 2
-        result = preprocess_smooth('jacobi', 5)
-        assert_equal(result, ['jacobi' for i in range(5)])
-        # test 3
-        result = preprocess_smooth(('jacobi', {}), 5)
-        assert_equal(result, [('jacobi', {}) for i in range(5)])
-        ## test 4
-        result = preprocess_smooth([('jacobi', {}),None], 5)
-        assert_equal(result, [('jacobi', {}), None, None, None, None]) 
-
-    def test_preprocess_str_or_agg(self):
-        from pyamg.aggregation.aggregation import preprocess_str_or_agg
-        A = poisson( (100,), format='csr')
-        # test 1
-        max_levels, max_coarse, result = preprocess_str_or_agg([('symmetric', {})], 5, 5)
-        assert_equal(result, [('symmetric', {}) for i in range(4)])
-        assert_equal(max_levels, 5)
-        assert_equal(max_coarse, 5)
-        # test 2
-        max_levels, max_coarse, result = preprocess_str_or_agg('symmetric', 5, 5)
-        assert_equal(result, ['symmetric' for i in range(4)])
-        assert_equal(max_levels, 5)
-        assert_equal(max_coarse, 5)
-        # test 3
-        max_levels, max_coarse, result = preprocess_str_or_agg(('symmetric', {}), 5, 5)
-        assert_equal(result, [('symmetric', {}) for i in range(4)])
-        assert_equal(max_levels, 5)
-        assert_equal(max_coarse, 5)
-        # test 4
-        max_levels, max_coarse, result = preprocess_str_or_agg([('symmetric', {}),None], 5, 5)
-        assert_equal(result, [('symmetric', {}), None, None, None]) 
-        assert_equal(max_levels, 5)
-        assert_equal(max_coarse, 5)
-        # test 5
-        max_levels, max_coarse, result = preprocess_str_or_agg(('predefined',{'C' : A}), 5, 5)
-        assert_equal(result, [('predefined',{'C' : A})])
-        assert_equal(max_levels, 2)
-        assert_equal(max_coarse, 0)
-        # test 6
-        max_levels, max_coarse, result = preprocess_str_or_agg([('predefined',{'C' : A}), \
-                                                                ('predefined',{'C' : A})], 5, 5)
-        assert_equal(result, [('predefined',{'C' : A}), ('predefined',{'C' : A})])
-        assert_equal(max_levels, 3)
-        assert_equal(max_coarse, 0)
-        # test 7
-        max_levels, max_coarse, result = preprocess_str_or_agg(None, 5, 5)
-        assert_equal(result, [(None,{}) for i in range(4)])
-        assert_equal(max_levels, 5)
-        assert_equal(max_coarse, 5)
-
-
-
 class TestSolverPerformance(TestCase):
     def setUp(self):
         self.cases = []
-        
+
         A = poisson( (5000,), format='csr')
-        self.cases.append(( A, None, 0.4, 'symmetric', ('jacobi', {'omega': 4.0/3.0}) ))
         self.cases.append(( A, None, 0.4, 'symmetric', ('energy', {'krylov' : 'cg'}) ))
-        self.cases.append(( A, None, 0.5, 'symmetric', ('energy', {'krylov' : 'gmres'}) ))
+        self.cases.append(( A, None, 0.4, 'symmetric', ('energy', {'krylov' : 'gmres'}) ))
         
-        A = poisson( (60,60), format='csr')
-        self.cases.append(( A, None, 0.42, 'symmetric', ('jacobi', {'omega': 4.0/3.0}) ))
-        self.cases.append(( A, None, 0.42, 'symmetric', ('energy', {'krylov' : 'cg'}) ))
-        self.cases.append(( A, None, 0.42, 'symmetric', ('energy', {'krylov' : 'cgnr'}) ))
+        A = poisson( (75,75), format='csr')
+        self.cases.append(( A, None, 0.26, 'symmetric', ('energy', {'krylov' : 'cg'}) ))
+        self.cases.append(( A, None, 0.30, 'symmetric', ('energy', {'krylov' : 'cgnr'}) ))
         
         A,B = linear_elasticity( (50,50), format='bsr')
-        self.cases.append(( A, B, 0.32, 'symmetric', ('jacobi', {'omega': 4.0/3.0})  ) )
-        self.cases.append(( A, B, 0.22, 'symmetric', ('energy', {'krylov' : 'cg'})  ))
-        self.cases.append(( A, B, 0.42, 'symmetric', ('energy', {'krylov' : 'cgnr'})  ))
-        self.cases.append(( A, B, 0.42, 'symmetric', ('energy', {'krylov' : 'gmres'})  ))
+        self.cases.append( ( A, B, 0.3, 'symmetric', ('energy', {'krylov' : 'cg'})  ))
+        self.cases.append( ( A, B, 0.3, 'symmetric', ('energy', {'krylov' : 'cgnr'})  ))
+        self.cases.append( ( A, B, 0.3, 'symmetric', ('energy', {'krylov' : 'gmres'})  ))
         # TODO add unstructured tests
 
 
@@ -238,7 +156,7 @@ class TestSolverPerformance(TestCase):
         """check that method converges at a reasonable rate"""
 
         for A,B,c_factor,symmetry,smooth in self.cases:
-            ml = smoothed_aggregation_solver(A, B, symmetry=symmetry, smooth=smooth, max_coarse=10)
+            ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth, max_coarse=10)
 
             numpy.random.seed(0) #make tests repeatable
 
@@ -251,7 +169,6 @@ class TestSolverPerformance(TestCase):
             avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
             #print "Real Test:   %1.3e,  %1.3e,  %d,  %1.3e" % \
             #   (avg_convergence_ratio, c_factor, len(ml.levels), ml.operator_complexity())
-            
             assert(avg_convergence_ratio < c_factor)
 
 
@@ -271,15 +188,15 @@ class TestSolverPerformance(TestCase):
         #TODO force 2 level method and check that result is the same
         kwargs = {'max_coarse' : 1, 'max_levels' : 2, 'coarse_solver' : 'splu'}
 
-        sa = smoothed_aggregation_solver(D*A*D, D_inv * B, **kwargs)
+        sa = rootnode_solver(D*A*D, D_inv * B, **kwargs)
 
         residuals = []
         x_sol = sa.solve(b, x0=x, maxiter=10, tol=1e-12, residuals=residuals)
 
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
 
-        #print "Diagonal Scaling Test:   %1.3e,  %1.3e" % (avg_convergence_ratio, 0.25)
-        assert(avg_convergence_ratio < 0.25)
+        #print "Diagonal Scaling Test:   %1.3e,  %1.3e" % (avg_convergence_ratio, 0.4)
+        assert(avg_convergence_ratio < 0.4)
 
     def test_Bimprove(self):
         ##
@@ -293,14 +210,14 @@ class TestSolverPerformance(TestCase):
         cases = []
         A_elas,B_elas = linear_elasticity( (60,60), format='bsr')
         #                Matrix                              Candidates    rho_scale
-        cases.append( (poisson( (61,61),  format='csr'), ones((61*61,1)), 0.9 ) )
-        cases.append( (A_elas,                           B_elas,       0.9 ) )
+        cases.append( (poisson( (75,75),  format='csr'), ones((75*75,1)), 0.9 ) )
+        cases.append( (A_elas,                             B_elas,          0.9 ) )
         for (A,B,rho_scale) in cases:
             last_rho = -1.0
             x0 = rand(A.shape[0],1) 
             b = rand(A.shape[0],1)
             for Bimprove in Bimproves:
-                ml = smoothed_aggregation_solver(A, B, max_coarse=10, Bimprove=Bimprove)
+                ml = rootnode_solver(A, B, max_coarse=10, Bimprove=Bimprove)
                 residuals=[]
                 x_sol = ml.solve(b,x0=x0,maxiter=20,tol=1e-10, residuals=residuals)
                 rho = (residuals[-1]/residuals[0])**(1.0/len(residuals))
@@ -308,7 +225,7 @@ class TestSolverPerformance(TestCase):
                     last_rho = rho
                 else:
                     # each successive Bimprove option should be an improvement on the previous
-                    # print "\nBimprove Test: %1.3e, %1.3e, %d\n"%(rho,rho_scale*last_rho,A.shape[0])
+                    #print "\nBimprove Test: %1.3e, %1.3e, %d\n"%(rho,rho_scale*last_rho,A.shape[0])
                     assert(rho < rho_scale*last_rho)
                     last_rho = rho
     
@@ -329,7 +246,7 @@ class TestSolverPerformance(TestCase):
         
         for smoother in smoothers:
             for B in Bs:
-                ml = smoothed_aggregation_solver(A, B, max_coarse=10, \
+                ml = rootnode_solver(A, B, max_coarse=10, \
                        presmoother=smoother, postsmoother=smoother)
                 P = ml.aspreconditioner()
                 x = rand(n,)
@@ -351,19 +268,21 @@ class TestSolverPerformance(TestCase):
         strength=[('evolution', {'k':2, 'epsilon':8.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
         # Construct solver with nonsymmetric parameters
-        sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
+        sa = rootnode_solver(A, B=B, smooth=smooth, \
            strength=strength, presmoother=smoother, postsmoother=smoother, **SA_build_args)
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        assert(avg_convergence_ratio < 0.65)
+        #print "Test 1  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.7)
+        assert(avg_convergence_ratio < 0.7)
         # accelerated solve
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres', **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
+        #print "Test 2  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.45)
         assert(avg_convergence_ratio < 0.45)
 
         # test that nonsymmetric parameters give the same result as symmetric parameters
@@ -371,10 +290,10 @@ class TestSolverPerformance(TestCase):
         A = poisson( (15,15), format='csr')
         strength='symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+        sa_nonsymm = rootnode_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
          strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+        sa_symm = rootnode_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
          strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )
@@ -397,8 +316,8 @@ class TestSolverPerformance(TestCase):
         for coarse1,coarse2 in coarse_solver_pairs:
             r1 = []
             r2 = []
-            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1)
-            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2)
+            sa1 = rootnode_solver(A, coarse_solver=coarse1)
+            sa2 = rootnode_solver(A, coarse_solver=coarse2)
             x1 = sa1.solve(b,residuals=r1)
             x2 = sa2.solve(b,residuals=r2)
             assert( (len(r1) + 5) < len(r2) )
@@ -411,9 +330,9 @@ class TestSolverPerformance(TestCase):
         cases.append(A.tocsc())
         cases.append(A.todense())
         
-        sa_old = smoothed_aggregation_solver(A,max_coarse=10)
+        sa_old = rootnode_solver(A,max_coarse=10)
         for AA in cases:
-            sa_new = smoothed_aggregation_solver(AA,max_coarse=10)
+            sa_new = rootnode_solver(AA,max_coarse=10)
             assert( abs( ravel( sa_old.levels[-1].A.todense() -
                          sa_new.levels[-1].A.todense() )).max() < 0.01 )
             sa_old = sa_new
@@ -431,27 +350,23 @@ class TestComplexSolverPerformance(TestCase):
         # Test 1
         A = poisson( (5000,),  format='csr')
         Ai = A + 1.0j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        self.cases.append(( Ai, None, 0.12, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
         self.cases.append(( Ai, None, 0.12, 'symmetric', ('energy', {'krylov' : 'gmres'})))
         
         # Test 2
         A = poisson( (71,71),  format='csr')
         Ai = A + (0.625/0.01)*1.0j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        self.cases.append(( Ai, None, 1e-3, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
         self.cases.append(( Ai, None, 1e-3, 'symmetric', ('energy', {'krylov' : 'cgnr'})))
 
         # Test 3
         A = poisson( (60,60),  format='csr')
         Ai = 1.0j*A;
-        self.cases.append(( Ai, None, 0.3, 'symmetric', ('jacobi', {'omega': 4.0/3.0})))
-        self.cases.append(( Ai, None, 0.6, 'symmetric', ('energy', {'krylov' : 'cgnr', 'maxiter' : 8})))
-        self.cases.append(( Ai, None, 0.6, 'symmetric', ('energy', {'krylov' : 'gmres', 'maxiter' : 8})))
+        self.cases.append(( Ai, None, 0.35, 'symmetric', ('energy', {'krylov' : 'cgnr', 'maxiter' : 8})))
+        self.cases.append(( Ai, None, 0.35, 'symmetric', ('energy', {'krylov' : 'gmres', 'maxiter' : 8})))
 
         # Test 4
         # Use an "inherently" imaginary problem, the Gauge Laplacian in 2D from Quantum Chromodynamics,
         A = gauge_laplacian(70, spacing=1.0, beta=0.41)
-        self.cases.append(( A, None, 0.4, 'hermitian', ('jacobi', {'omega': 4.0/3.0})))
-        self.cases.append(( A, None, 0.4, 'hermitian', ('energy', {'krylov' : 'cg'})))
+        self.cases.append(( A, None, 0.25, 'hermitian', ('energy', {'krylov' : 'cg'})))
 
 
     def test_basic(self):
@@ -460,7 +375,7 @@ class TestComplexSolverPerformance(TestCase):
         for A,B,c_factor,symmetry,smooth in self.cases:
             A = csr_matrix(A)
 
-            ml = smoothed_aggregation_solver(A, B, symmetry=symmetry, smooth=smooth, max_coarse=10)
+            ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth, max_coarse=10)
 
             numpy.random.seed(0) #make tests repeatable
 
@@ -491,29 +406,31 @@ class TestComplexSolverPerformance(TestCase):
         strength=[('evolution', {'k':2, 'epsilon':2.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
         # Construct solver with nonsymmetric parameters
-        sa = smoothed_aggregation_solver(A, B=B, smooth=smooth, \
+        sa = rootnode_solver(A, B=B, smooth=smooth, \
            strength=strength, presmoother=smoother, postsmoother=smoother, **SA_build_args)
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        assert(avg_convergence_ratio < 0.85)
+        #print "Test 3  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.92)
+        assert(avg_convergence_ratio < 0.92)
         # accelerated solve
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres', **SA_solve_args)
         residuals = array(residuals)
         avg_convergence_ratio = (residuals[-1]/residuals[0])**(1.0/len(residuals))
-        assert(avg_convergence_ratio < 0.6)
+        #print "Test 4  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.8)
+        assert(avg_convergence_ratio < 0.8)
 
         # test that nonsymmetric parameters give the same result as symmetric parameters
         # for the complex-symmetric matrix A
         strength='symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+        sa_nonsymm = rootnode_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
          strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
+        sa_symm = rootnode_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
          strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )

@@ -81,7 +81,8 @@ def ruge_stuben_solver(A,
 
     See Also
     --------
-    smoothed_aggregation_solver, multilevel_solver
+    aggregation.smoothed_aggregation_solver, multilevel_solver,
+    aggregation.rootnode_solver
 
     """
 

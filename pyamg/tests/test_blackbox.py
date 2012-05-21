@@ -11,8 +11,8 @@ class TestBlackbox(TestCase):
         self.cases = []
 
         # Poisson problems in 1D and 2D
-        N = 30
-        self.cases.append( (poisson( (N,), format='csr'), rand(N,)) )     # 0
+        N = 20
+        self.cases.append( (poisson( (2*N,), format='csr'), rand(2*N,)) )     # 0
         self.cases.append( (poisson( (N,N), format='csr'), rand(N*N,)) )  # 1
         # Boxed examples
         A = load_example('recirc_flow')['A'].tocsr()                      # 2

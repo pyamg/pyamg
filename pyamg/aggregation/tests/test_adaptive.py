@@ -17,7 +17,7 @@ class TestAdaptiveSA(TestCase):
         seed(0)
 
     def test_poisson(self):
-        A = poisson( (100,100), format='csr' )
+        A = poisson( (50,50), format='csr' )
 
         [asa,work] = adaptive_sa_solver(A, num_candidates = 1)
         sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
@@ -35,10 +35,10 @@ class TestAdaptiveSA(TestCase):
         
         #print "ASA convergence (Poisson)",conv_asa
         #print "SA convergence (Poisson)",conv_sa
-        assert( conv_asa < 1.1 * conv_sa )
+        assert( conv_asa < 1.2 * conv_sa )
 
     def test_elasticity(self):
-        A,B = linear_elasticity( (100,100), format='bsr' )
+        A,B = linear_elasticity( (35,35), format='bsr' )
 
         [asa,work] = adaptive_sa_solver(A, num_candidates = 3, \
                 improvement_iters=5,prepostsmoother=('gauss_seidel',{'sweep':'symmetric','iterations':2}))
@@ -55,9 +55,9 @@ class TestAdaptiveSA(TestCase):
         conv_asa = (residuals0[-1]/residuals0[0])**(1.0/len(residuals0))
         conv_sa  = (residuals1[-1]/residuals1[0])**(1.0/len(residuals1))
        
-        #print "ASA convergence (Elasticity)",conv_asa
-        #print "SA convergence (Elasticity)",conv_sa
-        assert( conv_asa < 1.1 * conv_sa ) 
+        #print "ASA convergence (Elasticity) %1.2e" % (conv_asa)
+        #print "SA convergence (Elasticity) %1.2e" % (conv_sa)
+        assert( conv_asa < 1.3 * conv_sa ) 
 
 
     def test_matrix_formats(self):
@@ -88,18 +88,18 @@ class TestComplexAdaptiveSA(TestCase):
         cases = []
         
         # perturbed Laplacian
-        A = poisson( (100,100), format='csr' )
+        A = poisson( (50,50), format='csr' )
         Ai = A.copy(); Ai.data = Ai.data + 1e-5j*rand(Ai.nnz)
-        cases.append((Ai, 0.75))
+        cases.append((Ai, 0.25))
         
         # imaginary Laplacian
         Ai = 1.0j*A
-        cases.append((Ai, 0.75))
+        cases.append((Ai, 0.25))
         
         ## JBS:  Not sure if this is a valid test case
         ## imaginary shift 
         #Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
-        #cases.append((Ai,0.75))
+        #cases.append((Ai,0.8))
 
         for A,rratio in cases:
             [asa,work] = adaptive_sa_solver(A, num_candidates = 1, symmetry='symmetric')

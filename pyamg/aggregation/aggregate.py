@@ -23,6 +23,8 @@ def standard_aggregation(C):
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern 
         of the tentative prolongator
+    Cpts : array
+        array of Cpts, i.e., Cpts[i] = root node of aggregate i 
 
     Examples
     --------
@@ -35,7 +37,7 @@ def standard_aggregation(C):
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> standard_aggregation(A).todense() # two aggregates
+    >>> standard_aggregation(A)[0].todense() # two aggregates
     matrix([[1, 0],
             [1, 0],
             [0, 1],
@@ -45,7 +47,7 @@ def standard_aggregation(C):
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> standard_aggregation(A).todense() # one aggregate
+    >>> standard_aggregation(A)[0].todense() # one aggregate
     matrix([[0],
             [1],
             [1]], dtype=int8)
@@ -65,15 +67,19 @@ def standard_aggregation(C):
     index_type = C.indptr.dtype
     num_rows   = C.shape[0]
 
-    Tj = numpy.empty(num_rows, dtype=index_type) #stores the aggregate #s
+    Tj = numpy.empty(num_rows, dtype=index_type)   #stores the aggregate #s
+    Cpts = numpy.empty(num_rows, dtype=index_type) #stores the Cpts
     
     fn = amg_core.standard_aggregation
 
-    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj)
+    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
+    Cpts = Cpts[:num_aggregates]
 
     if num_aggregates == 0:
-        return csr_matrix( (num_rows,1), dtype='int8' ) # all zero matrix
+        # return all zero matrix and no Cpts
+        return csr_matrix( (num_rows,1), dtype='int8' ), numpy.array([],dtype=index_type) 
     else:
+        
         shape = (num_rows, num_aggregates)
         if Tj.min() == -1:
             # some nodes not aggregated
@@ -81,12 +87,12 @@ def standard_aggregation(C):
             row  = numpy.arange( num_rows, dtype=index_type )[mask]
             col  = Tj[mask]
             data = numpy.ones(len(col), dtype='int8')
-            return coo_matrix( (data,(row,col)), shape=shape).tocsr()
+            return coo_matrix( (data,(row,col)), shape=shape).tocsr(), Cpts
         else:
             # all nodes aggregated
             Tp = numpy.arange( num_rows+1, dtype=index_type)
             Tx = numpy.ones( len(Tj), dtype='int8')
-            return csr_matrix( (Tx,Tj,Tp), shape=shape)
+            return csr_matrix( (Tx,Tj,Tp), shape=shape), Cpts
 
  
 def naive_aggregation(C):
@@ -102,6 +108,8 @@ def naive_aggregation(C):
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern 
         of the tentative prolongator
+    Cpts : array
+        array of Cpts, i.e., Cpts[i] = root node of aggregate i 
 
     Examples
     --------
@@ -114,7 +122,7 @@ def naive_aggregation(C):
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> naive_aggregation(A).todense() # two aggregates
+    >>> naive_aggregation(A)[0].todense() # two aggregates
     matrix([[1, 0],
             [1, 0],
             [0, 1],
@@ -124,7 +132,7 @@ def naive_aggregation(C):
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> naive_aggregation(A).todense() # two aggregates
+    >>> naive_aggregation(A)[0].todense() # two aggregates
     matrix([[1, 0],
             [0, 1],
             [0, 1]], dtype=int8)
@@ -151,21 +159,23 @@ def naive_aggregation(C):
     index_type = C.indptr.dtype
     num_rows   = C.shape[0]
 
-    Tj = numpy.empty(num_rows, dtype=index_type) #stores the aggregate #s
+    Tj = numpy.empty(num_rows, dtype=index_type)    #stores the aggregate #s
+    Cpts = numpy.empty(num_rows, dtype=index_type) #stores the Cpts
     
     fn = amg_core.naive_aggregation
 
-    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj)
+    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
+    Cpts = Cpts[:num_aggregates]
     Tj = Tj - 1
 
     if num_aggregates == 0:
-        return csr_matrix( (num_rows,1), dtype='int8' ) # all zero matrix
+        return csr_matrix( (num_rows,1), dtype='int8' ), Cpts # all zero matrix
     else:
         shape = (num_rows, num_aggregates)
         # all nodes aggregated
         Tp = numpy.arange( num_rows+1, dtype=index_type)
         Tx = numpy.ones( len(Tj), dtype='int8')
-        return csr_matrix( (Tx,Tj,Tp), shape=shape)
+        return csr_matrix( (Tx,Tj,Tp), shape=shape), Cpts
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
@@ -198,6 +208,8 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern 
         of the tentative prolongator
+    seeds : array
+        array of Cpts, i.e., Cpts[i] = root node of aggregate i 
 
     Examples
     --------
@@ -210,7 +222,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> lloyd_aggregation(A).todense() # one aggregate
+    >>> lloyd_aggregation(A)[0].todense() # one aggregate
     matrix([[1],
             [1],
             [1],
@@ -257,4 +269,4 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     col  = clusters[row]
     data = numpy.ones(len(row), dtype='int8')
     AggOp = coo_matrix( (data,(row,col)), shape=(G.shape[0],num_seeds)).tocsr()
-    return AggOp
+    return AggOp, seeds

@@ -350,14 +350,14 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             for(I j = 0; j < Bcols; j++)
             {
                 Sx[s_counter] = 0.0;
-                a_counter = a_start;
+                a_counter = a_start;                                // a_counter cycles through rows of A
                 for(I k = 0; k < Brows; k++)
                 {
                     //S[i,j] += Ax[i,k]*B[k,j]
                     Sx[s_counter] += Ax[a_counter]*Bx[b_counter];
                     a_counter++; b_counter++;
                 }
-                s_counter+=Scols;
+                s_counter+=Srows;
             }
             a_start += Acols;
         }

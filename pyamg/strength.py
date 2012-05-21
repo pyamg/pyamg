@@ -421,11 +421,14 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     return Atilde
 
 @numpy.deprecate
-def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, symmetrize_measure=True):
+def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, 
+                               symmetrize_measure=True, assume_const_nullspace=False):
     """Use evolution_strength_of_connection instead"""
-    return evolution_strength_of_connection(A, B, epsilon, k, proj_type, block_flag, symmetrize_measure)
+    return evolution_strength_of_connection(A, B, epsilon, k, proj_type, block_flag, 
+                                            symmetrize_measure, assume_const_nullspace)
 
-def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, symmetrize_measure=True):
+def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", block_flag=False, 
+                                     symmetrize_measure=True, assume_const_nullspace=False):
     """Construct an AMG strength of connection matrix using an Evolution-based measure
 
     Parameters
@@ -443,6 +446,10 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
     block_flag : {boolean}
         If True, use a block D inverse as preconditioner for A during 
         weighted-Jacobi
+    assume_const_nns : {boolean}
+        If True, use a constant vector instead of B for computing strength-of-connection.
+        If this parameter is False, and multiple vectors are used in B, the method's
+        cost increases dramatically.  
    
     Returns
     -------
@@ -486,7 +493,10 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
     #====================================================================
     # Format A and B correctly.
     #B must be in mat format, this isn't a deep copy
-    Bmat = numpy.mat(B)
+    if assume_const_nullspace:
+        Bmat = numpy.mat(numpy.ones((B.shape[0],1),dtype=B.dtype))
+    else:
+        Bmat = numpy.mat(B)
 
     # Pre-process A.  We need A in CSR, to be devoid of explicit 0's and have sorted indices
     if (not sparse.isspmatrix_csr(A)):

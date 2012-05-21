@@ -36,7 +36,7 @@ from version import version as __version__
 
 from multilevel import *
 from classical import ruge_stuben_solver
-from aggregation import smoothed_aggregation_solver
+from aggregation import smoothed_aggregation_solver, rootnode_solver
 from gallery import demo
 from blackbox import solve,solver,solver_configuration
 

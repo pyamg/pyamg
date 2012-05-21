@@ -407,7 +407,7 @@ def setup_jacobi(lvl, iterations=1, omega=1.0, withrho=True):
     return smoother
 
 def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, \
-                  inv_subblock=None, inv_subblock_ptr=None):
+                  inv_subblock=None, inv_subblock_ptr=None, sweep='symmetric'):
 
     Acsr = matrix_asformat(lvl, 'A', 'csr')
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
@@ -416,11 +416,11 @@ def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None, \
     def smoother(A,x,b):
         relaxation.schwarz(A, x, b, iterations=iterations, subdomain=subdomain, \
                            subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,\
-                           inv_subblock_ptr=inv_subblock_ptr)
+                           inv_subblock_ptr=inv_subblock_ptr, sweep=sweep)
     return smoother
 
 
-def setup_strength_based_schwarz(lvl, iterations=1):
+def setup_strength_based_schwarz(lvl, iterations=1, sweep='symmetric'):
     # Use the overlapping regions defined by the strength of connection matrix C 
     # for the overlapping Schwarz method
     if not hasattr(lvl,'C'):
@@ -432,8 +432,7 @@ def setup_strength_based_schwarz(lvl, iterations=1):
     subdomain = C.indices.copy()
 
     return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain, \
-                         subdomain_ptr=subdomain_ptr)
-
+                         subdomain_ptr=subdomain_ptr, sweep=sweep)
 
 def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None, withrho=True):
     ##

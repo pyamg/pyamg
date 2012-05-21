@@ -2,18 +2,22 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 import numpy
-import types
 import scipy
+import types
+from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg import relaxation
 from pyamg import amg_core
+from pyamg.aggregation.aggregation import preprocess_str_or_agg, preprocess_smooth, preprocess_Bimprove
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
-                             relaxation_as_linear_operator
+                             relaxation_as_linear_operator, scale_rows, \
+                             get_diagonal, scale_T, get_Cpt_params
+from pyamg.util.linalg import pinv_array, approximate_spectral_radius, \
+                              _approximate_eigenvalues
 from pyamg.strength import classical_strength_of_connection, \
         symmetric_strength_of_connection, evolution_strength_of_connection, \
         energy_based_strength_of_connection, distance_strength_of_connection
@@ -22,103 +26,30 @@ from tentative import fit_candidates
 from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
         energy_prolongation_smoother
 
-__all__ = ['smoothed_aggregation_solver']
-
-def nPDEs(levels):
-    # Helper Function:
-    # Return the number of PDEs (i.e. blocksize) at the coarsest level
-    
-    if isspmatrix_bsr(levels[-1].A):
-        return levels[-1].A.blocksize[0]
+__all__ = ['rootnode_solver']
+ 
+def blocksize(A):
+    # Helper Function: return the blocksize of a matrix 
+    if isspmatrix_bsr(A):
+        return A.blocksize[0]
     else:
-        # csr matrices correspond to 1 PDE
         return 1
 
-def preprocess_Bimprove(Bimprove, A, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # Bimprove[i] is length max_levels and defines the Bimprove routine 
-    # for level i.
-    
-    if Bimprove == 'default':
-        if A.symmetry == 'hermitian' or A.symmetry == 'symmetric':
-            Bimprove = [('block_gauss_seidel', {'sweep':'symmetric', 'iterations':4}), None]
-        else:    
-            Bimprove = [('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':4}), None]
-    elif Bimprove == None:
-        Bimprove = [None]
+def nPDEs(levels):
+    # Helper Function:return number of PDEs (i.e. blocksize) at coarsest level
+    return blocksize(levels[-1].A) 
 
-    if not isinstance(Bimprove, list):
-        raise ValueError("Bimprove must be a list")
-    elif len(Bimprove) < max_levels:
-            Bimprove.extend([Bimprove[-1] for i in range(max_levels-len(Bimprove)) ])
-
-    return Bimprove
-
-
-def preprocess_str_or_agg(scheme, max_levels, max_coarse):
-    # Helper function for smoothed_aggregation_solver that preprocesses
-    # strength of connection and aggregation parameters from the user.  Upon
-    # return, scheme[i] is length max_levels and defines the scheme or
-    # aggregation routine for level i.
-
-    if isinstance(scheme, tuple):
-        if scheme[0] == 'predefined':
-            scheme = [scheme] 
-            max_levels = 2
-            max_coarse = 0
-        else:
-            scheme = [scheme for i in range(max_levels-1)]
-    
-    elif isinstance(scheme,str):
-        if scheme == 'predefined':
-            raise ValueError('predefined scheme requires a user-provided ' +\
-                             'CSR matrix representing strength or aggregation' +\
-                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
-        else:
-            scheme = [scheme for i in range(max_levels-1)]
-    
-    elif isinstance(scheme, list):
-        if isinstance(scheme[-1], tuple) and (scheme[-1][0] == 'predefined'): 
-            # scheme is a list that ends with a predefined operator
-            max_levels = len(scheme) + 1
-            max_coarse = 0
-        else:
-            # scheme a list that __doesn't__ end with 'predefined'
-            if len(scheme) < max_levels-1:
-                scheme.extend([scheme[-1] for i in range(max_levels-len(scheme)-1) ])
-
-    elif scheme==None:
-        scheme=[(None,{}) for i in range(max_levels-1)]
-    else:
-        raise ValueError('invalid scheme')
-
-    return max_levels, max_coarse, scheme
-
-
-def preprocess_smooth(smooth, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # smooth[i] is length max_levels and defines the smooth routine 
-    # for level i.
-    
-    if isinstance(smooth, tuple) or isinstance(smooth,str):
-        smooth = [smooth for i in range(max_levels)]
-    elif isinstance(smooth, list):
-        if len(smooth) < max_levels:
-            smooth.extend([smooth[-1] for i in range(max_levels-len(smooth)) ])
-    elif smooth==None:
-        smooth=[(None,{}) for i in range(max_levels)]
-    
-    return smooth
-
-
-def smoothed_aggregation_solver(A, B=None, BH=None,
+def rootnode_solver(A, B=None, BH=None,
         symmetry='hermitian', strength='symmetric', 
-        aggregate='standard', smooth=('jacobi', {'omega': 4.0/3.0}),
+        aggregate='standard', smooth='energy',
         presmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
-        Bimprove='default', max_levels = 10, max_coarse = 500, keep=False, **kwargs):
+        Bimprove='default', max_levels = 10, max_coarse = 500, 
+        keep=False, **kwargs):
     """
-    Create a multilevel solver using classical-style Smoothed Aggregation (SA)
+    Create a multilevel solver using root-node based Smoothed Aggregation (SA).  
+    See the notes below, for the major differences with the classical-style 
+    smoothed aggregation solver in aggregation.smoothed_aggregation_solver.
 
     Parameters
     ----------
@@ -126,11 +57,15 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Sparse NxN matrix in CSR or BSR format
     B : {None, array_like}
         Right near-nullspace candidates stored in the columns of an NxK array.
-        The default value B=None is equivalent to B=ones((N,1))
+        K must be >= the blocksize of A (see reference [2]). The default value
+        B=None is equivalent to choosing the constant over each block-variable,
+        B = np.kron(np.ones((A.shape[0]/blocksize(A),1)), np.eye(blocksize(A)))
     BH : {None, array_like}
         Left near-nullspace candidates stored in the columns of an NxK array.
-        BH is only used if symmetry is 'nonsymmetric'. 
-        The default value B=None is equivalent to BH=B.copy()
+        BH is only used if symmetry is 'nonsymmetric'.  K must be >= the
+        blocksize of A (see reference [2]). The default value B=None is
+        equivalent to choosing the constant over each block-variable,
+        B = np.kron(np.ones((A.shape[0]/blocksize(A),1)), np.eye(blocksize(A)))
     symmetry : {string}
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
@@ -148,10 +83,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Method used to aggregate nodes.  See notes below for varying this
         parameter on a per level basis.  Also, see notes below for using a
         predefined aggregation on each level.
-    smooth : {list} : default ['jacobi', 'richardson', 'energy', None]
+    smooth : {list} : default ['energy', None]
         Method used to smooth the tentative prolongator.  Method-specific
         parameters may be passed in using a tuple, e.g.  smooth=
-        ('jacobi',{'filter' : True }).  See notes below for varying this
+        ('energy',{'krylov' : 'gmres'}).  Only 'energy' and None are valid
+        prolongation smoothing options.  See notes below for varying this
         parameter on a per level basis.
     presmoother : {tuple, string, list} : default ('block_gauss_seidel', {'sweep':'symmetric'})
         Defines the presmoother for the multilevel cycling.  The default block
@@ -169,11 +105,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     max_levels : {integer} : default 10
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
-        Maximum number of variables permitted on the coarse grid. 
+        Maximum number of variables permitted on the coarse grid.
     keep : {bool} : default False
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
-        tentative prolongation (T), and aggregation (AggOp) are kept.
+        tentative prolongation (T), aggregation (AggOp), and arrays 
+        storing the C-points (Cpts) and F-points (Fpts) are kept at
+        each level.
 
     Other Parameters
     ----------------
@@ -192,13 +130,20 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     See Also
     --------
-    multilevel_solver, classical.ruge_stuben_solver, 
-    aggregation.smoothed_aggregation_solver
+    multilevel_solver, aggregation.smoothed_aggregation_solver, 
+    classical.ruge_stuben_solver
 
     Notes
     -----
-        - This method implements classical-style SA, not root-node style SA 
-          (see aggregation.rootnode_solver).  
+         - Root-node style SA differs from classical SA primarily by preserving
+           and identity block in the interpolation operator, P.  Each aggregate
+           has a "root-node" or "center-node" associated with it, and this 
+           root-node is injected from the coarse grid to the fine grid.  The 
+           injection corresponds to the identity block.
+
+         - Only smooth={'energy', None} is supported for prolongation smoothing.
+           See reference [2] below for more details on why the 'energy' prolongation
+           smoother is the natural counterpart to root-node style SA.
 
         - The additional parameters are passed through as arguments to
           multilevel_solver.  Refer to pyamg.multilevel_solver for additional
@@ -246,15 +191,19 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
           Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] == A.shape[0] and
           Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a csr_matrix.
 
+          Because this is a root-nodes solver, if a member of the predefined
+          aggregation list is predefined, it must be of the form 
+          ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
+
     Examples
     --------
-    >>> from pyamg import smoothed_aggregation_solver
+    >>> from pyamg import rootnode_solver
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
     >>> import numpy
     >>> A = poisson((100,100), format='csr')           # matrix
     >>> b = numpy.ones((A.shape[0]))                   # RHS
-    >>> ml = smoothed_aggregation_solver(A)            # AMG solver
+    >>> ml = rootnode_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
     >>> x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
 
@@ -265,7 +214,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
        Second and Fourth Order Elliptic Problems", 
        Computing, vol. 56, no. 3, pp. 179--196, 1996.
        http://citeseer.ist.psu.edu/vanek96algebraic.html
-
+    .. [2] Olson, L. and Schroder, J. and Tuminaro, R.,
+       "A general interpolation strategy for algebraic 
+       multigrid using energy minimization", SIAM Journal
+       on Scientific Computing (SISC), vol. 33, pp. 
+       966--991, 2011.
     """
 
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
@@ -277,7 +230,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                              or be convertible to csr_matrix')
 
     A = A.asfptype()
-    
+
     if (symmetry != 'symmetric') and (symmetry != 'hermitian') and (symmetry != 'nonsymmetric'):
         raise ValueError('expected \'symmetric\', \'nonsymmetric\' or \'hermitian\' for the symmetry parameter ')
     A.symmetry = symmetry
@@ -285,11 +238,18 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
     ##
-    # Right near nullspace candidates
+    # Right near nullspace candidates, use constant for each variable as default
     if B is None:
-        B = numpy.ones((A.shape[0],1), dtype=A.dtype) # use constant vector
+        B = numpy.kron(numpy.ones((A.shape[0]/blocksize(A),1), dtype=A.dtype), 
+                       numpy.eye(blocksize(A)))         
     else:
         B = numpy.asarray(B, dtype=A.dtype)
+        if len(B.shape) == 1:
+            B = B.reshape(-1,1)
+        if B.shape[0] != A.shape[0]:
+            raise ValueError('The near null-space modes B have incorrect dimensions for matrix A')
+        if B.shape[1] < blocksize(A):
+            raise ValueError('B.shape[1] must be >= the blocksize of A') 
     
     ##
     # Left near nullspace candidates
@@ -298,6 +258,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             BH = B.copy()
         else:
             BH = numpy.asarray(BH, dtype=A.dtype)
+            if len(BH.shape) == 1:
+                BH = BH.reshape(-1,1)
+            if BH.shape[1] != B.shape[1]:
+                raise ValueError('The number of left and right near null-space modes,' + \
+                                 ' B and BH, must be equal')
+            if BH.shape[0] != A.shape[0]:
+                raise ValueError('The near null-space modes BH have incorrect dimensions' + \
+                                 ' for matrix A')
 
     ##
     # Preprocess parameters
@@ -380,16 +348,17 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
     # aggregation
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
     if fn == 'standard':
-        AggOp = standard_aggregation(C, **kwargs)[0]
+        AggOp,Cnodes = standard_aggregation(C, **kwargs)
     elif fn == 'naive':
-        AggOp = naive_aggregation(C, **kwargs)[0]
+        AggOp,Cnodes = naive_aggregation(C, **kwargs)
     elif fn == 'lloyd':
-        AggOp = lloyd_aggregation(C, **kwargs)[0]
+        AggOp,Cnodes = lloyd_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
+        Cnodes = kwargs['Cnodes']
     else:
         raise ValueError('unrecognized aggregation method %s' % str(fn))
-    
+
     ##
     # Improve near nullspace candidates (important to place after the call to
     # evolution_strength_of_connection)
@@ -403,24 +372,35 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
 
     ##
     # tentative prolongator
-    T,B = fit_candidates(AggOp,B)
+    T,dummy = fit_candidates(AggOp,B[:,0:blocksize(A)])
+    del dummy
     if A.symmetry == "nonsymmetric":
-        TH,BH = fit_candidates(AggOp,BH)
+        TH,dummyH = fit_candidates(AggOp,BH[:,0:blocksize(A)])
+        del dummyH
+
+    ##
+    # Create necessary root node matrices
+    Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
+    T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+    if A.symmetry == "nonsymmetric":
+        TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+        
+    ##
+    # Set coarse grid modes as injected fine grid modes
+    B = Cpt_params[1]['P_I'].T*levels[-1].B
+    if A.symmetry == "nonsymmetric":
+        BH = Cpt_params[1]['P_I'].T*levels[-1].BH
 
     ##
     # tentative prolongator smoother
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
-    if fn == 'jacobi':
-        P = jacobi_prolongation_smoother(A, T, C, B, **kwargs)
-    elif fn == 'richardson':
-        P = richardson_prolongation_smoother(A, T, **kwargs)
-    elif fn == 'energy':
-        P = energy_prolongation_smoother(A, T, C, B, None, (False,{}), **kwargs)
+    if fn == 'energy':
+        P = energy_prolongation_smoother(A, T, C, B, levels[-1].B, Cpt_params=Cpt_params, **kwargs)
     elif fn is None:
         P = T
     else:
         raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
-   
+
     ##
     # Choice of R reflects A's structure
     symmetry = A.symmetry
@@ -430,23 +410,23 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
         R = P.T
     elif symmetry == 'nonsymmetric':
         fn, kwargs = unpack_arg(smooth[len(levels)-1])
-        if fn == 'jacobi':
-            R = jacobi_prolongation_smoother(AH, TH, C, BH, **kwargs).H
-        elif fn == 'richardson':
-            R = richardson_prolongation_smoother(AH, TH, **kwargs).H
-        elif fn == 'energy':
-            R = energy_prolongation_smoother(AH, TH, C, BH, None, (False,{}), **kwargs)
+        if fn == 'energy':
+            R = energy_prolongation_smoother(AH, TH, C, BH, levels[-1].BH, Cpt_params=Cpt_params, **kwargs)
             R = R.H
         elif fn is None:
             R = T.H
         else:
             raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
 
-
     if keep:
         levels[-1].C     = C       # strength of connection matrix
         levels[-1].AggOp = AggOp   # aggregation operator
         levels[-1].T     = T       # tentative prolongator
+        levels[-1].Cpts  = Cpt_params[1]['Cpts']    # Cpts (i.e., rootnodes) 
+        levels[-1].Fpts  = Cpt_params[1]['Fpts']    # Fpts    
+        levels[-1].P_I   = Cpt_params[1]['P_I']     # Injection operator 
+        levels[-1].I_F   = Cpt_params[1]['I_F']     # Identity on F-pts
+        levels[-1].I_C   = Cpt_params[1]['I_C']     # Identity on C-pts
 
     levels[-1].P     = P       # smoothed prolongator
     levels[-1].R     = R       # restriction operator 

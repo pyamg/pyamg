@@ -2,7 +2,7 @@ from pyamg.testing import *
 
 import numpy, scipy
 from numpy import array, ones, arange, empty, array_split, zeros
-
+from numpy.lib.arraysetops import setdiff1d
 from scipy.sparse import csr_matrix, spdiags
 
 from pyamg.gallery import poisson, load_example
@@ -22,7 +22,7 @@ class TestAggregate(TestCase):
         # Poisson problems in 1D and 2D
         for N in [2,3,5,7,10,11,19]:
             self.cases.append( poisson( (N,), format='csr') )
-        for N in [2,3,5,7,10,11]:
+        for N in [2,3,5,7,8]:
             self.cases.append( poisson( (N,N), format='csr') )
 
         for name in ['knot','airfoil','bar']:
@@ -34,32 +34,37 @@ class TestAggregate(TestCase):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
             
-            expected = reference_standard_aggregation(S)
-            result   = standard_aggregation(S)
+            (expected,expected_Cpts) = reference_standard_aggregation(S)
+            (result,Cpts)   = standard_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
+            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
     
         # S is diagonal - no dofs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        result   = standard_aggregation(S)
+        (result,Cpts)   = standard_aggregation(S)
         expected = array([[0],[0],[0],[0]])
         assert_equal(result.todense(),expected)
+        assert_equal(Cpts.shape[0], 0)
 
     def test_naive_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
             
-            expected = reference_naive_aggregation(S)
-            result   = naive_aggregation(S)
+            (expected,expected_Cpts) = reference_naive_aggregation(S)
+            (result,Cpts)   = naive_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
+            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
     
         # S is diagonal - no dofs aggregated
         S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        result   = naive_aggregation(S)
+        (result, Cpts)   = naive_aggregation(S)
         expected = numpy.eye(4)
         assert_equal(result.todense(),expected)
-
+        assert_equal(Cpts.shape[0], 4)
         
 
 class TestComplexAggregate(TestCase):
@@ -67,7 +72,7 @@ class TestComplexAggregate(TestCase):
         self.cases = []
 
         # Poisson problems in 2D
-        for N in [2,3,5,7,10,11]:
+        for N in [2,3,5,7,8]:
             A = poisson( (N,N), format='csr'); A.data = A.data + 0.001j*rand(A.nnz)
             self.cases.append(A)
 
@@ -75,19 +80,23 @@ class TestComplexAggregate(TestCase):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
             
-            expected = reference_standard_aggregation(S)
-            result   = standard_aggregation(S)
+            (expected,expected_Cpts) = reference_standard_aggregation(S)
+            (result,Cpts)   = standard_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
+            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
     
     def test_naive_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
             
-            expected = reference_naive_aggregation(S)
-            result   = naive_aggregation(S)
+            (expected,expected_Cpts) = reference_naive_aggregation(S)
+            (result,Cpts)   = naive_aggregation(S)
 
             assert_equal( (result - expected).nnz, 0 )
+            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
 
 ################################################
@@ -103,6 +112,7 @@ def reference_standard_aggregation(C):
 
     R = set(range(n))
     j = 0
+    Cpts = []
 
     aggregates    = empty(n,dtype=C.indices.dtype)
     aggregates[:] = -1
@@ -112,6 +122,7 @@ def reference_standard_aggregation(C):
         Ni = set(row) | set([i])
 
         if Ni.issubset(R):
+            Cpts.append(i)
             R -= Ni
             for x in Ni:
                 aggregates[x] = j
@@ -132,6 +143,7 @@ def reference_standard_aggregation(C):
     for i,row in enumerate(S):
         if i not in R: continue
         Ni = set(row) | set([i])
+        Cpts.append(i)
 
         for x in Ni:
             if x in R:
@@ -144,9 +156,10 @@ def reference_standard_aggregation(C):
     Pp = arange(n+1)
     Px = ones(n)
 
-    return csr_matrix((Px,Pj,Pp))
+    return csr_matrix((Px,Pj,Pp)), array(Cpts)
 
 #####################################
+
 def reference_naive_aggregation(C):
     S = array_split(C.indices,C.indptr[1:-1])
     n = C.shape[0]
@@ -154,7 +167,7 @@ def reference_naive_aggregation(C):
     aggregates[:] = -1 # aggregates[j] denotes the aggregate j is in
     R = zeros( (0,) )  # R stores already aggregated nodes
     j = 0              # j is the aggregate counter
-
+    Cpts = []
 
     # Only one aggregation pass
     for i,row in enumerate(S):
@@ -167,6 +180,7 @@ def reference_naive_aggregation(C):
             j += 1
             R = numpy.union1d(R, unaggregated_neighbors)
             R = numpy.union1d(R, numpy.array([i]))
+            Cpts.append(i)
         else:
             pass
     
@@ -176,6 +190,6 @@ def reference_naive_aggregation(C):
     Pp = arange(n+1)
     Px = ones(n)
 
-    return csr_matrix((Px,Pj,Pp))
+    return csr_matrix((Px,Pj,Pp)), array(Cpts)
 
 

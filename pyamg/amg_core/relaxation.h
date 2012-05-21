@@ -902,21 +902,25 @@ void extract_subblocks(const I Ap[],
  *  row_start, row_stop, and row_step.
  *
  *  Parameters
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array, blocks assumed square
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      Tx[]       - Inverse of each diagonal block of A, stored in
- *                   row major
- *      Tp[]       - Pointer array into Tx indicating where the
- *                   diagonal blocks start and stop
- *      Sj[]       - Indices of each subdomain 
- *                   __must be sorted over each subdomain__
- *      Sp[]       - Pointer array indicating where each subdomain
- *                   starts and stops
- *      nsdomains  - Number of subdomains
- *      nrows      - Number of rows
+ *      Ap[]           - CSR row pointer
+ *      Aj[]           - CSR index array
+ *      Ax[]           - CSR data array, blocks assumed square
+ *      x[]            - approximate solution
+ *      b[]            - right hand side
+ *      Tx[]           - Inverse of each diagonal block of A, stored in
+ *                       row major
+ *      Tp[]           - Pointer array into Tx indicating where the
+ *                       diagonal blocks start and stop
+ *      Sj[]           - Indices of each subdomain 
+ *                       __must be sorted over each subdomain__
+ *      Sp[]           - Pointer array indicating where each subdomain
+ *                       starts and stops
+ *      nsdomains      - Number of subdomains
+ *      nrows          - Number of rows
+ *      row_start      --- The subdomains are processed in this order,
+ *      row_stop       --- for(i = row_start, i != row_stop, i+=row_step) 
+ *      row_step       --- {...computation...}
+ *                       
  *  
  *  Returns:
  *      Nothing, x will be modified in place
@@ -933,16 +937,18 @@ void overlapping_schwarz_csr(const I Ap[],
                              const I Sj[], 
                              const I Sp[],
                                    I nsdomains,
-                                   I nrows)
+                                   I nrows,
+                                   I row_start,
+                                   I row_stop,
+                                   I row_step)
 {
 
     T zero = 0.0;
     T *rsum = new T[nrows];
     T *Dinv_rsum = new T[nrows];
-    I Scounter = 0;
     
     // Begin loop over the subdomains
-    for(I domptr = 0; domptr < nsdomains; domptr++) {
+    for(I domptr = row_start; domptr != row_stop; domptr+=row_step) {
         
         I counter = 0;
         std::fill(&(rsum[0]), &(rsum[nrows]), zero);
@@ -965,11 +971,9 @@ void overlapping_schwarz_csr(const I Ap[],
         }
 
         // Multiply block residual with block inverse of A
-        gemm(&(Tx[Scounter]), size_domain, size_domain, 'F', 
+        gemm(&(Tx[Tp[domptr]]), size_domain, size_domain, 'F', 
              &(rsum[0]),      size_domain,   1,         'F', 
              &(Dinv_rsum[0]), size_domain,   1,         'F');
-        
-        Scounter += size_domain*size_domain; 
             
         // Add to x
         counter = 0;

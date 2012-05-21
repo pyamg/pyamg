@@ -7,6 +7,7 @@ from aggregate import *
 from aggregation import *
 from tentative import *
 from smooth import *
+from rootnode import *
 
 __all__ = filter(lambda s:not s.startswith('_'),dir())
 from pyamg.testing import Tester
