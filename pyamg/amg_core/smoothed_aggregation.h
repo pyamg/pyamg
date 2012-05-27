@@ -576,11 +576,11 @@ void satisfy_constraints_helper(const I RowsPerBlock,  const I ColsPerBlock,
         {
             // Calculate C = BtBinv[i*NullDimSq => (i+1)*NullDimSq]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
             // Implicit transpose of conjugate(B_i) is done through gemm assuming Bt is in column major
-            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, ColsPerBlock, 'F', &(C[0]), NullDim, ColsPerBlock, 'T');
+            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, ColsPerBlock, 'F', &(C[0]), NullDim, ColsPerBlock, 'T', 'T');
 
             // Calculate Sx[ j*BlockSize => (j+1)*blocksize ] =  UB[ i*BlockSize => (i+1)*blocksize ] * C
             // Note that C actually stores C^T in row major, or C in col major.  gemm assumes C is in col major, so we're OK
-            gemm(&(UB[i*NullDim_Rows]), RowsPerBlock, NullDim, 'F', &(C[0]), NullDim, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F');
+            gemm(&(UB[i*NullDim_Rows]), RowsPerBlock, NullDim, 'F', &(C[0]), NullDim, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F', 'T');
             
             //Update Sx
             for(I k = 0; k < BlockSize; k++)
@@ -713,52 +713,198 @@ void calc_BtB(const I NullDim, const I Nnodes,  const I ColsPerBlock,
     delete[] work;
 }
 
-/* Helper function for my_BSRinner(...) where we search for the row-th entry 
- * in the current j-th column of CSC matrix, B.
+/*
+ * Calculate A*B = S, but only at the pre-existing sparsity
+ * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
+ *
+ * A, B and S must all be in BSR, may be rectangular, but the 
+ * indices need not be sorted. 
+ * Also, A.blocksize[0] must equal S.blocksize[0]
+ *       A.blocksize[1] must equal B.blocksize[0]
+ *       B.blocksize[1] must equal S.blocksize[1]
  *
  * Parameters
  * ----------
+ * Ap : {int array}
+ *      BSR row pointer array
+ * Aj : {int array}
+ *      BSR col index array
+ * Ax : {float|complex array}
+ *      BSR value array
+ * Bp : {int array}
+ *      BSR row pointer array                 
  * Bj : {int array}
- *  column indices of BSC matrix, B
- *  MUst be sorted
- * Bx : {float array}
- *  values array for BSC matrix B
- * BptrLim : {int}
- *  stop index for the current column of B
- *  equal to B.indptr[j+1]
- * Bptr : {int}
- *  current index under consideration in this column of B
- *  B.indptr[j] <= Bptr < B.indptr[j+1]
- * row : {int}
- *  the row number of the entry that we are searching for
- * Aval : {float}
- *  the current entry of the right matrix in the mat-mat
- *  this is the (i,k)-th block entry where k=row
- * blockproduct : {float array}
- *  modified in place as return value
- * flag : {int}
- *  modified in place as return value 
- * brows, bcols : {int}
- *  the number of rows and columns in each block of B
+ *      BSR col index array                 
+ * Bx : {float|complex array}
+ *      BSR value array
+ * Sp : {int array}
+ *      BSR row pointer array
+ * Sj : {int array}
+ *      BSR col index array
+ * Sx : {float|complex array}
+ *      BSR value array     
+ * n_brow : {int}
+ *      Number of block-rows in A
+ * n_bcol : {int}
+ *      Number of block-cols in S
+ * brow_A : {int}
+ *      row blocksize for A
+ * bcol_A : {int}
+ *      column blocksize for A
+ * bcol_B : {int}
+ *      column blocksize for B
  *
  * Returns
  * -------
- * blockproduct is modified in place such it holds the 
- *   mat-mat multiply of the blocks, Aval*B(row,j) 
- * 
- * Bptr is modified in place such that it 
- *   is incremented to the first entry past B(row,j)
- *
- * flag is modified in place to reflect whether the 
- *   matching B(row,j)-th entry was nonzero and the 
- *   cumulative sum must be updated in the calling routine
+ * Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ * but only for those entries already present in the sparsity pattern
+ * of S.
  *
  * Notes
  * -----
- * Principle calling routine is my_BSRinner(...) in this file
+ * 
+ * Algorithm is SMMP
  *
- * BSC matrix B must have sorted indices
+ * Principle calling routine is energy_prolongation_smoother(...) in
+ * smooth.py.  Here it is used to calculate the descent direction
+ * A*P_tent, but only within an accepted sparsity pattern.
+ *
+ * Is generally faster than the commented out incomplete_BSRmatmat(...)
+ * routine below, except when S has far few nonzeros than A or B.
+ *
  */
+template<class I, class T, class F>
+void incomplete_mat_mult_bsr( const I Ap[],   const I Aj[],    const T Ax[], 
+                            const I Bp[],   const I Bj[],    const T Bx[], 
+                            const I Sp[],   const I Sj[],          T Sx[], 
+                            const I n_brow, const I n_bcol,  const I brow_A,  
+                            const I bcol_A, const I bcol_B )
+{
+    
+    std::vector<T*> S(n_bcol);
+    std::fill(S.begin(), S.end(), (T *) NULL);
+    
+    I A_blocksize = brow_A*bcol_A;
+    I B_blocksize = bcol_A*bcol_B;
+    I S_blocksize = brow_A*bcol_B;
+    I one_by_one_blocksize = 0;
+    if ((A_blocksize == B_blocksize) && (B_blocksize == S_blocksize) && (A_blocksize == 1)){
+        one_by_one_blocksize = 1; }
+
+    // Loop over rows of A
+    for(I i = 0; i < n_brow; i++){
+
+        // Initialize S to be NULL, except for the nonzero entries in S[i,:], 
+        // where S will point to the correct location in Sx
+        I jj_start = Sp[i];
+        I jj_end   = Sp[i+1];
+        for(I jj = jj_start; jj < jj_end; jj++){
+            S[ Sj[jj] ] = &(Sx[jj*S_blocksize]); }
+
+        // Loop over columns in row i of A
+        jj_start = Ap[i];
+        jj_end   = Ap[i+1];
+        for(I jj = jj_start; jj < jj_end; jj++){
+            I j = Aj[jj];
+            
+            // Loop over columns in row j of B
+            I kk_start = Bp[j];
+            I kk_end   = Bp[j+1];
+            for(I kk = kk_start; kk < kk_end; kk++){
+                I k = Bj[kk];
+                T * Sk = S[k];
+                
+                // If this is an allowed entry in S, then accumulate to it with a block multiply
+                if (Sk != NULL){
+                    if(one_by_one_blocksize){
+                        // Just do a scalar multiply for the case of 1x1 blocks
+                        *(Sk) += Ax[jj]*Bx[kk];
+                    }
+                    else{ 
+                        gemm(&(Ax[jj*A_blocksize]), brow_A, bcol_A, 'F', 
+                             &(Bx[kk*B_blocksize]), bcol_A, bcol_B, 'T', 
+                             Sk,                    brow_A, bcol_B, 'F',
+                             'F'); 
+                    }
+                }
+            }
+        }  
+        
+        // Revert S back to it's state of all NULL
+        jj_start = Sp[i];
+        jj_end   = Sp[i+1];
+        for(I jj = jj_start; jj < jj_end; jj++){
+            S[ Sj[jj] ] = NULL; }
+
+    }
+}
+
+
+/********************************************************************
+ *              Old Function Definitions, from May, 2012
+ *              This collection of functions essentially defines
+ *              an incomplete mat-mat-mult routine for BSR matrices
+ *              that assumes for A*B = C, A is in BSR, B is in BSC 
+ *              and C is written in BSR.  
+ *
+ *              The algorithm is naive, in that the loops are over
+ *              each entry in C, whereby the corresponding inner-prod
+ *              <A[i,j],  B[j,k]>  --->  C[i,k].
+ *
+ *              It is generally much slower than the incomplete 
+ *              mat-mat-mult routine above, except when the desired 
+ *              sparsity pattern in C is much smaller than the patterns
+ *              in both A and B.  This doesn't happen in PyAMG, so we
+ *              comment this code out for now.  
+ *
+ *              This code is a candidate for eventual removal
+
+// Helper function for my_BSRinner(...) where we search for the row-th entry 
+// in the current j-th column of CSC matrix, B.
+//
+// Parameters
+// ----------
+// Bj : {int array}
+//  column indices of BSC matrix, B
+//  MUst be sorted
+// Bx : {float array}
+//  values array for BSC matrix B
+// BptrLim : {int}
+//  stop index for the current column of B
+//  equal to B.indptr[j+1]
+// Bptr : {int}
+//  current index under consideration in this column of B
+//  B.indptr[j] <= Bptr < B.indptr[j+1]
+// row : {int}
+//  the row number of the entry that we are searching for
+// Aval : {float}
+//  the current entry of the right matrix in the mat-mat
+//  this is the (i,k)-th block entry where k=row
+// blockproduct : {float array}
+//  modified in place as return value
+// flag : {int}
+//  modified in place as return value 
+// brows, bcols : {int}
+//  the number of rows and columns in each block of B
+//
+// Returns
+// -------
+// blockproduct is modified in place such it holds the 
+//   mat-mat multiply of the blocks, Aval*B(row,j) 
+// 
+// Bptr is modified in place such that it 
+//   is incremented to the first entry past B(row,j)
+//
+// flag is modified in place to reflect whether the 
+//   matching B(row,j)-th entry was nonzero and the 
+//   cumulative sum must be updated in the calling routine
+//
+// Notes
+// -----
+// Principle calling routine is my_BSRinner(...) in this file
+//
+// BSC matrix B must have sorted indices
+//
 template<class I, class T>
 inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
                             const I row,         I &Bptr, const T Aval[],
@@ -778,7 +924,8 @@ inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
             // block multiply
             gemm(&(Aval[0]),            brows, brows, trans, 
                  &(Bx[Bptr*blocksize]), brows, bcols, trans, 
-                 &(blockproduct[0]),    brows, bcols, trans);
+                 &(blockproduct[0]),    brows, bcols, trans,
+                 'T');
             Bptr++;
             return;
         }
@@ -794,48 +941,48 @@ inline void find_BSRmatval( const I Bj[],  const T Bx[],  const I BptrLim,
 }
 
 
-/* For use in incomplete_BSRmatmat(...)
- * Calculate <A_{row,:}, B_{:, col}>
- *
- * Parameters
- * ----------
- * Ap : {int array}
- *  row ptr array for BSR matrix A
- * Aj : {int array}
- *  col index array for BSR matrix A
- *  MUst be sorted
- * Ax : {float array}
- *  value array for BSR matrix A
- * Bp : {int array}
- *  col ptr array for BSC matrix A
- * Bj : {int array}
- *  row index array for BSC matrix A
- *  MUst be sorted
- * Bx : {float array}
- *  value array for BSC matrix A
- * row, col : {int}
- *  indicate which row of A and column of B to take
- *  the inner product of
- * sum : {float array}
- *  modified in place return value
- *  array of size brows x bcols
- * brows, bcols : {int}
- *  the number of rows and columns in each block of B
- *
- *
- * Returns
- * -------
- * sum is modified in place to hold the result <A_{row,:}, B_{:, col}>
- *   because A and B are block matrices, sum is a dense matrix of size
- *   brows x bcols
- *
- * Notes
- * -----
- * Principle calling routine is incomplete_BSRmatmat in this file 
- *
- * A and B are assumed to have sorted indices
- *  
- */
+// For use in incomplete_BSRmatmat(...)
+// Calculate <A_{row,:}, B_{:, col}>
+//
+// Parameters
+// ----------
+// Ap : {int array}
+//  row ptr array for BSR matrix A
+// Aj : {int array}
+//  col index array for BSR matrix A
+//  MUst be sorted
+// Ax : {float array}
+//  value array for BSR matrix A
+// Bp : {int array}
+//  col ptr array for BSC matrix A
+// Bj : {int array}
+//  row index array for BSC matrix A
+//  MUst be sorted
+// Bx : {float array}
+//  value array for BSC matrix A
+// row, col : {int}
+//  indicate which row of A and column of B to take
+//  the inner product of
+// sum : {float array}
+//  modified in place return value
+//  array of size brows x bcols
+// brows, bcols : {int}
+//  the number of rows and columns in each block of B
+//
+//
+// Returns
+// -------
+// sum is modified in place to hold the result <A_{row,:}, B_{:, col}>
+//   because A and B are block matrices, sum is a dense matrix of size
+//   brows x bcols
+//
+// Notes
+// -----
+// Principle calling routine is incomplete_BSRmatmat in this file 
+//
+// A and B are assumed to have sorted indices
+//  
+//
 template<class I, class T>
 inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[], 
                       const I Bp[],  const I Bj[],    const T Bx[], 
@@ -889,81 +1036,81 @@ inline void my_BSRinner( const I Ap[],  const I Aj[],    const T Ax[],
 }
 
 
-/* Calculate A*B = S, but only at the pre-existing sparsity
- * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
- *
- * A must be in BSR, B must be in BSC and S must be in CSR
- * Indices for A, B and S must be sorted
- * A must be square, B and S must be the same size
- *
- * Parameters
- * ----------
- * Ap : {int array}
- *      Row pointer array for BSR matrix A
- * Aj : {int array}
- *      Col index array for BSR matrix A
- * Ax : {float|complex array}
- *      Value array for BSR matrix A
- * Bp : {int array}
- *      Row pointer array for BSC matrix B
- * Bj : {int array}
- *      Col index array for BSC matrix B
- * Bx : {float|complex array}
- *      Value array for BSC matrix B
- * Sp : {int array}
- *      Row pointer array for BSR matrix S
- * Sj : {int array}
- *      Col index array for BSR matrix S
- * Sx : {float|complex array}
- *      Value array for BSR matrix S
- * n: {int} 
- *      number of rows of A.  We do not need
- *      the number of columns, as that data 
- *      is stored implicitly in the BSR data
- *      structures
- * brows : {int}
- *      number of rows per block
- * bcols : {int}
- *      number of cols per block
- *
- * Returns
- * -------
- * Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
- *
- * Notes
- * -----
- * A must be in BSR, B must be in BSC and S must be in CSR
- * Indices for A, B and S must be sorted
- * A must be square, B and S must be the same size
- *
- * Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
- * But, the routine is written for the case when S's 
- * sparsity pattern is a subset of A*B, so this algorithm 
- * should work well.
- *
- * Principle calling routine is energy_prolongation_smoother(...) in
- * smooth.py.  Here is is used to calculate the descent direction
- * A*P_tent, but only within an accepted sparsity pattern.
- *
- * Examples
- * --------
- * >>> from pyamg.amg_core import incomplete_BSRmatmat
- * >>> from scipy import arange, eye, ones, ravel
- * >>> from scipy.sparse import bsr_matrix
- * >>>
- * >>> A = bsr_matrix(ones((4,4),dtype=float), blocksize=(2,2))
- * >>> B = bsr_matrix(arange(1,17,dtype=float).reshape(4,4), blocksize=(2,2))
- * >>> BT = B.T.tobsr()      # Mimic bsc format with a transpose
- * >>> AB = bsr_matrix(eye(4,4,dtype=float), blocksize=(2,2))
- * >>> A.sort_indices()
- * >>> B.sort_indices()
- * >>> BT.sort_indices()
- * >>> AB.sort_indices()
- * >>> incomplete_BSRmatmat(A.indptr, A.indices, ravel(A.data), BT.indptr, BT.indices,
- *                       ravel(BT.data), AB.indptr, AB.indices, ravel(AB.data), 4, 2, 2)
- * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
- * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
- */
+// Calculate A*B = S, but only at the pre-existing sparsity
+// pattern of S, i.e. do an exact, but incomplete mat-mat mult.
+//
+// A must be in BSR, B must be in BSC and S must be in CSR
+// Indices for A, B and S must be sorted
+// A must be square, B and S must be the same size
+//
+// Parameters
+// ----------
+// Ap : {int array}
+//      Row pointer array for BSR matrix A
+// Aj : {int array}
+//      Col index array for BSR matrix A
+// Ax : {float|complex array}
+//      Value array for BSR matrix A
+// Bp : {int array}
+//      Row pointer array for BSC matrix B
+// Bj : {int array}
+//      Col index array for BSC matrix B
+// Bx : {float|complex array}
+//      Value array for BSC matrix B
+// Sp : {int array}
+//      Row pointer array for BSR matrix S
+// Sj : {int array}
+//      Col index array for BSR matrix S
+// Sx : {float|complex array}
+//      Value array for BSR matrix S
+// n: {int} 
+//      number of rows of A.  We do not need
+//      the number of columns, as that data 
+//      is stored implicitly in the BSR data
+//      structures
+// brows : {int}
+//      number of rows per block
+// bcols : {int}
+//      number of cols per block
+//
+// Returns
+// -------
+// Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+//
+// Notes
+// -----
+// A must be in BSR, B must be in BSC and S must be in CSR
+// Indices for A, B and S must be sorted
+// A must be square, B and S must be the same size
+//
+// Algorithm is naive, S(i,j) = <A_{i,:}, B_{:,j}>
+// But, the routine is written for the case when S's 
+// sparsity pattern is a subset of A*B, so this algorithm 
+// should work well.
+//
+// Principle calling routine is energy_prolongation_smoother(...) in
+// smooth.py.  Here is is used to calculate the descent direction
+// A*P_tent, but only within an accepted sparsity pattern.
+//
+// Examples
+// --------
+// >>> from pyamg.amg_core import incomplete_BSRmatmat
+// >>> from scipy import arange, eye, ones, ravel
+// >>> from scipy.sparse import bsr_matrix
+// >>>
+// >>> A = bsr_matrix(ones((4,4),dtype=float), blocksize=(2,2))
+// >>> B = bsr_matrix(arange(1,17,dtype=float).reshape(4,4), blocksize=(2,2))
+// >>> BT = B.T.tobsr()      # Mimic bsc format with a transpose
+// >>> AB = bsr_matrix(eye(4,4,dtype=float), blocksize=(2,2))
+// >>> A.sort_indices()
+// >>> B.sort_indices()
+// >>> BT.sort_indices()
+// >>> AB.sort_indices()
+// >>> incomplete_BSRmatmat(A.indptr, A.indices, ravel(A.data), BT.indptr, BT.indices,
+//                       ravel(BT.data), AB.indptr, AB.indices, ravel(AB.data), 4, 2, 2)
+// >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
+// >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
+//
 template<class I, class T, class F>
 void incomplete_BSRmatmat( const I Ap[],  const I Aj[],    const T Ax[], 
                            const I Bp[],  const I Bj[],    const T Bx[], 
@@ -987,5 +1134,11 @@ void incomplete_BSRmatmat( const I Ap[],  const I Aj[],    const T Ax[],
         }
     }
 }
+
+ * 
+ *                      Ending Old Function Definitions
+ ********************************************************************
+ */
+
 
 #endif

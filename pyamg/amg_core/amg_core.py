@@ -237,22 +237,24 @@ def calc_BtB(*args):
     """
   return _amg_core.calc_BtB(*args)
 
-def incomplete_BSRmatmat(*args):
+def incomplete_mat_mult_bsr(*args):
   """
-    incomplete_BSRmatmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
-        int Sp, int Sj, float Sx, int n, int brows, 
-        int bcols)
-    incomplete_BSRmatmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
-        int Sp, int Sj, double Sx, int n, int brows, 
-        int bcols)
-    incomplete_BSRmatmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
+    incomplete_mat_mult_bsr(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
+        int Sp, int Sj, float Sx, int n_brow, int n_bcol, 
+        int brow_A, int bcol_A, int bcol_B)
+    incomplete_mat_mult_bsr(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
+        int Sp, int Sj, double Sx, int n_brow, int n_bcol, 
+        int brow_A, int bcol_A, int bcol_B)
+    incomplete_mat_mult_bsr(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
         npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, 
-        int n, int brows, int bcols)
-    incomplete_BSRmatmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
+        int n_brow, int n_bcol, 
+        int brow_A, int bcol_A, int bcol_B)
+    incomplete_mat_mult_bsr(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
         npy_cdouble_wrapper Bx, int Sp, int Sj, 
-        npy_cdouble_wrapper Sx, int n, int brows, int bcols)
+        npy_cdouble_wrapper Sx, int n_brow, int n_bcol, 
+        int brow_A, int bcol_A, int bcol_B)
     """
-  return _amg_core.incomplete_BSRmatmat(*args)
+  return _amg_core.incomplete_mat_mult_bsr(*args)
 
 def pinv_array(*args):
   """
@@ -306,20 +308,20 @@ def evolution_strength_helper(*args):
     """
   return _amg_core.evolution_strength_helper(*args)
 
-def incomplete_matmat(*args):
+def incomplete_mat_mult_csr(*args):
   """
-    incomplete_matmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
+    incomplete_mat_mult_csr(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, 
         int Sp, int Sj, float Sx, int num_rows)
-    incomplete_matmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
+    incomplete_mat_mult_csr(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, 
         int Sp, int Sj, double Sx, int num_rows)
-    incomplete_matmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
+    incomplete_mat_mult_csr(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, 
         npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, 
         int num_rows)
-    incomplete_matmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
+    incomplete_mat_mult_csr(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, 
         npy_cdouble_wrapper Bx, int Sp, int Sj, 
         npy_cdouble_wrapper Sx, int num_rows)
     """
-  return _amg_core.incomplete_matmat(*args)
+  return _amg_core.incomplete_mat_mult_csr(*args)
 
 def apply_distance_filter(*args):
   """

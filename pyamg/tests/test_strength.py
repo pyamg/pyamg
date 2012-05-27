@@ -10,7 +10,7 @@ from scipy.linalg import pinv2, pinv
 
 from pyamg.gallery import poisson, linear_elasticity, load_example, stencil_grid
 from pyamg.strength import *
-from pyamg.amg_core import incomplete_matmat
+from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows
 
@@ -75,9 +75,11 @@ class TestStrengthOfConnection(TestCase):
 
 
 
-    def test_incomplete_matmat(self):
+    def test_incomplete_mat_mult_csr(self):
         # Test a critical helper routine for evolution_strength_of_connection(...)
-        # We test that (A*B).multiply(mask) = incomplete_matmat(A,B,mask)
+        # We test that (A*B).multiply(mask) = incomplete_mat_mult_csr(A,B,mask)
+        #
+        # This function assumes square matrices, A, B and mask, so that simplifies the testing
         cases = []
 
         # 1x1 tests
@@ -200,7 +202,7 @@ class TestStrengthOfConnection(TestCase):
             B.sort_indices()
             mask.sort_indices()
             result = mask.copy()
-            incomplete_matmat(A.indptr,A.indices,A.data, B.indptr,B.indices,B.data, 
+            incomplete_mat_mult_csr(A.indptr,A.indices,A.data, B.indptr,B.indices,B.data, 
                               result.indptr,result.indices,result.data, A.shape[0])
             result.eliminate_zeros()
             exact = (A*B).multiply(mask)

@@ -433,7 +433,8 @@ void evolution_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         //  Bi^H*D_A*z ==> RHS
         gemm( DBi, NullDim, length, 'F', 
                 z, length,       1, 'F', 
-              RHS, NullDim,      1, 'F');
+              RHS, NullDim,      1, 'F', 
+              'T');
         //Double the first NullDim entries in RHS
         for(I j = 0; j < NullDim; j++)
         {   RHS[j] *= 2.0; }
@@ -446,7 +447,8 @@ void evolution_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
         //Find best approximation to z in span(Bi), Bi*RHS[0:NullDim] ==> zhat
         gemm(  Bi,   length, NullDim, 'F', 
               RHS,  NullDim,       1, 'F', 
-             zhat,   length,       1, 'F');
+             zhat,   length,       1, 'F', 
+              'T');
         
         //Need to filter out numerically zero values in zhat, because the sign of each
         //entry is very important in the below angle calc.  First, find the maximum value 
@@ -523,7 +525,7 @@ void evolution_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
 
 
 
-/* For use in incomplete_matmat(...)
+/* For use in incomplete_mat_mult_csr(...)
  * Calcuate <A_{row,:}, B_{:, col}>
  *
  * Parameters
@@ -552,7 +554,7 @@ void evolution_strength_helper(      T Sx[],  const I Sp[],    const I Sj[],
  *
  * Notes
  * -----
- * Principle calling routine is incomplete_matmat in this file 
+ * Principle calling routine is incomplete_mat_mult_csr in this file 
  *
  * A and B are assumed to have sorted indices and be free of
  * duplicate entries
@@ -643,7 +645,7 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  *
  * Examples
  * --------
- * >>> from pyamg.amg_core import incomplete_matmat
+ * >>> from pyamg.amg_core import incomplete_mat_mult_csr
  * >>> from scipy import arange, eye, ones
  * >>> from scipy.sparse import csr_matrix, csc_matrix
  * >>>
@@ -653,15 +655,15 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  * >>> A.sort_indices()
  * >>> B.sort_indices()
  * >>> AB.sort_indices()
- * >>> incomplete_matmat(A.indptr, A.indices, A.data, B.indptr, B.indices,
+ * >>> incomplete_mat_mult_csr(A.indptr, A.indices, A.data, B.indptr, B.indices,
  *                       B.data, AB.indptr, AB.indices, AB.data, 3)
  * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
  * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
  */
 template<class I, class T, class F>
-void incomplete_matmat(const I Ap[], const I Aj[], const T Ax[], 
-                       const I Bp[], const I Bj[], const T Bx[], 
-                       const I Sp[], const I Sj[],       T Sx[], const I num_rows)
+void incomplete_mat_mult_csr(const I Ap[], const I Aj[], const T Ax[], 
+                             const I Bp[], const I Bj[], const T Bx[], 
+                             const I Sp[], const I Sj[],       T Sx[], const I num_rows)
 {
     for(I row = 0; row < num_rows; row++)
     {

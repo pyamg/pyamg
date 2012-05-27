@@ -310,7 +310,9 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  * Bcols : {int}
  *      Number of columns of B
  * Btrans : {char}
- *      Not Used
+ *      Supported, essentially Btrans='F' assumes
+ *      B is in column major, and Brans='T' assumes
+ *      B is in row major
  * Sx : {float|complex array} 
  *      Output array, Contents are overwritten
  * Srows : {int}
@@ -318,30 +320,46 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  * Scols : {int}
  *      Number of columns of S
  * Strans : {char}
- *      'T' gives S in col major
+ *      'T' gives S in col major (only works with Btrans='F')
  *      'F' gives S in row major
+ * overwrite : {char}
+ *      'T' overwrite S
+ *      'F' accumulate to S 
+ *  
  *
  * Return
  * ------
  * Sx = Ax*Bx in column or row major, depending on Strans.
- * Contents of Sx are overwritten
  *
  * Notes
  * -----
- * Naively calculates S(i,j) = A(i,:) B(:,j) by looping over the rows of A
- * and the columns of B.
+ *  Supported matrix format combinations,
+ *  Btrans = 'F' and Strans = 'T'
+ *  Btrans = 'F' and Strans = 'F'
+ *  Btrans = 'T' and Strans = 'F'
+ *  
+ *  All other combinations are not yet supported
+ *
  *
  */
 template<class I, class T>
-void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans, 
+inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans, 
           const T Bx[], const I Brows, const I Bcols, const char Btrans, 
-          T Sx[], const I Srows, const I Scols, const char Strans)
+          T Sx[], const I Srows, const I Scols, const char Strans, 
+          const char overwrite)
 {
     //Add checks for dimensions, but leaving them out speeds things up
     //Add functionality for transposes
+    
+    if(overwrite == 'T'){
+        std::fill(Sx, Sx + Srows*Scols,  0); }
 
-    if(Strans == 'T')
+    if( (Strans == 'T') && (Btrans == 'F'))
     {
+        // A is in row major, B is in column major, so compute 
+        // S(i,j) = A(i,:) B(:,j) by looping over the rows of A
+        // and the columns of B.
+        
         I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
         for(I i = 0; i < Arows; i++)
         {
@@ -349,7 +367,6 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             b_counter = 0; 
             for(I j = 0; j < Bcols; j++)
             {
-                Sx[s_counter] = 0.0;
                 a_counter = a_start;                                // a_counter cycles through rows of A
                 for(I k = 0; k < Brows; k++)
                 {
@@ -362,15 +379,18 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             a_start += Acols;
         }
     }
-    else if(Strans == 'F')
+    else if((Strans == 'F') && (Btrans == 'F'))
     {
+        // A is in row major, B is in column major, so compute 
+        // S(i,j) = A(i,:) B(:,j) by looping over the rows of A
+        // and the columns of B.
+        
         I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
         for(I i = 0; i < Arows; i++)
         {
             b_counter = 0; 
             for(I j = 0; j < Bcols; j++)
             {
-                Sx[s_counter] = 0.0;
                 a_counter = a_start;
                 for(I k = 0; k < Brows; k++)
                 {
@@ -383,6 +403,35 @@ void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             a_start += Acols;
         }
     }
+    else if((Strans == 'F') && (Btrans == 'T'))
+    {
+        // A is in row major, B is in row major, so compute 
+        // S(i,j) = A(i,:) B(:,j) with the SMMP algorithm
+        
+        I a_counter = 0;
+
+        // Loop over rows of A
+        for(I i = 0; i < Arows; i++)
+        {
+            // Loop over columns in row i of A
+            for(I j = 0; j < Acols; j++)
+            {
+                I s_counter = i*Scols;
+                I b_counter = j*Bcols;
+                
+                // Loop over columns in row j of B
+                for(I k = 0; k < Bcols; k++)
+                {
+                    // Accumulate A[i,j]*B[j,k] --> S[i,k]
+                    Sx[s_counter] += Ax[a_counter]*Bx[b_counter];
+                    b_counter++;
+                    s_counter++; 
+                }
+                a_counter++;
+            }
+        }
+    }
+
 }
 
 
@@ -752,7 +801,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // A^{-1} b = V*Sinv*U.H*b, in 3 steps
     // Step 1, U.H*b
     gemm(&(U[0]), n, n, trans, &(b[0]), n, 1, trans,  
-         &(x[0]), n, 1, trans);
+         &(x[0]), n, 1, trans, 'T');
 
     // Setp 2, scale x by Sinv
     for(I j = 0; j < n; j++)
@@ -767,7 +816,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // transpose V so that it is in row major for gemm
     transpose(&(V[0]), &(U[0]), n, n);
     gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,  
-         &(b[0]), n, 1, trans);
+         &(b[0]), n, 1, trans, 'T');
     
     return;
 }
@@ -869,7 +918,7 @@ void pinv_array(T Ax[], const I m, const I n, const char TransA)
 
         // A^{-1} = V*SinvUh
         gemm(&(Tran[0]), n, n, t, &(SinvUh[0]), n, n, t,  
-             &(Ax[Acounter]), n, n, t);
+             &(Ax[Acounter]), n, n, t, 'T');
 
         Acounter += nsq;
     }

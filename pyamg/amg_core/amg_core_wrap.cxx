@@ -7443,7 +7443,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_bsr__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -7457,6 +7457,8 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_1(PyObject *SWIGUNUSEDPARM
   int arg10 ;
   int arg11 ;
   int arg12 ;
+  int arg13 ;
+  int arg14 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -7480,6 +7482,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_1(PyObject *SWIGUNUSEDPARM
   int ecode11 = 0 ;
   int val12 ;
   int ecode12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  int val14 ;
+  int ecode14 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -7492,8 +7498,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_1(PyObject *SWIGUNUSEDPARM
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:incomplete_BSRmatmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:incomplete_mat_mult_bsr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -7581,20 +7589,30 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_1(PyObject *SWIGUNUSEDPARM
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_BSRmatmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_bsr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   ecode11 = SWIG_AsVal_int(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_BSRmatmat" "', argument " "11"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_mat_mult_bsr" "', argument " "11"" of type '" "int""'");
   } 
   arg11 = static_cast< int >(val11);
   ecode12 = SWIG_AsVal_int(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_BSRmatmat" "', argument " "12"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_mat_mult_bsr" "', argument " "12"" of type '" "int""'");
   } 
   arg12 = static_cast< int >(val12);
-  incomplete_BSRmatmat< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,(int const (*))arg4,(int const (*))arg5,(float const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12);
+  ecode13 = SWIG_AsVal_int(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "incomplete_mat_mult_bsr" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  ecode14 = SWIG_AsVal_int(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "incomplete_mat_mult_bsr" "', argument " "14"" of type '" "int""'");
+  } 
+  arg14 = static_cast< int >(val14);
+  incomplete_mat_mult_bsr< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,(int const (*))arg4,(int const (*))arg5,(float const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12,arg13,arg14);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -7682,7 +7700,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_bsr__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -7696,6 +7714,8 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_2(PyObject *SWIGUNUSEDPARM
   int arg10 ;
   int arg11 ;
   int arg12 ;
+  int arg13 ;
+  int arg14 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -7719,6 +7739,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_2(PyObject *SWIGUNUSEDPARM
   int ecode11 = 0 ;
   int val12 ;
   int ecode12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  int val14 ;
+  int ecode14 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -7731,8 +7755,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_2(PyObject *SWIGUNUSEDPARM
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:incomplete_BSRmatmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:incomplete_mat_mult_bsr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -7820,20 +7846,30 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_2(PyObject *SWIGUNUSEDPARM
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_BSRmatmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_bsr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   ecode11 = SWIG_AsVal_int(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_BSRmatmat" "', argument " "11"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_mat_mult_bsr" "', argument " "11"" of type '" "int""'");
   } 
   arg11 = static_cast< int >(val11);
   ecode12 = SWIG_AsVal_int(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_BSRmatmat" "', argument " "12"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_mat_mult_bsr" "', argument " "12"" of type '" "int""'");
   } 
   arg12 = static_cast< int >(val12);
-  incomplete_BSRmatmat< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,(int const (*))arg4,(int const (*))arg5,(double const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12);
+  ecode13 = SWIG_AsVal_int(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "incomplete_mat_mult_bsr" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  ecode14 = SWIG_AsVal_int(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "incomplete_mat_mult_bsr" "', argument " "14"" of type '" "int""'");
+  } 
+  arg14 = static_cast< int >(val14);
+  incomplete_mat_mult_bsr< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,(int const (*))arg4,(int const (*))arg5,(double const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12,arg13,arg14);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -7921,7 +7957,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_bsr__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -7935,6 +7971,8 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_3(PyObject *SWIGUNUSEDPARM
   int arg10 ;
   int arg11 ;
   int arg12 ;
+  int arg13 ;
+  int arg14 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -7958,6 +7996,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_3(PyObject *SWIGUNUSEDPARM
   int ecode11 = 0 ;
   int val12 ;
   int ecode12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  int val14 ;
+  int ecode14 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -7970,8 +8012,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_3(PyObject *SWIGUNUSEDPARM
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:incomplete_BSRmatmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:incomplete_mat_mult_bsr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -8059,20 +8103,30 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_3(PyObject *SWIGUNUSEDPARM
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_BSRmatmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_bsr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   ecode11 = SWIG_AsVal_int(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_BSRmatmat" "', argument " "11"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_mat_mult_bsr" "', argument " "11"" of type '" "int""'");
   } 
   arg11 = static_cast< int >(val11);
   ecode12 = SWIG_AsVal_int(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_BSRmatmat" "', argument " "12"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_mat_mult_bsr" "', argument " "12"" of type '" "int""'");
   } 
   arg12 = static_cast< int >(val12);
-  incomplete_BSRmatmat< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12);
+  ecode13 = SWIG_AsVal_int(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "incomplete_mat_mult_bsr" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  ecode14 = SWIG_AsVal_int(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "incomplete_mat_mult_bsr" "', argument " "14"" of type '" "int""'");
+  } 
+  arg14 = static_cast< int >(val14);
+  incomplete_mat_mult_bsr< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12,arg13,arg14);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -8160,7 +8214,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_bsr__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -8174,6 +8228,8 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_4(PyObject *SWIGUNUSEDPARM
   int arg10 ;
   int arg11 ;
   int arg12 ;
+  int arg13 ;
+  int arg14 ;
   PyArrayObject *array1 = NULL ;
   int is_new_object1 ;
   PyArrayObject *array2 = NULL ;
@@ -8197,6 +8253,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_4(PyObject *SWIGUNUSEDPARM
   int ecode11 = 0 ;
   int val12 ;
   int ecode12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  int val14 ;
+  int ecode14 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -8209,8 +8269,10 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_4(PyObject *SWIGUNUSEDPARM
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
   PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  PyObject * obj13 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:incomplete_BSRmatmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOOO:incomplete_mat_mult_bsr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12,&obj13)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -8298,20 +8360,30 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat__SWIG_4(PyObject *SWIGUNUSEDPARM
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_BSRmatmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_bsr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
   ecode11 = SWIG_AsVal_int(obj10, &val11);
   if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_BSRmatmat" "', argument " "11"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "incomplete_mat_mult_bsr" "', argument " "11"" of type '" "int""'");
   } 
   arg11 = static_cast< int >(val11);
   ecode12 = SWIG_AsVal_int(obj11, &val12);
   if (!SWIG_IsOK(ecode12)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_BSRmatmat" "', argument " "12"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "incomplete_mat_mult_bsr" "', argument " "12"" of type '" "int""'");
   } 
   arg12 = static_cast< int >(val12);
-  incomplete_BSRmatmat< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12);
+  ecode13 = SWIG_AsVal_int(obj12, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "incomplete_mat_mult_bsr" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  ecode14 = SWIG_AsVal_int(obj13, &val14);
+  if (!SWIG_IsOK(ecode14)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode14), "in method '" "incomplete_mat_mult_bsr" "', argument " "14"" of type '" "int""'");
+  } 
+  arg14 = static_cast< int >(val14);
+  incomplete_mat_mult_bsr< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10,arg11,arg12,arg13,arg14);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -8399,17 +8471,17 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_bsr(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[13];
+  PyObject *argv[15];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 12); ii++) {
+  for (ii = 0; (ii < argc) && (ii < 14); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 12) {
+  if (argc == 14) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -8462,7 +8534,19 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
-                            return _wrap_incomplete_BSRmatmat__SWIG_1(self, args);
+                            {
+                              int res = SWIG_AsVal_int(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              {
+                                int res = SWIG_AsVal_int(argv[13], NULL);
+                                _v = SWIG_CheckState(res);
+                              }
+                              if (_v) {
+                                return _wrap_incomplete_mat_mult_bsr__SWIG_1(self, args);
+                              }
+                            }
                           }
                         }
                       }
@@ -8476,7 +8560,7 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
       }
     }
   }
-  if (argc == 12) {
+  if (argc == 14) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -8529,7 +8613,19 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
-                            return _wrap_incomplete_BSRmatmat__SWIG_2(self, args);
+                            {
+                              int res = SWIG_AsVal_int(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              {
+                                int res = SWIG_AsVal_int(argv[13], NULL);
+                                _v = SWIG_CheckState(res);
+                              }
+                              if (_v) {
+                                return _wrap_incomplete_mat_mult_bsr__SWIG_2(self, args);
+                              }
+                            }
                           }
                         }
                       }
@@ -8543,7 +8639,7 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
       }
     }
   }
-  if (argc == 12) {
+  if (argc == 14) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -8596,7 +8692,19 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
-                            return _wrap_incomplete_BSRmatmat__SWIG_3(self, args);
+                            {
+                              int res = SWIG_AsVal_int(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              {
+                                int res = SWIG_AsVal_int(argv[13], NULL);
+                                _v = SWIG_CheckState(res);
+                              }
+                              if (_v) {
+                                return _wrap_incomplete_mat_mult_bsr__SWIG_3(self, args);
+                              }
+                            }
                           }
                         }
                       }
@@ -8610,7 +8718,7 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
       }
     }
   }
-  if (argc == 12) {
+  if (argc == 14) {
     int _v;
     {
       _v = (is_array(argv[0]) && PyArray_CanCastSafely(PyArray_TYPE(argv[0]),PyArray_INT)) ? 1 : 0;
@@ -8663,7 +8771,19 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
                             _v = SWIG_CheckState(res);
                           }
                           if (_v) {
-                            return _wrap_incomplete_BSRmatmat__SWIG_4(self, args);
+                            {
+                              int res = SWIG_AsVal_int(argv[12], NULL);
+                              _v = SWIG_CheckState(res);
+                            }
+                            if (_v) {
+                              {
+                                int res = SWIG_AsVal_int(argv[13], NULL);
+                                _v = SWIG_CheckState(res);
+                              }
+                              if (_v) {
+                                return _wrap_incomplete_mat_mult_bsr__SWIG_4(self, args);
+                              }
+                            }
                           }
                         }
                       }
@@ -8679,12 +8799,12 @@ SWIGINTERN PyObject *_wrap_incomplete_BSRmatmat(PyObject *self, PyObject *args) 
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'incomplete_BSRmatmat'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'incomplete_mat_mult_bsr'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    incomplete_BSRmatmat< int,float,float >(int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],float [],int const,int const,int const)\n"
-    "    incomplete_BSRmatmat< int,double,double >(int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],double [],int const,int const,int const)\n"
-    "    incomplete_BSRmatmat< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper [],int const,int const,int const)\n"
-    "    incomplete_BSRmatmat< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper [],int const,int const,int const)\n");
+    "    incomplete_mat_mult_bsr< int,float,float >(int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],float [],int const,int const,int const,int const,int const)\n"
+    "    incomplete_mat_mult_bsr< int,double,double >(int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],double [],int const,int const,int const,int const,int const)\n"
+    "    incomplete_mat_mult_bsr< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper [],int const,int const,int const,int const,int const)\n"
+    "    incomplete_mat_mult_bsr< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper [],int const,int const,int const,int const,int const)\n");
   return NULL;
 }
 
@@ -11385,7 +11505,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_csr__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -11427,7 +11547,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_matmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_mat_mult_csr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -11515,10 +11635,10 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_1(PyObject *SWIGUNUSEDPARM(se
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_matmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_csr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
-  incomplete_matmat< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,(int const (*))arg4,(int const (*))arg5,(float const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
+  incomplete_mat_mult_csr< int,float,float >((int const (*))arg1,(int const (*))arg2,(float const (*))arg3,(int const (*))arg4,(int const (*))arg5,(float const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -11606,7 +11726,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_csr__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -11648,7 +11768,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_matmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_mat_mult_csr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -11736,10 +11856,10 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_2(PyObject *SWIGUNUSEDPARM(se
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_matmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_csr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
-  incomplete_matmat< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,(int const (*))arg4,(int const (*))arg5,(double const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
+  incomplete_mat_mult_csr< int,double,double >((int const (*))arg1,(int const (*))arg2,(double const (*))arg3,(int const (*))arg4,(int const (*))arg5,(double const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -11827,7 +11947,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_csr__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -11869,7 +11989,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_matmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_mat_mult_csr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -11957,10 +12077,10 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_3(PyObject *SWIGUNUSEDPARM(se
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_matmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_csr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
-  incomplete_matmat< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
+  incomplete_mat_mult_csr< int,npy_cfloat_wrapper,float >((int const (*))arg1,(int const (*))arg2,(npy_cfloat_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cfloat_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -12048,7 +12168,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_csr__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int *arg1 ;
   int *arg2 ;
@@ -12090,7 +12210,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_4(PyObject *SWIGUNUSEDPARM(se
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_matmat",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:incomplete_mat_mult_csr",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
   {
     npy_intp size[1] = {
       -1
@@ -12178,10 +12298,10 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat__SWIG_4(PyObject *SWIGUNUSEDPARM(se
   }
   ecode10 = SWIG_AsVal_int(obj9, &val10);
   if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_matmat" "', argument " "10"" of type '" "int""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "incomplete_mat_mult_csr" "', argument " "10"" of type '" "int""'");
   } 
   arg10 = static_cast< int >(val10);
-  incomplete_matmat< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
+  incomplete_mat_mult_csr< int,npy_cdouble_wrapper,double >((int const (*))arg1,(int const (*))arg2,(npy_cdouble_wrapper const (*))arg3,(int const (*))arg4,(int const (*))arg5,(npy_cdouble_wrapper const (*))arg6,(int const (*))arg7,(int const (*))arg8,arg9,arg10);
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object1 && array1) {
@@ -12269,7 +12389,7 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_incomplete_mat_mult_csr(PyObject *self, PyObject *args) {
   int argc;
   PyObject *argv[11];
   int ii;
@@ -12322,7 +12442,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_incomplete_matmat__SWIG_1(self, args);
+                        return _wrap_incomplete_mat_mult_csr__SWIG_1(self, args);
                       }
                     }
                   }
@@ -12377,7 +12497,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_incomplete_matmat__SWIG_2(self, args);
+                        return _wrap_incomplete_mat_mult_csr__SWIG_2(self, args);
                       }
                     }
                   }
@@ -12432,7 +12552,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_incomplete_matmat__SWIG_3(self, args);
+                        return _wrap_incomplete_mat_mult_csr__SWIG_3(self, args);
                       }
                     }
                   }
@@ -12487,7 +12607,7 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_incomplete_matmat__SWIG_4(self, args);
+                        return _wrap_incomplete_mat_mult_csr__SWIG_4(self, args);
                       }
                     }
                   }
@@ -12501,12 +12621,12 @@ SWIGINTERN PyObject *_wrap_incomplete_matmat(PyObject *self, PyObject *args) {
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'incomplete_matmat'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'incomplete_mat_mult_csr'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    incomplete_matmat< int,float,float >(int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],float [],int const)\n"
-    "    incomplete_matmat< int,double,double >(int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],double [],int const)\n"
-    "    incomplete_matmat< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper [],int const)\n"
-    "    incomplete_matmat< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper [],int const)\n");
+    "    incomplete_mat_mult_csr< int,float,float >(int const [],int const [],float const [],int const [],int const [],float const [],int const [],int const [],float [],int const)\n"
+    "    incomplete_mat_mult_csr< int,double,double >(int const [],int const [],double const [],int const [],int const [],double const [],int const [],int const [],double [],int const)\n"
+    "    incomplete_mat_mult_csr< int,npy_cfloat_wrapper,float >(int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper const [],int const [],int const [],npy_cfloat_wrapper [],int const)\n"
+    "    incomplete_mat_mult_csr< int,npy_cdouble_wrapper,double >(int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper const [],int const [],int const [],npy_cdouble_wrapper [],int const)\n");
   return NULL;
 }
 
@@ -29228,19 +29348,21 @@ static PyMethodDef SwigMethods[] = {
 		"    int BsqCols, npy_cdouble_wrapper x, \n"
 		"    int Sp, int Sj)\n"
 		""},
-	 { (char *)"incomplete_BSRmatmat", _wrap_incomplete_BSRmatmat, METH_VARARGS, (char *)"\n"
-		"incomplete_BSRmatmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, \n"
-		"    int Sp, int Sj, float Sx, int n, int brows, \n"
-		"    int bcols)\n"
-		"incomplete_BSRmatmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, \n"
-		"    int Sp, int Sj, double Sx, int n, int brows, \n"
-		"    int bcols)\n"
-		"incomplete_BSRmatmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, \n"
+	 { (char *)"incomplete_mat_mult_bsr", _wrap_incomplete_mat_mult_bsr, METH_VARARGS, (char *)"\n"
+		"incomplete_mat_mult_bsr(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, \n"
+		"    int Sp, int Sj, float Sx, int n_brow, int n_bcol, \n"
+		"    int brow_A, int bcol_A, int bcol_B)\n"
+		"incomplete_mat_mult_bsr(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, \n"
+		"    int Sp, int Sj, double Sx, int n_brow, int n_bcol, \n"
+		"    int brow_A, int bcol_A, int bcol_B)\n"
+		"incomplete_mat_mult_bsr(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, \n"
 		"    npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, \n"
-		"    int n, int brows, int bcols)\n"
-		"incomplete_BSRmatmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, \n"
+		"    int n_brow, int n_bcol, \n"
+		"    int brow_A, int bcol_A, int bcol_B)\n"
+		"incomplete_mat_mult_bsr(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, \n"
 		"    npy_cdouble_wrapper Bx, int Sp, int Sj, \n"
-		"    npy_cdouble_wrapper Sx, int n, int brows, int bcols)\n"
+		"    npy_cdouble_wrapper Sx, int n_brow, int n_bcol, \n"
+		"    int brow_A, int bcol_A, int bcol_B)\n"
 		""},
 	 { (char *)"pinv_array", _wrap_pinv_array, METH_VARARGS, (char *)"\n"
 		"pinv_array(float Ax, int m, int n, char TransA)\n"
@@ -29282,15 +29404,15 @@ static PyMethodDef SwigMethods[] = {
 		"    npy_cdouble_wrapper b, int BDBCols, int NullDim, \n"
 		"    double tol)\n"
 		""},
-	 { (char *)"incomplete_matmat", _wrap_incomplete_matmat, METH_VARARGS, (char *)"\n"
-		"incomplete_matmat(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, \n"
+	 { (char *)"incomplete_mat_mult_csr", _wrap_incomplete_mat_mult_csr, METH_VARARGS, (char *)"\n"
+		"incomplete_mat_mult_csr(int Ap, int Aj, float Ax, int Bp, int Bj, float Bx, \n"
 		"    int Sp, int Sj, float Sx, int num_rows)\n"
-		"incomplete_matmat(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, \n"
+		"incomplete_mat_mult_csr(int Ap, int Aj, double Ax, int Bp, int Bj, double Bx, \n"
 		"    int Sp, int Sj, double Sx, int num_rows)\n"
-		"incomplete_matmat(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, \n"
+		"incomplete_mat_mult_csr(int Ap, int Aj, npy_cfloat_wrapper Ax, int Bp, int Bj, \n"
 		"    npy_cfloat_wrapper Bx, int Sp, int Sj, npy_cfloat_wrapper Sx, \n"
 		"    int num_rows)\n"
-		"incomplete_matmat(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, \n"
+		"incomplete_mat_mult_csr(int Ap, int Aj, npy_cdouble_wrapper Ax, int Bp, int Bj, \n"
 		"    npy_cdouble_wrapper Bx, int Sp, int Sj, \n"
 		"    npy_cdouble_wrapper Sx, int num_rows)\n"
 		""},

@@ -340,21 +340,14 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
     #   Equivalent to R = -A*T;    R = R.multiply(Sparsity_Pattern)
     #   with the added constraint that R has an explicit 0 wherever 
     #   R is 0 and Sparsity_Pattern is not
-    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
-                    shape=(Sparsity_Pattern.shape) )
-    # This gives us the same sparsity data structures as T in BSC format.
-    # It has the added benefit of TBSC.data looking like T.tobsc().data, but 
-    # with each block in data looking like it is in column-major format, 
-    # which is needed for the gemm in incomplete_BSRmatmat.
-    TBSC = -1.0*T.T.tobsr()
-    TBSC.sort_indices()
-    A.sort_indices()
-    pyamg.amg_core.incomplete_BSRmatmat(A.indptr, A.indices, numpy.ravel(A.data), 
-                                        TBSC.indptr, TBSC.indices, numpy.ravel(TBSC.data),
-                                        R.indptr, R.indices, numpy.ravel(R.data),      
-                                        T.shape[0], T.blocksize[0],T.blocksize[1])
-    del TBSC
-    
+    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, 
+                   Sparsity_Pattern.indptr), shape=(Sparsity_Pattern.shape) )
+    pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr,  A.indices,  numpy.ravel(A.data), 
+                                           T.indptr,  T.indices,  numpy.ravel(T.data),
+                                           R.indptr, R.indices,   numpy.ravel(R.data),
+                                           T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                           A.blocksize[0], A.blocksize[1], T.blocksize[1])
+    R.data *= -1.0
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
@@ -364,7 +357,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         return T
     
     #Calculate Frobenius norm of the residual
-    resid = numpy.sqrt((R.data.conjugate()*R.data).sum())
+    resid = R.nnz ##numpy.sqrt((R.data.conjugate()*R.data).sum())
     #print "Energy Minimization of Prolongator --- Iteration 0 --- r = " + str(resid)
     
     i = 0
@@ -385,22 +378,17 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
             beta = newsum/oldsum
             P = Z + beta*P
         oldsum = newsum
-
-        # This gives us the same sparsity data structures as P in BSC format
-        # It has the added benefit of TBSC.data looking like P.tobsc().data, but 
-        # with each block in data looking like it is in column-major format, 
-        # which is needed for the gemm in incomplete_BSRmatmat.
-        PBSC = P.T.tobsr()
-        PBSC.sort_indices()
         
         # Calculate new direction and enforce constraints
         #   Equivalent to:  AP = A*P;    AP = AP.multiply(Sparsity_Pattern)
         #   with the added constraint that explicit zeros are in AP wherever 
-        #   AP = 0 and Sparsity_Pattern does not
-        pyamg.amg_core.incomplete_BSRmatmat(A.indptr, A.indices, numpy.ravel(A.data), 
-                                            PBSC.indptr, PBSC.indices,numpy.ravel(PBSC.data),
-                                            AP.indptr, AP.indices, numpy.ravel(AP.data),
-                                            T.shape[0],  T.blocksize[0], T.blocksize[1])
+        #   AP = 0 and Sparsity_Pattern does not  !!!!
+        AP.data[:] = 0.0
+        pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr,  A.indices,  numpy.ravel(A.data), 
+                                               P.indptr,  P.indices,  numpy.ravel(P.data),
+                                               AP.indptr, AP.indices, numpy.ravel(AP.data),
+                                               T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                               A.blocksize[0], A.blocksize[1], P.blocksize[1])
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
@@ -421,7 +409,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         i += 1
 
         #Calculate Frobenius norm of the residual
-        resid = numpy.sqrt((R.data.conjugate()*R.data).sum())
+        resid = R.nnz #numpy.sqrt((R.data.conjugate()*R.data).sum())
         #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
    
     return T
@@ -489,8 +477,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     Ah.sort_indices()
     
     # Preallocate
-    AP = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
-                      shape=(Sparsity_Pattern.shape) )
+    AP = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), 
+                     Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+                     shape=(Sparsity_Pattern.shape) )
  
     # D for A.H*A
     Dinv = get_diagonal(A, norm_eq=1, inv=True)
@@ -499,24 +488,17 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     #   Equivalent to R = -Ah*(A*T);    R = R.multiply(Sparsity_Pattern)
     #   with the added constraint that R has an explicit 0 wherever 
     #   R is 0 and Sparsity_Pattern is not
-    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), 
+                    Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                     shape=(Sparsity_Pattern.shape) )
-    # This gives us the same sparsity data structures as T in BSC format
-    # It has the added benefit of TBSC.data looking like T.tobsc().data, but 
-    # with each block in data looking like it is in column-major format, 
-    # which is needed for the gemm in incomplete_BSRmatmat.
-    
-    ATBSC = -1.0*(A*T).T.tobsr()
-    
-    ATBSC.sort_indices()
-    pyamg.amg_core.incomplete_BSRmatmat(Ah.indptr, Ah.indices, 
-            numpy.ravel(Ah.data), ATBSC.indptr, ATBSC.indices,
-            numpy.ravel(ATBSC.data), R.indptr,    R.indices,
-            numpy.ravel(R.data),      T.shape[0],
-            T.blocksize[0],T.blocksize[1]) 
+    AT = -1.0*A*T
+    R.data[:] = 0.0
+    pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices, numpy.ravel(Ah.data), 
+                                           AT.indptr, AT.indices, numpy.ravel(AT.data),
+                                           R.indptr,  R.indices,  numpy.ravel(R.data),
+                                           T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                           Ah.blocksize[0], Ah.blocksize[1], T.blocksize[1])
 
-    del ATBSC
- 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
  
@@ -525,7 +507,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         return T
     
     #Calculate Frobenius norm of the residual
-    resid = numpy.sqrt((R.data.conjugate()*R.data).sum())
+    resid = R.nnz #numpy.sqrt((R.data.conjugate()*R.data).sum())
     #print "Energy Minimization of Prolongator --- Iteration 0 --- r = " + str(resid)
 
     i = 0
@@ -548,36 +530,20 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
             P = Z + beta*P
         oldsum = newsum
  
-        # This gives us the same sparsity data structures as AP in BSC format
-        # It has the added benefit of AP_BSC.data looking like AP.tobsc().data, but 
-        # with each block in data looking like it is in column-major format, 
-        # which is needed for the gemm in incomplete_BSRmatmat.
-        if True:
-            AP_BSC = (A*P).T.tobsr()
-            AP_BSC.sort_indices()
-        else:    
-            # Mimic -(A^* Q A) P 
-            # by inserting a multiply by Q after A
-            AP_BSC = (A*P)
-            Sparsity_Pattern.data[:] = 1.0
-            AP_BSC = AP_BSC + 1e-100*Sparsity_Pattern
-            AP_BSC = AP_BSC.multiply(Sparsity_Pattern)
-            AP_BSC.eliminate_zeros()
-            AP_BSC.sort_indices()
-            Satisfy_Constraints(AP_BSC, B, BtBinv)
-            AP_BSC = AP_BSC.T.tobsr()
-            AP_BSC.sort_indices()
-        
         #Calculate new direction
         #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(Sparsity_Pattern)
         #  with the added constraint that explicit zeros are in AP wherever 
         #  AP = 0 and Sparsity_Pattern does not
-        pyamg.amg_core.incomplete_BSRmatmat(Ah.indptr, Ah.indices,             
-                numpy.ravel(Ah.data), AP_BSC.indptr, AP_BSC.indices,
-                numpy.ravel(AP_BSC.data), AP.indptr, AP.indices,
-                numpy.ravel(AP.data), T.shape[0], T.blocksize[0],
-                T.blocksize[1])
-        
+        AP_temp = A*P
+        AP.data[:] = 0.0
+        pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr,      Ah.indices,      numpy.ravel(Ah.data), 
+                                               AP_temp.indptr, AP_temp.indices, numpy.ravel(AP_temp.data),
+                                               AP.indptr,      AP.indices,      numpy.ravel(AP.data),
+                                               T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                               Ah.blocksize[0], Ah.blocksize[1], T.blocksize[1])
+        del AP_temp 
+
+
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
         
@@ -597,7 +563,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         i += 1
 
         #Calculate Frobenius norm of the residual
-        resid = numpy.sqrt((R.data.conjugate()*R.data).sum())
+        resid = R.nnz #numpy.sqrt((R.data.conjugate()*R.data).sum())
         #print "Energy Minimization of Prolongator --- Iteration " + str(i) + " --- r = " + str(resid)
 
     vect = numpy.ravel((A*T).data)
@@ -724,24 +690,16 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     #   Equivalent to R = -A*T;    R = R.multiply(Sparsity_Pattern)
     #   with the added constraint that R has an explicit 0 wherever 
     #   R is 0 and Sparsity_Pattern is not
-    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
+    R = bsr_matrix((numpy.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype), 
+                    Sparsity_Pattern.indices, Sparsity_Pattern.indptr), 
                     shape=(Sparsity_Pattern.shape) )
-    # This gives us the same sparsity data structures as T in BSC format.
-    # It has the added benefit of TBSC.data looking like T.tobsc().data, but 
-    # with each block in data looking like it is in column-major format, 
-    # which is needed for the gemm in incomplete_BSRmatmat.
-    TBSC = -1.0*T.T.tobsr()
-    TBSC.sort_indices()
-    A.sort_indices()
-    pyamg.amg_core.incomplete_BSRmatmat(A.indptr,    A.indices,
-            numpy.ravel(A.data), 
-                                              TBSC.indptr, TBSC.indices,
-                                              numpy.ravel(TBSC.data),
-                                              R.indptr,    R.indices,
-                                              numpy.ravel(R.data),      
-                                              T.shape[0],  T.blocksize[0],T.blocksize[1])
-    del TBSC
-    
+    pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr,  A.indices,  numpy.ravel(A.data), 
+                                           T.indptr,  T.indices,  numpy.ravel(T.data),
+                                           R.indptr,  R.indices,  numpy.ravel(R.data),
+                                           T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                           A.blocksize[0], A.blocksize[1], T.blocksize[1])
+    R.data *= -1.0
+ 
     #Apply diagonal preconditioner
     if weighting == 'local' or weighting == 'diagonal':
         R = scale_rows(R, Dinv)
@@ -774,20 +732,15 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
         i = i+1
 
         # Calculate new search direction
-        # This gives us the same sparsity data structures as P in BSC format
-        # It has the added benefit of TBSC.data looking like P.tobsc().data, but 
-        # with each block in data looking like it is in column-major format, 
-        # which is needed for the gemm in incomplete_BSRmatmat.
-        VBSC = V[i].T.tobsr()
-        VBSC.sort_indices()
         #   Equivalent to:  AV = A*V;    AV = AV.multiply(Sparsity_Pattern)
         #   with the added constraint that explicit zeros are in AP wherever 
         #   AP = 0 and Sparsity_Pattern does not
-        pyamg.amg_core.incomplete_BSRmatmat(A.indptr, A.indices, numpy.ravel(A.data), 
-                                            VBSC.indptr, VBSC.indices, numpy.ravel(VBSC.data),
-                                            AV.indptr,   AV.indices,
-                                            numpy.ravel(AV.data),      
-                                            T.shape[0],  T.blocksize[0], T.blocksize[1])
+        AV.data[:] = 0.0
+        pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr,     A.indices,     numpy.ravel(A.data), 
+                                               V[i].indptr,  V[i].indices,  numpy.ravel(V[i].data),
+                                               AV.indptr,    AV.indices,    numpy.ravel(AV.data),
+                                               T.shape[0]/T.blocksize[0], T.shape[1]/T.blocksize[1],
+                                               A.blocksize[0], A.blocksize[1], T.blocksize[1])
         
         if weighting == 'local' or weighting == 'diagonal':
             AV = scale_rows(AV, Dinv)

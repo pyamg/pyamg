@@ -617,7 +617,7 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
         AtildeCSC.sort_indices()
         mask.sort_indices()
         Atilde.sort_indices()
-        amg_core.incomplete_matmat(Atilde.indptr,    Atilde.indices,    Atilde.data, 
+        amg_core.incomplete_mat_mult_csr(Atilde.indptr,    Atilde.indices,    Atilde.data, 
                                          AtildeCSC.indptr, AtildeCSC.indices, AtildeCSC.data,
                                          mask.indptr,      mask.indices,      mask.data,      
                                          dimen)

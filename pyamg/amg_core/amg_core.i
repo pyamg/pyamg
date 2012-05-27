@@ -228,14 +228,13 @@ INSTANTIATE_BOTH(rs_direct_interpolation_pass2)
 
 INSTANTIATE_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_COMPLEX(calc_BtB)
-INSTANTIATE_COMPLEX(incomplete_BSRmatmat)
-
+INSTANTIATE_COMPLEX(incomplete_mat_mult_bsr)
 
 INSTANTIATE_COMPLEX(pinv_array)
 INSTANTIATE_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
 INSTANTIATE_COMPLEX(evolution_strength_helper)
-INSTANTIATE_COMPLEX(incomplete_matmat)
+INSTANTIATE_COMPLEX(incomplete_mat_mult_csr)
 INSTANTIATE_BOTH(apply_distance_filter)
 INSTANTIATE_BOTH(apply_absolute_distance_filter)
 INSTANTIATE_BOTH(min_blocks)
