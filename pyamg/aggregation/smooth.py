@@ -370,7 +370,10 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
 
         #Frobenius inner-product of (R,Z) = sum( numpy.conjugate(rk).*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
-            
+        if newsum < tol:
+            # met tolerance, so halt
+            break
+
         #P is the search direction, not the prolongator, which is T.    
         if(i == 0):
             P = Z
@@ -521,6 +524,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
  
         #Frobenius innerproduct of (R,Z) = sum(rk.*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
+        if newsum < tol:
+            # met tolerance, so halt
+            break
             
         #P is the search direction, not the prolongator, which is T.    
         if(i == 0):

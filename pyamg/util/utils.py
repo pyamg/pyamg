@@ -1543,13 +1543,16 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     Fpts = I_F.indices.copy()
 
     ##
-    # P_I only injects from Cpts on the coarse grid to the fine grid
+    # P_I only injects from Cpts on the coarse grid to the fine grid, but
+    # because of it's later uses, it must have the CSC indices ordered as in Cpts
     if I_C.nnz > 0:
-        indices = numpy.arange(ncoarse)
+        indices = Cpts.copy()
+        indptr = numpy.arange(indices.shape[0]+1)
     else:
         indices = numpy.zeros((0,),dtype=T.indices.dtype)
-    P_I = csr_matrix( (I_C.data.copy(), indices, I_C.indptr.copy()), 
-                        shape=(I_C.shape[0], ncoarse) ) 
+        indptr = numpy.zeros((ncoarse+1,),dtype=T.indptr.dtype)
+    
+    P_I = csc_matrix( (I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse) ) 
     P_I = P_I.tobsr(T.blocksize)
     
     ##
