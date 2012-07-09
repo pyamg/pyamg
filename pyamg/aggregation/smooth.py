@@ -403,7 +403,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
         T = T + alpha*P 
 
         # Ensure identity at C-pts 
-        if Cpt_params[0] and T.blocksize[0] > 1:
+        if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
 
         #Update residual
@@ -560,7 +560,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         T = T + alpha*P 
  
         # Ensure identity at C-pts 
-        if Cpt_params[0] and T.blocksize[0] > 1:
+        if Cpt_params[0]: 
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
 
         #Update residual
@@ -817,7 +817,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     #print "Final Iteration " + str(i) + "   Energy = %1.3e"%numpy.sqrt( (vect.conjugate()*vect).sum() )
 
     # Ensure identity at C-pts 
-    if Cpt_params[0] and T.blocksize[0] > 1:
+    if Cpt_params[0]:
         T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
 
     return T
@@ -1003,7 +1003,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params, krylov='cg', m
     if Cpt_params[0] and (B.shape[1] > A.blocksize[0]):
         T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts 
-        if Cpt_params[0] and T.blocksize[0] > 1:
+        if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
    
     ##
