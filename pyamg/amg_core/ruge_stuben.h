@@ -8,6 +8,10 @@
 #include <limits>
 #include <algorithm>
 
+#include "linalg.h"
+#include "graph.h"
+
+
 /*
  *  Compute a strength of connection matrix using the classical strength
  *  of connection measure by Ruge and Stuben. Both the input and output 
