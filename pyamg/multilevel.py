@@ -7,6 +7,7 @@ from warnings import warn
 import scipy
 import numpy
 
+
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
@@ -84,7 +85,7 @@ class multilevel_solver:
             tuple of the form (string|callable, args), where args is a
             dictionary of arguments to be passed to the function denoted by
             string or callable.
-
+            
             The set of valid string arguments is:
             - Sparse direct methods:
                 + splu         : sparse LU solver
@@ -93,7 +94,9 @@ class multilevel_solver:
                   pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov
                   take precedence.
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
-                  present in pyamg.relaxation
+
+
+
             - Dense methods:
                 + pinv     : pseudoinverse (QR)
                 + pinv2    : pseudoinverse (SVD)
@@ -145,7 +148,7 @@ class multilevel_solver:
         """
 
         self.levels = levels
-
+        
         self.coarse_solver = coarse_grid_solver(coarse_solver)
 
         for level in levels[:-1]:
@@ -160,7 +163,7 @@ class multilevel_solver:
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
-
+        
         total_nnz = sum([level.A.nnz for level in self.levels])
 
         output += '  level   unknowns     nonzeros\n'
@@ -173,16 +176,16 @@ class multilevel_solver:
         return output
 
     def cycle_complexity(self, cycle='V'):
-        """Cycle complexity of this multigrid hierarchy for V(1,1), W(1,1) and
-           F(1,1) cycles when simple relaxation methods are used.
-
+        """Cycle complexity of this multigrid hierarchy for V(1,1), W(1,1),
+           AMLI(1,1) and F(1,1) cycles when simple relaxation methods are used.
+       
         Cycle complexity is an approximate measure of the number of
         floating point operations (FLOPs) required to perform a single
         multigrid cycle relative to the cost a single smoothing operation.
 
         Parameters
         ----------
-        cycle : {'V', 'W', 'F'}
+        cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
 
         Returns
@@ -201,7 +204,7 @@ class multilevel_solver:
         This assumption holds for smoothers like Jacobi and Gauss-Seidel.
         However, the true cycle complexity of cycle using more expensive
         methods, like block Gauss-Seidel will be underestimated.
-
+        
         Additionally, if the cycle used in practice isn't a (1,1)-cycle,
         then this cost estimate will be off.
 
@@ -217,7 +220,7 @@ class multilevel_solver:
                 return 2 * nnz[level] + nnz[level + 1]
             else:
                 return 2 * nnz[level] + V(level + 1)
-
+        
         def W(level):
             if len(self.levels) == 1:
                 return nnz[0]
@@ -225,7 +228,7 @@ class multilevel_solver:
                 return 2 * nnz[level] + nnz[level + 1]
             else:
                 return 2 * nnz[level] + 2 * W(level + 1)
-
+        
         def F(level):
             if len(self.levels) == 1:
                 return nnz[0]
@@ -236,14 +239,15 @@ class multilevel_solver:
 
         if cycle == 'V':
             flops = V(0)
-        elif cycle == 'W':
+        elif (cycle == 'W') or (cycle == 'AMLI'):
             flops = W(0)
         elif cycle == 'F':
             flops = F(0)
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
-
+        
         return float(flops) / float(nnz[0])
+
 
     def operator_complexity(self):
         """Operator complexity of this multigrid hierarchy
@@ -251,14 +255,14 @@ class multilevel_solver:
         Defined as:
             Number of nonzeros in the matrix on all levels /
             Number of nonzeros in the matrix on the finest level
-
+        
         """
         return sum([level.A.nnz for level in self.levels]) /\
                 float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
         """Grid complexity of this multigrid hierarchy
-
+        
         Defined as:
             Number of unknowns on all levels /
             Number of unknowns on the finest level
@@ -275,9 +279,9 @@ class multilevel_solver:
 
         Parameters
         ----------
-        cycle : {'V', 'W', 'F'}
+        cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
-
+       
         Returns
         -------
         precond : LinearOperator
@@ -296,21 +300,21 @@ class multilevel_solver:
         >>> from pyamg.gallery import poisson
         >>> from scipy.sparse.linalg import cg
         >>> from scipy import rand
-        >>> A = poisson((100, 100), format='csr')           # matrix
+        >>> A = poisson((100, 100), format='csr')          # matrix
         >>> b = rand(A.shape[0])                           # random RHS
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
-        >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
-
+        >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
+                    
         """
         from scipy.sparse.linalg import LinearOperator
-
+        
         shape = self.levels[0].A.shape
         dtype = self.levels[0].A.dtype
 
         def matvec(b):
             return self.solve(b, maxiter=1, cycle=cycle, tol=1e-12)
-
+                    
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
@@ -327,7 +331,7 @@ class multilevel_solver:
             Stopping criteria: relative residual r[k]/r[0] tolerance.
         maxiter : int
             Stopping criteria: maximum number of allowable iterations.
-        cycle : {'V', 'W', 'F'}
+        cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
         accel : {string, function}
             Defines acceleration method.  Can be a string such as 'cg'
@@ -364,15 +368,25 @@ class multilevel_solver:
         """
 
         from pyamg.util.linalg import residual_norm, norm
-
+        
         if x0 is None:
             x = numpy.zeros_like(b)
         else:
             x = numpy.array(x0)  # copy
-
+        
         cycle = str(cycle).upper()
+        
+        # AMLI cycles require hermitian matrix 
+        if (cycle == 'AMLI') and hasattr(self.levels[0].A, 'symmetry'):
+            if self.levels[0].A.symmetry != 'hermitian':
+                raise ValueError('AMLI cycles require symmetry to be hermitian') 
 
         if accel is not None:
+            
+            # Check for AMLI compatability
+            if (accel != 'fgmres') and (cycle == 'AMLI'):
+                raise ValueError('AMLI cycles require acceleration (accel) to be fgmres, or no acceleration') 
+
             # Acceleration is being used
             if isinstance(accel, basestring):
                 from pyamg import krylov
@@ -385,18 +399,17 @@ class multilevel_solver:
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
-
+        
             try:  # try PyAMG style interface which has a residuals parameter
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                              callback=callback, residuals=residuals)[0]
             except:  # try the scipy.sparse.linalg.isolve style interface,
                      # which requires a call back function if a residual
                      # history is desired
-
+                
                 cb = callback
                 if residuals is not None:
                     residuals[:] = [residual_norm(A, x, b)]
-
                     def callback(x):
                         if scipy.isscalar(x):
                             residuals.append(x)
@@ -407,7 +420,7 @@ class multilevel_solver:
 
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                              callback=callback)[0]
-
+        
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
@@ -423,6 +436,7 @@ class multilevel_solver:
         else:
             residuals[:] = []
 
+
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of real A and complex b
         from scipy.sparse.sputils import upcast
@@ -431,20 +445,20 @@ class multilevel_solver:
         [b, x] = to_type(tp, [b, x])
         b = numpy.ravel(b)
         x = numpy.ravel(x)
-
+        
         A = self.levels[0].A
 
         residuals.append(residual_norm(A, x, b))
 
         self.first_pass = True
-
+        
         while len(residuals) <= maxiter and residuals[-1] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
                 self.__solve(0, x, b, cycle)
-
+            
             residuals.append(residual_norm(A, x, b))
 
             self.first_pass = False
@@ -467,13 +481,15 @@ class multilevel_solver:
             Initial guess `x` and return correction
         b : numpy array
             Right-hand side for Ax=b
-        cycle : {'V', 'W', 'F'}
+        cycle : {'V','W','F','AMLI'}
             Recursively called cycling function.  The
             Defines the cycling used:
-            cycle = 'V', V-cycle
-            cycle = 'W', W-cycle
-            cycle = 'F', F-cycle
+            cycle = 'V',    V-cycle
+            cycle = 'W',    W-cycle
+            cycle = 'F',    F-cycle
+            cycle = 'AMLI', AMLI-cycle
         """
+
 
         A = self.levels[lvl].A
 
@@ -495,12 +511,44 @@ class multilevel_solver:
             elif cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
+            elif cycle == "AMLI":
+                ##
+                # Run nAMLI AMLI cycles, which compute "optimal" corrections by 
+                # orthogonalizing the coarse-grid corrections in the A-norm
+                nAMLI = 2
+                Ac = self.levels[lvl+1].A
+                p = numpy.zeros((nAMLI, coarse_b.shape[0]), dtype=coarse_b.dtype)
+                beta  = numpy.zeros((nAMLI,nAMLI), dtype=coarse_b.dtype)
+                for k in range(nAMLI):
+                    ##
+                    # New search direction --> M^{-1}*residual
+                    self.__solve(lvl + 1, 
+                            p[k,:].reshape(coarse_b.shape), coarse_b, cycle)
+                     
+                    ##
+                    # Orthogonalize new search direction to old directions
+                    for j in range(k):  # loops from j = 0...(k-1)
+                        beta[k,j] = numpy.inner( p[j,:].conj(), Ac*p[k,:])/ \
+                                    numpy.inner( p[j,:].conj(), Ac*p[j,:])
+                        p[k,:] -= beta[k,j]*p[j,:]
+                    
+                    ##
+                    # Compute step size
+                    Ap = Ac*p[k,:]
+                    alpha = numpy.inner(p[k,:].conj(), numpy.ravel(coarse_b))/ \
+                            numpy.inner(p[k,:].conj(), Ap)
+                    # Update solution
+                    coarse_x += alpha*p[k,:].reshape(coarse_x.shape)
+                    # Update residual
+                    coarse_b -= alpha*Ap.reshape(coarse_b.shape)
+                ##
             else:
                 raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
         self.levels[lvl].postsmoother(A, x, b)
+
 
 
 def coarse_grid_solver(solver):
@@ -615,7 +663,7 @@ def coarse_grid_solver(solver):
     elif solver in ['gauss_seidel', 'jacobi', 'block_gauss_seidel', 'schwarz',
                     'block_jacobi', 'richardson', 'sor', 'chebyshev',
                     'jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']:
-
+        
         if 'iterations' not in kwargs:
             kwargs['iterations'] = 10
 
@@ -643,6 +691,7 @@ def coarse_grid_solver(solver):
 
     else:
         raise ValueError('unknown solver: %s' % solver)
+
 
     class generic_solver:
         def __call__(self, A, b):

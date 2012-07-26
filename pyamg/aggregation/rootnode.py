@@ -419,24 +419,24 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
             raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
 
     if keep:
-        levels[-1].C     = C       # strength of connection matrix
-        levels[-1].AggOp = AggOp   # aggregation operator
-        levels[-1].T     = T       # tentative prolongator
-        levels[-1].Cpts  = Cpt_params[1]['Cpts']    # Cpts (i.e., rootnodes) 
-        levels[-1].Fpts  = Cpt_params[1]['Fpts']    # Fpts    
-        levels[-1].P_I   = Cpt_params[1]['P_I']     # Injection operator 
-        levels[-1].I_F   = Cpt_params[1]['I_F']     # Identity on F-pts
-        levels[-1].I_C   = Cpt_params[1]['I_C']     # Identity on C-pts
+        levels[-1].C     = C                      # strength of connection matrix
+        levels[-1].AggOp = AggOp                  # aggregation operator
+        levels[-1].T     = T                      # tentative prolongator
+        levels[-1].Fpts  = Cpt_params[1]['Fpts']  # Fpts    
+        levels[-1].P_I   = Cpt_params[1]['P_I']   # Injection operator 
+        levels[-1].I_F   = Cpt_params[1]['I_F']   # Identity on F-pts
+        levels[-1].I_C   = Cpt_params[1]['I_C']   # Identity on C-pts
 
-    levels[-1].P     = P       # smoothed prolongator
-    levels[-1].R     = R       # restriction operator 
+    levels[-1].P     = P                          # smoothed prolongator
+    levels[-1].R     = R                          # restriction operator 
+    levels[-1].Cpts  = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes) 
 
     levels.append( multilevel_solver.level() )
-    A = R * A * P              # Galerkin operator
+    A = R * A * P                                 # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
-    levels[-1].B = B           # right near nullspace candidates
+    levels[-1].B = B                              # right near nullspace candidates
 
     if A.symmetry == "nonsymmetric":
-        levels[-1].BH = BH     # left near nullspace candidates
+        levels[-1].BH = BH                        # left near nullspace candidates
 

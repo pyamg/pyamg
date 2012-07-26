@@ -2,7 +2,7 @@ from pyamg.testing import *
 
 from numpy import matrix, array, diag, arange, ones, sqrt, dot, ravel
 from scipy import rand
-from scipy.linalg import norm
+from pyamg.util.linalg import norm
 from scipy.sparse import csr_matrix
 
 from pyamg.gallery import poisson
@@ -43,6 +43,7 @@ class TestMultilevel(TestCase):
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
         from scipy.sparse.linalg import cg
+        from pyamg.krylov import fgmres
 
         A = poisson((50,50), format='csr')
         b = rand(A.shape[0])
@@ -50,10 +51,16 @@ class TestMultilevel(TestCase):
         ml = smoothed_aggregation_solver(A)
 
         for cycle in ['V','W','F']:
-            M = ml.aspreconditioner(cycle='V')
+            M = ml.aspreconditioner(cycle=cycle)
             x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)
             # cg satisfies convergence in the preconditioner norm
             assert(precon_norm(b - A*x,ml) < 1e-8*precon_norm(b,ml))
+        
+        for cycle in ['AMLI']:
+            M = ml.aspreconditioner(cycle=cycle)
+            x,info = fgmres(A, b, tol=1e-8, maxiter=30, M=M)
+            # fgmres satisfies convergence in the 2-norm
+            assert(norm(b - A*x) < 1e-8*norm(b))
 
 
     def test_accel(self):
@@ -105,24 +112,28 @@ class TestMultilevel(TestCase):
         mg = multilevel_solver(levels[:1])
         assert_equal(mg.cycle_complexity(cycle='V'), 100.0/100.0) #1
         assert_equal(mg.cycle_complexity(cycle='W'), 100.0/100.0) #1
+        assert_equal(mg.cycle_complexity(cycle='AMLI'), 100.0/100.0) #1
         assert_equal(mg.cycle_complexity(cycle='F'), 100.0/100.0) #1
 
         # two level hierarchy
         mg = multilevel_solver(levels[:2])
         assert_equal(mg.cycle_complexity(cycle='V'), 225.0/100.0) #2,1
         assert_equal(mg.cycle_complexity(cycle='W'), 225.0/100.0) #2,1
+        assert_equal(mg.cycle_complexity(cycle='AMLI'), 225.0/100.0) #2,1
         assert_equal(mg.cycle_complexity(cycle='F'), 225.0/100.0) #2,1
 
         # three level hierarchy
         mg = multilevel_solver(levels[:3])
         assert_equal(mg.cycle_complexity(cycle='V'), 259.0/100.0) #2,2,1
         assert_equal(mg.cycle_complexity(cycle='W'), 318.0/100.0) #2,4,2
+        assert_equal(mg.cycle_complexity(cycle='AMLI'), 318.0/100.0) #2,4,2
         assert_equal(mg.cycle_complexity(cycle='F'), 318.0/100.0) #2,4,2
         
         # four level hierarchy
         mg = multilevel_solver(levels[:4])
         assert_equal(mg.cycle_complexity(cycle='V'), 272.0/100.0) #2,2,2,1
         assert_equal(mg.cycle_complexity(cycle='W'), 388.0/100.0) #2,4,8,4
+        assert_equal(mg.cycle_complexity(cycle='AMLI'), 388.0/100.0) #2,4,8,4
         assert_equal(mg.cycle_complexity(cycle='F'), 366.0/100.0) #2,4,6,3
 
 
