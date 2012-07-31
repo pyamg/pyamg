@@ -1,4 +1,4 @@
-from numpy import array, zeros, ones, sqrt, ravel, arange
+from numpy import array, zeros, ones, sqrt, ravel, arange, abs
 from scipy import rand, real, pi, imag, hstack, vstack, linspace
 from scipy.linalg import svd
 import pylab
@@ -118,5 +118,5 @@ if __name__ == '__main__':
 
     
     elements2,vertices2 =  shrink_elmts(elements, vertices)
-    my_vis(sa, vertices2, error=x, fname='helmholtz_', E2V=elements2)
+    my_vis(sa, vertices2, error=abs(x), fname='helmholtz_', E2V=elements2)
 

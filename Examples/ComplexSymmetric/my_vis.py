@@ -20,12 +20,18 @@ from numpy import array, ones, zeros, sqrt, asarray, empty, concatenate, \
 from scipy import array, zeros, mean, kron, ones, sparse, rand
 from scipy.sparse import csr_matrix, coo_matrix, csc_matrix
 from os import system
-# have to manually install Delaunay
-from scikits import delaunay
 # pyamg
 from pyamg.vis import write_basic_mesh, write_vtu
 from pyamg.util.utils import scale_rows, scale_columns
 
+# have to manually install Delaunay package from scikits
+try:
+    from scikits import delaunay
+except:
+    try:
+        import delaunay
+    except:
+        raise ValueError("Install delaunay package from SciKits for this example")
 
 __all__ = ['my_vis', 'shrink_elmts', 'dg_vis']
 
