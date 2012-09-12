@@ -344,7 +344,7 @@ def symmetric_rcm(A):
 
     root, order, level = pseudo_peripheral_node(A)
 
-    Perm = sparse.spidentity(n)
+    Perm = sparse.identity(n)
     p = level.argsort()
     Perm = Perm[p,:]
 
