@@ -458,6 +458,12 @@ def gauss_seidel_indexed(*args):
         int row_start, int row_stop, int row_step)
     gauss_seidel_indexed(int Ap, int Aj, double Ax, double x, double b, int Id, 
         int row_start, int row_stop, int row_step)
+    gauss_seidel_indexed(int Ap, int Aj, npy_cfloat_wrapper Ax, npy_cfloat_wrapper x, 
+        npy_cfloat_wrapper b, int Id, int row_start, 
+        int row_stop, int row_step)
+    gauss_seidel_indexed(int Ap, int Aj, npy_cdouble_wrapper Ax, npy_cdouble_wrapper x, 
+        npy_cdouble_wrapper b, int Id, int row_start, 
+        int row_stop, int row_step)
     """
   return _amg_core.gauss_seidel_indexed(*args)
 

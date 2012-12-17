@@ -912,7 +912,9 @@ class TestComplexRelaxation(TestCase):
 
             b = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
             x = asmatrix(rand(A.shape[0],1)) + 1.0j*asmatrix(rand(A.shape[0],1)).astype(A.dtype)
-
+            
+            ##
+            # Gauss-Seidel Tests
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
@@ -924,6 +926,21 @@ class TestComplexRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
+            
+            ##
+            # Indexed Gauss-Seidel Tests
+            x_copy = x.copy()
+            gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]), iterations=1, sweep='forward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='forward') )
+            
+            x_copy = x.copy()
+            gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]), iterations=1, sweep='backward')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='backward') )
+            
+            x_copy = x.copy()
+            gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]), iterations=1, sweep='symmetric')
+            assert_almost_equal( x, gold(A,x_copy,b,iterations=1,sweep='symmetric') )
+
 
     def test_gauss_seidel_csr(self):
         N = 1

@@ -391,7 +391,7 @@ void bsr_jacobi(const I Ap[],
  *      Nothing, x will be modified in place
  *
  */
-template<class I, class T>
+template<class I, class T, class F>
 void gauss_seidel_indexed(const I Ap[], 
                           const I Aj[], 
                           const T Ax[],
