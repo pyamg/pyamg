@@ -759,3 +759,84 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
     
     return Atilde
 
+def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
+    """Construct an AMG strength of connection matrix using an algebraic
+    distance measure.
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+        Sparse NxN matrix
+    alpha : scalar
+        Weight for Jacobi
+    R : integer
+        Number of random vectors
+    k : integer
+        Number of relaxation passes
+    theta : scalar
+        Drop values larger than theta
+    p : scalar or inf
+        p-norm of the measure
+   
+    Returns
+    -------
+    C : {csr_matrix}
+        Sparse matrix of strength values
+
+    References
+    ----------
+    .. [1] "Advanced Coarsening Schemes for Graph Partitioning"
+            by Ilya Safro, Peter Sanders, and Christian Schulz
+
+    Notes
+    -----
+    No unit testing yet.
+
+    Does not handle BSR matrices yet.
+    """
+    print A.format
+    if not sparse.isspmatrix_csr(A): 
+        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        A = sparse.csr_matrix(A)
+
+    if alpha<0:
+        raise ValueError('expected alpha>0')
+
+    if R<=0 or not isinstance(R, int):
+        raise ValueError('expected integer R>0')
+
+    if k<=0 or not isinstance(k, int):
+        raise ValueError('expected integer k>0')
+
+    if theta<0:
+        raise ValueError('expected theta>0.0')
+
+    if p<1:
+        raise ValueError('expected p>1 or equal to numpy.inf')
+
+    # random n x R block in column ordering
+    n = A.shape[0]
+    x = numpy.random.rand(n*R) - 0.5
+    x = numpy.reshape(x,(n,R),order='F')
+    b = numpy.zeros((n,1))
+
+    # relax k times
+    for r in range(0,R):
+        pyamg.relaxation.jacobi(A,x[:,r],b,iterations=k,omega=alpha)
+
+    # get distance measure d
+    C = A.tocoo()
+    I = C.row
+    J = C.col
+    if p != numpy.inf:
+        d = numpy.sum((x[I] - x[J])**p, axis=1)**(1.0/p)
+    else:
+        d = numpy.abs(x[I] - x[J]).max(axis=1)
+
+    # drop weak connections larger than theta
+    weak = numpy.where(C.data>theta)[0]
+    C.data[weak] = 0
+    C = C.tocsr()
+    C.eliminate_zeros()
+    
+    return C
