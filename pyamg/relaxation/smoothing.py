@@ -9,7 +9,7 @@ from pyamg.util.utils import scale_rows, get_block_diag, UnAmal, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 from pyamg import amg_core
-import scipy.lib.lapack as la
+from scipy.linalg import lapack as la
 
 __docformat__ = "restructuredtext en"
 
