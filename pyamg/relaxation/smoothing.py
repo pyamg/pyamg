@@ -357,14 +357,13 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
         ##
         # Invert each block column
-        [my_pinv] = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
+        my_pinv, = la.get_lapack_funcs(['gelss'], (numpy.ones((1,), dtype=A.dtype)) )
         for i in xrange(subdomain_ptr.shape[0]-1):
             m = blocksize[i]
             rhs = scipy.eye(m,m, dtype=A.dtype)
-            [v,pseudo,s,rank,info] = \
-                my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), 
-                        rhs, cond=cond)
-            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(pseudo)
+            gelssoutput = my_pinv(inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]].reshape(m,m), 
+                            rhs, cond=cond, overwrite_a=True, overwrite_b=True)
+            inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]] = numpy.ravel(gelssoutput[1])
 
     A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
     return A.schwarz_parameters
