@@ -266,7 +266,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     return (Vects,Eigs,H,V,breakdown_flag)
 
 
-def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None):
+def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None, initial_guess=None):
     """
     Approximate the spectral radius of a matrix
 
@@ -290,6 +290,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
                 Lanczos iteration is used (more efficient)
         False - if A is non-symmetric (default
                 Arnoldi iteration is used (less efficient)
+    initial_guess : {array|None}
+        If n x 1 array, then use as initial guess for Arnoldi/Lanczos.
+        If None, then use a random initial guess.
 
     Returns
     -------
@@ -336,9 +339,17 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
         if A.shape[0] != A.shape[1]:
             raise ValueError,'expected square A'
 
-        v0  = scipy.rand(A.shape[1],1)
-        if A.dtype == complex:
-            v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
+        if initial_guess == None:
+            v0  = scipy.rand(A.shape[1],1)
+            if A.dtype == complex:
+                v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)
+        else:
+            if initial_guess.shape[0] != A.shape[0]:
+                raise ValueError,'initial_guess and A must have same shape'
+            if (len(initial_guess.shape) > 1) and (initial_guess.shape[1] > 1):
+                raise ValueError,'initial_guess must be an (n,1) or (n,) vector'
+            v0 = initial_guess.reshape(-1,1)
+            v0 = numpy.array(v0, dtype=A.dtype)
 
         for j in range(restart+1):
             [evect, ev, H, V, breakdown_flag] = _approximate_eigenvalues(A, 

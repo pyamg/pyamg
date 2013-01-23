@@ -93,6 +93,13 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
         where K = diag(S)^-1 * S and rho(K) is an approximation to the 
         spectral radius of K.
 
+    Notes
+    -----
+    If weighting is not 'local', then results using Jacobi prolongation
+    smoother are not precisely reproducible due to a random initial guess used
+    for the spectral radius approximation.  For precise reproducibility, 
+    set numpy.random.seed(..) to the same value before each test. 
+    
     Examples
     --------
     >>> from pyamg.aggregation import jacobi_prolongation_smoother
@@ -220,6 +227,14 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     P : {csr_matrix, bsr_matrix}
         Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) * T
         where rho(S) is an approximation to the spectral radius of S.
+    
+    Notes
+    -----
+    Results using Richardson prolongation smoother are not precisely
+    reproducible due to a random initial guess used for the spectral radius
+    approximation.  For precise reproducibility, set numpy.random.seed(..) to
+    the same value before each test. 
+    
 
     Examples
     --------
