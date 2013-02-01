@@ -46,8 +46,8 @@ class TestStrengthOfConnection(TestCase):
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
-                expected = reference_symmetric_strength_of_connection(A, theta)
                 result   = symmetric_strength_of_connection(A, theta)
+                expected = reference_symmetric_strength_of_connection(A, theta)
 
                 assert_equal( result.nnz,       expected.nnz)
                 assert_equal( result.todense(), expected.todense())

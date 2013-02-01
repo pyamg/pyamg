@@ -16,7 +16,8 @@ from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
                              relaxation_as_linear_operator
 from pyamg.strength import classical_strength_of_connection, \
         symmetric_strength_of_connection, evolution_strength_of_connection, \
-        energy_based_strength_of_connection, distance_strength_of_connection
+        energy_based_strength_of_connection, distance_strength_of_connection, \
+        algebraic_distance
 from aggregate import standard_aggregation, naive_aggregation, lloyd_aggregation
 from tentative import fit_candidates
 from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoother, \
@@ -362,6 +363,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':
         C = kwargs['C'].tocsr()
+    elif fn == 'algebraic_distance':
+        C = algebraic_distance(A, **kwargs)
     elif fn is None:
         C = A.tocsr()
     else:
