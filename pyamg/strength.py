@@ -576,8 +576,7 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2", blo
     # a very efficient computational short-cut.  Otherwise, we support  
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0: 
-        warn("The most efficient time stepping for the Evolution Strength Method
-              is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
+        warn("The most efficient time stepping for the Evolution Strength Method is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
     
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
