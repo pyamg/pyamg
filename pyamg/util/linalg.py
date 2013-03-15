@@ -241,6 +241,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             
             if (H[j+1,j] < breakdown): 
                 breakdown_flag = True
+                if H[j+1,j] != 0.0:
+                    w = w/H[j+1,j] 
+                V.append(w)
                 break
             
             w = w/H[j+1,j] 
@@ -266,7 +269,8 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     return (Vects,Eigs,H,V,breakdown_flag)
 
 
-def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None, initial_guess=None):
+def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None, 
+        initial_guess=None, return_vector=False):
     """
     Approximate the spectral radius of a matrix
 
@@ -293,10 +297,16 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
     initial_guess : {array|None}
         If n x 1 array, then use as initial guess for Arnoldi/Lanczos.
         If None, then use a random initial guess.
+    return_vector : {boolean}
+        True - return an approximate dominant eigenvector, in addition to the
+               spectral radius.   
+        False - Do not return the approximate dominant eigenvector
 
     Returns
     -------
-    An approximation to the spectral radius of A
+    An approximation to the spectral radius of A, and
+    if return_vector=True, then also return the approximate dominant
+    eigenvector
 
     Notes
     -----
@@ -325,10 +335,15 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
     1.0
     """
     
-    if not hasattr(A, 'rho'):
+    if not hasattr(A, 'rho') or return_vector:
         
         ## somehow more restart causes a nonsymmetric case to fail...look at this
         ## what about A.dtype=int?  convert somehow?
+
+        ##
+        # The use of the restart vector v0 requires that the full Krylov subspace V
+        # be stored.  So, set symmetric to False.
+        symmetric = False
 
         if maxiter < 1:
             raise ValueError,'expected maxiter > 0'
@@ -364,6 +379,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
             #print str(error) + "    " + str(scipy.linalg.norm(e2))
             if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or breakdown_flag:
                 # halt if below relative tolerance
+                v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:,max_index].reshape(-1,1))
                 break
             else:
                 v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:,max_index].reshape(-1,1))
@@ -373,7 +389,10 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
         if sparse.isspmatrix(A):
             A.rho = rho
         
-        return rho
+        if return_vector:
+            return (rho, v0)
+        else:
+            return rho
 
     else:
         return A.rho

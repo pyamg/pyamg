@@ -1,6 +1,6 @@
 from pyamg.testing import *
 
-from numpy import matrix, array, diag, zeros, sqrt, abs, ravel, zeros_like, arange
+from numpy import matrix, array, diag, zeros, sqrt, abs, ravel, zeros_like, arange, dot
 from scipy import rand, linalg, real, imag, mat, diag, random
 from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
@@ -41,10 +41,21 @@ class TestLinalg(TestCase):
         for A in cases:
             A = A.astype(float)
             Asp = csr_matrix(A)
+            
+            [E,V] = linalg.eig(A)
+            E = abs(E)
+            largest_eig = (E == E.max()).nonzero()[0]
+            expected_eig = E[largest_eig]
+            expected_vec = V[:,largest_eig]
 
-            expected = max([linalg.norm(x) for x in linalg.eigvals(A)])
-            assert_almost_equal( approximate_spectral_radius(A),   expected )
-            assert_almost_equal( approximate_spectral_radius(Asp), expected )
+            assert_almost_equal( approximate_spectral_radius(A),   expected_eig )
+            assert_almost_equal( approximate_spectral_radius(Asp), expected_eig )
+            vec = approximate_spectral_radius(A, return_vector=True)[1]
+            diff = min( norm(expected_vec + vec), norm(expected_vec - vec) ) / norm(expected_vec)
+            assert_almost_equal(diff, 0.0, decimal=4 )
+            vec = approximate_spectral_radius(Asp, return_vector=True)[1]
+            diff = min( norm(expected_vec + vec), norm(expected_vec - vec) ) / norm(expected_vec)
+            assert_almost_equal(diff, 0.0, decimal=4 )
         
         # try symmetric matrices
         for A in cases:
@@ -52,9 +63,21 @@ class TestLinalg(TestCase):
             A = A.astype(float) 
             Asp = csr_matrix(A)
 
-            expected = max([linalg.norm(x) for x in linalg.eigvals(A)])
-            assert_almost_equal( approximate_spectral_radius(A,symmetric=True),   expected )
-            assert_almost_equal( approximate_spectral_radius(Asp,symmetric=True), expected )
+            [E,V] = linalg.eig(A)
+            E = abs(E)
+            largest_eig = (E == E.max()).nonzero()[0]
+            expected_eig = E[largest_eig]
+            expected_vec = V[:,largest_eig]
+
+            assert_almost_equal( approximate_spectral_radius(A),   expected_eig )
+            assert_almost_equal( approximate_spectral_radius(Asp), expected_eig )
+            vec = approximate_spectral_radius(A, return_vector=True)[1]
+            diff = min( norm(expected_vec + vec), norm(expected_vec - vec) ) / norm(expected_vec)
+            assert_almost_equal(diff, 0.0, decimal=4 )
+            vec = approximate_spectral_radius(Asp, return_vector=True)[1]
+            diff = min( norm(expected_vec + vec), norm(expected_vec - vec) ) / norm(expected_vec)
+            assert_almost_equal(diff, 0.0, decimal=4 )
+
       
         # test a larger matrix, and various parameter choices
         cases =[]
@@ -103,30 +126,50 @@ class TestComplexLinalg(TestCase):
         cases = []
 
         cases.append( matrix([[-4-4.0j]]) )
-        cases.append( array([[-4+8.2j]]) )
+        cases.append( matrix([[-4+8.2j]]) )
         
-        cases.append( array([[2.0-2.9j,0],[0,1.5]]) )
-        cases.append( array([[-2.0-2.4j,0],[0,1.21]]) )
+        cases.append( matrix([[2.0-2.9j,0],[0,1.5]]) )
+        cases.append( matrix([[-2.0-2.4j,0],[0,1.21]]) )
       
-        cases.append( array([[100+1.0j,0,0],[0,101-1.0j,0],[0,0,99+9.9j]]) )
+        cases.append( matrix([[100+1.0j,0,0],[0,101-1.0j,0],[0,0,99+9.9j]]) )
         
         for i in range(1,6):
-            cases.append( rand(i,i)+1.0j*rand(i,i) )
+            cases.append( matrix(rand(i,i)+1.0j*rand(i,i)) )
        
         # method should be almost exact for small matrices
         for A in cases:
             Asp = csr_matrix(A)
-            e = linalg.eigvals(A)
-            expected = max(abs(e))
-            assert_almost_equal( approximate_spectral_radius(A),   expected )
-            assert_almost_equal( approximate_spectral_radius(Asp), expected )
-            
+            [E,V] = linalg.eig(A)
+            E = abs(E)
+            largest_eig = (E == E.max()).nonzero()[0]
+            expected_eig = E[largest_eig]
+            expected_vec = V[:,largest_eig]
+
+            assert_almost_equal( approximate_spectral_radius(A),   expected_eig )
+            assert_almost_equal( approximate_spectral_radius(Asp), expected_eig )
+            vec = approximate_spectral_radius(A, return_vector=True)[1]
+            rayleigh = abs( dot(ravel(A*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)) )
+            assert_almost_equal(rayleigh, expected_eig, decimal=4 )
+            vec = approximate_spectral_radius(Asp, return_vector=True)[1]
+            rayleigh = abs( dot(ravel(Asp*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)) )
+            assert_almost_equal(rayleigh, expected_eig, decimal=4 )
+
             AA = mat(A).H*mat(A)
             AAsp = csr_matrix(AA)
-            e = linalg.eigvals(AA)
-            expected = max(abs(e))
-            assert_almost_equal( approximate_spectral_radius(AA, symmetric=True),   expected )
-            assert_almost_equal( approximate_spectral_radius(AAsp, symmetric=True), expected )
+            [E,V] = linalg.eig(AA)
+            E = abs(E)
+            largest_eig = (E == E.max()).nonzero()[0]
+            expected_eig = E[largest_eig]
+            expected_vec = V[:,largest_eig]
+
+            assert_almost_equal( approximate_spectral_radius(AA),   expected_eig )
+            assert_almost_equal( approximate_spectral_radius(AAsp), expected_eig )
+            vec = approximate_spectral_radius(AA, return_vector=True)[1]
+            rayleigh = abs( dot(ravel(AA*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)) )
+            assert_almost_equal(rayleigh, expected_eig, decimal=4 )
+            vec = approximate_spectral_radius(AAsp, return_vector=True)[1]
+            rayleigh = abs( dot(ravel(AAsp*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)) )
+            assert_almost_equal(rayleigh, expected_eig, decimal=4 )
  
     def test_infinity_norm(self):
         A = matrix([[-4-3.0j]])
