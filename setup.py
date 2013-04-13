@@ -64,7 +64,7 @@ def setup_package():
         setup(
             name = 'pyamg',
             maintainer = "PyAMG Developers",
-            maintainer_email = "wnbell@gmail.com",
+            maintainer_email = "luke.olson@gmail.com",
             description = DOCLINES[0],
             long_description = "\n".join(DOCLINES[2:]),
             url = "http://code.google.com/p/pyamg",

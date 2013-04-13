@@ -4,8 +4,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-import scipy
-import numpy
+import scipy as sp
+import numpy as np
 
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -85,7 +85,7 @@ class multilevel_solver:
             tuple of the form (string|callable, args), where args is a
             dictionary of arguments to be passed to the function denoted by
             string or callable.
-            
+
             The set of valid string arguments is:
             - Sparse direct methods:
                 + splu         : sparse LU solver
@@ -148,7 +148,7 @@ class multilevel_solver:
         """
 
         self.levels = levels
-        
+
         self.coarse_solver = coarse_grid_solver(coarse_solver)
 
         for level in levels[:-1]:
@@ -163,22 +163,22 @@ class multilevel_solver:
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
-        
+
         total_nnz = sum([level.A.nnz for level in self.levels])
 
         output += '  level   unknowns     nonzeros\n'
         for n, level in enumerate(self.levels):
             A = level.A
             output += '   %2d   %10d   %10d [%5.2f%%]\n' %\
-                    (n, A.shape[1], A.nnz,\
-                    (100 * float(A.nnz) / float(total_nnz)))
+                (n, A.shape[1], A.nnz,
+                (100 * float(A.nnz) / float(total_nnz)))
 
         return output
 
     def cycle_complexity(self, cycle='V'):
         """Cycle complexity of this multigrid hierarchy for V(1,1), W(1,1),
            AMLI(1,1) and F(1,1) cycles when simple relaxation methods are used.
-       
+
         Cycle complexity is an approximate measure of the number of
         floating point operations (FLOPs) required to perform a single
         multigrid cycle relative to the cost a single smoothing operation.
@@ -204,7 +204,7 @@ class multilevel_solver:
         This assumption holds for smoothers like Jacobi and Gauss-Seidel.
         However, the true cycle complexity of cycle using more expensive
         methods, like block Gauss-Seidel will be underestimated.
-        
+
         Additionally, if the cycle used in practice isn't a (1,1)-cycle,
         then this cost estimate will be off.
 
@@ -220,7 +220,7 @@ class multilevel_solver:
                 return 2 * nnz[level] + nnz[level + 1]
             else:
                 return 2 * nnz[level] + V(level + 1)
-        
+
         def W(level):
             if len(self.levels) == 1:
                 return nnz[0]
@@ -228,7 +228,7 @@ class multilevel_solver:
                 return 2 * nnz[level] + nnz[level + 1]
             else:
                 return 2 * nnz[level] + 2 * W(level + 1)
-        
+
         def F(level):
             if len(self.levels) == 1:
                 return nnz[0]
@@ -245,9 +245,8 @@ class multilevel_solver:
             flops = F(0)
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
-        
-        return float(flops) / float(nnz[0])
 
+        return float(flops) / float(nnz[0])
 
     def operator_complexity(self):
         """Operator complexity of this multigrid hierarchy
@@ -255,21 +254,19 @@ class multilevel_solver:
         Defined as:
             Number of nonzeros in the matrix on all levels /
             Number of nonzeros in the matrix on the finest level
-        
         """
         return sum([level.A.nnz for level in self.levels]) /\
-                float(self.levels[0].A.nnz)
+            float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
         """Grid complexity of this multigrid hierarchy
-        
+
         Defined as:
             Number of unknowns on all levels /
             Number of unknowns on the finest level
-
         """
         return sum([level.A.shape[0] for level in self.levels]) /\
-                float(self.levels[0].A.shape[0])
+            float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
         return self.solve(b, maxiter=1)
@@ -281,7 +278,7 @@ class multilevel_solver:
         ----------
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
-       
+
         Returns
         -------
         precond : LinearOperator
@@ -305,16 +302,15 @@ class multilevel_solver:
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
-                    
         """
         from scipy.sparse.linalg import LinearOperator
-        
+
         shape = self.levels[0].A.shape
         dtype = self.levels[0].A.dtype
 
         def matvec(b):
             return self.solve(b, maxiter=1, cycle=cycle, tol=1e-12)
-                    
+
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
@@ -368,24 +364,26 @@ class multilevel_solver:
         """
 
         from pyamg.util.linalg import residual_norm, norm
-        
+
         if x0 is None:
-            x = numpy.zeros_like(b)
+            x = np.zeros_like(b)
         else:
-            x = numpy.array(x0)  # copy
-        
+            x = np.array(x0)  # copy
+
         cycle = str(cycle).upper()
-        
-        # AMLI cycles require hermitian matrix 
+
+        # AMLI cycles require hermitian matrix
         if (cycle == 'AMLI') and hasattr(self.levels[0].A, 'symmetry'):
             if self.levels[0].A.symmetry != 'hermitian':
-                raise ValueError('AMLI cycles require symmetry to be hermitian') 
+                raise ValueError('AMLI cycles require \
+                    symmetry to be hermitian')
 
         if accel is not None:
-            
+
             # Check for AMLI compatability
             if (accel != 'fgmres') and (cycle == 'AMLI'):
-                raise ValueError('AMLI cycles require acceleration (accel) to be fgmres, or no acceleration') 
+                raise ValueError('AMLI cycles require acceleration (accel) \
+                        to be fgmres, or no acceleration')
 
             # Acceleration is being used
             if isinstance(accel, basestring):
@@ -399,19 +397,20 @@ class multilevel_solver:
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
-        
+
             try:  # try PyAMG style interface which has a residuals parameter
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                              callback=callback, residuals=residuals)[0]
             except:  # try the scipy.sparse.linalg.isolve style interface,
                      # which requires a call back function if a residual
                      # history is desired
-                
+
                 cb = callback
                 if residuals is not None:
                     residuals[:] = [residual_norm(A, x, b)]
+
                     def callback(x):
-                        if scipy.isscalar(x):
+                        if sp.isscalar(x):
                             residuals.append(x)
                         else:
                             residuals.append(residual_norm(A, x, b))
@@ -420,7 +419,7 @@ class multilevel_solver:
 
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                              callback=callback)[0]
-        
+
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
@@ -436,29 +435,28 @@ class multilevel_solver:
         else:
             residuals[:] = []
 
-
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of real A and complex b
         from scipy.sparse.sputils import upcast
         from pyamg.util.utils import to_type
         tp = upcast(b.dtype, x.dtype, self.levels[0].A.dtype)
         [b, x] = to_type(tp, [b, x])
-        b = numpy.ravel(b)
-        x = numpy.ravel(x)
-        
+        b = np.ravel(b)
+        x = np.ravel(x)
+
         A = self.levels[0].A
 
         residuals.append(residual_norm(A, x, b))
 
         self.first_pass = True
-        
+
         while len(residuals) <= maxiter and residuals[-1] > tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
                 self.__solve(0, x, b, cycle)
-            
+
             residuals.append(residual_norm(A, x, b))
 
             self.first_pass = False
@@ -490,7 +488,6 @@ class multilevel_solver:
             cycle = 'AMLI', AMLI-cycle
         """
 
-
         A = self.levels[lvl].A
 
         self.levels[lvl].presmoother(A, x, b)
@@ -498,7 +495,7 @@ class multilevel_solver:
         residual = b - A * x
 
         coarse_b = self.levels[lvl].R * residual
-        coarse_x = numpy.zeros_like(coarse_b)
+        coarse_x = np.zeros_like(coarse_b)
 
         if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
@@ -513,42 +510,40 @@ class multilevel_solver:
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
             elif cycle == "AMLI":
                 ##
-                # Run nAMLI AMLI cycles, which compute "optimal" corrections by 
+                # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
                 nAMLI = 2
                 Ac = self.levels[lvl+1].A
-                p = numpy.zeros((nAMLI, coarse_b.shape[0]), dtype=coarse_b.dtype)
-                beta  = numpy.zeros((nAMLI,nAMLI), dtype=coarse_b.dtype)
+                p = np.zeros((nAMLI, coarse_b.shape[0]), dtype=coarse_b.dtype)
+                beta = np.zeros((nAMLI, nAMLI), dtype=coarse_b.dtype)
                 for k in range(nAMLI):
-                    ##
                     # New search direction --> M^{-1}*residual
-                    self.__solve(lvl + 1, 
-                            p[k,:].reshape(coarse_b.shape), coarse_b, cycle)
-                     
-                    ##
+                    p[k, :] = 1
+                    self.__solve(lvl + 1, p[k, :].reshape(coarse_b.shape),
+                                 coarse_b, cycle)
+
                     # Orthogonalize new search direction to old directions
                     for j in range(k):  # loops from j = 0...(k-1)
-                        beta[k,j] = numpy.inner( p[j,:].conj(), Ac*p[k,:])/ \
-                                    numpy.inner( p[j,:].conj(), Ac*p[j,:])
-                        p[k,:] -= beta[k,j]*p[j,:]
-                    
-                    ##
+                        beta[k, j] = np.inner(p[j, :].conj(), Ac * p[k, :]) /\
+                            np.inner(p[j, :].conj(), Ac * p[j, :])
+                        p[k, :] -= beta[k, j]*p[j, :]
+
                     # Compute step size
-                    Ap = Ac*p[k,:]
-                    alpha = numpy.inner(p[k,:].conj(), numpy.ravel(coarse_b))/ \
-                            numpy.inner(p[k,:].conj(), Ap)
+                    Ap = Ac*p[k, :]
+                    alpha = np.inner(p[k, :].conj(), np.ravel(coarse_b)) /\
+                        np.inner(p[k, :].conj(), Ap)
+
                     # Update solution
-                    coarse_x += alpha*p[k,:].reshape(coarse_x.shape)
+                    coarse_x += alpha*p[k, :].reshape(coarse_x.shape)
+
                     # Update residual
                     coarse_b -= alpha*Ap.reshape(coarse_b.shape)
-                ##
             else:
                 raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
         self.levels[lvl].postsmoother(A, x, b)
-
 
 
 def coarse_grid_solver(solver):
@@ -608,20 +603,20 @@ def coarse_grid_solver(solver):
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
-                self.P = getattr(scipy.linalg, solver)(A.todense(), **kwargs)
-            return numpy.dot(self.P, b)
+                self.P = getattr(sp.linalg, solver)(A.todense(), **kwargs)
+            return np.dot(self.P, b)
 
     elif solver == 'lu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = scipy.linalg.lu_factor(A.todense(), **kwargs)
-            return scipy.linalg.lu_solve(self.LU, b)
+                self.LU = sp.linalg.lu_factor(A.todense(), **kwargs)
+            return sp.linalg.lu_solve(self.LU, b)
 
     elif solver == 'cholesky':
         def solve(self, A, b):
             if not hasattr(self, 'L'):
-                self.L = scipy.linalg.cho_factor(A.todense(), **kwargs)
-            return scipy.linalg.cho_solve(self.L, b)
+                self.L = sp.linalg.cho_factor(A.todense(), **kwargs)
+            return sp.linalg.cho_solve(self.L, b)
 
     elif solver == 'splu':
         def solve(self, A, b):
@@ -632,30 +627,29 @@ def coarse_grid_solver(solver):
                 Acsc.eliminate_zeros()
                 diffptr = Acsc.indptr[:-1] - Acsc.indptr[1:]
                 nonzero_cols = (diffptr != 0).nonzero()[0]
-                Map = scipy.sparse.eye(Acsc.shape[0], Acsc.shape[1],\
-                                       format='csc')
+                Map = sp.sparse.eye(Acsc.shape[0], Acsc.shape[1], format='csc')
                 Map = Map[:, nonzero_cols]
                 Acsc = Map.T.tocsc() * Acsc * Map
-                self.LU = scipy.sparse.linalg.splu(Acsc, **kwargs)
+                self.LU = sp.sparse.linalg.splu(Acsc, **kwargs)
                 self.LU_Map = Map
 
-            return self.LU_Map * self.LU.solve(numpy.ravel(self.LU_Map.T * b))
+            return self.LU_Map * self.LU.solve(np.ravel(self.LU_Map.T * b))
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
         from pyamg import krylov
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
-            fn = getattr(scipy.sparse.linalg.isolve, solver)
+            fn = getattr(sp.sparse.linalg.isolve, solver)
 
         def solve(self, A, b):
             if 'tol' not in kwargs:
-                eps = numpy.finfo(numpy.float).eps
-                feps = numpy.finfo(numpy.single).eps
-                geps = numpy.finfo(numpy.longfloat).eps
-                _array_precision = {'f': 0, 'd': 1, 'g': 2,\
+                eps = np.finfo(np.float).eps
+                feps = np.finfo(np.single).eps
+                geps = np.finfo(np.longfloat).eps
+                _array_precision = {'f': 0, 'd': 1, 'g': 2,
                                     'F': 0, 'D': 1, 'G': 2}
-                kwargs['tol'] = {0: feps * 1e3, 1: eps * 1e6,\
+                kwargs['tol'] = {0: feps * 1e3, 1: eps * 1e6,
                                  2: geps * 1e6}[_array_precision[A.dtype.char]]
 
             return fn(A, b, **kwargs)[0]
@@ -663,7 +657,7 @@ def coarse_grid_solver(solver):
     elif solver in ['gauss_seidel', 'jacobi', 'block_gauss_seidel', 'schwarz',
                     'block_jacobi', 'richardson', 'sor', 'chebyshev',
                     'jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']:
-        
+
         if 'iterations' not in kwargs:
             kwargs['iterations'] = 10
 
@@ -675,7 +669,7 @@ def coarse_grid_solver(solver):
             lvl.A = A
             fn = eval('smoothing.setup_' + str(solver))
             relax = fn(lvl, **kwargs)
-            x = numpy.zeros_like(b)
+            x = np.zeros_like(b)
             relax(A, x, b)
 
             return x
@@ -692,22 +686,21 @@ def coarse_grid_solver(solver):
     else:
         raise ValueError('unknown solver: %s' % solver)
 
-
     class generic_solver:
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
-            b = numpy.asanyarray(b)
+            b = np.asanyarray(b)
 
             if A.nnz == 0:
                 # if A.nnz = 0, then we expect no correction
-                x = numpy.zeros(b.shape)
+                x = np.zeros(b.shape)
             else:
                 x = solve(self, A, b)
 
-            if isinstance(b, numpy.ndarray):
-                x = numpy.asarray(x)
-            elif isinstance(b, numpy.matrix):
-                x = numpy.asmatrix(x)
+            if isinstance(b, np.ndarray):
+                x = np.asarray(x)
+            elif isinstance(b, np.matrix):
+                x = np.asmatrix(x)
             else:
                 raise ValueError('unrecognized type')
 
