@@ -5,30 +5,33 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 import numpy
 import scipy
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
+from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
+    isspmatrix_csc, isspmatrix_bsr, eye
 
 from pyamg.multilevel import multilevel_solver
-from pyamg.strength import symmetric_strength_of_connection, evolution_strength_of_connection
-from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne, \
-                             gauss_seidel_indexed, jacobi, polynomial
-from pyamg.relaxation.smoothing import change_smoothers, rho_block_D_inv_A, rho_D_inv_A
+from pyamg.strength import symmetric_strength_of_connection,\
+    classical_strength_of_connection, evolution_strength_of_connection
+from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne,\
+    gauss_seidel_indexed, jacobi, polynomial
+from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
-from pyamg.util.utils import scale_rows, scale_columns
 from pyamg.util.linalg import norm, approximate_spectral_radius
-from pyamg.aggregation.aggregation import preprocess_str_or_agg, preprocess_smooth, \
-                                          smoothed_aggregation_solver
+from pyamg.aggregation.aggregation import preprocess_str_or_agg,\
+    preprocess_smooth
 from aggregation import smoothed_aggregation_solver
-from aggregate import standard_aggregation
-from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother, \
-                   richardson_prolongation_smoother
+from aggregate import standard_aggregation, lloyd_aggregation
+from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
+    richardson_prolongation_smoother
 from tentative import fit_candidates
+from pyamg.util.utils import amalgamate
 
 __all__ = ['adaptive_sa_solver']
+
 
 def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
     """
     Helper function that determines where to eliminate candidates locally
-    on a per aggregate basis.  
+    on a per aggregate basis.
 
     Parameters
     ---------
@@ -47,7 +50,7 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
     -------
     Nothing, x is modified in place
     """
-    
+
     if not (isspmatrix_csr(AggOp) or isspmatrix_csc(AggOp)):
         raise TypeError('AggOp must be a CSR or CSC matrix')
     else:
@@ -57,18 +60,18 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
 
     def aggregate_wise_inner_product(z, AggOp, nPDEs, ndof):
         """
-        Helper function that calculates <z, z>_i, i.e., the 
+        Helper function that calculates <z, z>_i, i.e., the
         inner product of z only over aggregate i
         Returns a vector of length num_aggregates where entry i is <z, z>_i
         """
-        
+
         z = numpy.ravel(z)*numpy.ravel(z)
-        innerp = numpy.zeros( (1,AggOp.shape[1]), dtype=z.dtype)
+        innerp = numpy.zeros((1, AggOp.shape[1]), dtype=z.dtype)
         for j in range(nPDEs):
-            innerp += z[slice(j,ndof,nPDEs)].reshape(1,-1)*AggOp
-        
-        return innerp.reshape(-1,1)
-    
+            innerp += z[slice(j, ndof, nPDEs)].reshape(1, -1) * AggOp
+
+        return innerp.reshape(-1, 1)
+
     def get_aggregate_weights(AggOp, A, z, nPDEs, ndof):
         """
         Calculate local aggregate quantities
@@ -76,43 +79,47 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         (card(agg_i)/A.shape[0]) ( <Az, z>/rho(A) )
         """
         rho = approximate_spectral_radius(A)
-        zAz = numpy.dot(z.reshape(1,-1), A*z.reshape(-1,1))
+        zAz = numpy.dot(z.reshape(1, -1), A*z.reshape(-1, 1))
         card = nPDEs*(AggOp.indptr[1:]-AggOp.indptr[:-1])
         weights = (numpy.ravel(card)*zAz)/(A.shape[0]*rho)
-        return weights.reshape(-1,1)
+        return weights.reshape(-1, 1)
 
     # Run test 1, which finds where x is small relative to its energy
     weights = Ca*get_aggregate_weights(AggOp, A, x, nPDEs, ndof)
     mask1 = aggregate_wise_inner_product(x, AggOp, nPDEs, ndof) <= weights
-    
-    # Run test 2, which finds where x is already approximated 
+
+    # Run test 2, which finds where x is already approximated
     # accurately by the existing T
     projected_x = x - T*(T.T*x)
-    mask2 = aggregate_wise_inner_product(projected_x, AggOp, nPDEs, ndof) <= weights
-    
+    mask2 = aggregate_wise_inner_product(projected_x,
+                                         AggOp, nPDEs, ndof) <= weights
+
     # Combine masks and zero out corresponding aggregates in x
     mask = numpy.ravel(mask1 + mask2).nonzero()[0]
     if mask.shape[0] > 0:
-        mask = nPDEs*AggOp[:,mask].indices
+        mask = nPDEs*AggOp[:, mask].indices
         for j in range(nPDEs):
             x[mask+j] = 0.0
-    
+
 
 def unpack_arg(v):
     """Helper function for local methods"""
-    if isinstance(v,tuple):
-        return v[0],v[1]
+    if isinstance(v, tuple):
+        return v[0], v[1]
     else:
-        return v,{}
+        return v, {}
 
 
-def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian', 
-        pdef=True, num_candidates=1, candidate_iters=5, 
-        improvement_iters=0, epsilon=0.1,
-        max_levels=10, max_coarse=100, aggregate='standard',
-        prepostsmoother=('gauss_seidel', {'sweep':'symmetric'}),
-        smooth=('jacobi', {}), strength='symmetric', coarse_solver='pinv2',
-        eliminate_local=(False, {'Ca' : 1.0}), keep=False, **kwargs):
+def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
+                       pdef=True, num_candidates=1, candidate_iters=5,
+                       improvement_iters=0, epsilon=0.1,
+                       max_levels=10, max_coarse=100, aggregate='standard',
+                       prepostsmoother=('gauss_seidel',
+                                        {'sweep': 'symmetric'}),
+                       smooth=('jacobi', {}), strength='symmetric',
+                       coarse_solver='pinv2',
+                       eliminate_local=(False, {'Ca': 1.0}), keep=False,
+                       **kwargs):
     """
     Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
 
@@ -135,7 +142,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     num_candidates : {integer} : default 1
         Number of near-nullspace candidates to generate
     candidate_iters : {integer} : default 5
-        Number of smoothing passes/multigrid cycles used at each level of 
+        Number of smoothing passes/multigrid cycles used at each level of
         the adaptive setup phase
     improvement_iters : {integer} : default 0
         Number of times each candidate is improved
@@ -147,11 +154,13 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Maximum number of variables permitted on the coarse grid.
     prepostsmoother : {string or dict}
         Pre- and post-smoother used in the adaptive method
-    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C' : csr_matrix}), None]
-        Method used to determine the strength of connection between unknowns
-        of the linear system.  See smoothed_aggregation_solver(...) documentation.
-    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
-        Method used to aggregate nodes.  See smoothed_aggregation_solver(...) 
+    strength : ['symmetric', 'classical', 'evolution',
+                ('predefined', {'C': csr_matrix}), None]
+        Method used to determine the strength of connection between unknowns of
+        the linear system.  See smoothed_aggregation_solver(...) documentation.
+    aggregate : ['standard', 'lloyd', 'naive',
+                 ('predefined', {'AggOp': csr_matrix})]
+        Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
         documentation.
     smooth : ['jacobi', 'richardson', 'energy', None]
         Method used used to smooth the tentative prolongator.  See
@@ -164,8 +173,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     eliminate_local : {tuple}
         Length 2 tuple.  If the first entry is True, then eliminate candidates
         where they aren't needed locally, using the second entry of the tuple
-        to contain arguments to local elimination routine.  Given the rigid 
-        sparse data structures, this doesn't help much, if at all, with 
+        to contain arguments to local elimination routine.  Given the rigid
+        sparse data structures, this doesn't help much, if at all, with
         complexity.  Its more of a diagnostic utility.
     keep: {bool} : default False
         Flag to indicate keeping extra operators in the hierarchy for
@@ -182,7 +191,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     - Floating point value representing the "work" required to generate
       the solver.  This value is the total cost of just relaxation, relative
-      to the fine grid.  The relaxation method used is assumed to symmetric 
+      to the fine grid.  The relaxation method used is assumed to symmetric
       Gauss-Seidel.
 
     - Unlike the standard Smoothed Aggregation (SA) method, adaptive SA does
@@ -196,10 +205,12 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.aggregation import adaptive_sa_solver
     >>> import numpy
-    >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
+    >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]],
+                       (31,31),format='csr')
     >>> [asa,work] = adaptive_sa_solver(A,num_candidates=1)
     >>> residuals=[]
-    >>> x=asa.solve(b=numpy.ones((A.shape[0],)),x0=numpy.ones((A.shape[0],)),residuals=residuals)
+    >>> x=asa.solve(b=numpy.ones((A.shape[0],)), x0=numpy.ones((A.shape[0],)),
+                    residuals=residuals)
 
     References
     ----------
@@ -209,134 +220,158 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
 
     """
-    
+
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR", scipy.sparse.SparseEfficiencyWarning)
+            warn("Implicit conversion of A to CSR",
+                 scipy.sparse.SparseEfficiencyWarning)
         except:
-            raise TypeError('Argument A must have type csr_matrix or bsr_matrix,\
-                             or be convertible to csr_matrix')
+            raise TypeError('Argument A must have type csr_matrix or\
+                            bsr_matrix, or be convertible to csr_matrix')
 
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
-    
-    ##
+
     # Track work in terms of relaxation
     work = numpy.zeros((1,))
-    
-    ##
-    # Preprocess parameters
-    max_levels, max_coarse, strength = preprocess_str_or_agg(strength, max_levels, max_coarse)
-    smooth = preprocess_smooth(smooth, max_levels)
-    max_levels, max_coarse, aggregate = preprocess_str_or_agg(aggregate, max_levels, max_coarse)
 
-    ##
-    # Develop initial candidate(s).  Note that any predefined aggregation is preserved.
-    if initial_candidates == None:
-        B,aggregate,strength = initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
-                max_levels, max_coarse, aggregate, prepostsmoother, smooth, strength, work)
+    # Preprocess parameters
+    max_levels, max_coarse, strength =\
+        preprocess_str_or_agg(strength, max_levels, max_coarse)
+    smooth = preprocess_smooth(smooth, max_levels)
+    max_levels, max_coarse, aggregate =\
+        preprocess_str_or_agg(aggregate, max_levels, max_coarse)
+
+    # Develop initial candidate(s).  Note that any predefined aggregation is
+    # preserved.
+    if initial_candidates is None:
+        B, aggregate, strength =\
+            initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
+                                max_levels, max_coarse, aggregate,
+                                prepostsmoother, smooth, strength, work)
         # Normalize B
-        B = (1.0/norm(B, 'inf'))*B
+        B = (1.0/norm(B, 'inf')) * B
         num_candidates -= 1
     else:
         # Otherwise, use predefined candidates
         B = initial_candidates
         num_candidates -= B.shape[1]
         # Generate Aggregation and Strength Operators (the brute force way)
-        sa = smoothed_aggregation_solver(A, B=B, symmetry=symmetry, 
-                      presmoother=prepostsmoother, postsmoother=prepostsmoother, 
-                      smooth=smooth, strength=strength, max_levels=max_levels, 
-                      max_coarse=max_coarse, aggregate=aggregate, 
-                      coarse_solver=coarse_solver, Bimprove=None, keep=True, **kwargs)
+        sa = smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
+                                         presmoother=prepostsmoother,
+                                         postsmoother=prepostsmoother,
+                                         smooth=smooth, strength=strength,
+                                         max_levels=max_levels,
+                                         max_coarse=max_coarse,
+                                         aggregate=aggregate,
+                                         coarse_solver=coarse_solver,
+                                         Bimprove=None, keep=True, **kwargs)
         if len(sa.levels) > 1:
             # Set strength-of-connection and aggregation
-            aggregate=[ ('predefined', {'AggOp':sa.levels[i].AggOp.tocsr()}) \
-                                        for i in range(len(sa.levels)-1) ]
-            strength =[ ('predefined', {'C':sa.levels[i].C.tocsr()}) \
-                                        for i in range(len(sa.levels)-1) ]
+            aggregate = [('predefined', {'AggOp': sa.levels[i].AggOp.tocsr()})
+                         for i in range(len(sa.levels) - 1)]
+            strength = [('predefined', {'C': sa.levels[i].C.tocsr()})
+                        for i in range(len(sa.levels) - 1)]
 
     ##
     # Develop additional candidates
     for i in range(num_candidates):
-        x=general_setup_stage(smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
-                              presmoother=prepostsmoother, postsmoother=prepostsmoother,
-                              smooth=smooth, coarse_solver=coarse_solver, 
-                              aggregate=aggregate, strength=strength,
-                              Bimprove=None, keep=True, **kwargs),
-                         symmetry, candidate_iters, prepostsmoother, smooth, 
-                         eliminate_local, coarse_solver, work)
-        
+        x = general_setup_stage(
+            smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
+                                        presmoother=prepostsmoother,
+                                        postsmoother=prepostsmoother,
+                                        smooth=smooth,
+                                        coarse_solver=coarse_solver,
+                                        aggregate=aggregate,
+                                        strength=strength, Bimprove=None,
+                                        keep=True, **kwargs),
+            symmetry, candidate_iters, prepostsmoother, smooth,
+            eliminate_local, coarse_solver, work)
+
         # Normalize x and add to candidate list
         x = x/norm(x, 'inf')
         if numpy.isinf(x[0]) or numpy.isnan(x[0]):
             raise ValueError('Adaptive candidate is all 0.')
-        B = numpy.hstack((B,x.reshape(-1,1))) 
+        B = numpy.hstack((B, x.reshape(-1, 1)))
 
-    ##  
+    ##
     # Improve candidates
-    if B.shape[1] > 1 and improvement_iters > 0:  
-        b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
+    if B.shape[1] > 1 and improvement_iters > 0:
+        b = numpy.zeros((A.shape[0], 1), dtype=A.dtype)
         for i in range(improvement_iters):
             for j in range(B.shape[1]):
-                # Run a V-cycle built on everything except candidate j, while using 
-                # candidate j as the initial guess 
-                x0 = B[:,0]
-                B  = B[:,1:]
-                sa_temp = smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
-                              presmoother=prepostsmoother, postsmoother=prepostsmoother, 
-                              smooth=smooth, coarse_solver=coarse_solver, 
-                              aggregate=aggregate, strength=strength,
-                              Bimprove=None, keep=True, **kwargs)
-                x = sa_temp.solve(b, x0=x0, tol=float(numpy.finfo(numpy.float).tiny), 
+                # Run a V-cycle built on everything except candidate j, while
+                # using candidate j as the initial guess
+                x0 = B[:, 0]
+                B = B[:, 1:]
+                sa_temp =\
+                    smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
+                                                presmoother=prepostsmoother,
+                                                postsmoother=prepostsmoother,
+                                                smooth=smooth,
+                                                coarse_solver=coarse_solver,
+                                                aggregate=aggregate,
+                                                strength=strength,
+                                                Bimprove=None, keep=True,
+                                                **kwargs)
+                x = sa_temp.solve(b, x0=x0,
+                                  tol=float(numpy.finfo(numpy.float).tiny),
                                   maxiter=candidate_iters, cycle='V')
-                work[:]+=sa_temp.operator_complexity()*sa_temp.levels[0].A.nnz*candidate_iters*2
+                work[:] += 2 * sa_temp.operator_complexity() *\
+                    sa_temp.levels[0].A.nnz * candidate_iters
 
                 # Apply local elimination
                 elim, elim_kwargs = unpack_arg(eliminate_local)
-                if elim == True:
+                if elim is True:
                     x = x/norm(x, 'inf')
-                    eliminate_local_candidates(x, sa_temp.levels[0].AggOp, A, 
-                                               sa_temp.levels[0].T, **elim_kwargs)
+                    eliminate_local_candidates(x, sa_temp.levels[0].AggOp, A,
+                                               sa_temp.levels[0].T,
+                                               **elim_kwargs)
 
                 # Normalize x and add to candidate list
                 x = x/norm(x, 'inf')
                 if numpy.isinf(x[0]) or numpy.isnan(x[0]):
                     raise ValueError('Adaptive candidate is all 0.')
-                B = numpy.hstack((B,x.reshape(-1,1)))
-    
+                B = numpy.hstack((B, x.reshape(-1, 1)))
+
     elif improvement_iters > 0:
         ##
         # Special case for improving a single candidate
         max_levels = len(aggregate) + 1
         max_coarse = 0
         for i in range(improvement_iters):
-            B,aggregate,strength = initial_setup_stage(A, symmetry, pdef, candidate_iters, 
-                                        epsilon, max_levels, max_coarse, aggregate, 
-                                        prepostsmoother, smooth, strength, work, 
-                                        initial_candidate=B)
+            B, aggregate, strength =\
+                initial_setup_stage(A, symmetry, pdef, candidate_iters,
+                                    epsilon, max_levels, max_coarse,
+                                    aggregate, prepostsmoother, smooth,
+                                    strength, work, initial_candidate=B)
             # Normalize B
             B = (1.0/norm(B, 'inf'))*B
-            
-    return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry, presmoother=prepostsmoother,
-                                       postsmoother=prepostsmoother, smooth=smooth, 
-                                       coarse_solver=coarse_solver,  aggregate=aggregate, 
-                                       strength=strength, Bimprove=None, keep=keep, **kwargs), work[0]/A.nnz]
 
-     
-def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon, 
-                        max_levels, max_coarse, aggregate, prepostsmoother, 
+    return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
+                                        presmoother=prepostsmoother,
+                                        postsmoother=prepostsmoother,
+                                        smooth=smooth,
+                                        coarse_solver=coarse_solver,
+                                        aggregate=aggregate, strength=strength,
+                                        Bimprove=None, keep=keep, **kwargs),
+            work[0]/A.nnz]
+
+
+def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
+                        max_levels, max_coarse, aggregate, prepostsmoother,
                         smooth, strength, work, initial_candidate=None):
     """
     Computes a complete aggregation and the first near-nullspace candidate
     following Algorithm 3 in Brezina et al.
-    
+
     Parameters
     ----------
-    candidate_iters 
+    candidate_iters
         number of test relaxation iterations
-    epsilon 
+    epsilon
         minimum acceptable relaxation convergence factor
 
     References
@@ -349,90 +384,101 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
     ##
     # Define relaxation routine
-    def relax(A,x):
+    def relax(A, x):
         fn, kwargs = unpack_arg(prepostsmoother)
         if fn == 'gauss_seidel':
-            gauss_seidel(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            gauss_seidel(A, x, numpy.zeros_like(x),
+                         iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gauss_seidel_nr':
-            gauss_seidel_nr(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            gauss_seidel_nr(A, x, numpy.zeros_like(x),
+                            iterations=candidate_iters, sweep='symmetric')
         elif fn == 'gauss_seidel_ne':
-            gauss_seidel_ne(A, x, numpy.zeros_like(x), iterations=candidate_iters, sweep='symmetric')
+            gauss_seidel_ne(A, x, numpy.zeros_like(x),
+                            iterations=candidate_iters, sweep='symmetric')
         elif fn == 'jacobi':
-            jacobi(A, x, numpy.zeros_like(x), iterations=1, omega=1.0/rho_D_inv_A(A))
+            jacobi(A, x, numpy.zeros_like(x), iterations=1,
+                   omega=1.0 / rho_D_inv_A(A))
         elif fn == 'richardson':
-            polynomial(A, x, numpy.zeros_like(x), iterations=1, \
+            polynomial(A, x, numpy.zeros_like(x), iterations=1,
                        coeffients=[1.0/approximate_spectral_radius(A)])
         elif fn == 'gmres':
-            x[:] = (gmres(A, numpy.zeros_like(x), x0=x, maxiter=candidate_iters)[0]).reshape(x.shape)
+            x[:] = (gmres(A, numpy.zeros_like(x), x0=x,
+                    maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 
     # flag for skipping steps f-i in step 4
-    skip_f_to_i = True 
+    skip_f_to_i = True
 
     #step 1
     A_l = A
-    if initial_candidate==None:
-        x = scipy.rand(A_l.shape[0],1)
+    if initial_candidate is None:
+        x = scipy.rand(A_l.shape[0], 1)
         if A_l.dtype == complex:
-            x = x + 1.0j*scipy.rand(A_l.shape[0],1)
+            x = x + 1.0j*scipy.rand(A_l.shape[0], 1)
     else:
         x = numpy.array(initial_candidate, dtype=A_l.dtype)
 
     #step 2
-    relax(A_l,x)
-    work[:] += A_l.nnz*candidate_iters*2
+    relax(A_l, x)
+    work[:] += A_l.nnz * candidate_iters*2
 
-    #step 3
-    # not advised to stop the iteration here: often the first relaxation pass _is_ good, 
-    # but the remaining passes are poor
-    #if x_A_x/x_A_x_old < epsilon:
+    # step 3
+    # not advised to stop the iteration here: often the first relaxation pass
+    # _is_ good, but the remaining passes are poor
+    # if x_A_x/x_A_x_old < epsilon:
     #    # relaxation alone is sufficient
     #    print 'relaxation alone works: %g'%(x_A_x/x_A_x_old)
     #    return x, []
 
-    #step 4
-    As          = [A]
-    xs          = [x]
-    Ps          = []
-    AggOps      = []
+    # step 4
+    As = [A]
+    xs = [x]
+    Ps = []
+    AggOps = []
     StrengthOps = []
 
     while A.shape[0] > max_coarse and max_levels > 1:
     # The real check to break from the while loop is below
 
-        ##
         # Begin constructing next level
-        fn, kwargs = unpack_arg(strength[len(As)-1])        #step 4b
+        fn, kwargs = unpack_arg(strength[len(As)-1])  # step 4b
         if fn == 'symmetric':
             C_l = symmetric_strength_of_connection(A_l, **kwargs)
-            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')   # Diagonal must be nonzero
+            # Diagonal must be nonzero
+            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
         elif fn == 'classical':
             C_l = classical_strength_of_connection(A_l, **kwargs)
-            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')   # Diagonal must be nonzero
+            # Diagonal must be nonzero
+            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
             if isspmatrix_bsr(A_l):
                 C_l = amalgamate(C, A_l.blocksize[0])
         elif (fn == 'ode') or (fn == 'evolution'):
-            C_l = evolution_strength_of_connection(A_l, numpy.ones((A_l.shape[0],1),dtype=A.dtype),**kwargs)
+            C_l = evolution_strength_of_connection(A_l,
+                                                   numpy.ones(
+                                                       (A_l.shape[0], 1),
+                                                       dtype=A.dtype),
+                                                   **kwargs)
         elif fn == 'predefined':
             C_l = kwargs['C'].tocsr()
         elif fn is None:
             C_l = A_l.tocsr()
         else:
-            raise ValueError('unrecognized strength of connection method: %s' % str(fn))
-        
-        # In SA, strength represents "distance", so we take magnitude of complex values
+            raise ValueError('unrecognized strength of connection method: %s' %
+                             str(fn))
+
+        # In SA, strength represents "distance", so we take magnitude of
+        # complex values
         if C_l.dtype == complex:
             C_l.data = numpy.abs(C_l.data)
-        
-        # Create a unified strength framework so that large values represent strong
-        # connections and small values represent weak connections
-        if (fn == 'ode') or (fn == 'evolutin') or (fn == 'energy_based'):
-            C_l.data = 1.0/C_l.data
 
-        ##
+        # Create a unified strength framework so that large values represent
+        # strong connections and small values represent weak connections
+        if (fn == 'ode') or (fn == 'evolutin') or (fn == 'energy_based'):
+            C_l.data = 1.0 / C_l.data
+
         # aggregation
-        fn, kwargs = unpack_arg(aggregate[len(As)-1])
+        fn, kwargs = unpack_arg(aggregate[len(As) - 1])
         if fn == 'standard':
             AggOp = standard_aggregation(C_l, **kwargs)[0]
         elif fn == 'lloyd':
@@ -442,27 +488,28 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         else:
             raise ValueError('unrecognized aggregation method %s' % str(fn))
 
+        T_l, x = fit_candidates(AggOp, x)  # step 4c
 
-        T_l,x = fit_candidates(AggOp,x)                                        #step 4c
-
-        fn, kwargs = unpack_arg(smooth[len(As)-1])                             #step 4d
+        fn, kwargs = unpack_arg(smooth[len(As)-1])  # step 4d
         if fn == 'jacobi':
             P_l = jacobi_prolongation_smoother(A_l, T_l, C_l, x, **kwargs)
         elif fn == 'richardson':
             P_l = richardson_prolongation_smoother(A_l, T_l, **kwargs)
         elif fn == 'energy':
-            P_l = energy_prolongation_smoother(A_l, T_l, C_l, x, None, (False,{}), **kwargs)
-        elif fn == None:
+            P_l = energy_prolongation_smoother(A_l, T_l, C_l, x, None,
+                                               (False, {}), **kwargs)
+        elif fn is None:
             P_l = T_l
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
-        
-        # R should reflect A's structure                                          #step 4e
+            raise ValueError('unrecognized prolongation smoother method %s' %
+                             str(fn))
+
+        # R should reflect A's structure # step 4e
         if symmetry == 'symmetric':
-            A_l   = P_l.T.asformat(P_l.format) * A_l * P_l   
+            A_l = P_l.T.asformat(P_l.format) * A_l * P_l
         elif symmetry == 'hermitian':
-            A_l   = P_l.H.asformat(P_l.format) * A_l * P_l    
-        
+            A_l = P_l.H.asformat(P_l.format) * A_l * P_l
+
         StrengthOps.append(C_l)
         AggOps.append(AggOp)
         Ps.append(P_l)
@@ -470,68 +517,70 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
         # skip to step 5 as in step 4e
         if (A_l.shape[0] <= max_coarse) or (len(AggOps) + 1 >= max_levels):
-            break 
+            break
 
         if not skip_f_to_i:
-            x_hat = x.copy()                                                   #step 4g
-            relax(A_l,x)                                                       #step 4h
+            x_hat = x.copy()  # step 4g
+            relax(A_l, x)  # step 4h
             work[:] += A_l.nnz*candidate_iters*2
-            if pdef == True:
-                x_A_x = numpy.dot(numpy.conjugate(x).T,A_l*x)
-                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)
-                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
+            if pdef is True:
+                x_A_x = numpy.dot(numpy.conjugate(x).T, A_l*x)
+                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T, A_l*x_hat)
+                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
             else:
                 # use A.H A inner-product
-                Ax = A_l*x; Axhat = A_l*x_hat;
-                x_A_x = numpy.dot(numpy.conjugate(Ax).T,Ax)
-                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T,A_l*x_hat)
-                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters) 
+                Ax = A_l * x
+                #Axhat = A_l * x_hat
+                x_A_x = numpy.dot(numpy.conjugate(Ax).T, Ax)
+                xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T, A_l*x_hat)
+                err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
 
-            if err_ratio < epsilon:                                            #step 4i
+            if err_ratio < epsilon:  # step 4i
                 #print "sufficient convergence, skipping"
                 skip_f_to_i = True
                 if x_A_x == 0:
-                    x = x_hat  #need to restore x
+                    x = x_hat  # need to restore x
         else:
-            # just carry out relaxation, don't check for convergence        
-            relax(A_l,x)                                                       #step 4h
-            work[:] += A_l.nnz*candidate_iters*2
-        
+            # just carry out relaxation, don't check for convergence
+            relax(A_l, x)  # step 4h
+            work[:] += 2 * A_l.nnz * candidate_iters
+
         # store xs for diagnostic use and for use in step 5
         xs.append(x)
 
-    #step 5
+    # step 5
     # Extend coarse-level candidate to the finest level
     # --> note that we start with the x from the second coarsest level
     x = xs[-1]
     # make sure that xs[-1] has been relaxed by step 4h, i.e. relax(As[-2], x)
-    for lev in range(len(Ps)-2,-1,-1):  # lev = coarsest ... finest-1
+    for lev in range(len(Ps)-2, -1, -1):  # lev = coarsest ... finest-1
         P = Ps[lev]                     # I: lev --> lev+1
         A = As[lev]                     # A on lev+1
         x = P * x
-        relax(A,x)
+        relax(A, x)
         work[:] += A.nnz*candidate_iters*2
 
-    ##
     # Set predefined strength of connection and aggregation
     if len(AggOps) > 1:
-        aggregate = [ ('predefined', {'AggOp' : AggOps[i]}) for i in range(len(AggOps)) ]
-        strength = [('predefined', {'C' : StrengthOps[i]}) for i in range(len(StrengthOps))]
+        aggregate = [('predefined', {'AggOp': AggOps[i]})
+                     for i in range(len(AggOps))]
+        strength = [('predefined', {'C': StrengthOps[i]})
+                    for i in range(len(StrengthOps))]
 
-    return x,aggregate,strength  #first candidate
+    return x, aggregate, strength  # first candidate
 
 
-def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother, 
+def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
                         smooth, eliminate_local, coarse_solver, work):
     """
     Computes additional candidates and improvements
     following Algorithm 4 in Brezina et al.
-    
+
     Parameters
     ----------
-    candidate_iters 
+    candidate_iters
         number of test relaxation iterations
-    epsilon 
+    epsilon
         minimum acceptable relaxation convergence factor
 
     References
@@ -543,34 +592,36 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
     """
 
     def make_bridge(T):
-        M,N  = T.shape
-        K    = T.blocksize[0]
+        M, N = T.shape
+        K = T.blocksize[0]
         bnnz = T.indptr[-1]
-        # the K+1 represents the new dof introduced by the new candidate.  the bridge 'T'
-        # ignores this new dof and just maps zeros there
-        data = numpy.zeros( (bnnz, K+1, K), dtype=T.dtype )
-        data[:,:-1,:] = T.data
-        return bsr_matrix( (data, T.indices, T.indptr), shape=( (K+1)*(M/K), N) )
-    
+        # the K+1 represents the new dof introduced by the new candidate.  the
+        # bridge 'T' ignores this new dof and just maps zeros there
+        data = numpy.zeros((bnnz, K+1, K), dtype=T.dtype)
+        data[:, :-1, :] = T.data
+        return bsr_matrix((data, T.indices, T.indptr),
+                          shape=((K + 1) * (M / K), N))
+
     def expand_candidates(B_old, nodesize):
-        # insert a new dof that is always zero, to create NullDim+1 dofs per node in B
+        # insert a new dof that is always zero, to create NullDim+1 dofs per
+        # node in B
         NullDim = B_old.shape[1]
-        nnodes = B_old.shape[0]/nodesize
-        Bnew = numpy.zeros( (nnodes, nodesize+1, NullDim), dtype=B_old.dtype)
+        nnodes = B_old.shape[0] / nodesize
+        Bnew = numpy.zeros((nnodes, nodesize+1, NullDim), dtype=B_old.dtype)
         Bnew[:, :-1, :] = B_old.reshape(nnodes, nodesize, NullDim)
-        return Bnew.reshape(-1,NullDim)
-        
+        return Bnew.reshape(-1, NullDim)
+
     levels = ml.levels
 
-    x = scipy.rand(levels[0].A.shape[0],1)
+    x = scipy.rand(levels[0].A.shape[0], 1)
     if levels[0].A.dtype == complex:
-        x = x + 1.0j*scipy.rand(levels[0].A.shape[0],1)
+        x = x + 1.0j*scipy.rand(levels[0].A.shape[0], 1)
     b = numpy.zeros_like(x)
 
-    x = ml.solve(b, x0=x, tol=float(numpy.finfo(numpy.float).tiny), 
+    x = ml.solve(b, x0=x, tol=float(numpy.finfo(numpy.float).tiny),
                  maxiter=candidate_iters)
     work[:] += ml.operator_complexity()*ml.levels[0].A.nnz*candidate_iters*2
-    
+
     T0 = levels[0].T.copy()
 
     #TEST FOR CONVERGENCE HERE
@@ -578,119 +629,136 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
     for i in range(len(ml.levels) - 2):
         # alpha-SA paper does local elimination here, but after talking
         # to Marian, its not clear that this helps things
-        #fn, kwargs = unpack_arg(eliminate_local)
-        #if fn == True:
-        #    eliminate_local_candidates(x,levels[i].AggOp,levels[i].A, levels[i].T, **kwargs)
-        
+        # fn, kwargs = unpack_arg(eliminate_local)
+        # if fn == True:
+        #    eliminate_local_candidates(x,levels[i].AggOp,levels[i].A,
+        #    levels[i].T, **kwargs)
+
         # add candidate to B
-        B = numpy.hstack((levels[i].B, x.reshape(-1,1)))
-        
+        B = numpy.hstack((levels[i].B, x.reshape(-1, 1)))
+
         # construct Ptent
-        T,R = fit_candidates(levels[i].AggOp,B)
-        
+        T, R = fit_candidates(levels[i].AggOp, B)
+
         levels[i].T = T
-        x = R[:,-1].reshape(-1,1)
+        x = R[:, -1].reshape(-1, 1)
 
         # smooth P
         fn, kwargs = unpack_arg(smooth[i])
         if fn == 'jacobi':
-            levels[i].P =jacobi_prolongation_smoother(levels[i].A, T, levels[i].C, R,**kwargs)
+            levels[i].P = jacobi_prolongation_smoother(levels[i].A, T,
+                                                       levels[i].C, R,
+                                                       **kwargs)
         elif fn == 'richardson':
-            levels[i].P = richardson_prolongation_smoother(levels[i].A, T, **kwargs)
+            levels[i].P = richardson_prolongation_smoother(levels[i].A, T,
+                                                           **kwargs)
         elif fn == 'energy':
-            levels[i].P = energy_prolongation_smoother(levels[i].A, T, levels[i].C, R, None, (False,{}), **kwargs)
-            x = R[:,-1].reshape(-1,1)
-        elif fn == None:
+            levels[i].P = energy_prolongation_smoother(levels[i].A, T,
+                                                       levels[i].C, R, None,
+                                                       (False, {}), **kwargs)
+            x = R[:, -1].reshape(-1, 1)
+        elif fn is None:
             levels[i].P = T
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
- 
+            raise ValueError('unrecognized prolongation smoother method %s' %
+                             str(fn))
+
         # construct R
-        if symmetry == 'symmetric':                     # R should reflect A's structure
-            levels[i].R   = levels[i].P.T.asformat(levels[i].P.format)
+        if symmetry == 'symmetric':  # R should reflect A's structure
+            levels[i].R = levels[i].P.T.asformat(levels[i].P.format)
         elif symmetry == 'hermitian':
-            levels[i].R   = levels[i].P.H.asformat(levels[i].P.format)
-        
+            levels[i].R = levels[i].P.H.asformat(levels[i].P.format)
+
         # construct coarse A
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
-        
+
         # construct bridging P
         T_bridge = make_bridge(levels[i+1].T)
         R_bridge = levels[i+2].B
-        
+
         # smooth bridging P
         fn, kwargs = unpack_arg(smooth[i+1])
         if fn == 'jacobi':
-            levels[i+1].P= jacobi_prolongation_smoother(levels[i+1].A, T_bridge, \
-                                            levels[i+1].C, R_bridge, **kwargs)
+            levels[i+1].P = jacobi_prolongation_smoother(levels[i+1].A,
+                                                         T_bridge,
+                                                         levels[i+1].C,
+                                                         R_bridge, **kwargs)
         elif fn == 'richardson':
-            levels[i+1].P = richardson_prolongation_smoother(levels[i+1].A, T_bridge, **kwargs)
+            levels[i+1].P = richardson_prolongation_smoother(levels[i+1].A,
+                                                             T_bridge,
+                                                             **kwargs)
         elif fn == 'energy':
-            levels[i+1].P = energy_prolongation_smoother(levels[i+1].A, T_bridge, \
-                                      levels[i+1].C, R_bridge, None, (False,{}), **kwargs)
-        elif fn == None:
+            levels[i+1].P = energy_prolongation_smoother(levels[i+1].A,
+                                                         T_bridge,
+                                                         levels[i+1].C,
+                                                         R_bridge, None,
+                                                         (False, {}), **kwargs)
+        elif fn is None:
             levels[i+1].P = T_bridge
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
-        
+            raise ValueError('unrecognized prolongation smoother method %s' %
+                             str(fn))
+
         # construct the "bridging" R
-        if symmetry == 'symmetric':                     # R should reflect A's structure
+        if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
         elif symmetry == 'hermitian':
             levels[i+1].R = levels[i+1].P.H.asformat(levels[i+1].P.format)
-        
+
         # run solver on candidate
         solver = multilevel_solver(levels[i+1:], coarse_solver=coarse_solver)
-        change_smoothers(solver, presmoother=prepostsmoother, postsmoother=prepostsmoother)
-        x = solver.solve(numpy.zeros_like(x), x0=x, tol=float(numpy.finfo(numpy.float).tiny), 
-                          maxiter=candidate_iters)
-        work[:] += solver.operator_complexity()*solver.levels[0].A.nnz*candidate_iters*2
+        change_smoothers(solver, presmoother=prepostsmoother,
+                         postsmoother=prepostsmoother)
+        x = solver.solve(numpy.zeros_like(x), x0=x,
+                         tol=float(numpy.finfo(numpy.float).tiny),
+                         maxiter=candidate_iters)
+        work[:] += 2 * solver.operator_complexity() * solver.levels[0].A.nnz *\
+            candidate_iters*2
 
         # update values on next level
-        levels[i+1].B = R[:,:-1].copy()
+        levels[i+1].B = R[:, :-1].copy()
         levels[i+1].T = T_bridge
 
-    
     # note that we only use the x from the second coarsest level
     fn, kwargs = unpack_arg(prepostsmoother)
     for lvl in reversed(levels[:-2]):
         x = lvl.P * x
         work[:] += lvl.A.nnz*candidate_iters*2
-        
+
         if fn == 'gauss_seidel':
-            # only relax at nonzeros, so as not to mess up any locally dropped candidates
+            # only relax at nonzeros, so as not to mess up any locally dropped
+            # candidates
             indices = numpy.ravel(x).nonzero()[0]
-            gauss_seidel_indexed(lvl.A, x, numpy.zeros_like(x), indices, 
+            gauss_seidel_indexed(lvl.A, x, numpy.zeros_like(x), indices,
                                  iterations=candidate_iters, sweep='symmetric')
-        
+
         elif fn == 'gauss_seidel_ne':
-            gauss_seidel_ne(lvl.A, x, numpy.zeros_like(x), 
+            gauss_seidel_ne(lvl.A, x, numpy.zeros_like(x),
                             iterations=candidate_iters, sweep='symmetric')
-        
+
         elif fn == 'gauss_seidel_nr':
-            gauss_seidel_nr(lvl.A, x, numpy.zeros_like(x), 
+            gauss_seidel_nr(lvl.A, x, numpy.zeros_like(x),
                             iterations=candidate_iters, sweep='symmetric')
-        
+
         elif fn == 'jacobi':
-            jacobi(lvl.A, x, numpy.zeros_like(x), iterations=1, omega=1.0/rho_D_inv_A(lvl.A))
-        
+            jacobi(lvl.A, x, numpy.zeros_like(x), iterations=1,
+                   omega=1.0 / rho_D_inv_A(lvl.A))
+
         elif fn == 'richardson':
-            polynomial(lvl.A, x, numpy.zeros_like(x), iterations=1, \
+            polynomial(lvl.A, x, numpy.zeros_like(x), iterations=1,
                        coeffients=[1.0/approximate_spectral_radius(lvl.A)])
-        
+
         elif fn == 'gmres':
-            x[:] = (gmres(lvl.A, numpy.zeros_like(x), x0=x, 
+            x[:] = (gmres(lvl.A, numpy.zeros_like(x), x0=x,
                           maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 
-    ##
     # x will be dense again, so we have to drop locally again
     elim, elim_kwargs = unpack_arg(eliminate_local)
-    if elim == True:
+    if elim is True:
         x = x/norm(x, 'inf')
-        eliminate_local_candidates(x, levels[0].AggOp, levels[0].A, T0, **elim_kwargs)
+        eliminate_local_candidates(x, levels[0].AggOp, levels[0].A, T0,
+                                   **elim_kwargs)
 
-    return x.reshape(-1,1)
-
-
+    return x.reshape(-1, 1)
