@@ -423,7 +423,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     return Atilde
 
 
-@numpy.deprecate
+@np.deprecate
 def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
                                block_flag=False, symmetrize_measure=True,
                                assume_const_nullspace=False):
