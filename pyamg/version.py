@@ -1,5 +1,5 @@
 version = '2.0.5'
-release=False
+release = False
 
 if not release:
     import os
@@ -12,5 +12,5 @@ if not release:
         svn = imp.load_module('pyamg.__svn_version__',
                               open(svn_version_file),
                               svn_version_file,
-                              ('.py','U',1))
+                              ('.py', 'U', 1))
         version += svn.version
