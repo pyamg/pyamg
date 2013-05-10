@@ -17,7 +17,15 @@ __all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep',
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
-           'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv']
+           'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
+           'eliminate_diag_dom_nodes']
+
+def blocksize(A):
+    # Helper Function: return the blocksize of a matrix 
+    if isspmatrix_bsr(A):
+        return A.blocksize[0]
+    else:
+        return 1
 
 def profile_solver(ml, accel=None, **kwargs):
     """
@@ -1660,6 +1668,80 @@ def compute_BtBinv(B, C):
     pinv_array(BtBinv)
     
     return BtBinv
+
+def eliminate_diag_dom_nodes(A, C, theta=1.02):
+    
+    ''' Helper function that eliminates diagonally dominant rows and cols from A
+    in the separate matrix C.  This is useful because it eliminates nodes in C
+    which we don't want coarsened.  These eliminated nodes in C just become 
+    the rows and columns of the identity. 
+    
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix 
+    C : {csr_matrix}
+        Sparse MxM matrix, where M is the number of nodes in A.  M=N if A is CSR
+        or is BSR with blocksize 1.  Otherwise M = N/blocksize.
+    theta : {float}
+        determines diagonal dominance threshhold
+
+    Returns
+    -------
+    C : {csr_matrix}
+        C updated such that the rows and columns corresponding to diagonally
+        dominant rows in A have been eliminated and replaced with rows and 
+        columns of the identity.
+
+    Notes
+    -----
+    Diagonal dominance is defined as 
+     || (e_i, A) - a_ii ||_1  <  theta a_ii
+    that is, the 1-norm of the off diagonal elements in row i must be less than
+    theta times the diagonal element.
+
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import eliminate_diag_dom_nodes
+    >>> A = poisson( (4,), format='csr' )
+    >>> C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
+    >>> C.todense()
+    matrix([[ 1.,  0.,  0.,  0.],
+            [ 0.,  2., -1.,  0.],
+            [ 0., -1.,  2.,  0.],
+            [ 0.,  0.,  0.,  1.]])
+    
+    '''
+
+    ##
+    # Find the diagonally dominant rows in A.   
+    A_abs = A.copy()
+    A_abs.data = numpy.abs(A_abs.data)
+    D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
+    diag_dom_rows = ( D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],),dtype=A_abs) - D_abs) ) )
+    
+    ##
+    # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
+    bsize = blocksize(A_abs)
+    if bsize > 1:
+        diag_dom_rows = numpy.array( diag_dom_rows, dtype=int)
+        diag_dom_rows = diag_dom_rows.reshape(-1,bsize)
+        diag_dom_rows = numpy.sum(diag_dom_rows, axis=1)
+        diag_dom_rows = (diag_dom_rows == bsize)
+
+    ##
+    # Replace these rows/cols in # C with rows/cols of the identity.
+    I = eye(C.shape[0], C.shape[1], format='csr')
+    I.data[diag_dom_rows] = 0.0
+    C = I*C*I
+    I.data[diag_dom_rows] = 1.0
+    I.data[diag_dom_rows == False] = 0.0
+    C = C + I
+    
+    del A_abs
+    return C
 
 
 #from functools import partial, update_wrapper

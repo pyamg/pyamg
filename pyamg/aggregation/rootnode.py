@@ -15,7 +15,8 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
                              relaxation_as_linear_operator, scale_rows, \
-                             get_diagonal, scale_T, get_Cpt_params
+                             get_diagonal, scale_T, get_Cpt_params, \
+                             eliminate_diag_dom_nodes
 from pyamg.util.linalg import pinv_array, approximate_spectral_radius, \
                               _approximate_eigenvalues
 from pyamg.strength import classical_strength_of_connection, \
@@ -45,6 +46,7 @@ def rootnode_solver(A, B=None, BH=None,
         presmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         Bimprove='default', max_levels = 10, max_coarse = 500, 
+        coarsen_diag_dom=(False, {'theta':1.02}),
         keep=False, **kwargs):
     """
     Create a multilevel solver using root-node based Smoothed Aggregation (SA).  
@@ -106,6 +108,10 @@ def rootnode_solver(A, B=None, BH=None,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
+    coarsen_diag_dom : {tuple} : default (False, {'theta':1.02})
+        If the first tuple entry is True, then avoid coarsening
+        diagonally dominant rows.  theta is used as the threshold
+        to determine diagonal dominance.
     keep : {bool} : default False
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
@@ -287,13 +293,14 @@ def rootnode_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
     
     while len(levels) < max_levels and levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep)
+        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, coarsen_diag_dom, keep)
     
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
-def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
+def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, 
+                     coarsen_diag_dom=(False,{'theta':1.02}), keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
@@ -343,6 +350,11 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, keep=True):
     # connections and small values represent weak connections
     if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or (fn == 'energy_based'):
         C.data = 1.0/C.data
+
+    # Avoid coarsening diagonally dominant rows
+    flag,kwargs = unpack_arg( coarsen_diag_dom )
+    if flag:
+        C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
     ##
     # aggregation

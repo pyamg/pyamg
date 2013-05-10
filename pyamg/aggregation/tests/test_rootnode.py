@@ -71,6 +71,15 @@ class TestParameters(TestCase):
 
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
+    
+    def test_diag_dom(self): 
+        diag_dom = []
+        diag_dom.append( (False, {'theta':1.1}) )
+        diag_dom.append( (True, {'theta':1.1}) )
+
+        for dd in diag_dom:
+            self.run_cases( {'coarsen_diag_dom' : dd} )
+
 
 class TestComplexParameters(TestCase):
     def setUp(self):
@@ -132,6 +141,14 @@ class TestComplexParameters(TestCase):
 
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
+    
+    def test_diag_dom(self): 
+        diag_dom = []
+        diag_dom.append( (False, {'theta':1.1}) )
+        diag_dom.append( (True, {'theta':1.1}) )
+
+        for dd in diag_dom:
+            self.run_cases( {'coarsen_diag_dom' : dd} )
 
 class TestSolverPerformance(TestCase):
     def setUp(self):

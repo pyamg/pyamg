@@ -886,6 +886,32 @@ class TestUtils(TestCase):
                         [[ 2.5, -1. ], [-1. ,  0.5]]])
         assert_array_almost_equal(BtBinv, answer)
 
+    def test_eliminate_diag_dom_nodes(self):
+        ##
+        # Simple CSR test
+        from pyamg.gallery import poisson
+        A = poisson( (4,), format='csr' )
+        C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
+        answer = array([[ 1.,  0.,  0.,  0.],
+            [ 0.,  2., -1.,  0.],
+            [ 0., -1.,  2.,  0.],
+            [ 0.,  0.,  0.,  1.]])
+        assert_array_almost_equal(C.todense(), answer)
+        
+        ##
+        # Simple BSR test
+        from pyamg.gallery import poisson
+        A = poisson( (6,), format='csr' )
+        A.data[3] = 5.0
+        A = A.tobsr( (2,2) )
+        C = poisson( (3,), format='csr' )
+        C = eliminate_diag_dom_nodes(A, C, 1.1)
+        answer = array([[ 1.,  0.,  0.],
+            [ 0.,  2., -1.],
+            [ 0., -1.,  2.]])        
+        assert_array_almost_equal(C.todense(), answer)
+
+
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):
         #check sparse -> array
@@ -1163,6 +1189,34 @@ class TestComplexUtils(TestCase):
         answer = array([[[ 1.5+0.j ,  0.0+0.5j], [ 0.0-0.5j,  0.2+0.j ]],
                         [[ 5.0+0.j ,  0.0+1.5j], [ 0.0-1.5j,  0.5+0.j ]]])
         assert_array_almost_equal(BtBinv, answer)
+    
+    def test_eliminate_diag_dom_nodes(self):
+        ##
+        # Simple CSR test
+        from pyamg.gallery import poisson
+        A = poisson( (4,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[0] = 1+5.0j
+        C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
+        answer = array([[ 1.,  0.,  0.,  0.],
+            [ 0.,  2., -1.,  0.],
+            [ 0., -1.,  2.,  0.],
+            [ 0.,  0.,  0.,  1.]])
+        assert_array_almost_equal(C.todense(), answer)
+        
+        ##
+        # Simple BSR test
+        from pyamg.gallery import poisson
+        A = poisson( (6,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[3] = 1.0 + 5.0j
+        A = A.tobsr( (2,2) )
+        C = poisson( (3,), format='csr' )
+        C = eliminate_diag_dom_nodes(A, C, 1.1)
+        answer = array([[ 1.,  0.,  0.],
+            [ 0.,  2., -1.],
+            [ 0., -1.,  2.]])        
+        assert_array_almost_equal(C.todense(), answer)
 
     ## JBS: no explicitly complex tests necessary for get_Cpt_params
     ## def test_get_Cpt_params(self):
