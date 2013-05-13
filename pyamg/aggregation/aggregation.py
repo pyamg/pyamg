@@ -128,7 +128,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                               {'sweep': 'symmetric'}),
                                 Bimprove='default', max_levels = 10,
                                 max_coarse = 500,  
-                                coarsen_diag_dom=(False, {'theta':1.02}),
+                                coarsen_diag_dom=False,
                                 keep=False, **kwargs):
     """
     Create a multilevel solver using classical-style Smoothed Aggregation (SA)
@@ -187,10 +187,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    coarsen_diag_dom : {tuple} : default (False, {'theta':1.02})
-        If the first tuple entry is True, then avoid coarsening
-        diagonally dominant rows.  theta is used as the threshold
-        to determine diagonal dominance.
+    coarsen_diag_dom : {bool, tuple} : default False
+        If True (or the first tuple entry is True), then avoid coarsening
+        diagonally dominant rows.  The second tuple entry requires a
+        dictionary, where the key value 'theta' is used to tune the diagonal
+        dominance threshold.
     keep : {bool} : default False
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
@@ -357,7 +358,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
 
 def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, 
-                     coarsen_diag_dom=(False,{'theta':1.02}), keep=True):
+                     coarsen_diag_dom=False, keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.

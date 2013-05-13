@@ -76,6 +76,8 @@ class TestParameters(TestCase):
         diag_dom = []
         diag_dom.append( (False, {'theta':1.1}) )
         diag_dom.append( (True, {'theta':1.1}) )
+        diag_dom.append( True )
+        diag_dom.append( False )
 
         for dd in diag_dom:
             self.run_cases( {'coarsen_diag_dom' : dd} )
@@ -145,6 +147,8 @@ class TestComplexParameters(TestCase):
         diag_dom = []
         diag_dom.append( (False, {'theta':1.1}) )
         diag_dom.append( (True, {'theta':1.1}) )
+        diag_dom.append( True )
+        diag_dom.append( False )
 
         for dd in diag_dom:
             self.run_cases( {'coarsen_diag_dom' : dd} )
