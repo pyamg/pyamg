@@ -72,15 +72,15 @@ class TestParameters(TestCase):
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
     
-    def test_diag_dom(self): 
-        diag_dom = []
-        diag_dom.append( (False, {'theta':1.1}) )
-        diag_dom.append( (True, {'theta':1.1}) )
-        diag_dom.append( True )
-        diag_dom.append( False )
+    def test_diagonal_dominance(self): 
+        diagonal_dominance = []
+        diagonal_dominance.append( (False, {'theta':1.1}) )
+        diagonal_dominance.append( (True, {'theta':1.1}) )
+        diagonal_dominance.append( True )
+        diagonal_dominance.append( False )
 
-        for dd in diag_dom:
-            self.run_cases( {'coarsen_diag_dom' : dd} )
+        for dd in diagonal_dominance:
+            self.run_cases( {'diagonal_dominance' : dd} )
 
 
 class TestComplexParameters(TestCase):
@@ -144,15 +144,15 @@ class TestComplexParameters(TestCase):
         for solver in solvers:
             self.run_cases( {'coarse_solver' : solver} )
     
-    def test_diag_dom(self): 
-        diag_dom = []
-        diag_dom.append( (False, {'theta':1.1}) )
-        diag_dom.append( (True, {'theta':1.1}) )
-        diag_dom.append( True )
-        diag_dom.append( False )
+    def test_diagonal_dominance(self): 
+        diagonal_dominance = []
+        diagonal_dominance.append( (False, {'theta':1.1}) )
+        diagonal_dominance.append( (True, {'theta':1.1}) )
+        diagonal_dominance.append( True )
+        diagonal_dominance.append( False )
 
-        for dd in diag_dom:
-            self.run_cases( {'coarsen_diag_dom' : dd} )
+        for dd in diagonal_dominance:
+            self.run_cases( {'diagonal_dominance' : dd} )
 
 class TestSolverPerformance(TestCase):
     def setUp(self):

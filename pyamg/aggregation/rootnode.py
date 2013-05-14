@@ -46,7 +46,7 @@ def rootnode_solver(A, B=None, BH=None,
         presmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         postsmoother=('block_gauss_seidel',{'sweep':'symmetric'}),
         Bimprove='default', max_levels = 10, max_coarse = 500, 
-        coarsen_diag_dom=False, keep=False, **kwargs):
+        diagonal_dominance=False, keep=False, **kwargs):
     """
     Create a multilevel solver using root-node based Smoothed Aggregation (SA).  
     See the notes below, for the major differences with the classical-style 
@@ -107,7 +107,7 @@ def rootnode_solver(A, B=None, BH=None,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    coarsen_diag_dom : {bool, tuple} : default False
+    diagonal_dominance : {bool, tuple} : default False
         If True (or the first tuple entry is True), then avoid coarsening
         diagonally dominant rows.  The second tuple entry requires a
         dictionary, where the key value 'theta' is used to tune the diagonal
@@ -293,14 +293,14 @@ def rootnode_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
     
     while len(levels) < max_levels and levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, coarsen_diag_dom, keep)
+        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, diagonal_dominance , keep)
     
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, 
-                     coarsen_diag_dom=False, keep=True):
+                     diagonal_dominance=False, keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
@@ -352,7 +352,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         C.data = 1.0/C.data
 
     # Avoid coarsening diagonally dominant rows
-    flag,kwargs = unpack_arg( coarsen_diag_dom )
+    flag,kwargs = unpack_arg( diagonal_dominance )
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
