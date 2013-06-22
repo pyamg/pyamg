@@ -1,2 +1,0 @@
-import pyamg
-pyamg.test()
