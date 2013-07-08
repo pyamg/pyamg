@@ -91,6 +91,7 @@ The predominant portion of PyAMG is written in Python with a smaller amount of s
 # Example Usage
 
 PyAMG is easy to use!  The following code constructs a two-dimensional Poisson problem and solves the resulting linear system with Classical AMG.
+
     from scipy import *
     from scipy.linalg import *
     from pyamg import *
