@@ -22,13 +22,15 @@ PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Py
 
 # Citing
 
-  @MISC{BeOlSc2011,
-        author = "Bell, W. N. and Olson, L. N. and Schroder, J. B.",
-        title = "{PyAMG}: Algebraic Multigrid Solvers in {Python} v2.0",
-        year = "2011",
-        url = "http://www.pyamg.org",
-        note = "Release 2.0"
-        }
+<pre>
+@MISC{BeOlSc2011,
+      author = "Bell, W. N. and Olson, L. N. and Schroder, J. B.",
+      title = "{PyAMG}: Algebraic Multigrid Solvers in {Python} v2.0",
+      year = "2011",
+      url = "http://www.pyamg.org",
+      note = "Release 2.0"
+      }
+</pre>
 
 # Getting Help
 
@@ -42,11 +44,15 @@ or
 
 Try the [docstrings](http://docs.python.org/tutorial/controlflow.html#documentation-strings): for example
 
-    print pyamg.strength.__doc__
+````python
+print pyamg.strength.__doc__
+````
 
 or
 
-    pyamg.strength?
+````python
+pyamg.strength?
+````
 
 in [ipython](http://www.ipython.org)
 
@@ -92,19 +98,22 @@ The predominant portion of PyAMG is written in Python with a smaller amount of s
 
 PyAMG is easy to use!  The following code constructs a two-dimensional Poisson problem and solves the resulting linear system with Classical AMG.
 
-    from scipy import *
-    from scipy.linalg import *
-    from pyamg import *
-    from pyamg.gallery import *
-    A = poisson((500,500), format='csr')     # 2D Poisson problem on 500x500 grid
-    ml = ruge_stuben_solver(A)               # construct the multigrid hierarchy
-    print ml                                 # print hierarchy information
-    b = rand(A.shape[0])                     # pick a random right hand side
-    x = ml.solve(b, tol=1e-10)               # solve Ax=b to a tolerance of 1e-8
-    print "residual norm is", norm(b - A*x)  # compute norm of residual vector
+````python
+from scipy import *
+from scipy.linalg import *
+from pyamg import *
+from pyamg.gallery import *
+A = poisson((500,500), format='csr')     # 2D Poisson problem on 500x500 grid
+ml = ruge_stuben_solver(A)               # construct the multigrid hierarchy
+print ml                                 # print hierarchy information
+b = rand(A.shape[0])                     # pick a random right hand side
+x = ml.solve(b, tol=1e-10)               # solve Ax=b to a tolerance of 1e-8
+print "residual norm is", norm(b - A*x)  # compute norm of residual vector
+````
 
 Program output:
 
+<pre>
     multilevel_solver
     Number of Levels:     6
     Operator Complexity:  2.198
@@ -119,3 +128,4 @@ Program output:
         5          484         4728 [ 0.17%]
     
     residual norm is 1.86112114946e-06
+</pre>
