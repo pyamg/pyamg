@@ -1,14 +1,10 @@
-# README
-
-
 ![](Docs/logo/PyAMG_logo.png)
 
 ----
 
-![](Docs/logo/CS_logo.png)
-
-
 PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
+
+![](Docs/logo/CS_logo.png)
 
 ----
 
@@ -76,21 +72,32 @@ The predominant portion of PyAMG is written in Python with a smaller amount of s
 
 # PyAMG Objectives
 
-- ease of use
+**ease of use**
+
 - interface is accessible to non-experts
 - extensive documentation and references
-- speed
+
+**speed**
+
 - solves problems with millions of unknowns efficiently
 - core multigrid algorithms are implemented in C++ and translated through SWIG
 - sparse matrix support provided by scipy.sparse
-- readability
+
+**readability**
+
 - source code is organized into intuitive components
-- extensibility
+
+**extensibility**
+
 - core components can be reused to implement additional techniques
 - new features are easy integrated
-- experimentation
+
+**experimentation**
+
 - facilitates rapid prototyping and analysis of multigrid methods
-- portability
+
+**portability**
+
 - tested on several platforms
 - relies only on Python, NumPy, and SciPy
 
