@@ -1,41 +1,41 @@
-fix wiki pages
+- [ ]fix wiki pages
 
-move wiki to pages (org or project?)
+- [ ]move wiki to pages (org or project?)
 
-update pyamg.org
+- [ ]update pyamg.org
 
-specific points 
+- [ ]specific points 
 
-- point to code
+- [ ] point to code
 
-- point to examples
+- [ ] point to examples
 
-analytics (google or bitdeli?)
+a [ ]nalytics (google or bitdeli?)
 
-- update install scripts
+- [ ] update install scripts
 
-- unifify the return of C from all strength of connection in aggregation and RS
+- [ ] unifify the return of C from all strength of connection in aggregation and RS
 
-- C can be float in [0,1] or bool
+- [ ] C can be float in [0,1] or bool
 
-- make diagonal C in routine (does this work for RS?)
+- [ ] make diagonal C in routine (does this work for RS?)
 
-- fix unamal doc string.  it makes all ones
+- [ ] fix unamal doc string.  it makes all ones
 
-- clearly block out strength, aggregation, interp routines
+- [ ] clearly block out strength, aggregation, interp routines
 
-- move BImprove before strength?  (test before/after)
+- [ ] move BImprove before strength?  (test before/after)
 
-- move preprocess_Bimprove
+- [ ] move preprocess_Bimprove
 
-- move default option from preprocess_Bimprove somewhere else
+- [ ] move default option from preprocess_Bimprove somewhere else
 
-- change Bimprove to improve_candidates  (consistent with adaptive SA solver)
+- [ ] change Bimprove to improve_candidates  (consistent with adaptive SA solver)
 
-- change 'scheme' to consistent usage
+- [ ] change 'scheme' to consistent usage
 
-- rename preprocess_Bimprove, preprocess_str_or_agg, preprocess_smooth to levelize
+- [ ] rename preprocess_Bimprove, preprocess_str_or_agg, preprocess_smooth to levelize
 
-- fix returns for preprocess
+- [ ] fix returns for preprocess
 
-- clean up symmetry flag
+- [ ] clean up symmetry flag
