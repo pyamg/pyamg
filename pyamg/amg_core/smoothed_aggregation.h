@@ -75,10 +75,14 @@ void symmetric_strength_of_connection(const I n_row,
             const I   j = Aj[jj];
             const T Aij = Ax[jj];
 
-            if(i == j){continue;}  //skip diagonal
-
-            //  |A(i,j)| >= theta * sqrt(|A(i,i)|*|A(j,j)|) 
-            if(mynormsq(Aij) >= eps_Aii * diags[j]){    
+            if(i == j){
+                // Always add the diagonal
+                Sj[nnz] =   j;
+                Sx[nnz] = Aij;
+                nnz++;
+            }  
+            else if(mynormsq(Aij) >= eps_Aii * diags[j]){    
+                //  |A(i,j)| >= theta * sqrt(|A(i,i)|*|A(j,j)|) 
                 Sj[nnz] =   j;
                 Sx[nnz] = Aij;
                 nnz++;
