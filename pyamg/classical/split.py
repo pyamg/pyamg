@@ -100,6 +100,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, coo_matrix
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
+from pyamg.util.utils import remove_diagonal
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
@@ -433,37 +434,4 @@ def preprocess(S, coloring_method = None):
 
     return (weights,G,S,T)
 
-# Internal function
-def remove_diagonal(S):
-    """ Removes the diagonal of the matrix S
-    
-    Parameters
-    ----------
-    S : csr_matrix
-        Square matrix
-
-    Returns
-    -------
-    S : csr_matrix
-        Strength matrix with the diagonal removed
-   
-    Notes
-    -----
-    This is needed by all the splitting routines which operate on matrix graphs
-    with an assumed zero diagonal
- 
-    """
-
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
-    
-    if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
-
-    S = coo_matrix(S)  
-    mask = S.row != S.col
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
-    S.data = S.data[mask]
-
-    return S.tocsr()
 

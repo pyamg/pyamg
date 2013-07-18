@@ -910,6 +910,17 @@ class TestUtils(TestCase):
             [ 0.,  2., -1.],
             [ 0., -1.,  2.]])        
         assert_array_almost_equal(C.todense(), answer)
+    
+    def test_remove_diagonal(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import remove_diagonal
+        A = poisson( (4,), format='csr' )
+        C = remove_diagonal(A)
+        exact = array([[ 0., -1.,  0.,  0.],
+                       [-1.,  0., -1.,  0.],
+                       [ 0., -1.,  0., -1.],
+                       [ 0.,  0., -1.,  0.]])
+        assert_array_almost_equal(C.todense(), exact)
 
 
 class TestComplexUtils(TestCase):
@@ -1217,6 +1228,18 @@ class TestComplexUtils(TestCase):
             [ 0.,  2., -1.],
             [ 0., -1.,  2.]])        
         assert_array_almost_equal(C.todense(), answer)
+
+    def test_remove_diagonal(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import remove_diagonal
+        A = poisson( (4,), format='csr' )
+        C = remove_diagonal(1.0j*A)
+        exact = array([[ 0., -1.,  0.,  0.],
+                       [-1.,  0., -1.,  0.],
+                       [ 0., -1.,  0., -1.],
+                       [ 0.,  0., -1.,  0.]])
+        assert_array_almost_equal(C.todense(), 1.0j*exact)
+
 
     ## JBS: no explicitly complex tests necessary for get_Cpt_params
     ## def test_get_Cpt_params(self):

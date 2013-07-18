@@ -166,6 +166,12 @@ def classical_strength_of_connection(A, theta=0.0):
     >>> S = classical_strength_of_connection(A, 0.0)
 
     """
+
+    if sparse.isspmatrix_bsr(A):
+        blocksize = A.blocksize[0]
+    else:
+        blocksize = 1
+
     if not sparse.isspmatrix_csr(A):
         warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
@@ -179,8 +185,12 @@ def classical_strength_of_connection(A, theta=0.0):
 
     fn = amg_core.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
+    S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
-    return sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+    if blocksize > 1:
+        S = amalgamate(S, A.blocksize[0])
+
+    return S
 
 
 def symmetric_strength_of_connection(A, theta=0):

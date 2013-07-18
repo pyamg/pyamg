@@ -1743,6 +1743,52 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     del A_abs
     return C
 
+def remove_diagonal(S):
+    """ Removes the diagonal of the matrix S
+    
+    Parameters
+    ----------
+    S : csr_matrix
+        Square matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Strength matrix with the diagonal removed
+   
+    Notes
+    -----
+    This is needed by all the splitting routines which operate on matrix graphs
+    with an assumed zero diagonal
+
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import remove_diagonal
+    >>> A = poisson( (4,), format='csr' )
+    >>> C = remove_diagonal(A)
+    >>> C.todense()
+    matrix([[ 0., -1.,  0.,  0.],
+            [-1.,  0., -1.,  0.],
+            [ 0., -1.,  0., -1.],
+            [ 0.,  0., -1.,  0.]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    if S.shape[0] != S.shape[1]:
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+
+    S = coo_matrix(S)  
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
+    return S.tocsr()
+
 
 #from functools import partial, update_wrapper
 #def dispatcher(name_to_handle):

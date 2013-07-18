@@ -378,17 +378,20 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
 
     ##
     # Begin constructing next level
+    ##
+    
+    ##
+    # Strength-of-Connection. Requirements for the strength matrix C are:
+    #   * Nonzero diagonal whenever A has a nonzero diagonal
+    #   * Non-negative entries (float or bool) in [0,1]
+    #   * Large entries denoting stronger connections
+    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+    #     row block size of m, then C is (n/m) x (n/m) 
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
-        # Diagonal must be nonzero
-        C = C + eye(C.shape[0], C.shape[1], format='csr')
     elif fn == 'classical':
         C = classical_strength_of_connection(A, **kwargs)
-        # Diagonal must be nonzero
-        C = C + eye(C.shape[0], C.shape[1], format='csr')
-        if isspmatrix_bsr(A):
-            C = amalgamate(C, A.blocksize[0])
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
@@ -404,18 +407,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-
-    # In SA, strength represents "distance", so we take magnitude of complex
-    # values
-    if C.dtype == complex:
-        C.data = np.abs(C.data)
-
-    # Create a unified strength framework so that large values represent strong
-    # connections and small values represent weak connections
-    if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or\
-            (fn == 'energy_based'):
-        C.data = 1.0/C.data
     
+    ##    
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )
     if flag:
