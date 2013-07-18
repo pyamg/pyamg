@@ -417,8 +417,12 @@ def reference_classical_strength_of_connection(A, theta):
     S.col  = S.col[mask]
     S.data = S.data[mask]
     
-    #S = S + scipy.sparse.eye(S.shape[0], S.shape[0], format="csr")
-    return S.tocsr()
+    # Add back diagonal
+    D = scipy.sparse.eye(S.shape[0], S.shape[0], format="csr", dtype=A.dtype)
+    D.data[:] = csr_matrix(A).diagonal()
+    S = S.tocsr() + D
+
+    return S
     
 
 def reference_symmetric_strength_of_connection(A, theta):

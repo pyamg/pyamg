@@ -165,6 +165,12 @@ def reference_direct_interpolation(A,S,splitting):
     A = coo_matrix(A)
     S = coo_matrix(S)  
 
+    # remove diagonals
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
     #strong C points
     c_mask = splitting[S.col] == 1
     C_s = coo_matrix( (S.data[c_mask],(S.row[c_mask],S.col[c_mask])), shape=S.shape)

@@ -96,7 +96,7 @@ References
 
 import numpy
 import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix, isspmatrix_csr, coo_matrix
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
@@ -137,6 +137,7 @@ def RS(S):
 
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    S = remove_diagonal(S)
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
@@ -182,6 +183,7 @@ def PMIS(S):
        SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
     """
+    S = remove_diagonal(S)
     weights,G,S,T = preprocess(S)
     return MIS(G, weights)
 
@@ -225,6 +227,7 @@ def PMISc(S, method='JP'):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
+    S = remove_diagonal(S)
     weights,G,S,T = preprocess(S, coloring_method=method)
     return MIS(G, weights)
      
@@ -264,6 +267,7 @@ def CLJP(S,color=False):
 
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    S = remove_diagonal(S)
 
     colorid = 0
     if color:
@@ -315,6 +319,7 @@ def CLJPc(S):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
+    S = remove_diagonal(S)
     return CLJP(S,color=True)
 
 def MIS(G, weights, maxiter=None):
@@ -350,6 +355,7 @@ def MIS(G, weights, maxiter=None):
     """
 
     if not isspmatrix_csr(G): raise TypeError('expected csr_matrix')
+    G = remove_diagonal(G)
 
     mis    = numpy.empty( G.shape[0], dtype='intc' )
     mis[:] = -1
@@ -426,3 +432,38 @@ def preprocess(S, coloring_method = None):
         weights  = weights + (scipy.rand(len(weights)) + coloring)/num_colors
 
     return (weights,G,S,T)
+
+# Internal function
+def remove_diagonal(S):
+    """ Removes the diagonal of the matrix S
+    
+    Parameters
+    ----------
+    S : csr_matrix
+        Square matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Strength matrix with the diagonal removed
+   
+    Notes
+    -----
+    This is needed by all the splitting routines which operate on matrix graphs
+    with an assumed zero diagonal
+ 
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    if S.shape[0] != S.shape[1]:
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+
+    S = coo_matrix(S)  
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
+    return S.tocsr()
+
