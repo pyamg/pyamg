@@ -136,7 +136,7 @@ def extend_hierarchy(levels, strength, CF, keep):
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        C = evolution_strength_of_connection(A, B=scipy.ones((A.shape[0],1), dtype=A.dtype), **kwargs)
+        C = evolution_strength_of_connection(A, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'algebraic_distance':
