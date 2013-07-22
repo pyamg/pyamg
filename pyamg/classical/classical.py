@@ -13,6 +13,7 @@ from pyamg.strength import classical_strength_of_connection, \
                            evolution_strength_of_connection
 
 from interpolate import direct_interpolation
+import split
 
 __all__ = ['ruge_stuben_solver']
 
@@ -145,18 +146,33 @@ def extend_hierarchy(levels, strength, CF, keep):
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-
-    if CF in [ 'RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']:
-        import split
-        splitting = getattr(split, CF)(C)
+    
+    ##
+    # Generate splitting
+    fn, kwargs = unpack_arg(CF)
+    if fn == 'RS':
+        splitting = split.RS(C)
+    elif fn == 'PMIS':
+        splitting = split.PMIS(C)
+    elif fn == 'PMISc':
+        splitting = split.PMISc(C)
+    elif fn == 'CLJP':
+        splitting = split.CLJP(C)
+    elif fn == 'CLJPc':
+        splitting = split.CLJPc(C)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
-
+    
+    ##
+    # Generate interpolation
     P = direct_interpolation(A, C, splitting)
 
-
+    ##
+    # Generate restriction
     R = P.T.tocsr()
 
+    ##
+    # Store relevant information for this level
     if keep:
         levels[-1].C = C                  # strength of connection matrix
         levels[-1].splitting = splitting  # C/F splitting
@@ -166,6 +182,8 @@ def extend_hierarchy(levels, strength, CF, keep):
 
     levels.append( multilevel_solver.level() )
 
-    A = R * A * P                     #galerkin operator
+    ##
+    # Form next level through Galerkin product
+    A = R * A * P
     levels[-1].A = A
 
