@@ -209,12 +209,11 @@ def classical_strength_of_connection(A, theta=0.0):
     if blocksize > 1:
         S = amalgamate(S, A.blocksize[0])
     
+    # Strength represents "distance", so take the magnitude 
+    S.data = np.abs(S.data)
+
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-    
-    # Strength represents "distance", so take magnitude of complex values
-    if S.dtype == complex:
-        S.data = np.abs(S.data)
   
     return S
 
@@ -316,12 +315,11 @@ def symmetric_strength_of_connection(A, theta=0):
     else:
         raise TypeError('expected csr_matrix or bsr_matrix')
 
+    # Strength represents "distance", so take the magnitude 
+    S.data = np.abs(S.data)
+
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-    
-    # Strength represents "distance", so take magnitude of complex values
-    if S.dtype == complex:
-        S.data = np.abs(S.data)
     
     return S
 
@@ -463,6 +461,10 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
                                    Atilde.indptr), shape=(
                                        Atilde.shape[0] / numPDEs,
                                        Atilde.shape[1] / numPDEs))
+
+
+    # Scale C by the largest magnitude entry in each row
+    Atilde = scale_rows_by_largest_entry(Atilde)
 
     return Atilde
 
@@ -911,5 +913,19 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     C.data[weak] = 0
     C = C.tocsr()
     C.eliminate_zeros()
+
+    # Strength represents "distance", so take the magnitude 
+    S.data = np.abs(S.data)
+
+    # Standardized strength values require small values be weak and large
+    # values be strong.  So, we invert the distances.
+    C.data = 1.0/C.data
+    
+    ## 
+    # Put an identity on the diagonal
+    C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
+    
+    # Scale C by the largest magnitude entry in each row
+    C = scale_rows_by_largest_entry(C)
 
     return C

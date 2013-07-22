@@ -423,6 +423,9 @@ def reference_classical_strength_of_connection(A, theta):
     D.data[:] = csr_matrix(A).diagonal()
     S = S.tocsr() + D
     
+    # Strength represents "distance", so take the magnitude 
+    S.data = abs(S.data)
+
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
     for i in range(S.shape[0]):
@@ -434,10 +437,6 @@ def reference_classical_strength_of_connection(A, theta):
     largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
     S = S.tocsr()   
     S = scale_rows(S, largest_row_entry, copy=True)
-
-    # Strength represents "distance", so take magnitude of complex values
-    if S.dtype == complex:
-        S.data = abs(S.data)
 
     return S
     
@@ -471,6 +470,9 @@ def reference_symmetric_strength_of_connection(A, theta):
     D.data[:] = csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
+    # Strength represents "distance", so take the magnitude 
+    S.data = abs(S.data)
+
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
     for i in range(S.shape[0]):
@@ -482,11 +484,7 @@ def reference_symmetric_strength_of_connection(A, theta):
     largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
     S = S.tocsr()   
     S = scale_rows(S, largest_row_entry, copy=True)
-    
-    # Strength represents "distance", so take magnitude of complex values
-    if S.dtype == complex:
-        S.data = abs(S.data)
-    
+     
     return S
 
 
@@ -665,6 +663,22 @@ def reference_evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type
         #Atilde = csr_matrix((data, row, col), shape=(*,*))
         Atilde = csr_matrix((array([ Atilde.data[i,:,:][Atilde.data[i,:,:].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
                              Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs) )
+
+    # Standardized strength values require small values be weak and large
+    # values be strong.  So, we invert the algebraic distances computed here
+    Atilde.data = 1.0/Atilde.data
+    
+    # Scale Atilde by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((Atilde.shape[0],), dtype=Atilde.dtype)
+    for i in range(Atilde.shape[0]):
+        for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
+            val = numpy.abs(Atilde.data[j])
+            if val > largest_row_entry[i]:
+                largest_row_entry[i] = val
+    
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    Atilde = Atilde.tocsr()   
+    Atilde = scale_rows(Atilde, largest_row_entry, copy=True)
 
     return Atilde
 
