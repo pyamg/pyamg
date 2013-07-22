@@ -120,19 +120,31 @@ def extend_hierarchy(levels, strength, CF, keep):
     
     A = levels[-1].A
 
-    # strength of connection
+    ##
+    # Strength-of-Connection. Requirements for the strength matrix C are:
+    #   * Nonzero diagonal whenever A has a nonzero diagonal
+    #   * Non-negative entries (float or bool) in [0,1]
+    #   * Large entries denoting stronger connections
+    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+    #     row block size of m, then C is (n/m) x (n/m) 
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
-        C = symmetric_strength_of_connection(A,**kwargs)
+        C = symmetric_strength_of_connection(A, **kwargs)
     elif fn == 'classical':
-        C = classical_strength_of_connection(A,**kwargs)
+        C = classical_strength_of_connection(A, **kwargs)
+    elif fn == 'distance':
+        C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        raise NotImplementedError('evolution method not supported for Classical AMG')
+        C = evolution_strength_of_connection(A, B, **kwargs)
+    elif fn == 'energy_based':
+        C = energy_based_strength_of_connection(A, **kwargs)
+    elif fn == 'algebraic_distance':
+        C = algebraic_distance(A, **kwargs)
     elif fn is None:
         C = A
     else:
-        raise ValueError('unrecognized strength of connection method: %s' % fn)
-
+        raise ValueError('unrecognized strength of connection method: %s' %
+                         str(fn))
 
     if CF in [ 'RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc']:
         import split

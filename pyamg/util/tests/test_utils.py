@@ -921,7 +921,19 @@ class TestUtils(TestCase):
                        [ 0., -1.,  0., -1.],
                        [ 0.,  0., -1.,  0.]])
         assert_array_almost_equal(C.todense(), exact)
-
+    
+    def test_scale_rows_by_largest_entry(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_rows_by_largest_entry
+        A = poisson( (4,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[1] = 8. 
+        A = scale_rows_by_largest_entry(A)
+        exact = array([[ 0.25,  1.  ,  0.  ,  0.  ],
+                       [-0.5 ,  1.  , -0.5 ,  0.  ],
+                       [ 0.  , -0.5 ,  1.  , -0.5 ],
+                       [ 0.  ,  0.  , -0.5 ,  1.  ]])
+        assert_array_almost_equal(A.todense(), exact)
 
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):
@@ -1239,6 +1251,20 @@ class TestComplexUtils(TestCase):
                        [ 0., -1.,  0., -1.],
                        [ 0.,  0., -1.,  0.]])
         assert_array_almost_equal(C.todense(), 1.0j*exact)
+
+    def test_scale_rows_by_largest_entry(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_rows_by_largest_entry
+        A = poisson( (4,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[1] = 3. + 2.j
+        A = scale_rows_by_largest_entry(A)
+        exact = array( [[ 0.55470020+0.j,  0.83205029+0.5547002j,  0.0,      0.0],
+                        [-0.50000000+0.j,  1.00000000+0.j,        -0.5+0.j,  0.0+0.j],
+                        [ 0.00000000+0.j, -0.50000000+0.j,         1.0+0.j, -0.5+0.j],
+                        [ 0.00000000+0.j,  0.00000000+0.j,        -0.5+0.j,  1.0+0.j]])
+        assert_array_almost_equal(A.todense(), exact)
+
 
 
     ## JBS: no explicitly complex tests necessary for get_Cpt_params

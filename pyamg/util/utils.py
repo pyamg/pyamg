@@ -1789,6 +1789,44 @@ def remove_diagonal(S):
 
     return S.tocsr()
 
+def scale_rows_by_largest_entry(S):
+    """ Scale each row in S by it's largest in magnitude entry 
+    
+    Parameters
+    ----------
+    S : csr_matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Each row has been scaled by it's largest in magnitude entry
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import scale_rows_by_largest_entry
+    >>> A = poisson( (4,), format='csr' )
+    >>> A.data[1] = 5.0
+    >>> A = scale_rows_by_largest_entry(A)
+    >>> A.todense()
+    matrix([[ 0.4,  1. ,  0. ,  0. ],
+            [-0.5,  1. , -0.5,  0. ],
+            [ 0. , -0.5,  1. , -0.5],
+            [ 0. ,  0. , -0.5,  1. ]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    # Scale S by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data) 
+
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    S = scale_rows(S, largest_row_entry, copy=True)
+
+    return S
+
 
 #from functools import partial, update_wrapper
 #def dispatcher(name_to_handle):

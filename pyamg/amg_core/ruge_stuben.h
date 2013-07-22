@@ -88,6 +88,41 @@ void classical_strength_of_connection(const I n_row,
     }
 }
 
+/*
+ *  Compute the maximum in magnitude row value for a CSR matrix 
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *       x[]       - num_rows array
+ *  
+ *  Returns:
+ *      Nothing, x[i] will hold row i's maximum magnitude entry
+ *
+ */
+template<class I, class T, class F>
+void maximum_row_value(const I n_row, T x[],
+                       const I Ap[], const I Aj[], const T Ax[])
+{
+
+    for(I i = 0; i < n_row; i++){
+        F max_entry = std::numeric_limits<F>::min();
+
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
+        
+        // Find this row's max entry
+        for(I jj = row_start; jj < row_end; jj++){
+            max_entry = std::max(max_entry, mynorm(Ax[jj]) );
+        }
+        
+        x[i] = max_entry;
+    }
+}
+
+
 
 #define F_NODE 0
 #define C_NODE 1

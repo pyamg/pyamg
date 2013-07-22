@@ -41,7 +41,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_classical_strength_of_connection(A, theta)
                 
                 assert_equal( result.nnz, expected.nnz )
-                assert_equal( result.todense(), expected.todense() )
+                assert_array_almost_equal( result.todense(), expected.todense() )
 
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
@@ -50,7 +50,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_symmetric_strength_of_connection(A, theta)
 
                 assert_equal( result.nnz,       expected.nnz)
-                assert_equal( result.todense(), expected.todense())
+                assert_array_almost_equal( result.todense(), expected.todense() )
 
     def test_distance_strength_of_connection(self):
         data = load_example('airfoil')
@@ -310,15 +310,16 @@ class TestComplexStrengthOfConnection(TestCase):
                 expected = reference_classical_strength_of_connection(A, theta)
                 
                 assert_equal( result.nnz, expected.nnz )
-                assert_equal( result.todense(), expected.todense() )
+                assert_array_almost_equal( result.todense(), expected.todense() )
 
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
                 expected = reference_symmetric_strength_of_connection(A, theta)
                 result   = symmetric_strength_of_connection(A, theta)
+
                 assert_equal( result.nnz,       expected.nnz)
-                assert_equal( result.todense(), expected.todense())
+                assert_array_almost_equal( result.todense(), expected.todense() )
 
     def test_evolution_strength_of_connection(self):
         cases = [] 
@@ -421,6 +422,22 @@ def reference_classical_strength_of_connection(A, theta):
     D = scipy.sparse.eye(S.shape[0], S.shape[0], format="csr", dtype=A.dtype)
     D.data[:] = csr_matrix(A).diagonal()
     S = S.tocsr() + D
+    
+    # Scale S by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    for i in range(S.shape[0]):
+        for j in range(S.indptr[i], S.indptr[i+1]):
+            val = numpy.abs(S.data[j])
+            if val > largest_row_entry[i]:
+                largest_row_entry[i] = val
+    
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    S = S.tocsr()   
+    S = scale_rows(S, largest_row_entry, copy=True)
+
+    # Strength represents "distance", so take magnitude of complex values
+    if S.dtype == complex:
+        S.data = abs(S.data)
 
     return S
     
@@ -454,7 +471,23 @@ def reference_symmetric_strength_of_connection(A, theta):
     D.data[:] = csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
-    return S.tocsr()
+    # Scale S by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    for i in range(S.shape[0]):
+        for j in range(S.indptr[i], S.indptr[i+1]):
+            val = numpy.abs(S.data[j])
+            if val > largest_row_entry[i]:
+                largest_row_entry[i] = val
+    
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    S = S.tocsr()   
+    S = scale_rows(S, largest_row_entry, copy=True)
+    
+    # Strength represents "distance", so take magnitude of complex values
+    if S.dtype == complex:
+        S.data = abs(S.data)
+    
+    return S
 
 
 
@@ -686,6 +719,23 @@ def reference_distance_strength_of_connection(A, V, theta=2.0, relative_drop=Tru
 
     C.eliminate_zeros()
     C = C + 2.0*scipy.sparse.eye(C.shape[0], C.shape[1], format='csr')
+
+    # Standardized strength values require small values be weak and large
+    # values be strong.  So, we invert the distances.
+    C.data = 1.0/C.data
+    
+    # Scale C by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((C.shape[0],), dtype=C.dtype)
+    for i in range(C.shape[0]):
+        for j in range(C.indptr[i], C.indptr[i+1]):
+            val = numpy.abs(C.data[j])
+            if val > largest_row_entry[i]:
+                largest_row_entry[i] = val
+    
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    C = C.tocsr()   
+    C = scale_rows(C, largest_row_entry, copy=True)
+
     return C
 
 

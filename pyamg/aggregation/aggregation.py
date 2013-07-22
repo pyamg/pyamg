@@ -377,10 +377,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         BH = levels[-1].BH
 
     ##
-    # Begin constructing next level
-    ##
-    
-    ##
     # Strength-of-Connection. Requirements for the strength matrix C are:
     #   * Nonzero diagonal whenever A has a nonzero diagonal
     #   * Non-negative entries (float or bool) in [0,1]
@@ -408,7 +404,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
     
-    ##    
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )
     if flag:

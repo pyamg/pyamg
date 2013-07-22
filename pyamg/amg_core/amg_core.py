@@ -256,6 +256,15 @@ def incomplete_mat_mult_bsr(*args):
     """
   return _amg_core.incomplete_mat_mult_bsr(*args)
 
+def maximum_row_value(*args):
+  """
+    maximum_row_value(int n_row, float x, int Ap, int Aj, float Ax)
+    maximum_row_value(int n_row, double x, int Ap, int Aj, double Ax)
+    maximum_row_value(int n_row, npy_cfloat_wrapper x, int Ap, int Aj, npy_cfloat_wrapper Ax)
+    maximum_row_value(int n_row, npy_cdouble_wrapper x, int Ap, int Aj, npy_cdouble_wrapper Ax)
+    """
+  return _amg_core.maximum_row_value(*args)
+
 def pinv_array(*args):
   """
     pinv_array(float Ax, int m, int n, char TransA)

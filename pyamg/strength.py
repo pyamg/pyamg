@@ -1,4 +1,14 @@
-"""Strength of Connection functions"""
+"""
+Strength of Connection functions
+
+Requirements for the strength matrix C are:
+    1) Nonzero diagonal whenever A has a nonzero diagonal
+    2) Non-negative entries (float or bool) in [0,1]
+    3) Large entries denoting stronger connections
+    4) C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+       row block size of m, then C is (n/m) x (n/m) 
+
+"""
 
 __docformat__ = "restructuredtext en"
 
@@ -6,8 +16,9 @@ from warnings import warn
 
 import numpy as np
 import pyamg
-from pyamg.util.utils import scale_rows, scale_columns
+from pyamg.util.utils import scale_rows, scale_columns, scale_rows_by_largest_entry
 from scipy import sparse
+from pyamg import amg_core
 
 import amg_core
 
@@ -104,6 +115,14 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         C.eliminate_zeros()
 
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
+
+    # Standardized strength values require small values be weak and large
+    # values be strong.  So, we invert the distances.
+    C.data = 1.0/C.data
+    
+    # Scale C by the largest magnitude entry in each row
+    C = scale_rows_by_largest_entry(C)
+    
     return C
 
 
@@ -189,7 +208,14 @@ def classical_strength_of_connection(A, theta=0.0):
 
     if blocksize > 1:
         S = amalgamate(S, A.blocksize[0])
-
+    
+    # Scale S by the largest magnitude entry in each row
+    S = scale_rows_by_largest_entry(S)
+    
+    # Strength represents "distance", so take magnitude of complex values
+    if S.dtype == complex:
+        S.data = np.abs(S.data)
+  
     return S
 
 
@@ -267,8 +293,8 @@ def symmetric_strength_of_connection(A, theta=0):
         fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
-        return sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
-
+        S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+        
     elif sparse.isspmatrix_bsr(A):
         M, N = A.shape
         R, C = A.blocksize
@@ -278,7 +304,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
         if theta == 0:
             data = np.ones(len(A.indices), dtype=A.dtype)
-            return sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()),
+            S = sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()),
                                      shape=(M / R, N / C))
         else:
             # the strength of connection matrix is based on the
@@ -290,6 +316,14 @@ def symmetric_strength_of_connection(A, theta=0):
     else:
         raise TypeError('expected csr_matrix or bsr_matrix')
 
+    # Scale S by the largest magnitude entry in each row
+    S = scale_rows_by_largest_entry(S)
+    
+    # Strength represents "distance", so take magnitude of complex values
+    if S.dtype == complex:
+        S.data = np.abs(S.data)
+    
+    return S
 
 def energy_based_strength_of_connection(A, theta=0.0, k=2):
     """
@@ -787,6 +821,13 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
         Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr),
                                    shape=(Atilde.shape[0] / numPDEs,
                                           Atilde.shape[1] / numPDEs))
+
+    # Standardized strength values require small values be weak and large
+    # values be strong.  So, we invert the algebraic distances computed here
+    Atilde.data = 1.0/Atilde.data
+    
+    # Scale C by the largest magnitude entry in each row
+    Atilde = scale_rows_by_largest_entry(Atilde)
 
     return Atilde
 

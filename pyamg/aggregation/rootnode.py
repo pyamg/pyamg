@@ -319,16 +319,17 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         BH = levels[-1].BH
  
     ##
-    # Begin constructing next level
+    # Strength-of-Connection. Requirements for the strength matrix C are:
+    #   * Nonzero diagonal whenever A has a nonzero diagonal
+    #   * Non-negative entries (float or bool) in [0,1]
+    #   * Large entries denoting stronger connections
+    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+    #     row block size of m, then C is (n/m) x (n/m) 
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
-        C = C + eye(C.shape[0], C.shape[1], format='csr')   # Diagonal must be nonzero
     elif fn == 'classical':
         C = classical_strength_of_connection(A, **kwargs)
-        C = C + eye(C.shape[0], C.shape[1], format='csr')   # Diagonal must be nonzero
-        if isspmatrix_bsr(A):
-            C = amalgamate(C, A.blocksize[0])
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
@@ -337,19 +338,13 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':
         C = kwargs['C'].tocsr()
+    elif fn == 'algebraic_distance':
+        C = algebraic_distance(A, **kwargs)
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError('unrecognized strength of connection method: %s' % str(fn))
-    
-    # In SA, strength represents "distance", so we take magnitude of complex values
-    if C.dtype == complex:
-        C.data = numpy.abs(C.data)
-    
-    # Create a unified strength framework so that large values represent strong
-    # connections and small values represent weak connections
-    if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or (fn == 'energy_based'):
-        C.data = 1.0/C.data
+        raise ValueError('unrecognized strength of connection method: %s' %
+                         str(fn))
 
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )
