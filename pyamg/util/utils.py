@@ -673,8 +673,9 @@ def amalgamate(A, blocksize):
     Returns
     -------
     A_amal : csr_matrix
-        Amalgamated  matrix A, first, convert A to BSR with square blocksize 
-        and then return CSR matrix using the resulting BSR indptr and indices
+        Amalgamated  matrix A, first, convert A to BSR with square blocksize
+        and then return a CSR matrix of ones using the resulting BSR indptr and
+        indices
     
     Notes
     -----
@@ -713,9 +714,11 @@ def amalgamate(A, blocksize):
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
-    Unamalgamate a CSR A with blocks of 1's.  
 
-    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock))
+    Unamalgamate a CSR A with blocks of 1's.  This operation is equivalent to
+    replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
+    is equivalent to setting all of A's nonzeros to 1 and then doing a
+    Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
 
     Parameters
     ----------
@@ -728,8 +731,9 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     
     Returns
     -------
-    A_UnAmal : bsr_matrix 
-        Similar to a Kronecker product of A and ones(RowsPerBlock, ColsPerBlock)
+    A : bsr_matrix 
+        Returns A.data[:] = 1, followed by a Kronecker product of A and
+        ones(RowsPerBlock, ColsPerBlock)
 
     Examples
     --------
