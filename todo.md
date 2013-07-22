@@ -6,7 +6,6 @@
 - point to examples
 - analytics (google or bitdeli?)
 - update install scripts
-- fix unamal doc string.  it makes all ones
 - clearly block out strength, aggregation, interp routines
 - move BImprove before strength?  (test before/after)
 - move preprocess_Bimprove

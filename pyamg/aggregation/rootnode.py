@@ -323,7 +323,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        C = evolution_strength_of_connection(A, B, **kwargs)
+        if kwargs.has_key('B'):
+            C = evolution_strength_of_connection(A, **kwargs)
+        else:
+            C = evolution_strength_of_connection(A, B, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':

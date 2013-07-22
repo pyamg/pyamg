@@ -470,18 +470,15 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 @np.deprecate
-def ode_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
-                               block_flag=False, symmetrize_measure=True,
-                               assume_const_nullspace=False):
+def ode_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l2",
+        block_flag=False, symmetrize_measure=True):
     """Use evolution_strength_of_connection instead"""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
-                                            block_flag, symmetrize_measure,
-                                            assume_const_nullspace)
+        block_flag, symmetrize_measure)
 
 
-def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
-                                     block_flag=False, symmetrize_measure=True,
-                                     assume_const_nullspace=False):
+def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l2",
+        block_flag=False, symmetrize_measure=True):
     """
     Construct strength of connection matrix using an Evolution-based measure
 
@@ -489,8 +486,9 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
-    B : {array_like}
-        Near-nullspace vector(s) stored in NxK array
+    B : {string, array}
+        If B='ones', then the near nullspace vector used is all ones.  If B is
+        an (NxK) array, then B is taken to be the near nullspace vectors. 
     epsilon : scalar
         Drop tolerance
     k : integer
@@ -500,10 +498,6 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
     block_flag : {boolean}
         If True, use a block D inverse as preconditioner for A during
         weighted-Jacobi
-    assume_const_nns : {boolean}
-        If True, use a constant vector instead of B for computing
-        strength-of-connection.  If this parameter is False, and multiple
-        vectors are used in B, the method's cost increases dramatically.
 
     Returns
     -------
@@ -546,9 +540,9 @@ def evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2",
 
     #====================================================================
     # Format A and B correctly.
-    #B must be in mat format, this isn't a deep copy
-    if assume_const_nullspace:
-        Bmat = np.mat(np.ones((B.shape[0], 1), dtype=B.dtype))
+    # B must be in mat format, this isn't a deep copy
+    if B=='ones':
+        Bmat = np.mat(np.ones((A.shape[0], 1), dtype=A.dtype))
     else:
         Bmat = np.mat(B)
 
