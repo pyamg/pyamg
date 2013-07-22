@@ -13,7 +13,7 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
+__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',

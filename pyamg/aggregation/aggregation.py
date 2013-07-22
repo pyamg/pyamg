@@ -12,7 +12,7 @@ from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
-    relaxation_as_linear_operator, eliminate_diag_dom_nodes
+    relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -24,17 +24,6 @@ from smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
 
 __all__ = ['smoothed_aggregation_solver']
-
-
-def nPDEs(levels):
-    # Helper Function:
-    # Return the number of PDEs (i.e. blocksize) at the coarsest level
-
-    if isspmatrix_bsr(levels[-1].A):
-        return levels[-1].A.blocksize[0]
-    else:
-        # csr matrices correspond to 1 PDE
-        return 1
 
 
 def preprocess_Bimprove(Bimprove, A, max_levels):
@@ -349,7 +338,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and\
-            levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
+            levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
