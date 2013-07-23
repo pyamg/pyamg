@@ -36,20 +36,19 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
     Parameters
     ----------
-    A : {csr_matrix}
-        Sparse NxN matrix in CSR format
-    V : {array}
-        Vertices of the fine level dof's.
-    relative_drop : {bool}
+    A : csr_matrix or bsr_matrix
+        Square, sparse matrix in CSR or BSR format
+    V : array
+        Coordinates of the vertices of the graph of A
+    relative_drop : bool
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
         If true, then the closest connection is always strong, and other points
-        must be within theta _times_ the smallest distance to be considered
-        strong
+        must be within theta times the smallest distance to be considered strong
 
     Returns
     -------
-    C : {csr_matrix}
+    C : csr_matrix
         C(i,j) = distance(point_i, point_j)
         Strength of connection matrix where strength values are
         distances, i.e. the smaller the value, the stronger the connection.
@@ -57,7 +56,9 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
     Notes
     -----
-    theta is a drop tolerance that is applied row-wise
+    - theta is a drop tolerance that is applied row-wise
+    - If a BSR matrix given, then the return matrix is still CSR.  The strength
+      is given between super nodes based on the BSR block size.
 
     Examples
     --------
@@ -66,37 +67,30 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     >>> from pyamg.strength import distance_strength_of_connection
     >>> data = pyamg.gallery.load_example('airfoil')
     >>> A = data['A'].tocsr()
-    >>> B = scipy.array(data['B'],dtype=float)
     >>> S = distance_strength_of_connection(data['A'], data['vertices'])
-    >>> b = scipy.rand(data['A'].shape[0],)
-    >>> # Use distance strength on level 0, and symmetric on coarse levels
-    >>> strength = [('distance', {'V' : data['vertices']}), 'symmetric']
-    >>> sa = smoothed_aggregation_solver(A, B,\
-                                         strength=strength, max_coarse=10)
-    >>> x = sa.solve(b)
+
     """
-
-    three_d = False
-    if V.shape[1] == 3:
-        if V[:, 2].any():
-            three_d = True
-
     # Amalgamate for the supernode case
     if sparse.isspmatrix_bsr(A):
-        dimen = A.shape[0]/A.blocksize[0]
-        A = sparse.csr_matrix((np.ones((A.data.shape[0],)),
-                               A.indices, A.indptr), shape=(dimen, dimen))
+        sn = A.shape[0]/A.blocksize[0]
+        u = np.ones((A.data.shape[0],))
+        A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
+
+    if not sparse.isspmatrix_csr(A):
+        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        A = sparse.csr_matrix(A)
+
+    dim = V.shape[1]
 
     # Create two arrays for differencing the different coordinates such
     # that C(i,j) = distance(point_i, point_j)
-    A = A.tocsr()
     cols = A.indices
     rows = np.repeat(np.arange(A.shape[0]), A.indptr[1:] - A.indptr[0:-1])
 
     # Insert difference for each coordinate into C
-    C = (V[rows, 0] - V[cols, 0])**2 + (V[rows, 1] - V[cols, 1])**2
-    if three_d:
-        C = C + (V[rows, 2] - V[cols, 2])**2
+    C = (V[rows, 0] - V[cols, 0])**2 
+    for d in range(1,dim):
+        C += (V[rows, d] - V[cols, d])**2
     C = np.sqrt(C)
     C[C < 1e-6] = 1e-6
 
@@ -108,11 +102,10 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         if theta != np.inf:
             amg_core.apply_distance_filter(C.shape[0], theta, C.indptr,
                                            C.indices, C.data)
-            C.eliminate_zeros()
     else:
         amg_core.apply_absolute_distance_filter(C.shape[0], theta, C.indptr,
                                                 C.indices, C.data)
-        C.eliminate_zeros()
+    C.eliminate_zeros()
 
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
 
@@ -135,9 +128,8 @@ def classical_strength_of_connection(A, theta=0.0):
 
     Parameters
     ----------
-    A : csr_matrix
-        Matrix graph defined in sparse format.  Entry A[i,j] describes the
-        strength of edge [i,j]
+    A : csr_matrix or bsr_matrix
+        Square, sparse matrix in CSR or BSR format
     theta : float
         Threshold parameter in [0,1].
 
