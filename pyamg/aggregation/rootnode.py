@@ -10,13 +10,14 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 
 from pyamg import relaxation
 from pyamg import amg_core
-from pyamg.aggregation.aggregation import preprocess_str_or_agg, preprocess_smooth, preprocess_Bimprove
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
                              relaxation_as_linear_operator, scale_rows, \
                              get_diagonal, scale_T, get_Cpt_params, \
-                             eliminate_diag_dom_nodes, blocksize
+                             eliminate_diag_dom_nodes, blocksize, \
+                             preprocess_Bimprove, preprocess_smooth,\
+                             preprocess_str_or_agg
 from pyamg.util.linalg import pinv_array, approximate_spectral_radius, \
                               _approximate_eigenvalues
 from pyamg.strength import classical_strength_of_connection, \

@@ -12,7 +12,8 @@ from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
-    relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize
+    relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize,\
+    preprocess_Bimprove, preprocess_smooth, preprocess_str_or_agg
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -24,88 +25,6 @@ from smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
 
 __all__ = ['smoothed_aggregation_solver']
-
-
-def preprocess_Bimprove(Bimprove, A, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # Bimprove[i] is length max_levels and defines the Bimprove routine
-    # for level i.
-
-    if Bimprove == 'default':
-        if A.symmetry == 'hermitian' or A.symmetry == 'symmetric':
-            Bimprove = [('block_gauss_seidel', {'sweep': 'symmetric',
-                                                'iterations': 4}), None]
-        else:
-            Bimprove = [('gauss_seidel_nr', {'sweep': 'symmetric',
-                                             'iterations': 4}), None]
-    elif Bimprove is None:
-        Bimprove = [None]
-
-    if not isinstance(Bimprove, list):
-        raise ValueError("Bimprove must be a list")
-    elif len(Bimprove) < max_levels:
-            Bimprove.extend([Bimprove[-1]
-                             for i in range(max_levels-len(Bimprove))])
-
-    return Bimprove
-
-
-def preprocess_str_or_agg(scheme, max_levels, max_coarse):
-    # Helper function for smoothed_aggregation_solver that preprocesses
-    # strength of connection and aggregation parameters from the user.  Upon
-    # return, scheme[i] is length max_levels and defines the scheme or
-    # aggregation routine for level i.
-
-    if isinstance(scheme, tuple):
-        if scheme[0] == 'predefined':
-            scheme = [scheme]
-            max_levels = 2
-            max_coarse = 0
-        else:
-            scheme = [scheme for i in range(max_levels-1)]
-
-    elif isinstance(scheme, str):
-        if scheme == 'predefined':
-            raise ValueError('predefined scheme requires a user-provided CSR' +
-                             'matrix representing strength or aggregation' +
-                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
-        else:
-            scheme = [scheme for i in range(max_levels-1)]
-
-    elif isinstance(scheme, list):
-        if isinstance(scheme[-1], tuple) and (scheme[-1][0] == 'predefined'):
-            # scheme is a list that ends with a predefined operator
-            max_levels = len(scheme) + 1
-            max_coarse = 0
-        else:
-            # scheme a list that __doesn't__ end with 'predefined'
-            if len(scheme) < max_levels-1:
-                scheme.extend([scheme[-1]
-                               for i in range(max_levels-len(scheme)-1)])
-
-    elif scheme is None:
-        scheme = [(None, {}) for i in range(max_levels-1)]
-    else:
-        raise ValueError('invalid scheme')
-
-    return max_levels, max_coarse, scheme
-
-
-def preprocess_smooth(smooth, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # smooth[i] is length max_levels and defines the smooth routine
-    # for level i.
-
-    if isinstance(smooth, tuple) or isinstance(smooth, str):
-        smooth = [smooth for i in range(max_levels)]
-    elif isinstance(smooth, list):
-        if len(smooth) < max_levels:
-            smooth.extend([smooth[-1] for i in range(max_levels-len(smooth))])
-    elif smooth is None:
-        smooth = [(None, {}) for i in range(max_levels)]
-
-    return smooth
-
 
 def smoothed_aggregation_solver(A, B=None, BH=None,
                                 symmetry='hermitian', strength='symmetric',

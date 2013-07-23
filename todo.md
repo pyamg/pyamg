@@ -8,10 +8,15 @@
 - update install scripts
 - clearly block out strength, aggregation, interp routines
 - move BImprove before strength?  (test before/after)
-- move preprocess_Bimprove
-- move default option from preprocess_Bimprove somewhere else
+- clean up symmetry flag
+
+- move default option from preprocess_Bimprove somewhere else, just set the
+  default to ('gauss_seidel', {'sweep':'symmetric', 'iterations':4}), but then
+  you have to worry about symmetry.
 - change Bimprove to improve_candidates  (consistent with adaptive SA solver)
 - change 'scheme' to consistent usage
 - rename preprocess_Bimprove, preprocess_str_or_agg, preprocess_smooth to levelize
 - fix returns for preprocess
-- clean up symmetry flag
+- preprocess stuff needs full doc-strings
+- As you change the preprocess names: also update test_utils, __all__ in utils and rootnode and smoothed_aggregation_solver
+
