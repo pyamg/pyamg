@@ -12,7 +12,7 @@ from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
-    relaxation_as_linear_operator, eliminate_diag_dom_nodes
+    relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -24,17 +24,6 @@ from smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
 
 __all__ = ['smoothed_aggregation_solver']
-
-
-def nPDEs(levels):
-    # Helper Function:
-    # Return the number of PDEs (i.e. blocksize) at the coarsest level
-
-    if isspmatrix_bsr(levels[-1].A):
-        return levels[-1].A.blocksize[0]
-    else:
-        # csr matrices correspond to 1 PDE
-        return 1
 
 
 def preprocess_Bimprove(Bimprove, A, max_levels):
@@ -349,7 +338,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and\
-            levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
+            levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
@@ -377,22 +366,24 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         BH = levels[-1].BH
 
     ##
-    # Begin constructing next level
+    # Strength-of-Connection. Requirements for the strength matrix C are:
+    #   * Nonzero diagonal whenever A has a nonzero diagonal
+    #   * Non-negative entries (float or bool) in [0,1]
+    #   * Large entries denoting stronger connections
+    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+    #     row block size of m, then C is (n/m) x (n/m) 
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
-        # Diagonal must be nonzero
-        C = C + eye(C.shape[0], C.shape[1], format='csr')
     elif fn == 'classical':
         C = classical_strength_of_connection(A, **kwargs)
-        # Diagonal must be nonzero
-        C = C + eye(C.shape[0], C.shape[1], format='csr')
-        if isspmatrix_bsr(A):
-            C = amalgamate(C, A.blocksize[0])
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        C = evolution_strength_of_connection(A, B, **kwargs)
+        if kwargs.has_key('B'):
+            C = evolution_strength_of_connection(A, **kwargs)
+        else:
+            C = evolution_strength_of_connection(A, B, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':
@@ -404,17 +395,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-
-    # In SA, strength represents "distance", so we take magnitude of complex
-    # values
-    if C.dtype == complex:
-        C.data = np.abs(C.data)
-
-    # Create a unified strength framework so that large values represent strong
-    # connections and small values represent weak connections
-    if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or\
-            (fn == 'energy_based'):
-        C.data = 1.0/C.data
     
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )

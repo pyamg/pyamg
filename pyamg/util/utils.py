@@ -13,7 +13,7 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
+__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
@@ -673,8 +673,9 @@ def amalgamate(A, blocksize):
     Returns
     -------
     A_amal : csr_matrix
-        Amalgamated  matrix A, first, convert A to BSR with square blocksize 
-        and then return CSR matrix using the resulting BSR indptr and indices
+        Amalgamated  matrix A, first, convert A to BSR with square blocksize
+        and then return a CSR matrix of ones using the resulting BSR indptr and
+        indices
     
     Notes
     -----
@@ -713,9 +714,11 @@ def amalgamate(A, blocksize):
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
-    Unamalgamate a CSR A with blocks of 1's.  
 
-    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock))
+    Unamalgamate a CSR A with blocks of 1's.  This operation is equivalent to
+    replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
+    is equivalent to setting all of A's nonzeros to 1 and then doing a
+    Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
 
     Parameters
     ----------
@@ -728,8 +731,9 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     
     Returns
     -------
-    A_UnAmal : bsr_matrix 
-        Similar to a Kronecker product of A and ones(RowsPerBlock, ColsPerBlock)
+    A : bsr_matrix 
+        Returns A.data[:] = 1, followed by a Kronecker product of A and
+        ones(RowsPerBlock, ColsPerBlock)
 
     Examples
     --------
@@ -1742,6 +1746,90 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     
     del A_abs
     return C
+
+def remove_diagonal(S):
+    """ Removes the diagonal of the matrix S
+    
+    Parameters
+    ----------
+    S : csr_matrix
+        Square matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Strength matrix with the diagonal removed
+   
+    Notes
+    -----
+    This is needed by all the splitting routines which operate on matrix graphs
+    with an assumed zero diagonal
+
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import remove_diagonal
+    >>> A = poisson( (4,), format='csr' )
+    >>> C = remove_diagonal(A)
+    >>> C.todense()
+    matrix([[ 0., -1.,  0.,  0.],
+            [-1.,  0., -1.,  0.],
+            [ 0., -1.,  0., -1.],
+            [ 0.,  0., -1.,  0.]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    if S.shape[0] != S.shape[1]:
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+
+    S = coo_matrix(S)  
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
+    return S.tocsr()
+
+def scale_rows_by_largest_entry(S):
+    """ Scale each row in S by it's largest in magnitude entry 
+    
+    Parameters
+    ----------
+    S : csr_matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Each row has been scaled by it's largest in magnitude entry
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import scale_rows_by_largest_entry
+    >>> A = poisson( (4,), format='csr' )
+    >>> A.data[1] = 5.0
+    >>> A = scale_rows_by_largest_entry(A)
+    >>> A.todense()
+    matrix([[ 0.4,  1. ,  0. ,  0. ],
+            [-0.5,  1. , -0.5,  0. ],
+            [ 0. , -0.5,  1. , -0.5],
+            [ 0. ,  0. , -0.5,  1. ]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    # Scale S by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data) 
+
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    S = scale_rows(S, largest_row_entry, copy=True)
+
+    return S
 
 
 #from functools import partial, update_wrapper

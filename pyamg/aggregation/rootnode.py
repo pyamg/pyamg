@@ -16,7 +16,7 @@ from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
                              relaxation_as_linear_operator, scale_rows, \
                              get_diagonal, scale_T, get_Cpt_params, \
-                             eliminate_diag_dom_nodes
+                             eliminate_diag_dom_nodes, blocksize
 from pyamg.util.linalg import pinv_array, approximate_spectral_radius, \
                               _approximate_eigenvalues
 from pyamg.strength import classical_strength_of_connection, \
@@ -29,17 +29,6 @@ from smooth import jacobi_prolongation_smoother, richardson_prolongation_smoothe
 
 __all__ = ['rootnode_solver']
  
-def blocksize(A):
-    # Helper Function: return the blocksize of a matrix 
-    if isspmatrix_bsr(A):
-        return A.blocksize[0]
-    else:
-        return 1
-
-def nPDEs(levels):
-    # Helper Function:return number of PDEs (i.e. blocksize) at coarsest level
-    return blocksize(levels[-1].A) 
-
 def rootnode_solver(A, B=None, BH=None,
         symmetry='hermitian', strength='symmetric', 
         aggregate='standard', smooth='energy',
@@ -292,7 +281,8 @@ def rootnode_solver(A, B=None, BH=None,
     if A.symmetry == 'nonsymmetric':
         levels[-1].BH = BH    # left candidates
     
-    while len(levels) < max_levels and levels[-1].A.shape[0]/nPDEs(levels) > max_coarse:
+    while len(levels) < max_levels and \
+            levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, diagonal_dominance , keep)
     
     ml = multilevel_solver(levels, **kwargs)
@@ -319,37 +309,35 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
         BH = levels[-1].BH
  
     ##
-    # Begin constructing next level
+    # Strength-of-Connection. Requirements for the strength matrix C are:
+    #   * Nonzero diagonal whenever A has a nonzero diagonal
+    #   * Non-negative entries (float or bool) in [0,1]
+    #   * Large entries denoting stronger connections
+    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
+    #     row block size of m, then C is (n/m) x (n/m) 
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
-        C = C + eye(C.shape[0], C.shape[1], format='csr')   # Diagonal must be nonzero
     elif fn == 'classical':
         C = classical_strength_of_connection(A, **kwargs)
-        C = C + eye(C.shape[0], C.shape[1], format='csr')   # Diagonal must be nonzero
-        if isspmatrix_bsr(A):
-            C = amalgamate(C, A.blocksize[0])
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        C = evolution_strength_of_connection(A, B, **kwargs)
+        if kwargs.has_key('B'):
+            C = evolution_strength_of_connection(A, **kwargs)
+        else:
+            C = evolution_strength_of_connection(A, B, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'predefined':
         C = kwargs['C'].tocsr()
+    elif fn == 'algebraic_distance':
+        C = algebraic_distance(A, **kwargs)
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError('unrecognized strength of connection method: %s' % str(fn))
-    
-    # In SA, strength represents "distance", so we take magnitude of complex values
-    if C.dtype == complex:
-        C.data = numpy.abs(C.data)
-    
-    # Create a unified strength framework so that large values represent strong
-    # connections and small values represent weak connections
-    if (fn == 'ode') or (fn == 'evolution') or (fn == 'distance') or (fn == 'energy_based'):
-        C.data = 1.0/C.data
+        raise ValueError('unrecognized strength of connection method: %s' %
+                         str(fn))
 
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )

@@ -1,7 +1,7 @@
     Parameters
     ----------
     A : csr_matrix or bsr_matrix
-        Sparse NxN matrix in CSR or BSR format
+        Square, sparse matrix in CSR or BSR format
     B : array_like
         Right near-nullspace candidates stored in the columns of an NxK array.
         The default value B=None is equivalent to B=ones((N,1))

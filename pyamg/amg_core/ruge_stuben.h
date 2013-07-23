@@ -66,6 +66,8 @@ void classical_strength_of_connection(const I n_row,
         F threshold = theta*max_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
             F norm_jj = mynorm(Ax[jj]);
+            
+            // Add entry if it exceeds the threshold
             if(norm_jj >= threshold){
                 if(Aj[jj] != i){
                     Sj[nnz] = Aj[jj];
@@ -73,11 +75,53 @@ void classical_strength_of_connection(const I n_row,
                     nnz++;
                 }
             }
+            
+            // Always add the diagonal
+            if(Aj[jj] == i){
+                Sj[nnz] = Aj[jj];
+                Sx[nnz] = Ax[jj];
+                nnz++;
+            }
         }
 
         Sp[i+1] = nnz;
     }
 }
+
+/*
+ *  Compute the maximum in magnitude row value for a CSR matrix 
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *       x[]       - num_rows array
+ *  
+ *  Returns:
+ *      Nothing, x[i] will hold row i's maximum magnitude entry
+ *
+ */
+template<class I, class T, class F>
+void maximum_row_value(const I n_row, T x[],
+                       const I Ap[], const I Aj[], const T Ax[])
+{
+
+    for(I i = 0; i < n_row; i++){
+        F max_entry = std::numeric_limits<F>::min();
+
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
+        
+        // Find this row's max entry
+        for(I jj = row_start; jj < row_end; jj++){
+            max_entry = std::max(max_entry, mynorm(Ax[jj]) );
+        }
+        
+        x[i] = max_entry;
+    }
+}
+
 
 
 #define F_NODE 0
@@ -451,7 +495,7 @@ void rs_direct_interpolation_pass1(const I n_nodes,
             nnz++;
         } else {
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-                if (splitting[Sj[jj]] == C_NODE)
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) )
                     nnz++;
             }
         }
@@ -475,7 +519,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
         } else {
             T sum_strong_pos = 0, sum_strong_neg = 0;
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-                if (splitting[Sj[jj]] == C_NODE){
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
                     if (Sx[jj] < 0)
                         sum_strong_neg += Sx[jj];
                     else
@@ -509,7 +553,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 
             I nnz = Bp[i];
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-                if (splitting[Sj[jj]] == C_NODE){
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){ 
                     Bj[nnz] = Sj[jj];
                     if (Sx[jj] < 0)
                         Bx[nnz] = neg_coeff * Sx[jj];

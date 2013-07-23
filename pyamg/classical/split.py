@@ -96,10 +96,11 @@ References
 
 import numpy
 import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix, isspmatrix_csr, coo_matrix
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
+from pyamg.util.utils import remove_diagonal
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
@@ -137,6 +138,7 @@ def RS(S):
 
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    S = remove_diagonal(S)
 
     T = S.T.tocsr()  #transpose S for efficient column access
 
@@ -182,6 +184,7 @@ def PMIS(S):
        SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
     """
+    S = remove_diagonal(S)
     weights,G,S,T = preprocess(S)
     return MIS(G, weights)
 
@@ -225,6 +228,7 @@ def PMISc(S, method='JP'):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
+    S = remove_diagonal(S)
     weights,G,S,T = preprocess(S, coloring_method=method)
     return MIS(G, weights)
      
@@ -264,6 +268,7 @@ def CLJP(S,color=False):
 
     """
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    S = remove_diagonal(S)
 
     colorid = 0
     if color:
@@ -315,6 +320,7 @@ def CLJPc(S):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
+    S = remove_diagonal(S)
     return CLJP(S,color=True)
 
 def MIS(G, weights, maxiter=None):
@@ -350,6 +356,7 @@ def MIS(G, weights, maxiter=None):
     """
 
     if not isspmatrix_csr(G): raise TypeError('expected csr_matrix')
+    G = remove_diagonal(G)
 
     mis    = numpy.empty( G.shape[0], dtype='intc' )
     mis[:] = -1
@@ -426,3 +433,5 @@ def preprocess(S, coloring_method = None):
         weights  = weights + (scipy.rand(len(weights)) + coloring)/num_colors
 
     return (weights,G,S,T)
+
+
