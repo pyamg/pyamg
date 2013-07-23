@@ -288,8 +288,9 @@ class TestSolverPerformance(TestCase):
         SA_solve_args={'cycle':'V', 'maxiter':20, 'tol':1e-8}
         strength=[('evolution', {'k':2, 'epsilon':8.0})]
         smoother =('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':1})
+        improve_candidates =[('gauss_seidel_nr', {'sweep': 'symmetric', 'iterations': 4}), None]
         # Construct solver with nonsymmetric parameters
-        sa = rootnode_solver(A, B=B, smooth=smooth, \
+        sa = rootnode_solver(A, B=B, smooth=smooth, improve_candidates=improve_candidates, \
            strength=strength, presmoother=smoother, postsmoother=smoother, **SA_build_args)
         residuals = []
         # stand-alone solve

@@ -13,7 +13,7 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
     relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize,\
-    preprocess_improve_candidates, preprocess_smooth, preprocess_str_or_agg
+    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -34,8 +34,9 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                              {'sweep': 'symmetric'}),
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
-                                improve_candidates='default', max_levels = 10,
-                                max_coarse = 500,  
+                                improve_candidates=[('block_gauss_seidel', 
+                                    {'sweep': 'symmetric', 'iterations': 4}), None], 
+                                max_levels = 10, max_coarse = 500,  
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
     """
@@ -84,11 +85,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    improve_candidates : {list} : default
-                        [('block_gauss_seidel', {'sweep':'symmetric'}), None]
+    improve_candidates : {tuple, string, list} : default [('block_gauss_seidel', 
+                         {'sweep': 'symmetric', 'iterations': 4}), None]
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
-        will define the method for all levels lower.
+        will define the method for all levels lower.  If tuple or string, then
+        this single relaxation descriptor defines improve_candidates on all levels.
         The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
     max_levels : {integer} : default 10
@@ -236,13 +238,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             BH = np.asarray(BH, dtype=A.dtype)
 
     ##
-    # Preprocess parameters
+    # Levelize the user parameters, so that they become lists describing the
+    # desired user option on each level.
     max_levels, max_coarse, strength =\
-        preprocess_str_or_agg(strength, max_levels, max_coarse)
+        levelize_strength_or_aggregation(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
-        preprocess_str_or_agg(aggregate, max_levels, max_coarse)
-    improve_candidates = preprocess_improve_candidates(improve_candidates, A, max_levels)
-    smooth = preprocess_smooth(smooth, max_levels)
+        levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
+    improve_candidates = levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
+    smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
     ##
     # Construct multilevel structure
@@ -337,13 +340,13 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     ##
     # Improve near nullspace candidates (important to place after the call to
     # evolution_strength_of_connection)
-    if improve_candidates[len(levels)-1] is not None:
+    fn, kwargs = unpack_arg( improve_candidates[len(levels)-1] )
+    if fn is not None: 
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator(improve_candidates[len(levels)-1], A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":
-            GOp = relaxation_as_linear_operator(improve_candidates[len(levels)-1], AH, b)
-            BH = GOp * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH 
             levels[-1].BH = BH
 
     ##

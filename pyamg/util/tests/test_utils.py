@@ -1270,81 +1270,60 @@ class TestComplexUtils(TestCase):
     ## JBS: no explicitly complex tests necessary for get_Cpt_params
     ## def test_get_Cpt_params(self):
 
-class TestPreprocess(TestCase):
+class TestLevelize(TestCase):
     
-    def test_preprocess_improve_candidates(self):
-        from pyamg.util.utils import preprocess_improve_candidates
-        from pyamg.gallery import poisson
-        A = poisson( (100,), format='csr')
-        A.symmetry = 'hermitian'
+    def test_levelize_smooth_or_improve_candidates(self):
+        from pyamg.util.utils import levelize_smooth_or_improve_candidates
         # test 1
-        result = preprocess_improve_candidates('default', A, 5)
-        assert_equal(result, [('block_gauss_seidel', {'sweep':'symmetric', 'iterations':4}), \
-                              None, None, None, None])
-        # test 2
-        A.symmetry = 'nonsymmetric'
-        result = preprocess_improve_candidates('default', A, 5)
-        assert_equal(result, [('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':4}), \
-                              None, None, None, None])
-        # test 3
-        result = preprocess_improve_candidates([('gauss_seidel', {})], A, 5)
-        assert_equal(result, [('gauss_seidel', {}) for i in range(5)])
-        # test 4
-        result = preprocess_improve_candidates([('gauss_seidel', {}),None], A, 5)
-        assert_equal(result, [('gauss_seidel', {}), None, None, None, None]) 
-
-    def test_preprocess_smooth(self):
-        from pyamg.util.utils import preprocess_smooth
-        # test 1
-        result = preprocess_smooth([('jacobi', {})], 5)
+        result = levelize_smooth_or_improve_candidates([('jacobi', {})], 5)
         assert_equal(result, [('jacobi', {}) for i in range(5)])
         # test 2
-        result = preprocess_smooth('jacobi', 5)
+        result = levelize_smooth_or_improve_candidates('jacobi', 5)
         assert_equal(result, ['jacobi' for i in range(5)])
         # test 3
-        result = preprocess_smooth(('jacobi', {}), 5)
+        result = levelize_smooth_or_improve_candidates(('jacobi', {}), 5)
         assert_equal(result, [('jacobi', {}) for i in range(5)])
         ## test 4
-        result = preprocess_smooth([('jacobi', {}),None], 5)
+        result = levelize_smooth_or_improve_candidates([('jacobi', {}),None], 5)
         assert_equal(result, [('jacobi', {}), None, None, None, None]) 
 
-    def test_preprocess_str_or_agg(self):
-        from pyamg.util.utils import preprocess_str_or_agg
+    def test_levelize_strength_or_aggregation(self):
+        from pyamg.util.utils import levelize_strength_or_aggregation
         from pyamg.gallery import poisson
         A = poisson( (100,), format='csr')
         # test 1
-        max_levels, max_coarse, result = preprocess_str_or_agg([('symmetric', {})], 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('symmetric', {})], 5, 5)
         assert_equal(result, [('symmetric', {}) for i in range(4)])
         assert_equal(max_levels, 5)
         assert_equal(max_coarse, 5)
         # test 2
-        max_levels, max_coarse, result = preprocess_str_or_agg('symmetric', 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation('symmetric', 5, 5)
         assert_equal(result, ['symmetric' for i in range(4)])
         assert_equal(max_levels, 5)
         assert_equal(max_coarse, 5)
         # test 3
-        max_levels, max_coarse, result = preprocess_str_or_agg(('symmetric', {}), 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(('symmetric', {}), 5, 5)
         assert_equal(result, [('symmetric', {}) for i in range(4)])
         assert_equal(max_levels, 5)
         assert_equal(max_coarse, 5)
         # test 4
-        max_levels, max_coarse, result = preprocess_str_or_agg([('symmetric', {}),None], 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('symmetric', {}),None], 5, 5)
         assert_equal(result, [('symmetric', {}), None, None, None]) 
         assert_equal(max_levels, 5)
         assert_equal(max_coarse, 5)
         # test 5
-        max_levels, max_coarse, result = preprocess_str_or_agg(('predefined',{'C' : A}), 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(('predefined',{'C' : A}), 5, 5)
         assert_equal(result, [('predefined',{'C' : A})])
         assert_equal(max_levels, 2)
         assert_equal(max_coarse, 0)
         # test 6
-        max_levels, max_coarse, result = preprocess_str_or_agg([('predefined',{'C' : A}), \
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('predefined',{'C' : A}), \
                                                                 ('predefined',{'C' : A})], 5, 5)
         assert_equal(result, [('predefined',{'C' : A}), ('predefined',{'C' : A})])
         assert_equal(max_levels, 3)
         assert_equal(max_coarse, 0)
         # test 7
-        max_levels, max_coarse, result = preprocess_str_or_agg(None, 5, 5)
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(None, 5, 5)
         assert_equal(result, [(None,{}) for i in range(4)])
         assert_equal(max_levels, 5)
         assert_equal(max_coarse, 5)

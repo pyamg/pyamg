@@ -18,8 +18,9 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
            'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
-           'eliminate_diag_dom_nodes', 'preprocess_str_or_agg', 'preprocess_smooth', 
-           'preprocess_improve_candidates']
+           'eliminate_diag_dom_nodes', 'levelize_strength_or_aggregation', 
+           'levelize_smooth_or_improve_candidates'] 
+           
 
 def blocksize(A):
     # Helper Function: return the blocksize of a matrix 
@@ -1832,85 +1833,139 @@ def scale_rows_by_largest_entry(S):
 
     return S
 
-def preprocess_improve_candidates(improve_candidates, A, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # improve_candidates[i] is length max_levels and defines the improve_candidates routine
-    # for level i.
+def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
+    """
+    Helper function to preprocess the strength and aggregation parameters
+    passed to smoothed_aggregation_solver and rootnode_solver. 
 
-    if improve_candidates == 'default':
-        if A.symmetry == 'hermitian' or A.symmetry == 'symmetric':
-            improve_candidates = [('block_gauss_seidel', {'sweep': 'symmetric',
-                                                'iterations': 4}), None]
-        else:
-            improve_candidates = [('gauss_seidel_nr', {'sweep': 'symmetric',
-                                             'iterations': 4}), None]
-    elif improve_candidates is None:
-        improve_candidates = [None]
+    Parameters
+    ----------
+    to_levelize : {string, tuple, list} 
+        Parameter to preprocess, i.e., levelize and convert to a level-by-level
+        list such that entry i specifies the parameter at level i
+    max_levels : int
+        Defines the maximum number of levels considered
+    max_coarse : int
+        Defines the maximum coarse grid size allowed
 
-    if not isinstance(improve_candidates, list):
-        raise ValueError("improve_candidates must be a list")
-    elif len(improve_candidates) < max_levels:
-            improve_candidates.extend([improve_candidates[-1]
-                             for i in range(max_levels-len(improve_candidates))])
+    Returns
+    -------
+    (max_levels, max_coarse, to_levelize) : tuple
+        New max_levels and max_coarse values and then the parameter list
+        to_levelize, such that entry i specifies the parameter choice at level
+        i.  max_levels and max_coarse are returned, because they may be updated
+        if strength or aggregation set a predefined coarsening and possibly
+        change these values.
 
-    return improve_candidates
+    Notes
+    --------
+    This routine is needed because the user will pass in a parameter option
+    such as smooth='jacobi', or smooth=['jacobi', None], and this option must
+    be "levelized", or converted to a list of length max_levels such that entry
+    [i] in that list is the parameter choice for level i.   
+    
+    The parameter choice in to_levelize can be a string, tuple or list.  If
+    it is a string or tuple, then that option is assumed to be the
+    parameter setting at every level.  If to_levelize is inititally a list, 
+    if the length of the list is less than max_levels, the last entry in the
+    list defines that parameter for all subsequent levels.
 
 
-def preprocess_str_or_agg(scheme, max_levels, max_coarse):
-    # Helper function for smoothed_aggregation_solver that preprocesses
-    # strength of connection and aggregation parameters from the user.  Upon
-    # return, scheme[i] is length max_levels and defines the scheme or
-    # aggregation routine for level i.
+    Examples
+    --------
+    >>> from pyamg.util.utils import levelize_strength_or_aggregation
+    >>> strength = ['evolution', 'classical']
+    >>> levelize_strength_or_aggregation(strength) 
+    (4, 10, ['evolution', 'classical', 'classical']) 
+    """
 
-    if isinstance(scheme, tuple):
-        if scheme[0] == 'predefined':
-            scheme = [scheme]
+
+
+
+    if isinstance(to_levelize, tuple):
+        if to_levelize[0] == 'predefined':
+            to_levelize = [to_levelize]
             max_levels = 2
             max_coarse = 0
         else:
-            scheme = [scheme for i in range(max_levels-1)]
+            to_levelize = [to_levelize for i in range(max_levels-1)]
 
-    elif isinstance(scheme, str):
-        if scheme == 'predefined':
-            raise ValueError('predefined scheme requires a user-provided CSR' +
+    elif isinstance(to_levelize, str):
+        if to_levelize == 'predefined':
+            raise ValueError('predefined to_levelize requires a user-provided CSR' +
                              'matrix representing strength or aggregation' +
                              'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
         else:
-            scheme = [scheme for i in range(max_levels-1)]
+            to_levelize = [to_levelize for i in range(max_levels-1)]
 
-    elif isinstance(scheme, list):
-        if isinstance(scheme[-1], tuple) and (scheme[-1][0] == 'predefined'):
-            # scheme is a list that ends with a predefined operator
-            max_levels = len(scheme) + 1
+    elif isinstance(to_levelize, list):
+        if isinstance(to_levelize[-1], tuple) and (to_levelize[-1][0] == 'predefined'):
+            # to_levelize is a list that ends with a predefined operator
+            max_levels = len(to_levelize) + 1
             max_coarse = 0
         else:
-            # scheme a list that __doesn't__ end with 'predefined'
-            if len(scheme) < max_levels-1:
-                scheme.extend([scheme[-1]
-                               for i in range(max_levels-len(scheme)-1)])
+            # to_levelize a list that __doesn't__ end with 'predefined'
+            if len(to_levelize) < max_levels-1:
+                to_levelize.extend([to_levelize[-1]
+                               for i in range(max_levels-len(to_levelize)-1)])
 
-    elif scheme is None:
-        scheme = [(None, {}) for i in range(max_levels-1)]
+    elif to_levelize is None:
+        to_levelize = [(None, {}) for i in range(max_levels-1)]
     else:
-        raise ValueError('invalid scheme')
+        raise ValueError('invalid to_levelize')
 
-    return max_levels, max_coarse, scheme
+    return max_levels, max_coarse, to_levelize
 
 
-def preprocess_smooth(smooth, max_levels):
-    # Helper function for smoothed_aggregation_solver.  Upon return,
-    # smooth[i] is length max_levels and defines the smooth routine
-    # for level i.
+def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
+    """
+    Helper function to preprocess the smooth and improve_candidates 
+    parameters passed to smoothed_aggregation_solver and rootnode_solver. 
 
-    if isinstance(smooth, tuple) or isinstance(smooth, str):
-        smooth = [smooth for i in range(max_levels)]
-    elif isinstance(smooth, list):
-        if len(smooth) < max_levels:
-            smooth.extend([smooth[-1] for i in range(max_levels-len(smooth))])
-    elif smooth is None:
-        smooth = [(None, {}) for i in range(max_levels)]
+    Parameters
+    ----------
+    to_levelize : {string, tuple, list} 
+        Parameter to preprocess, i.e., levelize and convert to a level-by-level
+        list such that entry i specifies the parameter at level i
+    max_levels : int
+        Defines the maximum number of levels considered
 
-    return smooth
+    Returns
+    -------
+    to_levelize : list 
+        The parameter list such that entry i specifies the parameter choice
+        at level i.  
+    
+    Notes
+    --------
+    This routine is needed because the user will pass in a parameter option
+    such as smooth='jacobi', or smooth=['jacobi', None], and this option must
+    be "levelized", or converted to a list of length max_levels such that entry
+    [i] in that list is the parameter choice for level i.  
+    
+    The parameter choice in to_levelize can be a string, tuple or list.  If
+    it is a string or tuple, then that option is assumed to be the
+    parameter setting at every level.  If to_levelize is inititally a list, 
+    if the length of the list is less than max_levels, the last entry in the
+    list defines that parameter for all subsequent levels.
+
+    Examples
+    --------
+    >>> from pyamg.util.utils import levelize_smooth_or_improve_candidates
+    >>> improve_candidates = ['gauss_seidel', None]
+    >>> levelize_smooth_or_improve_candidates(improve_candidates, 4) 
+    ['gauss_seidel', None, None, None]
+    """
+
+    if isinstance(to_levelize, tuple) or isinstance(to_levelize, str):
+        to_levelize = [to_levelize for i in range(max_levels)]
+    elif isinstance(to_levelize, list):
+        if len(to_levelize) < max_levels:
+            to_levelize.extend([to_levelize[-1] for i in range(max_levels-len(to_levelize))])
+    elif to_levelize is None:
+        to_levelize = [(None, {}) for i in range(max_levels)]
+
+    return to_levelize
 
 
 
