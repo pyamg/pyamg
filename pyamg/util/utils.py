@@ -19,7 +19,7 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
            'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
            'eliminate_diag_dom_nodes', 'preprocess_str_or_agg', 'preprocess_smooth', 
-           'preprocess_Bimprove']
+           'preprocess_improve_candidates']
 
 def blocksize(A):
     # Helper Function: return the blocksize of a matrix 
@@ -1832,28 +1832,28 @@ def scale_rows_by_largest_entry(S):
 
     return S
 
-def preprocess_Bimprove(Bimprove, A, max_levels):
+def preprocess_improve_candidates(improve_candidates, A, max_levels):
     # Helper function for smoothed_aggregation_solver.  Upon return,
-    # Bimprove[i] is length max_levels and defines the Bimprove routine
+    # improve_candidates[i] is length max_levels and defines the improve_candidates routine
     # for level i.
 
-    if Bimprove == 'default':
+    if improve_candidates == 'default':
         if A.symmetry == 'hermitian' or A.symmetry == 'symmetric':
-            Bimprove = [('block_gauss_seidel', {'sweep': 'symmetric',
+            improve_candidates = [('block_gauss_seidel', {'sweep': 'symmetric',
                                                 'iterations': 4}), None]
         else:
-            Bimprove = [('gauss_seidel_nr', {'sweep': 'symmetric',
+            improve_candidates = [('gauss_seidel_nr', {'sweep': 'symmetric',
                                              'iterations': 4}), None]
-    elif Bimprove is None:
-        Bimprove = [None]
+    elif improve_candidates is None:
+        improve_candidates = [None]
 
-    if not isinstance(Bimprove, list):
-        raise ValueError("Bimprove must be a list")
-    elif len(Bimprove) < max_levels:
-            Bimprove.extend([Bimprove[-1]
-                             for i in range(max_levels-len(Bimprove))])
+    if not isinstance(improve_candidates, list):
+        raise ValueError("improve_candidates must be a list")
+    elif len(improve_candidates) < max_levels:
+            improve_candidates.extend([improve_candidates[-1]
+                             for i in range(max_levels-len(improve_candidates))])
 
-    return Bimprove
+    return improve_candidates
 
 
 def preprocess_str_or_agg(scheme, max_levels, max_coarse):

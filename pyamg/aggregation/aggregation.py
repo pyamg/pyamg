@@ -13,7 +13,7 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
     relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize,\
-    preprocess_Bimprove, preprocess_smooth, preprocess_str_or_agg
+    preprocess_improve_candidates, preprocess_smooth, preprocess_str_or_agg
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -34,7 +34,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                              {'sweep': 'symmetric'}),
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
-                                Bimprove='default', max_levels = 10,
+                                improve_candidates='default', max_levels = 10,
                                 max_coarse = 500,  
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
@@ -84,7 +84,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    Bimprove : {list} : default
+    improve_candidates : {list} : default
                         [('block_gauss_seidel', {'sweep':'symmetric'}), None]
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
@@ -241,7 +241,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         preprocess_str_or_agg(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
         preprocess_str_or_agg(aggregate, max_levels, max_coarse)
-    Bimprove = preprocess_Bimprove(Bimprove, A, max_levels)
+    improve_candidates = preprocess_improve_candidates(improve_candidates, A, max_levels)
     smooth = preprocess_smooth(smooth, max_levels)
 
     ##
@@ -258,14 +258,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     while len(levels) < max_levels and\
             levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, diagonal_dominance, keep)
+        extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 
-def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove, 
+def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates, 
                      diagonal_dominance=False, keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
@@ -337,12 +337,12 @@ def extend_hierarchy(levels, strength, aggregate, smooth, Bimprove,
     ##
     # Improve near nullspace candidates (important to place after the call to
     # evolution_strength_of_connection)
-    if Bimprove[len(levels)-1] is not None:
+    if improve_candidates[len(levels)-1] is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator(Bimprove[len(levels)-1], A, b) * B
+        B = relaxation_as_linear_operator(improve_candidates[len(levels)-1], A, b) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":
-            GOp = relaxation_as_linear_operator(Bimprove[len(levels)-1], AH, b)
+            GOp = relaxation_as_linear_operator(improve_candidates[len(levels)-1], AH, b)
             BH = GOp * BH
             levels[-1].BH = BH
 

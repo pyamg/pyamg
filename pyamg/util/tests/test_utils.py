@@ -1272,25 +1272,25 @@ class TestComplexUtils(TestCase):
 
 class TestPreprocess(TestCase):
     
-    def test_preprocess_Bimprove(self):
-        from pyamg.util.utils import preprocess_Bimprove
+    def test_preprocess_improve_candidates(self):
+        from pyamg.util.utils import preprocess_improve_candidates
         from pyamg.gallery import poisson
         A = poisson( (100,), format='csr')
         A.symmetry = 'hermitian'
         # test 1
-        result = preprocess_Bimprove('default', A, 5)
+        result = preprocess_improve_candidates('default', A, 5)
         assert_equal(result, [('block_gauss_seidel', {'sweep':'symmetric', 'iterations':4}), \
                               None, None, None, None])
         # test 2
         A.symmetry = 'nonsymmetric'
-        result = preprocess_Bimprove('default', A, 5)
+        result = preprocess_improve_candidates('default', A, 5)
         assert_equal(result, [('gauss_seidel_nr', {'sweep':'symmetric', 'iterations':4}), \
                               None, None, None, None])
         # test 3
-        result = preprocess_Bimprove([('gauss_seidel', {})], A, 5)
+        result = preprocess_improve_candidates([('gauss_seidel', {})], A, 5)
         assert_equal(result, [('gauss_seidel', {}) for i in range(5)])
         # test 4
-        result = preprocess_Bimprove([('gauss_seidel', {}),None], A, 5)
+        result = preprocess_improve_candidates([('gauss_seidel', {}),None], A, 5)
         assert_equal(result, [('gauss_seidel', {}), None, None, None, None]) 
 
     def test_preprocess_smooth(self):

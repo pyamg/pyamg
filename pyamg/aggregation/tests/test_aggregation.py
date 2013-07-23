@@ -223,12 +223,12 @@ class TestSolverPerformance(TestCase):
         #print "Diagonal Scaling Test:   %1.3e,  %1.3e" % (avg_convergence_ratio, 0.25)
         assert(avg_convergence_ratio < 0.25)
 
-    def test_Bimprove(self):
+    def test_improve_candidates(self):
         ##
-        # test Bimprove for the Poisson problem and elasticity, where rho_scale is 
-        # the amount that each successive Bimprove option should improve convergence
-        # over the previous Bimprove option.
-        Bimproves = [None, [('block_gauss_seidel', {'iterations' : 4, 'sweep':'symmetric'})] ]
+        # test improve_candidates for the Poisson problem and elasticity, where rho_scale is 
+        # the amount that each successive improve_candidates option should improve convergence
+        # over the previous improve_candidates option.
+        improve_candidates_list = [None, [('block_gauss_seidel', {'iterations' : 4, 'sweep':'symmetric'})] ]
         # make tests repeatable
         numpy.random.seed(0) 
         
@@ -241,16 +241,16 @@ class TestSolverPerformance(TestCase):
             last_rho = -1.0
             x0 = rand(A.shape[0],1) 
             b = rand(A.shape[0],1)
-            for Bimprove in Bimproves:
-                ml = smoothed_aggregation_solver(A, B, max_coarse=10, Bimprove=Bimprove)
+            for improve_candidates in improve_candidates_list:
+                ml = smoothed_aggregation_solver(A, B, max_coarse=10, improve_candidates=improve_candidates)
                 residuals=[]
                 x_sol = ml.solve(b,x0=x0,maxiter=20,tol=1e-10, residuals=residuals)
                 rho = (residuals[-1]/residuals[0])**(1.0/len(residuals))
                 if last_rho == -1.0:
                     last_rho = rho
                 else:
-                    # each successive Bimprove option should be an improvement on the previous
-                    # print "\nBimprove Test: %1.3e, %1.3e, %d\n"%(rho,rho_scale*last_rho,A.shape[0])
+                    # each successive improve_candidates option should be an improvement on the previous
+                    # print "\nimprove_candidates Test: %1.3e, %1.3e, %d\n"%(rho,rho_scale*last_rho,A.shape[0])
                     assert(rho < rho_scale*last_rho)
                     last_rho = rho
     
@@ -314,10 +314,10 @@ class TestSolverPerformance(TestCase):
         strength='symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
         sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
-         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+         strength=strength, presmoother=smoother, postsmoother=smoother, improve_candidates=None,**SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
         sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
-         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+         strength=strength, presmoother=smoother, postsmoother=smoother, improve_candidates=None,**SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )
 
@@ -453,10 +453,10 @@ class TestComplexSolverPerformance(TestCase):
         strength='symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
         sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
-         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+         strength=strength, presmoother=smoother, postsmoother=smoother, improve_candidates=None,**SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
         sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0],1)), smooth=smooth, \
-         strength=strength, presmoother=smoother, postsmoother=smoother, Bimprove=None,**SA_build_args)
+         strength=strength, presmoother=smoother, postsmoother=smoother, improve_candidates=None,**SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(), nonsymm_lvl.A.todense() )
 
