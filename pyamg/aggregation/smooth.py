@@ -702,8 +702,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     elif weighting == 'local':
         # Based on Gershgorin estimate
         D = numpy.abs(A)*numpy.ones((A.shape[0],1), dtype=A.dtype)
-        Dinv = 1.0 / numpy.abs(D)
-        Dinv[D == 0] = 0
+        Dinv = numpy.zeros_like(D)
+        Dinv[D != 0] = 1.0 / numpy.abs(D[D != 0])
     else:
         raise ValueError('weighting value is invalid')
 
