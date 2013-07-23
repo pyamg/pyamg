@@ -909,7 +909,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     C.eliminate_zeros()
 
     # Strength represents "distance", so take the magnitude 
-    S.data = np.abs(S.data)
+    C.data = np.abs(C.data)
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
