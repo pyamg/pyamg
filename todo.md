@@ -7,6 +7,19 @@
 - analytics (google or bitdeli?)
 - update install scripts
 - clearly block out strength, aggregation, interp routines
+- C impacts: adaptive, aggregate, aggregation, rootnode, smooth, classical, split, smoothing, and of course strength
+- move pre/post smoother to solve, not setup?
 - move improve_candidates before strength?  (test before/after)
 - clean up symmetry flag, maybe warn the user if flag is nonsymmetric, but
   improve_candidates or pre/postsmoother is not gauss_seidel_nr/ne
+- (JS: Done) unifify the return of C from all strength of connection in aggregation and RS
+- (JS: Done) C can be float in [0,1] or bool
+- (JS: Done) make diagonal C in routine (does this work for RS?)
+- (JS: Done) fix unamal doc string.  it makes all ones
+- (JS: Done) move BImprove before strength?  (test before/after)
+- (JS: Done) move preprocess_Bimprove
+- (JS: Done) move default option from preprocess_Bimprove somewhere else
+- (JS: Done) change Bimprove to improve_candidates  (consistent with adaptive SA solver)
+- (JS: Done) change 'scheme' to consistent usage
+- (JS: Done) rename preprocess_Bimprove, preprocess_str_or_agg, preprocess_smooth to levelize
+- (JS: Done) fix returns for preprocess
