@@ -122,12 +122,8 @@ def extend_hierarchy(levels, strength, CF, keep):
     A = levels[-1].A
 
     ##
-    # Strength-of-Connection. Requirements for the strength matrix C are:
-    #   * Nonzero diagonal whenever A has a nonzero diagonal
-    #   * Non-negative entries (float or bool) in [0,1]
-    #   * Large entries denoting stronger connections
-    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
-    #     row block size of m, then C is (n/m) x (n/m) 
+    # Compute the strength-of-connection matrix C, where larger 
+    # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
@@ -148,7 +144,7 @@ def extend_hierarchy(levels, strength, CF, keep):
                          str(fn))
     
     ##
-    # Generate splitting
+    # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
         splitting = split.RS(C)
@@ -164,11 +160,11 @@ def extend_hierarchy(levels, strength, CF, keep):
         raise ValueError('unknown C/F splitting method (%s)' % CF)
     
     ##
-    # Generate interpolation
+    # Generate the interpolation matrix that maps from the coarse-grid to the fine-grid
     P = direct_interpolation(A, C, splitting)
 
     ##
-    # Generate restriction
+    # Generate the restriction matrix that maps from the fine-grid to the coarse-grid
     R = P.T.tocsr()
 
     ##

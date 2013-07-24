@@ -316,12 +316,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         BH = levels[-1].BH
  
     ##
-    # Strength-of-Connection. Requirements for the strength matrix C are:
-    #   * Nonzero diagonal whenever A has a nonzero diagonal
-    #   * Non-negative entries (float or bool) in [0,1]
-    #   * Large entries denoting stronger connections
-    #   * C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
-    #     row block size of m, then C is (n/m) x (n/m) 
+    # Compute the strength-of-connection matrix C, where larger 
+    # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
         C = symmetric_strength_of_connection(A, **kwargs)
@@ -345,14 +341,17 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-
+    
+    ##
     # Avoid coarsening diagonally dominant rows
     flag,kwargs = unpack_arg( diagonal_dominance )
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
     ##
-    # aggregation
+    # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
+    # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
+    # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
     if fn == 'standard':
         AggOp,Cnodes = standard_aggregation(C, **kwargs)
@@ -367,8 +366,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized aggregation method %s' % str(fn))
 
     ##
-    # Improve near nullspace candidates (important to place after the call to
-    # evolution_strength_of_connection)
+    # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg( improve_candidates[len(levels)-1] )
     if fn is not None: 
         b = numpy.zeros((A.shape[0],1), dtype=A.dtype)
@@ -379,7 +377,9 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             levels[-1].BH = BH
 
     ##
-    # tentative prolongator
+    # Compute the tentative prolongator, T, which is a tentative interpolation
+    # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
+    # B_fine[:,0:blocksize(A)] = T B_coarse[:,0:blocksize(A)].
     T,dummy = fit_candidates(AggOp,B[:,0:blocksize(A)])
     del dummy
     if A.symmetry == "nonsymmetric":
@@ -394,13 +394,16 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
         
     ##
-    # Set coarse grid modes as injected fine grid modes
+    # Set coarse grid near nullspace modes as injected fine grid near
+    # null-space modes
     B = Cpt_params[1]['P_I'].T*levels[-1].B
     if A.symmetry == "nonsymmetric":
         BH = Cpt_params[1]['P_I'].T*levels[-1].BH
 
+
     ##
-    # tentative prolongator smoother
+    # Smooth the tentative prolongator, so that it's accuracy is greatly improved
+    # for algebraically smooth error.
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
     if fn == 'energy':
         P = energy_prolongation_smoother(A, T, C, B, levels[-1].B, Cpt_params=Cpt_params, **kwargs)
@@ -410,7 +413,9 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized prolongation smoother method %s' % str(fn))
 
     ##
-    # Choice of R reflects A's structure
+    # Compute the restriction matrix R, which interpolates from the fine-grid
+    # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
+    # based on A.H.  Otherwise R = P.H or P.T.
     symmetry = A.symmetry
     if symmetry == 'hermitian':
         R = P.H
