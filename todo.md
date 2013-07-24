@@ -9,6 +9,7 @@
 - unifify the return of C from all strength of connection in aggregation and RS
 - C can be float in [0,1] or bool
 - make diagonal C in routine (does this work for RS?)
+- C impacts: adaptive, aggregate, aggregation, rootnode, smooth, classical, split, smoothing, and of course strength
 - fix unamal doc string.  it makes all ones
 - clearly block out strength, aggregation, interp routines
 - move BImprove before strength?  (test before/after)
@@ -19,3 +20,5 @@
 - rename preprocess_Bimprove, preprocess_str_or_agg, preprocess_smooth to levelize
 - fix returns for preprocess
 - clean up symmetry flag
+
+- move pre/post smoother to solve, not setup?
