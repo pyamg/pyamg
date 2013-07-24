@@ -168,8 +168,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
         # Use the Gershgorin estimate as each row's weight, instead of a global
         # spectral radius estimate
         D = numpy.abs(S)*numpy.ones((S.shape[0],1), dtype=S.dtype)
-        Dinv = numpy.zeros_like(D)
-        Dinv[D != 0] = 1.0 / numpy.abs(D[D != 0])
+        D_inv = numpy.zeros_like(D)
+        D_inv[D != 0] = 1.0 / numpy.abs(D[D != 0])
 
         D_inv_S = scale_rows(S, D_inv, copy=True)
         D_inv_S = omega*D_inv_S
