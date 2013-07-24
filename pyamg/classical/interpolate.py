@@ -49,6 +49,14 @@ def direct_interpolation(A, C, splitting):
 
     if not isspmatrix_csr(C): 
         raise TypeError('expected csr_matrix for C')
+    
+    ##
+    # Interpolation weights are computed based on entries in A, but subject to
+    # the sparsity pattern of C.  So, copy the entries of A into the
+    # sparsity pattern of C.
+    C = C.copy()
+    C.data[:] = 1.0
+    C = C.multiply(A)
 
     Pp = numpy.empty_like( A.indptr )
 

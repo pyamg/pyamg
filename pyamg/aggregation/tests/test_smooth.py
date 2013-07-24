@@ -384,7 +384,9 @@ class TestEnergyMin(TestCase):
                 smoother = smooth
             
             if smoother == 'energy' and (B.shape[1] >= blocksize(A)):
-                 ml = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True, symmetry='nonsymmetric')
+                 ml = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, 
+                         improve_candidates =[('gauss_seidel_nr', {'sweep': 'symmetric', 'iterations': 4}), None],
+                         keep=True, symmetry='nonsymmetric')
                  T = ml.levels[0].T.tocsr()
                  Cpts = ml.levels[0].Cpts
                  Bf = ml.levels[0].B 

@@ -13,27 +13,25 @@ import sys
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
-Intended Audience :: Science/Research
+Environment :: Console
+Environment :: X11 Applications
 Intended Audience :: Developers
 Intended Audience :: Education
+Intended Audience :: Science/Research
 License :: OSI Approved :: BSD License
+Natural Language :: English
+Operating System :: OS Independent
 Programming Language :: C++
 Programming Language :: Python
 Topic :: Education
-Topic :: Software Development
 Topic :: Scientific/Engineering
 Topic :: Scientific/Engineering :: Mathematics
-Operating System :: Microsoft :: Windows
-Operating System :: POSIX
-Operating System :: Unix
-Operating System :: MacOS
+Topic :: Software Development :: Libraries :: Python Modules
 """
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
-
-#os.environ['NO_PYAMG_IMPORT']='SciPy/setup.py'
 
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -63,11 +61,11 @@ def setup_package():
     try:
         setup(
             name = 'pyamg',
-            maintainer = "PyAMG Developers",
+            maintainer = "Luke Olson",
             maintainer_email = "luke.olson@gmail.com",
             description = DOCLINES[0],
             long_description = "\n".join(DOCLINES[2:]),
-            url = "http://code.google.com/p/pyamg",
+            url = "https://github.com/pyamg/pyamg",
             download_url = "http://code.google.com/p/pyamg/downloads/list",
             license = 'BSD',
             classifiers=filter(None, CLASSIFIERS.split('\n')),

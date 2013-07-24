@@ -13,12 +13,14 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
+__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
            'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
-           'eliminate_diag_dom_nodes']
+           'eliminate_diag_dom_nodes', 'levelize_strength_or_aggregation', 
+           'levelize_smooth_or_improve_candidates'] 
+           
 
 def blocksize(A):
     # Helper Function: return the blocksize of a matrix 
@@ -673,8 +675,9 @@ def amalgamate(A, blocksize):
     Returns
     -------
     A_amal : csr_matrix
-        Amalgamated  matrix A, first, convert A to BSR with square blocksize 
-        and then return CSR matrix using the resulting BSR indptr and indices
+        Amalgamated  matrix A, first, convert A to BSR with square blocksize
+        and then return a CSR matrix of ones using the resulting BSR indptr and
+        indices
     
     Notes
     -----
@@ -713,9 +716,11 @@ def amalgamate(A, blocksize):
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
-    Unamalgamate a CSR A with blocks of 1's.  
 
-    Equivalent to Kronecker_Product(A, ones(RowsPerBlock, ColsPerBlock))
+    Unamalgamate a CSR A with blocks of 1's.  This operation is equivalent to
+    replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
+    is equivalent to setting all of A's nonzeros to 1 and then doing a
+    Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
 
     Parameters
     ----------
@@ -728,8 +733,9 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     
     Returns
     -------
-    A_UnAmal : bsr_matrix 
-        Similar to a Kronecker product of A and ones(RowsPerBlock, ColsPerBlock)
+    A : bsr_matrix 
+        Returns A.data[:] = 1, followed by a Kronecker product of A and
+        ones(RowsPerBlock, ColsPerBlock)
 
     Examples
     --------
@@ -1742,6 +1748,225 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     
     del A_abs
     return C
+
+def remove_diagonal(S):
+    """ Removes the diagonal of the matrix S
+    
+    Parameters
+    ----------
+    S : csr_matrix
+        Square matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Strength matrix with the diagonal removed
+   
+    Notes
+    -----
+    This is needed by all the splitting routines which operate on matrix graphs
+    with an assumed zero diagonal
+
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import remove_diagonal
+    >>> A = poisson( (4,), format='csr' )
+    >>> C = remove_diagonal(A)
+    >>> C.todense()
+    matrix([[ 0., -1.,  0.,  0.],
+            [-1.,  0., -1.,  0.],
+            [ 0., -1.,  0., -1.],
+            [ 0.,  0., -1.,  0.]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    if S.shape[0] != S.shape[1]:
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+
+    S = coo_matrix(S)  
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
+
+    return S.tocsr()
+
+def scale_rows_by_largest_entry(S):
+    """ Scale each row in S by it's largest in magnitude entry 
+    
+    Parameters
+    ----------
+    S : csr_matrix
+
+    Returns
+    -------
+    S : csr_matrix
+        Each row has been scaled by it's largest in magnitude entry
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import scale_rows_by_largest_entry
+    >>> A = poisson( (4,), format='csr' )
+    >>> A.data[1] = 5.0
+    >>> A = scale_rows_by_largest_entry(A)
+    >>> A.todense()
+    matrix([[ 0.4,  1. ,  0. ,  0. ],
+            [-0.5,  1. , -0.5,  0. ],
+            [ 0. , -0.5,  1. , -0.5],
+            [ 0. ,  0. , -0.5,  1. ]])
+    
+    """
+
+    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    
+    # Scale S by the largest magnitude entry in each row
+    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data) 
+
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    S = scale_rows(S, largest_row_entry, copy=True)
+
+    return S
+
+def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
+    """
+    Helper function to preprocess the strength and aggregation parameters
+    passed to smoothed_aggregation_solver and rootnode_solver. 
+
+    Parameters
+    ----------
+    to_levelize : {string, tuple, list} 
+        Parameter to preprocess, i.e., levelize and convert to a level-by-level
+        list such that entry i specifies the parameter at level i
+    max_levels : int
+        Defines the maximum number of levels considered
+    max_coarse : int
+        Defines the maximum coarse grid size allowed
+
+    Returns
+    -------
+    (max_levels, max_coarse, to_levelize) : tuple
+        New max_levels and max_coarse values and then the parameter list
+        to_levelize, such that entry i specifies the parameter choice at level
+        i.  max_levels and max_coarse are returned, because they may be updated
+        if strength or aggregation set a predefined coarsening and possibly
+        change these values.
+
+    Notes
+    --------
+    This routine is needed because the user will pass in a parameter option
+    such as smooth='jacobi', or smooth=['jacobi', None], and this option must
+    be "levelized", or converted to a list of length max_levels such that entry
+    [i] in that list is the parameter choice for level i.   
+    
+    The parameter choice in to_levelize can be a string, tuple or list.  If
+    it is a string or tuple, then that option is assumed to be the
+    parameter setting at every level.  If to_levelize is inititally a list, 
+    if the length of the list is less than max_levels, the last entry in the
+    list defines that parameter for all subsequent levels.
+
+
+    Examples
+    --------
+    >>> from pyamg.util.utils import levelize_strength_or_aggregation
+    >>> strength = ['evolution', 'classical']
+    >>> levelize_strength_or_aggregation(strength) 
+    (4, 10, ['evolution', 'classical', 'classical']) 
+    """
+
+
+
+
+    if isinstance(to_levelize, tuple):
+        if to_levelize[0] == 'predefined':
+            to_levelize = [to_levelize]
+            max_levels = 2
+            max_coarse = 0
+        else:
+            to_levelize = [to_levelize for i in range(max_levels-1)]
+
+    elif isinstance(to_levelize, str):
+        if to_levelize == 'predefined':
+            raise ValueError('predefined to_levelize requires a user-provided CSR' +
+                             'matrix representing strength or aggregation' +
+                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
+        else:
+            to_levelize = [to_levelize for i in range(max_levels-1)]
+
+    elif isinstance(to_levelize, list):
+        if isinstance(to_levelize[-1], tuple) and (to_levelize[-1][0] == 'predefined'):
+            # to_levelize is a list that ends with a predefined operator
+            max_levels = len(to_levelize) + 1
+            max_coarse = 0
+        else:
+            # to_levelize a list that __doesn't__ end with 'predefined'
+            if len(to_levelize) < max_levels-1:
+                to_levelize.extend([to_levelize[-1]
+                               for i in range(max_levels-len(to_levelize)-1)])
+
+    elif to_levelize is None:
+        to_levelize = [(None, {}) for i in range(max_levels-1)]
+    else:
+        raise ValueError('invalid to_levelize')
+
+    return max_levels, max_coarse, to_levelize
+
+
+def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
+    """
+    Helper function to preprocess the smooth and improve_candidates 
+    parameters passed to smoothed_aggregation_solver and rootnode_solver. 
+
+    Parameters
+    ----------
+    to_levelize : {string, tuple, list} 
+        Parameter to preprocess, i.e., levelize and convert to a level-by-level
+        list such that entry i specifies the parameter at level i
+    max_levels : int
+        Defines the maximum number of levels considered
+
+    Returns
+    -------
+    to_levelize : list 
+        The parameter list such that entry i specifies the parameter choice
+        at level i.  
+    
+    Notes
+    --------
+    This routine is needed because the user will pass in a parameter option
+    such as smooth='jacobi', or smooth=['jacobi', None], and this option must
+    be "levelized", or converted to a list of length max_levels such that entry
+    [i] in that list is the parameter choice for level i.  
+    
+    The parameter choice in to_levelize can be a string, tuple or list.  If
+    it is a string or tuple, then that option is assumed to be the
+    parameter setting at every level.  If to_levelize is inititally a list, 
+    if the length of the list is less than max_levels, the last entry in the
+    list defines that parameter for all subsequent levels.
+
+    Examples
+    --------
+    >>> from pyamg.util.utils import levelize_smooth_or_improve_candidates
+    >>> improve_candidates = ['gauss_seidel', None]
+    >>> levelize_smooth_or_improve_candidates(improve_candidates, 4) 
+    ['gauss_seidel', None, None, None]
+    """
+
+    if isinstance(to_levelize, tuple) or isinstance(to_levelize, str):
+        to_levelize = [to_levelize for i in range(max_levels)]
+    elif isinstance(to_levelize, list):
+        if len(to_levelize) < max_levels:
+            to_levelize.extend([to_levelize[-1] for i in range(max_levels-len(to_levelize))])
+    elif to_levelize is None:
+        to_levelize = [(None, {}) for i in range(max_levels)]
+
+    return to_levelize
+
 
 
 #from functools import partial, update_wrapper

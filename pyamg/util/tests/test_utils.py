@@ -910,7 +910,30 @@ class TestUtils(TestCase):
             [ 0.,  2., -1.],
             [ 0., -1.,  2.]])        
         assert_array_almost_equal(C.todense(), answer)
-
+    
+    def test_remove_diagonal(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import remove_diagonal
+        A = poisson( (4,), format='csr' )
+        C = remove_diagonal(A)
+        exact = array([[ 0., -1.,  0.,  0.],
+                       [-1.,  0., -1.,  0.],
+                       [ 0., -1.,  0., -1.],
+                       [ 0.,  0., -1.,  0.]])
+        assert_array_almost_equal(C.todense(), exact)
+    
+    def test_scale_rows_by_largest_entry(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_rows_by_largest_entry
+        A = poisson( (4,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[1] = 8. 
+        A = scale_rows_by_largest_entry(A)
+        exact = array([[ 0.25,  1.  ,  0.  ,  0.  ],
+                       [-0.5 ,  1.  , -0.5 ,  0.  ],
+                       [ 0.  , -0.5 ,  1.  , -0.5 ],
+                       [ 0.  ,  0.  , -0.5 ,  1.  ]])
+        assert_array_almost_equal(A.todense(), exact)
 
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):
@@ -1218,6 +1241,92 @@ class TestComplexUtils(TestCase):
             [ 0., -1.,  2.]])        
         assert_array_almost_equal(C.todense(), answer)
 
+    def test_remove_diagonal(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import remove_diagonal
+        A = poisson( (4,), format='csr' )
+        C = remove_diagonal(1.0j*A)
+        exact = array([[ 0., -1.,  0.,  0.],
+                       [-1.,  0., -1.,  0.],
+                       [ 0., -1.,  0., -1.],
+                       [ 0.,  0., -1.,  0.]])
+        assert_array_almost_equal(C.todense(), 1.0j*exact)
+
+    def test_scale_rows_by_largest_entry(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_rows_by_largest_entry
+        A = poisson( (4,), format='csr' )
+        A.data = array(A.data, dtype=complex)
+        A.data[1] = 3. + 2.j
+        A = scale_rows_by_largest_entry(A)
+        exact = array( [[ 0.55470020+0.j,  0.83205029+0.5547002j,  0.0,      0.0],
+                        [-0.50000000+0.j,  1.00000000+0.j,        -0.5+0.j,  0.0+0.j],
+                        [ 0.00000000+0.j, -0.50000000+0.j,         1.0+0.j, -0.5+0.j],
+                        [ 0.00000000+0.j,  0.00000000+0.j,        -0.5+0.j,  1.0+0.j]])
+        assert_array_almost_equal(A.todense(), exact)
+
+
+
     ## JBS: no explicitly complex tests necessary for get_Cpt_params
     ## def test_get_Cpt_params(self):
+
+class TestLevelize(TestCase):
+    
+    def test_levelize_smooth_or_improve_candidates(self):
+        from pyamg.util.utils import levelize_smooth_or_improve_candidates
+        # test 1
+        result = levelize_smooth_or_improve_candidates([('jacobi', {})], 5)
+        assert_equal(result, [('jacobi', {}) for i in range(5)])
+        # test 2
+        result = levelize_smooth_or_improve_candidates('jacobi', 5)
+        assert_equal(result, ['jacobi' for i in range(5)])
+        # test 3
+        result = levelize_smooth_or_improve_candidates(('jacobi', {}), 5)
+        assert_equal(result, [('jacobi', {}) for i in range(5)])
+        ## test 4
+        result = levelize_smooth_or_improve_candidates([('jacobi', {}),None], 5)
+        assert_equal(result, [('jacobi', {}), None, None, None, None]) 
+
+    def test_levelize_strength_or_aggregation(self):
+        from pyamg.util.utils import levelize_strength_or_aggregation
+        from pyamg.gallery import poisson
+        A = poisson( (100,), format='csr')
+        # test 1
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('symmetric', {})], 5, 5)
+        assert_equal(result, [('symmetric', {}) for i in range(4)])
+        assert_equal(max_levels, 5)
+        assert_equal(max_coarse, 5)
+        # test 2
+        max_levels, max_coarse, result = levelize_strength_or_aggregation('symmetric', 5, 5)
+        assert_equal(result, ['symmetric' for i in range(4)])
+        assert_equal(max_levels, 5)
+        assert_equal(max_coarse, 5)
+        # test 3
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(('symmetric', {}), 5, 5)
+        assert_equal(result, [('symmetric', {}) for i in range(4)])
+        assert_equal(max_levels, 5)
+        assert_equal(max_coarse, 5)
+        # test 4
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('symmetric', {}),None], 5, 5)
+        assert_equal(result, [('symmetric', {}), None, None, None]) 
+        assert_equal(max_levels, 5)
+        assert_equal(max_coarse, 5)
+        # test 5
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(('predefined',{'C' : A}), 5, 5)
+        assert_equal(result, [('predefined',{'C' : A})])
+        assert_equal(max_levels, 2)
+        assert_equal(max_coarse, 0)
+        # test 6
+        max_levels, max_coarse, result = levelize_strength_or_aggregation([('predefined',{'C' : A}), \
+                                                                ('predefined',{'C' : A})], 5, 5)
+        assert_equal(result, [('predefined',{'C' : A}), ('predefined',{'C' : A})])
+        assert_equal(max_levels, 3)
+        assert_equal(max_coarse, 0)
+        # test 7
+        max_levels, max_coarse, result = levelize_strength_or_aggregation(None, 5, 5)
+        assert_equal(result, [(None,{}) for i in range(4)])
+        assert_equal(max_levels, 5)
+        assert_equal(max_coarse, 5)
+
+
 

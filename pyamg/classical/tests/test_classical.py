@@ -162,8 +162,22 @@ class TestSolverPerformance(TestCase):
 
 def reference_direct_interpolation(A,S,splitting):
 
+    ##
+    # Interpolation weights are computed based on entries in A, but subject to
+    # the sparsity pattern of C.  So, we copy the entries of A into the
+    # sparsity pattern of C.
+    S = S.copy()
+    S.data[:] = 1.0
+    S = S.multiply(A)
+
     A = coo_matrix(A)
     S = coo_matrix(S)  
+
+    # remove diagonals
+    mask = S.row != S.col
+    S.row  = S.row[mask]
+    S.col  = S.col[mask]
+    S.data = S.data[mask]
 
     #strong C points
     c_mask = splitting[S.col] == 1

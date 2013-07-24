@@ -16,14 +16,13 @@ from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne,\
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
 from pyamg.util.linalg import norm, approximate_spectral_radius
-from pyamg.aggregation.aggregation import preprocess_str_or_agg,\
-    preprocess_smooth
 from aggregation import smoothed_aggregation_solver
 from aggregate import standard_aggregation, lloyd_aggregation
 from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
     richardson_prolongation_smoother
 from tentative import fit_candidates
-from pyamg.util.utils import amalgamate
+from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
+    levelize_smooth_or_improve_candidates
 
 __all__ = ['adaptive_sa_solver']
 
@@ -237,12 +236,14 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     # Track work in terms of relaxation
     work = numpy.zeros((1,))
 
-    # Preprocess parameters
+    ##
+    # Levelize the user parameters, so that they become lists describing the
+    # desired user option on each level.
     max_levels, max_coarse, strength =\
-        preprocess_str_or_agg(strength, max_levels, max_coarse)
-    smooth = preprocess_smooth(smooth, max_levels)
+        levelize_strength_or_aggregation(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
-        preprocess_str_or_agg(aggregate, max_levels, max_coarse)
+        levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
+    smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
     # Develop initial candidate(s).  Note that any predefined aggregation is
     # preserved.
@@ -267,7 +268,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                          max_coarse=max_coarse,
                                          aggregate=aggregate,
                                          coarse_solver=coarse_solver,
-                                         Bimprove=None, keep=True, **kwargs)
+                                         improve_candidates=None, keep=True, **kwargs)
         if len(sa.levels) > 1:
             # Set strength-of-connection and aggregation
             aggregate = [('predefined', {'AggOp': sa.levels[i].AggOp.tocsr()})
@@ -285,7 +286,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         smooth=smooth,
                                         coarse_solver=coarse_solver,
                                         aggregate=aggregate,
-                                        strength=strength, Bimprove=None,
+                                        strength=strength, improve_candidates=None,
                                         keep=True, **kwargs),
             symmetry, candidate_iters, prepostsmoother, smooth,
             eliminate_local, coarse_solver, work)
@@ -314,7 +315,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 coarse_solver=coarse_solver,
                                                 aggregate=aggregate,
                                                 strength=strength,
-                                                Bimprove=None, keep=True,
+                                                improve_candidates=None, keep=True,
                                                 **kwargs)
                 x = sa_temp.solve(b, x0=x0,
                                   tol=float(numpy.finfo(numpy.float).tiny),
@@ -356,7 +357,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         smooth=smooth,
                                         coarse_solver=coarse_solver,
                                         aggregate=aggregate, strength=strength,
-                                        Bimprove=None, keep=keep, **kwargs),
+                                        improve_candidates=None, keep=keep, **kwargs),
             work[0]/A.nnz]
 
 

@@ -168,8 +168,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1, filter=Fal
         # Use the Gershgorin estimate as each row's weight, instead of a global
         # spectral radius estimate
         D = numpy.abs(S)*numpy.ones((S.shape[0],1), dtype=S.dtype)
-        D_inv = 1.0 / numpy.array(numpy.abs(D), dtype=S.dtype)
-        D_inv[D == 0] = 0
+        Dinv = numpy.zeros_like(D)
+        Dinv[D != 0] = 1.0 / numpy.abs(D[D != 0])
 
         D_inv_S = scale_rows(S, D_inv, copy=True)
         D_inv_S = omega*D_inv_S
@@ -346,8 +346,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol, w
     elif weighting == 'local':
         # Based on Gershgorin estimate
         D = numpy.abs(A)*numpy.ones((A.shape[0],1), dtype=A.dtype)
-        Dinv = 1.0 / numpy.abs(D)
-        Dinv[D == 0] = 0
+        Dinv = numpy.zeros_like(D)
+        Dinv[D != 0] = 1.0 / numpy.abs(D[D != 0])
     else:
         raise ValueError('weighting value is invalid')
 
@@ -702,8 +702,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol
     elif weighting == 'local':
         # Based on Gershgorin estimate
         D = numpy.abs(A)*numpy.ones((A.shape[0],1), dtype=A.dtype)
-        Dinv = 1.0 / numpy.abs(D)
-        Dinv[D == 0] = 0
+        Dinv = numpy.zeros_like(D)
+        Dinv[D != 0] = 1.0 / numpy.abs(D[D != 0])
     else:
         raise ValueError('weighting value is invalid')
 

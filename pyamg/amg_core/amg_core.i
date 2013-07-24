@@ -230,6 +230,7 @@ INSTANTIATE_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_COMPLEX(calc_BtB)
 INSTANTIATE_COMPLEX(incomplete_mat_mult_bsr)
 
+INSTANTIATE_COMPLEX(maximum_row_value)
 INSTANTIATE_COMPLEX(pinv_array)
 INSTANTIATE_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_COMPLEX(symmetric_strength_of_connection)
