@@ -10,6 +10,14 @@ import os
 import sys
 import subprocess
 
+if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
+    raise RuntimeError("Python version 2.6, 2.7 required.")
+
+if sys.version_info[0] >= 3:
+    import builtins
+else:
+    import __builtin__ as builtins
+
 DOCLINES = __doc__.split('\n')
 
 CLASSIFIERS = """\
@@ -59,6 +67,7 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 #       C: unique SHA1 generated with git describe --always
 #       D: date in format YYYYMMDDHHMMSS
 #       R: which repository (fork) this came from with git remote show origin
+#       then add this to say fullversion.py
 
 # Return the git revision as a string
 def git_version():
@@ -145,7 +154,7 @@ def configuration(parent_package='',top_path=None):
 
     config.add_subpackage('pyamg')
 
-    config.get_version('pyamg/version.py')) # sets config.version
+    config.get_version('pyamg/version.py') # sets config.version
 
     return config
 
