@@ -1,7 +1,17 @@
 """PyAMG: Algebraic Multigrid Solvers in Python"""
 
-
 from info import __doc__
+
+__doc__ += """
+
+Utility tools
+-------------
+
+  test        --- Run pyamg unittests (requires nose unittest framework)
+  bench       --- Run pyamg benchmarks (requires nose unittest framework) 
+  __version__ --- pyamg version string
+
+"""
 
 try:
     from __config__ import show as show_config
@@ -10,7 +20,6 @@ except ImportError, e:
     being in pyamg source directory; please exit the pyamg source
     tree first, and relaunch your python interpreter."""
     raise ImportError(msg)
-
 
 # Emit a warning if numpy is too old 
 import numpy as _numpy
@@ -29,8 +38,8 @@ if minver < 0.7:
     warnings.warn("SciPy 0.7 or above is recommended for this version of " \
                   "PyAMG (detected version %s)" % _scipy.version.version, 
                   UserWarning) 
-del _numpy, _scipy
 
+del _numpy, _scipy
 
 from version import version as __version__
 
@@ -40,21 +49,8 @@ from aggregation import smoothed_aggregation_solver, rootnode_solver
 from gallery import demo
 from blackbox import solve,solver,solver_configuration
 
-__all__ = filter(lambda s:not s.startswith('_'),dir())
+__all__ = [s for s in dir() if not s.startswith('_')]
 __all__ += ['test', '__version__']
-
-
 from pyamg.testing import Tester
 test = Tester().test
 bench = Tester().bench
-
-__doc__ += """
-
-Utility tools
--------------
-
-  test        --- Run pyamg unittests (requires nose unittest framework)
-  bench       --- Run pyamg benchmarks (requires nose unittest framework) 
-  __version__ --- pyamg version string
-
-"""

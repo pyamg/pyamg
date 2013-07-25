@@ -38,7 +38,7 @@ URL = 'https://github.com/pyamg/pyamg'
 DESCRIPTION = DOCLINES[0]
 LONG_DESCRIPTION = '\n'.join(DOCLINES[2:])
 DOWNLOAD_URL = 'https://github.com/pyamg/pyamg/releases'
-CLASSIFIERS = filter(None, CLASSIFIERS.split('\n'))
+CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
 LICENSE = 'BSD'
 

@@ -9,6 +9,6 @@ from stencil import *
 from random_sparse import *
 from demo import demo
 
-__all__ = filter(lambda s:not s.startswith('_'),dir())
+__all__ = [s for s in dir() if not s.startswith('_')]
 from pyamg.testing import Tester
 test = Tester().test
