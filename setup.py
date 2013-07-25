@@ -6,10 +6,10 @@ with a convenient Python interface.
 
 """
 
-DOCLINES = __doc__.split("\n")
-
 import os
 import sys
+
+DOCLINES = __doc__.split('\n')
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -28,6 +28,19 @@ Topic :: Scientific/Engineering
 Topic :: Scientific/Engineering :: Mathematics
 Topic :: Software Development :: Libraries :: Python Modules
 """
+
+NAME = 'pyamg'
+AUTHOR = 'Nathan Bell, Luke OLson, and Jacob Schroder'
+AUTHOR_EMAIL = 'luke.olson@gmail.com'
+MAINTAINER = 'Luke Olson'
+MAINTAINER_EMAIL = 'luke.olson@gmail.com'
+URL = 'https://github.com/pyamg/pyamg'
+DESCRIPTION = DOCLINES[0]
+LONG_DESCRIPTION = '\n'.join(DOCLINES[2:])
+DOWNLOAD_URL = 'https://github.com/pyamg/pyamg/releases'
+CLASSIFIERS = filter(None, CLASSIFIERS.split('\n'))
+PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
+LICENSE = 'BSD'
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
@@ -50,7 +63,6 @@ def configuration(parent_package='',top_path=None):
 
 def setup_package():
     from numpy.distutils.core import setup
-    from numpy.distutils.misc_util import Configuration
 
     old_path = os.getcwd()
     local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -60,16 +72,16 @@ def setup_package():
 
     try:
         setup(
-            name = 'pyamg',
-            maintainer = "Luke Olson",
-            maintainer_email = "luke.olson@gmail.com",
-            description = DOCLINES[0],
-            long_description = "\n".join(DOCLINES[2:]),
-            url = "https://github.com/pyamg/pyamg",
-            download_url = "http://code.google.com/p/pyamg/downloads/list",
-            license = 'BSD',
-            classifiers=filter(None, CLASSIFIERS.split('\n')),
-            platforms = ["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
+            name=NAME,
+            maintainer=MAINTAINER,
+            maintainer_email=MAINTAINER_EMAIL,
+            description=DOCLINES[0],
+            long_description=LONG_DESCRIPTION,
+            url=URL,
+            download_url=DOWNLOAD_URL,
+            license=LICENSE,
+            classifiers=CLASSIFIERS,
+            platforms=PLATFORMS,
             configuration=configuration )
     finally:
         del sys.path[0]
