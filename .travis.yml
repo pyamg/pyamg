@@ -8,8 +8,6 @@ before_install:
   - sudo apt-get install -qq python-scipy python-nose
 install: sudo python setup.py install
 script:
-  - INSTALLDIR=$(python -c "import os; import pyamg; print(os.path.dirname(pyamg.__file__))")
-  - export PYTHONWARNINGS=default
   - mkdir test_pyamg
   - cd test_pyamg
   - python ../test_pyamg_install.py
