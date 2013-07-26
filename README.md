@@ -6,6 +6,8 @@ PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, *
 
 ----
 
+[![Build Status](https://travis-ci.org/pyamg/pyamg.png?branch=master)](https://travis-ci.org/pyamg/pyamg)
+
 # Introduction
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.  
