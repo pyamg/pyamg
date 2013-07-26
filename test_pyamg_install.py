@@ -9,6 +9,8 @@ See NumPy/SciPy examples.
 """
 import sys
 
+sys.path.pop(0)
+
 import pyamg
 
 result = pyamg.test()
