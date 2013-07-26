@@ -15,6 +15,11 @@ import pyamg
 
 result = pyamg.test()
 
+print result
+
+print "--------"
+print result.wasSuccessful()
+
 if result.wasSuccessful():
     sys.exit(0)
 else:
