@@ -3,3 +3,4 @@
 *.so
 *.swp
 build/*
+pyamg/version.py
