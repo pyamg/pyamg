@@ -1,5 +1,6 @@
 include MANIFEST.in
 include README.md
-recursive-include *.txt
+include *.txt
+recursive-include pyamg *.txt
 include setupegg.py
 include test_pyamg_install.py
