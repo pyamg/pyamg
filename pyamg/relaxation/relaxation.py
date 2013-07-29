@@ -685,7 +685,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.relaxation import gauss_seidel
+    >>> from pyamg.relaxation import gauss_seidel_indexed
     >>> import numpy
     >>> A = poisson((4,), format='csr')
     >>> x = numpy.array([0.0, 0.0, 0.0, 0.0])

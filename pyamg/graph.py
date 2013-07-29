@@ -295,7 +295,7 @@ def connected_components(G):
 
     Examples
     --------
-    >>> from pyamg.graph import connected_compoents
+    >>> from pyamg.graph import connected_components
     >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
     [0 0 0]
     >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
