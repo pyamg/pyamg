@@ -1875,12 +1875,10 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     --------
     >>> from pyamg.util.utils import levelize_strength_or_aggregation
     >>> strength = ['evolution', 'classical']
-    >>> levelize_strength_or_aggregation(strength) 
+    >>> levelize_strength_or_aggregation(strength, 4, 10) 
     (4, 10, ['evolution', 'classical', 'classical']) 
+
     """
-
-
-
 
     if isinstance(to_levelize, tuple):
         if to_levelize[0] == 'predefined':

@@ -184,7 +184,7 @@ def rho_D_inv_A(A):
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
     >>> from scipy.sparse import csr_matrix
     >>> import numpy
-    >>> A = csr_matrix(numpy.array([[1,0,0],[0,2,0],[0,0,3]]))
+    >>> A = csr_matrix(numpy.array([[1.0,0,0],[0,2.0,0],[0,0,3].0]))
     >>> print rho_D_inv_A(A)
     1.0
     """

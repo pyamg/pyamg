@@ -463,7 +463,7 @@ def cond(A):
     Examples
     --------
     >>> import numpy
-    >>> from pyamg.util.linalg import cond
+    >>> from pyamg.util.linalg import condest
     >>> c = condest(numpy.array([[1.0,0.],[0.,2.0]]))
     >>> print c
     2.0

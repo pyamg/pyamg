@@ -72,6 +72,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
 
     Examples
     --------
+    >>> from pyamg.vis import write_vtu
     >>> import numpy
     >>> Verts = numpy.array([[0.0,0.0],
     ...                      [1.0,0.0],
@@ -399,6 +400,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri', \
     Examples
     --------
     >>> import numpy
+    >>> from pyamg.vis import write_basic_mesh
     >>> Verts = numpy.array([[0.0,0.0],
     ...                      [1.0,0.0],
     ...                      [2.0,0.0],

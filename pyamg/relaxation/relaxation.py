@@ -685,6 +685,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     Examples
     --------
     >>> from pyamg.gallery import poisson
+    >>> from pyamg.relaxation import gauss_seidel
     >>> import numpy
     >>> A = poisson((4,), format='csr')
     >>> x = numpy.array([0.0, 0.0, 0.0, 0.0])
@@ -758,7 +759,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     Examples
     --------
     >>> ## Use NE Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import jacobi_ne
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy

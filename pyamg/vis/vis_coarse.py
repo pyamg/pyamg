@@ -58,9 +58,8 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     >>> A = data['A'].tocsr()
     >>> V = data['vertices']
     >>> E2V = data['elements']
-    >>> Agg = standard_aggregation(A)
+    >>> Agg = standard_aggregation(A)[0]
     >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tri', output='vtk', fname='output.vtu')
-
 
     >>> from pyamg.aggregation import standard_aggregation
     >>> from pyamg.vis.vis_coarse import vis_aggregate_groups
@@ -69,7 +68,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk', fname='output
     >>> A = data['A'].tocsr()
     >>> V = data['vertices']
     >>> E2V = data['elements']
-    >>> Agg = standard_aggregation(A)
+    >>> Agg = standard_aggregation(A)[0]
     >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tet', output='vtk', fname='output.vtu')
 
     """

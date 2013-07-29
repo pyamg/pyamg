@@ -62,10 +62,9 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
     Examples
     --------
-    >>> import scipy
-    >>> from pyamg import smoothed_aggregation_solver
+    >>> from pyamg.gallery import load_example
     >>> from pyamg.strength import distance_strength_of_connection
-    >>> data = pyamg.gallery.load_example('airfoil')
+    >>> data = gallery.load_example('airfoil')
     >>> A = data['A'].tocsr()
     >>> S = distance_strength_of_connection(data['A'], data['vertices'])
 

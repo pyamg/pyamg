@@ -6,6 +6,8 @@ from elasticity import *
 from example import *
 from laplacian import *
 from stencil import *
+from mesh import *
+from diffusion import *
 from random_sparse import *
 from demo import demo
 

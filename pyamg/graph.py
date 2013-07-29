@@ -295,6 +295,7 @@ def connected_components(G):
 
     Examples
     --------
+    >>> from pyamg.graph import connected_compoents
     >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
     [0 0 0]
     >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
@@ -325,7 +326,6 @@ def symmetric_rcm(A):
 
     Example
     -------
-    >>> import pylab
     >>> from pyamg import gallery
     >>> from pyamg.graph import symmetric_rcm
     >>> n = 200
@@ -333,6 +333,7 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
+    >>> #import pylab
     >>> #pylab.figure()
     >>> #pylab.subplot(121)
     >>> #pylab.spy(S,marker='.')
