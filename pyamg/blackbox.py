@@ -32,6 +32,7 @@ def make_csr(A):
     >>> from pyamg.blackbox import make_csr
     >>> A = poisson((40,40),format='csc')
     >>> Acsr = make_csr(A)
+    Implicit conversion of A to CSR in pyamg.blackbox.make_csr
     """
 
     ##

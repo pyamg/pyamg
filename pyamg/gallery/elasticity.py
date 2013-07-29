@@ -229,6 +229,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     Examples
     --------
     >>> from pyamg.gallery import linear_elasticity_p1
+    >>> from numpy import array
     >>> E = array([[0,1,2],[1,3,2]])
     >>> V = array([[0.0,0.0],[1.0,0.0],[0.0,1.0],[1.0,1.0]])
     >>> A,B = linear_elasticity_p1(V,E)

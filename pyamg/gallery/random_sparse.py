@@ -39,7 +39,7 @@ def sprand(m, n, density, format='csr'):
 
     Examples
     --------
-    >>> import numpy
+    >>> from pyamg.gallery import sprand
     >>> A = sprand(5,5,3/5.0)
 
     """

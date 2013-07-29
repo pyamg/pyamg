@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-__all__ = ['poisson', "gauge_laplacian"]
+__all__ = ['poisson', 'gauge_laplacian']
 
 import numpy
 import scipy
@@ -27,6 +27,7 @@ def poisson(grid, spacing=None, dtype=float, format=None):
 
     Examples
     --------
+    >>> from pyamg.gallery import poisson
     >>> # 4 nodes in one dimension
     >>> poisson( (4,) ).todense()
     matrix([[ 2., -1.,  0.,  0.],
@@ -86,6 +87,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
 
     Examples
     --------
+    >>> from pyamg.gallery import gauge_laplacian
     >>> A = gauge_laplacian(10)
 
     References

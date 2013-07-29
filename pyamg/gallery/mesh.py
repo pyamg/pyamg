@@ -25,6 +25,7 @@ def regular_triangle_mesh(nx, ny):
 
     Examples
     --------
+    >>> from pyamg.gallery import regular_triangle_mesh
     >>> E2V,Vert = regular_triangle_mesh(3, 2)
 
     """

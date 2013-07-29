@@ -165,6 +165,3 @@ class TestKrylov(TestCase):
                 (xNew, flag) = method(A, b, x0=x0, tol=case['tol'], maxiter=A.shape[0])
                 xNew = xNew.reshape(-1,1)
                 assert_equal( (norm(b - A*xNew)/norm(b - A*x0)) < 0.15, True, err_msg='Inexact Krylov Method Failed Test')
-    
-
-

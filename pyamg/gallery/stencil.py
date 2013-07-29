@@ -39,6 +39,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
 
     Examples
     --------
+    >>> from pyamg.gallery import stencil_grid
     >>> stencil = [-1,2,-1]  # 1D Poisson stencil
     >>> grid = (5,)          # 1D grid with 5 vertices
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')   

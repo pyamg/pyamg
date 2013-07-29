@@ -233,7 +233,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
             [1],
             [1]], dtype=int8)
     >>> # more seeding for two aggregates
-    >>> Agg = lloyd_aggregation(A,ratio=0.5).todense()
+    >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].todense()
     """
 
     if ratio <= 0 or ratio > 1:
