@@ -4,3 +4,4 @@
 *.swp
 build/*
 pyamg/version.py
+MANIFEST
