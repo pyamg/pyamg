@@ -4,8 +4,8 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['poisson', 'gauge_laplacian']
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 
 from stencil import stencil_grid
 
@@ -53,7 +53,7 @@ def poisson(grid, spacing=None, dtype=float, format=None):
         raise ValueError('invalid grid shape: %s' % str(grid))
 
     # create N-dimension Laplacian stencil
-    stencil = numpy.zeros((3,) * N, dtype=dtype) 
+    stencil = np.zeros((3,) * N, dtype=dtype) 
     for i in range(N):
         stencil[ (1,)*i + (0,) + (1,)*(N-i-1) ] = -1
         stencil[ (1,)*i + (2,) + (1,)*(N-i-1) ] = -1
@@ -107,13 +107,13 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
     # on a 1-D grid along the x or y direction.  e.g. the first
     # point at (0,0) would be evaluate at alpha_*[0], while the
     # last point at (N*spacing, N*spacing) would evaluate at alpha_*[-1]
-    alpha_x = 1.0j * 2.0 * numpy.pi * beta * numpy.random.randn(N*N)
-    alpha_y = 1.0j * 2.0 * numpy.pi * beta * numpy.random.randn(N*N)
+    alpha_x = 1.0j * 2.0 * np.pi * beta * np.random.randn(N*N)
+    alpha_y = 1.0j * 2.0 * np.pi * beta * np.random.randn(N*N)
     
     # Replace off diagonals of A
     for i in range(A.nnz):
         r = A.row[i]; c = A.col[i]
-        diff = numpy.abs(r - c)
+        diff = np.abs(r - c)
         index = min(r, c)
         if r > c:
             s = -1.0
@@ -121,14 +121,14 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
             s = 1.0
         if diff == 1:
             # differencing in the x-direction
-            A.data[i] = -1.0 * numpy.exp(s * alpha_x[index]) 
+            A.data[i] = -1.0 * np.exp(s * alpha_x[index]) 
         if diff == N:
             # differencing in the y-direction
-            A.data[i] = -1.0 * numpy.exp(s * alpha_y[index])
+            A.data[i] = -1.0 * np.exp(s * alpha_y[index])
 
     # Handle periodic BCs
-    alpha_x = 1.0j * 2.0 * numpy.pi * beta * numpy.random.randn(N*N)
-    alpha_y = 1.0j * 2.0 * numpy.pi * beta * numpy.random.randn(N*N)
+    alpha_x = 1.0j * 2.0 * np.pi * beta * np.random.randn(N*N)
+    alpha_y = 1.0j * 2.0 * np.pi * beta * np.random.randn(N*N)
     new_r = []; new_c = []; new_data = []; new_diff = []
     for i in range(0, N):
         new_r.append(i)
@@ -159,16 +159,16 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
             s = 1.0
         if diff == 1:
             # differencing in the x-direction
-            new_data.append(-1.0 * numpy.exp(s * alpha_x[index])) 
+            new_data.append(-1.0 * np.exp(s * alpha_x[index])) 
         if diff == N:
             # differencing in the y-direction
-            new_data.append(-1.0 * numpy.exp(s * alpha_y[index]))
+            new_data.append(-1.0 * np.exp(s * alpha_y[index]))
    
     # Construct Final Matrix
-    data = numpy.hstack((A.data, numpy.array(new_data))) 
-    row  = numpy.hstack((A.row,  numpy.array(new_r)))
-    col  = numpy.hstack((A.col,  numpy.array(new_c)))
-    A = scipy.sparse.coo_matrix( (data , (row,col)), shape=(N*N,N*N) ).tocsr()
+    data = np.hstack((A.data, np.array(new_data))) 
+    row  = np.hstack((A.row,  np.array(new_r)))
+    col  = np.hstack((A.col,  np.array(new_c)))
+    A = sp.sparse.coo_matrix( (data , (row,col)), shape=(N*N,N*N) ).tocsr()
 
     return (1.0/spacing**2)*A
 
