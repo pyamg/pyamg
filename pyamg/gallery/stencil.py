@@ -4,6 +4,7 @@ __docformat__ = "restructuredtext en"
 
 import numpy
 import scipy
+import scipy.sparse
 
 __all__ = ['stencil_grid']
 
