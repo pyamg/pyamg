@@ -245,7 +245,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
             xF = Verts[cdataF,0]
             yF = Verts[cdataF,1]
             figure()
-            plot(xC,yC,'r.',xF,yF,'b.')
+            plot(xC,yC,'r.',xF,yF,'b.', clip_on=True)
             title('C/F splitting (red=coarse, blue=fine)')
             xlabel('x')
             ylabel('y')

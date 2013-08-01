@@ -2,12 +2,12 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
+import numpy as np
 import scipy
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, csr_matrix, spdiags
+from scipy.sparse import isspmatrix, csr_matrix, spdiags, isspmatrix_csr
 
-from pyamg.relaxation import gauss_seidel
+from pyamg.relaxation import gauss_seidel, gauss_seidel_indexed
 
 __all__ = ['CR','binormalize']
 
@@ -56,24 +56,25 @@ def CR(S, method='habituated',maxiter=20):
 
     # initializations    
     alpha = 0.0     # coarsening ratio, quota
-    beta = numpy.inf      # quality criterion
-    beta1 = numpy.inf     # quality criterion, older
-    beta2 = numpy.inf     # quality criterion, oldest
+    beta = np.inf      # quality criterion
+    beta1 = np.inf     # quality criterion, older
+    beta2 = np.inf     # quality criterion, oldest
     n=S.shape[0]    # problem size
     nC = 0          # number of current Coarse points
-    rhs = numpy.zeros((n,1)); # rhs for Ae=0
+    rhs = np.zeros((n,1)); # rhs for Ae=0
 
-    if not isspmatrix(S): raise TypeError('expecting sparse matrix')
+    if not isspmatrix(S):
+        raise TypeError('expecting sparse matrix')
 
     S = binormalize(S)
     
-    splitting = numpy.zeros( (S.shape[0],1), dtype='intc' )
+    splitting = np.zeros( (S.shape[0],1), dtype='intc' )
    
     # out iterations ---------------
     for m in range(0,maxiter):
 
         mu = 0.0        # convergence rate
-        E = numpy.zeros((n,1))  # slowness measure
+        E = np.zeros((n,1))  # slowness measure
 
         # random iterations ---------------
         for k in range(0,ntests):
@@ -87,7 +88,7 @@ def CR(S, method='habituated',maxiter=20):
             for l in range(0,nrelax):
 
                 if method == 'habituated':
-                    gauss_seidel(S,e,numpy.zeros((n,1)),iterations=1)
+                    gauss_seidel(S,e,np.zeros((n,1)),iterations=1)
                     e[splitting>0]=0
                 elif method == 'concurrent':
                     raise NotImplementedError, 'not implemented: need an F-smoother'
@@ -105,7 +106,7 @@ def CR(S, method='habituated',maxiter=20):
             # end relax
 
             # check slowness
-            E = numpy.where( numpy.abs(e)>E, numpy.abs(e), E )
+            E = np.where( np.abs(e)>E, np.abs(e), E )
 
             # update convergence rate
             mu = mu + enorm/enorm_old
@@ -120,7 +121,7 @@ def CR(S, method='habituated',maxiter=20):
         # quality criterion
         beta2 = beta1
         beta1 = beta
-        beta = numpy.power(max([mu, 0.1]), 1.0 / W)
+        beta = np.power(max([mu, 0.1]), 1.0 / W)
         
         # check if we're doing well
         if (beta>beta1 and beta1>beta2) or m==(maxiter-1) or max(E)<1e-13:
@@ -134,14 +135,14 @@ def CR(S, method='habituated',maxiter=20):
         else:
             alpha = (1-alphai) * alpha + alphai * (1/gamma)
 
-        nCmax = numpy.ceil( alpha * n )
+        nCmax = np.ceil( alpha * n )
 
-        L = numpy.ceil( G * E / E.max() ).ravel()
+        L = np.ceil( G * E / E.max() ).ravel()
 
         binid=G
 
         # add whole bins (and t-depth nodes) at a time
-        u = numpy.zeros((n,1))
+        u = np.zeros((n,1))
         # TODO This loop may never halt...
         #      Perhaps loop over nC < nCmax and binid > 0 ?
         while nC < nCmax:
@@ -150,7 +151,7 @@ def CR(S, method='habituated',maxiter=20):
             if tdepth != 1:
                 raise NotImplementedError
 
-            (roots,) = numpy.where(L==binid)
+            (roots,) = np.where(L==binid)
 
             for root in roots:
                 if L[root]>=0:
@@ -164,12 +165,124 @@ def CR(S, method='habituated',maxiter=20):
             #u[:]=0.0
             #u[roots] = 1.0
             #for depth in range(0,tdepth):
-            #    u = numpy.abs(S) * u
-            #(troots,tmp) = numpy.where(u>0)
+            #    u = np.abs(S) * u
+            #(troots,tmp) = np.where(u>0)
 
     return splitting.ravel()
 
-def binormalize( A, tol=1e-5, maxiter=10):
+def _CRsweep(A, Findex, Cindex, nu, thetacr, method):
+
+    n = A.shape[0]    # problem size
+    numax = nu
+    z = np.zeros((n,))
+    e = np.ones((n,))
+    e[Cindex] = 0.0
+    enorm = norm(e)
+    rhok = 1
+
+    for it in range(1,numax+1):
+
+        if method == 'habituated':
+            gauss_seidel(A,e,z,iterations=1)
+            e[Cindex] = 0.0
+        elif method == 'concurrent':
+            gauss_seidel_indexed(A,e,z,indices=Findex,iterations=1)
+        else:
+            raise NotImplementedError, 'method not recognized: need habituated or concurrent'
+
+        enorm_old = enorm
+        enorm     = norm(e)
+        rhok_old = rhok
+        rhok = enorm / enorm_old
+
+        # criteria 1
+        if (abs(rhok - rhok_old) / rhok < 0.1) and (it >= nu):
+            return rhok, e
+
+        # criteria 2
+        if rhok < 0.1 * thetacr:
+            return rhok, e
+
+def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxiter=20):
+    """
+    >>> from pyamg.gallery import poisson
+    >>> from cr import CRalpha
+    >>> A = poisson((20,20),format='csr')
+    >>> splitting = CRalpha(A)
+    """
+    n = A.shape[0]    # problem size
+
+    thetacs = list(thetacs)
+    thetacs.reverse()
+
+    if not isspmatrix_csr(A): 
+        raise TypeError('expecting csr sparse matrix A')
+
+    if A.dtype==complex:
+        raise NotImplementedError('complex A not implemented')
+    
+    # 3.1a
+    splitting = np.zeros((n,), dtype='intc')
+    gamma = np.zeros((n,))
+
+    # 3.1b
+    Cindex = np.where(splitting == 1)[0]
+    Findex = np.where(splitting == 0)[0]
+    rho, e = _CRsweep(A, Findex, Cindex, nu, thetacr, method=method)
+
+    # 3.1c
+    for it in range(0, maxiter):
+
+        print it
+        # 3.1d (assuming constant initial e in _CRsweep)
+        # should already be zero at C pts (Cindex)
+        gamma[Findex] = np.abs(e[Findex]) / np.abs(e[Findex]).max()
+
+        # 3.1e
+        Uindex = np.where(gamma > thetacs[0])[0]
+        if len(thetacs) > 1:
+            thetacs.pop()
+
+        # 3.1f
+        # first find the weights: omega_i = |N_i\C| + gamma_i
+        omega = -np.inf * np.ones((n,))
+        for i in Uindex:
+            J = A.indices[np.arange(A.indptr[i],A.indptr[i+1])]
+            J = np.where(splitting[J] == 0)[0]
+            omega[i] = len(J) + gamma[i]
+
+        # independent set
+        Usize = len(Uindex)
+        while Usize > 0:
+            # step 1
+            i = omega.argmax()
+            splitting[i] = 1
+            gamma[i] = 0.0
+            # step 2
+            J = A.indices[np.arange(A.indptr[i],A.indptr[i+1])]
+            J = np.intersect1d(J, Uindex, assume_unique=True)
+            omega[i] = -np.inf
+            omega[J] = -np.inf
+
+            # step 3
+            for j in J:
+                K = A.indices[np.arange(A.indptr[j],A.indptr[j+1])]
+                K = np.intersect1d(K, Uindex, assume_unique=True)
+                omega[K] = omega[K] + 1.0
+
+            Usize -= 1
+
+        Cindex = np.where(splitting == 1)[0]
+        Findex = np.where(splitting == 0)[0]
+        rho, e = _CRsweep(A, Findex, Cindex, nu, thetacr, method=method)
+
+        print rho
+        if rho < thetacr:
+            break
+
+    return splitting
+
+def binormalize(A, tol=1e-5, maxiter=10):
     """Binormalize matrix A.  Attempt to create unit l_1 norm rows.
 
     Parameters
@@ -218,7 +331,7 @@ def binormalize( A, tol=1e-5, maxiter=10):
 
     n  = A.shape[0]
     it = 0
-    x = numpy.ones((n,1)).ravel()
+    x = np.ones((n,1)).ravel()
 
     # 1.
     B = A.multiply(A).tocsc()  # power(A,2) inconsistent for numpy, scipy.sparse
@@ -226,7 +339,7 @@ def binormalize( A, tol=1e-5, maxiter=10):
     
     # 2.
     beta    = B * x
-    betabar = (1.0/n) * numpy.dot(x,beta)
+    betabar = (1.0/n) * np.dot(x,beta)
     stdev = rowsum_stdev(x,beta)
 
     #3
@@ -242,14 +355,14 @@ def binormalize( A, tol=1e-5, maxiter=10):
                 return A
             else:
                 # see equation (12)
-                xnew = (2*c0)/(-c1 - numpy.sqrt(c1*c1 - 4*c0*c2))
+                xnew = (2*c0)/(-c1 - np.sqrt(c1*c1 - 4*c0*c2))
             dx = xnew - x[i]
 
             # here we assume input matrix is symmetric since we grab a row of B
             # instead of a column
             ii = B.indptr[i]
             iii = B.indptr[i+1]
-            dot_Bcol = numpy.dot(x[B.indices[ii:iii]],B.data[ii:iii])
+            dot_Bcol = np.dot(x[B.indices[ii:iii]],B.data[ii:iii])
 
             betabar = betabar + (1.0/n)*dx*(dot_Bcol + beta[i] + d[i]*dx)
             beta[B.indices[ii:iii]] += dx*B.data[ii:iii]
@@ -260,12 +373,12 @@ def binormalize( A, tol=1e-5, maxiter=10):
         it+=1
 
     # rescale for unit 2-norm
-    d = numpy.sqrt(x)
+    d = np.sqrt(x)
     D = spdiags( d.ravel(), [0], n,n)
     C = D * A * D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)
-    scale = numpy.sqrt((1.0/n) * numpy.sum(beta))
+    scale = np.sqrt((1.0/n) * np.sum(beta))
     return (1/scale)*C
 
 
@@ -291,6 +404,6 @@ def rowsum_stdev(x,beta):
 
     """
     n=x.size
-    betabar = (1.0/n) * numpy.dot(x,beta)
-    stdev   = numpy.sqrt((1.0/n)*numpy.sum(numpy.power(numpy.multiply(x,beta) - betabar,2)))
+    betabar = (1.0/n) * np.dot(x,beta)
+    stdev   = np.sqrt((1.0/n)*np.sum(np.power(np.multiply(x,beta) - betabar,2)))
     return stdev/betabar

@@ -128,7 +128,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
 def _symbolic_rotation_helper():
     """
-    Simply SymPy script to generate the 3D rotation matrix and products for diffusion_stencil_3d.
+    Simple SymPy script to generate the 3D rotation matrix and products for diffusion_stencil_3d.
 
     """
 
@@ -154,7 +154,7 @@ def _symbolic_rotation_helper():
 
 def _symbolic_product_helper():
     """
-    Simply SymPy script to generate the 3D products for diffusion_stencil_3d.
+    Simple SymPy script to generate the 3D products for diffusion_stencil_3d.
 
     """
 
@@ -291,41 +291,46 @@ def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0, psi=0.0
             sphi*sth*(-cphi*spsi - cpsi*cth*sphi)
     D[2, 2] = cphi**2*epsy*sth**2 + cth**2*epsz + sphi**2*sth**2
 
-    # from _symbolic_product_helper
-    # dx*(D11*dx + D21*dy + D31*dz) + dy*(D12*dx + D22*dy + D32*dz) + dz*(D13*dx + D23*dy + D33*dz)
-    #
-    # D00*dxx +
-    # (D10+D01)*dxy +
-    # (D20+D02)*dxz +
-    # D11*dyy +
-    # (D21+D12)*dyz +
-    # D22*dzz
-
     stencil = np.zeros((3,3,3))
 
-    i, j, k = (1,1,1)
+    if type=='FD':
+        # from _symbolic_product_helper
+        # dx*(D11*dx + D21*dy + D31*dz) + dy*(D12*dx + D22*dy + D32*dz) + dz*(D13*dx + D23*dy + D33*dz)
+        #
+        # D00*dxx +
+        # (D10+D01)*dxy +
+        # (D20+D02)*dxz +
+        # D11*dyy +
+        # (D21+D12)*dyz +
+        # D22*dzz
 
-    # dxx
-    stencil[[i-1, i, i+1], j, k] += np.array([-1, 2, -1]) * D[0,0]
- 
-    # dyy
-    stencil[i, [j-1, j, j+1], k] += np.array([-1, 2, -1]) * D[1,1]
+        i, j, k = (1,1,1)
 
-    # dzz
-    stencil[i, j, [k-1, k, k+1]] += np.array([-1, 2, -1]) * D[2,2]
+        # dxx
+        stencil[[i-1, i, i+1], j, k] += np.array([-1, 2, -1]) * D[0,0]
+     
+        # dyy
+        stencil[i, [j-1, j, j+1], k] += np.array([-1, 2, -1]) * D[1,1]
 
-    L = np.array([-1, -1, 1, 1])
-    M = np.array([-1, 1, -1, 1])
-    # dxy
-    stencil[i + L, j + M, k] \
-        += 0.25 * np.array([1, -1, -1, 1]) * (D[1,0] + D[0,1])
+        # dzz
+        stencil[i, j, [k-1, k, k+1]] += np.array([-1, 2, -1]) * D[2,2]
 
-    # dxz
-    stencil[i + L, j, k + M] \
-        += 0.25 * np.array([1, -1, -1, 1]) * (D[2,0] + D[0,2])
+        L = np.array([-1, -1, 1, 1])
+        M = np.array([-1, 1, -1, 1])
+        # dxy
+        stencil[i + L, j + M, k] \
+            += 0.25 * np.array([1, -1, -1, 1]) * (D[1,0] + D[0,1])
 
-    # dyz
-    stencil[i, j + L, k + M] \
-        += 0.25 * np.array([1, -1, -1, 1]) * (D[2,1] + D[1,2])
+        # dxz
+        stencil[i + L, j, k + M] \
+            += 0.25 * np.array([1, -1, -1, 1]) * (D[2,0] + D[0,2])
 
-    return stencil
+        # dyz
+        stencil[i, j + L, k + M] \
+            += 0.25 * np.array([1, -1, -1, 1]) * (D[2,1] + D[1,2])
+
+        return stencil
+
+    if type=='FE':
+        raise NotImplementedError, 'not implemented'
+        
