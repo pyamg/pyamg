@@ -953,12 +953,16 @@ void overlapping_schwarz_csr(const I Ap[],
     T *rsum = new T[nrows];
     T *Dinv_rsum = new T[nrows];
     
+    // Initialize rsum and Dinv_rsum
+    for(I k = 0; k < nrows; k++) {   
+        rsum[k] = 0.0;
+        Dinv_rsum[k] = 0.0;
+    }
+
     // Begin loop over the subdomains
     for(I domptr = row_start; domptr != row_stop; domptr+=row_step) {
         
         I counter = 0;
-        std::fill(&(rsum[0]), &(rsum[nrows]), zero);
-        std::fill(&(Dinv_rsum[0]), &(Dinv_rsum[nrows]), zero);
         I size_domain = Sp[domptr+1] - Sp[domptr];
 
         // Begin block calculation of the residual
@@ -980,7 +984,7 @@ void overlapping_schwarz_csr(const I Ap[],
         gemm(&(Tx[Tp[domptr]]), size_domain, size_domain, 'F', 
              &(rsum[0]),      size_domain,   1,         'F', 
              &(Dinv_rsum[0]), size_domain,   1,         'F',
-             'T');
+             'F');
             
         // Add to x
         counter = 0;
@@ -988,6 +992,13 @@ void overlapping_schwarz_csr(const I Ap[],
             x[Sj[j]] += Dinv_rsum[counter];
             counter++;
             }
+
+        // Set rsum and Dinv_rsum back to zero for the next iteration
+        for(I k = 0; k < size_domain; k++) {   
+            rsum[k] = 0.0;
+            Dinv_rsum[k] = 0.0;
+        }
+
         
     }
 
