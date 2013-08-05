@@ -1,6 +1,11 @@
 ### preamble
 ###
 ###
+
+Note: these instructions no longer work...
+
+
+
 Requirements:
   Sphinx (sudo easy_install -U Sphinx)
   
