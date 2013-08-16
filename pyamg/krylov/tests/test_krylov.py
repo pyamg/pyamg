@@ -76,52 +76,37 @@ class TestKrylov(TestCase):
         # Ensure repeatability
         random.seed(0)
         
-        #  For small all-real matrices, Householder and MGS GMRES should give the same result, 
+        #  For these small matrices, Householder and MGS GMRES should give the same result, 
         #  and for symmetric (but possibly indefinite) matrices CR and GMRES should give same result
         for maxiter in [1,2,3]:
-            for i in range(1,6):
-                A = rand(i,i)
-                b = rand(i)
-                x0 = rand(i)
+            for case, symm_case in zip(self.cases, self.symm_cases):
+                A = case['A'] 
+                b = case['b']
+                x0 = case['x0']
+                A_symm = symm_case['A'] 
+                b_symm = symm_case['b']
+                x0_symm = symm_case['x0']
                 
                 # Test agreement between Householder and GMRES
-                (x, flag) = gmres_householder(A,b,x0=x0,maxiter=min(i,maxiter))
-                (x2, flag2) = gmres_mgs(A,b,x0=x0,maxiter=min(i,maxiter))
-                assert_array_almost_equal(x, x2,err_msg='Householder GMRES and MGS GMRES gave different results for small matrix')
-                assert_equal(flag,flag2,err_msg='Householder GMRES and MGS GMRES returned different convergence flags for small matrix')
+                (x, flag) = gmres_householder(A,b,x0=x0,maxiter=min(A.shape[0],maxiter))
+                (x2, flag2) = gmres_mgs(A,b,x0=x0,maxiter=min(A.shape[0],maxiter))
+                assert_array_almost_equal(x/norm(x), x2/norm(x2), 
+                        err_msg='Householder GMRES and MGS GMRES gave different results for small matrix')
+                assert_equal(flag, flag2, 
+                        err_msg='Householder GMRES and MGS GMRES returned different convergence flags for small matrix')
 
                 # Test agreement between GMRES and CR
-                if A.shape[0] > 1:
+                if A_symm.shape[0] > 1:
                     residuals2 = []
-                    (x2, flag2) = gmres_mgs(A+A.T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals2)
+                    (x2, flag2) = gmres_mgs(A_symm, b_symm, x0=x0_symm, maxiter=min(A.shape[0],maxiter),residuals=residuals2)
                     residuals3 = []
-                    (x3, flag2) = cr(A+A.T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals3)
-                    assert_array_almost_equal(array(residuals3), array(residuals2), err_msg='CR and GMRES yield different residual vectors')
-                    assert_array_almost_equal(x2, x3, err_msg='CR and GMRES yield different answers')
+                    (x3, flag2) = cr(A_symm, b_symm, x0=x0_symm, maxiter=min(A.shape[0],maxiter),residuals=residuals3)
+                    residuals2 = array(residuals2)
+                    residuals3 = array(residuals3)
+                    assert_array_almost_equal(residuals3/norm(residuals3), residuals2/norm(residuals2), 
+                            err_msg='CR and GMRES yield different residual vectors')
+                    assert_array_almost_equal(x2/norm(x2), x3/norm(x3), err_msg='CR and GMRES yield different answers')
                 
-            
-        #  For small complex-valued matrices, Householder and MGS GMRES should give the same result
-        #  and for symmetric (but possibly indefinite) matrices CR and GMRES should give same result
-        for maxiter in [1,2,3]:
-            for i in range(1,6):
-                A = rand(i,i) + 1.0j*rand(i,i)
-                b = rand(i) + 1.0j*rand(i)
-                x0 = rand(i) + 1.0j*rand(i)
-
-                # Test agreement between Householder and GMRES
-                (x, flag) = gmres_householder(A,b,x0=x0,maxiter=min(i,maxiter))
-                (x2, flag2) = gmres_mgs(A,b,x0=x0,maxiter=min(i,maxiter))
-                assert_array_almost_equal(x, x2,err_msg='Householder GMRES and MGS GMRES gave different results for small matrix')
-                assert_equal(flag,flag2,err_msg='Householder GMRES and MGS GMRES returned different convergence flags for small matrix')
-
-                # Test agreement between GMRES and CR
-                if A.shape[0] > 1:
-                    residuals2 = []
-                    (x2, flag2) = gmres_mgs(A+A.conjugate().T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals2)
-                    residuals3 = []
-                    (x3, flag2) = cr(A+A.conjugate().T,b,x0=x0,maxiter=min(i,maxiter),residuals=residuals3)
-                    assert_array_almost_equal(array(residuals3), array(residuals2), err_msg='CR and GMRES yield different residual vectors')
-                    assert_array_almost_equal(x2, x3, err_msg='CR and GMRES yield different answers')
         
     def test_krylov(self):
         # Oblique projectors reduce the residual
@@ -165,3 +150,4 @@ class TestKrylov(TestCase):
                 (xNew, flag) = method(A, b, x0=x0, tol=case['tol'], maxiter=A.shape[0])
                 xNew = xNew.reshape(-1,1)
                 assert_equal( (norm(b - A*xNew)/norm(b - A*x0)) < 0.15, True, err_msg='Inexact Krylov Method Failed Test')
+
