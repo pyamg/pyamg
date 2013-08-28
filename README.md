@@ -36,6 +36,7 @@ or
 
 Try the [docstrings](http://docs.python.org/tutorial/controlflow.html#documentation-strings): for example
 
+
 ````python
 print pyamg.strength.__doc__
 ````

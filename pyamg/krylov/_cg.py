@@ -31,7 +31,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     xtype : type
         dtype for the solution, default is automatic type detection
     M : {array, matrix, sparse matrix, LinearOperator}
-        n x n, inverted preconditioner, i.e. solve M A x = b.
+        n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
