@@ -89,7 +89,10 @@ def stencil_grid(S, grid, dtype=None, format=None):
     strides = np.cumprod([1] + list(reversed(grid)))[:-1]
     indices = tuple(i.copy() for i in S.nonzero())
     for i, s in zip(indices, S.shape):
-        i = i - (s // 2)
+        i -= s // 2
+        #i = (i - s) // 2
+        #i = i // 2
+        # i = i - (s // 2)
     for stride, coords in zip(strides, reversed(indices)):
         diags += stride * coords
 
