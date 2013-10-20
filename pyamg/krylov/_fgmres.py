@@ -177,7 +177,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     if normb == 0.0:
         normb = 1.0
     if normr < tol*normb:
-        if callback is None:
+        if callback is not None:
             callback(norm(r))
         return (postprocess(x), 0)
 
