@@ -7,9 +7,10 @@ __docformat__ = "restructuredtext en"
 __all__ = ['bicgstab']
 
 
-def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback=None, residuals=None):
+def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+             callback=None, residuals=None):
     '''Biconjugate Gradient Algorithm with Stabilization
-    
+
     Solves the linear system Ax = b. Left preconditioning is supported.
 
     Parameters
@@ -34,9 +35,9 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     residuals : list
         residuals has the residual norm history,
         including the initial residual, appended to it
-     
+
     Returns
-    -------    
+    -------
     (xNew, info)
     xNew : an updated guess to the solution of Ax = b
     info : halting status of bicgstab
@@ -44,7 +45,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
             ==  ======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
             ==  ======================================
 
@@ -59,7 +60,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     --------
     >>> from pyamg.krylov.bicgstab import bicgstab
     >>> from pyamg.util.linalg import norm
-    >>> import numpy 
+    >>> import numpy
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = numpy.ones((A.shape[0],))
@@ -69,22 +70,22 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     References
     ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
        Second Edition", SIAM, pp. 231-234, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
-    
-    # Convert inputs to linear system, with error checking  
-    A,M,x,b,postprocess = make_system(A,M,x0,b,xtype)
-    
+
+    # Convert inputs to linear system, with error checking
+    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
+
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._bicgstab')
 
     # Check iteration numbers
-    if maxiter == None:
+    if maxiter is None:
         maxiter = len(x) + 5
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
@@ -96,7 +97,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
     if residuals is not None:
         residuals[:] = [normr]
 
-    # Check initial guess ( scaling by b, if b != 0, 
+    # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
@@ -106,15 +107,15 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     # Scale tol by ||r_0||_2
     if normr != 0.0:
-        tol = tol*normr    
-   
+        tol = tol*normr
+
     # Is this a one dimensional matrix?
     if A.shape[0] == 1:
         entry = ravel(A*array([1.0], dtype=xtype))
         return (postprocess(b/entry), 0)
 
     rstar = r.copy()
-    p     = r.copy()
+    p = r.copy()
 
     rrstarOld = inner(rstar.conjugate(), r)
 
@@ -122,15 +123,15 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
     # Begin BiCGStab
     while True:
-        Mp  = M*p
+        Mp = M*p
         AMp = A*Mp
-        
+
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
         alpha = rrstarOld/inner(rstar.conjugate(), AMp)
-        
+
         # s_j = r_j - alpha*A*M*p_j
-        s   = r - alpha*AMp
-        Ms  = M*s
+        s = r - alpha*AMp
+        Ms = M*s
         AMs = A*Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
@@ -144,14 +145,14 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 
         # beta_j = (r_{j+1}, rstar)/(r_j, rstar) * (alpha/omega)
         rrstarNew = inner(rstar.conjugate(), r)
-        beta      = (rrstarNew / rrstarOld) * (alpha / omega)
+        beta = (rrstarNew / rrstarOld) * (alpha / omega)
         rrstarOld = rrstarNew
 
         # p_{j+1} = r_{j+1} + beta*(p_j - omega*A*M*p)
         p = r + beta*(p - omega*AMp)
 
         iter += 1
-        
+
         normr = norm(r)
 
         if residuals is not None:
@@ -166,9 +167,6 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
         if iter == maxiter:
             return (postprocess(x), iter)
 
-
-
-
 #if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
@@ -178,14 +176,16 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 #    # %timeit -n 15 (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
 #    from pyamg.gallery import stencil_grid
 #    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),
+#                     dtype=float,format='csr')
 #    b = random((A.shape[0],))
 #    x0 = random((A.shape[0],))
 #
 #    import time
 #    from scipy.sparse.linalg.isolve import bicgstab as ibicgstab
 #
-#    print '\n\nTesting BiCGStab with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    print '\n\nTesting BiCGStab with %d x %d 2D Laplace Matrix' % \
+#           (A.shape[0],A.shape[0])
 #    t1=time.time()
 #    (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
 #    t2=time.time()
@@ -199,5 +199,3 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, callback
 #    print '\n%s took %0.3f ms' % ('linalg bicgstab', (t2-t1)*1000.0)
 #    print 'norm = %g'%(norm(b - A*y))
 #    print 'info flag = %d'%(flag)
-
-    

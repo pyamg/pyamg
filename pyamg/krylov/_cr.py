@@ -1,7 +1,6 @@
 import numpy
-from numpy import inner, conjugate, asarray, mod, ravel, sqrt
+from numpy import inner, conjugate, asarray, mod, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from warnings import warn
 
@@ -9,10 +8,11 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['cr']
 
-def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+
+def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None):
     '''Conjugate Residual algorithm
-    
+
     Solves the linear system Ax = b. Left preconditioning is supported.
     The matrix A must be Hermitian symmetric (but not necessarily definite).
 
@@ -40,19 +40,19 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         residuals contains the residual norm history,
         including the initial residual.  The preconditioner norm
         is used, instead of the Euclidean norm.
-     
+
     Returns
-    -------    
+    -------
     (xNew, info)
     xNew : an updated guess to the solution of Ax = b
     info : halting status of cr
 
-            ==  ======================================= 
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  ======================================= 
+            ==  =======================================
 
     Notes
     -----
@@ -62,13 +62,13 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     still supported as a legacy.
 
     The 2-norm of the preconditioned residual is used both for halting and
-    returned in the residuals list. 
+    returned in the residuals list.
 
     Examples
     --------
     >>> from pyamg.krylov.cr import cr
     >>> from pyamg.util.linalg import norm
-    >>> import numpy 
+    >>> import numpy
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = numpy.ones((A.shape[0],))
@@ -78,14 +78,14 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     References
     ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
        Second Edition", SIAM, pp. 262-67, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
-    A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
+    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
     n = len(b)
-    
+
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
@@ -102,22 +102,23 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     eps = numpy.finfo(numpy.float).eps
     feps = numpy.finfo(numpy.single).eps
     geps = numpy.finfo(numpy.longfloat).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G':2}
-    numerically_zero = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
+    numerically_zero = {0: feps*1e3, 1: eps*1e6,
+                        2: geps*1e6}[_array_precision[t]]
 
     # setup method
-    r  = b - A*x
-    z  = M*r
-    p  = z.copy()
+    r = b - A*x
+    z = M*r
+    p = z.copy()
     zz = inner(z.conjugate(), z)
 
     # use preconditioner norm
     normr = sqrt(zz)
 
     if residuals is not None:
-        residuals[:] = [normr] #initial residual 
+        residuals[:] = [normr]  # initial residual
 
-    # Check initial guess ( scaling by b, if b != 0, 
+    # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
@@ -134,7 +135,6 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     iter = 0
 
-    Ar = A*r
     Az = A*z
     rAz = inner(r.conjugate(), Az)
     Ap = A*p
@@ -143,30 +143,30 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         rAz_old = rAz
 
-        alpha   = rAz / inner(Ap.conjugate(), Ap)       # 3
-        x      += alpha * p                           # 4
+        alpha = rAz / inner(Ap.conjugate(), Ap)       # 3
+        x += alpha * p                           # 4
 
         if mod(iter, recompute_r) and iter > 0:       # 5
-            r  -= alpha * Ap
+            r -= alpha * Ap
         else:
             r = b - A*x
 
-        z       = M*r
+        z = M*r
 
-        Az      = A*z
-        rAz     = inner(r.conjugate(),Az)
+        Az = A*z
+        rAz = inner(r.conjugate(), Az)
 
-        beta    = rAz/rAz_old                        # 6
+        beta = rAz/rAz_old                        # 6
 
-        p      *= beta                               # 7
-        p      += z
+        p *= beta                               # 7
+        p += z
 
-        Ap     *= beta                               # 8
-        Ap     += Az
+        Ap *= beta                               # 8
+        Ap += Az
 
         iter += 1
- 
-        zz = inner(z.conjugate(),z)
+
+        zz = inner(z.conjugate(), z)
         normr = sqrt(zz)                          # use preconditioner norm
 
         if residuals is not None:
@@ -180,7 +180,8 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         elif zz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CR, ceasing iterations\n")
+            warn("\nSingular preconditioner detected in CR, ceasing \
+                  iterations\n")
             return (postprocess(x), -1)
 
         if iter == maxiter:
@@ -195,29 +196,31 @@ if __name__ == '__main__':
 
     from pyamg.gallery import stencil_grid
     from numpy.random import random
-    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
     import time
     from pyamg.krylov._gmres import gmres
 
-    print '\n\nTesting CR with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
-    t1=time.time()
-    r = []
-    (x,flag) = cr(A,b,x0,tol=1e-8,maxiter=100,residuals=r)
-    t2=time.time()
-    print '%s took %0.3f ms' % ('cr', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
+                     dtype=float, format='csr')
+    b = random((A.shape[0],))
+    x0 = random((A.shape[0],))
 
-    t1=time.time()
+    print '\n\nTesting CR with %d x %d 2D Laplace Matrix' % \
+          (A.shape[0], A.shape[0])
+    t1 = time.time()
+    r = []
+    (x, flag) = cr(A, b, x0, tol=1e-8, maxiter=100, residuals=r)
+    t2 = time.time()
+    print '%s took %0.3f ms' % ('cr', (t2-t1)*1000.0)
+    print 'norm = %g' % (norm(b - A*x))
+    print 'info flag = %d' % (flag)
+
+    t1 = time.time()
     r2 = []
-    (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100,residuals=r2)
-    t2=time.time()
+    (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100, residuals=r2)
+    t2 = time.time()
     print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
-    print 'norm = %g'%(norm(b - A*x))
-    print 'info flag = %d'%(flag)
+    print 'norm = %g' % (norm(b - A*x))
+    print 'info flag = %d' % (flag)
 
     # from scipy.sparse.linalg.isolve import cg as icg
     # t1=time.time()

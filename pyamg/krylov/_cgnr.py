@@ -10,11 +10,12 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['cgnr']
 
-def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+
+def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
          callback=None, residuals=None):
     '''Conjugate Gradient, Normal Residual algorithm
 
-    Applies CG to the normal equations, A.H A x = b. Left preconditioning 
+    Applies CG to the normal equations, A.H A x = b. Left preconditioning
     is supported.  Note that unless A is well-conditioned, the use of
     CGNR is inadvisable
 
@@ -40,9 +41,9 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     residuals : list
         residuals has the residual norm history,
         including the initial residual, appended to it
-     
+
     Returns
-    -------    
+    -------
     (xNew, info)
     xNew : an updated guess to the solution of Ax = b
     info : halting status of cgnr
@@ -50,7 +51,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
             ==  =======================================
 
@@ -61,12 +62,12 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.  A.psolve(..) is
     still supported as a legacy.
-    
+
     Examples
     --------
     >>> from pyamg.krylov.cgnr import cgnr
     >>> from pyamg.util.linalg import norm
-    >>> import numpy 
+    >>> import numpy
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = numpy.ones((A.shape[0],))
@@ -76,7 +77,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     References
     ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
        Second Edition", SIAM, pp. 276-7, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
@@ -86,13 +87,13 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     if isspmatrix(A):
         AH = A.H
     else:
-        #TODO avoid doing this since A may be a different sparse type 
+        #TODO avoid doing this since A may be a different sparse type
         AH = aslinearoperator(asmatrix(A).H)
-    
-    # Convert inputs to linear system, with error checking  
-    A,M,x,b,postprocess = make_system(A,M,x0,b,xtype)
+
+    # Convert inputs to linear system, with error checking
+    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
     dimen = A.shape[0]
-    
+
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
@@ -121,12 +122,13 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Check iteration numbers. CGNR suffers from loss of orthogonality quite
     # easily, so we arbitrarily let the method go up to 130% over the
     # theoretically necessary limit of maxiter=dimen
-    if maxiter == None:
+    if maxiter is None:
         maxiter = int(ceil(1.3*dimen)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > (1.3*dimen):
-        warn('maximum allowed inner iterations (maxiter) are the 130% times the number of dofs')
+        warn('maximum allowed inner iterations (maxiter) are the 130% times \
+              the number of dofs')
         maxiter = int(ceil(1.3*dimen)) + 2
 
     # Prep for method
@@ -136,20 +138,19 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     if keep_r:
         residuals.append(normr)
 
-    # Check initial guess ( scaling by b, if b != 0, 
+    # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
         normb = 1.0
     if normr < tol*normb:
-        if callback != None:    
+        if callback is not None:
             callback(x)
         return (postprocess(x), 0)
 
     # Scale tol by ||r_0||_2
     if normr != 0.0:
-        tol = tol*normr    
-   
+        tol = tol*normr
 
     # Begin CGNR
 
@@ -165,7 +166,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
         alpha = old_zr / inner(w.conjugate(), w)
-        
+
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
 
@@ -174,7 +175,6 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             r -= alpha*w
         else:
             r = b - A*x
-
 
         # rhat_{j+1} = A.H*r_{j+1}
         rhat = AH*r
@@ -192,9 +192,9 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         p += z
 
         # Allow user access to residual
-        if callback != None:
-            callback( x )
-        
+        if callback is not None:
+            callback(x)
+
         # test for convergence
         normr = norm(r)
         if keep_r:
@@ -217,14 +217,16 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #
 #    from pyamg.gallery import stencil_grid
 #    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),dtype=float,format='csr')
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),\
+#                     dtype=float,format='csr')
 #    b = random((A.shape[0],))
 #    x0 = random((A.shape[0],))
 #
 #    import time
 #    from scipy.sparse.linalg.isolve import cg as icg
 #
-#    print '\n\nTesting CGNR with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    print '\n\nTesting CGNR with %d x %d 2D Laplace Matrix'%\
+#           (A.shape[0],A.shape[0])
 #    t1=time.time()
 #    (x,flag) = cgnr(A,b,x0,tol=1e-8,maxiter=100)
 #    t2=time.time()
