@@ -19,8 +19,11 @@ and generate new ones with
     python generate_modules.py -d ./source -s rst -m 5 $BUILD/lib.macosx-10.3-fat-2.6/ build
 
 where $BUILD is your PyAMG build directory and the lib.* directory is the appropriate
-one from your most recent build.
+one from your most recent build.  Note that the .rst files do not have to be updated to generate
+html documentation.
 
 To make the html documentation, do
 
     make html
+
+then look in pyamg/Docs/build/html for the html files.
