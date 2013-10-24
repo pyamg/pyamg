@@ -1,21 +1,30 @@
-Amg_Core Documentation
-======================
+amg_core Package
+================
 
-This page contains the Amg_Core Package documentation.
+:mod:`amg_core` Package
+-----------------------
 
-The :mod:`amg_core` Module
---------------------------
+.. automodule:: pyamg.amg_core
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`amg_core` Module
+----------------------
 
 .. automodule:: pyamg.amg_core.amg_core
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.amg_core.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

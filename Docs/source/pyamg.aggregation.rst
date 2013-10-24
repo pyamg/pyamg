@@ -1,53 +1,75 @@
-Aggregation Documentation
-=========================
+aggregation Package
+===================
 
-This page contains the Aggregation Package documentation.
-
-The :mod:`adaptive` Module
+:mod:`aggregation` Package
 --------------------------
+
+.. automodule:: pyamg.aggregation
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`adaptive` Module
+----------------------
 
 .. automodule:: pyamg.aggregation.adaptive
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`aggregate` Module
----------------------------
+:mod:`aggregate` Module
+-----------------------
 
 .. automodule:: pyamg.aggregation.aggregate
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`aggregation` Module
------------------------------
+:mod:`aggregation` Module
+-------------------------
 
 .. automodule:: pyamg.aggregation.aggregation
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
+:mod:`rootnode` Module
+----------------------
+
+.. automodule:: pyamg.aggregation.rootnode
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.aggregation.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`smooth` Module
-------------------------
+:mod:`smooth` Module
+--------------------
 
 .. automodule:: pyamg.aggregation.smooth
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`tentative` Module
----------------------------
+:mod:`tentative` Module
+-----------------------
 
 .. automodule:: pyamg.aggregation.tentative
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

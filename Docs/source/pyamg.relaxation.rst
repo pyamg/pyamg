@@ -1,37 +1,57 @@
-Relaxation Documentation
-========================
+relaxation Package
+==================
 
-This page contains the Relaxation Package documentation.
+:mod:`relaxation` Package
+-------------------------
 
-The :mod:`chebyshev` Module
----------------------------
+.. automodule:: pyamg.relaxation
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`chebyshev` Module
+-----------------------
 
 .. automodule:: pyamg.relaxation.chebyshev
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`relaxation` Module
-----------------------------
+:mod:`info` Module
+------------------
+
+.. automodule:: pyamg.relaxation.info
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`relaxation` Module
+------------------------
 
 .. automodule:: pyamg.relaxation.relaxation
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.relaxation.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`smoothing` Module
----------------------------
+:mod:`smoothing` Module
+-----------------------
 
 .. automodule:: pyamg.relaxation.smoothing
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

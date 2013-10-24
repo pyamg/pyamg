@@ -1,37 +1,57 @@
-Util Documentation
-==================
+util Package
+============
 
-This page contains the Util Package documentation.
+:mod:`util` Package
+-------------------
 
-The :mod:`BSR_utils` Module
----------------------------
+.. automodule:: pyamg.util
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`BSR_utils` Module
+-----------------------
 
 .. automodule:: pyamg.util.BSR_utils
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`linalg` Module
-------------------------
+:mod:`info` Module
+------------------
+
+.. automodule:: pyamg.util.info
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`linalg` Module
+--------------------
 
 .. automodule:: pyamg.util.linalg
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.util.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`utils` Module
------------------------
+:mod:`utils` Module
+-------------------
 
 .. automodule:: pyamg.util.utils
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

@@ -1,29 +1,48 @@
-Vis Documentation
-=================
+vis Package
+===========
 
-This page contains the Vis Package documentation.
+:mod:`vis` Package
+------------------
 
-The :mod:`setup` Module
------------------------
+.. automodule:: pyamg.vis
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`info` Module
+------------------
+
+.. automodule:: pyamg.vis.info
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.vis.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`vis_coarse` Module
-----------------------------
+:mod:`vis_coarse` Module
+------------------------
 
 .. automodule:: pyamg.vis.vis_coarse
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`vtk_writer` Module
-----------------------------
+:mod:`vtk_writer` Module
+------------------------
 
 .. automodule:: pyamg.vis.vtk_writer
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
