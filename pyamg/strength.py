@@ -5,8 +5,8 @@ Requirements for the strength matrix C are:
     1) Nonzero diagonal whenever A has a nonzero diagonal
     2) Non-negative entries (float or bool) in [0,1]
     3) Large entries denoting stronger connections
-    4) C denotes nodal connections, i.e., if A is an nxn BSR matrix with 
-       row block size of m, then C is (n/m) x (n/m) 
+    4) C denotes nodal connections, i.e., if A is an nxn BSR matrix with
+       row block size of m, then C is (n/m) x (n/m)
 
 """
 
@@ -16,7 +16,8 @@ from warnings import warn
 
 import numpy as np
 import pyamg
-from pyamg.util.utils import scale_rows, scale_columns, scale_rows_by_largest_entry
+from pyamg.util.utils import scale_rows, scale_columns,\
+    scale_rows_by_largest_entry
 from scipy import sparse
 from pyamg import amg_core
 
@@ -44,7 +45,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
         If true, then the closest connection is always strong, and other points
-        must be within theta times the smallest distance to be considered strong
+        must be within theta times the smallest distance to be strong
 
     Returns
     -------
@@ -87,8 +88,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     rows = np.repeat(np.arange(A.shape[0]), A.indptr[1:] - A.indptr[0:-1])
 
     # Insert difference for each coordinate into C
-    C = (V[rows, 0] - V[cols, 0])**2 
-    for d in range(1,dim):
+    C = (V[rows, 0] - V[cols, 0])**2
+    for d in range(1, dim):
         C += (V[rows, d] - V[cols, d])**2
     C = np.sqrt(C)
     C[C < 1e-6] = 1e-6
@@ -111,10 +112,10 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
-    
+
     # Scale C by the largest magnitude entry in each row
     C = scale_rows_by_largest_entry(C)
-    
+
     return C
 
 
@@ -199,13 +200,13 @@ def classical_strength_of_connection(A, theta=0.0):
 
     if blocksize > 1:
         S = amalgamate(S, A.blocksize[0])
-    
-    # Strength represents "distance", so take the magnitude 
+
+    # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-  
+
     return S
 
 
@@ -284,7 +285,7 @@ def symmetric_strength_of_connection(A, theta=0):
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
-        
+
     elif sparse.isspmatrix_bsr(A):
         M, N = A.shape
         R, C = A.blocksize
@@ -295,7 +296,7 @@ def symmetric_strength_of_connection(A, theta=0):
         if theta == 0:
             data = np.ones(len(A.indices), dtype=A.dtype)
             S = sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()),
-                                     shape=(M / R, N / C))
+                                  shape=(M / R, N / C))
         else:
             # the strength of connection matrix is based on the
             # Frobenius norms of the blocks
@@ -306,13 +307,14 @@ def symmetric_strength_of_connection(A, theta=0):
     else:
         raise TypeError('expected csr_matrix or bsr_matrix')
 
-    # Strength represents "distance", so take the magnitude 
+    # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-    
+
     return S
+
 
 def energy_based_strength_of_connection(A, theta=0.0, k=2):
     """
@@ -448,11 +450,11 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     if bsr_flag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
         nblocks = Atilde.indices.shape[0]
-        Atilde = sparse.csr_matrix((np.ones((nblocks,)), Atilde.indices,
-                                   Atilde.indptr), shape=(
+        uone = np.ones((nblocks,))
+        Atilde = sparse.csr_matrix((uone, Atilde.indices, Atilde.indptr),
+                                   shape=(
                                        Atilde.shape[0] / numPDEs,
                                        Atilde.shape[1] / numPDEs))
-
 
     # Scale C by the largest magnitude entry in each row
     Atilde = scale_rows_by_largest_entry(Atilde)
@@ -462,14 +464,15 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 @np.deprecate
 def ode_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l2",
-        block_flag=False, symmetrize_measure=True):
+                               block_flag=False, symmetrize_measure=True):
     """Use evolution_strength_of_connection instead"""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
-        block_flag, symmetrize_measure)
+                                            block_flag, symmetrize_measure)
 
 
-def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l2",
-        block_flag=False, symmetrize_measure=True):
+def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
+                                     proj_type="l2", block_flag=False,
+                                     symmetrize_measure=True):
     """
     Construct strength of connection matrix using an Evolution-based measure
 
@@ -479,7 +482,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l
         Sparse NxN matrix
     B : {string, array}
         If B='ones', then the near nullspace vector used is all ones.  If B is
-        an (NxK) array, then B is taken to be the near nullspace vectors. 
+        an (NxK) array, then B is taken to be the near nullspace vectors.
     epsilon : scalar
         Drop tolerance
     k : integer
@@ -532,7 +535,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l
     #====================================================================
     # Format A and B correctly.
     # B must be in mat format, this isn't a deep copy
-    if B=='ones':
+    if B == 'ones':
         Bmat = np.mat(np.ones((A.shape[0], 1), dtype=A.dtype))
     else:
         Bmat = np.mat(B)
@@ -812,7 +815,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the algebraic distances computed here
     Atilde.data = 1.0/Atilde.data
-    
+
     # Scale C by the largest magnitude entry in each row
     Atilde = scale_rows_by_largest_entry(Atilde)
 
@@ -899,17 +902,17 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     C = C.tocsr()
     C.eliminate_zeros()
 
-    # Strength represents "distance", so take the magnitude 
+    # Strength represents "distance", so take the magnitude
     C.data = np.abs(C.data)
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
-    
-    ## 
+
+    ##
     # Put an identity on the diagonal
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
-    
+
     # Scale C by the largest magnitude entry in each row
     C = scale_rows_by_largest_entry(C)
 

@@ -8,7 +8,7 @@ Utility tools
 -------------
 
   test        --- Run pyamg unittests (requires nose unittest framework)
-  bench       --- Run pyamg benchmarks (requires nose unittest framework) 
+  bench       --- Run pyamg benchmarks (requires nose unittest framework)
   __version__ --- pyamg version string
 
 """
@@ -34,23 +34,23 @@ else:
         tree first, and relaunch your python interpreter."""
         raise ImportError(msg)
 
-    # Emit a warning if numpy is too old 
+    # Emit a warning if numpy is too old
     import numpy as _numpy
-    majver, minver = [float(i) for i in _numpy.version.version.split('.')[:2]] 
-    if majver < 1 or (majver == 1 and minver < 2): 
-        import warnings 
-        warnings.warn("Numpy 1.2.0 or above is recommended for this version of " \
-                      "PyAMG (detected version %s)" % _numpy.version.version,
-                      UserWarning) 
+    majver, minver = [float(i) for i in _numpy.version.version.split('.')[:2]]
+    if majver < 1 or (majver == 1 and minver < 2):
+        import warnings
+        warnings.warn("Numpy 1.2.0 or above is recommended for this version of\
+                      PyAMG (detected version %s)" % _numpy.version.version,
+                      UserWarning)
 
-    # Emit a warning if scipy is too old 
+    # Emit a warning if scipy is too old
     import scipy as _scipy
-    majver, minver = [float(i) for i in _scipy.version.version.split('.')[:2]] 
+    majver, minver = [float(i) for i in _scipy.version.version.split('.')[:2]]
     if minver < 0.7:
-        import warnings 
-        warnings.warn("SciPy 0.7 or above is recommended for this version of " \
-                      "PyAMG (detected version %s)" % _scipy.version.version, 
-                      UserWarning) 
+        import warnings
+        warnings.warn("SciPy 0.7 or above is recommended for this version of\
+                      PyAMG (detected version %s)" % _scipy.version.version,
+                      UserWarning)
 
     del _numpy, _scipy
 
@@ -61,7 +61,7 @@ else:
     from classical import ruge_stuben_solver
     from aggregation import smoothed_aggregation_solver, rootnode_solver
     from gallery import demo
-    from blackbox import solve,solver,solver_configuration
+    from blackbox import solve, solver, solver_configuration
 
     __all__ = [s for s in dir() if not s.startswith('_')]
     __all__ += ['test', '__version__']
