@@ -1,45 +1,57 @@
-Classical Documentation
-=======================
+classical Package
+=================
 
-This page contains the Classical Package documentation.
+:mod:`classical` Package
+------------------------
 
-The :mod:`classical` Module
----------------------------
+.. automodule:: pyamg.classical
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
+:mod:`classical` Module
+-----------------------
 
 .. automodule:: pyamg.classical.classical
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`cr` Module
---------------------
+:mod:`cr` Module
+----------------
 
 .. automodule:: pyamg.classical.cr
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`interpolate` Module
------------------------------
+:mod:`interpolate` Module
+-------------------------
 
 .. automodule:: pyamg.classical.interpolate
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
+:mod:`setup` Module
+-------------------
 
 .. automodule:: pyamg.classical.setup
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
-The :mod:`split` Module
------------------------
+:mod:`split` Module
+-------------------
 
 .. automodule:: pyamg.classical.split
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

@@ -1,30 +1,29 @@
-### preamble
-###
-###
-
-Note: these instructions no longer work...
-
-
-
-Requirements:
-  Sphinx (sudo easy_install -U Sphinx)
+Requirements: Sphinx
   
-The files in Docs such as
+The files in pyamg/Docs such as
 
-  source/conf.py
-  source/index.rst
-  Makefile
+    pyamg/Docs/source/conf.py
+    pyamg/Docs/source/index.rst
+    pyamg/Docs/Makefile
 
-are created with sphinx-quickstart and are in the repo.  Then create the rst files:
+are created with sphinx-quickstart and are in the repo.  The files pyamg/Docs/source/pyamg.*.rst 
+tell sphinx which modules will have documentation built based on the current documentation strings.
+These .rst files are reasonably up-to-date, but the freshest .rst files can be gotten by downloading 
+[generate_modules.py](https://bitbucket.org/thomaswaldmann/sphinx-autopackage-script/src)
+and placing generate_modules.py in the pyamg/Docs directory.  Then remove all old .rst files
 
-  python sphinxext/generate_modules.py --suffix rst --dest-dir source --maxdepth=5 ../pyamg/
+    rm source/pyamg.*.rst
 
-This is added to the Makefile.  The generate_modules.py script autogenerates .rst
-files for the pyamg module.
+and generate new ones with 
+    
+    python generate_modules.py -d ./source -s rst -m 5 $BUILD/lib.macosx-10.3-fat-2.6/ build
 
+where $BUILD is your PyAMG build directory and the lib.* directory is the appropriate
+one from your most recent build.  Note that the .rst files do not have to be updated to generate
+html documentation.
 
+To make the html documentation, do
 
-### how to make the documentation
-###
-###
-make html
+    make html
+
+then look in pyamg/Docs/build/html for the html files.

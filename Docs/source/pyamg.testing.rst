@@ -1,13 +1,12 @@
-Testing Documentation
-=====================
+testing Package
+===============
 
-This page contains the Testing Package documentation.
-
-The :mod:`testing` Package
---------------------------
+:mod:`testing` Package
+----------------------
 
 .. automodule:: pyamg.testing
     :members:
     :undoc-members:
+    :inherited-members:
     :show-inheritance:
 

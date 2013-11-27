@@ -37,7 +37,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     xtype : type
         dtype for the solution, default is automatic type detection
     M : {array, matrix, sparse matrix, LinearOperator}
-        n x n, inverted preconditioner, i.e. solve M A x = b.
+        n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback( ||rk||_2 ), where rk is the current preconditioned residual
