@@ -3,7 +3,7 @@ Script for testing the installation.
 
 Mainly used for Travis-CI.
 
-Can be expand tof more verbose testing and coverage.  
+Can be expand tof more verbose testing and coverage.
 
 See NumPy/SciPy examples.
 """

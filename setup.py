@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """PyAMG: Algebraic Multigrid Solvers in Python
 
-PyAMG is a library of Algebraic Multigrid (AMG) solvers 
+PyAMG is a library of Algebraic Multigrid (AMG) solvers
 with a convenient Python interface.
 
 """
@@ -38,18 +38,18 @@ Topic :: Scientific/Engineering :: Mathematics
 Topic :: Software Development :: Libraries :: Python Modules
 """
 
-NAME             = 'pyamg'
-AUTHOR           = 'Nathan Bell, Luke OLson, and Jacob Schroder'
-AUTHOR_EMAIL     = 'luke.olson@gmail.com'
-MAINTAINER       = 'Luke Olson'
+NAME = 'pyamg'
+AUTHOR = 'Nathan Bell, Luke OLson, and Jacob Schroder'
+AUTHOR_EMAIL = 'luke.olson@gmail.com'
+MAINTAINER = 'Luke Olson'
 MAINTAINER_EMAIL = 'luke.olson@gmail.com'
-URL              = 'https://github.com/pyamg/pyamg'
-DOWNLOAD_URL     = 'https://github.com/pyamg/pyamg/releases'
-DESCRIPTION      = DOCLINES[0]
+URL = 'https://github.com/pyamg/pyamg'
+DOWNLOAD_URL = 'https://github.com/pyamg/pyamg/releases'
+DESCRIPTION = DOCLINES[0]
 LONG_DESCRIPTION = '\n'.join(DOCLINES[2:])
-CLASSIFIERS      = [_f for _f in CLASSIFIERS.split('\n') if _f]
-PLATFORMS        = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
-LICENSE          = 'BSD'
+CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
+PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
+LICENSE = 'BSD'
 MAJOR = 2
 MINOR = 1
 MICRO = 0
@@ -57,7 +57,7 @@ ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 # Use NumPy/SciPy style versioning
-# 
+#
 # This changes the pyamg/version.py file directly
 #
 #       notes for the future:
@@ -68,6 +68,7 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 #       D: date in format YYYYMMDDHHMMSS
 #       R: which repository (fork) this came from with git remote show origin
 #       then add this to say fullversion.py
+
 
 # Return the git revision as a string
 def git_version():
@@ -82,7 +83,8 @@ def git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout = subprocess.PIPE, env=env).communicate()[0]
+        out = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                               env=env).communicate()[0]
         return out
 
     try:
@@ -95,13 +97,15 @@ def git_version():
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
-if os.path.exists('MANIFEST'): os.remove('MANIFEST')
+if os.path.exists('MANIFEST'):
+    os.remove('MANIFEST')
 
 # This is a bit hackish: we are setting a global variable so that the main
 # pyamg __init__ can detect if it is being loaded by the setup routine, to
 # avoid attempting to load components that aren't built yet.  While ugly, it's
 # a lot more robust than what was previously being used.
 builtins.__PYAMG_SETUP__ = True
+
 
 def write_version_py(filename='pyamg/version.py'):
     cnt = """
@@ -125,8 +129,8 @@ if not release:
         try:
             from pyamg.version import git_revision as GIT_REVISION
         except ImportError:
-            raise ImportError("Unable to import git_revision. Try removing " \
-                              "pyamg/version.py and the build directory " \
+            raise ImportError("Unable to import git_revision. Try removing "
+                              "pyamg/version.py and the build directory "
                               "before building.")
     else:
         GIT_REVISION = "Unknown"
@@ -137,13 +141,14 @@ if not release:
     a = open(filename, 'w')
     try:
         a.write(cnt % {'version': VERSION,
-                       'full_version' : FULLVERSION,
-                       'git_revision' : GIT_REVISION,
+                       'full_version': FULLVERSION,
+                       'git_revision': GIT_REVISION,
                        'isrelease': str(ISRELEASED)})
     finally:
         a.close()
 
-def configuration(parent_package='',top_path=None):
+
+def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration(None, parent_package, top_path)
@@ -154,16 +159,17 @@ def configuration(parent_package='',top_path=None):
 
     config.add_subpackage('pyamg')
 
-    config.get_version('pyamg/version.py') # sets config.version
+    config.get_version('pyamg/version.py')  # sets config.version
 
     return config
+
 
 def setup_package():
 
     old_path = os.getcwd()
     local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     os.chdir(local_path)
-    sys.path.insert(0,local_path)
+    sys.path.insert(0, local_path)
 
     # rewrite the version file
     write_version_py()
@@ -185,7 +191,7 @@ def setup_package():
             author=AUTHOR,
             author_email=AUTHOR_EMAIL,
             platforms=PLATFORMS,
-            configuration=configuration )
+            configuration=configuration)
     finally:
         del sys.path[0]
         os.chdir(old_path)
