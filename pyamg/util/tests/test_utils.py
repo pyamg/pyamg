@@ -1313,13 +1313,13 @@ class TestLevelize(TestCase):
         assert_equal(max_coarse, 5)
         # test 5
         max_levels, max_coarse, result = levelize_strength_or_aggregation(('predefined',{'C' : A}), 5, 5)
-        assert_equal(result, [('predefined',{'C' : A})])
+        assert_array_equal(result, [('predefined',{'C' : A})])
         assert_equal(max_levels, 2)
         assert_equal(max_coarse, 0)
         # test 6
         max_levels, max_coarse, result = levelize_strength_or_aggregation([('predefined',{'C' : A}), \
                                                                 ('predefined',{'C' : A})], 5, 5)
-        assert_equal(result, [('predefined',{'C' : A}), ('predefined',{'C' : A})])
+        assert_array_equal(result, [('predefined',{'C' : A}), ('predefined',{'C' : A})])
         assert_equal(max_levels, 3)
         assert_equal(max_coarse, 0)
         # test 7
