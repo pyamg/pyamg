@@ -26,6 +26,7 @@ from smooth import jacobi_prolongation_smoother,\
 
 __all__ = ['smoothed_aggregation_solver']
 
+
 def smoothed_aggregation_solver(A, B=None, BH=None,
                                 symmetry='hermitian', strength='symmetric',
                                 aggregate='standard',
@@ -34,9 +35,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                              {'sweep': 'symmetric'}),
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
-                                improve_candidates=[('block_gauss_seidel', 
-                                    {'sweep': 'symmetric', 'iterations': 4}), None], 
-                                max_levels = 10, max_coarse = 500,  
+                                improve_candidates=[('block_gauss_seidel',
+                                                    {'sweep': 'symmetric',
+                                                     'iterations': 4}),
+                                                    None],
+                                max_levels = 10, max_coarse = 500,
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
     """
@@ -85,12 +88,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    improve_candidates : {tuple, string, list} : default [('block_gauss_seidel', 
+    improve_candidates : {tuple, string, list} : default
+                        [('block_gauss_seidel',
                          {'sweep': 'symmetric', 'iterations': 4}), None]
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
-        this single relaxation descriptor defines improve_candidates on all levels.
+        this single relaxation descriptor defines improve_candidates on all
+        levels.
         The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
     max_levels : {integer} : default 10
@@ -244,7 +249,8 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levelize_strength_or_aggregation(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
         levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
-    improve_candidates = levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
+    improve_candidates =\
+        levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
     smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
     ##
@@ -261,14 +267,15 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     while len(levels) < max_levels and\
             levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates, diagonal_dominance, keep)
+        extend_hierarchy(levels, strength, aggregate, smooth,
+                         improve_candidates, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 
-def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates, 
+def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                      diagonal_dominance=False, keep=True):
     """Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
@@ -288,7 +295,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         BH = levels[-1].BH
 
     ##
-    # Compute the strength-of-connection matrix C, where larger 
+    # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength[len(levels)-1])
     if fn == 'symmetric':
@@ -298,7 +305,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        if kwargs.has_key('B'):
+        if 'B' in kwargs:
             C = evolution_strength_of_connection(A, **kwargs)
         else:
             C = evolution_strength_of_connection(A, B, **kwargs)
@@ -313,10 +320,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-    
+
     ##
     # Avoid coarsening diagonally dominant rows
-    flag,kwargs = unpack_arg( diagonal_dominance )
+    flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
@@ -338,13 +345,13 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     ##
     # Improve near nullspace candidates by relaxing on A B = 0
-    fn, kwargs = unpack_arg( improve_candidates[len(levels)-1] )
-    if fn is not None: 
+    fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
+    if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
         B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH 
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
     ##
@@ -356,8 +363,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         TH, BH = fit_candidates(AggOp, BH)
 
     ##
-    # Smooth the tentative prolongator, so that it's accuracy is greatly improved
-    # for algebraically smooth error.
+    # Smooth the tentative prolongator, so that it's accuracy is greatly
+    # improved for algebraically smooth error.
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
     if fn == 'jacobi':
         P = jacobi_prolongation_smoother(A, T, C, B, **kwargs)

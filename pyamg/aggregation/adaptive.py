@@ -268,7 +268,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                          max_coarse=max_coarse,
                                          aggregate=aggregate,
                                          coarse_solver=coarse_solver,
-                                         improve_candidates=None, keep=True, **kwargs)
+                                         improve_candidates=None, keep=True,
+                                         **kwargs)
         if len(sa.levels) > 1:
             # Set strength-of-connection and aggregation
             aggregate = [('predefined', {'AggOp': sa.levels[i].AggOp.tocsr()})
@@ -286,7 +287,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         smooth=smooth,
                                         coarse_solver=coarse_solver,
                                         aggregate=aggregate,
-                                        strength=strength, improve_candidates=None,
+                                        strength=strength,
+                                        improve_candidates=None,
                                         keep=True, **kwargs),
             symmetry, candidate_iters, prepostsmoother, smooth,
             eliminate_local, coarse_solver, work)
@@ -315,8 +317,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 coarse_solver=coarse_solver,
                                                 aggregate=aggregate,
                                                 strength=strength,
-                                                improve_candidates=None, keep=True,
-                                                **kwargs)
+                                                improve_candidates=None,
+                                                keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0,
                                   tol=float(numpy.finfo(numpy.float).tiny),
                                   maxiter=candidate_iters, cycle='V')
@@ -357,7 +359,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         smooth=smooth,
                                         coarse_solver=coarse_solver,
                                         aggregate=aggregate, strength=strength,
-                                        improve_candidates=None, keep=keep, **kwargs),
+                                        improve_candidates=None, keep=keep,
+                                        **kwargs),
             work[0]/A.nnz]
 
 
