@@ -207,8 +207,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         #    w = r + sign(r[1])*||r||_2*e_1
         w = r
         beta = mysign(w[0])*normr
-        w[0] += beta
-        w /= norm(w)
+        w[0] = w[0] + beta
+        w = w / norm(w)
 
         # Preallocate for Krylov vectors, Householder reflectors and
         # Hessenberg matrix
@@ -230,7 +230,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
             # Calculate Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
             v = -2.0*conjugate(w[inner])*w
-            v[inner] += 1.0
+            v[inner] = v[inner] + 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             #for j in range(inner-1,-1,-1):
             #    v -= 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
@@ -270,7 +270,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
                     if inner < (max_inner-1):
                         w[inner+1:] = vslice
                         w[inner+1] += alpha
-                        w /= norm(w)
+                        w = w / norm(w)
 
                     # Apply new reflector to v
                     #  v = v - 2.0*w*(w.T*v)
@@ -342,7 +342,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         amg_core.householder_hornerscheme(update, ravel(W), ravel(y), dimen,
                                           inner, -1, -1)
 
-        x += update
+        x = x + update
         r = b - ravel(A*x)
 
         #Apply preconditioner
