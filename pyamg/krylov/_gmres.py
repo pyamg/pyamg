@@ -98,6 +98,11 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     '''
 
+    # known bug vvvvvv remove when fixed
+    if A.dtype == complex and orthog == 'householder':
+        raise ValueError('[Known Bug] Housholder fails with complex matrices; \
+                          use MGS')
+
     # pass along **kwargs
     if orthog == 'householder':
         (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,

@@ -126,6 +126,11 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         Mtype = M.dtype
     xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
 
+    # known bug vvvvvv remove when fixed
+    if Atype == complex:
+        raise ValueError('[Known Bug] Housholder fails with complex matrices; \
+                          use MGS')
+
     if restrt is not None:
         restrt = int(restrt)
     if maxiter is not None:
