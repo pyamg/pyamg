@@ -9,19 +9,20 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
-                           symmetric_strength_of_connection, \
-                           evolution_strength_of_connection
+    symmetric_strength_of_connection, \
+    evolution_strength_of_connection
 
 from interpolate import direct_interpolation
 import split
 
 __all__ = ['ruge_stuben_solver']
 
-def ruge_stuben_solver(A, 
-                       strength=('classical',{'theta':0.25}), 
-                       CF='RS', 
-                       presmoother=('gauss_seidel',{'sweep':'symmetric'}),
-                       postsmoother=('gauss_seidel',{'sweep':'symmetric'}),
+
+def ruge_stuben_solver(A,
+                       strength=('classical', {'theta': 0.25}),
+                       CF='RS',
+                       presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
+                       postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=10, max_coarse=500, keep=False, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
@@ -66,18 +67,18 @@ def ruge_stuben_solver(A,
 
     Notes
     -----
-    
+
     "coarse_solver" is an optional argument and is the solver used at the
     coarsest grid.  The default is a pseudo-inverse.  Most simply,
     coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
-    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple 
+    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
     (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
     function, and args is a dictionary of arguments to be passed to fn.
 
 
     References
     ----------
-    .. [1] Trottenberg, U., Oosterlee, C. W., and Schuller, A., 
+    .. [1] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
        "Multigrid" San Diego: Academic Press, 2001.  Appendix A
 
     See Also
@@ -87,42 +88,44 @@ def ruge_stuben_solver(A,
 
     """
 
-    levels = [ multilevel_solver.level() ]
-    
+    levels = [multilevel_solver.level()]
+
     # convert A to csr
     if not isspmatrix_csr(A):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR", scipy.sparse.SparseEfficiencyWarning)
+            warn("Implicit conversion of A to CSR",
+                 scipy.sparse.SparseEfficiencyWarning)
         except:
-            raise TypeError('Argument A must have type csr_matrix, or be convertible to csr_matrix')
+            raise TypeError('Argument A must have type csr_matrix, \
+                             or be convertible to csr_matrix')
     # preprocess A
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
     levels[-1].A = A
-    
-    while len(levels) < max_levels  and levels[-1].A.shape[0] > max_coarse:
+
+    while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
+
 # internal function
 def extend_hierarchy(levels, strength, CF, keep):
     """ helper function for local methods """
     def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
+        if isinstance(v, tuple):
+            return v[0], v[1]
         else:
-            return v,{}
-    
+            return v, {}
+
     A = levels[-1].A
 
-    ##
-    # Compute the strength-of-connection matrix C, where larger 
+    # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
@@ -142,7 +145,7 @@ def extend_hierarchy(levels, strength, CF, keep):
     else:
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
-    
+
     ##
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -158,13 +161,15 @@ def extend_hierarchy(levels, strength, CF, keep):
         splitting = split.CLJPc(C)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
-    
+
     ##
-    # Generate the interpolation matrix that maps from the coarse-grid to the fine-grid
+    # Generate the interpolation matrix that maps from the coarse-grid to the
+    # fine-grid
     P = direct_interpolation(A, C, splitting)
 
     ##
-    # Generate the restriction matrix that maps from the fine-grid to the coarse-grid
+    # Generate the restriction matrix that maps from the fine-grid to the
+    # coarse-grid
     R = P.T.tocsr()
 
     ##
@@ -176,10 +181,9 @@ def extend_hierarchy(levels, strength, CF, keep):
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
 
-    levels.append( multilevel_solver.level() )
+    levels.append(multilevel_solver.level())
 
     ##
     # Form next level through Galerkin product
     A = R * A * P
     levels[-1].A = A
-
