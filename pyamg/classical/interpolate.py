@@ -18,7 +18,7 @@ def direct_interpolation(A, C, splitting):
     A : {csr_matrix}
         NxN matrix in CSR format
     C : {csr_matrix}
-        Strength-of-Connection matrix 
+        Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
@@ -34,7 +34,7 @@ def direct_interpolation(A, C, splitting):
     >>> from pyamg.classical import direct_interpolation
     >>> import numpy
     >>> A = poisson((5,),format='csr')
-    >>> splitting = numpy.array([1,0,1,0,1], dtype='intc') 
+    >>> splitting = numpy.array([1,0,1,0,1], dtype='intc')
     >>> P = direct_interpolation(A, A, splitting)
     >>> print P.todense()
     [[ 1.   0.   0. ]
@@ -44,12 +44,12 @@ def direct_interpolation(A, C, splitting):
      [ 0.   0.   1. ]]
 
     """
-    if not isspmatrix_csr(A): 
+    if not isspmatrix_csr(A):
         raise TypeError('expected csr_matrix for A')
 
-    if not isspmatrix_csr(C): 
+    if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix for C')
-    
+
     ##
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
@@ -58,19 +58,19 @@ def direct_interpolation(A, C, splitting):
     C.data[:] = 1.0
     C = C.multiply(A)
 
-    Pp = numpy.empty_like( A.indptr )
+    Pp = numpy.empty_like(A.indptr)
 
-    amg_core.rs_direct_interpolation_pass1( A.shape[0],
-            C.indptr, C.indices, splitting,  Pp)
+    amg_core.rs_direct_interpolation_pass1(A.shape[0],
+                                           C.indptr, C.indices, splitting, Pp)
 
     nnz = Pp[-1]
-    Pj = numpy.empty( nnz, dtype=Pp.dtype )
-    Px = numpy.empty( nnz, dtype=A.dtype )
+    Pj = numpy.empty(nnz, dtype=Pp.dtype)
+    Px = numpy.empty(nnz, dtype=A.dtype)
 
-    amg_core.rs_direct_interpolation_pass2( A.shape[0],
-            A.indptr, A.indices, A.data,
-            C.indptr, C.indices, C.data,
-            splitting,
-            Pp,       Pj,        Px)
+    amg_core.rs_direct_interpolation_pass2(A.shape[0],
+                                           A.indptr, A.indices, A.data,
+                                           C.indptr, C.indices, C.data,
+                                           splitting,
+                                           Pp, Pj, Px)
 
-    return csr_matrix( (Px,Pj,Pp) )
+    return csr_matrix((Px, Pj, Pp))
