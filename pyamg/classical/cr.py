@@ -9,10 +9,11 @@ from scipy.sparse import isspmatrix, csr_matrix, spdiags, isspmatrix_csr
 
 from pyamg.relaxation import gauss_seidel, gauss_seidel_indexed
 
-__all__ = ['CR','binormalize']
+__all__ = ['CR', 'binormalize']
 
-def CR(S, method='habituated',maxiter=20):
-    """Use Compatible Relaxation to compute a C/F splitting 
+
+def CR(S, method='habituated', maxiter=20):
+    """Use Compatible Relaxation to compute a C/F splitting
 
     Parameters
     ----------
@@ -47,56 +48,58 @@ def CR(S, method='habituated',maxiter=20):
     ntests = 3      # (nu) number of random tests to do per iteration
     nrelax = 4      # (eta) number of relaxation sweeps per test
 
-    smagic = 1.0    # (s) parameter in [1,5] to account for fill-in 
+    smagic = 1.0    # (s) parameter in [1,5] to account for fill-in
     gamma = 1.5     # (gamma) cycle index.  use 1.5 for 2d
     G = 30          # (G) number of equivalence classes (# of bins)
     tdepth = 1      # (t) drop depth on parse of L bins
     delta = 0       # (delta) drop threshold on parse of L bins
     alphai = 0.25   # (alpha_inc) quota increase
 
-    # initializations    
+    # initializations
     alpha = 0.0     # coarsening ratio, quota
     beta = np.inf      # quality criterion
     beta1 = np.inf     # quality criterion, older
     beta2 = np.inf     # quality criterion, oldest
-    n=S.shape[0]    # problem size
+    n = S.shape[0]    # problem size
     nC = 0          # number of current Coarse points
-    rhs = np.zeros((n,1)); # rhs for Ae=0
+    rhs = np.zeros((n, 1))  # rhs for Ae=0
 
     if not isspmatrix(S):
         raise TypeError('expecting sparse matrix')
 
     S = binormalize(S)
-    
-    splitting = np.zeros( (S.shape[0],1), dtype='intc' )
-   
-    # out iterations ---------------
-    for m in range(0,maxiter):
 
-        mu = 0.0        # convergence rate
-        E = np.zeros((n,1))  # slowness measure
+    splitting = np.zeros((S.shape[0], 1), dtype='intc')
+
+    # out iterations ---------------
+    for m in range(0, maxiter):
+
+        mu = 0.0  # convergence rate
+        E = np.zeros((n, 1))  # slowness measure
 
         # random iterations ---------------
-        for k in range(0,ntests):
+        for k in range(0, ntests):
 
-            e  = 0.5*( 1 + scipy.rand(n,1))
-            e[splitting>0] = 0
+            e = 0.5*(1 + scipy.rand(n, 1))
+            e[splitting > 0] = 0
 
             enorm = norm(e)
 
             # relaxation iterations ---------------
-            for l in range(0,nrelax):
+            for l in range(0, nrelax):
 
                 if method == 'habituated':
-                    gauss_seidel(S,e,np.zeros((n,1)),iterations=1)
-                    e[splitting>0]=0
+                    gauss_seidel(S, e, np.zeros((n, 1)), iterations=1)
+                    e[splitting > 0] = 0
                 elif method == 'concurrent':
-                    raise NotImplementedError, 'not implemented: need an F-smoother'
+                    raise NotImplementedError('not implemented: need an \
+                                                F-smoother')
                 else:
-                    raise NotImplementedError, 'method not recognized: need habituated or concurrent'
+                    raise NotImplementedError('method not recognized: need \
+                                               habituated or concurrent')
 
                 enorm_old = enorm
-                enorm     = norm(e)
+                enorm = norm(e)
 
                 if enorm <= 1e-14:
                     # break out of loops
@@ -106,7 +109,7 @@ def CR(S, method='habituated',maxiter=20):
             # end relax
 
             # check slowness
-            E = np.where( np.abs(e)>E, np.abs(e), E )
+            E = np.where(np.abs(e) > E, np.abs(e), E)
 
             # update convergence rate
             mu = mu + enorm/enorm_old
@@ -117,32 +120,33 @@ def CR(S, method='habituated',maxiter=20):
         alpha = float(nC)/n
 
         W = (1 + (smagic-1)*gamma*alpha)/(1-gamma*alpha)
-        
+
         # quality criterion
         beta2 = beta1
         beta1 = beta
         beta = np.power(max([mu, 0.1]), 1.0 / W)
-        
+
         # check if we're doing well
-        if (beta>beta1 and beta1>beta2) or m==(maxiter-1) or max(E)<1e-13:
+        if (beta > beta1 and beta1 > beta2) or \
+           m == (maxiter-1) or max(E) < 1e-13:
             return splitting.ravel()
 
         # now add points
         #
         # update limit on additions to splitting (C)
         if alpha < 1e-13:
-            alpha=0.25
+            alpha = 0.25
         else:
             alpha = (1-alphai) * alpha + alphai * (1/gamma)
 
-        nCmax = np.ceil( alpha * n )
+        nCmax = np.ceil(alpha * n)
 
-        L = np.ceil( G * E / E.max() ).ravel()
+        L = np.ceil(G * E / E.max()).ravel()
 
-        binid=G
+        binid = G
 
         # add whole bins (and t-depth nodes) at a time
-        u = np.zeros((n,1))
+        u = np.zeros((n, 1))
         # TODO This loop may never halt...
         #      Perhaps loop over nC < nCmax and binid > 0 ?
         while nC < nCmax:
@@ -151,14 +155,14 @@ def CR(S, method='habituated',maxiter=20):
             if tdepth != 1:
                 raise NotImplementedError
 
-            (roots,) = np.where(L==binid)
+            (roots,) = np.where(L == binid)
 
             for root in roots:
-                if L[root]>=0:
-                    cols = S[root,:].indices
+                if L[root] >= 0:
+                    cols = S[root, :].indices
                     splitting[root] = 1    # add roots
                     nC += 1
-                    L[cols]=-1
+                    L[cols] = -1
             binid -= 1
 
             #L[troots] = -1          # mark t-rings visited
@@ -170,6 +174,7 @@ def CR(S, method='habituated',maxiter=20):
 
     return splitting.ravel()
 
+
 def _CRsweep(A, Findex, Cindex, nu, thetacr, method):
 
     n = A.shape[0]    # problem size
@@ -180,18 +185,19 @@ def _CRsweep(A, Findex, Cindex, nu, thetacr, method):
     enorm = norm(e)
     rhok = 1
 
-    for it in range(1,numax+1):
+    for it in range(1, numax+1):
 
         if method == 'habituated':
-            gauss_seidel(A,e,z,iterations=1)
+            gauss_seidel(A, e, z, iterations=1)
             e[Cindex] = 0.0
         elif method == 'concurrent':
-            gauss_seidel_indexed(A,e,z,indices=Findex,iterations=1)
+            gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
         else:
-            raise NotImplementedError, 'method not recognized: need habituated or concurrent'
+            raise NotImplementedError('method not recognized: need \
+                                       habituated or concurrent')
 
         enorm_old = enorm
-        enorm     = norm(e)
+        enorm = norm(e)
         rhok_old = rhok
         rhok = enorm / enorm_old
 
@@ -203,7 +209,9 @@ def _CRsweep(A, Findex, Cindex, nu, thetacr, method):
         if rhok < 0.1 * thetacr:
             return rhok, e
 
-def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxiter=20):
+
+def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3, 0.5],
+            maxiter=20):
     """
     >>> from pyamg.gallery import poisson
     >>> from cr import CRalpha
@@ -215,12 +223,12 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxite
     thetacs = list(thetacs)
     thetacs.reverse()
 
-    if not isspmatrix_csr(A): 
+    if not isspmatrix_csr(A):
         raise TypeError('expecting csr sparse matrix A')
 
-    if A.dtype==complex:
+    if A.dtype == complex:
         raise NotImplementedError('complex A not implemented')
-    
+
     # 3.1a
     splitting = np.zeros((n,), dtype='intc')
     gamma = np.zeros((n,))
@@ -247,7 +255,7 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxite
         # first find the weights: omega_i = |N_i\C| + gamma_i
         omega = -np.inf * np.ones((n,))
         for i in Uindex:
-            J = A.indices[np.arange(A.indptr[i],A.indptr[i+1])]
+            J = A.indices[np.arange(A.indptr[i], A.indptr[i+1])]
             J = np.where(splitting[J] == 0)[0]
             omega[i] = len(J) + gamma[i]
 
@@ -259,14 +267,14 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxite
             splitting[i] = 1
             gamma[i] = 0.0
             # step 2
-            J = A.indices[np.arange(A.indptr[i],A.indptr[i+1])]
+            J = A.indices[np.arange(A.indptr[i], A.indptr[i+1])]
             J = np.intersect1d(J, Uindex, assume_unique=True)
             omega[i] = -np.inf
             omega[J] = -np.inf
 
             # step 3
             for j in J:
-                K = A.indices[np.arange(A.indptr[j],A.indptr[j+1])]
+                K = A.indices[np.arange(A.indptr[j], A.indptr[j+1])]
                 K = np.intersect1d(K, Uindex, assume_unique=True)
                 omega[K] = omega[K] + 1.0
 
@@ -281,6 +289,7 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3,0.5], maxite
             break
 
     return splitting
+
 
 def binormalize(A, tol=1e-5, maxiter=10):
     """Binormalize matrix A.  Attempt to create unit l_1 norm rows.
@@ -315,7 +324,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     >>> from pyamg.classical import binormalize
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
-        
+
     References
     ----------
     .. [1] Livne, Golub, "Scaling by Binormalization"
@@ -323,28 +332,28 @@ def binormalize(A, tol=1e-5, maxiter=10):
        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.3.1679
 
     """
-    if not isspmatrix(A): 
+    if not isspmatrix(A):
         raise TypeError('expecting sparse matrix A')
 
-    if A.dtype==complex:
+    if A.dtype == complex:
         raise NotImplementedError('complex A not implemented')
 
-    n  = A.shape[0]
+    n = A.shape[0]
     it = 0
-    x = np.ones((n,1)).ravel()
+    x = np.ones((n, 1)).ravel()
 
     # 1.
-    B = A.multiply(A).tocsc()  # power(A,2) inconsistent for numpy, scipy.sparse
-    d=B.diagonal().ravel()
-    
+    B = A.multiply(A).tocsc()  # power(A,2) inconsistent in numpy, scipy.sparse
+    d = B.diagonal().ravel()
+
     # 2.
-    beta    = B * x
-    betabar = (1.0/n) * np.dot(x,beta)
-    stdev = rowsum_stdev(x,beta)
+    beta = B * x
+    betabar = (1.0/n) * np.dot(x, beta)
+    stdev = rowsum_stdev(x, beta)
 
     #3
     while stdev > tol and it < maxiter:
-        for i in range(0,n):
+        for i in range(0, n):
             # solve equation x_i, keeping x_j's fixed
             # see equation (12)
             c2 = (n-1)*d[i]
@@ -362,19 +371,19 @@ def binormalize(A, tol=1e-5, maxiter=10):
             # instead of a column
             ii = B.indptr[i]
             iii = B.indptr[i+1]
-            dot_Bcol = np.dot(x[B.indices[ii:iii]],B.data[ii:iii])
+            dot_Bcol = np.dot(x[B.indices[ii:iii]], B.data[ii:iii])
 
             betabar = betabar + (1.0/n)*dx*(dot_Bcol + beta[i] + d[i]*dx)
             beta[B.indices[ii:iii]] += dx*B.data[ii:iii]
 
             x[i] = xnew
 
-        stdev = rowsum_stdev(x,beta)
-        it+=1
+        stdev = rowsum_stdev(x, beta)
+        it += 1
 
     # rescale for unit 2-norm
     d = np.sqrt(x)
-    D = spdiags( d.ravel(), [0], n,n)
+    D = spdiags(d.ravel(), [0], n, n)
     C = D * A * D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)
@@ -382,7 +391,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     return (1/scale)*C
 
 
-def rowsum_stdev(x,beta):
+def rowsum_stdev(x, beta):
     """Compute row sum standard deviation
 
     Compute for approximation x, the std dev of the row sums
@@ -403,7 +412,8 @@ def rowsum_stdev(x,beta):
     equation (7) in Livne/Golub
 
     """
-    n=x.size
-    betabar = (1.0/n) * np.dot(x,beta)
-    stdev   = np.sqrt((1.0/n)*np.sum(np.power(np.multiply(x,beta) - betabar,2)))
+    n = x.size
+    betabar = (1.0/n) * np.dot(x, beta)
+    stdev = np.sqrt((1.0/n) *
+                    np.sum(np.power(np.multiply(x, beta) - betabar, 2)))
     return stdev/betabar
