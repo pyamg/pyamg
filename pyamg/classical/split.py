@@ -23,52 +23,52 @@ C/F Splitting Methods
 ---------------------
 
 RS : Original Ruge-Stuben method
-    - Produces good C/F splittings but is inherently serial.  
+    - Produces good C/F splittings but is inherently serial.
     - May produce AMG hierarchies with relatively high operator complexities.
     - See References [1,4]
 
-PMIS: Parallel Modified Independent Set 
-    - Very fast construction with low operator complexity.  
-    - Convergence can deteriorate with increasing problem 
-      size on structured meshes.  
+PMIS: Parallel Modified Independent Set
+    - Very fast construction with low operator complexity.
+    - Convergence can deteriorate with increasing problem
+      size on structured meshes.
     - Uses method similar to Luby's Maximal Independent Set algorithm.
     - See References [1,3]
 
 PMISc: Parallel Modified Independent Set in Color
-    - Fast construction with low operator complexity.  
+    - Fast construction with low operator complexity.
     - Better scalability than PMIS on structured meshes.
     - Augments random weights with a (graph) vertex coloring
     - See References [1]
-      
+
 CLJP: Clearly-Luby-Jones-Plassmann
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
-    - Convergence can deteriorate with increasing problem 
-      size on structured meshes.  
+    - Convergence can deteriorate with increasing problem
+      size on structured meshes.
     - See References [1,2]
 
 CLJP-c: Clearly-Luby-Jones-Plassmann in Color
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Better scalability than CLJP on structured meshes.
     - See References [1]
-    
+
 
 Summary
 -------
 
-In general, methods that use a graph coloring perform better on structured 
-meshes [1].  Unstructured meshes do not appear to benefit substantially 
+In general, methods that use a graph coloring perform better on structured
+meshes [1].  Unstructured meshes do not appear to benefit substantially
 from coloring.
 
-    ========  ========  ========  ==========  
-     method   parallel  in color     cost    
+    ========  ========  ========  ==========
+     method   parallel  in color     cost
     ========  ========  ========  ==========
        RS        no        no      moderate
       PMIS      yes        no      very low
       PMISc     yes       yes        low
-      CLJP      yes        no      moderate         
+      CLJP      yes        no      moderate
       CLJPc     yes       yes      moderate
     ========  ========  ========  ==========
-    
+
 
 References
 ----------
@@ -77,20 +77,21 @@ References
     "Parallel coarse-grid selection"
     Numerical Linear Algebra with Applications 2007; 14:611-643.
 
-..  [2] Cleary AJ, Falgout RD, Henson VE, Jones JE. 
+..  [2] Cleary AJ, Falgout RD, Henson VE, Jones JE.
     "Coarse-grid selection for parallel algebraic multigrid"
-    Proceedings of the 5th International Symposium on Solving Irregularly 
+    Proceedings of the 5th International Symposium on Solving Irregularly
     Structured Problems in Parallel. Springer: Berlin, 1998; 104-115.
 
 ..  [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
-    "Reducing complexity in parallel algebraic multigrid preconditioners" 
+    "Reducing complexity in parallel algebraic multigrid preconditioners"
     SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
-..  [4] Ruge JW, Stuben K. 
+..  [4] Ruge JW, Stuben K.
     "Algebraic multigrid (AMG)"
-    In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
+    In Multigrid Methods, McCormick SF (ed.),
+    Frontiers in Applied Mathematics, vol. 3.
     SIAM: Philadelphia, PA, 1987; 73-130.
-    
+
 
 """
 
@@ -105,6 +106,7 @@ from pyamg.util.utils import remove_diagonal
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
 
+
 def RS(S):
     """Compute a C/F splitting using Ruge-Stuben coarsening
 
@@ -118,14 +120,14 @@ def RS(S):
     -------
     splitting : ndarray
         Array of length of S of ones (coarse) and zeros (fine)
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import RS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = RS(S)
- 
+
     See Also
     --------
     amg_core.rs_cf_splitting
@@ -133,21 +135,23 @@ def RS(S):
     References
     ----------
     .. [1] Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
-       In Multigrid Methods, McCormick SF (ed.), Frontiers in Applied Mathematics, vol. 3. 
+       In Multigrid Methods, McCormick SF (ed.),
+       Frontiers in Applied Mathematics, vol. 3.
        SIAM: Philadelphia, PA, 1987; 73-130.
 
     """
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
     S = remove_diagonal(S)
 
-    T = S.T.tocsr()  #transpose S for efficient column access
+    T = S.T.tocsr()  # transpose S for efficient column access
 
-    splitting = numpy.empty( S.shape[0], dtype='intc' )
+    splitting = numpy.empty(S.shape[0], dtype='intc')
 
     amg_core.rs_cf_splitting(S.shape[0],
-            S.indptr, S.indices,  
-            T.indptr, T.indices, 
-            splitting)
+                             S.indptr, S.indices,
+                             T.indptr, T.indices,
+                             splitting)
 
     return splitting
 
@@ -165,14 +169,14 @@ def PMIS(S):
     -------
     splitting : ndarray
         Array of length of S of ones (coarse) and zeros (fine)
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import PMIS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMIS(S)
- 
+
     See Also
     --------
     MIS
@@ -180,18 +184,19 @@ def PMIS(S):
     References
     ----------
     .. [1] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
-       "Reducing complexity in parallel algebraic multigrid preconditioners" 
+       "Reducing complexity in parallel algebraic multigrid preconditioners"
        SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
     """
     S = remove_diagonal(S)
-    weights,G,S,T = preprocess(S)
+    weights, G, S, T = preprocess(S)
     return MIS(G, weights)
+
 
 def PMISc(S, method='JP'):
     """C/F splitting using Parallel Modified Independent Set (in color)
 
-    PMIS-c, or PMIS in color, improves PMIS by perturbing the initial 
+    PMIS-c, or PMIS in color, improves PMIS by perturbing the initial
     random weights with weights determined by a vertex coloring.
 
     Parameters
@@ -209,14 +214,14 @@ def PMISc(S, method='JP'):
     -------
     splitting : array
         Array of length of S of ones (coarse) and zeros (fine)
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import PMISc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMISc(S)
- 
+
     See Also
     --------
     MIS
@@ -229,11 +234,11 @@ def PMISc(S, method='JP'):
 
     """
     S = remove_diagonal(S)
-    weights,G,S,T = preprocess(S, coloring_method=method)
+    weights, G, S, T = preprocess(S, coloring_method=method)
     return MIS(G, weights)
-     
 
-def CLJP(S,color=False):
+
+def CLJP(S, color=False):
     """Compute a C/F splitting using the parallel CLJP algorithm
 
     Parameters
@@ -248,7 +253,7 @@ def CLJP(S,color=False):
     -------
     splitting : array
         Array of length of S of ones (coarse) and zeros (fine)
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
@@ -267,28 +272,30 @@ def CLJP(S,color=False):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
     S = remove_diagonal(S)
 
     colorid = 0
     if color:
         colorid = 1
 
-    T = S.T.tocsr()  #transpose S for efficient column access
-    splitting = numpy.empty( S.shape[0], dtype='intc' )
+    T = S.T.tocsr()  # transpose S for efficient column access
+    splitting = numpy.empty(S.shape[0], dtype='intc')
 
     amg_core.cljp_naive_splitting(S.shape[0],
-                                        S.indptr, S.indices,
-                                        T.indptr, T.indices,  
-                                        splitting,
-                                        colorid)
+                                  S.indptr, S.indices,
+                                  T.indptr, T.indices,
+                                  splitting,
+                                  colorid)
 
     return splitting
 
+
 def CLJPc(S):
     """Compute a C/F splitting using the parallel CLJP-c algorithm
-    
-    CLJP-c, or CLJP in color, improves CLJP by perturbing the initial 
+
+    CLJP-c, or CLJP in color, improves CLJP by perturbing the initial
     random weights with weights determined by a vertex coloring.
 
     Parameters
@@ -301,14 +308,14 @@ def CLJPc(S):
     -------
     splitting : array
         Array of length of S of ones (coarse) and zeros (fine)
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical.split import CLJPc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = CLJPc(S)
- 
+
     See Also
     --------
     MIS, PMIS, CLJP
@@ -321,7 +328,8 @@ def CLJPc(S):
 
     """
     S = remove_diagonal(S)
-    return CLJP(S,color=True)
+    return CLJP(S, color=True)
+
 
 def MIS(G, weights, maxiter=None):
     """Compute a maximal independent set of a graph in parallel
@@ -339,7 +347,7 @@ def MIS(G, weights, maxiter=None):
     -------
     mis : array
         Array of length of G of zeros/ones indicating the independent set
-        
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
@@ -352,17 +360,18 @@ def MIS(G, weights, maxiter=None):
     See Also
     --------
     fn = amg_core.maximal_independent_set_parallel
- 
+
     """
 
-    if not isspmatrix_csr(G): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(G):
+        raise TypeError('expected csr_matrix')
     G = remove_diagonal(G)
 
-    mis    = numpy.empty( G.shape[0], dtype='intc' )
+    mis = numpy.empty(G.shape[0], dtype='intc')
     mis[:] = -1
-    
+
     fn = amg_core.maximal_independent_set_parallel
-        
+
     if maxiter is None:
         fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights)
     else:
@@ -373,10 +382,11 @@ def MIS(G, weights, maxiter=None):
 
     return mis
 
+
 # internal function
-def preprocess(S, coloring_method = None):
+def preprocess(S, coloring_method=None):
     """Common preprocess for splitting functions
-    
+
     Parameters
     ----------
     S : csr_matrix
@@ -397,7 +407,7 @@ def preprocess(S, coloring_method = None):
         transpose of S
     G : csr_matrix
         union of S and T
-    
+
     Notes
     -----
     Performs the following operations:
@@ -405,33 +415,33 @@ def preprocess(S, coloring_method = None):
         - Replaces S.data with ones
         - Creates T = S.T in CSR format
         - Creates G = S union T in CSR format
-        - Creates random weights 
+        - Creates random weights
         - Augments weights with graph coloring (if use_color == True)
 
     """
 
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
 
     N = S.shape[0]
-    S = csr_matrix( (numpy.ones(S.nnz,dtype='int8'),S.indices,S.indptr), shape=(N,N))
-    T = S.T.tocsr()     #transpose S for efficient column access
+    S = csr_matrix((numpy.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
+                   shape=(N, N))
+    T = S.T.tocsr()  # transpose S for efficient column access
 
-    G = S + T           # form graph (must be symmetric)
+    G = S + T  # form graph (must be symmetric)
     G.data[:] = 1
 
-    weights   = numpy.ravel(T.sum(axis=1))  # initial weights
+    weights = numpy.ravel(T.sum(axis=1))  # initial weights
     #weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
-        weights  = weights + scipy.rand(len(weights))
+        weights = weights + scipy.rand(len(weights))
     else:
         coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
-        weights  = weights + (scipy.rand(len(weights)) + coloring)/num_colors
+        weights = weights + (scipy.rand(len(weights)) + coloring)/num_colors
 
-    return (weights,G,S,T)
-
-
+    return (weights, G, S, T)
