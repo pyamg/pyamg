@@ -434,10 +434,10 @@ class TestEnergyMin(TestCase):
 
             if smoother == 'energy' and (B.shape[1] >= blocksize(A)):
                 ic = [('gauss_seidel_nr',
-                       {'sweep': 'symmetric', 'iterations': 4}), None],
+                       {'sweep': 'symmetric', 'iterations': 4}), None]
                 ml = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
                                      smooth=smooth,
-                                     improve_candidates=
+                                     improve_candidates=ic,
                                      keep=True, symmetry='nonsymmetric')
                 T = ml.levels[0].T.tocsr()
                 Cpts = ml.levels[0].Cpts
