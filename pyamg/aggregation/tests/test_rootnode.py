@@ -353,7 +353,7 @@ class TestSolverPerformance(TestCase):
                                      strength=strength,
                                      presmoother=smoother,
                                      postsmoother=smoother,
-                                     improve_candidates=None, **SA_build_arg
+                                     improve_candidates=None, **SA_build_arg)
         SA_build_args['symmetry'] = 'symmetric'
         sa_symm = rootnode_solver(A, B=ones((A.shape[0], 1)), smooth=smooth,
                                   strength=strength, presmoother=smoother,
