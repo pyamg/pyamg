@@ -400,7 +400,7 @@ class TestSolverPerformance(TestCase):
         for AA in cases:
             sa_new = rootnode_solver(AA, max_coarse=10)
             assert(abs(ravel(sa_old.levels[-1].A.todense() -
-                         sa_new.levels[-1].A.todense())).max() < 0.01)
+                             sa_new.levels[-1].A.todense())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -423,13 +423,13 @@ class TestComplexSolverPerformance(TestCase):
         # Test 2
         A = poisson((71, 71), format='csr')
         Ai = A + (0.625 / 0.01) * 1.0j *\
-             scipy.sparse.eye(A.shape[0], A.shape[1])
+            scipy.sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('energy', {'krylov': 'cgnr'})))
 
         # Test 3
         A = poisson((60, 60), format='csr')
-        Ai = 1.0j * A;
+        Ai = 1.0j * A
         self.cases.append((Ai, None, 0.35, 'symmetric',
                            ('energy', {'krylov': 'cgnr', 'maxiter': 8})))
         self.cases.append((Ai, None, 0.35, 'symmetric',
@@ -440,7 +440,6 @@ class TestComplexSolverPerformance(TestCase):
         A = gauge_laplacian(70, spacing=1.0, beta=0.41)
         self.cases.append((A, None, 0.25, 'hermitian',
                            ('energy', {'krylov': 'cg'})))
-
 
     def test_basic(self):
         """check that method converges at a reasonable rate"""
