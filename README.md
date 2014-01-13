@@ -30,25 +30,6 @@ Contact the [pyamg-user group](http://groups.google.com/group/pyamg-user)
 
 Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [Examples](https://github.com/pyamg/pyamg/wiki/Examples) (for instance  the [0STARTHERE](https://github.com/pyamg/pyamg-examples/blob/master/0STARTHERE/demo.py) example)
 
-Read the [documentation]() (TODO: new link coming)
-
-or
-
-Try the [docstrings](http://docs.python.org/tutorial/controlflow.html#documentation-strings): for example
-
-
-````python
-print pyamg.strength.__doc__
-````
-
-or
-
-````python
-pyamg.strength?
-````
-
-in [ipython](http://www.ipython.org)
-
 # What is AMG?
 
  AMG is a multilevel technique for solving large-scale linear systems with optimal or near-optimal efficiency.  Unlike geometric multigrid, AMG requires little or no geometric information about the underlying problem and develops a sequence of coarser grids directly from the input matrix.  This feature is especially important for problems discretized on unstructured meshes and irregular grids.
