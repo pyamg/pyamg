@@ -114,7 +114,3 @@ Program output:
     
     residual norm is 1.86112114946e-06
 </pre>
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/pyamg/pyamg/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
