@@ -403,7 +403,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
 
     if hasattr(A, 'symmetry'):    
         if A.symmetry == 'nonsymmetric':
-            if BH == None:
+            if BH is None:
                 raise ValueError("BH should be an n x m array")
             else:
                 for i in range(BH.shape[1]):
@@ -1286,7 +1286,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
     # C. This array is used multiple times in Satisfy_Constraints(...).
-    if BtBinv == None:
+    if BtBinv is None:
         BtBinv = compute_BtBinv(B, C)
 
     ##

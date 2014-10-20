@@ -137,10 +137,10 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     for key in Cells:
         if ((type(key) != int) or (key not in range(1,15))):
             raise ValueError('cell array must have positive integer keys in [1,14]')
-        if (vtk_cell_info[key] == None) and (Cells[key] != None):
+        if (vtk_cell_info[key] is None) and (Cells[key] is not None):
             # Poly data
             raise NotImplementedError('Poly Data not implemented yet')
-        if Cells[key] == None:
+        if Cells[key] is None:
             raise ValueError('cell array cannot be empty for key %d'%(key))
         if numpy.rank(Cells[key])!=2:
             Cells[key] = Cells[key].reshape((Cells[key].size,1))
@@ -151,7 +151,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     # check pdata
     # must be Ndof x n_pdata
     n_pdata = 0
-    if pdata != None:
+    if pdata is not None:
         if numpy.rank(pdata)>1:
             n_pdata=pdata.shape[1]
         else:
@@ -163,7 +163,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     # check pvdata
     # must be 3*Ndof x n_pvdata
     n_pvdata = 0
-    if pvdata != None:
+    if pvdata is not None:
         if numpy.rank(pvdata)>1:
             n_pvdata = pvdata.shape[1]
         else:
@@ -175,7 +175,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     # check cdata
     # must be NCells x n_cdata for each key
     n_cdata = 0
-    if cdata !=None:
+    if cdata is not None:
         for key in Cells:   # all valid now
             if numpy.rank(cdata[key])>1:
                 if n_cdata==0:
@@ -187,13 +187,13 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
                 cdata[key] = cdata[key].reshape((cdata[key].size,1))
             if cdata[key].shape[0]!=Cells[key].shape[0]:
                 raise ValueError('size mismatch with cdata %d and Cells %d'%(cdata[key].shape[0],Cells[key].shape[0]))
-            if cdata[key] == None:
+            if cdata[key] is None:
                 raise ValueError('cdata array cannot be empty for key %d'%(key))
 
     # check cvdata
     # must be NCells*3 x n_cdata for each key
     n_cvdata = 0
-    if cvdata !=None:
+    if cvdata is not None:
         for key in Cells:   # all valid now
             if numpy.rank(cvdata[key])>1:
                 if n_cvdata==0:
@@ -205,7 +205,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
                 cvdata[key] = cvdata[key].reshape((cvdata[key].size,1))
             if cvdata[key].shape[0]!=3*Cells[key].shape[0]:
                 raise ValueError('size mismatch with cvdata and Cells')
-            if cvdata[key] == None:
+            if cvdata[key] is None:
                 raise ValueError('cvdata array cannot be empty for key %d'%(key))
             
     Ncells = 0
@@ -227,14 +227,14 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
             cell_offset = numpy.hstack((cell_offset,offset*numpy.ones((sz,),dtype='uint8')))
             cell_type   = numpy.hstack((cell_type,key*numpy.ones((sz,),dtype='uint8')))
             
-            if cdata != None:
-                if cdata_all==None:
+            if cdata is not None:
+                if cdata_all is None:
                     cdata_all=cdata[key]
                 else:
                     cdata_all = numpy.vstack((cdata_all,cdata[key]))
 
-            if cvdata != None:
-                if cvdata_all==None:
+            if cvdata is not None:
+                if cvdata_all is None:
                     cvdata_all=cvdata[key]
                 else:
                     cvdata_all = numpy.vstack((cvdata_all,cvdata[key]))
@@ -451,10 +451,10 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri', \
     else:
         E2V = { key : E2V }
 
-    if cdata != None:
+    if cdata is not None:
         cdata = {key: cdata} 
     
-    if cvdata != None:
+    if cvdata is not None:
         cvdata = {key: cvdata}
 
     write_vtu(Verts=Verts, Cells=E2V, pdata=pdata, pvdata=pvdata, \

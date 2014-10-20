@@ -50,6 +50,6 @@ class TestBlackbox(TestCase):
         #(5) Run nonsymmetric example, make sure BH isn't None
         A,b = self.cases[2]
         (x,ml) = solve(A,b,return_solver=True,verb=False,maxiter=A.shape[0])
-        assert(ml.levels[0].BH != None)
+        assert(ml.levels[0].BH is not None)
 
 
