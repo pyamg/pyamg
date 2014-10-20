@@ -473,7 +473,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     A,x,b = make_system(A, x, b, formats=['csr', 'bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
 
-    if Dinv == None:
+    if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != A.shape[0]/blocksize:
         raise ValueError('Dinv and A have incompatible dimensions')
@@ -550,7 +550,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1, Dinv
     A,x,b = make_system(A, x, b, formats=['csr','bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
     
-    if Dinv == None:
+    if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != A.shape[0]/blocksize:
         raise ValueError('Dinv and A have incompatible dimensions')
@@ -864,7 +864,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0, Dinv=None
     A,x,b = make_system(A, x, b, formats=['csr'])
     
     # Dinv for A*A.H
-    if Dinv == None:
+    if Dinv is None:
         Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
     
     if sweep == 'forward':
@@ -944,7 +944,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0, Dinv=None
     A,x,b = make_system(A, x, b, formats=['csc'])
     
     # Dinv for A.H*A
-    if Dinv == None:
+    if Dinv is None:
         Dinv = numpy.ravel(get_diagonal(A, norm_eq=1, inv=True))
     
     if sweep == 'forward':

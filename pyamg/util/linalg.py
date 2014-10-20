@@ -354,7 +354,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
         if A.shape[0] != A.shape[1]:
             raise ValueError,'expected square A'
 
-        if initial_guess == None:
+        if initial_guess is None:
             v0  = scipy.rand(A.shape[1],1)
             if A.dtype == complex:
                 v0 = v0 + 1.0j * scipy.rand(A.shape[1],1)

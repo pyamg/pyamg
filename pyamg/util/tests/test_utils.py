@@ -102,7 +102,7 @@ class TestUtils(TestCase):
             [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=BH)
             assert_array_almost_equal(DAD.todense(), DAD_answer)
             assert_array_almost_equal(DB, DB_answer)
-            if DBH_answer != None:
+            if DBH_answer is not None:
                 assert_array_almost_equal(DBH, DBH_answer)
 
 
@@ -993,7 +993,7 @@ class TestComplexUtils(TestCase):
             [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=BH)
             assert_array_almost_equal(DAD.todense(), DAD_answer)
             assert_array_almost_equal(DB, DB_answer)
-            if DBH_answer != None:
+            if DBH_answer is not None:
                 assert_array_almost_equal(DBH, DBH_answer)
 
 
