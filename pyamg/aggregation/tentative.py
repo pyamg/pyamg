@@ -125,7 +125,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
         B = numpy.asarray(B, dtype='float64')
 
     if len(B.shape) != 2:
-        raise ValueError('expected rank 2 array for argument B')
+        raise ValueError('expected 2d array for argument B')
 
     if B.shape[0] % AggOp.shape[0] != 0:
         raise ValueError('dimensions of AggOp %s and B %s are \

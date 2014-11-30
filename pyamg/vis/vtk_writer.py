@@ -142,7 +142,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
             raise NotImplementedError('Poly Data not implemented yet')
         if Cells[key] is None:
             raise ValueError('cell array cannot be empty for key %d'%(key))
-        if numpy.rank(Cells[key])!=2:
+        if numpy.ndim(Cells[key])!=2:
             Cells[key] = Cells[key].reshape((Cells[key].size,1))
         if vtk_cell_info[key] != Cells[key].shape[1]:
             # TODO: (Luke) offset is undefined 
@@ -152,7 +152,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     # must be Ndof x n_pdata
     n_pdata = 0
     if pdata is not None:
-        if numpy.rank(pdata)>1:
+        if numpy.ndim(pdata)>1:
             n_pdata=pdata.shape[1]
         else:
             n_pdata = 1
@@ -164,7 +164,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     # must be 3*Ndof x n_pvdata
     n_pvdata = 0
     if pvdata is not None:
-        if numpy.rank(pvdata)>1:
+        if numpy.ndim(pvdata)>1:
             n_pvdata = pvdata.shape[1]
         else:
             n_pvdata = 1
@@ -177,7 +177,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     n_cdata = 0
     if cdata is not None:
         for key in Cells:   # all valid now
-            if numpy.rank(cdata[key])>1:
+            if numpy.ndim(cdata[key])>1:
                 if n_cdata==0:
                     n_cdata=cdata[key].shape[1]
                 elif n_cdata!=cdata[key].shape[1]:
@@ -195,7 +195,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None, fn
     n_cvdata = 0
     if cvdata is not None:
         for key in Cells:   # all valid now
-            if numpy.rank(cvdata[key])>1:
+            if numpy.ndim(cvdata[key])>1:
                 if n_cvdata==0:
                     n_cvdata=cvdata[key].shape[1]
                 elif n_cvdata!=cvdata[key].shape[1]:
