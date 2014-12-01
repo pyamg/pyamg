@@ -5,6 +5,8 @@ install:
   - pip install python-coveralls
   - pip install coverage
   - pip install nose
+  - pip install numpy
+  - pip install scipy
 script:
   - python setup.py install
   - nosetests --with-coverage --cover-package pyamg
