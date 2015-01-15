@@ -13,17 +13,17 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep', 
+__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep',
            'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
            'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
            'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
            'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
-           'eliminate_diag_dom_nodes', 'levelize_strength_or_aggregation', 
-           'levelize_smooth_or_improve_candidates'] 
-           
+           'eliminate_diag_dom_nodes', 'levelize_strength_or_aggregation',
+           'levelize_smooth_or_improve_candidates']
+
 
 def blocksize(A):
-    # Helper Function: return the blocksize of a matrix 
+    # Helper Function: return the blocksize of a matrix
     if isspmatrix_bsr(A):
         return A.blocksize[0]
     else:
@@ -63,7 +63,7 @@ def profile_solver(ml, accel=None, **kwargs):
     >>> b = A*numpy.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
- 
+
     """
     A = ml.levels[0].A
     b = A * scipy.rand(A.shape[0],1)
@@ -89,7 +89,7 @@ def diag_sparse(A):
 
     Parameters
     ----------
-    A : sparse matrix or rank 1 array
+    A : sparse matrix or 1d array
         General sparse matrix or array of diagonal entries
 
     Returns
@@ -112,8 +112,8 @@ def diag_sparse(A):
     if isspmatrix(A):
         return A.diagonal()
     else:
-        if(numpy.rank(A)!=1):
-            raise ValueError,'input diagonal array expected to be rank 1'
+        if(numpy.ndim(A)!=1):
+            raise ValueError,'input diagonal array expected to be 1d'
         return csr_matrix((numpy.asarray(A),numpy.arange(len(A)),numpy.arange(len(A)+1)),(len(A),len(A)))
 
 def scale_rows(A,v,copy=True):
@@ -183,7 +183,7 @@ def scale_rows(A,v,copy=True):
         return scale_columns(A.T,v)
     else:
         return scale_rows(csr_matrix(A),v)
-        
+
 def scale_columns(A,v,copy=True):
     """
     Scale the sparse columns of a matrix
@@ -322,7 +322,7 @@ def symmetric_rescaling(A,copy=True):
         else:
             # We can take square roots of negative numbers
             D_sqrt = numpy.sqrt(D)
-        
+
         D_sqrt_inv = numpy.zeros_like(D_sqrt)
         D_sqrt_inv[mask] = 1.0/D_sqrt[mask]
 
@@ -343,7 +343,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
 
     where D=diag(A).  The left multiplication is accomplished through
     scale_rows and the right multiplication is done through scale columns.
-    
+
     The candidates B and BH are scaled accordingly::
 
         B = D^{1/2} B
@@ -392,23 +392,23 @@ def symmetric_rescaling_sa(A, B, BH=None):
      [ 1.41421356]
      [ 1.41421356]]
     """
-    
+
     ##
     # rescale A
     [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
     ##
     # scale candidates
     for i in range(B.shape[1]):
-        B[:,i] = numpy.ravel(B[:,i])*numpy.ravel(D_sqrt) 
+        B[:,i] = numpy.ravel(B[:,i])*numpy.ravel(D_sqrt)
 
-    if hasattr(A, 'symmetry'):    
+    if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
-            if BH == None:
+            if BH is None:
                 raise ValueError("BH should be an n x m array")
             else:
                 for i in range(BH.shape[1]):
-                    BH[:,i] = numpy.ravel(BH[:,i])*numpy.ravel(D_sqrt) 
-    
+                    BH[:,i] = numpy.ravel(BH[:,i])*numpy.ravel(D_sqrt)
+
     return [A,B,BH]
 
 
@@ -416,7 +416,7 @@ def type_prep(upcast_type, varlist):
     """
     Loop over all elements of varlist and convert them to upcasttype
     The only difference with pyamg.util.utils.to_type(...), is that scalars
-    are wrapped into (1,0) arrays.  This is desirable when passing 
+    are wrapped into (1,0) arrays.  This is desirable when passing
     the numpy complex data type to C routines and complex scalars aren't
     handled correctly
 
@@ -425,7 +425,7 @@ def type_prep(upcast_type, varlist):
     upcast_type : data type
         e.g. complex, float64 or complex128
     varlist : list
-        list may contain arrays, mat's, sparse matrices, or scalars 
+        list may contain arrays, mat's, sparse matrices, or scalars
         the elements may be float, int or complex
 
     Returns
@@ -434,13 +434,13 @@ def type_prep(upcast_type, varlist):
 
     Notes
     -----
-    Useful when harmonizing the types of variables, such as 
+    Useful when harmonizing the types of variables, such as
     if A and b are complex, but x,y and z are not.
 
     Examples
     --------
     >>> import numpy
-    >>> from pyamg.util.utils import type_prep 
+    >>> from pyamg.util.utils import type_prep
     >>> from scipy.sparse.sputils import upcast
     >>> x = numpy.ones((5,1))
     >>> y = 2.0j*numpy.ones((5,1))
@@ -452,7 +452,7 @@ def type_prep(upcast_type, varlist):
     for i in range(len(varlist)):
         if numpy.isscalar(varlist[i]):
             varlist[i] = numpy.array([varlist[i]])
-    
+
     return varlist
 
 
@@ -465,7 +465,7 @@ def to_type(upcast_type, varlist):
     upcast_type : data type
         e.g. complex, float64 or complex128
     varlist : list
-        list may contain arrays, mat's, sparse matrices, or scalars 
+        list may contain arrays, mat's, sparse matrices, or scalars
         the elements may be float, int or complex
 
     Returns
@@ -474,13 +474,13 @@ def to_type(upcast_type, varlist):
 
     Notes
     -----
-    Useful when harmonizing the types of variables, such as 
+    Useful when harmonizing the types of variables, such as
     if A and b are complex, but x,y and z are not.
 
     Examples
     --------
     >>> import numpy
-    >>> from pyamg.util.utils import to_type  
+    >>> from pyamg.util.utils import to_type
     >>> from scipy.sparse.sputils import upcast
     >>> x = numpy.ones((5,1))
     >>> y = 2.0j*numpy.ones((5,1))
@@ -489,7 +489,7 @@ def to_type(upcast_type, varlist):
     """
 
     #convert_type = type(numpy.array([0], upcast_type)[0])
-        
+
     for i in range(len(varlist)):
 
         # convert scalars to complex
@@ -508,9 +508,9 @@ def to_type(upcast_type, varlist):
 
 
 def get_diagonal(A, norm_eq=False, inv=False):
-    """ Return the diagonal or inverse of diagonal for 
+    """ Return the diagonal or inverse of diagonal for
         A, (A.H A) or (A A.H)
-    
+
     Parameters
     ----------
     A   : {dense or sparse matrix}
@@ -521,7 +521,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
         2 ==> D = diag(A A.H)
     inv : {True, False}
         If True, D = 1.0/D
-    
+
     Returns
     -------
     diagonal, D, of appropriate system
@@ -545,23 +545,23 @@ def get_diagonal(A, norm_eq=False, inv=False):
     [ 0.2         0.16666667  0.16666667  0.16666667  0.2       ]
 
     """
-    
+
     #if not isspmatrix(A):
     if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
         warn('Implicit conversion to sparse matrix')
         A = csr_matrix(A)
-    
+
     # critical to sort the indices of A
     A.sort_indices()
     if norm_eq == 1:
         # This transpose involves almost no work, use csr data structures as csc, or vice versa
-        At = A.T    
+        At = A.T
         D = (At.multiply(At.conjugate()))*numpy.ones((At.shape[0],))
-    elif norm_eq == 2:    
+    elif norm_eq == 2:
         D = (A.multiply(A.conjugate()))*numpy.ones((A.shape[0],))
     else:
         D = A.diagonal()
-        
+
     if inv:
         Dinv = numpy.zeros_like(D)
         mask = (D != 0.0)
@@ -586,7 +586,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     Returns
     -------
     block_diag : array
-        block diagonal of A in array form, 
+        block diagonal of A in array form,
         array size is (A.shape[0]/blocksize, blocksize, blocksize)
 
     Examples
@@ -606,7 +606,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
      [[ 28.  29.]
       [ 34.  35.]]]
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
-    
+
     """
 
     if not isspmatrix(A):
@@ -615,7 +615,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         raise ValueError("Expected square matrix")
     if scipy.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
-    
+
     ##
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
@@ -626,19 +626,19 @@ def get_block_diag(A, blocksize, inv_flag=True):
         if (A.block_D.shape[1] == blocksize) and (A.block_D.shape[2] == blocksize) and \
         (A.block_D.shape[0] == A.shape[0]/blocksize):
             return A.block_D
-    
+
     ##
     # Convert to BSR
     if not isspmatrix_bsr(A):
         A = bsr_matrix(A, blocksize=(blocksize,blocksize))
     if A.blocksize != (blocksize,blocksize):
         A = A.tobsr(blocksize=(blocksize,blocksize))
-    
+
     ##
     # Peel off block diagonal by extracting block entries from the now BSR matrix A
     A = A.asfptype()
     block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize), dtype=A.dtype)
-    
+
     diag_entries = csr_matrix((scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr), \
                                 shape=(A.shape[0]/blocksize, A.shape[0]/blocksize)).diagonal()
     diag_entries -= 1
@@ -648,8 +648,8 @@ def get_block_diag(A, blocksize, inv_flag=True):
         block_diag[nonzero_mask,:,:] = A.data[diag_entries,:,:]
 
     if inv_flag:
-        ## 
-        # Invert each block 
+        ##
+        # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
             pyamg.amg_core.pinv_array(block_diag, block_diag.shape[0], block_diag.shape[1], 'T')
@@ -664,7 +664,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
 def amalgamate(A, blocksize):
     """
     Amalgamate matrix A
-    
+
     Parameters
     ----------
     A : csr_matrix
@@ -678,11 +678,11 @@ def amalgamate(A, blocksize):
         Amalgamated  matrix A, first, convert A to BSR with square blocksize
         and then return a CSR matrix of ones using the resulting BSR indptr and
         indices
-    
+
     Notes
     -----
     inverse operation of UnAmal for square matrices
-    
+
     Examples
     --------
     >>> from numpy import array
@@ -708,10 +708,10 @@ def amalgamate(A, blocksize):
         return A
     elif scipy.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
-    
-    A = A.tobsr(blocksize=(blocksize,blocksize))        
+
+    A = A.tobsr(blocksize=(blocksize,blocksize))
     A.sort_indices()
-    return csr_matrix( (numpy.ones(A.indices.shape), A.indices, A.indptr), 
+    return csr_matrix( (numpy.ones(A.indices.shape), A.indices, A.indptr),
                        shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]) )
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
@@ -730,10 +730,10 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
         Give A blocks of size (RowsPerBlock, ColsPerBlock)
     ColsPerBlock : int
         Give A blocks of size (RowsPerBlock, ColsPerBlock)
-    
+
     Returns
     -------
-    A : bsr_matrix 
+    A : bsr_matrix
         Returns A.data[:] = 1, followed by a Kronecker product of A and
         ones(RowsPerBlock, ColsPerBlock)
 
@@ -766,7 +766,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
 def print_table(table, title='', delim='|', centering='center', col_padding=2, header=True, headerchar='-'):
     """
     Print a table from a list of lists representing the rows of a table
-    
+
 
     Parameters
     ----------
@@ -806,11 +806,11 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     >>> table2 = print_table(table, delim='||')
     >>> table3 = print_table(table, headerchar='*')
     >>> table4 = print_table(table, col_padding=6, centering='left')
-    
+
     """
-    
+
     table_str = '\n'
-    
+
     # sometimes, the table will be passed in as (title, table)
     if type(table) == type( (2,2) ):
         title = table[0]
@@ -822,7 +822,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
         # extend colwidths for row i
         for k in range( len(table[i]) - len(colwidths) ):
             colwidths.append(-1)
-        
+
         # Update colwidths if table[i][j] is wider than colwidth[j]
         for j in range(len(table[i])):
             if len(table[i][j]) > colwidths[j]:
@@ -854,7 +854,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     if header:
         # Append Column Headers
         for elmt,elmtwidth in zip(table[0],colwidths):
-            table_str += centering(str(elmt), elmtwidth) + delim 
+            table_str += centering(str(elmt), elmtwidth) + delim
         if table[0] != []:
             table_str = table_str[:-len(delim)] + '\n'
 
@@ -863,7 +863,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
         if len(headerchar) == 0:
             headerchard = ' '
         table_str += headerchar*int(scipy.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
-        
+
         table = table[1:]
 
     for row in table:
@@ -889,12 +889,12 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     Returns
     -------
     (1) table to standard out detailing the spectrum of each level in mg
-    (2) if plot==True, a sequence of plots in the complex plane of the 
+    (2) if plot==True, a sequence of plots in the complex plane of the
         spectrum at each level
 
     Notes
     -----
-    This can be useful for troubleshooting and when examining how your 
+    This can be useful for troubleshooting and when examining how your
     problem's nature changes from level to level
 
     Examples
@@ -906,19 +906,19 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     >>> ml = smoothed_aggregation_solver(A)
     >>> hierarchy_spectrum(ml)
     <BLANKLINE>
-     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A) 
+     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A)
     -------------------------------------------------------------------------------------
-       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00 
+       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00
     <BLANKLINE>
     <BLANKLINE>
-     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A) 
+     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A)
     -------------------------------------------------------------------------------------
-       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00 
+       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00
     <BLANKLINE>
 
 
     """
-    
+
     real_table = [ ['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0', 'num re(eig) > 0', 'cond_2(A)'] ]
     imag_table = [ ['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0', 'num im(eig) > 0', 'cond_2(A)'] ]
 
@@ -946,7 +946,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         num_neg = max(e[scipy.real(e) < 0.0].shape)
         num_pos = max(e[scipy.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min), ('%1.3f' % lambda_max), str(num_neg), str(num_pos), ('%1.2e' % c)])
-        
+
         lambda_min = min(scipy.imag(e))
         lambda_max = max(scipy.imag(e))
         num_neg = max(e[scipy.imag(e) < 0.0].shape)
@@ -981,14 +981,14 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     ----------
     numNodes : int
         Number of nodes
-    numPDEs : 
+    numPDEs :
         Number of dofs per node
     x,y,z : array_like
         Coordinate vectors
 
     Returns
     -------
-    rbm : matrix 
+    rbm : matrix
         A matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
         body modes
 
@@ -996,7 +996,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     --------
     >>> import numpy
     >>> from pyamg.util.utils import Coord2RBM
-    >>> a = numpy.array([0,1,2]) 
+    >>> a = numpy.array([0,1,2])
     >>> Coord2RBM(3,6,a,a,a)
     matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
             [ 0.,  1.,  0., -0.,  0.,  0.],
@@ -1028,35 +1028,35 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
                 + str(numPDEs) + "." )
 
     if( (max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes) ):
-        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes)) 
+        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes))
 
     #if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
-    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).") 
+    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).")
 
 
     #preallocate rbm
     rbm = numpy.mat(numpy.zeros((numNodes*numPDEs, numcols)))
-    
+
     for node in range(numNodes):
         dof = node*numPDEs
 
         if(numPDEs == 1):
-            rbm[node] = 1.0 
-                
-        if(numPDEs == 6): 
+            rbm[node] = 1.0
+
+        if(numPDEs == 6):
             for ii in range(3,6):        #lower half = [ 0 I ]
                 for jj in range(0,6):
                     if(ii == jj):
-                        rbm[dof+ii, jj] = 1.0 
-                    else: 
+                        rbm[dof+ii, jj] = 1.0
+                    else:
                         rbm[dof+ii, jj] = 0.0
 
-        if((numPDEs == 3) or (numPDEs == 6) ): 
+        if((numPDEs == 3) or (numPDEs == 6) ):
             for ii in range(0,3):        #upper left = [ I ]
                 for jj in range(0,3):
                     if(ii == jj):
-                        rbm[dof+ii, jj] = 1.0 
-                    else: 
+                        rbm[dof+ii, jj] = 1.0
+                    else:
                         rbm[dof+ii, jj] = 0.0
 
             for ii in range(0,3):        #upper right = [ Q ]
@@ -1066,31 +1066,31 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
                     else:
                         if( (ii+jj) == 4):
                             rbm[dof+ii, jj] = z[node]
-                        elif( (ii+jj) == 5 ): 
+                        elif( (ii+jj) == 5 ):
                             rbm[dof+ii, jj] = y[node]
-                        elif( (ii+jj) == 6 ): 
+                        elif( (ii+jj) == 6 ):
                             rbm[dof+ii, jj] = x[node]
                         else:
                             rbm[dof+ii, jj] = 0.0
-            
-            ii = 0 
-            jj = 5 
+
+            ii = 0
+            jj = 5
             rbm[dof+ii, jj] *= -1.0
-    
-            ii = 1 
-            jj = 3 
+
+            ii = 1
+            jj = 3
             rbm[dof+ii, jj] *= -1.0
-    
-            ii = 2 
-            jj = 4 
+
+            ii = 2
+            jj = 4
             rbm[dof+ii, jj] *= -1.0
-    
+
     return rbm
 
 
 def relaxation_as_linear_operator(method, A, b):
     """
-    Create a linear operator that applies a relaxation method for the 
+    Create a linear operator that applies a relaxation method for the
     given right-hand-side
 
     Parameters
@@ -1104,7 +1104,7 @@ def relaxation_as_linear_operator(method, A, b):
 
     Returns
     -------
-    linear operator that applies the relaxation method to a vector for a 
+    linear operator that applies the relaxation method to a vector for a
     fixed right-hand-side, b.
 
     Notes
@@ -1133,7 +1133,7 @@ def relaxation_as_linear_operator(method, A, b):
             return v[0],v[1]
         else:
             return v,{}
-    
+
     ##
     # setup variables
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor', 'gauss_seidel_ne', \
@@ -1143,7 +1143,7 @@ def relaxation_as_linear_operator(method, A, b):
     fn, kwargs = unpack_arg(method)
     lvl = pyamg.multilevel_solver.level()
     lvl.A = A
-    
+
     ##
     # Retrieve setup call from relaxation.smoothing for this relaxation method
     if not accepted_methods.__contains__(fn):
@@ -1180,11 +1180,11 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         n x k array of near nullspace vectors to place in span(A)
     BtBinv : {None, array}
         3 dimensional array such that,
-        BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted 
-        to the neighborhood (with respect to the matrix graph 
-        of C) of dof of i.  If None is passed in, this array is 
+        BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
+        to the neighborhood (with respect to the matrix graph
+        of C) of dof of i.  If None is passed in, this array is
         computed internally.
-        
+
     Returns
     -------
     A : sparse matrix updated such that sparsity structure of A now matches
@@ -1228,7 +1228,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     When generating initial guesses for root-node style prolongation operators,
     this function is usually called before pyamg.uti.utils.scale_T
-    
+
     """
 
     ##
@@ -1262,17 +1262,17 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         Bf = Bf.reshape(-1,1)
     if Bf.shape[0] != A.shape[0]:
         raise ValueError, 'A and Bf must have the same first dimension'
-        
+
     if len(B.shape) == 1:
         B = B.reshape(-1,1)
     if B.shape[0] != A.shape[1]:
         raise ValueError, 'A and B must have matching dimensions such that A*B is computable'
-    
+
     if B.shape[1] != Bf.shape[1]:
         raise ValueError, 'B and Bf must have the same second dimension'
     else:
         NullDim = B.shape[1]
-    
+
     if A.dtype == int:
         A.data = numpy.array(A.data, dtype=float)
     if B.dtype == int:
@@ -1286,7 +1286,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
     # C. This array is used multiple times in Satisfy_Constraints(...).
-    if BtBinv == None:
+    if BtBinv is None:
         BtBinv = compute_BtBinv(B, C)
 
     ##
@@ -1310,16 +1310,16 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     diff = A*B - Bf
 
     ##
-    # Right multiply each row i of A with 
-    # A_i <--- A_i - diff_i*inv(B_i.T B_i)*Bi.T 
+    # Right multiply each row i of A with
+    # A_i <--- A_i - diff_i*inv(B_i.T B_i)*Bi.T
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
-    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock, 
-            Nnodes, NullDim, 
-            numpy.conjugate(numpy.ravel(B)), numpy.ravel(diff), numpy.ravel(BtBinv), 
+    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
+            Nnodes, NullDim,
+            numpy.conjugate(numpy.ravel(B)), numpy.ravel(diff), numpy.ravel(BtBinv),
             A.indptr, A.indices, numpy.ravel(A.data))
-    
+
     A.eliminate_zeros()
     return A
 
@@ -1337,13 +1337,13 @@ def scale_T(T, P_I, I_F):
         Interpolation operator that carries out only simple injection from the coarse grid
         to fine grid Cpts nodes
     I_F : {bsr_matrix}
-        Identity operator on Fpts, i.e., the action of this matrix zeros 
+        Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
 
     Returns
     -------
     T : {bsr_matrix}
-        Tentative prolongator scaled to be identity at C-pt nodes 
+        Tentative prolongator scaled to be identity at C-pt nodes
 
     Examples
     --------
@@ -1383,35 +1383,35 @@ def scale_T(T, P_I, I_F):
     generate a suitable initial guess for the energy-minimization process, when
     root-node style SA is used.  This function, scale_T, takes an existing
     tentative prolongator and ensures that it injects from the coarse-grid to
-    fine-grid root-nodes.  
+    fine-grid root-nodes.
 
     When generating initial guesses for root-node style prolongation operators,
     this function is usually called after pyamg.uti.utils.filter_operator
-    
-    This function assumes that the eventual coarse-grid nullspace vectors 
+
+    This function assumes that the eventual coarse-grid nullspace vectors
     equal coarse-grid injection applied to the fine-grid nullspace vectors.
 
     '''
 
     if not isspmatrix_bsr(T):
         raise TypeError('Expected BSR matrix T')
-    elif T.blocksize[0] != T.blocksize[1]: 
+    elif T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected BSR matrix T with square blocks')
     ##
     if not isspmatrix_bsr(P_I):
         raise TypeError('Expected BSR matrix P_I')
-    elif P_I.blocksize[0] != P_I.blocksize[1]: 
+    elif P_I.blocksize[0] != P_I.blocksize[1]:
         raise TypeError('Expected BSR matrix P_I with square blocks')
     ##
     if not isspmatrix_bsr(I_F):
         raise TypeError('Expected BSR matrix I_F')
-    elif I_F.blocksize[0] != I_F.blocksize[1]: 
+    elif I_F.blocksize[0] != I_F.blocksize[1]:
         raise TypeError('Expected BSR matrix I_F with square blocks')
     ##
     if (I_F.blocksize[0] != P_I.blocksize[0]) or (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
- 
-    
+
+
     ##
     # Only do if we have a non-trivial coarse-grid
     if P_I.nnz > 0:
@@ -1420,12 +1420,12 @@ def scale_T(T, P_I, I_F):
         D = P_I.T*T
         if D.nnz > 0:
             # changes D in place
-            pinv_array(D.data)   
-        
+            pinv_array(D.data)
+
         ##
         # Scale T to be identity at root-nodes
         T = T*D
-        
+
         ##
         # Ensure coarse-grid injection
         T = I_F*T + P_I
@@ -1442,7 +1442,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         Operator
     Cnodes : {array}
         Array of all root node indices.  This is an array of nodal indices,
-        not degree-of-freedom indices.  If the blocksize of T is 1, then 
+        not degree-of-freedom indices.  If the blocksize of T is 1, then
         nodal indices and degree-of-freedom indices coincide.
     AggOp : {csr_matrix}
         Aggregation operator corresponding to A
@@ -1457,10 +1457,10 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         Interpolation operator that carries out only simple injection from the coarse grid
         to fine grid Cpts nodes
     I_F : {bsr_matrix}
-        Identity operator on Fpts, i.e., the action of this matrix zeros 
+        Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
     I_C : {bsr_matrix}
-        Identity operator on Cpts nodes, i.e., the action of this matrix zeros 
+        Identity operator on Cpts nodes, i.e., the action of this matrix zeros
         out entries in a vector at all Fpts, leaving Cpts untouched
     Cpts : {array}
         An array of all root node dofs, corresponding to the F/C splitting
@@ -1497,7 +1497,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
 
     Notes
     -----
-    The principal calling routine is 
+    The principal calling routine is
     aggregation.smooth.energy_prolongation_smoother,
     which uses the Cpt_param dictionary for root-node style
     prolongation smoothing
@@ -1512,13 +1512,13 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         raise TypeError('Expected BSR matrix T')
     if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected square blocksize for BSR matrix T')
-    if A.shape[0] != A.shape[1]: 
+    if A.shape[0] != A.shape[1]:
         raise TypeError('Expected square matrix A')
-    if T.shape[0] != A.shape[0]: 
+    if T.shape[0] != A.shape[0]:
         raise TypeError('Expected compatible dimensions for T and A, T.shape[0] = A.shape[0]')
     if Cnodes.shape[0] != AggOp.shape[1]:
         if AggOp.shape[1] > 1:
-            raise TypeError('Number of columns in AggOp must equal number of Cnodes') 
+            raise TypeError('Number of columns in AggOp must equal number of Cnodes')
 
     if isspmatrix_bsr(A) and A.blocksize[0] > 1:
         ##
@@ -1532,27 +1532,27 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         Cpts = Cnodes
     ##
     Cpts = numpy.array(Cpts, dtype=int)
-    
+
     ##
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
         if T.shape[1] > blocksize:
-            raise ValueError('Expected number of Cpts to match T.shape[1]') 
+            raise ValueError('Expected number of Cpts to match T.shape[1]')
     if blocksize != T.blocksize[0]:
         raise ValueError('Expected identical blocksize in A and T')
     if AggOp.shape[0] != T.shape[0]/blocksize:
-        raise ValueError('Number of rows in AggOp must equal number of fine-grid nodes') 
+        raise ValueError('Number of rows in AggOp must equal number of fine-grid nodes')
 
     ##
     # Create two maps, one for F points and one for C points
-    ncoarse = T.shape[1] 
+    ncoarse = T.shape[1]
     I_C = eye(A.shape[0], A.shape[1], format='csr')
     I_F = I_C.copy()
     I_F.data[Cpts] = 0.0
     I_F.eliminate_zeros()
     I_C = I_C - I_F
     I_C.eliminate_zeros()
-    
+
     # Find Fpts, the complement of Cpts
     Fpts = I_F.indices.copy()
 
@@ -1565,10 +1565,10 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         indices = numpy.zeros((0,),dtype=T.indices.dtype)
         indptr = numpy.zeros((ncoarse+1,),dtype=T.indptr.dtype)
-    
-    P_I = csc_matrix( (I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse) ) 
+
+    P_I = csc_matrix( (I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse) )
     P_I = P_I.tobsr(T.blocksize)
-    
+
     ##
     # Use same blocksize as A
     if isspmatrix_bsr(A):
@@ -1577,11 +1577,11 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         I_C = I_C.tobsr(blocksize=(1,1))
         I_F = I_F.tobsr(blocksize=(1,1))
-  
-    return {'P_I':P_I, 'I_F':I_F, 'I_C':I_C, 'Cpts':Cpts, 'Fpts':Fpts} 
+
+    return {'P_I':P_I, 'I_F':I_F, 'I_C':I_C, 'Cpts':Cpts, 'Fpts':Fpts}
 
 def compute_BtBinv(B, C):
-    ''' Helper function that creates inv(B_i.T B_i) for each block row i in C, 
+    ''' Helper function that creates inv(B_i.T B_i) for each block row i in C,
         where B_i is B restricted to the sparsity pattern of block row i.
 
     Parameters
@@ -1590,11 +1590,11 @@ def compute_BtBinv(B, C):
         (M,k) array, typically near-nullspace modes for coarse grid, i.e., B_c.
     C : {csr_matrix, bsr_matrix}
         Sparse NxM matrix, whose sparsity structure (i.e., matrix graph)
-        is used to determine BtBinv. 
+        is used to determine BtBinv.
 
     Returns
     -------
-    BtBinv : {array} 
+    BtBinv : {array}
         BtBinv[i] = inv(B_i.T B_i), where B_i is B restricted to the nonzero
         pattern of block row i in C.
 
@@ -1622,8 +1622,8 @@ def compute_BtBinv(B, C):
     -----
     The principal calling routines are
     aggregation.smooth.energy_prolongation_smoother, and
-    util.utils.filter_operator.  
-    
+    util.utils.filter_operator.
+
     BtBinv is used in the prolongation smoothing process that incorporates B
     into the span of prolongation with row-wise projection operators.  It is
     these projection operators that BtBinv is part of.
@@ -1634,7 +1634,7 @@ def compute_BtBinv(B, C):
         raise TypeError('Expected bsr_matrix or csr_matrix for C')
     if C.shape[1] != B.shape[0]:
         raise TypeError('Expected matching dimensions such that C*B')
-    
+
     ##
     # Problem parameters
     if isspmatrix_bsr(C):
@@ -1648,10 +1648,10 @@ def compute_BtBinv(B, C):
     Nfine = C.shape[0]
     NullDim = B.shape[1]
     Nnodes = Nfine/RowsPerBlock
-    
+
     ##
     # Construct BtB
-    BtBinv = numpy.zeros((Nnodes,NullDim,NullDim), dtype=B.dtype) 
+    BtBinv = numpy.zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
     BsqCols = sum(range(NullDim+1))
     Bsq = numpy.zeros((Ncoarse,BsqCols), dtype=B.dtype)
     counter = 0
@@ -1662,30 +1662,30 @@ def compute_BtBinv(B, C):
             counter = counter + 1
     ##
     # This specialized C-routine calculates (B.T B) for each row using Bsq
-    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock, numpy.ravel(numpy.asarray(Bsq)), 
+    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock, numpy.ravel(numpy.asarray(Bsq)),
     BsqCols, numpy.ravel(numpy.asarray(BtBinv)), C.indptr, C.indices)
-    
-    ## 
+
+    ##
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
-    #   This is the old call to a specialized routine, but lacks robustness 
+    #   This is the old call to a specialized routine, but lacks robustness
     #   pyamg.amg_core.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
     BtBinv = BtBinv.transpose((0,2,1)).copy()
     pinv_array(BtBinv)
-    
+
     return BtBinv
 
 def eliminate_diag_dom_nodes(A, C, theta=1.02):
-    
+
     ''' Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
-    which we don't want coarsened.  These eliminated nodes in C just become 
-    the rows and columns of the identity. 
-    
+    which we don't want coarsened.  These eliminated nodes in C just become
+    the rows and columns of the identity.
+
     Parameters
     ----------
     A : {csr_matrix, bsr_matrix}
-        Sparse NxN matrix 
+        Sparse NxN matrix
     C : {csr_matrix}
         Sparse MxM matrix, where M is the number of nodes in A.  M=N if A is CSR
         or is BSR with blocksize 1.  Otherwise M = N/blocksize.
@@ -1696,12 +1696,12 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     -------
     C : {csr_matrix}
         C updated such that the rows and columns corresponding to diagonally
-        dominant rows in A have been eliminated and replaced with rows and 
+        dominant rows in A have been eliminated and replaced with rows and
         columns of the identity.
 
     Notes
     -----
-    Diagonal dominance is defined as 
+    Diagonal dominance is defined as
      || (e_i, A) - a_ii ||_1  <  theta a_ii
     that is, the 1-norm of the off diagonal elements in row i must be less than
     theta times the diagonal element.
@@ -1718,16 +1718,16 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
             [ 0.,  2., -1.,  0.],
             [ 0., -1.,  2.,  0.],
             [ 0.,  0.,  0.,  1.]])
-    
+
     '''
 
     ##
-    # Find the diagonally dominant rows in A.   
+    # Find the diagonally dominant rows in A.
     A_abs = A.copy()
     A_abs.data = numpy.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
     diag_dom_rows = ( D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],),dtype=A_abs) - D_abs) ) )
-    
+
     ##
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
@@ -1745,13 +1745,13 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     I.data[diag_dom_rows] = 1.0
     I.data[diag_dom_rows == False] = 0.0
     C = C + I
-    
+
     del A_abs
     return C
 
 def remove_diagonal(S):
     """ Removes the diagonal of the matrix S
-    
+
     Parameters
     ----------
     S : csr_matrix
@@ -1761,7 +1761,7 @@ def remove_diagonal(S):
     -------
     S : csr_matrix
         Strength matrix with the diagonal removed
-   
+
     Notes
     -----
     This is needed by all the splitting routines which operate on matrix graphs
@@ -1779,15 +1779,15 @@ def remove_diagonal(S):
             [-1.,  0., -1.,  0.],
             [ 0., -1.,  0., -1.],
             [ 0.,  0., -1.,  0.]])
-    
+
     """
 
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
-    
+
     if S.shape[0] != S.shape[1]:
         raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
 
-    S = coo_matrix(S)  
+    S = coo_matrix(S)
     mask = S.row != S.col
     S.row  = S.row[mask]
     S.col  = S.col[mask]
@@ -1796,8 +1796,8 @@ def remove_diagonal(S):
     return S.tocsr()
 
 def scale_rows_by_largest_entry(S):
-    """ Scale each row in S by it's largest in magnitude entry 
-    
+    """ Scale each row in S by it's largest in magnitude entry
+
     Parameters
     ----------
     S : csr_matrix
@@ -1819,16 +1819,16 @@ def scale_rows_by_largest_entry(S):
             [-0.5,  1. , -0.5,  0. ],
             [ 0. , -0.5,  1. , -0.5],
             [ 0. ,  0. , -0.5,  1. ]])
-    
+
     """
 
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
-    
+
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
-    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data) 
+    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data)
 
-    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ] 
+    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ]
     S = scale_rows(S, largest_row_entry, copy=True)
 
     return S
@@ -1836,11 +1836,11 @@ def scale_rows_by_largest_entry(S):
 def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     """
     Helper function to preprocess the strength and aggregation parameters
-    passed to smoothed_aggregation_solver and rootnode_solver. 
+    passed to smoothed_aggregation_solver and rootnode_solver.
 
     Parameters
     ----------
-    to_levelize : {string, tuple, list} 
+    to_levelize : {string, tuple, list}
         Parameter to preprocess, i.e., levelize and convert to a level-by-level
         list such that entry i specifies the parameter at level i
     max_levels : int
@@ -1862,11 +1862,11 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
-    [i] in that list is the parameter choice for level i.   
-    
+    [i] in that list is the parameter choice for level i.
+
     The parameter choice in to_levelize can be a string, tuple or list.  If
     it is a string or tuple, then that option is assumed to be the
-    parameter setting at every level.  If to_levelize is inititally a list, 
+    parameter setting at every level.  If to_levelize is inititally a list,
     if the length of the list is less than max_levels, the last entry in the
     list defines that parameter for all subsequent levels.
 
@@ -1875,8 +1875,8 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     --------
     >>> from pyamg.util.utils import levelize_strength_or_aggregation
     >>> strength = ['evolution', 'classical']
-    >>> levelize_strength_or_aggregation(strength, 4, 10) 
-    (4, 10, ['evolution', 'classical', 'classical']) 
+    >>> levelize_strength_or_aggregation(strength, 4, 10)
+    (4, 10, ['evolution', 'classical', 'classical'])
 
     """
 
@@ -1917,12 +1917,12 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
 
 def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     """
-    Helper function to preprocess the smooth and improve_candidates 
-    parameters passed to smoothed_aggregation_solver and rootnode_solver. 
+    Helper function to preprocess the smooth and improve_candidates
+    parameters passed to smoothed_aggregation_solver and rootnode_solver.
 
     Parameters
     ----------
-    to_levelize : {string, tuple, list} 
+    to_levelize : {string, tuple, list}
         Parameter to preprocess, i.e., levelize and convert to a level-by-level
         list such that entry i specifies the parameter at level i
     max_levels : int
@@ -1930,20 +1930,20 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
 
     Returns
     -------
-    to_levelize : list 
+    to_levelize : list
         The parameter list such that entry i specifies the parameter choice
-        at level i.  
-    
+        at level i.
+
     Notes
     --------
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
-    [i] in that list is the parameter choice for level i.  
-    
+    [i] in that list is the parameter choice for level i.
+
     The parameter choice in to_levelize can be a string, tuple or list.  If
     it is a string or tuple, then that option is assumed to be the
-    parameter setting at every level.  If to_levelize is inititally a list, 
+    parameter setting at every level.  If to_levelize is inititally a list,
     if the length of the list is less than max_levels, the last entry in the
     list defines that parameter for all subsequent levels.
 
@@ -1951,7 +1951,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     --------
     >>> from pyamg.util.utils import levelize_smooth_or_improve_candidates
     >>> improve_candidates = ['gauss_seidel', None]
-    >>> levelize_smooth_or_improve_candidates(improve_candidates, 4) 
+    >>> levelize_smooth_or_improve_candidates(improve_candidates, 4)
     ['gauss_seidel', None, None, None]
     """
 
@@ -1974,12 +1974,12 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
 #            fn,opts = arg[0],arg[1]
 #        else:
 #            fn,opts = arg,{}
-#    
+#
 #        if fn in name_to_handle:
 #            # convert string into function handle
-#            fn = name_to_handle[fn] 
+#            fn = name_to_handle[fn]
 #        #elif isinstance(fn, type(numpy.ones)):
-#        #    pass     
+#        #    pass
 #        elif callable(fn):
 #            # if fn is itself a function handle
 #            pass
@@ -1988,7 +1988,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
 #
 #        wrapped = partial(fn, **opts)
 #        update_wrapper(wrapped, fn)
-#    
+#
 #        return wrapped
 #
 #    return dispatcher

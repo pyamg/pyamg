@@ -182,7 +182,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
         if maxiter > dimen:
             warn('Setting number of inner iterations (maxiter) to maximum allowed, which is A.shape[0] ')
             maxiter = dimen
-        elif maxiter == None:
+        elif maxiter is None:
             maxiter = min(dimen, 40)
         max_inner = maxiter
 
@@ -210,7 +210,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
     if normb == 0.0:
         normb = 1.0
     if normr < tol*normb:
-        if callback != None:    
+        if callback is not None:    
             callback(norm(r))
         return (postprocess(x), 0)
 
@@ -312,7 +312,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
                     break
                 
                 # Allow user access to residual
-                if callback != None:
+                if callback is not None:
                     callback( normr )
                 if keep_r:
                     residuals.append(normr)
@@ -334,7 +334,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None, M=
         #    return(postprocess(x), -1)
         
         # Allow user access to residual
-        if callback != None:
+        if callback is not None:
             callback( normr )
         if keep_r:
             residuals.append(normr)

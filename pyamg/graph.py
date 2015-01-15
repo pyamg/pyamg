@@ -205,7 +205,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
         # complex dtype
         G = numpy.abs(G)
 
-    #interpret seeds argument
+    # interpret seeds argument
     if numpy.isscalar(seeds):
         seeds = numpy.random.permutation(N)[:seeds]
         seeds = seeds.astype('intc')
@@ -254,12 +254,12 @@ def breadth_first_search(G, seed):
     Examples
     --------
     """
-    #TODO document
+    # TODO document
 
     G = asgraph(G)
     N = G.shape[0]
 
-    #Check symmetry?
+    # Check symmetry?
 
     order = numpy.empty(N, G.indptr.dtype)
     level = numpy.empty(N, G.indptr.dtype)
@@ -308,7 +308,7 @@ def connected_components(G):
     G = asgraph(G)
     N = G.shape[0]
 
-    #Check symmetry?
+    # Check symmetry?
     components = numpy.empty(N, G.indptr.dtype)
 
     fn = amg_core.connected_components
@@ -348,7 +348,7 @@ def symmetric_rcm(A):
 
     root, order, level = pseudo_peripheral_node(A)
 
-    Perm = sparse.identity(n)
+    Perm = sparse.identity(n, format='csr')
     p = level.argsort()
     Perm = Perm[p, :]
 

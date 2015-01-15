@@ -14,7 +14,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
     Parameters
     ----------
     S : ndarray
-        matrix stencil stored in rank N array
+        matrix stencil stored in N-d array
     grid : tuple
         tuple containing the N grid dimensions
     dtype :
@@ -73,8 +73,8 @@ def stencil_grid(S, grid, dtype=None, format=None):
     if not (np.asarray(S.shape) % 2 == 1).all():
         raise ValueError('all stencil dimensions must be odd')
 
-    if len(grid) != np.rank(S):
-        raise ValueError('stencil rank must equal number of grid dimensions')
+    if len(grid) != np.ndim(S):
+        raise ValueError('stencil dimension must equal number of grid dimensions')
 
     if min(grid) < 1:
         raise ValueError('grid dimensions must be positive')

@@ -123,12 +123,12 @@ def change_smoothers(ml, presmoother, postsmoother):
     '''
 
     # interpret arguments into list
-    if isinstance(presmoother, str) or isinstance(presmoother, tuple) or (presmoother == None):
+    if isinstance(presmoother, str) or isinstance(presmoother, tuple) or (presmoother is None):
         presmoother = [presmoother]
     elif not isinstance(presmoother, list):
         raise ValueError,'Unrecognized presmoother'
 
-    if isinstance(postsmoother, str) or isinstance(postsmoother, tuple) or (postsmoother == None):
+    if isinstance(postsmoother, str) or isinstance(postsmoother, tuple) or (postsmoother is None):
         postsmoother = [postsmoother]
     elif not isinstance(postsmoother, list):
         raise ValueError,'Unrecognized postsmoother'
@@ -320,7 +320,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     
     # Check if A has a pre-existing set of Schwarz parameters
     if hasattr(A, 'schwarz_parameters'):
-        if subdomain != None and subdomain_ptr != None:
+        if subdomain is not None and subdomain_ptr is not None:
             # check that the existing parameters correspond to the same subdomains
             if numpy.array(A.schwarz_parameters[0] == subdomain).all() and \
                numpy.array(A.schwarz_parameters[1] == subdomain_ptr).all():
@@ -436,12 +436,12 @@ def setup_strength_based_schwarz(lvl, iterations=1, sweep='symmetric'):
 def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None, withrho=True):
     ##
     # Determine Blocksize
-    if blocksize == None and Dinv == None:
+    if blocksize is None and Dinv is None:
         if scipy.sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
         elif scipy.sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
-    elif blocksize == None:
+    elif blocksize is None:
         blocksize = Dinv.shape[1]
     
     if blocksize == 1:
@@ -449,7 +449,7 @@ def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None, 
         return setup_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
     else:
         # Use Block Jacobi
-        if Dinv == None:
+        if Dinv is None:
             Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
         if withrho:
             omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
@@ -461,12 +461,12 @@ def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None, 
 def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, blocksize=None):
     ##
     # Determine Blocksize
-    if blocksize == None and Dinv == None:
+    if blocksize is None and Dinv is None:
         if scipy.sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
         elif scipy.sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
-    elif blocksize == None:
+    elif blocksize is None:
         blocksize = Dinv.shape[1]
 
     if blocksize == 1:
@@ -474,7 +474,7 @@ def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None, bloc
         return setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
     else:
         # Use Block GS       
-        if Dinv == None:
+        if Dinv is None:
             Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
         def smoother(A,x,b):
             relaxation.block_gauss_seidel(A, x, b, iterations=iterations, \

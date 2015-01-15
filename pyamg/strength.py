@@ -16,12 +16,9 @@ from warnings import warn
 
 import numpy as np
 import pyamg
-from pyamg.util.utils import scale_rows, scale_columns,\
-    scale_rows_by_largest_entry
+from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from scipy import sparse
 from pyamg import amg_core
-
-import amg_core
 
 __all__ = ['classical_strength_of_connection',
            'symmetric_strength_of_connection',
@@ -97,7 +94,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     C = sparse.csr_matrix((C, A.indices.copy(), A.indptr.copy()),
                           shape=A.shape)
 
-    #Apply drop tolerance
+    # Apply drop tolerance
     if relative_drop is True:
         if theta != np.inf:
             amg_core.apply_distance_filter(C.shape[0], theta, C.indptr,
@@ -274,8 +271,8 @@ def symmetric_strength_of_connection(A, theta=0):
         raise ValueError('expected a positive theta')
 
     if sparse.isspmatrix_csr(A):
-        #if theta == 0:
-        #    return A
+        # if theta == 0:
+        #     return A
 
         Sp = np.empty_like(A.indptr)
         Sj = np.empty_like(A.indices)
@@ -519,20 +516,19 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     # local imports for evolution_strength_of_connection
     from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
-    from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
 
-    #====================================================================
-    #Check inputs
+    # ====================================================================
+    # Check inputs
     if epsilon < 1.0:
         raise ValueError("expected epsilon > 1.0")
     if k <= 0:
         raise ValueError("number of time steps must be > 0")
     if proj_type not in ['l2', 'D_A']:
-        raise VaueError("proj_type must be 'l2' or 'D_A'")
+        raise ValueError("proj_type must be 'l2' or 'D_A'")
     if (not sparse.isspmatrix_csr(A)) and (not sparse.isspmatrix_bsr(A)):
         raise TypeError("expected csr_matrix or bsr_matrix")
 
-    #====================================================================
+    # ====================================================================
     # Format A and B correctly.
     # B must be in mat format, this isn't a deep copy
     if B == 'ones':
@@ -581,7 +577,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     # size for the ODE
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
-    #Calculate D_A for later use in the minimization problem
+    # Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
         D_A = sparse.spdiags([D], [0], dimen, dimen, format='csr')
     else:
@@ -600,7 +596,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
     Atilde = Atilde.T.tocsr()
 
-    #Construct a sparsity mask for Atilde that will restrict Atilde^T to the
+    # Construct a sparsity mask for Atilde that will restrict Atilde^T to the
     # nonzero pattern of A, with the added constraint that row i of Atilde^T
     # retains only the nonzeros that are also in the same PDE as i.
     mask = A.copy()
@@ -638,8 +634,6 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
         Atilde.eliminate_zeros()
         Atilde.sort_indices()
 
-        del mask
-
     elif nsquare == 0:
         if numPDEs > 1:
             # Apply mask to Atilde, zeros in mask have already been eliminated
@@ -648,8 +642,6 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
             Atilde = Atilde.multiply(mask)
             Atilde.eliminate_zeros()
             Atilde.sort_indices()
-
-        del mask
 
     else:
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
@@ -673,7 +665,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
         Atilde.eliminate_zeros()
         Atilde.sort_indices()
 
-    del Dinv, Dinv_A
+    del Dinv, Dinv_A, mask
 
     # Calculate strength based on constrained min problem of
     # min( z - B*x ), such that
@@ -724,20 +716,20 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
         angle = angle < 0.0
         angle = np.array(angle, dtype=bool)
 
-        #Calculate Approximation ratio
+        # Calculate Approximation ratio
         Atilde.data = Atilde.data/data
 
         # If approximation ratio is less than tol, then weak connection
         weak_ratio = (np.abs(Atilde.data) < 1e-4)
 
-        #Calculate Approximation error
+        # Calculate Approximation error
         Atilde.data = abs(1.0 - Atilde.data)
 
         # Set small ratios and large angles to weak
         Atilde.data[weak_ratio] = 0.0
         Atilde.data[angle] = 0.0
 
-        #Set near perfect connections to 1e-4
+        # Set near perfect connections to 1e-4
         Atilde.eliminate_zeros()
         Atilde.data[Atilde.data < np.sqrt(np.finfo(float).eps)] = 1e-4
 
@@ -783,7 +775,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     # part
     Atilde.data = np.array(np.real(Atilde.data), dtype=float)
 
-    #Apply drop tolerance
+    # Apply drop tolerance
     if symmetrize_measure:
         Atilde = 0.5*(Atilde + Atilde.T)
 
@@ -807,7 +799,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
         CSRdata = np.zeros((n_blocks,))
         amg_core.min_blocks(n_blocks, blocksize,
                             np.ravel(np.asarray(Atilde.data)), CSRdata)
-        #Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
+        # Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
         Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr),
                                    shape=(Atilde.shape[0] / numPDEs,
                                           Atilde.shape[1] / numPDEs))
@@ -891,6 +883,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     C = A.tocoo()
     I = C.row
     J = C.col
+    # TODO : this is not right vvvvvvv
     if p != np.inf:
         d = np.sum((x[I] - x[J])**p, axis=1)**(1.0/p)
     else:
