@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/pyamg/pyamg.png?branch=master)](https://travis-ci.org/pyamg/pyamg)
 [![Coverage Status](https://coveralls.io/repos/pyamg/pyamg/badge.svg)](https://coveralls.io/r/pyamg/pyamg)
+[![Latest Version](https://pypip.in/version/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
+[![Downloads](https://pypip.in/download/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 
 
 ![](Docs/logo/PyAMG_logo.png)
