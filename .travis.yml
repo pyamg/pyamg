@@ -3,6 +3,8 @@ python:
   - "2.6"
   - "2.7"
 before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran
   - pip install -r requirements.txt
   - pip install python-coveralls
   - pip install coverage
