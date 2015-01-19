@@ -478,7 +478,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
         # Create a unified strength framework so that large values represent
         # strong connections and small values represent weak connections
-        if (fn == 'ode') or (fn == 'evolutin') or (fn == 'energy_based'):
+        if (fn == 'ode') or (fn == 'evolution') or (fn == 'energy_based'):
             C_l.data = 1.0 / C_l.data
 
         # aggregation

@@ -196,7 +196,7 @@ def classical_strength_of_connection(A, theta=0.0):
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
     if blocksize > 1:
-        S = amalgamate(S, A.blocksize[0])
+        S = amalgamate(S, blocksize)
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
