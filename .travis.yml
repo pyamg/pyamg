@@ -14,6 +14,6 @@ install:
 script:
   - mkdir coverage
   - cd coverage
-  - nosetests pyamg --with-coverage
+  - nosetests pyamg --with-coverage --cover-package=pyamg
 after_success:
   - coveralls
