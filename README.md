@@ -1,16 +1,18 @@
-![](Docs/logo/PyAMG_logo.png)
-
-PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
-
-![](Docs/logo/CS_logo.png)
-
-----
-
 [![Build Status](https://travis-ci.org/pyamg/pyamg.png?branch=master)](https://travis-ci.org/pyamg/pyamg)
+[![Coverage Status](https://coveralls.io/repos/pyamg/pyamg/badge.svg)](https://coveralls.io/r/pyamg/pyamg)
+[![Latest Version](https://pypip.in/version/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
+[![Downloads](https://pypip.in/download/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 
 # Introduction
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.  
+
+![](Docs/logo/PyAMG_logo.png) 
+![](Docs/logo/CS_logo.png)
+
+PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
+
+
 
 # Citing
 
