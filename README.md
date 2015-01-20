@@ -7,8 +7,8 @@
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.  
 
-![](Docs/logo/PyAMG_logo.png = x100) 
-![](Docs/logo/CS_logo.png = x100)
+![](Docs/logo/PyAMG_logo.png) 
+![](Docs/logo/CS_logo.png)
 
 PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
 
