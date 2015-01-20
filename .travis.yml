@@ -12,6 +12,8 @@ install:
   - pip install .
   - pip install coveralls
 script:
+  - mkdir coverage
+  - cd coverage
   - nosetests pyamg --with-coverage
 after_success:
   - coveralls
