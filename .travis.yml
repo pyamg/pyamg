@@ -13,5 +13,6 @@ install:
   - pip install coveralls
 script:
   #- nosetests pyamg --with-coverage --cover-package=pyamg
+  - python test_pyamg_install.py
 after_success:
   - coveralls
