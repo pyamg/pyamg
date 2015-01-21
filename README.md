@@ -2,6 +2,16 @@
 [![Coverage Status](https://coveralls.io/repos/pyamg/pyamg/badge.svg)](https://coveralls.io/r/pyamg/pyamg)
 [![Latest Version](https://pypip.in/version/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://pypip.in/download/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
+# Installation
+PyAMG requires `numpy` and `scipy` (see requirements.txt)
+
+      pip install -r requirements.txt
+      pip install pyamg
+
+or
+
+      python setup.py install
+      
 
 # Introduction
 
