@@ -50,37 +50,6 @@ and experimental support for:
 
 The predominant portion of PyAMG is written in Python with a smaller amount of supporting C++ code for performance critical operations.
 
-# PyAMG Objectives
-
-**ease of use**
-
-- interface is accessible to non-experts
-- extensive documentation and references
-
-**speed**
-
-- solves problems with millions of unknowns efficiently
-- core multigrid algorithms are implemented in C++ and translated through SWIG
-- sparse matrix support provided by scipy.sparse
-
-**readability**
-
-- source code is organized into intuitive components
-
-**extensibility**
-
-- core components can be reused to implement additional techniques
-- new features are easy integrated
-
-**experimentation**
-
-- facilitates rapid prototyping and analysis of multigrid methods
-
-**portability**
-
-- tested on several platforms
-- relies only on Python, NumPy, and SciPy
-
 # Example Usage
 
 PyAMG is easy to use!  The following code constructs a two-dimensional Poisson problem and solves the resulting linear system with Classical AMG.
