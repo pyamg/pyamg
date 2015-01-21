@@ -414,7 +414,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     # flag for skipping steps f-i in step 4
     skip_f_to_i = True
 
-    #step 1
+    # step 1
     A_l = A
     if initial_candidate is None:
         x = scipy.rand(A_l.shape[0], 1)
@@ -423,7 +423,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     else:
         x = numpy.array(initial_candidate, dtype=A_l.dtype)
 
-    #step 2
+    # step 2
     relax(A_l, x)
     work[:] += A_l.nnz * candidate_iters*2
 
@@ -443,7 +443,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     StrengthOps = []
 
     while A.shape[0] > max_coarse and max_levels > 1:
-    # The real check to break from the while loop is below
+        # The real check to break from the while loop is below
 
         # Begin constructing next level
         fn, kwargs = unpack_arg(strength[len(As)-1])  # step 4b
@@ -456,7 +456,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             # Diagonal must be nonzero
             C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
             if isspmatrix_bsr(A_l):
-                C_l = amalgamate(C, A_l.blocksize[0])
+                C_l = amalgamate(C_l, A_l.blocksize[0])
         elif (fn == 'ode') or (fn == 'evolution'):
             C_l = evolution_strength_of_connection(A_l,
                                                    numpy.ones(
@@ -534,13 +534,13 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             else:
                 # use A.H A inner-product
                 Ax = A_l * x
-                #Axhat = A_l * x_hat
+                # Axhat = A_l * x_hat
                 x_A_x = numpy.dot(numpy.conjugate(Ax).T, Ax)
                 xhat_A_xhat = numpy.dot(numpy.conjugate(x_hat).T, A_l*x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
 
             if err_ratio < epsilon:  # step 4i
-                #print "sufficient convergence, skipping"
+                # print "sufficient convergence, skipping"
                 skip_f_to_i = True
                 if x_A_x == 0:
                     x = x_hat  # need to restore x
@@ -628,7 +628,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
 
     T0 = levels[0].T.copy()
 
-    #TEST FOR CONVERGENCE HERE
+    # TEST FOR CONVERGENCE HERE
 
     for i in range(len(ml.levels) - 2):
         # alpha-SA paper does local elimination here, but after talking

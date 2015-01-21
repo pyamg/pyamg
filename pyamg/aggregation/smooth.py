@@ -8,7 +8,7 @@ import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
     UnAmal, filter_operator, compute_BtBinv
-from pyamg.util.linalg import approximate_spectral_radius, pinv_array
+from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
@@ -390,30 +390,30 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                Returning tentative prolongator\n"
         return T
 
-    #Calculate Frobenius norm of the residual
+    # Calculate Frobenius norm of the residual
     resid = R.nnz  # np.sqrt((R.data.conjugate()*R.data).sum())
-    #print "Energy Minimization of Prolongator \
+    # print "Energy Minimization of Prolongator \
     #       --- Iteration 0 --- r = " + str(resid)
 
     i = 0
     while i < maxiter and resid > tol:
-        #Apply diagonal preconditioner
+        # Apply diagonal preconditioner
         if weighting == 'local' or weighting == 'diagonal':
             Z = scale_rows(R, Dinv)
         else:
             Z = Dinv*R
 
-        #Frobenius inner-product of (R,Z) = sum( np.conjugate(rk).*zk)
+        # Frobenius inner-product of (R,Z) = sum( np.conjugate(rk).*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
         if newsum < tol:
             # met tolerance, so halt
             break
 
-        #P is the search direction, not the prolongator, which is T.
+        # P is the search direction, not the prolongator, which is T.
         if(i == 0):
             P = Z
         else:
-            beta = newsum/oldsum
+            beta = newsum / oldsum
             P = Z + beta*P
         oldsum = newsum
 

@@ -4,7 +4,6 @@ Typically, the following is sufficient:
 
 % sudo python setup.py install
 
-
 To verify a successful installation of PyAMG:
 % python
 >>> import pyamg
