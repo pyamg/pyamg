@@ -2,6 +2,16 @@
 [![Coverage Status](https://coveralls.io/repos/pyamg/pyamg/badge.svg)](https://coveralls.io/r/pyamg/pyamg)
 [![Latest Version](https://pypip.in/version/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://pypip.in/download/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
+# Installation
+PyAMG requires `numpy` and `scipy` (see requirements.txt)
+
+      pip install -r requirements.txt
+      pip install pyamg
+
+or
+
+      python setup.py install
+      
 
 # Introduction
 
@@ -49,37 +59,6 @@ and experimental support for:
 - **Compatible Relaxation (CR)**
 
 The predominant portion of PyAMG is written in Python with a smaller amount of supporting C++ code for performance critical operations.
-
-# PyAMG Objectives
-
-**ease of use**
-
-- interface is accessible to non-experts
-- extensive documentation and references
-
-**speed**
-
-- solves problems with millions of unknowns efficiently
-- core multigrid algorithms are implemented in C++ and translated through SWIG
-- sparse matrix support provided by scipy.sparse
-
-**readability**
-
-- source code is organized into intuitive components
-
-**extensibility**
-
-- core components can be reused to implement additional techniques
-- new features are easy integrated
-
-**experimentation**
-
-- facilitates rapid prototyping and analysis of multigrid methods
-
-**portability**
-
-- tested on several platforms
-- relies only on Python, NumPy, and SciPy
 
 # Example Usage
 
