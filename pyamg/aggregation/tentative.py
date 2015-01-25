@@ -147,7 +147,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
        AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(),
        B.ravel(), R.ravel(), tol)
 
-    #TODO replace with BSC matrix here
+    # TODO replace with BSC matrix here
     Q = bsr_matrix((Qx.swapaxes(1, 2).copy(), AggOp_csc.indices,
                     AggOp_csc.indptr), shape=(K2*N_coarse, K1*N_fine))
     Q = Q.T.tobsr()
