@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 import numpy as np
 import scipy
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, csr_matrix, spdiags, isspmatrix_csr
+from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
 
 from pyamg.relaxation import gauss_seidel, gauss_seidel_indexed
 
@@ -62,7 +62,7 @@ def CR(S, method='habituated', maxiter=20):
     beta2 = np.inf     # quality criterion, oldest
     n = S.shape[0]    # problem size
     nC = 0          # number of current Coarse points
-    rhs = np.zeros((n, 1))  # rhs for Ae=0
+    # rhs = np.zeros((n, 1))  # rhs for Ae=0
 
     if not isspmatrix(S):
         raise TypeError('expecting sparse matrix')
@@ -146,7 +146,7 @@ def CR(S, method='habituated', maxiter=20):
         binid = G
 
         # add whole bins (and t-depth nodes) at a time
-        u = np.zeros((n, 1))
+        # u = np.zeros((n, 1))
         # TODO This loop may never halt...
         #      Perhaps loop over nC < nCmax and binid > 0 ?
         while nC < nCmax:
@@ -165,12 +165,12 @@ def CR(S, method='habituated', maxiter=20):
                     L[cols] = -1
             binid -= 1
 
-            #L[troots] = -1          # mark t-rings visited
-            #u[:]=0.0
-            #u[roots] = 1.0
-            #for depth in range(0,tdepth):
-            #    u = np.abs(S) * u
-            #(troots,tmp) = np.where(u>0)
+            # L[troots] = -1          # mark t-rings visited
+            # u[:]=0.0
+            # u[roots] = 1.0
+            # for depth in range(0,tdepth):
+            #     u = np.abs(S) * u
+            # (troots,tmp) = np.where(u>0)
 
     return splitting.ravel()
 
@@ -351,7 +351,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     betabar = (1.0/n) * np.dot(x, beta)
     stdev = rowsum_stdev(x, beta)
 
-    #3
+    # 3
     while stdev > tol and it < maxiter:
         for i in range(0, n):
             # solve equation x_i, keeping x_j's fixed

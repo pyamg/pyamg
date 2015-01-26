@@ -97,7 +97,7 @@ References
 
 import numpy
 import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr, coo_matrix
+from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
@@ -435,7 +435,7 @@ def preprocess(S, coloring_method=None):
     G.data[:] = 1
 
     weights = numpy.ravel(T.sum(axis=1))  # initial weights
-    #weights -= T.diagonal()          # discount self loops
+    # weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
         weights = weights + scipy.rand(len(weights))
