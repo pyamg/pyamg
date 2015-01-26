@@ -1,9 +1,7 @@
 from pyamg.testing import *
 
-import scipy.sparse
-from numpy import arange, ones, zeros, array, eye, vstack, diff, random, ravel
+from numpy import ones, zeros, random, ravel
 from scipy import rand
-from scipy.sparse import csr_matrix
 
 from pyamg.aggregation import smoothed_aggregation_solver
 
@@ -29,6 +27,7 @@ class TestAdaptiveSA(TestCase):
 
         sol0 = asa.solve(b, maxiter=20, tol=1e-10, residuals=residuals0)
         sol1 = sa.solve(b, maxiter=20, tol=1e-10, residuals=residuals1)
+        del sol0, sol1
 
         conv_asa = (residuals0[-1] / residuals0[0]) ** (1.0 / len(residuals0))
         conv_sa = (residuals1[-1] / residuals1[0]) ** (1.0 / len(residuals1))
@@ -53,6 +52,7 @@ class TestAdaptiveSA(TestCase):
 
         sol0 = asa.solve(b, maxiter=20, tol=1e-10, residuals=residuals0)
         sol1 = sa.solve(b, maxiter=20, tol=1e-10, residuals=residuals1)
+        del sol0, sol1
 
         conv_asa = (residuals0[-1] / residuals0[0]) ** (1.0 / len(residuals0))
         conv_sa = (residuals1[-1] / residuals1[0]) ** (1.0 / len(residuals1))
@@ -101,13 +101,13 @@ class TestComplexAdaptiveSA(TestCase):
 
         # JBS:  Not sure if this is a valid test case
         # imaginary shift
-        #Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
+        # Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
         # cases.append((Ai,0.8))
 
         for A, rratio in cases:
             [asa, work] = adaptive_sa_solver(A, num_candidates=1,
                                              symmetry='symmetric')
-            #sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
+            # sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
 
             b = zeros((A.shape[0],))
             x0 = rand(A.shape[0],) + 1.0j * rand(A.shape[0],)
@@ -116,6 +116,7 @@ class TestComplexAdaptiveSA(TestCase):
 
             sol0 = asa.solve(b, x0=x0, maxiter=20, tol=1e-10,
                              residuals=residuals0)
+            del sol0
 
             conv_asa = \
                 (residuals0[-1] / residuals0[0]) ** (1.0 / len(residuals0))

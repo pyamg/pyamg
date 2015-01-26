@@ -3,9 +3,8 @@ from pyamg.testing import *
 import numpy
 import scipy.sparse
 from numpy import sqrt, ones, arange, array, abs, dot, ravel
-from scipy import rand, pi, exp, hstack
-from scipy.sparse import csr_matrix, spdiags, coo_matrix,\
-    SparseEfficiencyWarning
+from scipy import rand, hstack
+from scipy.sparse import csr_matrix, SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity,\
@@ -37,6 +36,7 @@ class TestParameters(TestCase):
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
                              residuals=residuals)
+            del x_sol
             convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
@@ -56,7 +56,7 @@ class TestParameters(TestCase):
     def test_smoothers(self):
         smoothers = []
         smoothers.append('gauss_seidel')
-        #smoothers.append( ('sor',{'omega':0.9}) )
+        # smoothers.append( ('sor',{'omega':0.9}) )
         smoothers.append(('gauss_seidel', {'sweep': 'symmetric'}))
 
         for pre in smoothers:
@@ -115,6 +115,7 @@ class TestComplexParameters(TestCase):
 
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
                              residuals=residuals)
+            del x_sol
             convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
@@ -210,6 +211,7 @@ class TestSolverPerformance(TestCase):
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
                              residuals=residuals)
+            del x_sol
 
             avg_convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
@@ -228,7 +230,7 @@ class TestSolverPerformance(TestCase):
         D = diag_sparse(1.0 / sqrt(10 ** (12 * rand(A.shape[0]) - 6))).tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
-        DAD = D * A * D
+        # DAD = D * A * D
 
         B = ones((A.shape[0], 1))
 
@@ -239,6 +241,7 @@ class TestSolverPerformance(TestCase):
 
         residuals = []
         x_sol = sa.solve(b, x0=x, maxiter=10, tol=1e-12, residuals=residuals)
+        del x_sol
 
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
@@ -274,6 +277,7 @@ class TestSolverPerformance(TestCase):
                 residuals = []
                 x_sol = ml.solve(b, x0=x0, maxiter=20, tol=1e-10,
                                  residuals=residuals)
+                del x_sol
                 rho = (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
                 if last_rho == -1.0:
                     last_rho = rho
@@ -345,6 +349,7 @@ class TestSolverPerformance(TestCase):
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
+        del x
         residuals = array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
@@ -397,6 +402,7 @@ class TestSolverPerformance(TestCase):
             sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2)
             x1 = sa1.solve(b, residuals=r1)
             x2 = sa2.solve(b, residuals=r2)
+            del x1, x2
             assert((len(r1) + 5) < len(r2))
 
     def test_matrix_formats(self):
@@ -477,6 +483,7 @@ class TestComplexSolverPerformance(TestCase):
 
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
                              residuals=residuals)
+            del x_sol
 
             avg_convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
@@ -518,6 +525,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
+        del x
         residuals = array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))

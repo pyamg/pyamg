@@ -1,6 +1,6 @@
 from pyamg.testing import *
 
-import numpy, scipy
+import numpy
 from numpy import array, ones, arange, empty, array_split, zeros
 from numpy.lib.arraysetops import setdiff1d
 from scipy.sparse import csr_matrix, spdiags
@@ -16,97 +16,97 @@ class TestAggregate(TestCase):
 
         # random matrices
         numpy.random.seed(0)
-        for N in [2,3,5]:
-            self.cases.append( csr_matrix(rand(N,N)) )
+        for N in [2, 3, 5]:
+            self.cases.append(csr_matrix(rand(N, N)))
 
         # Poisson problems in 1D and 2D
-        for N in [2,3,5,7,10,11,19]:
-            self.cases.append( poisson( (N,), format='csr') )
-        for N in [2,3,5,7,8]:
-            self.cases.append( poisson( (N,N), format='csr') )
+        for N in [2, 3, 5, 7, 10, 11, 19]:
+            self.cases.append(poisson((N,), format='csr'))
+        for N in [2, 3, 5, 7, 8]:
+            self.cases.append(poisson((N, N), format='csr'))
 
-        for name in ['knot','airfoil','bar']:
+        for name in ['knot', 'airfoil', 'bar']:
             ex = load_example(name)
-            self.cases.append( ex['A'].tocsr() )
-
+            self.cases.append(ex['A'].tocsr())
 
     def test_standard_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
-            
-            (expected,expected_Cpts) = reference_standard_aggregation(S)
-            (result,Cpts)   = standard_aggregation(S)
 
-            assert_equal( (result - expected).nnz, 0 )
-            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
-    
+            (expected, expected_Cpts) = reference_standard_aggregation(S)
+            (result, Cpts) = standard_aggregation(S)
+
+            assert_equal((result - expected).nnz, 0)
+            assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+
         # S is diagonal - no dofs aggregated
-        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        (result,Cpts)   = standard_aggregation(S)
-        expected = array([[0],[0],[0],[0]])
-        assert_equal(result.todense(),expected)
+        S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        (result, Cpts) = standard_aggregation(S)
+        expected = array([[0], [0], [0], [0]])
+        assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 0)
 
     def test_naive_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
-            
-            (expected,expected_Cpts) = reference_naive_aggregation(S)
-            (result,Cpts)   = naive_aggregation(S)
 
-            assert_equal( (result - expected).nnz, 0 )
-            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
-    
+            (expected, expected_Cpts) = reference_naive_aggregation(S)
+            (result, Cpts) = naive_aggregation(S)
+
+            assert_equal((result - expected).nnz, 0)
+            assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+
         # S is diagonal - no dofs aggregated
-        S = spdiags([[1,1,1,1]],[0],4,4,format='csr')
-        (result, Cpts)   = naive_aggregation(S)
+        S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        (result, Cpts) = naive_aggregation(S)
         expected = numpy.eye(4)
-        assert_equal(result.todense(),expected)
+        assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
-        
+
 
 class TestComplexAggregate(TestCase):
     def setUp(self):
         self.cases = []
 
         # Poisson problems in 2D
-        for N in [2,3,5,7,8]:
-            A = poisson( (N,N), format='csr'); A.data = A.data + 0.001j*rand(A.nnz)
+        for N in [2, 3, 5, 7, 8]:
+            A = poisson((N, N), format='csr')
+            A.data = A.data + 0.001j*rand(A.nnz)
             self.cases.append(A)
 
     def test_standard_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
-            
-            (expected,expected_Cpts) = reference_standard_aggregation(S)
-            (result,Cpts)   = standard_aggregation(S)
 
-            assert_equal( (result - expected).nnz, 0 )
-            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
-    
+            (expected, expected_Cpts) = reference_standard_aggregation(S)
+            (result, Cpts) = standard_aggregation(S)
+
+            assert_equal((result - expected).nnz, 0)
+            assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+
     def test_naive_aggregation(self):
         for A in self.cases:
             S = symmetric_strength_of_connection(A)
-            
-            (expected,expected_Cpts) = reference_naive_aggregation(S)
-            (result,Cpts)   = naive_aggregation(S)
 
-            assert_equal( (result - expected).nnz, 0 )
-            assert_equal( Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal( setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+            (expected, expected_Cpts) = reference_naive_aggregation(S)
+            (result, Cpts) = naive_aggregation(S)
+
+            assert_equal((result - expected).nnz, 0)
+            assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
 
-################################################
-##   reference implementations for unittests  ##
-################################################
+##############################################
+#   reference implementations for unittests  #
+##############################################
 
 # note that this method only tests the current implementation, not
 # all possible implementations
 def reference_standard_aggregation(C):
-    S = array_split(C.indices,C.indptr[1:-1])
+    S = array_split(C.indices, C.indptr[1:-1])
 
     n = C.shape[0]
 
@@ -114,11 +114,11 @@ def reference_standard_aggregation(C):
     j = 0
     Cpts = []
 
-    aggregates    = empty(n,dtype=C.indices.dtype)
+    aggregates = empty(n, dtype=C.indices.dtype)
     aggregates[:] = -1
 
     # Pass #1
-    for i,row in enumerate(S):
+    for i, row in enumerate(S):
         Ni = set(row) | set([i])
 
         if Ni.issubset(R):
@@ -130,8 +130,9 @@ def reference_standard_aggregation(C):
 
     # Pass #2
     Old_R = R.copy()
-    for i,row in enumerate(S):
-        if i not in R: continue
+    for i, row in enumerate(S):
+        if i not in R:
+            continue
 
         for x in row:
             if x not in Old_R:
@@ -140,8 +141,9 @@ def reference_standard_aggregation(C):
                 break
 
     # Pass #3
-    for i,row in enumerate(S):
-        if i not in R: continue
+    for i, row in enumerate(S):
+        if i not in R:
+            continue
         Ni = set(row) | set([i])
         Cpts.append(i)
 
@@ -156,22 +158,21 @@ def reference_standard_aggregation(C):
     Pp = arange(n+1)
     Px = ones(n)
 
-    return csr_matrix((Px,Pj,Pp)), array(Cpts)
+    return csr_matrix((Px, Pj, Pp)), array(Cpts)
 
-#####################################
 
 def reference_naive_aggregation(C):
-    S = array_split(C.indices,C.indptr[1:-1])
+    S = array_split(C.indices, C.indptr[1:-1])
     n = C.shape[0]
-    aggregates    = empty(n, dtype=C.indices.dtype)
-    aggregates[:] = -1 # aggregates[j] denotes the aggregate j is in
-    R = zeros( (0,) )  # R stores already aggregated nodes
-    j = 0              # j is the aggregate counter
+    aggregates = empty(n, dtype=C.indices.dtype)
+    aggregates[:] = -1  # aggregates[j] denotes the aggregate j is in
+    R = zeros((0,))     # R stores already aggregated nodes
+    j = 0               # j is the aggregate counter
     Cpts = []
 
     # Only one aggregation pass
-    for i,row in enumerate(S):
-        
+    for i, row in enumerate(S):
+
         # if i isn't already aggregated, grab all his neighbors
         if aggregates[i] == -1:
             unaggregated_neighbors = numpy.setdiff1d(row, R)
@@ -183,13 +184,11 @@ def reference_naive_aggregation(C):
             Cpts.append(i)
         else:
             pass
-    
+
     assert(numpy.unique(R).shape[0] == n)
 
     Pj = aggregates
     Pp = arange(n+1)
     Px = ones(n)
 
-    return csr_matrix((Px,Pj,Pp)), array(Cpts)
-
-
+    return csr_matrix((Px, Pj, Pp)), array(Cpts)
