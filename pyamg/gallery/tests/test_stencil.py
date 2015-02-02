@@ -2,21 +2,21 @@ from pyamg.testing import *
 
 from scipy import matrix, array
 
-from pyamg.gallery.laplacian import poisson
-from pyamg.gallery.stencil import *
+from pyamg.gallery.stencil import stencil_grid
+
 
 class TestStencil(TestCase):
     def test_1d(self):
         stencil = array([1, 2, 3])
 
-        result   = stencil_grid(stencil, (3,)).todense()
+        result = stencil_grid(stencil, (3,)).todense()
         expected = matrix([[2, 3, 0],
                            [1, 2, 3],
                            [0, 1, 2]])
         assert_equal(result, expected)
 
         stencil = array([1, 2, 3, 4, 5])
-        result   = stencil_grid(stencil, (5,)).todense()
+        result = stencil_grid(stencil, (5,)).todense()
         expected = matrix([[3, 4, 5, 0, 0],
                            [2, 3, 4, 5, 0],
                            [1, 2, 3, 4, 5],
@@ -29,7 +29,7 @@ class TestStencil(TestCase):
                          [4, 5, 6],
                          [7, 8, 9]])
 
-        result   = stencil_grid(stencil, (2, 3)).todense()
+        result = stencil_grid(stencil, (2, 3)).todense()
         expected = matrix([[5, 6, 0, 8, 9, 0],
                            [4, 5, 6, 7, 8, 9],
                            [0, 4, 5, 0, 7, 8],
@@ -51,7 +51,7 @@ class TestStencil(TestCase):
                                     [0, 0, -1, 2]])))
 
         for grid, expected in cases:
-            result   = stencil_grid(stencil, grid).todense()
+            result = stencil_grid(stencil, grid).todense()
             assert_equal(result, expected)
 
     def test_poisson2d_5pt(self):
@@ -131,4 +131,3 @@ class TestStencil(TestCase):
         for grid, expected in cases:
             result = stencil_grid(stencil, grid).todense()
             assert_equal(result, expected)
-

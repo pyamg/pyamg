@@ -1,6 +1,7 @@
 from pyamg.testing import *
 
-from pyamg.gallery.mesh import *
+from pyamg.gallery.mesh import regular_triangle_mesh
+
 
 class TestRegularTriangleMesh(TestCase):
     def test_1x1(self):
@@ -31,4 +32,3 @@ class TestRegularTriangleMesh(TestCase):
                            [1, 5, 4],
                            [0, 1, 4],
                            [1, 2, 5]])
-

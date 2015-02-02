@@ -1,11 +1,11 @@
 from pyamg.testing import *
 
 from scipy import matrix
-
 from numpy import array, abs
 from scipy import real, imag
 from scipy.linalg import eigvals
-from pyamg.gallery.laplacian import *
+from pyamg.gallery.laplacian import poisson, gauge_laplacian
+
 
 class TestPoisson(TestCase):
     def test_poisson(self):
@@ -55,14 +55,16 @@ class TestGaugeLaplacian(TestCase):
     def test_gaugelaplacian(self):
         cases = []
 
-        beta = 0.0; npts=5
+        beta = 0.0
+        npts = 5
         A = gauge_laplacian(npts, spacing=1.0, beta=beta)
         cases.append((A, beta))
 
-        beta = 0.11; npts=3;
+        beta = 0.11
+        npts = 3
         A = gauge_laplacian(npts, spacing=1.0, beta=beta)
         cases.append((A, beta))
-        npts=8
+        npts = 8
         A = gauge_laplacian(npts, spacing=1.0, beta=beta)
         cases.append((A, beta))
         A = gauge_laplacian(npts, spacing=0.1, beta=beta)
@@ -89,4 +91,3 @@ class TestGaugeLaplacian(TestCase):
                 assert_almost_equal(min(abs(imag(e))), 0.0)
                 # positive real part
                 assert(min(real(e)) > 0.0)
-

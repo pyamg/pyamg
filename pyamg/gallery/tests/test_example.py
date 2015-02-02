@@ -1,13 +1,13 @@
 from pyamg.testing import *
+from pyamg.gallery.example import load_example
 
-from pyamg.gallery.example import *
 
 class TestExample(TestCase):
     def test_load_example(self):
         knot = load_example('knot')
 
-        A        = knot['A']
-        B        = knot['B']
+        A = knot['A']
+        B = knot['B']
         vertices = knot['vertices']
         elements = knot['elements']
 
@@ -15,4 +15,3 @@ class TestExample(TestCase):
         assert_equal(B.shape, (239, 1))
         assert_equal(vertices.shape, (240, 3))
         assert_equal(elements.shape, (480, 3))
-
