@@ -1,5 +1,4 @@
-from numpy import array, zeros, sqrt, ravel, abs, max, dot, arange,\
-    conjugate, hstack, isnan, isinf
+from numpy import array, zeros, ravel, abs, max, dot, conjugate
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from warnings import warn
@@ -332,7 +331,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         # Find best update to x in Krylov Space, V.  Solve inner+1 x inner+1
         # system.  Apparently this is the best way to solve a triangular system
         # in the magical world of scipy
-        #piv = arange(inner+1)
+        # piv = arange(inner+1)
         # y = lu_solve((H[0:(inner+1), 0:(inner+1)], piv), g[0:(inner+1)],
         #             trans=0)
         y = scipy.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
@@ -386,12 +385,12 @@ if __name__ == '__main__':
     # A = A*A.transpose() + diag([10, 10, 10, 10])
     # b = random((4, 1))
     # x0 = random((4, 1))
-    #%timeit -n 15 (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100)
+    # %timeit -n 15 (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100)
 
     from numpy.random import random
     from pyamg.gallery import poisson
     A = poisson((125, 125), dtype=float, format='csr')
-    #A.data = A.data + 0.001j*rand(A.data.shape[0])
+    # A.data = A.data + 0.001j*rand(A.data.shape[0])
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 
