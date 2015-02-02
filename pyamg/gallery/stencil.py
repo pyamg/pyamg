@@ -74,7 +74,8 @@ def stencil_grid(S, grid, dtype=None, format=None):
         raise ValueError('all stencil dimensions must be odd')
 
     if len(grid) != np.ndim(S):
-        raise ValueError('stencil dimension must equal number of grid dimensions')
+        raise ValueError('stencil dimension must equal number of grid\
+                          dimensions')
 
     if min(grid) < 1:
         raise ValueError('grid dimensions must be positive')
@@ -90,8 +91,8 @@ def stencil_grid(S, grid, dtype=None, format=None):
     indices = tuple(i.copy() for i in S.nonzero())
     for i, s in zip(indices, S.shape):
         i -= s // 2
-        #i = (i - s) // 2
-        #i = i // 2
+        # i = (i - s) // 2
+        # i = i // 2
         # i = i - (s // 2)
     for stride, coords in zip(strides, reversed(indices)):
         diags += stride * coords
@@ -149,9 +150,9 @@ if __name__ == '__main__':
         S = np.array([[0, -1, 0],
                       [-1, 4, -1],
                       [0, -1, 0]])
-        #S = array([[-1, -1, -1],
-        #           [-1, 8, -1],
-        #           [-1, -1, -1]])
+        # S = array([[-1, -1, -1],
+        #            [-1, 8, -1],
+        #            [-1, -1, -1]])
         grid = (2, 1)
 
     if D == 3:

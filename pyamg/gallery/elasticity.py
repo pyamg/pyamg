@@ -88,7 +88,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         DX, DY = tuple(spacing)
         pts = [DX, DY]
 
-    #compute local stiffness matrix
+    # compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu))  # Lame's first parameter
     mu = E / (2 + 2*nu)                   # shear modulus
 
@@ -253,7 +253,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     """
 
-    #compute local stiffness matrix
+    # compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu))  # Lame's first parameter
     mu = E / (2 + 2*nu)                   # shear modulus
 

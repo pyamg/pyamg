@@ -6,7 +6,7 @@ import scipy
 __all__ = ['sprand']
 __docformat__ = "restructuredtext en"
 
-#TODO add sprandn
+# TODO add sprandn
 
 
 def _rand_sparse(m, n, density, format='csr'):
@@ -56,8 +56,8 @@ def sprand(m, n, density, format='csr'):
     return A.asformat(format)
 
 
-## currently returns positive semi-definite matrices
-#def sprand_spd(m, n, density, a=1.0, b=2.0, format='csr'):
+# currently returns positive semi-definite matrices
+# def sprand_spd(m, n, density, a=1.0, b=2.0, format='csr'):
 #    """Returns a random sparse, symmetric positive definite matrix
 #
 #    Parameters
