@@ -1,7 +1,5 @@
-import numpy
-from numpy import inner, conjugate, asarray, mod, ravel, sqrt
+from numpy import inner, mod
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from warnings import warn
 
@@ -9,10 +7,11 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['minimal_residual']
 
+
 def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None):
+                     callback=None, residuals=None):
     '''Minimal residual (MR) algorithm
-    
+
     Solves the linear system Ax = b. Left preconditioning is supported.
 
     Parameters
@@ -39,19 +38,19 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         residuals contains the residual norm history,
         including the initial residual.  The preconditioner norm
         is used, instead of the Euclidean norm.
-     
+
     Returns
-    -------    
+    -------
     (xNew, info)
     xNew : an updated guess to the solution of Ax = b
     info : halting status of cg
 
-            ==  ======================================= 
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  ======================================= 
+            ==  =======================================
 
     Notes
     -----
@@ -61,13 +60,13 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     still supported as a legacy.
 
     The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list. 
+    returned in the residuals list.
 
     Examples
     --------
     >>> from pyamg.krylov import minimal_residual
     >>> from pyamg.util.linalg import norm
-    >>> import numpy 
+    >>> import numpy
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = numpy.ones((A.shape[0],))
@@ -77,18 +76,18 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     References
     ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
        Second Edition", SIAM, pp. 137--142, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
-    n = len(b)
 
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._minimal_residual')
+    warnings.filterwarnings('always',
+                            module='pyamg\.krylov\._minimal_residual')
 
     # determine maxiter
     if maxiter is None:
@@ -97,7 +96,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r  = M*(b - A*x)
+    r = M*(b - A*x)
     normr = norm(r)
 
     # store initial residual
@@ -126,9 +125,10 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         p = M*(A*r)
 
-        rMAr = inner(p.conjugate(), r)                 # check curvature of M^-1 A
+        rMAr = inner(p.conjugate(), r)  # check curvature of M^-1 A
         if rMAr < 0.0:
-            warn("\nIndefinite matrix detected in minimal residual, aborting\n")
+            warn("\nIndefinite matrix detected in minimal residual,\
+                  aborting\n")
             return (postprocess(x), -1)
 
         alpha = rMAr / inner(p.conjugate(), p)
@@ -164,7 +164,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    from pyamg import smoothed_aggregation_solver
 #    from numpy.random import random
 #    from numpy import zeros_like, dot
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,
+#                     format='csr')
 #    x0 = random((A.shape[0],))
 #    b = zeros_like(x0)
 #
@@ -173,14 +174,15 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    def callback(x):
 #        fvals.append( sqrt(dot( ravel(x), ravel(A*x.reshape(-1,1)) )) )
 #
-#    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix' %\
+#          (A.shape[0],A.shape[0])
 #    resvec = []
 #    sa = smoothed_aggregation_solver(A)
-#    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, M=sa.aspreconditioner())
-#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, callback=callback)
+#    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
+#    M=sa.aspreconditioner())
+#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
+#    callback=callback)
 #    print 'Funcation values:  ' + str(fvals)
 #    print 'initial norm = %g'%(norm(b - A*x0))
 #    print 'norm = %g'%(norm(b - A*x))
 #    print 'info flag = %d'%(flag)
-#
-

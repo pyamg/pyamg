@@ -18,14 +18,14 @@ Functions
 
 References
 ----------
-.. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+.. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
    Second Edition", SIAM, pp. 231-234, 2003
    http://www-users.cs.umn.edu/~saad/books.html
 
-.. [2] Richard Barrett et al.  "Templates for the Solution of Linear Systems: Building 
-   Blocks for Iterative Methods, 2nd Edition", SIAM
+.. [2] Richard Barrett et al.  "Templates for the Solution of Linear Systems:
+   Building Blocks for Iterative Methods, 2nd Edition", SIAM
    http://www.netlib.org/linalg/html_templates/Templates.html
-   http://www.netlib.org/templates/ 
+   http://www.netlib.org/templates/
 
 """
 

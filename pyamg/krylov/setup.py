@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+
 def configuration(parent_package='', top_path=None):
-    import numpy
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration('krylov', parent_package, top_path)

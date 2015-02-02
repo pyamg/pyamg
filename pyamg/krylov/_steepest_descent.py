@@ -1,7 +1,5 @@
-import numpy
-from numpy import inner, conjugate, asarray, mod, ravel, sqrt
+from numpy import inner, mod, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from warnings import warn
 
@@ -9,10 +7,11 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['steepest_descent']
 
+
 def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None):
+                     callback=None, residuals=None):
     '''Steepest descent algorithm
-    
+
     Solves the linear system Ax = b. Left preconditioning is supported.
 
     Parameters
@@ -39,19 +38,19 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         residuals contains the residual norm history,
         including the initial residual.  The preconditioner norm
         is used, instead of the Euclidean norm.
-     
+
     Returns
-    -------    
+    -------
     (xNew, info)
     xNew : an updated guess to the solution of Ax = b
     info : halting status of cg
 
-            ==  ======================================= 
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  ======================================= 
+            ==  =======================================
 
     Notes
     -----
@@ -61,13 +60,13 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     still supported as a legacy.
 
     The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list. 
+    returned in the residuals list.
 
     Examples
     --------
     >>> from pyamg.krylov import steepest_descent
     >>> from pyamg.util.linalg import norm
-    >>> import numpy 
+    >>> import numpy
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = numpy.ones((A.shape[0],))
@@ -77,18 +76,18 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     References
     ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems, 
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
        Second Edition", SIAM, pp. 137--142, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
-    n = len(b)
 
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._steepest_descent')
+    warnings.filterwarnings('always',
+                            module='pyamg\.krylov\._steepest_descent')
 
     # determine maxiter
     if maxiter is None:
@@ -97,15 +96,15 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r  = b - A*x
-    z  = M*r
+    r = b - A*x
+    z = M*r
     rz = inner(r.conjugate(), z)
 
     # use preconditioner norm
     normr = sqrt(rz)
 
     if residuals is not None:
-        residuals[:] = [normr] #initial residual
+        residuals[:] = [normr]  # initial residual
 
     # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
@@ -130,9 +129,9 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         q = A*z
         zAz = inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
-            warn("\nIndefinite matrix detected in steepest descent, aborting\n")
+            warn("\nIndefinite matrix detected in steepest descent,\
+                  aborting\n")
             return (postprocess(x), -1)
-
 
         alpha = rz / zAz                            # step size
         x = x + alpha*z
@@ -146,7 +145,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         rz = inner(r.conjugate(), z)
 
         if rz < 0.0:                                # check curvature of M
-            warn("\nIndefinite preconditioner detected in steepest descent, aborting\n")
+            warn("\nIndefinite preconditioner detected in steepest descent,\
+                  aborting\n")
             return (postprocess(x), -1)
 
         normr = sqrt(rz)                            # use preconditioner norm
@@ -162,7 +162,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         elif rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in steepest descent, ceasing iterations\n")
+            warn("\nSingular preconditioner detected in steepest descent,\
+                  ceasing iterations\n")
             return (postprocess(x), -1)
 
         if iter == maxiter:
@@ -179,7 +180,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    from pyamg import smoothed_aggregation_solver
 #    from numpy.random import random
 #    from numpy import ravel, inner
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
+#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,
+#    format='csr')
 #    b = random((A.shape[0],))
 #    x0 = random((A.shape[0],))
 #
@@ -188,13 +190,13 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #        x = ravel(x)
 #        fvals.append( 0.5*inner(x, A*x) - inner(ravel(b),x) )
 #
-#    print '\n\nTesting steepest descent with %d x %d 2D Laplace Matrix'%(A.shape[0],A.shape[0])
+#    print '\n\nTesting steepest descent with %d x %d 2D Laplace Matrix'%\
+#    (A.shape[0],A.shape[0])
 #    resvec = []
 #    sa = smoothed_aggregation_solver(A)
-#    (x,flag) = steepest_descent(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, M=sa.aspreconditioner(), callback=callback)
+#    (x,flag) = steepest_descent(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
+#    M=sa.aspreconditioner(), callback=callback)
 #    print 'Funcation values:  ' + str(fvals)
 #    print 'initial norm = %g'%(norm(b - A*x0))
 #    print 'final norm = %g'%(norm(b - A*x))
 #    print 'info flag = %d'%(flag)
-#
-
