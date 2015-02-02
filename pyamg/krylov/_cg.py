@@ -1,7 +1,6 @@
 import numpy
-from numpy import inner, conjugate, asarray, mod, ravel, sqrt
+from numpy import inner, mod, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from warnings import warn
 
@@ -84,7 +83,6 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     '''
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
-    n = len(b)
 
     ##
     # Ensure that warnings are always reissued from this function
@@ -98,13 +96,13 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # choose tolerance for numerically zero values
-    t = A.dtype.char
-    eps = numpy.finfo(numpy.float).eps
-    feps = numpy.finfo(numpy.single).eps
-    geps = numpy.finfo(numpy.longfloat).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    numerically_zero = {0: feps*1e3, 1: eps*1e6,
-                        2: geps*1e6}[_array_precision[t]]
+    # t = A.dtype.char
+    # eps = numpy.finfo(numpy.float).eps
+    # feps = numpy.finfo(numpy.single).eps
+    # geps = numpy.finfo(numpy.longfloat).eps
+    # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
+    # numerically_zero = {0: feps*1e3, 1: eps*1e6,
+    #                    2: geps*1e6}[_array_precision[t]]
 
     # setup method
     r = b - A*x
@@ -139,29 +137,29 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         Ap = A*p
 
         rz_old = rz
-                                                  # Step # in Saad's pseudocode
-        pAp = inner(Ap.conjugate(), p)             # check curvature of A
+        # Step number in Saad's pseudocode
+        pAp = inner(Ap.conjugate(), p)            # check curvature of A
         if pAp < 0.0:
             warn("\nIndefinite matrix detected in CG, aborting\n")
             return (postprocess(x), -1)
 
         alpha = rz/pAp                            # 3
-        x += alpha * p                         # 4
+        x += alpha * p                            # 4
 
         if mod(iter, recompute_r) and iter > 0:   # 5
             r -= alpha * Ap
         else:
             r = b - A*x
 
-        z = M*r                               # 6
+        z = M*r                                   # 6
         rz = inner(r.conjugate(), z)
 
         if rz < 0.0:                              # check curvature of M
             warn("\nIndefinite preconditioner detected in CG, aborting\n")
             return (postprocess(x), -1)
 
-        beta = rz/rz_old                         # 7
-        p *= beta                              # 8
+        beta = rz/rz_old                          # 7
+        p *= beta                                 # 8
         p += z
 
         iter += 1
@@ -186,7 +184,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if iter == maxiter:
             return (postprocess(x), iter)
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
 #    # A = A*A.transpose() + diag([10,10,10,10])

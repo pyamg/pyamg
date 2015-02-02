@@ -1,4 +1,4 @@
-from numpy import array, inner, conjugate, ceil, asmatrix, mod
+from numpy import inner, ceil, asmatrix, mod
 from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -87,7 +87,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     if isspmatrix(A):
         AH = A.H
     else:
-        #TODO avoid doing this since A may be a different sparse type
+        # TODO avoid doing this since A may be a different sparse type
         AH = aslinearoperator(asmatrix(A).H)
 
     # Convert inputs to linear system, with error checking
@@ -206,9 +206,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     return (postprocess(x), iter+1)
 
-
-
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
 #    # A = A*A.transpose() + diag([10,10,10,10])

@@ -167,7 +167,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if iter == maxiter:
             return (postprocess(x), iter)
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
 #    # A = A*A.transpose() + diag([10,10,10,10])

@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['steepest_descent']
 
-def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None):
     '''Steepest descent algorithm
     
@@ -82,9 +82,9 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
-    A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
+    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
     n = len(b)
-    
+
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
@@ -92,10 +92,10 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(len(b)) 
+        maxiter = int(len(b))
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    
+
     # setup method
     r  = b - A*x
     z  = M*r
@@ -105,9 +105,9 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     normr = sqrt(rz)
 
     if residuals is not None:
-        residuals[:] = [normr] #initial residual 
+        residuals[:] = [normr] #initial residual
 
-    # Check initial guess ( scaling by b, if b != 0, 
+    # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
@@ -118,7 +118,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Scale tol by ||r_0||_M
     if normr != 0.0:
         tol = tol*normr
-   
+
     # How often should r be recomputed
     recompute_r = 50
 
@@ -136,15 +136,15 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         alpha = rz / zAz                            # step size
         x = x + alpha*z
-        
+
         if mod(iter, recompute_r) and iter > 0:
             r = b - A*x
         else:
             r = r - alpha*q
-        
+
         z = M*r
         rz = inner(r.conjugate(), z)
-        
+
         if rz < 0.0:                                # check curvature of M
             warn("\nIndefinite preconditioner detected in steepest descent, aborting\n")
             return (postprocess(x), -1)
@@ -153,7 +153,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         if residuals is not None:
             residuals.append(normr)
-        
+
         if callback is not None:
             callback(x)
 
@@ -164,11 +164,11 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             # indicator of convergence when r = 0.0
             warn("\nSingular preconditioner detected in steepest descent, ceasing iterations\n")
             return (postprocess(x), -1)
-        
+
         if iter == maxiter:
             return (postprocess(x), iter)
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
 #    # A = A*A.transpose() + diag([10,10,10,10])
@@ -182,7 +182,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
 #    b = random((A.shape[0],))
 #    x0 = random((A.shape[0],))
-#    
+#
 #    fvals = []
 #    def callback(x):
 #        x = ravel(x)

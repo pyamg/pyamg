@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['minimal_residual']
 
-def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None, 
+def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None):
     '''Minimal residual (MR) algorithm
     
@@ -82,9 +82,9 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
-    A,M,x,b,postprocess = make_system(A,M,x0,b,xtype=None)
+    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
     n = len(b)
-    
+
     ##
     # Ensure that warnings are always reissued from this function
     import warnings
@@ -92,19 +92,19 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(len(b)) 
+        maxiter = int(len(b))
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    
+
     # setup method
     r  = M*(b - A*x)
-    normr = norm(r) 
+    normr = norm(r)
 
     # store initial residual
     if residuals is not None:
-        residuals[:] = [normr] 
-    
-    # Check initial guess ( scaling by b, if b != 0, 
+        residuals[:] = [normr]
+
+    # Check initial guess ( scaling by b, if b != 0,
     #   must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
@@ -115,7 +115,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Scale tol by ||r_0||_M
     if normr != 0.0:
         tol = tol*normr
-   
+
     # How often should r be recomputed
     recompute_r = 50
 
@@ -130,7 +130,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if rMAr < 0.0:
             warn("\nIndefinite matrix detected in minimal residual, aborting\n")
             return (postprocess(x), -1)
-    
+
         alpha = rMAr / inner(p.conjugate(), p)
         x = x + alpha*r
 
@@ -138,22 +138,22 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             r = M*(b - A*x)
         else:
             r = r - alpha*p
-        
+
         normr = norm(r)
         if residuals is not None:
             residuals.append(normr)
-        
+
         if callback is not None:
             callback(x)
 
         if normr < tol:
             return (postprocess(x), 0)
-        
+
         if iter == maxiter:
             return (postprocess(x), iter)
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    # from numpy import diag
 #    # A = random((4,4))
 #    # A = A*A.transpose() + diag([10,10,10,10])
@@ -166,8 +166,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    from numpy import zeros_like, dot
 #    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,format='csr')
 #    x0 = random((A.shape[0],))
-#    b = zeros_like(x0) 
-#    
+#    b = zeros_like(x0)
+#
 #    # This function should always decrease (assuming zero RHS)
 #    fvals = []
 #    def callback(x):
@@ -177,7 +177,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 #    resvec = []
 #    sa = smoothed_aggregation_solver(A)
 #    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, M=sa.aspreconditioner())
-#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, callback=callback) 
+#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec, callback=callback)
 #    print 'Funcation values:  ' + str(fvals)
 #    print 'initial norm = %g'%(norm(b - A*x0))
 #    print 'norm = %g'%(norm(b - A*x))

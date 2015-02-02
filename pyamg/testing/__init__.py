@@ -18,7 +18,7 @@ def _show_system_info(self):
     print "Python version %s" % pyversion
 
     print "nose version %d.%d.%d" % nose.__versioninfo__
-    
+
     import pyamg
     print "PyAMG version %s" % pyamg.__version__
     spdir = os.path.dirname(pyamg.__file__)
