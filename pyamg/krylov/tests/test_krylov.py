@@ -1,5 +1,5 @@
 from pyamg.testing import *
-from pyamg.krylov import cg, cgne, cgnr, cr, fgmres, gmres
+from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
 from numpy import array, zeros, ones
