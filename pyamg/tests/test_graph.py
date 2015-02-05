@@ -4,11 +4,13 @@ import numpy
 from numpy import ones, eye, zeros, bincount, empty, asarray, array
 from numpy.random import seed
 from scipy import rand
-from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
+from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
-from pyamg.graph import *
+from pyamg.graph import maximal_independent_set, vertex_coloring, bellman_ford,\
+    lloyd_cluster, connected_components, max_value
 from pyamg import amg_core
+
 
 def canonical_graph(G):
     # convert to expected format
@@ -17,11 +19,12 @@ def canonical_graph(G):
     G = coo_matrix(G)
 
     mask = G.row != G.col
-    G.row     = G.row[mask]
-    G.col     = G.col[mask]
-    G.data    = G.data[mask]
+    G.row = G.row[mask]
+    G.col = G.col[mask]
+    G.data = G.data[mask]
     G.data[:] = 1
     return G
+
 
 def assert_is_mis(G, mis):
     G = canonical_graph(G)
@@ -31,6 +34,7 @@ def assert_is_mis(G, mis):
         assert((mis[G.row] + mis[G.col]).max() <= 1)
     # all non-set vertices have set neighbor
     assert((mis + G*mis).min() == 1)
+
 
 def assert_is_vertex_coloring(G, c):
     G = canonical_graph(G)
@@ -106,7 +110,7 @@ class TestGraph(TestCase):
 
                 seeds = numpy.random.permutation(N)[:n_seeds]
                 D_expected, S_expected = reference_bellman_ford(G, seeds)
-                D_result, S_result     = bellman_ford(G, seeds)
+                D_result, S_result = bellman_ford(G, seeds)
 
                 assert_equal(D_result, D_expected)
                 assert_equal(S_result, S_expected)
@@ -122,6 +126,7 @@ class TestGraph(TestCase):
                     continue
 
                 distances, clusters, centers = lloyd_cluster(G, n_seeds)
+
 
 class TestComplexGraph(TestCase):
     def setUp(self):
@@ -164,7 +169,6 @@ class TestComplexGraph(TestCase):
                 distances, clusters, centers = lloyd_cluster(G, n_seeds)
 
 
-
 class TestVertexColorings(TestCase):
     def setUp(self):
         #      3---4
@@ -176,7 +180,8 @@ class TestVertexColorings(TestCase):
                     [1, 1, 0, 0, 1],
                     [0, 1, 1, 1, 0]])
         self.G0 = csr_matrix(G0)
-        assert_equal((self.G0 - self.G0.T).nnz, 0) # make sure graph is symmetric
+        # make sure graph is symmetric
+        assert_equal((self.G0 - self.G0.T).nnz, 0)
 
         #  2        5
         #  | \    / |
@@ -188,34 +193,38 @@ class TestVertexColorings(TestCase):
                     [0, 0, 0, 1, 0, 1],
                     [0, 0, 0, 1, 1, 0]])
         self.G1 = csr_matrix(G1)
-        assert_equal((self.G1 - self.G1.T).nnz, 0) # make sure graph is symmetric
+        # make sure graph is symmetric
+        assert_equal((self.G1 - self.G1.T).nnz, 0)
 
     def test_vertex_coloring_JP(self):
         fn = amg_core.vertex_coloring_jones_plassmann
 
-        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        weights = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
         coloring = empty(5, dtype='intc')
-        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring, weights)
+        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring,
+           weights)
         assert_equal(coloring, [2, 0, 1, 1, 2])
 
-        weights  = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
+        weights = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
         coloring = empty(6, dtype='intc')
-        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring, weights)
+        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring,
+           weights)
         assert_equal(coloring, [2, 0, 1, 1, 2, 0])
 
     def test_vertex_coloring_LDF(self):
         fn = amg_core.vertex_coloring_LDF
 
-        weights  = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
+        weights = array([0.8, 0.1, 0.9, 0.7, 0.6], dtype='float64')
         coloring = empty(5, dtype='intc')
-        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring, weights)
+        fn(self.G0.shape[0], self.G0.indptr, self.G0.indices, coloring,
+           weights)
         assert_equal(coloring, [2, 0, 1, 1, 2])
 
-        weights  = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
+        weights = array([0.1, 0.2, 0.3, 0.1, 0.2, 0.3], dtype='float64')
         coloring = empty(6, dtype='intc')
-        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring, weights)
+        fn(self.G1.shape[0], self.G1.indptr, self.G1.indices, coloring,
+           weights)
         assert_equal(coloring, [2, 0, 1, 2, 1, 0])
-
 
 
 def test_breadth_first_search():
@@ -248,61 +257,56 @@ def test_connected_components():
 
     cases = []
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 1, 0],
-                              [0, 1, 0, 1],
-                              [0, 0, 1, 0]]))
+                             [1, 0, 1, 0],
+                             [0, 1, 0, 1],
+                             [0, 0, 1, 0]]))
 
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 0, 0],
-                              [0, 0, 0, 1],
-                              [0, 0, 1, 0]]))
+                             [1, 0, 0, 0],
+                             [0, 0, 0, 1],
+                             [0, 0, 1, 0]]))
 
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0]]))
+                             [1, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0]]))
 
     cases.append(csr_matrix([[0, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0]]))
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
     cases.append(csr_matrix([[0, 1, 1, 0, 0, 0],
-                              [1, 0, 1, 1, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 1, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [1, 0, 1, 1, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
     cases.append(csr_matrix([[0, 0, 1, 0, 0, 0],
-                              [0, 0, 1, 1, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 1, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [0, 0, 1, 1, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
     cases.append(csr_matrix([[0, 1, 1, 0, 0, 0],
-                              [1, 0, 1, 0, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [1, 0, 1, 0, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
-
-
-    #######################################
     # Compare to reference implementation #
-    #######################################
-
     for G in cases:
         result = connected_components(G)
 
@@ -327,62 +331,59 @@ def test_complex_connected_components():
 
     cases = []
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 1, 0],
-                              [0, 1, 0, 1],
-                              [0, 0, 1, 0]]))
+                             [1, 0, 1, 0],
+                             [0, 1, 0, 1],
+                             [0, 0, 1, 0]]))
 
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 0, 0],
-                              [0, 0, 0, 1],
-                              [0, 0, 1, 0]]))
+                             [1, 0, 0, 0],
+                             [0, 0, 0, 1],
+                             [0, 0, 1, 0]]))
 
     cases.append(csr_matrix([[0, 1, 0, 0],
-                              [1, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0]]))
+                             [1, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0]]))
 
     cases.append(csr_matrix([[0, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0],
-                              [0, 0, 0, 0]]))
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0],
+                             [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
     cases.append(csr_matrix([[0, 1, 1, 0, 0, 0],
-                              [1, 0, 1, 1, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 1, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [1, 0, 1, 1, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
     cases.append(csr_matrix([[0, 0, 1, 0, 0, 0],
-                              [0, 0, 1, 1, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 1, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [0, 0, 1, 1, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
     cases.append(csr_matrix([[0, 1, 1, 0, 0, 0],
-                              [1, 0, 1, 0, 0, 0],
-                              [1, 1, 0, 0, 0, 0],
-                              [0, 0, 0, 0, 1, 1],
-                              [0, 0, 0, 1, 0, 1],
-                              [0, 0, 0, 1, 1, 0]]))
+                             [1, 0, 1, 0, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
 
     # Create complex data entries
     cases = [G+1.0j*G for G in cases]
 
-    #######################################
     # Compare to reference implementation #
-    #######################################
-
     for G in cases:
         result = connected_components(G)
 
@@ -403,10 +404,7 @@ def test_complex_connected_components():
         assert_equal(result, expected)
 
 
-#############################
 # reference implementations #
-#############################
-
 def reference_connected_components(G):
     G = G.tocsr()
     N = G.shape[0]
@@ -418,8 +416,6 @@ def reference_connected_components(G):
             for j in G.indices[G.indptr[i]:G.indptr[i+1]]:
                 DFS(j, G, component, visited)
 
-
-    num_components = 0
     visited = set()
     components = set()
     for i in range(N):
@@ -430,19 +426,19 @@ def reference_connected_components(G):
 
     return components
 
-from pyamg.graph import max_value
+
 def reference_bellman_ford(G, seeds):
     G = G.tocoo()
     N = G.shape[0]
 
     seeds = asarray(seeds, dtype='intc')
 
-    distances        = empty(N, dtype=G.dtype)
-    distances[:]     = max_value(G.dtype)
+    distances = empty(N, dtype=G.dtype)
+    distances[:] = max_value(G.dtype)
     distances[seeds] = 0
 
-    nearest_seed        = empty(N, dtype='intc')
-    nearest_seed[:]     = -1
+    nearest_seed = empty(N, dtype='intc')
+    nearest_seed[:] = -1
     nearest_seed[seeds] = seeds
 
     while True:
@@ -452,12 +448,10 @@ def reference_bellman_ford(G, seeds):
 
             if distances[j] + v < distances[i]:
                 update = True
-                distances[i]    = distances[j] + v
+                distances[i] = distances[j] + v
                 nearest_seed[i] = nearest_seed[j]
 
         if not update:
             break
 
     return (distances, nearest_seed)
-
-
