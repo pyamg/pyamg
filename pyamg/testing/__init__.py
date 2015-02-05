@@ -1,7 +1,9 @@
 from numpy.testing import *
 
+
 def _show_system_info(self):
-    import os, sys
+    import os
+    import sys
     nose = nosetester.import_nose()
 
     import numpy
@@ -14,7 +16,7 @@ def _show_system_info(self):
     spdir = os.path.dirname(scipy.__file__)
     print "SciPy is installed in %s" % spdir
 
-    pyversion = sys.version.replace('\n','')
+    pyversion = sys.version.replace('\n', '')
     print "Python version %s" % pyversion
 
     print "nose version %d.%d.%d" % nose.__versioninfo__
