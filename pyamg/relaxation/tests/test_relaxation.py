@@ -4,13 +4,13 @@ import numpy
 import scipy
 from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
 from scipy import arange, ones, zeros, array, allclose, \
-    diag, triu, rand, asmatrix, mat
+    diag, triu, tril, rand, asmatrix, mat
 from scipy.linalg import solve
 
 from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation import gauss_seidel, jacobi, block_jacobi,\
     block_gauss_seidel, jacobi_ne, schwarz, sor, gauss_seidel_indexed,\
-    polynomial
+    polynomial, gauss_seidel_ne, gauss_seidel_nr
 from pyamg.util.utils import get_block_diag
 
 # Ignore efficiency warnings
