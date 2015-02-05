@@ -2,16 +2,16 @@
 Relaxation methods
 ------------------
 
-The multigrid cycle is formed by two complementary procedures: relaxation and 
+The multigrid cycle is formed by two complementary procedures: relaxation and
 coarse-grid correction.  The role of relaxation is to rapidly damp oscillatory
 (high-frequency) errors out of the approximate solution.  When the error is
-smooth, it can then be accurately represented on the coarser grid, where a 
+smooth, it can then be accurately represented on the coarser grid, where a
 solution, or approximate solution, can be computed.
 
 Iterative methods for linear systems that have an error smoothing property
-are valid relaxation methods.  Since the purpose of a relaxation method is 
+are valid relaxation methods.  Since the purpose of a relaxation method is
 to smooth oscillatory errors, its effectiveness on non-oscillatory errors
-is not important.  This point explains why simple iterative methods like 
+is not important.  This point explains why simple iterative methods like
 Gauss-Seidel iteration are effective relaxation methods while being very
 slow to converge to the solution of Ax=b.
 
@@ -30,7 +30,8 @@ Refer to the docstrings of the individual methods for additional information.
 """
 
 __docformat__ = "restructuredtext en"
-#TODO: explain separation of basic methods from interface methods.
-#TODO: explain why each class of methods exist (parallel vs. serial, SPD vs. indefinite)
+# TODO: explain separation of basic methods from interface methods.
+# TODO: explain why each class of methods exist
+# (parallel vs. serial, SPD vs. indefinite)
 
 postpone_import = 1

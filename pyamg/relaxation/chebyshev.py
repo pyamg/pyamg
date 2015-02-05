@@ -7,6 +7,7 @@ __docformat__ = "restructuredtext en"
 
 __all__ = ['chebyshev_polynomial_coefficients']
 
+
 def chebyshev_polynomial_coefficients(a, b, degree):
     """Chebyshev polynomial coefficients for the interval [a,b]
 
@@ -22,7 +23,7 @@ def chebyshev_polynomial_coefficients(a, b, degree):
     Coefficients of the Chebyshev polynomial C(t) with minimum
     magnitude on the interval [a,b] such that C(0) = 1.0.
     The coefficients are returned in descending order.
-    
+
     Notes
     -----
     a,b typically represent the interval of the spectrum for some matrix
@@ -30,22 +31,23 @@ def chebyshev_polynomial_coefficients(a, b, degree):
 
     Examples
     --------
-    >>> from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
+    >>> from pyamg.relaxation.chebyshev import \
+            chebyshev_polynomial_coefficients
     >>> print chebyshev_polynomial_coefficients(1.0,2.0, 3)
     [-0.32323232  1.45454545 -2.12121212  1.        ]
     """
 
     if a >= b or a <= 0:
-        raise ValueError('invalid interval [%s,%s]' % (a,b))
+        raise ValueError('invalid interval [%s,%s]' % (a, b))
 
     # Chebyshev roots for the interval [-1,1]
-    std_roots = numpy.cos( numpy.pi * (numpy.arange(degree) + 0.5)/ degree )
+    std_roots = numpy.cos(numpy.pi * (numpy.arange(degree) + 0.5) / degree)
 
     # Chebyshev roots for the interval [a,b]
     scaled_roots = 0.5 * (b-a) * (1 + std_roots) + a
-    
+
     # Compute monic polynomial coefficients of polynomial with scaled roots
-    scaled_poly  = numpy.poly(scaled_roots)
+    scaled_poly = numpy.poly(scaled_roots)
 
     # Scale coefficients to enforce C(0) = 1.0
     scaled_poly /= numpy.polyval(scaled_poly, 0)
@@ -53,10 +55,9 @@ def chebyshev_polynomial_coefficients(a, b, degree):
     return scaled_poly
 
 
-
 def mls_polynomial_coefficients(rho, degree):
     """Determine the coefficients for a MLS polynomial smoother
-    
+
     Parameters
     ----------
     rho : {float}
@@ -87,26 +88,28 @@ def mls_polynomial_coefficients(rho, degree):
     >>> print mls[1] # roots
     [ 1.4472136  0.5527864]
     """
-    
-    std_roots = numpy.cos( numpy.pi * (numpy.arange(degree) + 0.5)/ degree )
-    #print std_roots
 
-    roots = rho/2.0 * (1.0 - numpy.cos(2*numpy.pi*(numpy.arange(degree,dtype='float64') + 1)/(2.0*degree+1.0)))
-    #print roots
+    # std_roots = numpy.cos(numpy.pi * (numpy.arange(degree) + 0.5)/ degree)
+    # print std_roots
+
+    roots = rho/2.0 * (1.0 - numpy.cos(2*numpy.pi*(numpy.arange(degree,
+                                       dtype='float64') + 1)/(2.0*degree+1.0)))
+    # print roots
     roots = 1.0/roots
 
-    #S_coeffs = list(-numpy.poly(roots)[1:][::-1])
+    # S_coeffs = list(-numpy.poly(roots)[1:][::-1])
 
-    S = numpy.poly(roots)[::-1]             #monomial coefficients of S error propagator
-    
-    SSA_max = rho/((2.0*degree+1.0)**2)    #upper bound on the spectral radius of S^2A
-    S_hat = numpy.polymul(S,S) #monomial coefficients of \hat{S} propagator
-    S_hat = numpy.hstack(( (-1.0/SSA_max)*S_hat, [1]) )
+    S = numpy.poly(roots)[::-1]  # monomial coefficients of S error propagator
 
-    coeffs = numpy.polymul(S_hat,S)          #coefficients for combined error propagator i.e. \hat{S}S
-    coeffs = -coeffs[:-1]                    #coefficients for smoother
+    SSA_max = rho/((2.0*degree+1.0)**2)  # upper bound spectral radius of S^2A
+    S_hat = numpy.polymul(S, S)  # monomial coefficients of \hat{S} propagator
+    S_hat = numpy.hstack(((-1.0/SSA_max)*S_hat, [1]))
 
-    return (coeffs,roots)
+    # coeff for combined error propagator \hat{S}S
+    coeffs = numpy.polymul(S_hat, S)
+    coeffs = -coeffs[:-1]             # coeff for smoother
+
+    return (coeffs, roots)
 
 
 if __name__ == '__main__':
@@ -115,30 +118,28 @@ if __name__ == '__main__':
         a = 1.0/100.0
         b = 1.0
         degree = 4
-        
+
         coeffs = chebyshev_polynomial_coefficients(a, b, degree)
-        print "coeffs",coeffs
-        
-        from pylab import *
-        x = linspace(-0.1,1.1,100)
-        plot(x, polyval(coeffs, x))
-        vlines([a,b],-1,1)
-        y = polyval(coeffs, a) 
-        hlines([-y,y],a,b)
-        ylim(-1.1,1.1)
-        show()
-    
-    
+        print "coeffs", coeffs
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        x = np.linspace(-0.1, 1.1, 100)
+        plt.plot(x, np.polyval(coeffs, x))
+        plt.vlines([a, b], -1, 1)
+        y = np.polyval(coeffs, a)
+        plt.hlines([-y, y], a, b)
+        plt.ylim(-1.1, 1.1)
+        plt.show()
+
     if False:
         # show MLS polynomial, currently broken?
         degree = 2
-        rho    = 1.0
-    
-        coeffs,roots = mls_polynomial_coefficients(rho, degree)
-        
-        from pylab import *
-        x = linspace(0.0,1.1,100)
-        plot(x, polyval(coeffs, x))
-        xlim(0, rho)
-        show()
+        rho = 1.0
 
+        coeffs, roots = mls_polynomial_coefficients(rho, degree)
+
+        x = np.linspace(0.0, 1.1, 100)
+        plt.jplot(x, np.polyval(coeffs, x))
+        plt.xlim(0, rho)
+        plt.show()
