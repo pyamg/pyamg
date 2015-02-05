@@ -1,18 +1,27 @@
 from pyamg.testing import *
 
 import numpy
-from numpy import array, zeros, mat, eye, ones, setdiff1d, min, ravel, diff, mod, repeat, sqrt, finfo, abs
-from scipy import rand, real, imag, mat, zeros, sign, eye, arange
-from scipy.sparse import csr_matrix, isspmatrix_csr, bsr_matrix, isspmatrix_bsr, spdiags, coo_matrix
+from numpy import array, zeros, mat, eye, ones, min, ravel, diff, mod, repeat,\
+    sqrt, finfo, abs
+from scipy import rand, real, imag, arange
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, spdiags,\
+    coo_matrix
 import scipy.sparse
-from scipy.special import round
-from scipy.linalg import pinv2, pinv
+from scipy.linalg import pinv
 
-from pyamg.gallery import poisson, linear_elasticity, load_example, stencil_grid
-from pyamg.strength import *
+from pyamg.gallery import poisson, linear_elasticity, load_example,\
+    stencil_grid
+from pyamg.strength import classical_strength_of_connection,\
+    symmetric_strength_of_connection, evolution_strength_of_connection,\
+    distance_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows
+
+classical_soc = classical_strength_of_connection
+symmetric_soc = symmetric_strength_of_connection
+evolution_soc = evolution_strength_of_connection
+distance_soc = distance_strength_of_connection
 
 
 class TestStrengthOfConnection(TestCase):
@@ -37,8 +46,8 @@ class TestStrengthOfConnection(TestCase):
     def test_classical_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.05, 0.25, 0.50, 0.90]:
-                result   = classical_strength_of_connection(A, theta)
-                expected = reference_classical_strength_of_connection(A, theta)
+                result = classical_soc(A, theta)
+                expected = reference_classical_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
@@ -46,8 +55,8 @@ class TestStrengthOfConnection(TestCase):
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
-                result   = symmetric_strength_of_connection(A, theta)
-                expected = reference_symmetric_strength_of_connection(A, theta)
+                result = symmetric_soc(A, theta)
+                expected = reference_symmetric_soc(A, theta)
 
                 assert_equal(result.nnz,       expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
@@ -59,27 +68,25 @@ class TestStrengthOfConnection(TestCase):
 
         for (A, V) in cases:
             for theta in [1.5, 2.0, 2.5]:
-                result = distance_strength_of_connection(A, V, theta=theta)
-                expected = reference_distance_strength_of_connection(A, V, theta=theta)
+                result = distance_soc(A, V, theta=theta)
+                expected = reference_distance_soc(A, V, theta=theta)
                 assert_equal(result.nnz,       expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
         for (A, V) in cases:
             for theta in [0.5, 1.0, 1.5]:
-                result = distance_strength_of_connection(A, V, theta=theta, \
-                                            relative_drop=False)
-                expected = reference_distance_strength_of_connection(A, V, \
-                                            theta=theta, relative_drop=False)
+                result = distance_soc(A, V, theta=theta, relative_drop=False)
+                expected = reference_distance_soc(A, V, theta=theta,
+                                                  relative_drop=False)
                 assert_equal(result.nnz,       expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
-
-
     def test_incomplete_mat_mult_csr(self):
-        # Test a critical helper routine for evolution_strength_of_connection(...)
+        # Test a critical helper routine for evolution_soc(...)
         # We test that (A*B).multiply(mask) = incomplete_mat_mult_csr(A,B,mask)
         #
-        # This function assumes square matrices, A, B and mask, so that simplifies the testing
+        # This function assumes square matrices, A, B and mask, so that
+        # simplifies the testing
         cases = []
 
         # 1x1 tests
@@ -97,19 +104,22 @@ class TestStrengthOfConnection(TestCase):
         B = csr_matrix(mat([[1.3, 2.], [2.8, 4.]]))
         A2 = csr_matrix(mat([[1.3, 0.], [0., 4.]]))
         B2 = csr_matrix(mat([[1.3, 0.], [2., 4.]]))
-        mask = csr_matrix((ones(4), (array([0, 0, 1, 1]), array([0, 1, 0, 1]))), shape=(2, 2))
+        mask = csr_matrix((ones(4), (array([0, 0, 1, 1]),
+                                     array([0, 1, 0, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = csr_matrix((ones(3), (array([0, 0, 1]), array([0, 1, 1]))), shape=(2, 2))
+        mask = csr_matrix((ones(3), (array([0, 0, 1]),
+                                     array([0, 1, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = csr_matrix((ones(2), (array([0, 1]), array([0, 0]))), shape=(2, 2))
+        mask = csr_matrix((ones(2), (array([0, 1]),
+                                     array([0, 0]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
@@ -117,10 +127,10 @@ class TestStrengthOfConnection(TestCase):
 
         # 5x5 tests
         A = mat([[0.,  16.9,   6.4,   0.0,   5.8],
-                    [16.9,  13.8,   7.2,   0.,   9.5],
-                    [6.4,   7.2,  12.,   6.1,   5.9],
-                    [0.0,   0.,   6.1,   0.,   0.],
-                    [5.8,   9.5,   5.9,   0.,  13.]])
+                 [16.9,  13.8,   7.2,   0.,   9.5],
+                 [6.4,   7.2,  12.,   6.1,   5.9],
+                 [0.0,   0.,   6.1,   0.,   0.],
+                 [5.8,   9.5,   5.9,   0.,  13.]])
         C = A.copy()
         C[1, 0] = 3.1
         C[3, 2] = 10.1
@@ -165,8 +175,8 @@ class TestStrengthOfConnection(TestCase):
         B.data[11] = 11.6
         B.data[28] = -3.2
         C = csr_matrix(zeros(A.shape))
-        mask=A.copy()
-        mask.data[:]=1.0
+        mask = A.copy()
+        mask.data[:] = 1.0
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((B, A, mask))
@@ -175,11 +185,11 @@ class TestStrengthOfConnection(TestCase):
         cases.append((C, C, mask))
 
         # Imaginary tests
-        A = mat([[0.0 +0.j,   0.0+16.9j,   6.4 +1.2j,   0.0 +0.j,   0.0 +0.j],
-                 [16.9 +0.j,  13.8 +0.j,   7.2 +0.j,   0.0 +0.j,   0.0 +9.5j],
-                 [0.0 +6.4j,   7.2 -8.1j,  12.0 +0.j,   6.1 +0.j,   5.9 +0.j],
-                 [0.0 +0.j,   0.0 +0.j,   6.1 +0.j,   0.0 +0.j,   0.0 +0.j],
-                 [5.8 +0.j,  -4.0 +9.5j,  -3.2 -5.9j,   0.0 +0.j,  13.0 +0.j]])
+        A = mat([[0.0 + 0.j, 0.0 + 16.9j, 6.4 + 1.2j, 0.0 + 0.j, 0.0 + 0.j],
+                 [16.9 + 0.j, 13.8 + 0.j, 7.2 + 0.j, 0.0 + 0.j, 0.0 + 9.5j],
+                 [0.0 + 6.4j, 7.2 - 8.1j, 12.0 + 0.j, 6.1 + 0.j, 5.9 + 0.j],
+                 [0.0 + 0.j, 0.0 + 0.j, 6.1 + 0.j, 0.0 + 0.j, 0.0 + 0.j],
+                 [5.8 + 0.j, -4.0 + 9.5j, -3.2 - 5.9j, 0.0 + 0.j, 13.0 + 0.j]])
         C = A.copy()
         C[1, 0] = 3.1j - 1.3
         C[3, 2] = -10.1j + 9.7
@@ -193,7 +203,6 @@ class TestStrengthOfConnection(TestCase):
         cases.append((A, C, mask))
         cases.append((C, A, mask))
 
-
         for case in cases:
             A = case[0].tocsr()
             B = case[1].tocsc()
@@ -202,8 +211,9 @@ class TestStrengthOfConnection(TestCase):
             B.sort_indices()
             mask.sort_indices()
             result = mask.copy()
-            incomplete_mat_mult_csr(A.indptr, A.indices, A.data, B.indptr, B.indices, B.data,
-                              result.indptr, result.indices, result.data, A.shape[0])
+            incomplete_mat_mult_csr(A.indptr, A.indices, A.data, B.indptr,
+                                    B.indices, B.data, result.indptr,
+                                    result.indices, result.data, A.shape[0])
             result.eliminate_zeros()
             exact = (A*B).multiply(mask)
             exact.sort_indices()
@@ -211,7 +221,6 @@ class TestStrengthOfConnection(TestCase):
             assert_array_almost_equal(exact.data, result.data)
             assert_array_equal(exact.indptr, result.indptr)
             assert_array_equal(exact.indices, result.indices)
-
 
     def test_evolution_strength_of_connection(self):
         # Params:  A, B, epsilon=4.0, k=2, proj_type="l2"
@@ -221,18 +230,24 @@ class TestStrengthOfConnection(TestCase):
         for N in [3, 5, 7, 10]:
             A = poisson((N,), format='csr')
             B = ones((A.shape[0], 1))
-            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
+                          'k': 2, 'proj': 'l2'})
 
-        # Ensure that anisotropic diffusion results in an anisotropic strength stencil
+        # Ensure that anisotropic diffusion results in an anisotropic
+        # strength stencil
         for N in [3, 6, 7]:
-            A = spdiags([-ones(N*N), -0.001*ones(N*N), 2.002*ones(N*N), -0.001*ones(N*N), -ones(N*N)], [-N, -1, 0, 1, N], N*N, N*N, format='csr')
+            u = ones(N*N)
+            A = spdiags([-u, -0.001*u, 2.002*u, -0.001*u, -u],
+                        [-N, -1, 0, 1, N], N*N, N*N, format='csr')
             B = ones((A.shape[0], 1))
-            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
+                          'k': 2, 'proj': 'l2'})
 
         # Ensure that isotropic elasticity results in an isotropic stencil
         for N in [3, 6, 7]:
             (A, B) = linear_elasticity((N, N), format='bsr')
-            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 32.0, 'k': 8, 'proj': 'D_A'})
+            cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 32.0,
+                          'k': 8, 'proj': 'D_A'})
 
         # Run an example with a non-uniform stencil
         ex = load_example('airfoil')
@@ -257,17 +272,17 @@ class TestStrengthOfConnection(TestCase):
 
         for ca in cases:
             scipy.random.seed(0)  #make results deterministic
-            result = evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
             scipy.random.seed(0)  #make results deterministic
-            expected = reference_evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            expected = reference_evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal(result.todense(), expected.todense(), decimal=4)
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, \
+        result_unscaled = evolution_soc(A, B, epsilon=4.0, \
                            k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], \
@@ -275,7 +290,7 @@ class TestStrengthOfConnection(TestCase):
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], \
                                 [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_strength_of_connection( (D*A*D).tobsr(blocksize=(2, 2)), \
+        result_scaled = evolution_soc( (D*A*D).tobsr(blocksize=(2, 2)), \
                   Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
 
@@ -306,8 +321,8 @@ class TestComplexStrengthOfConnection(TestCase):
     def test_classical_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.05, 0.25, 0.50, 0.90]:
-                result   = classical_strength_of_connection(A, theta)
-                expected = reference_classical_strength_of_connection(A, theta)
+                result   = classical_soc(A, theta)
+                expected = reference_classical_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
@@ -315,8 +330,8 @@ class TestComplexStrengthOfConnection(TestCase):
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
-                expected = reference_symmetric_strength_of_connection(A, theta)
-                result   = symmetric_strength_of_connection(A, theta)
+                expected = reference_symmetric_soc(A, theta)
+                result   = symmetric_soc(A, theta)
 
                 assert_equal(result.nnz,       expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
@@ -343,10 +358,10 @@ class TestComplexStrengthOfConnection(TestCase):
 
         for ca in cases:
             scipy.random.seed(0)  #make results deterministic
-            result = evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                  k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
             scipy.random.seed(0)  #make results deterministic
-            expected = reference_evolution_strength_of_connection(ca['A'], ca['B'], epsilon=ca['epsilon'], \
+            expected = reference_evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
                                                            k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal(result.todense(), expected.todense())
 
@@ -354,20 +369,20 @@ class TestComplexStrengthOfConnection(TestCase):
         A = 1.0j*poisson((5, 5), format='csr')
         B = 1.0j*arange(1, A.shape[0]+1, dtype=float).reshape(-1, 1)
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
+        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
+        result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
 
         # Test that the l2 and D_A are the same for the 1 candidate case
         scipy.random.seed(0)  #make results deterministic
-        resultDA = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+        resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, \
                             k=2, proj_type="D_A", symmetrize_measure=False)
         scipy.random.seed(0)  #make results deterministic
-        resultl2 = evolution_strength_of_connection(D*A*D, Dinv*B, epsilon=4.0, \
+        resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, \
                               k=2, proj_type="l2", symmetrize_measure=False)
         assert_array_almost_equal(resultDA.todense(), resultl2.todense())
 
@@ -376,13 +391,13 @@ class TestComplexStrengthOfConnection(TestCase):
         A = 1.0j*A
         B = 1.0j*B
         scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_strength_of_connection(A, B, epsilon=4.0, k=2, \
+        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2, \
                                      proj_type="D_A", symmetrize_measure=False)
         # create scaled A
         D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
         scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_strength_of_connection((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B, \
+        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B, \
                                 epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
 
@@ -390,7 +405,7 @@ class TestComplexStrengthOfConnection(TestCase):
 ################################################
 ##   reference implementations for unittests  ##
 ################################################
-def reference_classical_strength_of_connection(A, theta):
+def reference_classical_soc(A, theta):
     # This complex extension of the classic Ruge-Stuben
     # strength-of-connection has some theoretical justification in
     # "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan,
@@ -441,7 +456,7 @@ def reference_classical_strength_of_connection(A, theta):
     return S
 
 
-def reference_symmetric_strength_of_connection(A, theta):
+def reference_symmetric_soc(A, theta):
     # This is just a direct complex extension of the classic
     # SA strength-of-connection measure.  The extension continues
     # to compare magnitudes. This should reduce to the classic
@@ -489,7 +504,7 @@ def reference_symmetric_strength_of_connection(A, theta):
 
 
 
-def reference_evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type="l2"):
+def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
     All python reference implementation for Evolution Strength of Connection
     
@@ -683,7 +698,7 @@ def reference_evolution_strength_of_connection(A, B, epsilon=4.0, k=2, proj_type
     return Atilde
 
 
-def reference_distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
+def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     ''' 
     Reference routine for distance based strength of connection
     '''
