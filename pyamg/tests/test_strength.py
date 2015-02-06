@@ -253,46 +253,61 @@ class TestStrengthOfConnection(TestCase):
         ex = load_example('airfoil')
         A = ex['A'].tocsr()
         B = ones((A.shape[0], 1))
-        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 8.0, 'k': 4, 'proj': 'D_A'})
+        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 8.0, 'k': 4,
+                      'proj': 'D_A'})
         Absr = A.tobsr(blocksize=(5, 5))
-        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 8.0, 'k': 4, 'proj': 'D_A'})
+        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 8.0, 'k': 4,
+                      'proj': 'D_A'})
         # Different B
         B = arange(1, 2*A.shape[0]+1, dtype=float).reshape(-1, 2)
-        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
-        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
+        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
 
         # Zero row and column
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
         A = A.tocsc()
         A.data[A.indptr[4]:A.indptr[5]] = 0.0
-        A.eliminate_zeros();  A = A.tocsr();  A.sort_indices()
-        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        A.eliminate_zeros()
+        A = A.tocsr()
+        A.sort_indices()
+        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
         Absr = A.tobsr(blocksize=(5, 5))
-        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
 
         for ca in cases:
-            scipy.random.seed(0)  #make results deterministic
-            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
-                                 k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
-            scipy.random.seed(0)  #make results deterministic
-            expected = reference_evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
-                                 k=ca['k'], proj_type=ca['proj'])
-            assert_array_almost_equal(result.todense(), expected.todense(), decimal=4)
+            scipy.random.seed(0)  # make results deterministic
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
+                                   k=ca['k'], proj_type=ca['proj'],
+                                   symmetrize_measure=False)
+            scipy.random.seed(0)  # make results deterministic
+            expected = reference_evolution_soc(ca['A'], ca['B'],
+                                               epsilon=ca['epsilon'],
+                                               k=ca['k'], proj_type=ca['proj'])
+            assert_array_almost_equal(result.todense(), expected.todense(),
+                                      decimal=4)
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
-        scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_soc(A, B, epsilon=4.0, \
-                           k=2, proj_type="D_A", symmetrize_measure=False)
+        scipy.random.seed(0)  # make results deterministic
+        result_unscaled = evolution_soc(A, B, epsilon=4.0,
+                                        k=2, proj_type="D_A",
+                                        symmetrize_measure=False)
         # create scaled A
-        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], \
-                         [0], A.shape[0], A.shape[0], format = 'csr')
-        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], \
-                                [0], A.shape[0], A.shape[0], format = 'csr')
-        scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_soc( (D*A*D).tobsr(blocksize=(2, 2)), \
-                  Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
+        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                    [0], A.shape[0], A.shape[0], format='csr')
+        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                       [0], A.shape[0], A.shape[0], format='csr')
+        scipy.random.seed(0)  # make results deterministic
+        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)),
+                                      Dinv*B, epsilon=4.0, k=2,
+                                      proj_type="D_A",
+                                      symmetrize_measure=False)
+        assert_array_almost_equal(result_scaled.todense(),
+                                  result_unscaled.todense(), decimal=2)
 
 
 # Define Complex tests
@@ -303,19 +318,23 @@ class TestComplexStrengthOfConnection(TestCase):
         # random matrices
         numpy.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(rand(N, N)) + csr_matrix(1.0j*rand(N, N)))
+            self.cases.append(csr_matrix(rand(N, N)) +
+                              csr_matrix(1.0j*rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
-            A = poisson((N,), format='csr'); A.data = A.data + 1.0j*A.data;
+            A = poisson((N,), format='csr')
+            A.data = A.data + 1.0j*A.data
             self.cases.append(A)
         for N in [2, 3, 7, 9]:
-            A = poisson((N, N), format='csr'); A.data = A.data + 1.0j*rand(A.data.shape[0],);
+            A = poisson((N, N), format='csr')
+            A.data = A.data + 1.0j*rand(A.data.shape[0],)
             self.cases.append(A)
 
         for name in ['knot', 'airfoil', 'bar']:
             ex = load_example(name)
-            A = ex['A'].tocsr(); A.data = A.data + 0.5j*rand(A.data.shape[0],);
+            A = ex['A'].tocsr()
+            A.data = A.data + 0.5j*rand(A.data.shape[0],)
             self.cases.append(A)
 
     def test_classical_strength_of_connection(self):
@@ -351,7 +370,9 @@ class TestComplexStrengthOfConnection(TestCase):
         B = 1.0j*ones((A.shape[0], 2))
         B[0:-1:2, 0] = 0.0
         B[1:-1:2, 1] = 0.0
-        B[-1, 0] = 0.0;  B[11, 1] = -14.2;  B[0, 0] = 1.2 - 12.0j
+        B[-1, 0] = 0.0
+        B[11, 1] = -14.2
+        B[0, 0] = 1.2 - 12.0j
         cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
         Absr = A.tobsr(blocksize=(2, 2))
         cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
@@ -507,7 +528,7 @@ def reference_symmetric_soc(A, theta):
 def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
     All python reference implementation for Evolution Strength of Connection
-    
+
     --> If doing imaginary test, both A and B should be imaginary type upon entry
     --> This does the "unsymmetrized" version of the ode measure
     """
@@ -530,7 +551,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     NullDim = Bmat.shape[1]
 
     # Get spectral radius of Dinv*A, this is the time step size for the ODE
-    D = A.diagonal();
+    D = A.diagonal()
     Dinv = numpy.zeros_like(D)
     mask = (D != 0.0)
     Dinv[mask] = 1.0 / D[mask]
@@ -699,7 +720,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
 
 def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
-    ''' 
+    '''
     Reference routine for distance based strength of connection
     '''
 
