@@ -717,11 +717,10 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
 
         # Atilde = csr_matrix((data, row, col), shape=(*,*))
-        #        Atilde = csr_matrix((array([Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
-        #                             Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs)
         At = []
         for i in range(Atilde.indices.shape[0]):
-            At.append(Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()].min())
+            Atmin = Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()]
+            At.append(Atmin.min())
 
         Atilde = csr_matrix((array(At), Atilde.indices, Atilde.indptr),
                             shape=(Atilde.shape[0]/numPDEs,
