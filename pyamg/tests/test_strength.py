@@ -340,7 +340,7 @@ class TestComplexStrengthOfConnection(TestCase):
     def test_classical_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.05, 0.25, 0.50, 0.90]:
-                result   = classical_soc(A, theta)
+                result = classical_soc(A, theta)
                 expected = reference_classical_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
@@ -350,7 +350,7 @@ class TestComplexStrengthOfConnection(TestCase):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
                 expected = reference_symmetric_soc(A, theta)
-                result   = symmetric_soc(A, theta)
+                result = symmetric_soc(A, theta)
 
                 assert_equal(result.nnz,       expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
@@ -364,7 +364,8 @@ class TestComplexStrengthOfConnection(TestCase):
         B = 1.0j*ones((A.shape[0], 1))
         B[0] = 1.2 - 12.0j
         B[11] = -14.2
-        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
 
         # Multiple near nullspace candidate
         B = 1.0j*ones((A.shape[0], 2))
@@ -373,59 +374,75 @@ class TestComplexStrengthOfConnection(TestCase):
         B[-1, 0] = 0.0
         B[11, 1] = -14.2
         B[0, 0] = 1.2 - 12.0j
-        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
         Absr = A.tobsr(blocksize=(2, 2))
-        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2, 'proj': 'l2'})
+        cases.append({'A': Absr.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
+                      'proj': 'l2'})
 
         for ca in cases:
-            scipy.random.seed(0)  #make results deterministic
-            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
-                                 k=ca['k'], proj_type=ca['proj'], symmetrize_measure=False)
-            scipy.random.seed(0)  #make results deterministic
-            expected = reference_evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'], \
-                                                           k=ca['k'], proj_type=ca['proj'])
+            scipy.random.seed(0)  # make results deterministic
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
+                                   k=ca['k'], proj_type=ca['proj'],
+                                   symmetrize_measure=False)
+            scipy.random.seed(0)  # make results deterministic
+            expected = reference_evolution_soc(ca['A'], ca['B'],
+                                               epsilon=ca['epsilon'],
+                                               k=ca['k'], proj_type=ca['proj'])
             assert_array_almost_equal(result.todense(), expected.todense())
 
         # Test Scale Invariance for a single candidate
         A = 1.0j*poisson((5, 5), format='csr')
         B = 1.0j*arange(1, A.shape[0]+1, dtype=float).reshape(-1, 1)
-        scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
+        scipy.random.seed(0)  # make results deterministic
+        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
+                                        proj_type="D_A",
+                                        symmetrize_measure=False)
         # create scaled A
-        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
+        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                    [0], A.shape[0], A.shape[0], format='csr')
+        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                       [0], A.shape[0], A.shape[0], format='csr')
+        scipy.random.seed(0)  # make results deterministic
+        result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2,
+                                      proj_type="D_A",
+                                      symmetrize_measure=False)
+        assert_array_almost_equal(result_scaled.todense(),
+                                  result_unscaled.todense(), decimal=2)
 
         # Test that the l2 and D_A are the same for the 1 candidate case
-        scipy.random.seed(0)  #make results deterministic
-        resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, \
-                            k=2, proj_type="D_A", symmetrize_measure=False)
-        scipy.random.seed(0)  #make results deterministic
-        resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, \
-                              k=2, proj_type="l2", symmetrize_measure=False)
+        scipy.random.seed(0)  # make results deterministic
+        resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
+                                 k=2, proj_type="D_A",
+                                 symmetrize_measure=False)
+        scipy.random.seed(0)  # make results deterministic
+        resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
+                                 k=2, proj_type="l2",
+                                 symmetrize_measure=False)
         assert_array_almost_equal(resultDA.todense(), resultl2.todense())
 
         # Test Scale Invariance for multiple candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
         A = 1.0j*A
         B = 1.0j*B
-        scipy.random.seed(0)  #make results deterministic
-        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2, \
-                                     proj_type="D_A", symmetrize_measure=False)
+        scipy.random.seed(0)  # make results deterministic
+        result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
+                                        proj_type="D_A",
+                                        symmetrize_measure=False)
         # create scaled A
-        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)], [0], A.shape[0], A.shape[0], format = 'csr')
-        scipy.random.seed(0)  #make results deterministic
-        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B, \
-                                epsilon=4.0, k=2, proj_type="D_A", symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(), result_unscaled.todense(), decimal=2)
+        D = spdiags([arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                    [0], A.shape[0], A.shape[0], format='csr')
+        Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                       [0], A.shape[0], A.shape[0], format='csr')
+        scipy.random.seed(0)  # make results deterministic
+        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B,
+                                      epsilon=4.0, k=2, proj_type="D_A",
+                                      symmetrize_measure=False)
+        assert_array_almost_equal(result_scaled.todense(),
+                                  result_unscaled.todense(), decimal=2)
 
 
-################################################
-##   reference implementations for unittests  ##
-################################################
+# reference implementations for unittests  #
 def reference_classical_soc(A, theta):
     # This complex extension of the classic Ruge-Stuben
     # strength-of-connection has some theoretical justification in
@@ -438,10 +455,10 @@ def reference_classical_soc(A, theta):
 
     # remove diagonals
     mask = S.row != S.col
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
+    S.row = S.row[mask]
+    S.col = S.col[mask]
     S.data = S.data[mask]
-    max_offdiag    = numpy.empty(S.shape[0])
+    max_offdiag = numpy.empty(S.shape[0])
     max_offdiag[:] = numpy.finfo(S.data.dtype).min
 
     # Note abs(.) takes the complex modulus
@@ -450,8 +467,8 @@ def reference_classical_soc(A, theta):
 
     # strong connections
     mask = abs(S.data) >= (theta * max_offdiag[S.row])
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
+    S.row = S.row[mask]
+    S.col = S.col[mask]
     S.data = S.data[mask]
 
     # Add back diagonal
@@ -470,7 +487,8 @@ def reference_classical_soc(A, theta):
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
-    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
+    largest_row_entry[largest_row_entry != 0] =\
+        1.0 / largest_row_entry[largest_row_entry != 0]
     S = S.tocsr()
     S = scale_rows(S, largest_row_entry, copy=True)
 
@@ -490,15 +508,15 @@ def reference_symmetric_soc(A, theta):
 
     S = coo_matrix(A)
 
-    mask  = S.row != S.col
+    mask = S.row != S.col
     DD = array(D[S.row] * D[S.col]).reshape(-1,)
     # Note that abs takes the complex modulus element-wise
     # Note that using the square of the measure is the technique used
     # in the C++ routine, so we use it here.  Doing otherwise causes errors.
     mask &= ((real(S.data)**2 + imag(S.data)**2) >= theta*theta*DD)
 
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
+    S.row = S.row[mask]
+    S.col = S.col[mask]
     S.data = S.data[mask]
 
     # Add back diagonal
@@ -517,19 +535,21 @@ def reference_symmetric_soc(A, theta):
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
-    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
+    largest_row_entry[largest_row_entry != 0] =\
+        1.0 / largest_row_entry[largest_row_entry != 0]
     S = S.tocsr()
     S = scale_rows(S, largest_row_entry, copy=True)
 
     return S
 
 
-
 def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     """
     All python reference implementation for Evolution Strength of Connection
 
-    --> If doing imaginary test, both A and B should be imaginary type upon entry
+    --> If doing imaginary test, both A and B should be imaginary type upon
+    entry
+
     --> This does the "unsymmetrized" version of the ode measure
     """
 
@@ -556,7 +576,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     mask = (D != 0.0)
     Dinv[mask] = 1.0 / D[mask]
     Dinv[D == 0] = 1.0
-    Dinv_A  = scale_rows(A, Dinv, copy=True)
+    Dinv_A = scale_rows(A, Dinv, copy=True)
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
     # Calculate (Atilde^k) naively
@@ -568,15 +588,14 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     # Strength Info should be row-based, so transpose Atilde
     Atilde = Atilde.T.tocsr()
 
-    #====================================================================
-    # Construct and apply a sparsity mask for Atilde that restricts Atilde^T to the nonzero pattern
-    #  of A, with the added constraint that row i of Atilde^T retains only the nonzeros that are
-    #  also in the same PDE as i.
+    # Construct and apply a sparsity mask for Atilde that restricts Atilde^T to
+    # the nonzero pattern of A, with the added constraint that row i of
+    # Atilde^T retains only the nonzeros that are also in the same PDE as i.
 
     mask = A.copy()
 
-    # Only consider strength at dofs from your PDE.  Use mask to enforce this by zeroing out
-    #   all entries in Atilde that aren't from your PDE.
+    # Only consider strength at dofs from your PDE.  Use mask to enforce this
+    # by zeroing out all entries in Atilde that aren't from your PDE.
     if numPDEs > 1:
         row_length = diff(mask.indptr)
         my_pde = mod(range(dimen), numPDEs)
@@ -585,14 +604,14 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
         del row_length, my_pde
         mask.eliminate_zeros()
 
-    # Apply mask to Atilde, zeros in mask have already been eliminated at start of routine.
+    # Apply mask to Atilde, zeros in mask have already been eliminated at start
+    # of routine.
     mask.data[:] = 1.0
     Atilde = Atilde.multiply(mask)
     Atilde.eliminate_zeros()
     Atilde.sort_indices()
     del mask
 
-    #====================================================================
     # Calculate strength based on constrained min problem of
     LHS = mat(zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
     RHS = mat(zeros((NullDim+1, 1)), dtype=A.dtype)
@@ -620,7 +639,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             for j in range(length):
                 D_A[j, j] = D[colindx[j]]
 
-        # Find row i's position in colindx, matrix must have sorted column indices.
+        # Find row i's position in colindx, matrix must have sorted column
+        # indices.
         iInRow = colindx.searchsorted(i)
 
         if length <= NullDim:
@@ -643,9 +663,9 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             # Calc Soln to Min Problem
             x = mat(pinv(LHS))*RHS
 
-            # Calculate best constrained approximation to zi with span(Bi), and filter out
-            # "numerically" zero values.  This is important because we look only at the
-            # sign of values below when calculating angle.
+            # Calculate best constrained approximation to zi with span(Bi), and
+            # filter out "numerically" zero values.  This is important because
+            # we look only at the sign of values below when calculating angle.
             zihat = Bi*x[:-1]
             tol_i = max(abs(zihat))*tol
             zihat.real[abs(zihat.real) < tol_i] = 0.0
@@ -653,9 +673,10 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
                 zihat.imag[abs(zihat.imag) < tol_i] = 0.0
 
             # if angle in the complex plane between individual entries is
-            #   greater than 90 degrees, then weak.  We can just look at the
-            #   dot product to determine if angle is greater than 90 degrees.
-            angle = real(ravel(zihat))*real(ravel(zi)) + imag(ravel(zihat))*imag(ravel(zi))
+            # greater than 90 degrees, then weak.  We can just look at the dot
+            # product to determine if angle is greater than 90 degrees.
+            angle = real(ravel(zihat))*real(ravel(zi)) +\
+                imag(ravel(zihat))*imag(ravel(zi))
             angle = angle < 0.0
             angle = array(angle, dtype=bool)
 
@@ -674,13 +695,12 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             # important to make "perfect" connections explicitly nonzero
             zi[zi < sqrt_near_zero] = 1e-4
 
-            # Calculate and apply drop-tol.  Ignore diagonal by making it very large
+            # Calculate and apply drop-tol.  Ignore diagonal by making it very
+            # large
             zi[iInRow] = 1e5
             drop_tol = min(zi)*epsilon
             zi[zi > drop_tol] = 0.0
             Atilde.data[rowstart:rowend] = ravel(zi)
-
-    #===================================================================
 
     # Clean up, and return Atilde
     Atilde.eliminate_zeros()
@@ -691,14 +711,21 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     I.data -= Atilde.diagonal()
     Atilde = Atilde + I
 
-    # If converted BSR to CSR we return amalgamated matrix with the minimum nonzero for each block
-    # making up the nonzeros of Atilde
+    # If converted BSR to CSR we return amalgamated matrix with the minimum
+    # nonzero for each block making up the nonzeros of Atilde
     if not csrflag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
 
         # Atilde = csr_matrix((data, row, col), shape=(*,*))
-        Atilde = csr_matrix((array([ Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
-                             Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs))
+        #        Atilde = csr_matrix((array([Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()].min() for i in range(Atilde.indices.shape[0]) ]), \
+        #                             Atilde.indices, Atilde.indptr), shape=(Atilde.shape[0]/numPDEs, Atilde.shape[1]/numPDEs)
+        At = []
+        for i in range(Atilde.indices.shape[0]):
+            At.append(Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()].min())
+
+        Atilde = csr_matrix((array(At), Atilde.indices, Atilde.indptr),
+                            shape=(Atilde.shape[0]/numPDEs,
+                                   Atilde.shape[1]/numPDEs))
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the algebraic distances computed here
@@ -712,7 +739,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
-    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
+    largest_row_entry[largest_row_entry != 0] =\
+        1.0 / largest_row_entry[largest_row_entry != 0]
     Atilde = Atilde.tocsr()
     Atilde = scale_rows(Atilde, largest_row_entry, copy=True)
 
@@ -727,8 +755,8 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     # deal with the supernode case
     if isspmatrix_bsr(A):
         dimen = A.shape[0]/A.blocksize[0]
-        C = csr_matrix( (numpy.ones((A.data.shape[0],)), A.indices, A.indptr), \
-                               shape=(dimen, dimen))
+        C = csr_matrix((numpy.ones((A.data.shape[0],)), A.indices, A.indptr),
+                       shape=(dimen, dimen))
     else:
         A = A.tocsr()
         dimen = A.shape[0]
@@ -782,11 +810,9 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
-    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
+    largest_row_entry[largest_row_entry != 0] =\
+        1.0 / largest_row_entry[largest_row_entry != 0]
     C = C.tocsr()
     C = scale_rows(C, largest_row_entry, copy=True)
 
     return C
-
-
-
