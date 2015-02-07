@@ -1765,7 +1765,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     I.data[diag_dom_rows] = 0.0
     C = I*C*I
     I.data[diag_dom_rows] = 1.0
-    I.data[diag_dom_rows == False] = 0.0
+    I.data[numpy.where(diag_dom_rows == 0)[0]] = 0.0
     C = C + I
 
     del A_abs
@@ -1805,7 +1805,8 @@ def remove_diagonal(S):
 
     """
 
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
         raise ValueError('expected square matrix, shape=%s' % (S.shape,))
@@ -1846,13 +1847,16 @@ def scale_rows_by_largest_entry(S):
 
     """
 
-    if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
 
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
-    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data)
+    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry,
+                                     S.indptr, S.indices, S.data)
 
-    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
+    largest_row_entry[largest_row_entry != 0] =\
+        1.0 / largest_row_entry[largest_row_entry != 0]
     S = scale_rows(S, largest_row_entry, copy=True)
 
     return S
@@ -1915,22 +1919,24 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
 
     elif isinstance(to_levelize, str):
         if to_levelize == 'predefined':
-            raise ValueError('predefined to_levelize requires a user-provided CSR' +
-                             'matrix representing strength or aggregation' +
-                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
+            raise ValueError('predefined to_levelize requires a user-provided\
+                              CSR matrix representing strength or aggregation\
+                              i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
         else:
             to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
-        if isinstance(to_levelize[-1], tuple) and (to_levelize[-1][0] == 'predefined'):
+        if isinstance(to_levelize[-1], tuple) and\
+           (to_levelize[-1][0] == 'predefined'):
             # to_levelize is a list that ends with a predefined operator
             max_levels = len(to_levelize) + 1
             max_coarse = 0
         else:
             # to_levelize a list that __doesn't__ end with 'predefined'
             if len(to_levelize) < max_levels-1:
-                to_levelize.extend([to_levelize[-1]
-                               for i in range(max_levels-len(to_levelize)-1)])
+                mlz = max_levels - 1 - len(to_levelize)
+                toext = [to_levelize[-1] for i in range(mlz)]
+                to_levelize.extend(toext)
 
     elif to_levelize is None:
         to_levelize = [(None, {}) for i in range(max_levels-1)]
@@ -1984,14 +1990,16 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
         to_levelize = [to_levelize for i in range(max_levels)]
     elif isinstance(to_levelize, list):
         if len(to_levelize) < max_levels:
-            to_levelize.extend([to_levelize[-1] for i in range(max_levels-len(to_levelize))])
+            mlz = max_levels - len(to_levelize)
+            toext = [to_levelize[-1] for i in range(mlz)]
+            to_levelize.extend(toext)
     elif to_levelize is None:
         to_levelize = [(None, {}) for i in range(max_levels)]
 
     return to_levelize
 
 
-#from functools import partial, update_wrapper
+# from functools import partial, update_wrapper
 # def dispatcher(name_to_handle):
 #    def dispatcher(arg):
 #        if isinstance(arg,tuple):
@@ -2016,4 +2024,3 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
 #        return wrapped
 #
 #    return dispatcher
-
