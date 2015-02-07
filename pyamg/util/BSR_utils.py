@@ -47,7 +47,7 @@ def BSR_Get_Row(A, i):
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
     
-    #Get z
+    # Get z
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
     
@@ -102,7 +102,7 @@ def BSR_Row_WriteScalar(A, i, x):
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
     
-    #for j in range(rowstart, rowend):
+    # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
     #   increment = indys.shape[0]
     #   A.data[j,localRowIndx,indys] = x
@@ -156,7 +156,7 @@ def BSR_Row_WriteVect(A, i, x):
     x = x.__array__().reshape((max(x.shape),))
     
     #counter = 0
-    #for j in range(rowstart, rowend):
+    # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
     #   increment = min(indys.shape[0], blocksize)
     #   A.data[j,localRowIndx,indys] = x[counter:(counter+increment), 0]

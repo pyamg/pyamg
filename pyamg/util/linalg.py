@@ -42,8 +42,8 @@ def norm(x, pnorm='2'):
     scipy.linalg.norm : scipy general matrix or vector norm
     """
 
-    #TODO check dimensions of x
-    #TODO speedup complex case
+    # TODO check dimensions of x
+    # TODO speedup complex case
     
     x = numpy.ravel(x)
     
@@ -93,7 +93,7 @@ def infinity_norm(A):
     """
 
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
-        #avoid copying index and ptr arrays
+        # avoid copying index and ptr arrays
         abs_A = A.__class__((numpy.abs(A.data), A.indices, A.indptr), shape=A.shape)
         return (abs_A * numpy.ones((A.shape[1]), dtype=A.dtype)).max()
     elif sparse.isspmatrix(A):
@@ -137,7 +137,7 @@ def axpy(x, y, a=1.0):
     fn = get_blas_funcs(['axpy'], [x, y])[0]
     fn(x, y, a)
 
-#def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
+# def approximate_spectral_radius(A, tol=0.1, maxiter=10, symmetric=False):
 #    """approximate the spectral radius of a matrix
 #
 #    Parameters
@@ -196,7 +196,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     maxiter = min(A.shape[0], maxiter)
     
     if initial_guess is None:
-        v0  = scipy.rand(A.shape[1], 1)
+        v0 = scipy.rand(A.shape[1], 1)
         if A.dtype == complex:
             v0 = v0 + 1.0j * scipy.rand(A.shape[1], 1)
     else:
@@ -207,7 +207,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     ##
     # Important to type H based on v0, so that a real nonsymmetric matrix, can 
     # have an imaginary initial guess for its Arnoldi Krylov space
-    H  = numpy.zeros((maxiter+1, maxiter), dtype=numpy.find_common_type([v0.dtype, A.dtype], []))
+    H = numpy.zeros((maxiter+1, maxiter), dtype=numpy.find_common_type([v0.dtype, A.dtype], []))
 
     V = [v0]
 
@@ -221,7 +221,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
 
             alpha = numpy.dot(numpy.conjugate(numpy.ravel(w)), numpy.ravel(V[-1]))
             H[j, j] = alpha
-            w -= alpha * V[-1]  #axpy(V[-1],w,-alpha) 
+            w -= alpha * V[-1]  # axpy(V[-1],w,-alpha) 
             
             beta = norm(w)
             H[j+1, j] = beta
@@ -233,10 +233,10 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             w /= beta
 
             V.append(w)
-            V = V[-2:] #retain only last two vectors
+            V = V[-2:]  # retain only last two vectors
 
         else:
-            #orthogonalize against Vs
+            # orthogonalize against Vs
             for i, v in enumerate(V):
                 H[i, j] = numpy.dot(numpy.conjugate(numpy.ravel(v)), numpy.ravel(w))
                 w = w - H[i, j]*v
@@ -256,7 +256,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             # if upper 2x2 block of Hessenberg matrix H is almost symmetric,
             # and the user has not explicitly specified symmetric=False,
             # then switch to symmetric Lanczos algorithm
-            #if symmetric is not False and j == 1:
+            # if symmetric is not False and j == 1:
             #    if abs(H[1,0] - H[0,1]) < 1e-12:
             #        #print "using symmetric mode"
             #        symmetric = True
@@ -264,7 +264,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
             #        H[1,0] = H[0,1]
             #        beta = H[2,1]
     
-    #print "Approximated spectral radius in %d iterations" % (j + 1)
+    # print "Approximated spectral radius in %d iterations" % (j + 1)
     
     from scipy.linalg import eig
     
@@ -341,8 +341,8 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
     
     if not hasattr(A, 'rho') or return_vector:
         
-        ## somehow more restart causes a nonsymmetric case to fail...look at this
-        ## what about A.dtype=int?  convert somehow?
+        # somehow more restart causes a nonsymmetric case to fail...look at this
+        # what about A.dtype=int?  convert somehow?
 
         ##
         # The use of the restart vector v0 requires that the full Krylov subspace V
@@ -359,7 +359,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
             raise ValueError, 'expected square A'
 
         if initial_guess is None:
-            v0  = scipy.rand(A.shape[1], 1)
+            v0 = scipy.rand(A.shape[1], 1)
             if A.dtype == complex:
                 v0 = v0 + 1.0j * scipy.rand(A.shape[1], 1)
         else:
@@ -378,9 +378,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
             max_index = numpy.abs(ev).argmax()
             error = H[nvecs, nvecs-1]*evect[-1, max_index]
             # error is a fast way of calculating the following line 
-            #error2 = ( A - ev[max_index]*scipy.mat(scipy.eye(A.shape[0],A.shape[1])) )*\
+            # error2 = ( A - ev[max_index]*scipy.mat(scipy.eye(A.shape[0],A.shape[1])) )*\
             #         ( scipy.mat(scipy.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) ) 
-            #print str(error) + "    " + str(scipy.linalg.norm(e2))
+            # print str(error) + "    " + str(scipy.linalg.norm(e2))
             if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or breakdown_flag:
                 # halt if below relative tolerance
                 v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
@@ -482,7 +482,7 @@ def cond(A):
     if sparse.isspmatrix(A):
         A = A.todense()
 
-    #2-Norm Condition Number
+    # 2-Norm Condition Number
     from scipy.linalg import svd
 
     U, Sigma, Vh = svd(A)

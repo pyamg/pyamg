@@ -29,6 +29,7 @@ def blocksize(A):
     else:
         return 1
 
+
 def profile_solver(ml, accel=None, **kwargs):
     """
     A quick solver to profile a particular multilevel object
@@ -66,18 +67,19 @@ def profile_solver(ml, accel=None, **kwargs):
 
     """
     A = ml.levels[0].A
-    b = A * scipy.rand(A.shape[0],1)
+    b = A * scipy.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:
         x_sol = ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
-            residuals.append( norm(numpy.ravel(b) - numpy.ravel(A*x)) )
-        M = ml.aspreconditioner(cycle=kwargs.get('cycle','V'))
+            residuals.append(norm(numpy.ravel(b) - numpy.ravel(A*x)))
+        M = ml.aspreconditioner(cycle=kwargs.get('cycle', 'V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
     return numpy.asarray(residuals)
+
 
 def diag_sparse(A):
     """
@@ -112,11 +114,12 @@ def diag_sparse(A):
     if isspmatrix(A):
         return A.diagonal()
     else:
-        if(numpy.ndim(A)!=1):
-            raise ValueError,'input diagonal array expected to be 1d'
-        return csr_matrix((numpy.asarray(A),numpy.arange(len(A)),numpy.arange(len(A)+1)),(len(A),len(A)))
+        if(numpy.ndim(A) != 1):
+            raise ValueError, 'input diagonal array expected to be 1d'
+        return csr_matrix((numpy.asarray(A), numpy.arange(len(A)), numpy.arange(len(A)+1)), (len(A), len(A)))
 
-def scale_rows(A,v,copy=True):
+
+def scale_rows(A, v, copy=True):
     """
     Scale the sparse rows of a matrix
 
@@ -162,29 +165,30 @@ def scale_rows(A,v,copy=True):
     v = numpy.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
-        M,N = A.shape
+        M, N = A.shape
         if M != len(v):
-            raise ValueError,'scale vector has incompatible shape'
+            raise ValueError, 'scale vector has incompatible shape'
 
         if copy:
             A = A.copy()
-            A.data = numpy.asarray(A.data,dtype=upcast(A.dtype,v.dtype))
+            A.data = numpy.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
         else:
-            v = numpy.asarray(v,dtype=A.dtype)
+            v = numpy.asarray(v, dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
         else:
-            R,C = A.blocksize
+            R, C = A.blocksize
             bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
-        return scale_columns(A.T,v)
+        return scale_columns(A.T, v)
     else:
-        return scale_rows(csr_matrix(A),v)
+        return scale_rows(csr_matrix(A), v)
 
-def scale_columns(A,v,copy=True):
+
+def scale_columns(A, v, copy=True):
     """
     Scale the sparse columns of a matrix
 
@@ -236,29 +240,30 @@ def scale_columns(A,v,copy=True):
     v = numpy.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
-        M,N = A.shape
+        M, N = A.shape
         if N != len(v):
-            raise ValueError,'scale vector has incompatible shape'
+            raise ValueError, 'scale vector has incompatible shape'
 
         if copy:
             A = A.copy()
-            A.data = numpy.asarray(A.data,dtype=upcast(A.dtype,v.dtype))
+            A.data = numpy.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
         else:
-            v = numpy.asarray(v,dtype=A.dtype)
+            v = numpy.asarray(v, dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
         else:
-            R,C = A.blocksize
+            R, C = A.blocksize
             bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
-        return scale_rows(A.T,v)
+        return scale_rows(A.T, v)
     else:
-        return scale_rows(csr_matrix(A),v)
+        return scale_rows(csr_matrix(A), v)
 
-def symmetric_rescaling(A,copy=True):
+
+def symmetric_rescaling(A, copy=True):
     """
     Scale the matrix symmetrically::
 
@@ -312,7 +317,7 @@ def symmetric_rescaling(A,copy=True):
     """
     if isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A):
         if A.shape[0] != A.shape[1]:
-            raise ValueError,'expected square matrix'
+            raise ValueError, 'expected square matrix'
 
         D = diag_sparse(A)
         mask = (D != 0)
@@ -326,10 +331,10 @@ def symmetric_rescaling(A,copy=True):
         D_sqrt_inv = numpy.zeros_like(D_sqrt)
         D_sqrt_inv[mask] = 1.0/D_sqrt[mask]
 
-        DAD = scale_rows(A,D_sqrt_inv,copy=copy)
-        DAD = scale_columns(DAD,D_sqrt_inv,copy=False)
+        DAD = scale_rows(A, D_sqrt_inv, copy=copy)
+        DAD = scale_columns(DAD, D_sqrt_inv, copy=False)
 
-        return D_sqrt,D_sqrt_inv,DAD
+        return D_sqrt, D_sqrt_inv, DAD
 
     else:
         return symmetric_rescaling(csr_matrix(A))
@@ -399,7 +404,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     ##
     # scale candidates
     for i in range(B.shape[1]):
-        B[:,i] = numpy.ravel(B[:,i])*numpy.ravel(D_sqrt)
+        B[:, i] = numpy.ravel(B[:, i])*numpy.ravel(D_sqrt)
 
     if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
@@ -407,9 +412,9 @@ def symmetric_rescaling_sa(A, B, BH=None):
                 raise ValueError("BH should be an n x m array")
             else:
                 for i in range(BH.shape[1]):
-                    BH[:,i] = numpy.ravel(BH[:,i])*numpy.ravel(D_sqrt)
+                    BH[:, i] = numpy.ravel(BH[:, i])*numpy.ravel(D_sqrt)
 
-    return [A,B,BH]
+    return [A, B, BH]
 
 
 def type_prep(upcast_type, varlist):
@@ -546,7 +551,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
     """
 
-    #if not isspmatrix(A):
+    # if not isspmatrix(A):
     if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
         warn('Implicit conversion to sparse matrix')
         A = csr_matrix(A)
@@ -569,6 +574,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
         return Dinv
     else:
         return D
+
 
 def get_block_diag(A, blocksize, inv_flag=True):
     """
@@ -630,9 +636,9 @@ def get_block_diag(A, blocksize, inv_flag=True):
     ##
     # Convert to BSR
     if not isspmatrix_bsr(A):
-        A = bsr_matrix(A, blocksize=(blocksize,blocksize))
-    if A.blocksize != (blocksize,blocksize):
-        A = A.tobsr(blocksize=(blocksize,blocksize))
+        A = bsr_matrix(A, blocksize=(blocksize, blocksize))
+    if A.blocksize != (blocksize, blocksize):
+        A = A.tobsr(blocksize=(blocksize, blocksize))
 
     ##
     # Peel off block diagonal by extracting block entries from the now BSR matrix A
@@ -645,7 +651,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     nonzero_mask = (diag_entries != -1)
     diag_entries = diag_entries[nonzero_mask]
     if diag_entries.shape != (0,):
-        block_diag[nonzero_mask,:,:] = A.data[diag_entries,:,:]
+        block_diag[nonzero_mask, :, :] = A.data[diag_entries, :, :]
 
     if inv_flag:
         ##
@@ -660,6 +666,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         A.block_D = block_diag
 
     return block_diag
+
 
 def amalgamate(A, blocksize):
     """
@@ -709,10 +716,11 @@ def amalgamate(A, blocksize):
     elif scipy.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
 
-    A = A.tobsr(blocksize=(blocksize,blocksize))
+    A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
-    return csr_matrix( (numpy.ones(A.indices.shape), A.indices, A.indptr),
-                       shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]) )
+    return csr_matrix((numpy.ones(A.indices.shape), A.indices, A.indptr),
+                       shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
+
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
@@ -759,8 +767,8 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
             [ 1.,  1.,  1.,  1.,  1.,  1.]])
 
     """
-    data = numpy.ones( (A.indices.shape[0], RowsPerBlock, ColsPerBlock) )
-    return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]) )
+    data = numpy.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
+    return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]))
 
 
 def print_table(table, title='', delim='|', centering='center', col_padding=2, header=True, headerchar='-'):
@@ -812,15 +820,15 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     table_str = '\n'
 
     # sometimes, the table will be passed in as (title, table)
-    if type(table) == type( (2,2) ):
+    if type(table) == type((2, 2)):
         title = table[0]
         table = table[1]
 
     # Calculate each column's width
-    colwidths=[]
+    colwidths = []
     for i in range(len(table)):
         # extend colwidths for row i
-        for k in range( len(table[i]) - len(colwidths) ):
+        for k in range(len(table[i]) - len(colwidths)):
             colwidths.append(-1)
 
         # Update colwidths if table[i][j] is wider than colwidth[j]
@@ -853,7 +861,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
 
     if header:
         # Append Column Headers
-        for elmt,elmtwidth in zip(table[0],colwidths):
+        for elmt, elmtwidth in zip(table[0], colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if table[0] != []:
             table_str = table_str[:-len(delim)] + '\n'
@@ -867,7 +875,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
         table = table[1:]
 
     for row in table:
-        for elmt,elmtwidth in zip(row,colwidths):
+        for elmt, elmtwidth in zip(row, colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if row != []:
             table_str = table_str[:-len(delim)] + '\n'
@@ -919,8 +927,8 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
     """
 
-    real_table = [ ['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0', 'num re(eig) > 0', 'cond_2(A)'] ]
-    imag_table = [ ['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0', 'num im(eig) > 0', 'cond_2(A)'] ]
+    real_table = [['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0', 'num re(eig) > 0', 'cond_2(A)']]
+    imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0', 'num im(eig) > 0', 'cond_2(A)']]
 
     for i in range(len(mg.levels)):
         A = mg.levels[i].A.tocsr()
@@ -935,7 +943,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
             nonzero_rowcols = scipy.union1d(nonzero_rows, nonzero_cols)
             A = numpy.mat(A.todense())
-            A = A[nonzero_rowcols,:][:,nonzero_rowcols]
+            A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
             A = numpy.mat(A.todense())
 
@@ -969,7 +977,6 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
     if plot:
         pylab.show()
-
 
 
 def Coord2RBM(numNodes, numPDEs, x, y, z):
@@ -1018,23 +1025,22 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
             [ 0.,  0.,  0.,  0.,  0.,  1.]])
     """
 
-    #check inputs
+    # check inputs
     if(numPDEs == 1):
         numcols = 1
-    elif( (numPDEs == 3) or (numPDEs == 6) ):
+    elif((numPDEs == 3) or (numPDEs == 6)):
         numcols = 6
     else:
         raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per spatial location, i.e. numPDEs = [1 | 3 | 6].  You've entered " \
-                + str(numPDEs) + "." )
+                + str(numPDEs) + ".")
 
-    if( (max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes) ):
+    if((max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes)):
         raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes))
 
-    #if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
+    # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
     #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).")
 
-
-    #preallocate rbm
+    # preallocate rbm
     rbm = numpy.mat(numpy.zeros((numNodes*numPDEs, numcols)))
 
     for node in range(numNodes):
@@ -1044,31 +1050,31 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
             rbm[node] = 1.0
 
         if(numPDEs == 6):
-            for ii in range(3,6):        #lower half = [ 0 I ]
-                for jj in range(0,6):
+            for ii in range(3, 6):  # lower half = [ 0 I ]
+                for jj in range(0, 6):
                     if(ii == jj):
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
-        if((numPDEs == 3) or (numPDEs == 6) ):
-            for ii in range(0,3):        #upper left = [ I ]
-                for jj in range(0,3):
+        if((numPDEs == 3) or (numPDEs == 6)):
+            for ii in range(0, 3):  # upper left = [ I ]
+                for jj in range(0, 3):
                     if(ii == jj):
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
-            for ii in range(0,3):        #upper right = [ Q ]
-                for jj in range(3,6):
-                    if( ii == (jj-3) ):
+            for ii in range(0, 3):  # upper right = [ Q ]
+                for jj in range(3, 6):
+                    if(ii == (jj-3)):
                         rbm[dof+ii, jj] = 0.0
                     else:
-                        if( (ii+jj) == 4):
+                        if((ii+jj) == 4):
                             rbm[dof+ii, jj] = z[node]
-                        elif( (ii+jj) == 5 ):
+                        elif((ii+jj) == 5):
                             rbm[dof+ii, jj] = y[node]
-                        elif( (ii+jj) == 6 ):
+                        elif((ii+jj) == 6):
                             rbm[dof+ii, jj] = x[node]
                         else:
                             rbm[dof+ii, jj] = 0.0
@@ -1129,10 +1135,10 @@ def relaxation_as_linear_operator(method, A, b):
     from scipy.sparse.linalg.interface import LinearOperator
     import pyamg.multilevel
     def unpack_arg(v):
-        if isinstance(v,tuple):
-            return v[0],v[1]
+        if isinstance(v, tuple):
+            return v[0], v[1]
         else:
-            return v,{}
+            return v, {}
 
     ##
     # setup variables
@@ -1164,6 +1170,7 @@ def relaxation_as_linear_operator(method, A, b):
         return xcopy
 
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
+
 
 def filter_operator(A, C, B, Bf, BtBinv=None):
     """
@@ -1259,12 +1266,12 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         raise ValueError, 'A and C must either both be CSR or BSR'
 
     if len(Bf.shape) == 1:
-        Bf = Bf.reshape(-1,1)
+        Bf = Bf.reshape(-1, 1)
     if Bf.shape[0] != A.shape[0]:
         raise ValueError, 'A and Bf must have the same first dimension'
 
     if len(B.shape) == 1:
-        B = B.reshape(-1,1)
+        B = B.reshape(-1, 1)
     if B.shape[0] != A.shape[1]:
         raise ValueError, 'A and B must have matching dimensions such that A*B is computable'
 
@@ -1297,11 +1304,11 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # add explicit zeros to A wherever C is nonzero, but A is zero
     A = A.tocoo()
     C = C.tocoo()
-    A.data = numpy.hstack((numpy.zeros(C.data.shape,dtype=A.dtype), A.data))
+    A.data = numpy.hstack((numpy.zeros(C.data.shape, dtype=A.dtype), A.data))
     A.row = numpy.hstack((C.row, A.row))
     A.col = numpy.hstack((C.col, A.col))
     if isBSR:
-        A = A.tobsr((RowsPerBlock,ColsPerBlock))
+        A = A.tobsr((RowsPerBlock, ColsPerBlock))
     else:
         A = A.tocsr()
 
@@ -1322,6 +1329,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     A.eliminate_zeros()
     return A
+
 
 def scale_T(T, P_I, I_F):
     '''
@@ -1411,7 +1419,6 @@ def scale_T(T, P_I, I_F):
     if (I_F.blocksize[0] != P_I.blocksize[0]) or (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
 
-
     ##
     # Only do if we have a non-trivial coarse-grid
     if P_I.nnz > 0:
@@ -1431,6 +1438,7 @@ def scale_T(T, P_I, I_F):
         T = I_F*T + P_I
 
     return T
+
 
 def get_Cpt_params(A, Cnodes, AggOp, T):
     ''' Helper function that returns a dictionary of sparse matrices and arrays
@@ -1563,10 +1571,10 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         indices = Cpts.copy()
         indptr = numpy.arange(indices.shape[0]+1)
     else:
-        indices = numpy.zeros((0,),dtype=T.indices.dtype)
-        indptr = numpy.zeros((ncoarse+1,),dtype=T.indptr.dtype)
+        indices = numpy.zeros((0,), dtype=T.indices.dtype)
+        indptr = numpy.zeros((ncoarse+1,), dtype=T.indptr.dtype)
 
-    P_I = csc_matrix( (I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse) )
+    P_I = csc_matrix((I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse))
     P_I = P_I.tobsr(T.blocksize)
 
     ##
@@ -1575,10 +1583,11 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         I_C = I_C.tobsr(A.blocksize)
         I_F = I_F.tobsr(A.blocksize)
     else:
-        I_C = I_C.tobsr(blocksize=(1,1))
-        I_F = I_F.tobsr(blocksize=(1,1))
+        I_C = I_C.tobsr(blocksize=(1, 1))
+        I_F = I_F.tobsr(blocksize=(1, 1))
 
-    return {'P_I':P_I, 'I_F':I_F, 'I_C':I_C, 'Cpts':Cpts, 'Fpts':Fpts}
+    return {'P_I': P_I, 'I_F': I_F, 'I_C': I_C, 'Cpts': Cpts, 'Fpts': Fpts}
+
 
 def compute_BtBinv(B, C):
     ''' Helper function that creates inv(B_i.T B_i) for each block row i in C,
@@ -1651,14 +1660,14 @@ def compute_BtBinv(B, C):
 
     ##
     # Construct BtB
-    BtBinv = numpy.zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
+    BtBinv = numpy.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
     BsqCols = sum(range(NullDim+1))
-    Bsq = numpy.zeros((Ncoarse,BsqCols), dtype=B.dtype)
+    Bsq = numpy.zeros((Ncoarse, BsqCols), dtype=B.dtype)
     counter = 0
     for i in range(NullDim):
-        for j in range(i,NullDim):
-            Bsq[:,counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:,i]))) * \
-                             numpy.ravel(numpy.asarray(B[:,j]))
+        for j in range(i, NullDim):
+            Bsq[:, counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:, i]))) * \
+                             numpy.ravel(numpy.asarray(B[:, j]))
             counter = counter + 1
     ##
     # This specialized C-routine calculates (B.T B) for each row using Bsq
@@ -1670,13 +1679,13 @@ def compute_BtBinv(B, C):
     # values in column-major form, thus necessitating the deep transpose
     #   This is the old call to a specialized routine, but lacks robustness
     #   pyamg.amg_core.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
-    BtBinv = BtBinv.transpose((0,2,1)).copy()
+    BtBinv = BtBinv.transpose((0, 2, 1)).copy()
     pinv_array(BtBinv)
 
     return BtBinv
 
-def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
+def eliminate_diag_dom_nodes(A, C, theta=1.02):
     ''' Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
     which we don't want coarsened.  These eliminated nodes in C just become
@@ -1726,14 +1735,14 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     A_abs = A.copy()
     A_abs.data = numpy.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
-    diag_dom_rows = ( D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],),dtype=A_abs) - D_abs) ) )
+    diag_dom_rows = (D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],), dtype=A_abs) - D_abs)))
 
     ##
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
     if bsize > 1:
-        diag_dom_rows = numpy.array( diag_dom_rows, dtype=int)
-        diag_dom_rows = diag_dom_rows.reshape(-1,bsize)
+        diag_dom_rows = numpy.array(diag_dom_rows, dtype=int)
+        diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
         diag_dom_rows = numpy.sum(diag_dom_rows, axis=1)
         diag_dom_rows = (diag_dom_rows == bsize)
 
@@ -1748,6 +1757,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
     del A_abs
     return C
+
 
 def remove_diagonal(S):
     """ Removes the diagonal of the matrix S
@@ -1785,15 +1795,16 @@ def remove_diagonal(S):
     if not isspmatrix_csr(S): raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,) )
+        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
 
     S = coo_matrix(S)
     mask = S.row != S.col
-    S.row  = S.row[mask]
-    S.col  = S.col[mask]
+    S.row = S.row[mask]
+    S.col = S.col[mask]
     S.data = S.data[mask]
 
     return S.tocsr()
+
 
 def scale_rows_by_largest_entry(S):
     """ Scale each row in S by it's largest in magnitude entry
@@ -1828,10 +1839,11 @@ def scale_rows_by_largest_entry(S):
     largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
     pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry, S.indptr, S.indices, S.data)
 
-    largest_row_entry[ largest_row_entry != 0 ] = 1.0 / largest_row_entry[ largest_row_entry != 0 ]
+    largest_row_entry[largest_row_entry != 0] = 1.0 / largest_row_entry[largest_row_entry != 0]
     S = scale_rows(S, largest_row_entry, copy=True)
 
     return S
+
 
 def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     """
@@ -1966,9 +1978,8 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     return to_levelize
 
 
-
 #from functools import partial, update_wrapper
-#def dispatcher(name_to_handle):
+# def dispatcher(name_to_handle):
 #    def dispatcher(arg):
 #        if isinstance(arg,tuple):
 #            fn,opts = arg[0],arg[1]
