@@ -879,10 +879,11 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
             table_str = table_str[:-len(delim)] + '\n'
 
         # Append Header Separator
-        #                Total Column Width            Total Col Delimiter Widths
+        #              Total Column Width            Total Col Delimiter Widths
         if len(headerchar) == 0:
-            headerchard = ' '
-        table_str += headerchar*int(scipy.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+            headerchar = ' '
+        table_str += headerchar *\
+            int(scipy.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
 
         table = table[1:]
 
@@ -904,7 +905,8 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     Parameters
     ----------
     mg { pyamg multilevel hierarchy }
-        e.g. generated with smoothed_aggregation_solver(...) or ruge_stuben_solver(...)
+        e.g. generated with smoothed_aggregation_solver(...) or
+        ruge_stuben_solver(...)
 
     Returns
     -------
@@ -926,26 +928,28 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     >>> ml = smoothed_aggregation_solver(A)
     >>> hierarchy_spectrum(ml)
     <BLANKLINE>
-     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A)
-    -------------------------------------------------------------------------------------
-       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00
+     Level min(re(eig)) max(re(eig)) num re(eig) < 0 num re(eig) > 0 cond_2(A)
+    ---------------------------------------------------------------------------
+       0      2.000        2.000            0               1         1.00e+00
     <BLANKLINE>
     <BLANKLINE>
-     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A)
-    -------------------------------------------------------------------------------------
-       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00
+     Level min(im(eig)) max(im(eig)) num im(eig) < 0 num im(eig) > 0 cond_2(A)
+    ---------------------------------------------------------------------------
+       0      0.000        0.000            0               0         1.00e+00
     <BLANKLINE>
 
 
     """
 
-    real_table = [['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0', 'num re(eig) > 0', 'cond_2(A)']]
-    imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0', 'num im(eig) > 0', 'cond_2(A)']]
+    real_table = [['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0',
+                   'num re(eig) > 0', 'cond_2(A)']]
+    imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0',
+                   'num im(eig) > 0', 'cond_2(A)']]
 
     for i in range(len(mg.levels)):
         A = mg.levels[i].A.tocsr()
 
-        if filter == True:
+        if filter is True:
             # Filter out any zero rows and columns of A
             A.eliminate_zeros()
             nnz_per_row = A.indptr[0:-1] - A.indptr[1:]
@@ -965,13 +969,17 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         lambda_max = max(scipy.real(e))
         num_neg = max(e[scipy.real(e) < 0.0].shape)
         num_pos = max(e[scipy.real(e) > 0.0].shape)
-        real_table.append([str(i), ('%1.3f' % lambda_min), ('%1.3f' % lambda_max), str(num_neg), str(num_pos), ('%1.2e' % c)])
+        real_table.append([str(i), ('%1.3f' % lambda_min),
+                          ('%1.3f' % lambda_max),
+                          str(num_neg), str(num_pos), ('%1.2e' % c)])
 
         lambda_min = min(scipy.imag(e))
         lambda_max = max(scipy.imag(e))
         num_neg = max(e[scipy.imag(e) < 0.0].shape)
         num_pos = max(e[scipy.imag(e) > 0.0].shape)
-        imag_table.append([str(i), ('%1.3f' % lambda_min), ('%1.3f' % lambda_max), str(num_neg), str(num_pos), ('%1.2e' % c)])
+        imag_table.append([str(i), ('%1.3f' % lambda_min),
+                          ('%1.3f' % lambda_max),
+                          str(num_neg), str(num_pos), ('%1.2e' % c)])
 
         if plot:
             import pylab
@@ -1043,14 +1051,19 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     elif((numPDEs == 3) or (numPDEs == 6)):
         numcols = 6
     else:
-        raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per spatial location, i.e. numPDEs = [1 | 3 | 6].  You've entered " \
-                + str(numPDEs) + ".")
+        raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per\
+                          spatial location,i.e. numPDEs = [1 | 3 | 6].\
+                          You've entered " + str(numPDEs) + ".")
 
-    if((max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes)):
-        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal length.  Length must be numNodes = " + str(numNodes))
+    if((max(x.shape) != numNodes) or
+       (max(y.shape) != numNodes) or
+       (max(z.shape) != numNodes)):
+        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
+                          length.  Length must be numNodes = " + str(numNodes))
 
     # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
-    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are (numNodes x 1) or (1 x numNodes).")
+    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are
+    #    (numNodes x 1) or (1 x numNodes).")
 
     # preallocate rbm
     rbm = numpy.mat(numpy.zeros((numNodes*numPDEs, numcols)))
@@ -1127,9 +1140,10 @@ def relaxation_as_linear_operator(method, A, b):
 
     Notes
     -----
-    This method is primarily used to improve B during the aggregation setup phase.
-    Here b = 0, and each relaxation call can improve the quality of B, especially near
-    the boundaries.
+
+    This method is primarily used to improve B during the aggregation setup
+    phase.  Here b = 0, and each relaxation call can improve the quality of B,
+    especially near the boundaries.
 
     Examples
     --------
