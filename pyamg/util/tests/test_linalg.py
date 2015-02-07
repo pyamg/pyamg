@@ -1,12 +1,16 @@
 from pyamg.testing import *
 
-from numpy import matrix, array, diag, zeros, sqrt, abs, ravel, zeros_like, arange, dot
-from scipy import rand, linalg, real, imag, mat, diag, random
+from numpy import matrix, array, abs, ravel, zeros_like, dot
+from scipy import rand, linalg, mat, random
 from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
 
-from pyamg.util.linalg import *
+from pyamg.util.linalg import approximate_spectral_radius,\
+    infinity_norm, norm, condest, cond,\
+    ishermitian, pinv_array
+
 from pyamg import gallery
+
 
 class TestLinalg(TestCase):
     def test_norm(self):
@@ -28,20 +32,20 @@ class TestLinalg(TestCase):
 
         cases.append(matrix([[-4]]))
         cases.append(array([[-4]]))
-        
+
         cases.append(array([[2, 0], [0, 1]]))
         cases.append(array([[-2, 0], [0, 1]]))
-      
+
         cases.append(array([[100, 0, 0], [0, 101, 0], [0, 0, 99]]))
-        
+
         for i in range(1, 5):
             cases.append(rand(i, i))
-       
+
         # method should be almost exact for small matrices
         for A in cases:
             A = A.astype(float)
             Asp = csr_matrix(A)
-            
+
             [E, V] = linalg.eig(A)
             E = abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
@@ -51,16 +55,18 @@ class TestLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
-            diff = min(norm(expected_vec + vec), norm(expected_vec - vec)) / norm(expected_vec)
+            minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
+            diff = minnorm / norm(expected_vec)
             assert_almost_equal(diff, 0.0, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
-            diff = min(norm(expected_vec + vec), norm(expected_vec - vec)) / norm(expected_vec)
+            minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
+            diff = minnorm / norm(expected_vec)
             assert_almost_equal(diff, 0.0, decimal=4)
-        
+
         # try symmetric matrices
         for A in cases:
             A = A + A.transpose()
-            A = A.astype(float) 
+            A = A.astype(float)
             Asp = csr_matrix(A)
 
             [E, V] = linalg.eig(A)
@@ -72,37 +78,44 @@ class TestLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
-            diff = min(norm(expected_vec + vec), norm(expected_vec - vec)) / norm(expected_vec)
+            minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
+            diff = minnorm / norm(expected_vec)
             assert_almost_equal(diff, 0.0, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
-            diff = min(norm(expected_vec + vec), norm(expected_vec - vec)) / norm(expected_vec)
+            minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
+            diff = minnorm / norm(expected_vec)
             assert_almost_equal(diff, 0.0, decimal=4)
 
-      
         # test a larger matrix, and various parameter choices
-        cases =[]
+        cases = []
         A1 = gallery.poisson((50, 50), format='csr')
         cases.append((A1, 7.99241331495))
         A2 = gallery.elasticity.linear_elasticity((32, 32), format='bsr')[0]
         cases.append((A2, 536549.922189))
         for A, expected in cases:
             # test that increasing maxiter increases accuracy
-            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=5, restart=0)
+            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=5,
+                                               restart=0)
             del A.rho
-            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=15, restart=0)
+            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=15,
+                                               restart=0)
             del A.rho
             assert_equal(abs(ans2 - expected) < 0.5*abs(ans1 - expected), True)
             # test that increasing restart increases accuracy
-            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=10, restart=0)
+            ans1 = approximate_spectral_radius(A, tol=1e-16, maxiter=10,
+                                               restart=0)
             del A.rho
-            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=10, restart=1)
+            ans2 = approximate_spectral_radius(A, tol=1e-16, maxiter=10,
+                                               restart=1)
             del A.rho
             assert_equal(abs(ans2 - expected) < 0.8*abs(ans1 - expected), True)
-            # test tol 
-            ans1 = approximate_spectral_radius(A, tol=0.1, maxiter=15, restart=5)
+            # test tol
+            ans1 = approximate_spectral_radius(A, tol=0.1, maxiter=15,
+                                               restart=5)
             del A.rho
             assert_equal(abs(ans1 - expected)/abs(expected) < 0.1, True)
-            ans2 = approximate_spectral_radius(A, tol=0.001, maxiter=15, restart=5)
+            ans2 = approximate_spectral_radius(A, tol=0.001, maxiter=15,
+                                               restart=5)
             del A.rho
             assert_equal(abs(ans2 - expected)/abs(expected) < 0.001, True)
             assert_equal(abs(ans2 - expected) < 0.1*abs(ans1 - expected), True)
@@ -121,21 +134,23 @@ class TestLinalg(TestCase):
         assert_equal(infinity_norm(csr_matrix(A)), 11)
 
 
-class TestComplexLinalg(TestCase):    
+class TestComplexLinalg(TestCase):
     def test_approximate_spectral_radius(self):
         cases = []
 
         cases.append(matrix([[-4-4.0j]]))
         cases.append(matrix([[-4+8.2j]]))
-        
+
         cases.append(matrix([[2.0-2.9j, 0], [0, 1.5]]))
         cases.append(matrix([[-2.0-2.4j, 0], [0, 1.21]]))
-      
-        cases.append(matrix([[100+1.0j, 0, 0], [0, 101-1.0j, 0], [0, 0, 99+9.9j]]))
-        
+
+        cases.append(matrix([[100+1.0j, 0, 0],
+                             [0, 101-1.0j, 0],
+                             [0, 0, 99+9.9j]]))
+
         for i in range(1, 6):
             cases.append(matrix(rand(i, i)+1.0j*rand(i, i)))
-       
+
         # method should be almost exact for small matrices
         for A in cases:
             Asp = csr_matrix(A)
@@ -143,15 +158,17 @@ class TestComplexLinalg(TestCase):
             E = abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
-            expected_vec = V[:, largest_eig]
+            # expected_vec = V[:, largest_eig]
 
             assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
-            rayleigh = abs(dot(ravel(A*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)))
+            vec = ravel(vec)
+            rayleigh = abs(dot(A*vec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
-            rayleigh = abs(dot(ravel(Asp*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)))
+            vec = ravel(vec)
+            rayleigh = abs(dot(Asp*vec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
             AA = mat(A).H*mat(A)
@@ -160,17 +177,21 @@ class TestComplexLinalg(TestCase):
             E = abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
-            expected_vec = V[:, largest_eig]
+            # expected_vec = V[:, largest_eig]
 
-            assert_almost_equal(approximate_spectral_radius(AA),   expected_eig)
-            assert_almost_equal(approximate_spectral_radius(AAsp), expected_eig)
+            assert_almost_equal(approximate_spectral_radius(AA),
+                                expected_eig)
+            assert_almost_equal(approximate_spectral_radius(AAsp),
+                                expected_eig)
             vec = approximate_spectral_radius(AA, return_vector=True)[1]
-            rayleigh = abs(dot(ravel(AA*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)))
+            vec = ravel(vec)
+            rayleigh = abs(dot(AA*vec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(AAsp, return_vector=True)[1]
-            rayleigh = abs(dot(ravel(AAsp*vec), ravel(vec)) / dot(ravel(vec), ravel(vec)))
+            vec = ravel(vec)
+            rayleigh = abs(dot(AAsp*vec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
- 
+
     def test_infinity_norm(self):
         A = matrix([[-4-3.0j]])
         assert_equal(infinity_norm(csr_matrix(A)), 5.0)
@@ -180,7 +201,6 @@ class TestComplexLinalg(TestCase):
 
         A = matrix([[0, 1], [0, -4.0+3.0j]])
         assert_equal(infinity_norm(csr_matrix(A)), 5.0)
-
 
     def test_cond(self):
         # make tests repeatable
@@ -210,7 +230,7 @@ class TestComplexLinalg(TestCase):
     def test_condest(self):
         # make tests repeatable
         random.seed(0)
-        
+
         # Should be exact for small matrices
         cases = []
         A = mat(array([2.14]))
@@ -277,10 +297,9 @@ class TestComplexLinalg(TestCase):
             assert_equal(ishermitian(A, fast_check=False), False)
             assert_equal(ishermitian(A, fast_check=True), False)
 
-
     def test_pinv_array(self):
         from scipy.linalg import pinv2
-        
+
         tests = []
         tests.append(rand(1, 1, 1))
         tests.append(rand(3, 1, 1))
@@ -306,7 +325,6 @@ class TestComplexLinalg(TestCase):
             pinv_test = zeros_like(test)
             for i in range(pinv_test.shape[0]):
                 pinv_test[i] = pinv2(test[i])
-            
+
             pinv_array(test)
             assert_array_almost_equal(test, pinv_test, decimal=4)
-
