@@ -8,6 +8,7 @@ import numpy
 
 __all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
 
+
 def BSR_Get_Row(A, i):
     """
     Return row i in BSR matrix A.  Only nonzero entries are returned
@@ -50,19 +51,19 @@ def BSR_Get_Row(A, i):
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
     
-    
     colindx = numpy.zeros((1, z.__len__()), dtype=numpy.int32)
     counter = 0
     
     for j in range(rowstart, rowend):
         coloffset = blocksize*A.indices[j]
-        indys = A.data[j,localRowIndx,:].nonzero()[0]
+        indys = A.data[j, localRowIndx, :].nonzero()[0]
         increment = indys.shape[0]
-        colindx[0,counter:(counter+increment)] = coloffset + indys
+        colindx[0, counter:(counter+increment)] = coloffset + indys
         counter += increment
     
-    return numpy.mat(z).T, colindx[0,:]
+    return numpy.mat(z).T, colindx[0, :]
     
+
 def BSR_Row_WriteScalar(A, i, x): 
     """
     Write a scalar at each nonzero location in row i of BSR matrix A
@@ -152,7 +153,7 @@ def BSR_Row_WriteVect(A, i, x):
     localRowIndx = i%blocksize
     
     # like matlab slicing:
-    x = x.__array__().reshape( (max(x.shape),) )
+    x = x.__array__().reshape((max(x.shape),))
     
     #counter = 0
     #for j in range(rowstart, rowend):
