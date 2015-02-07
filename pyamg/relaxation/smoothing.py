@@ -272,34 +272,28 @@ def matrix_asformat(lvl, name, format, blocksize=None):
     Be careful with it's usage.
     '''
 
-    desired_matrix = 'lvl.' + name + format
+    desired_matrix = name + format
+    M = getattr(lvl, name)
+
     if format == 'bsr':
         desired_matrix += str(blocksize[0])+str(blocksize[1])
-    base_matrix = 'lvl.' + name
 
-    if hasattr(lvl, desired_matrix[4:]):
+    if hasattr(lvl, desired_matrix):
         # if lvl already contains lvl.name+format
         pass
-    elif eval(base_matrix).format == format and format != 'bsr':
+    elif M.format == format and format != 'bsr':
         # is base_matrix already in the correct format?
-        exec desired_matrix + ' = ' + base_matrix
-    elif eval(base_matrix).format == format and format == 'bsr':
-        # make sure blocksize is correct
-        if eval(base_matrix).blocksize != blocksize:
-            exec desired_matrix + ' = ' + base_matrix +\
-                '.to' + format + '(blocksize=' + str(blocksize) + ')'
-        else:
-            exec desired_matrix + ' = ' + base_matrix
-    elif format == 'bsr':
-        # convert
-        exec desired_matrix + ' = ' + base_matrix + '.to' +\
-            format + '(blocksize=' + str(blocksize) + ')'
+        setattr(lvl, desired_matrix, M)
+    elif M.format == format and format == 'bsr':
+        # convert to bsr with the right blocksize
+        # tobsr() will not do anything extra if this is uneeded
+        setattr(lvl, desired_matrix, M.tobsr(blocksize=blocksize))
     else:
         # convert
-        exec desired_matrix + ' = lvl.' + name + '.to' + format + '()'
+        newM = getattr(M, 'to' + format)()
+        setattr(lvl, desired_matrix, newM)
 
-    return eval(desired_matrix)
-
+    return getattr(lvl, desired_matrix)
 
 # Appends
 # A.schwarz_tuple = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
@@ -311,6 +305,7 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
 # If subdomain and subdomain_ptr are passed in, check to see that they are the
 # same as any preexisting subdomain and subdomain_ptr?
+
 
 def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                        inv_subblock=None, inv_subblock_ptr=None):
@@ -430,9 +425,9 @@ def setup_jacobi(lvl, iterations=1, omega=1.0, withrho=True):
 def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None,
                   inv_subblock=None, inv_subblock_ptr=None, sweep='symmetric'):
 
-    Acsr = matrix_asformat(lvl, 'A', 'csr')
+    matrix_asformat(lvl, 'A', 'csr')
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
-        schwarz_parameters(Acsr, subdomain, subdomain_ptr, inv_subblock,
+        schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr, inv_subblock,
                            inv_subblock_ptr)
 
     def smoother(A, x, b):
@@ -546,29 +541,30 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
 
 
 def setup_jacobi_ne(lvl, iterations=1, omega=1.0, withrho=True):
-    Acsr = matrix_asformat(lvl, 'A', 'csr')
+    matrix_asformat(lvl, 'A', 'csr')
     if withrho:
-        omega = omega/rho_D_inv_A(Acsr)**2
+        omega = omega/rho_D_inv_A(lvl.Acsr)**2
 
     def smoother(A, x, b):
-        relaxation.jacobi_ne(Acsr, x, b, iterations=iterations, omega=omega)
+        relaxation.jacobi_ne(lvl.Acsr, x, b, iterations=iterations,
+                             omega=omega)
     return smoother
 
 
 def setup_gauss_seidel_ne(lvl, iterations=1, sweep='forward', omega=1.0):
-    Acsr = matrix_asformat(lvl, 'A', 'csr')
+    matrix_asformat(lvl, 'A', 'csr')
 
     def smoother(A, x, b):
-        relaxation.gauss_seidel_ne(Acsr, x, b, iterations=iterations,
+        relaxation.gauss_seidel_ne(lvl.Acsr, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
     return smoother
 
 
 def setup_gauss_seidel_nr(lvl, iterations=1, sweep='forward', omega=1.0):
-    Acsc = matrix_asformat(lvl, 'A', 'csc')
+    matrix_asformat(lvl, 'A', 'csc')
 
     def smoother(A, x, b):
-        relaxation.gauss_seidel_nr(Acsc, x, b, iterations=iterations,
+        relaxation.gauss_seidel_nr(lvl.Acsc, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
     return smoother
 
