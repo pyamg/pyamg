@@ -7,18 +7,19 @@ from warnings import warn
 import numpy
 import scipy
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
-        isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
+    isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type', 'type_prep',
-           'get_diagonal', 'UnAmal', 'Coord2RBM', 'hierarchy_spectrum',
-           'print_table', 'get_block_diag', 'amalgamate', 'symmetric_rescaling',
-           'symmetric_rescaling_sa', 'relaxation_as_linear_operator',
-           'filter_operator', 'scale_T', 'get_Cpt_params', 'compute_BtBinv',
-           'eliminate_diag_dom_nodes', 'levelize_strength_or_aggregation',
+__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
+           'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
+           'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
+           'symmetric_rescaling', 'symmetric_rescaling_sa',
+           'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
+           'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
+           'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates']
 
 
@@ -72,6 +73,7 @@ def profile_solver(ml, accel=None, **kwargs):
 
     if accel is None:
         x_sol = ml.solve(b, residuals=residuals, **kwargs)
+        del x_sol
     else:
         def callback(x):
             residuals.append(norm(numpy.ravel(b) - numpy.ravel(A*x)))
@@ -115,8 +117,9 @@ def diag_sparse(A):
         return A.diagonal()
     else:
         if(numpy.ndim(A) != 1):
-            raise ValueError, 'input diagonal array expected to be 1d'
-        return csr_matrix((numpy.asarray(A), numpy.arange(len(A)), numpy.arange(len(A)+1)), (len(A), len(A)))
+            raise ValueError('input diagonal array expected to be 1d')
+        return csr_matrix((numpy.asarray(A), numpy.arange(len(A)),
+                          numpy.arange(len(A)+1)), (len(A), len(A)))
 
 
 def scale_rows(A, v, copy=True):
@@ -147,7 +150,8 @@ def scale_rows(A, v, copy=True):
     Notes
     -----
     - if A is a csc_matrix, the transpose A.T is passed to scale_columns
-    - if A is not csr, csc, or bsr, it is converted to csr and sent to scale_rows
+    - if A is not csr, csc, or bsr, it is converted to csr and sent
+      to scale_rows
 
     Examples
     --------
@@ -167,7 +171,7 @@ def scale_rows(A, v, copy=True):
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M, N = A.shape
         if M != len(v):
-            raise ValueError, 'scale vector has incompatible shape'
+            raise ValueError('scale vector has incompatible shape')
 
         if copy:
             A = A.copy()
@@ -179,7 +183,8 @@ def scale_rows(A, v, copy=True):
             csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
-            bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
+            bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices,
+                           numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -216,7 +221,8 @@ def scale_columns(A, v, copy=True):
     Notes
     -----
     - if A is a csc_matrix, the transpose A.T is passed to scale_rows
-    - if A is not csr, csc, or bsr, it is converted to csr and sent to scale_rows
+    - if A is not csr, csc, or bsr, it is converted to csr and sent to
+      scale_rows
 
     Examples
     --------
@@ -242,7 +248,7 @@ def scale_columns(A, v, copy=True):
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M, N = A.shape
         if N != len(v):
-            raise ValueError, 'scale vector has incompatible shape'
+            raise ValueError('scale vector has incompatible shape')
 
         if copy:
             A = A.copy()
@@ -254,7 +260,8 @@ def scale_columns(A, v, copy=True):
             csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
-            bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices, numpy.ravel(A.data), v)
+            bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices,
+                              numpy.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -317,7 +324,7 @@ def symmetric_rescaling(A, copy=True):
     """
     if isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A):
         if A.shape[0] != A.shape[1]:
-            raise ValueError, 'expected square matrix'
+            raise ValueError('expected square matrix')
 
         D = diag_sparse(A)
         mask = (D != 0)
@@ -493,7 +500,7 @@ def to_type(upcast_type, varlist):
 
     """
 
-    #convert_type = type(numpy.array([0], upcast_type)[0])
+    # convert_type = type(numpy.array([0], upcast_type)[0])
 
     for i in range(len(varlist)):
 
@@ -559,7 +566,8 @@ def get_diagonal(A, norm_eq=False, inv=False):
     # critical to sort the indices of A
     A.sort_indices()
     if norm_eq == 1:
-        # This transpose involves almost no work, use csr data structures as csc, or vice versa
+        # This transpose involves almost no work, use csr data structures as
+        # csc, or vice versa
         At = A.T
         D = (At.multiply(At.conjugate()))*numpy.ones((At.shape[0],))
     elif norm_eq == 2:
@@ -625,12 +633,14 @@ def get_block_diag(A, blocksize, inv_flag=True):
     ##
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
-        if (A.block_D_inv.shape[1] == blocksize) and (A.block_D_inv.shape[2] == blocksize) and \
-        (A.block_D_inv.shape[0] == A.shape[0]/blocksize):
+        if (A.block_D_inv.shape[1] == blocksize) and\
+           (A.block_D_inv.shape[2] == blocksize) and \
+           (A.block_D_inv.shape[0] == A.shape[0]/blocksize):
             return A.block_D_inv
     elif hasattr(A, 'block_D') and (not inv_flag):
-        if (A.block_D.shape[1] == blocksize) and (A.block_D.shape[2] == blocksize) and \
-        (A.block_D.shape[0] == A.shape[0]/blocksize):
+        if (A.block_D.shape[1] == blocksize) and\
+           (A.block_D.shape[2] == blocksize) and \
+           (A.block_D.shape[0] == A.shape[0]/blocksize):
             return A.block_D
 
     ##
@@ -641,7 +651,8 @@ def get_block_diag(A, blocksize, inv_flag=True):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
     ##
-    # Peel off block diagonal by extracting block entries from the now BSR matrix A
+    # Peel off block diagonal by extracting block entries from the now BSR
+    # matrix A
     A = A.asfptype()
     block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize), dtype=A.dtype)
 
