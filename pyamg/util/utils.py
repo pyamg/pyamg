@@ -1182,7 +1182,7 @@ def relaxation_as_linear_operator(method, A, b):
     if not accepted_methods.__contains__(fn):
         raise NameError("invalid relaxation method: ", fn)
     try:
-        setup_smoother = eval('relaxation.smoothing.setup_' + fn)
+        setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
     except NameError:
         raise NameError("invalid presmoother method: ", fn)
     # Get relaxation routine that takes only (A, x, b) as parameters

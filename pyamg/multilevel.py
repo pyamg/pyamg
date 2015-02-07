@@ -668,7 +668,7 @@ def coarse_grid_solver(solver):
 
             lvl = multilevel_solver.level()
             lvl.A = A
-            fn = eval('smoothing.setup_' + str(solver))
+            fn = getattr(smoothing, 'setup_' + str(solver))
             relax = fn(lvl, **kwargs)
             x = np.zeros_like(b)
             relax(A, x, b)

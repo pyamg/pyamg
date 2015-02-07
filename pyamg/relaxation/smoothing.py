@@ -4,6 +4,7 @@
 import numpy
 import scipy
 import relaxation
+import smoothing
 from chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
@@ -145,7 +146,8 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn, kwargs = unpack_arg(presmoother[i])
         # get function handle
         try:
-            setup_presmoother = eval('setup_' + str(fn))
+            setup_presmoother =\
+                getattr(smoothing, 'setup_' + str(fn))
         except NameError:
             raise NameError("invalid presmoother method: ", fn)
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs)
@@ -161,7 +163,8 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn, kwargs = unpack_arg(postsmoother[i])
         # get function handle
         try:
-            setup_postsmoother = eval('setup_' + str(fn))
+            setup_postsmoother =\
+                getattr(smoothing, 'setup_' + str(fn))
         except NameError:
             raise NameError("invalid postsmoother method: ", fn)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs)
