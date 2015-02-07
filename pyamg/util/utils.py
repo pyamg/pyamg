@@ -649,10 +649,12 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize), dtype=A.dtype)
+    block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize),
+                             dtype=A.dtype)
 
-    diag_entries = csr_matrix((scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr), \
-                                shape=(A.shape[0]/blocksize, A.shape[0]/blocksize)).diagonal()
+    AAIJ = (scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
+    shape = (A.shape[0]/blocksize, A.shape[0]/blocksize)
+    diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
     nonzero_mask = (diag_entries != -1)
     diag_entries = diag_entries[nonzero_mask]
@@ -663,7 +665,8 @@ def get_block_diag(A, blocksize, inv_flag=True):
         # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
-            pyamg.amg_core.pinv_array(block_diag, block_diag.shape[0], block_diag.shape[1], 'T')
+            pyamg.amg_core.pinv_array(block_diag, block_diag.shape[0],
+                                      block_diag.shape[1], 'T')
         else:
             pinv_array(block_diag)
         A.block_D_inv = block_diag
@@ -723,8 +726,9 @@ def amalgamate(A, blocksize):
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
-    return csr_matrix((numpy.ones(A.indices.shape), A.indices, A.indptr),
-                       shape=(A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1]))
+    subI = (numpy.ones(A.indices.shape), A.indices, A.indptr)
+    shape = (A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1])
+    return csr_matrix(subI, shape=shape)
 
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
@@ -773,10 +777,13 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
 
     """
     data = numpy.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
-    return bsr_matrix((data, A.indices, A.indptr), shape=(RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1]))
+    blockI = (data, A.indices, A.indptr)
+    shape = (RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1])
+    return bsr_matrix(blockI, shape=shape)
 
 
-def print_table(table, title='', delim='|', centering='center', col_padding=2, header=True, headerchar='-'):
+def print_table(table, title='', delim='|', centering='center', col_padding=2,
+                header=True, headerchar='-'):
     """
     Print a table from a list of lists representing the rows of a table
 
@@ -825,7 +832,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2, h
     table_str = '\n'
 
     # sometimes, the table will be passed in as (title, table)
-    if type(table) == type((2, 2)):
+    if isinstance(table, tuple):
         title = table[0]
         table = table[1]
 
