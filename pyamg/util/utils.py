@@ -1160,6 +1160,7 @@ def relaxation_as_linear_operator(method, A, b):
     from pyamg import relaxation
     from scipy.sparse.linalg.interface import LinearOperator
     import pyamg.multilevel
+
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
@@ -1167,9 +1168,11 @@ def relaxation_as_linear_operator(method, A, b):
             return v, {}
 
     # setup variables
-    accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor', 'gauss_seidel_ne', \
-                        'gauss_seidel_nr', 'jacobi', 'block_jacobi', 'richardson', 'schwarz',
+    accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
+                        'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
+                        'block_jacobi', 'richardson', 'schwarz',
                         'strength_based_schwarz']
+
     b = numpy.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
     lvl = pyamg.multilevel_solver.level()
@@ -1180,7 +1183,7 @@ def relaxation_as_linear_operator(method, A, b):
         raise NameError("invalid relaxation method: ", fn)
     try:
         setup_smoother = eval('relaxation.smoothing.setup_' + fn)
-    except NameError, ne:
+    except NameError:
         raise NameError("invalid presmoother method: ", fn)
     # Get relaxation routine that takes only (A, x, b) as parameters
     relax = setup_smoother(lvl, **kwargs)
@@ -1263,9 +1266,9 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # First preprocess the parameters
     Nfine = A.shape[0]
     if A.shape[0] != C.shape[0]:
-        raise ValueError, 'A and C must be the same size'
+        raise ValueError('A and C must be the same size')
     if A.shape[1] != C.shape[1]:
-        raise ValueError, 'A and C must be the same size'
+        raise ValueError('A and C must be the same size')
 
     if isspmatrix_bsr(C):
         isBSR = True
@@ -1273,31 +1276,34 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         RowsPerBlock = C.blocksize[0]
         Nnodes = Nfine/RowsPerBlock
         if not isspmatrix_bsr(A):
-            raise ValueError, 'A and C must either both be CSR or BSR'
-        elif (ColsPerBlock != A.blocksize[1]) or (RowsPerBlock != A.blocksize[0]):
-            raise ValueError, 'A and C must have same BSR blocksizes'
+            raise ValueError('A and C must either both be CSR or BSR')
+        elif (ColsPerBlock != A.blocksize[1]) or\
+             (RowsPerBlock != A.blocksize[0]):
+            raise ValueError('A and C must have same BSR blocksizes')
     elif isspmatrix_csr(C):
         isBSR = False
         ColsPerBlock = 1
         RowsPerBlock = 1
         Nnodes = Nfine/RowsPerBlock
         if not isspmatrix_csr(A):
-            raise ValueError, 'A and C must either both be CSR or BSR'
+            raise ValueError('A and C must either both be CSR or BSR')
     else:
-        raise ValueError, 'A and C must either both be CSR or BSR'
+        raise ValueError('A and C must either both be CSR or BSR')
 
     if len(Bf.shape) == 1:
         Bf = Bf.reshape(-1, 1)
     if Bf.shape[0] != A.shape[0]:
-        raise ValueError, 'A and Bf must have the same first dimension'
+        raise ValueError('A and Bf must have the same first dimension')
 
     if len(B.shape) == 1:
         B = B.reshape(-1, 1)
     if B.shape[0] != A.shape[1]:
-        raise ValueError, 'A and B must have matching dimensions such that A*B is computable'
+        raise ValueError('A and B must have matching dimensions such\
+                          that A*B is computable')
 
     if B.shape[1] != Bf.shape[1]:
-        raise ValueError, 'B and Bf must have the same second dimension'
+        raise ValueError('B and Bf must have the same second\
+                          dimension')
     else:
         NullDim = B.shape[1]
 
@@ -1308,7 +1314,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if Bf.dtype == int:
         Bf.data = numpy.array(Bf.data, dtype=float)
     if (A.dtype != B.dtype) or (A.dtype != Bf.dtype):
-        raise TypeError, 'A, B and Bf must of the same dtype'
+        raise TypeError('A, B and Bf must of the same dtype')
 
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
@@ -1340,9 +1346,11 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
     pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
-            Nnodes, NullDim,
-            numpy.conjugate(numpy.ravel(B)), numpy.ravel(diff), numpy.ravel(BtBinv),
-            A.indptr, A.indices, numpy.ravel(A.data))
+                                              Nnodes, NullDim,
+                                              numpy.conjugate(numpy.ravel(B)),
+                                              numpy.ravel(diff),
+                                              numpy.ravel(BtBinv), A.indptr,
+                                              A.indices, numpy.ravel(A.data))
 
     A.eliminate_zeros()
     return A
@@ -1359,8 +1367,8 @@ def scale_T(T, P_I, I_F):
         Tentative prolongator, with square blocks in the BSR data structure,
         and a non-overlapping block-diagonal structure
     P_I : {bsr_matrix}
-        Interpolation operator that carries out only simple injection from the coarse grid
-        to fine grid Cpts nodes
+        Interpolation operator that carries out only simple injection from the
+        coarse grid to fine grid Cpts nodes
     I_F : {bsr_matrix}
         Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
@@ -1430,7 +1438,8 @@ def scale_T(T, P_I, I_F):
         raise TypeError('Expected BSR matrix I_F')
     elif I_F.blocksize[0] != I_F.blocksize[1]:
         raise TypeError('Expected BSR matrix I_F with square blocks')
-    if (I_F.blocksize[0] != P_I.blocksize[0]) or (I_F.blocksize[0] != T.blocksize[0]):
+    if (I_F.blocksize[0] != P_I.blocksize[0]) or\
+       (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
 
     # Only do if we have a non-trivial coarse-grid
@@ -1472,8 +1481,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     Dictionary containing these parameters:
 
     P_I : {bsr_matrix}
-        Interpolation operator that carries out only simple injection from the coarse grid
-        to fine grid Cpts nodes
+        Interpolation operator that carries out only simple injection from the
+        coarse grid to fine grid Cpts nodes
     I_F : {bsr_matrix}
         Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
@@ -1533,10 +1542,12 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     if A.shape[0] != A.shape[1]:
         raise TypeError('Expected square matrix A')
     if T.shape[0] != A.shape[0]:
-        raise TypeError('Expected compatible dimensions for T and A, T.shape[0] = A.shape[0]')
+        raise TypeError('Expected compatible dimensions for T and A,\
+                         T.shape[0] = A.shape[0]')
     if Cnodes.shape[0] != AggOp.shape[1]:
         if AggOp.shape[1] > 1:
-            raise TypeError('Number of columns in AggOp must equal number of Cnodes')
+            raise TypeError('Number of columns in AggOp must equal number\
+                             of Cnodes')
 
     if isspmatrix_bsr(A) and A.blocksize[0] > 1:
         # Expand the list of Cpt nodes to a list of Cpt dofs
@@ -1556,7 +1567,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     if blocksize != T.blocksize[0]:
         raise ValueError('Expected identical blocksize in A and T')
     if AggOp.shape[0] != T.shape[0]/blocksize:
-        raise ValueError('Number of rows in AggOp must equal number of fine-grid nodes')
+        raise ValueError('Number of rows in AggOp must equal number of\
+                          fine-grid nodes')
 
     # Create two maps, one for F points and one for C points
     ncoarse = T.shape[1]
@@ -1571,7 +1583,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     Fpts = I_F.indices.copy()
 
     # P_I only injects from Cpts on the coarse grid to the fine grid, but
-    # because of it's later uses, it must have the CSC indices ordered as in Cpts
+    # because of it's later uses, it must have the CSC indices ordered as
+    # in Cpts
     if I_C.nnz > 0:
         indices = Cpts.copy()
         indptr = numpy.arange(indices.shape[0]+1)
@@ -1579,7 +1592,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         indices = numpy.zeros((0,), dtype=T.indices.dtype)
         indptr = numpy.zeros((ncoarse+1,), dtype=T.indptr.dtype)
 
-    P_I = csc_matrix((I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse))
+    P_I = csc_matrix((I_C.data.copy(), indices, indptr),
+                     shape=(I_C.shape[0], ncoarse))
     P_I = P_I.tobsr(T.blocksize)
 
     # Use same blocksize as A
@@ -1668,11 +1682,13 @@ def compute_BtBinv(B, C):
     for i in range(NullDim):
         for j in range(i, NullDim):
             Bsq[:, counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:, i]))) * \
-                             numpy.ravel(numpy.asarray(B[:, j]))
+                numpy.ravel(numpy.asarray(B[:, j]))
             counter = counter + 1
     # This specialized C-routine calculates (B.T B) for each row using Bsq
-    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock, numpy.ravel(numpy.asarray(Bsq)),
-    BsqCols, numpy.ravel(numpy.asarray(BtBinv)), C.indptr, C.indices)
+    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock,
+                            numpy.ravel(numpy.asarray(Bsq)),
+                            BsqCols, numpy.ravel(numpy.asarray(BtBinv)),
+                            C.indptr, C.indices)
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
@@ -1695,8 +1711,8 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
     C : {csr_matrix}
-        Sparse MxM matrix, where M is the number of nodes in A.  M=N if A is CSR
-        or is BSR with blocksize 1.  Otherwise M = N/blocksize.
+        Sparse MxM matrix, where M is the number of nodes in A.  M=N if A
+        is CSR or is BSR with blocksize 1.  Otherwise M = N/blocksize.
     theta : {float}
         determines diagonal dominance threshhold
 
@@ -1733,7 +1749,8 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     A_abs = A.copy()
     A_abs.data = numpy.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
-    diag_dom_rows = (D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],), dtype=A_abs) - D_abs)))
+    diag_dom_rows = (D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],),
+                     dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
