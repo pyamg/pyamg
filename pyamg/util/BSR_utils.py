@@ -3,7 +3,6 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 import numpy
 
 __all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
@@ -12,20 +11,20 @@ __all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
 def BSR_Get_Row(A, i):
     """
     Return row i in BSR matrix A.  Only nonzero entries are returned
-    
+
     Parameters
     ----------
     A : bsr_matrix
         Input matrix
     i : int
         Row number
-    
+
     Returns
     -------
     z : array
         Actual nonzero values for row i colindx Array of column indices for the
         nonzeros of row i
-    
+
     Examples
     --------
     >>> from numpy import array
@@ -40,34 +39,34 @@ def BSR_Get_Row(A, i):
     [4 5]
 
     """
-    
+
     blocksize = A.blocksize[0]
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
-    
+
     # Get z
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
-    
+
     colindx = numpy.zeros((1, z.__len__()), dtype=numpy.int32)
     counter = 0
-    
+
     for j in range(rowstart, rowend):
         coloffset = blocksize*A.indices[j]
         indys = A.data[j, localRowIndx, :].nonzero()[0]
         increment = indys.shape[0]
         colindx[0, counter:(counter+increment)] = coloffset + indys
         counter += increment
-    
-    return numpy.mat(z).T, colindx[0, :]
-    
 
-def BSR_Row_WriteScalar(A, i, x): 
+    return numpy.mat(z).T, colindx[0, :]
+
+
+def BSR_Row_WriteScalar(A, i, x):
     """
     Write a scalar at each nonzero location in row i of BSR matrix A
-    
+
     Parameters
     ----------
     A : bsr_matrix
@@ -76,14 +75,14 @@ def BSR_Row_WriteScalar(A, i, x):
         Row number
     x : float
         Scalar to overwrite nonzeros of row i in A
-    
+
     Returns
     -------
     A : bsr_matrix
-        All nonzeros in row i of A have been overwritten with x.  
-        If x is a vector, the first length(x) nonzeros in row i 
+        All nonzeros in row i of A have been overwritten with x.
+        If x is a vector, the first length(x) nonzeros in row i
         of A have been overwritten with entries from x
-    
+
     Examples
     --------
     >>> from numpy import array
@@ -95,27 +94,27 @@ def BSR_Row_WriteScalar(A, i, x):
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
     >>> BSR_Row_WriteScalar(B,5,22)
     """
-    
+
     blocksize = A.blocksize[0]
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
-    
+
     # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
     #   increment = indys.shape[0]
     #   A.data[j,localRowIndx,indys] = x
-    
+
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
-    
-    
-def BSR_Row_WriteVect(A, i, x): 
+
+
+def BSR_Row_WriteVect(A, i, x):
     """
-    Overwrite the nonzeros in row i of BSR matrix A with the vector x.  
+    Overwrite the nonzeros in row i of BSR matrix A with the vector x.
     length(x) and nnz(A[i,:]) must be equivalent.
-    
+
     Parameters
     ----------
     A : bsr_matrix
@@ -124,7 +123,7 @@ def BSR_Row_WriteVect(A, i, x):
         Row number
     x : array
         Array of values to overwrite nonzeros in row i of A
-    
+
     Returns
     -------
     A : bsr_matrix
@@ -133,7 +132,7 @@ def BSR_Row_WriteVect(A, i, x):
         length as nonzeros of row i.  This is guaranteed
         when this routine is used with vectors derived form
         Get_BSR_Row
-    
+
     Examples
     --------
     >>> from numpy import array
@@ -145,22 +144,22 @@ def BSR_Row_WriteVect(A, i, x):
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
     >>> BSR_Row_WriteVect(B,5,array([11,22,33,44,55,66]))
     """
-    
+
     blocksize = A.blocksize[0]
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i%blocksize
-    
+
     # like matlab slicing:
     x = x.__array__().reshape((max(x.shape),))
-    
+
     #counter = 0
     # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
     #   increment = min(indys.shape[0], blocksize)
     #   A.data[j,localRowIndx,indys] = x[counter:(counter+increment), 0]
     #   counter += increment
-    
+
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
