@@ -405,10 +405,8 @@ def symmetric_rescaling_sa(A, B, BH=None):
      [ 1.41421356]]
     """
 
-    ##
     # rescale A
     [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
-    ##
     # scale candidates
     for i in range(B.shape[1]):
         B[:, i] = numpy.ravel(B[:, i])*numpy.ravel(D_sqrt)
@@ -630,7 +628,6 @@ def get_block_diag(A, blocksize, inv_flag=True):
     if scipy.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
 
-    ##
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
         if (A.block_D_inv.shape[1] == blocksize) and\
@@ -643,14 +640,12 @@ def get_block_diag(A, blocksize, inv_flag=True):
            (A.block_D.shape[0] == A.shape[0]/blocksize):
             return A.block_D
 
-    ##
     # Convert to BSR
     if not isspmatrix_bsr(A):
         A = bsr_matrix(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
-    ##
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
@@ -665,7 +660,6 @@ def get_block_diag(A, blocksize, inv_flag=True):
         block_diag[nonzero_mask, :, :] = A.data[diag_entries, :, :]
 
     if inv_flag:
-        ##
         # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
@@ -1151,7 +1145,6 @@ def relaxation_as_linear_operator(method, A, b):
         else:
             return v, {}
 
-    ##
     # setup variables
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor', 'gauss_seidel_ne', \
                         'gauss_seidel_nr', 'jacobi', 'block_jacobi', 'richardson', 'schwarz',
@@ -1161,7 +1154,6 @@ def relaxation_as_linear_operator(method, A, b):
     lvl = pyamg.multilevel_solver.level()
     lvl.A = A
 
-    ##
     # Retrieve setup call from relaxation.smoothing for this relaxation method
     if not accepted_methods.__contains__(fn):
         raise NameError("invalid relaxation method: ", fn)
@@ -1169,11 +1161,9 @@ def relaxation_as_linear_operator(method, A, b):
         setup_smoother = eval('relaxation.smoothing.setup_' + fn)
     except NameError, ne:
         raise NameError("invalid presmoother method: ", fn)
-    ##
     # Get relaxation routine that takes only (A, x, b) as parameters
     relax = setup_smoother(lvl, **kwargs)
 
-    ##
     # Define matvec
     def matvec(x):
         xcopy = x.copy()
@@ -1249,7 +1239,6 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     """
 
-    ##
     # First preprocess the parameters
     Nfine = A.shape[0]
     if A.shape[0] != C.shape[0]:
@@ -1300,14 +1289,12 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if (A.dtype != B.dtype) or (A.dtype != Bf.dtype):
         raise TypeError, 'A, B and Bf must of the same dtype'
 
-    ##
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
     # C. This array is used multiple times in Satisfy_Constraints(...).
     if BtBinv is None:
         BtBinv = compute_BtBinv(B, C)
 
-    ##
     # Filter A according to C's matrix graph
     C = C.copy()
     C.data[:] = 1
@@ -1323,11 +1310,9 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     else:
         A = A.tocsr()
 
-    ##
     # Calculate difference between A*B and Bf
     diff = A*B - Bf
 
-    ##
     # Right multiply each row i of A with
     # A_i <--- A_i - diff_i*inv(B_i.T B_i)*Bi.T
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
@@ -1416,35 +1401,28 @@ def scale_T(T, P_I, I_F):
         raise TypeError('Expected BSR matrix T')
     elif T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected BSR matrix T with square blocks')
-    ##
     if not isspmatrix_bsr(P_I):
         raise TypeError('Expected BSR matrix P_I')
     elif P_I.blocksize[0] != P_I.blocksize[1]:
         raise TypeError('Expected BSR matrix P_I with square blocks')
-    ##
     if not isspmatrix_bsr(I_F):
         raise TypeError('Expected BSR matrix I_F')
     elif I_F.blocksize[0] != I_F.blocksize[1]:
         raise TypeError('Expected BSR matrix I_F with square blocks')
-    ##
     if (I_F.blocksize[0] != P_I.blocksize[0]) or (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
 
-    ##
     # Only do if we have a non-trivial coarse-grid
     if P_I.nnz > 0:
-        ##
         # Construct block diagonal inverse D
         D = P_I.T*T
         if D.nnz > 0:
             # changes D in place
             pinv_array(D.data)
 
-        ##
         # Scale T to be identity at root-nodes
         T = T*D
 
-        ##
         # Ensure coarse-grid injection
         T = I_F*T + P_I
 
@@ -1540,7 +1518,6 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
             raise TypeError('Number of columns in AggOp must equal number of Cnodes')
 
     if isspmatrix_bsr(A) and A.blocksize[0] > 1:
-        ##
         # Expand the list of Cpt nodes to a list of Cpt dofs
         blocksize = A.blocksize[0]
         Cpts = numpy.repeat(blocksize*Cnodes, blocksize)
@@ -1549,10 +1526,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         blocksize = 1
         Cpts = Cnodes
-    ##
     Cpts = numpy.array(Cpts, dtype=int)
 
-    ##
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
         if T.shape[1] > blocksize:
@@ -1562,7 +1537,6 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     if AggOp.shape[0] != T.shape[0]/blocksize:
         raise ValueError('Number of rows in AggOp must equal number of fine-grid nodes')
 
-    ##
     # Create two maps, one for F points and one for C points
     ncoarse = T.shape[1]
     I_C = eye(A.shape[0], A.shape[1], format='csr')
@@ -1575,7 +1549,6 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     # Find Fpts, the complement of Cpts
     Fpts = I_F.indices.copy()
 
-    ##
     # P_I only injects from Cpts on the coarse grid to the fine grid, but
     # because of it's later uses, it must have the CSC indices ordered as in Cpts
     if I_C.nnz > 0:
@@ -1588,7 +1561,6 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     P_I = csc_matrix((I_C.data.copy(), indices, indptr), shape=(I_C.shape[0], ncoarse))
     P_I = P_I.tobsr(T.blocksize)
 
-    ##
     # Use same blocksize as A
     if isspmatrix_bsr(A):
         I_C = I_C.tobsr(A.blocksize)
@@ -1655,7 +1627,6 @@ def compute_BtBinv(B, C):
     if C.shape[1] != B.shape[0]:
         raise TypeError('Expected matching dimensions such that C*B')
 
-    ##
     # Problem parameters
     if isspmatrix_bsr(C):
         ColsPerBlock = C.blocksize[1]
@@ -1663,13 +1634,11 @@ def compute_BtBinv(B, C):
     else:
         ColsPerBlock = 1
         RowsPerBlock = 1
-    ##
     Ncoarse = C.shape[1]
     Nfine = C.shape[0]
     NullDim = B.shape[1]
     Nnodes = Nfine/RowsPerBlock
 
-    ##
     # Construct BtB
     BtBinv = numpy.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
     BsqCols = sum(range(NullDim+1))
@@ -1680,12 +1649,10 @@ def compute_BtBinv(B, C):
             Bsq[:, counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:, i]))) * \
                              numpy.ravel(numpy.asarray(B[:, j]))
             counter = counter + 1
-    ##
     # This specialized C-routine calculates (B.T B) for each row using Bsq
     pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock, numpy.ravel(numpy.asarray(Bsq)),
     BsqCols, numpy.ravel(numpy.asarray(BtBinv)), C.indptr, C.indices)
 
-    ##
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
     #   This is the old call to a specialized routine, but lacks robustness
@@ -1741,14 +1708,12 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
     '''
 
-    ##
     # Find the diagonally dominant rows in A.
     A_abs = A.copy()
     A_abs.data = numpy.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
     diag_dom_rows = (D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],), dtype=A_abs) - D_abs)))
 
-    ##
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
     if bsize > 1:
@@ -1757,7 +1722,6 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = numpy.sum(diag_dom_rows, axis=1)
         diag_dom_rows = (diag_dom_rows == bsize)
 
-    ##
     # Replace these rows/cols in # C with rows/cols of the identity.
     I = eye(C.shape[0], C.shape[1], format='csr')
     I.data[diag_dom_rows] = 0.0
