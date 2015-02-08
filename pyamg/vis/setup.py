@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import sys
 
 def configuration(parent_package='', top_path=None):
-    import numpy
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration('vis', parent_package, top_path)
