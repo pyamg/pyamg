@@ -44,7 +44,7 @@ def BSR_Get_Row(A, i):
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
-    localRowIndx = i%blocksize
+    localRowIndx = i % blocksize
 
     # Get z
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
@@ -99,7 +99,7 @@ def BSR_Row_WriteScalar(A, i, x):
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
-    localRowIndx = i%blocksize
+    localRowIndx = i % blocksize
 
     # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
@@ -149,12 +149,12 @@ def BSR_Row_WriteVect(A, i, x):
     BlockIndx = i/blocksize
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
-    localRowIndx = i%blocksize
+    localRowIndx = i % blocksize
 
     # like matlab slicing:
     x = x.__array__().reshape((max(x.shape),))
 
-    #counter = 0
+    # counter = 0
     # for j in range(rowstart, rowend):
     #   indys = A.data[j,localRowIndx,:].nonzero()[0]
     #   increment = min(indys.shape[0], blocksize)

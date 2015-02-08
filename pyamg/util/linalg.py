@@ -2,15 +2,15 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 import numpy
 import scipy
 import scipy.sparse as sparse
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg import calc_lwork
 
-__all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm', 'residual_norm',
-           'condest', 'cond', 'ishermitian', 'pinv_array']
+__all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
+           'residual_norm', 'condest', 'cond', 'ishermitian',
+           'pinv_array']
 
 
 def norm(x, pnorm='2'):
@@ -33,8 +33,9 @@ def norm(x, pnorm='2'):
 
     Notes
     -----
-    - currently 1+ order of magnitude faster than scipy.linalg.norm(x), which calls
-      sqrt(numpy.sum(real((conjugate(x)*x)),axis=0)) resulting in an extra copy
+    - currently 1+ order of magnitude faster than scipy.linalg.norm(x), which
+      calls sqrt(numpy.sum(real((conjugate(x)*x)),axis=0)) resulting in an
+      extra copy
     - only handles the 2-norm and infinity-norm for vectors
 
     See Also
@@ -94,12 +95,14 @@ def infinity_norm(A):
 
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
         # avoid copying index and ptr arrays
-        abs_A = A.__class__((numpy.abs(A.data), A.indices, A.indptr), shape=A.shape)
+        abs_A = A.__class__((numpy.abs(A.data), A.indices, A.indptr),
+                            shape=A.shape)
         return (abs_A * numpy.ones((A.shape[1]), dtype=A.dtype)).max()
     elif sparse.isspmatrix(A):
         return (abs(A) * numpy.ones((A.shape[1]), dtype=A.dtype)).max()
     else:
-        return numpy.dot(numpy.abs(A), numpy.ones((A.shape[1],), dtype=A.dtype)).max()
+        return numpy.dot(numpy.abs(A), numpy.ones((A.shape[1],),
+                                                  dtype=A.dtype)).max()
 
 
 def residual_norm(A, x, b):
@@ -162,10 +165,12 @@ def axpy(x, y, a=1.0):
 #    else:
 #        method = eigen
 #
-#    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter, return_eigenvectors=False) )
+#    return norm( method(A, k=1, tol=0.1, which='LM', maxiter=maxiter,
+#    return_eigenvectors=False) )
 
 
-def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None):
+def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
+                             initial_guess=None):
     """Used by approximate_spectral_radius and condest
 
        Returns [W, E, H, V, breakdown_flag], where W and E are the eigenvectors
@@ -178,9 +183,8 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
 
     from scipy.sparse.linalg import aslinearoperator
 
-    A = aslinearoperator(A) # A could be dense or sparse, or something weird
+    A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
-    ##
     # Choose tolerance for deciding if break-down has occurred
     t = A.dtype.char
     eps = numpy.finfo(numpy.float).eps
@@ -204,13 +208,14 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
 
     v0 /= norm(v0)
 
-    ##
     # Important to type H based on v0, so that a real nonsymmetric matrix, can
     # have an imaginary initial guess for its Arnoldi Krylov space
-    H = numpy.zeros((maxiter+1, maxiter), dtype=numpy.find_common_type([v0.dtype, A.dtype], []))
+    H = numpy.zeros((maxiter+1, maxiter),
+                    dtype=numpy.find_common_type([v0.dtype, A.dtype], []))
 
     V = [v0]
 
+    beta = 0.0
     for j in range(maxiter):
         w = A * V[-1]
 
@@ -219,7 +224,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
                 H[j-1, j] = beta
                 w -= beta * V[-2]
 
-            alpha = numpy.dot(numpy.conjugate(numpy.ravel(w)), numpy.ravel(V[-1]))
+            alpha = numpy.dot(numpy.conjugate(w.ravel()), V[-1].ravel())
             H[j, j] = alpha
             w -= alpha * V[-1]  # axpy(V[-1],w,-alpha)
 
@@ -238,7 +243,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
         else:
             # orthogonalize against Vs
             for i, v in enumerate(V):
-                H[i, j] = numpy.dot(numpy.conjugate(numpy.ravel(v)), numpy.ravel(w))
+                H[i, j] = numpy.dot(numpy.conjugate(v.ravel()), w.ravel())
                 w = w - H[i, j]*v
 
             H[j+1, j] = norm(w)
@@ -273,8 +278,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None, initial_guess=None
     return (Vects, Eigs, H, V, breakdown_flag)
 
 
-def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=None,
-        initial_guess=None, return_vector=False):
+def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
+                                symmetric=None, initial_guess=None,
+                                return_vector=False):
     """
     Approximate the spectral radius of a matrix
 
@@ -323,9 +329,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
 
     References
     ----------
-    .. [1] Z. Bai, J. Demmel, J. Dongarra, A. Ruhe, and H. van der Vorst, editors.
-       "Templates for the Solution of Algebraic Eigenvalue Problems: A Practical
-       Guide", SIAM, Philadelphia, 2000.
+    .. [1] Z. Bai, J. Demmel, J. Dongarra, A. Ruhe, and H. van der Vorst,
+       editors.  "Templates for the Solution of Algebraic Eigenvalue Problems:
+       A Practical Guide", SIAM, Philadelphia, 2000.
 
     Examples
     --------
@@ -340,23 +346,21 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
     """
 
     if not hasattr(A, 'rho') or return_vector:
+        # somehow more restart causes a nonsymmetric case to fail...look at
+        # this what about A.dtype=int?  convert somehow?
 
-        # somehow more restart causes a nonsymmetric case to fail...look at this
-        # what about A.dtype=int?  convert somehow?
-
-        ##
-        # The use of the restart vector v0 requires that the full Krylov subspace V
-        # be stored.  So, set symmetric to False.
+        # The use of the restart vector v0 requires that the full Krylov
+        # subspace V be stored.  So, set symmetric to False.
         symmetric = False
 
         if maxiter < 1:
-            raise ValueError, 'expected maxiter > 0'
+            raise ValueError('expected maxiter > 0')
         if restart < 0:
-            raise ValueError, 'expected restart >= 0'
+            raise ValueError('expected restart >= 0')
         if A.dtype == int:
-            raise ValueError, 'expected A to be float (complex or real)'
+            raise ValueError('expected A to be float (complex or real)')
         if A.shape[0] != A.shape[1]:
-            raise ValueError, 'expected square A'
+            raise ValueError('expected square A')
 
         if initial_guess is None:
             v0 = scipy.rand(A.shape[1], 1)
@@ -364,29 +368,38 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5, symmetric=No
                 v0 = v0 + 1.0j * scipy.rand(A.shape[1], 1)
         else:
             if initial_guess.shape[0] != A.shape[0]:
-                raise ValueError, 'initial_guess and A must have same shape'
+                raise ValueError('initial_guess and A must have same shape')
             if (len(initial_guess.shape) > 1) and (initial_guess.shape[1] > 1):
-                raise ValueError, 'initial_guess must be an (n,1) or (n,) vector'
+                raise ValueError('initial_guess must be an (n,1) or\
+                                  (n,) vector')
             v0 = initial_guess.reshape(-1, 1)
             v0 = numpy.array(v0, dtype=A.dtype)
 
         for j in range(restart+1):
-            [evect, ev, H, V, breakdown_flag] = _approximate_eigenvalues(A,
-                    tol, maxiter, symmetric, initial_guess=v0)
+            [evect, ev, H, V, breakdown_flag] =\
+                _approximate_eigenvalues(A, tol, maxiter,
+                                         symmetric, initial_guess=v0)
             # Calculate error in dominant eigenvector
             nvecs = ev.shape[0]
             max_index = numpy.abs(ev).argmax()
             error = H[nvecs, nvecs-1]*evect[-1, max_index]
+
             # error is a fast way of calculating the following line
-            # error2 = ( A - ev[max_index]*scipy.mat(scipy.eye(A.shape[0],A.shape[1])) )*\
-            #         ( scipy.mat(scipy.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) )
+            # error2 = ( A - ev[max_index]*scipy.mat(
+            #           scipy.eye(A.shape[0],A.shape[1])) )*\
+            #           ( scipy.mat(scipy.hstack(V[:-1]))*\
+            #           evect[:,max_index].reshape(-1,1) )
             # print str(error) + "    " + str(scipy.linalg.norm(e2))
-            if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or breakdown_flag:
+
+            if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or\
+               breakdown_flag:
                 # halt if below relative tolerance
-                v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
+                v0 = numpy.dot(numpy.hstack(V[:-1]),
+                               evect[:, max_index].reshape(-1, 1))
                 break
             else:
-                v0 = numpy.dot(numpy.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
+                v0 = numpy.dot(numpy.hstack(V[:-1]),
+                               evect[:, max_index].reshape(-1, 1))
         # end j-loop
 
         rho = numpy.abs(ev[max_index])
@@ -440,7 +453,8 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     """
 
-    [evect, ev, H, V, breakdown_flag] = _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    [evect, ev, H, V, breakdown_flag] =\
+        _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
     return numpy.max([norm(x) for x in ev])/min([norm(x) for x in ev])
 
@@ -477,7 +491,7 @@ def cond(A):
     """
 
     if A.shape[0] != A.shape[1]:
-        raise ValueError, 'expected square matrix'
+        raise ValueError('expected square matrix')
 
     if sparse.isspmatrix(A):
         A = A.todense()
@@ -559,7 +573,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         return True
     else:
         if verbose:
-            print dff
+            print diff
         return False
 
     return diff
@@ -602,7 +616,6 @@ def pinv_array(a, cond=None):
     m = a.shape[1]
 
     if m == 1:
-        ##
         # Pseudo-inverse of 1 x 1 matrices is trivial
         zero_entries = (a == 0.0).nonzero()[0]
         a[zero_entries] = 1.0
@@ -611,16 +624,14 @@ def pinv_array(a, cond=None):
         del zero_entries
 
     else:
-        ##
         # The block size is greater than 1
 
-        ##
         # Create necessary arrays and function pointers for calculating pinv
-        gelss, = get_lapack_funcs(('gelss',), (numpy.ones((1,), dtype=a.dtype)))
+        gelss, = get_lapack_funcs(('gelss',),
+                                  (numpy.ones((1,), dtype=a.dtype)))
         RHS = numpy.eye(m, dtype=a.dtype)
         lwork = calc_lwork.gelss(gelss.prefix, m, m, m)[1]
 
-        ##
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
             t = a.dtype.char
@@ -630,9 +641,8 @@ def pinv_array(a, cond=None):
             _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
             cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
-        ##
         # Invert each block of a
         for kk in xrange(n):
-            gelssoutput = gelss(a[kk], RHS, cond=cond, lwork=lwork, overwrite_a=True, overwrite_b=False)
-
+            gelssoutput = gelss(a[kk], RHS, cond=cond, lwork=lwork,
+                                overwrite_a=True, overwrite_b=False)
             a[kk] = gelssoutput[1]
