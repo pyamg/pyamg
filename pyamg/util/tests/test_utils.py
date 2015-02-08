@@ -393,7 +393,7 @@ class TestUtils(TestCase):
         P_I = matrix([[1.0]])
         I_F = matrix([[0.0]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[1.0]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -401,7 +401,7 @@ class TestUtils(TestCase):
         P_I = matrix([[0.0]])
         I_F = matrix([[1.0]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[1.1]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -409,7 +409,7 @@ class TestUtils(TestCase):
         P_I = matrix([[0.0]])
         I_F = matrix([[1.0]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[0.]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -418,7 +418,7 @@ class TestUtils(TestCase):
         P_I = matrix([[1.], [0.]])
         I_F = matrix([[0., 0.], [0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[1.], [0.8]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -426,7 +426,7 @@ class TestUtils(TestCase):
         P_I = matrix([[1.], [0.]])
         I_F = matrix([[0., 0.], [0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[1.], [0.]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -434,7 +434,7 @@ class TestUtils(TestCase):
         P_I = matrix([[1.], [0.]])
         I_F = matrix([[0., 0.], [0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[1.], [0.]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -442,7 +442,7 @@ class TestUtils(TestCase):
         P_I = matrix([[0.], [0.]])
         I_F = matrix([[1., 0.], [0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         T_answer = matrix([[0.], [0.]])
         assert_array_almost_equal(T_answer, T_scaled)
 
@@ -500,7 +500,7 @@ class TestUtils(TestCase):
                            [0.,  0.,  4.],
                            [0.,  0.,  1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
-        T_scaled = Tscaled.todense()
+        T_scaled = T_scaled.todense()
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test

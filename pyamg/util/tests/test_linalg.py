@@ -163,12 +163,16 @@ class TestComplexLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
+            Avec = A * vec
+            Avec = ravel(Avec)
             vec = ravel(vec)
-            rayleigh = abs(dot(A*vec, vec) / dot(vec, vec))
+            rayleigh = abs(dot(Avec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
+            Aspvec = Asp * vec
+            Aspvec = ravel(Aspvec)
             vec = ravel(vec)
-            rayleigh = abs(dot(Asp*vec, vec) / dot(vec, vec))
+            rayleigh = abs(dot(Aspvec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
             AA = mat(A).H*mat(A)
@@ -184,12 +188,16 @@ class TestComplexLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(AAsp),
                                 expected_eig)
             vec = approximate_spectral_radius(AA, return_vector=True)[1]
+            AAvec = AA * vec
+            AAvec = ravel(AAvec)
             vec = ravel(vec)
-            rayleigh = abs(dot(AA*vec, vec) / dot(vec, vec))
+            rayleigh = abs(dot(AAvec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(AAsp, return_vector=True)[1]
+            AAspvec = AAsp * vec
+            AAspvec = ravel(AAspvec)
             vec = ravel(vec)
-            rayleigh = abs(dot(AAsp*vec, vec) / dot(vec, vec))
+            rayleigh = abs(dot(AAspvec, vec) / dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
     def test_infinity_norm(self):
