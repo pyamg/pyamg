@@ -1,4 +1,3 @@
-from pyamg.testing import *
 from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
@@ -7,6 +6,8 @@ from scipy import mat, random
 from scipy.linalg import solve
 from pyamg.util.linalg import norm
 import pyamg
+
+from numpy.testing import TestCase, assert_array_almost_equal, assert_equal
 
 
 class TestKrylov(TestCase):

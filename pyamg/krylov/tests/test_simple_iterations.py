@@ -1,9 +1,10 @@
-from pyamg.testing import *
 from pyamg.krylov import minimal_residual, steepest_descent
 from numpy import array, zeros, ones, ravel, dot, sqrt, zeros_like
 from scipy import mat, random
 from pyamg.util.linalg import norm
 import pyamg
+
+from numpy.testing import TestCase, rand
 
 
 class TestSimpleIterations(TestCase):
