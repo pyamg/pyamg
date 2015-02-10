@@ -1,8 +1,6 @@
 """ Try creating a point and primal aggregate view for a C/F splitting and
 simple aggregation, respectively."""
 
-from pyamg.testing import *
-
 import tempfile
 import os
 
@@ -10,6 +8,8 @@ from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
 
 from pyamg.vis import vis_aggregate_groups
+
+from numpy.testing import TestCase
 
 
 class TestVis(TestCase):

@@ -1,14 +1,14 @@
 """ Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed
 xml."""
 
-from pyamg.testing import *
-
 import tempfile
 
 import xml.parsers.expat
 from numpy import array, uint32
 
 from pyamg.vis import write_vtu
+
+from numpy.testing import TestCase
 
 
 class TestWriteVtu(TestCase):

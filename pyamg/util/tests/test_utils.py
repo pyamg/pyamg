@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 from numpy import matrix, array, diag, sqrt, abs, ravel, ones, arange
 from scipy import rand, real, isscalar, hstack
 from scipy.sparse import csr_matrix, isspmatrix, bsr_matrix, isspmatrix_bsr,\
@@ -12,6 +10,9 @@ from pyamg.util.utils import diag_sparse, profile_solver, to_type,\
     get_block_diag, symmetric_rescaling, symmetric_rescaling_sa,\
     relaxation_as_linear_operator, filter_operator, scale_T, get_Cpt_params,\
     compute_BtBinv, eliminate_diag_dom_nodes
+
+from numpy.testing import TestCase, assert_equal, assert_almost_equal,\
+    assert_array_almost_equal, assert_array_equal
 
 
 class TestUtils(TestCase):

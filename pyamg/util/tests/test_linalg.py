@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 from numpy import matrix, array, abs, ravel, zeros_like, dot
 from scipy import rand, linalg, mat, random
 from scipy.sparse import csr_matrix
@@ -10,6 +8,9 @@ from pyamg.util.linalg import approximate_spectral_radius,\
     ishermitian, pinv_array
 
 from pyamg import gallery
+
+from numpy.testing import TestCase, assert_almost_equal, assert_equal,\
+    assert_array_almost_equal
 
 
 class TestLinalg(TestCase):

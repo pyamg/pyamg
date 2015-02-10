@@ -1,9 +1,10 @@
-from pyamg.testing import *
 from numpy import array, ravel
 from scipy import mat
 from scipy.sparse import bsr_matrix
 from pyamg.util.BSR_utils import BSR_Get_Row, BSR_Row_WriteScalar,\
     BSR_Row_WriteVect
+
+from numpy.testing import TestCase, assert_equal
 
 
 class TestBSRUtils(TestCase):
