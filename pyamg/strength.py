@@ -24,6 +24,7 @@ __all__ = ['classical_strength_of_connection',
            'symmetric_strength_of_connection',
            'evolution_strength_of_connection',
            'distance_strength_of_connection',
+           'algebraic_distance',
            # deprecated:
            'ode_strength_of_connection']
 
@@ -888,6 +889,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
         d = np.sum((x[I] - x[J])**p, axis=1)**(1.0/p)
     else:
         d = np.abs(x[I] - x[J]).max(axis=1)
+    del d
 
     # drop weak connections larger than theta
     weak = np.where(C.data > theta)[0]

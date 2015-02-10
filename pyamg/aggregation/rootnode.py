@@ -4,30 +4,24 @@ __docformat__ = "restructuredtext en"
 
 import numpy
 import scipy
-import types
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 
-from pyamg import relaxation
-from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import symmetric_rescaling_sa, diag_sparse, amalgamate, \
-    relaxation_as_linear_operator, scale_rows, \
-    get_diagonal, scale_T, get_Cpt_params, \
+from pyamg.util.utils import relaxation_as_linear_operator,\
+    scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, blocksize, \
     levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
-from pyamg.util.linalg import pinv_array, approximate_spectral_radius, \
-    _approximate_eigenvalues
-from pyamg.strength import classical_strength_of_connection, \
-    symmetric_strength_of_connection, evolution_strength_of_connection, \
-    energy_based_strength_of_connection, distance_strength_of_connection
+from pyamg.strength import classical_strength_of_connection,\
+    symmetric_strength_of_connection, evolution_strength_of_connection,\
+    energy_based_strength_of_connection, distance_strength_of_connection,\
+    algebraic_distance
 from aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from tentative import fit_candidates
-from smooth import jacobi_prolongation_smoother, \
-    richardson_prolongation_smoother, energy_prolongation_smoother
+from smooth import energy_prolongation_smoother
 
 __all__ = ['rootnode_solver']
 
@@ -256,7 +250,6 @@ def rootnode_solver(A, B=None, BH=None,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
-    ##
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
         B = numpy.kron(numpy.ones((A.shape[0]/blocksize(A), 1), dtype=A.dtype),
@@ -271,7 +264,6 @@ def rootnode_solver(A, B=None, BH=None,
         if B.shape[1] < blocksize(A):
             raise ValueError('B.shape[1] must be >= the blocksize of A')
 
-    ##
     # Left near nullspace candidates
     if A.symmetry == 'nonsymmetric':
         if BH is None:
@@ -287,7 +279,6 @@ def rootnode_solver(A, B=None, BH=None,
                 raise ValueError('The near null-space modes BH have \
                                   incorrect dimensions for matrix A')
 
-    ##
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
     max_levels, max_coarse, strength =\
@@ -298,13 +289,11 @@ def rootnode_solver(A, B=None, BH=None,
         levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
     smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
-    ##
     # Construct multilevel structure
     levels = []
     levels.append(multilevel_solver.level())
     levels[-1].A = A          # matrix
 
-    ##
     # Append near nullspace candidates
     levels[-1].B = B          # right candidates
     if A.symmetry == 'nonsymmetric':
@@ -339,7 +328,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AH = A.H.asformat(A.format)
         BH = levels[-1].BH
 
-    ##
     # Compute the strength-of-connection matrix C, where larger
     # C[i, j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength[len(levels)-1])
@@ -366,13 +354,11 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
 
-    ##
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
-    ##
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
@@ -389,7 +375,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized aggregation method %s' % str(fn))
 
-    ##
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
@@ -400,7 +385,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
-    ##
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine[:, 0:blocksize(A)] = T B_coarse[:, 0:blocksize(A)].
@@ -410,21 +394,18 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)])
         del dummyH
 
-    ##
     # Create necessary root node matrices
     Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
     T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
     if A.symmetry == "nonsymmetric":
         TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
 
-    ##
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
     B = Cpt_params[1]['P_I'].T*levels[-1].B
     if A.symmetry == "nonsymmetric":
         BH = Cpt_params[1]['P_I'].T*levels[-1].BH
 
-    ##
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
@@ -437,7 +418,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized prolongation smoother \
                           method %s' % str(fn))
 
-    ##
     # Compute the restriction matrix R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
     # based on A.H.  Otherwise R = P.H or P.T.

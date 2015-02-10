@@ -5,14 +5,12 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 import numpy as np
 import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
 
-from pyamg import relaxation
-from pyamg import amg_core
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import symmetric_rescaling_sa, amalgamate,\
-    relaxation_as_linear_operator, eliminate_diag_dom_nodes, blocksize,\
+from pyamg.util.utils import relaxation_as_linear_operator,\
+    eliminate_diag_dom_nodes, blocksize,\
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
@@ -227,14 +225,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
-    ##
     # Right near nullspace candidates
     if B is None:
         B = np.ones((A.shape[0], 1), dtype=A.dtype)  # use constant vector
     else:
         B = np.asarray(B, dtype=A.dtype)
 
-    ##
     # Left near nullspace candidates
     if A.symmetry == 'nonsymmetric':
         if BH is None:
@@ -242,7 +238,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         else:
             BH = np.asarray(BH, dtype=A.dtype)
 
-    ##
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
     max_levels, max_coarse, strength =\
@@ -253,13 +248,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
     smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
-    ##
     # Construct multilevel structure
     levels = []
     levels.append(multilevel_solver.level())
     levels[-1].A = A          # matrix
 
-    ##
     # Append near nullspace candidates
     levels[-1].B = B          # right candidates
     if A.symmetry == 'nonsymmetric':
@@ -294,7 +287,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AH = A.H.asformat(A.format)
         BH = levels[-1].BH
 
-    ##
     # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength[len(levels)-1])
@@ -321,13 +313,11 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
 
-    ##
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
-    ##
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
@@ -343,7 +333,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized aggregation method %s' % str(fn))
 
-    ##
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
@@ -354,7 +343,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
-    ##
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine = T B_coarse.
@@ -362,7 +350,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     if A.symmetry == "nonsymmetric":
         TH, BH = fit_candidates(AggOp, BH)
 
-    ##
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
@@ -379,7 +366,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized prolongation smoother method %s' %
                          str(fn))
 
-    ##
     # Compute the restriction matrix, R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
     # based on A.H.  Otherwise R = P.H or P.T.

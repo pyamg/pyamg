@@ -236,7 +236,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     # Track work in terms of relaxation
     work = numpy.zeros((1,))
 
-    ##
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
     max_levels, max_coarse, strength =\
@@ -277,7 +276,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
             strength = [('predefined', {'C': sa.levels[i].C.tocsr()})
                         for i in range(len(sa.levels) - 1)]
 
-    ##
     # Develop additional candidates
     for i in range(num_candidates):
         x = general_setup_stage(
@@ -299,7 +297,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
             raise ValueError('Adaptive candidate is all 0.')
         B = numpy.hstack((B, x.reshape(-1, 1)))
 
-    ##
     # Improve candidates
     if B.shape[1] > 1 and improvement_iters > 0:
         b = numpy.zeros((A.shape[0], 1), dtype=A.dtype)
@@ -340,7 +337,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                 B = numpy.hstack((B, x.reshape(-1, 1)))
 
     elif improvement_iters > 0:
-        ##
         # Special case for improving a single candidate
         max_levels = len(aggregate) + 1
         max_coarse = 0
@@ -386,7 +382,6 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
     """
 
-    ##
     # Define relaxation routine
     def relax(A, x):
         fn, kwargs = unpack_arg(prepostsmoother)
