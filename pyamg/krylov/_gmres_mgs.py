@@ -132,7 +132,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
     dimen = A.shape[0]
 
-    ##
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._gmres_mgs')

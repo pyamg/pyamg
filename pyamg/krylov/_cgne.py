@@ -1,4 +1,4 @@
-from numpy import array, inner, conjugate, ceil, asmatrix, mod
+from numpy import inner, ceil, asmatrix, mod
 from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -93,7 +93,6 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
     dimen = A.shape[0]
 
-    ##
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._cgne')

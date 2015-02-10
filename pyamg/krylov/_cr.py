@@ -1,5 +1,4 @@
-import numpy
-from numpy import inner, conjugate, asarray, mod, sqrt
+from numpy import inner, mod, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
@@ -84,9 +83,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     '''
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype=None)
-    n = len(b)
-
-    ##
+    # n = len(b)
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._cr')
@@ -98,13 +95,13 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # choose tolerance for numerically zero values
-    t = A.dtype.char
-    eps = numpy.finfo(numpy.float).eps
-    feps = numpy.finfo(numpy.single).eps
-    geps = numpy.finfo(numpy.longfloat).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    numerically_zero = {0: feps*1e3, 1: eps*1e6,
-                        2: geps*1e6}[_array_precision[t]]
+    # t = A.dtype.char
+    # eps = numpy.finfo(numpy.float).eps
+    # feps = numpy.finfo(numpy.single).eps
+    # geps = numpy.finfo(numpy.longfloat).eps
+    # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
+    # numerically_zero = {0: feps*1e3, 1: eps*1e6,
+    #                     2: geps*1e6}[_array_precision[t]]
 
     # setup method
     r = b - A*x

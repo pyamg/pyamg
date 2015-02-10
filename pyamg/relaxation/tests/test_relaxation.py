@@ -719,7 +719,6 @@ class TestRelaxation(TestCase):
                 indices = range(len(subdomains))
                 indices.extend(range(len(subdomains)-1, -1, -1))
 
-            ##
             # Multiplicative Schwarz iterations
             for j in xrange(iterations):
                 for i in indices:

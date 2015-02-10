@@ -156,14 +156,9 @@ class TestSolverPerformance(TestCase):
             rs_old = rs_new
 
 
-##############################################
 #   reference implementations for unittests  #
-##############################################
-
-
 def reference_direct_interpolation(A, S, splitting):
 
-    ##
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, we copy the entries of A into the
     # sparsity pattern of C.

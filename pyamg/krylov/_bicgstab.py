@@ -1,4 +1,4 @@
-from numpy import array, inner, conjugate, ravel
+from numpy import array, inner, ravel
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
@@ -79,7 +79,6 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
 
-    ##
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._bicgstab')

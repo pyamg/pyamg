@@ -94,7 +94,6 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
     dimen = A.shape[0]
 
-    ##
     # Ensure that warnings are always reissued from this function
     import warnings
     warnings.filterwarnings('always', module='pyamg\.krylov\._cgnr')
