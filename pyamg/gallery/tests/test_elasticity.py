@@ -1,9 +1,10 @@
-from pyamg.testing import *
 from scipy import matrix, array
 from scipy.sparse import coo_matrix
 from pyamg.gallery.elasticity import linear_elasticity, \
     linear_elasticity_p1, \
     q12d_local, p12d_local, p13d_local
+
+from numpy.testing import TestCase, assert_almost_equal
 
 
 class TestLinearElasticityP1(TestCase):

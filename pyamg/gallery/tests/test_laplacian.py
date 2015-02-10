@@ -1,10 +1,10 @@
-from pyamg.testing import *
-
 from scipy import matrix
 from numpy import array, abs
 from scipy import real, imag
 from scipy.linalg import eigvals
 from pyamg.gallery.laplacian import poisson, gauge_laplacian
+
+from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
 
 class TestPoisson(TestCase):

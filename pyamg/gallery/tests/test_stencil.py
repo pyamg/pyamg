@@ -1,8 +1,7 @@
-from pyamg.testing import *
-
 from scipy import matrix, array
-
 from pyamg.gallery.stencil import stencil_grid
+
+from numpy.testing import TestCase, assert_equal
 
 
 class TestStencil(TestCase):
