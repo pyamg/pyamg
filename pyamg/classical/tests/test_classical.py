@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 import numpy
 from numpy import ravel, ones, concatenate, cumsum
 from scipy import rand
@@ -11,6 +9,8 @@ from pyamg.strength import classical_strength_of_connection
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
 from pyamg.classical.interpolate import direct_interpolation
+
+from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
 
 class TestRugeStubenFunctions(TestCase):

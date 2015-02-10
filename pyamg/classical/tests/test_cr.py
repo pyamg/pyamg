@@ -1,12 +1,9 @@
-from pyamg.testing import *
-
 from numpy.random import seed, rand
-
 from scipy.sparse import csr_matrix
-
 from pyamg.gallery import poisson, load_example
-
 from pyamg.classical.cr import binormalize, CR
+
+from numpy.testing import TestCase
 
 
 class TestCR(TestCase):
