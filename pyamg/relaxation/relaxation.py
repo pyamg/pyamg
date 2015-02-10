@@ -217,7 +217,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     Examples
     --------
     >>> # Use Overlapping Schwarz as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import schwarz
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -298,7 +298,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     Examples
     --------
     >>> # Use Gauss-Seidel as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import gauss_seidel
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -372,7 +372,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     Examples
     --------
     >>> # Use Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -450,7 +450,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     Examples
     --------
     >>> # Use block Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import block_jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -531,7 +531,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     Examples
     --------
     >>> # Use Gauss-Seidel as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import block_gauss_seidel
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -855,7 +855,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     Examples
     --------
     >>> # Use NE Gauss-Seidel as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import gauss_seidel_ne
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -940,7 +940,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     Examples
     --------
     >>> # Use NR Gauss-Seidel as a Stand-Alone Solver
-    >>> from pyamg.relaxation import *
+    >>> from pyamg.relaxation import gauss_seidel_nr
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
