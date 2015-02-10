@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 import numpy
 import scipy.sparse
 from numpy import sqrt, ones, arange, array, abs, dot, ravel
@@ -11,6 +9,9 @@ from pyamg.gallery import poisson, linear_elasticity,\
     gauge_laplacian, load_example
 
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
+
+from numpy.testing import TestCase, assert_approx_equal,\
+    assert_array_almost_equal
 
 import warnings
 warnings.simplefilter('ignore', SparseEfficiencyWarning)

@@ -1,12 +1,12 @@
-from pyamg.testing import *
-
 from numpy import ones, zeros, random, ravel
 from scipy import rand
 
 from pyamg.aggregation import smoothed_aggregation_solver
 
-from pyamg.gallery import *
-from pyamg.aggregation.adaptive import *
+from pyamg.gallery import poisson, linear_elasticity
+from pyamg.aggregation.adaptive import adaptive_sa_solver
+
+from numpy.testing import TestCase
 
 
 class TestAdaptiveSA(TestCase):

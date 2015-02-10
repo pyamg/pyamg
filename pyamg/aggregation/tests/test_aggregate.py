@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 import numpy
 from numpy import array, ones, arange, empty, array_split, zeros
 from numpy.lib.arraysetops import setdiff1d
@@ -8,6 +6,8 @@ from scipy.sparse import csr_matrix, spdiags
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
+
+from numpy.testing import TestCase, rand, assert_equal
 
 
 class TestAggregate(TestCase):

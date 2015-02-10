@@ -9,7 +9,7 @@ from pyamg.graph import maximal_independent_set, vertex_coloring, bellman_ford,\
     lloyd_cluster, connected_components, max_value
 from pyamg import amg_core
 
-from pyamg.testing import TestCase, assert_equal
+from numpy.testing import TestCase, assert_equal
 
 
 def canonical_graph(G):

@@ -1,17 +1,16 @@
-from pyamg.testing import *
 import scipy.sparse
 import numpy
 
-from numpy import array, zeros, ones, mat, ravel
-from scipy import rand, mat
-from scipy.linalg import pinv2
-from scipy.sparse import bsr_matrix, csr_matrix, eye, isspmatrix_bsr
+from numpy import array, ones, mat, ravel
+from scipy.sparse import csr_matrix, eye, isspmatrix_bsr
 
-from pyamg.aggregation.smooth import Satisfy_Constraints
 from pyamg.gallery import poisson, linear_elasticity, load_example,\
     gauge_laplacian
 from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
 from pyamg.amg_core import incomplete_mat_mult_bsr
+
+from numpy.testing import TestCase, rand, assert_array_almost_equal,\
+    assert_equal, assert_almost_equal
 
 
 class TestEnergyMin(TestCase):
@@ -24,8 +23,8 @@ class TestEnergyMin(TestCase):
             sparsity structure of S
             A,B and S are assumed BSR
             '''
-            Ablocksize = A.blocksize
-            Bblocksize = B.blocksize
+            # Ablocksize = A.blocksize
+            # Bblocksize = B.blocksize
             S = S.copy()   # don't overwrite the original S
 
             S.data[:] = 1.0
