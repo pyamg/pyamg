@@ -142,7 +142,6 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
                 weighting = 'diagonal'
 
     if filter:
-        ##
         # Implement filtered prolongation smoothing for the general case by
         # utilizing satisfy constraints
 
@@ -182,14 +181,12 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         raise ValueError('Incorrect weighting option')
 
     if filter:
-        ##
         # Carry out Jacobi, but after calculating the prolongator update, U,
         # apply satisfy constraints so that U*B = 0
         P = T
         for i in range(degree):
             U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
 
-            ##
             # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
             # array is used multiple times in Satisfy_Constraints(...).
@@ -197,12 +194,10 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             # (2) Apply satisfy constraints
             Satisfy_Constraints(U, B, BtBinv)
 
-            ##
             # Update P
             P = P - U
 
     else:
-        ##
         # Carry out Jacobi as normal
         P = T
         for i in range(degree):
@@ -1059,7 +1054,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if min(T.nnz, AtildeCopy.nnz, A.nnz) == 0:
         return T
 
-    ##
     # Expand allowed sparsity pattern for P through multiplication by Atilde
     T.sort_indices()
     Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
@@ -1070,24 +1064,20 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     for i in range(degree):
         Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
 
-    ##
     # UnAmal returns a BSR matrix
     Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
     Sparsity_Pattern.sort_indices()
 
-    ##
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
         Sparsity_Pattern = Cpt_params[1]['I_F']*Sparsity_Pattern
         Sparsity_Pattern = Cpt_params[1]['P_I'] + Sparsity_Pattern
 
-    ##
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
     # sparsity pattern in Sparsity Pattern. This array is used multiple times
     # in Satisfy_Constraints(...).
     BtBinv = compute_BtBinv(B, Sparsity_Pattern)
 
-    ##
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine
     if Cpt_params[0] and (B.shape[1] > A.blocksize[0]):
@@ -1096,7 +1086,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
 
-    ##
     # Iteratively minimize the energy of T subject to the constraints of
     # Sparsity_Pattern and maintaining T's effect on B, i.e. T*B =
     # (T+Update)*B, i.e. Update*B = 0

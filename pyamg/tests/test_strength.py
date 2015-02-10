@@ -616,7 +616,6 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     LHS = mat(zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
     RHS = mat(zeros((NullDim+1, 1)), dtype=A.dtype)
 
-    ##
     # Choose tolerance for dropping "numerically zero" values later
     t = Atilde.dtype.char
     eps = numpy.finfo(numpy.float).eps

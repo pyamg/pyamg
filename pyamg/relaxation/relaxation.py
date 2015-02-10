@@ -131,7 +131,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     Examples
     --------
-    >>> ## Use SOR as stand-along solver
+    >>> # Use SOR as stand-along solver
     >>> from pyamg.relaxation import sor
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -143,7 +143,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> print norm(b-A*x0)
     3.03888724811
     >>> #
-    >>> ## Use SOR as the multigrid smoother
+    >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
@@ -216,7 +216,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
 
     Examples
     --------
-    >>> ## Use Overlapping Schwarz as a Stand-Alone Solver
+    >>> # Use Overlapping Schwarz as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -228,7 +228,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> print norm(b-A*x0)
     0.126326160522
     >>> #
-    >>> ## Schwarz as the Multigrid Smoother
+    >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
@@ -266,7 +266,6 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         raise ValueError("valid sweep directions are 'forward',\
                           'backward', and 'symmetric'")
 
-    ##
     # Call C code, need to make sure that subdomains are sorted and unique
     for iter in xrange(iterations):
         amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
@@ -298,7 +297,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     Examples
     --------
-    >>> ## Use Gauss-Seidel as a Stand-Alone Solver
+    >>> # Use Gauss-Seidel as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -310,7 +309,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> print norm(b-A*x0)
     4.00733716236
     >>> #
-    >>> ## Use Gauss-Seidel as the Multigrid Smoother
+    >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
@@ -372,7 +371,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Examples
     --------
-    >>> ## Use Jacobi as a Stand-Alone Solver
+    >>> # Use Jacobi as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -384,7 +383,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> print norm(b-A*x0)
     5.83475132751
     >>> #
-    >>> ## Use Jacobi as the Multigrid Smoother
+    >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
@@ -450,7 +449,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
 
     Examples
     --------
-    >>> ## Use block Jacobi as a Stand-Alone Solver
+    >>> # Use block Jacobi as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -462,7 +461,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> print norm(b-A*x0)
     4.66474230129
     >>> #
-    >>> ## Use block Jacobi as the Multigrid Smoother
+    >>> # Use block Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'omega': 4.0/3.0, 'iterations' : 2, 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
@@ -531,7 +530,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
 
     Examples
     --------
-    >>> ## Use Gauss-Seidel as a Stand-Alone Solver
+    >>> # Use Gauss-Seidel as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -544,7 +543,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> print norm(b-A*x0)
     0.958333817624
     >>> #
-    >>> ## Use Gauss-Seidel as the Multigrid Smoother
+    >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'sweep':'symmetric', 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
@@ -629,9 +628,9 @@ def polynomial(A, x, b, coefficients, iterations=1):
 
     Examples
     --------
-    >>> ## The polynomial smoother is not currently used directly
-    >>> ## in PyAMG.  It is only used by the chebyshev smoothing option,
-    >>> ## which automatically calculates the correct coefficients.
+    >>> # The polynomial smoother is not currently used directly
+    >>> # in PyAMG.  It is only used by the chebyshev smoothing option,
+    >>> # which automatically calculates the correct coefficients.
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy
@@ -773,7 +772,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
     Examples
     --------
-    >>> ## Use NE Jacobi as a Stand-Alone Solver
+    >>> # Use NE Jacobi as a Stand-Alone Solver
     >>> from pyamg.relaxation import jacobi_ne
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -785,7 +784,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> print norm(b-A*x0)
     49.3886046066
     >>> #
-    >>> ## Use NE Jacobi as the Multigrid Smoother
+    >>> # Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'iterations' : 2, 'omega' : 4.0/3.0}
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
@@ -855,7 +854,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Examples
     --------
-    >>> ## Use NE Gauss-Seidel as a Stand-Alone Solver
+    >>> # Use NE Gauss-Seidel as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -867,7 +866,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> print norm(b-A*x0)
     8.47576806771
     >>> #
-    >>> ## Use NE Gauss-Seidel as the Multigrid Smoother
+    >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
@@ -940,7 +939,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Examples
     --------
-    >>> ## Use NR Gauss-Seidel as a Stand-Alone Solver
+    >>> # Use NR Gauss-Seidel as a Stand-Alone Solver
     >>> from pyamg.relaxation import *
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
@@ -952,7 +951,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> print norm(b-A*x0)
     8.45044864352
     >>> #
-    >>> ## Use NR Gauss-Seidel as the Multigrid Smoother
+    >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
     ...      coarse_solver='pinv2', max_coarse=50,
@@ -984,7 +983,6 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
         raise ValueError("valid sweep directions are 'forward',\
                           'backward', and 'symmetric'")
 
-    ##
     # Calculate initial residual
     r = b - A*x
 

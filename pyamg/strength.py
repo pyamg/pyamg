@@ -395,7 +395,6 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
         Atilde = A.copy()
         Atilde = Atilde.tocsr()
 
-    ##
     # Calculate the weighted-Jacobi parameter
     from pyamg.util.linalg import approximate_spectral_radius
     D = A.diagonal()
@@ -419,7 +418,6 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
         v = np.mat(S[:, i].todense())
         Av = np.mat(A * v)
         denom = np.sqrt(np.conjugate(v).T * Av)
-        ##
         # replace entries in row i with strength values
         for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
             col = Atilde.indices[j]
@@ -904,7 +902,6 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
 
-    ##
     # Put an identity on the diagonal
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
 

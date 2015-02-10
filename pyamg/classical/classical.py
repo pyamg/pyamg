@@ -4,13 +4,14 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
+from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
-    symmetric_strength_of_connection, \
-    evolution_strength_of_connection
+    symmetric_strength_of_connection, evolution_strength_of_connection,\
+    distance_strength_of_connection, energy_based_strength_of_connection,\
+    algebraic_distance
 
 from interpolate import direct_interpolation
 import split
@@ -146,7 +147,6 @@ def extend_hierarchy(levels, strength, CF, keep):
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
 
-    ##
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
@@ -162,17 +162,14 @@ def extend_hierarchy(levels, strength, CF, keep):
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
-    ##
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
     P = direct_interpolation(A, C, splitting)
 
-    ##
     # Generate the restriction matrix that maps from the fine-grid to the
     # coarse-grid
     R = P.T.tocsr()
 
-    ##
     # Store relevant information for this level
     if keep:
         levels[-1].C = C                  # strength of connection matrix
@@ -183,7 +180,6 @@ def extend_hierarchy(levels, strength, CF, keep):
 
     levels.append(multilevel_solver.level())
 
-    ##
     # Form next level through Galerkin product
     A = R * A * P
     levels[-1].A = A

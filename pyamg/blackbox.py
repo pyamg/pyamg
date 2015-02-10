@@ -35,7 +35,6 @@ def make_csr(A):
     Implicit conversion of A to CSR in pyamg.blackbox.make_csr
     """
 
-    ##
     # Convert to CSR or BSR if necessary
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
@@ -295,12 +294,10 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     else:
         accel = 'gmres'
 
-    ##
     # Initial guess
     if x0 is None:
         x0 = np.array(sp.rand(A.shape[0],), dtype=A.dtype)
 
-    ##
     # Callback function to print iteration number
     if verb:
         iteration = np.zeros((1,))
@@ -314,7 +311,6 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     else:
         callback2 = None
 
-    ##
     # Solve with accelerated Krylov method
     x = existing_solver.solve(b, x0=x0, accel=accel, tol=tol, maxiter=maxiter,
                               callback=callback2)

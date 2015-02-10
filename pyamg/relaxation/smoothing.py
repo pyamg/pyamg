@@ -106,20 +106,20 @@ def change_smoothers(ml, presmoother, postsmoother):
     >>> b = rand(A.shape[0],)
     >>> ml = smoothed_aggregation_solver(A, max_coarse=10)
     >>> #
-    >>> ## Set all levels to use gauss_seidel's defaults
+    >>> # Set all levels to use gauss_seidel's defaults
     >>> smoothers = 'gauss_seidel'
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
     >>> #
-    >>> ## Set all levels to use three iterations of gauss_seidel's defaults
+    >>> # Set all levels to use three iterations of gauss_seidel's defaults
     >>> smoothers = ('gauss_seidel', {'iterations' : 3})
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=None)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
     >>> #
-    >>> ## Set level 0 to use gauss_seidel's defaults, and all
-    >>> ## subsequent levels to use 5 iterations of cgnr
+    >>> # Set level 0 to use gauss_seidel's defaults, and all
+    >>> # subsequent levels to use 5 iterations of cgnr
     >>> smoothers = ['gauss_seidel', ('cgnr', {'maxiter' : 5})]
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
@@ -455,7 +455,6 @@ def setup_strength_based_schwarz(lvl, iterations=1, sweep='symmetric'):
 
 def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None,
                        withrho=True):
-    ##
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if scipy.sparse.isspmatrix_csr(lvl.A):

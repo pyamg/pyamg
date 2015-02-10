@@ -99,10 +99,7 @@ class TestComplexAggregate(TestCase):
             assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
 
-##############################################
-#   reference implementations for unittests  #
-##############################################
-
+# reference implementations for unittests  #
 # note that this method only tests the current implementation, not
 # all possible implementations
 def reference_standard_aggregation(C):

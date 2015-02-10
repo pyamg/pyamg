@@ -87,7 +87,6 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     if E2V.max() >= Agg.shape[0]:
         E2V = E2V[E2V.max(axis=1) < Agg.shape[0]]
 
-    #####
     # 1 #
     # Find elements with all vertices in same aggregate
 
@@ -103,7 +102,6 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     else:
         ElementAggs = Agg.indices[E2V]
 
-    #####
     # 2 #
     # find all aggregates encompassing full elements
     # mask[i] == True if all vertices in element i belong to the same aggregate
@@ -112,7 +110,6 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     E2V_a = E2V[mask, :]   # elements where element is full
     Nel_a = E2V_a.shape[0]
 
-    #####
     # 3 #
     # find edges of elements in the same aggregate (brute force)
 
@@ -134,14 +131,12 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     E2V_b = edges[Agg.indices[V2V.row] == Agg.indices[V2V.col]]
     Nel_b = E2V_b.shape[0]
 
-    #######
     # 3.5 #
     # single node aggregates
     sums = numpy.array(Agg.sum(axis=0)).ravel()
     E2V_c = numpy.where(sums == 1)[0]
     Nel_c = len(E2V_c)
 
-    #####
     # 4 #
     # now write out the elements and edges
     colors_a = 3*numpy.ones((Nel_a,))  # color triangles with threes
