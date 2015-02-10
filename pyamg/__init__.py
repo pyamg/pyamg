@@ -65,6 +65,6 @@ else:
 
     __all__ = [s for s in dir() if not s.startswith('_')]
     __all__ += ['test', '__version__']
-    from pyamg.testing import Tester
+    from numpy.testing import Tester
     test = Tester().test
     bench = Tester().bench

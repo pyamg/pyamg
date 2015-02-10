@@ -6,5 +6,5 @@ from linalg import *
 from utils import *
 
 __all__ = [s for s in dir() if not s.startswith('_')]
-from pyamg.testing import Tester
+from numpy.testing import Tester
 test = Tester().test

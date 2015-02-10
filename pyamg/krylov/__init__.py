@@ -13,5 +13,5 @@ from _steepest_descent import *
 from _minimal_residual import *
 
 __all__ = [s for s in dir() if not s.startswith('_')]
-from pyamg.testing import Tester
+from numpy.testing import Tester
 test = Tester().test
