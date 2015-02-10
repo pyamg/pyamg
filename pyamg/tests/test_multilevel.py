@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 from numpy import diag, arange, ones, sqrt, dot, ravel
 from scipy import rand
 from pyamg.util.linalg import norm
@@ -7,6 +5,8 @@ from scipy.sparse import csr_matrix
 
 from pyamg.gallery import poisson
 from pyamg.multilevel import multilevel_solver, coarse_grid_solver
+
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
 
 def precon_norm(v, ml):

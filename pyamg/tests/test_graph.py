@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 import numpy
 from numpy import ones, eye, zeros, bincount, empty, asarray, array
 from numpy.random import seed
@@ -10,6 +8,8 @@ from pyamg.gallery import poisson, load_example
 from pyamg.graph import maximal_independent_set, vertex_coloring, bellman_ford,\
     lloyd_cluster, connected_components, max_value
 from pyamg import amg_core
+
+from pyamg.testing import TestCase, assert_equal
 
 
 def canonical_graph(G):

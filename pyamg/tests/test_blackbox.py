@@ -1,10 +1,10 @@
-from pyamg.testing import *
-
 from numpy import zeros_like
 from scipy import rand
 from scipy.linalg import norm
 from pyamg.gallery import poisson, load_example
 from pyamg.blackbox import solve
+
+from numpy.testing import TestCase
 
 
 class TestBlackbox(TestCase):

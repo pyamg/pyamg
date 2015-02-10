@@ -1,5 +1,3 @@
-from pyamg.testing import *
-
 import numpy
 from numpy import array, zeros, mat, eye, ones, min, ravel, diff, mod, repeat,\
     sqrt, finfo, abs
@@ -17,6 +15,9 @@ from pyamg.strength import classical_strength_of_connection,\
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows
+
+from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
+    assert_array_equal
 
 classical_soc = classical_strength_of_connection
 symmetric_soc = symmetric_strength_of_connection
