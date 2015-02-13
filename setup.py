@@ -55,6 +55,7 @@ MINOR = 2
 MICRO = 0
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
 # Use NumPy/SciPy style versioning
 #
@@ -175,7 +176,10 @@ def setup_package():
     write_version_py()
 
     # Run build
-    from numpy.distutils.core import setup
+    try:
+        from numpy.distutils.core import setup
+    except ImportError:
+        from setuptools import setup
 
     try:
         setup(
@@ -191,7 +195,8 @@ def setup_package():
             author=AUTHOR,
             author_email=AUTHOR_EMAIL,
             platforms=PLATFORMS,
-            configuration=configuration)
+            configuration=configuration,
+            install_requires=INSTALL_REQUIRES)
     finally:
         del sys.path[0]
         os.chdir(old_path)
