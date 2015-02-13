@@ -55,7 +55,7 @@ MINOR = 2
 MICRO = 0
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-INSTALL_REQUIRES=['nose', 'numpy', 'scipy']
+INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
 # Use NumPy/SciPy style versioning
 #
