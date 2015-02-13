@@ -3,21 +3,20 @@
 [![Latest Version](https://pypip.in/version/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://pypip.in/download/pyamg/badge.svg?style=flat)](https://pypi.python.org/pypi/pyamg/)
 # Installation
-PyAMG requires `numpy` and `scipy` (see requirements.txt)
+PyAMG requires `numpy` and `scipy`
 
-      pip install -r requirements.txt
       pip install pyamg
 
 or
 
       python setup.py install
-      
+
 
 # Introduction
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.  
 
-![](Docs/logo/PyAMG_logo.png) 
+![](Docs/logo/PyAMG_logo.png)
 ![](Docs/logo/CS_logo.png)
 
 PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
@@ -92,6 +91,6 @@ Program output:
         3         7825        70657 [ 2.58%]
         4         1937        17973 [ 0.66%]
         5          484         4728 [ 0.17%]
-    
+
     residual norm is 1.86112114946e-06
 </pre>
