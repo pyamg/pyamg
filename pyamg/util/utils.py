@@ -22,6 +22,13 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates']
 
+try:
+    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
+    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
+except ImportError:
+    from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
+    from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+
 
 def blocksize(A):
     # Helper Function: return the blocksize of a matrix
@@ -164,7 +171,6 @@ def scale_rows(A, v, copy=True):
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
     >>> B = scale_rows(A,5*numpy.ones((A.shape[0],1)))
     """
-    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
 
     v = numpy.ravel(v)
 
@@ -241,7 +247,6 @@ def scale_columns(A, v, copy=True):
      [  0.   0.   0.  -5.]]
 
     """
-    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
 
     v = numpy.ravel(v)
 
