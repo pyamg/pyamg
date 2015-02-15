@@ -90,10 +90,6 @@ class TestKrylov(TestCase):
                                'b': b, 'x0': x0, 'tol': 1e-16, 'maxiter': 2,
                                'reduction_factor': 0.98})
 
-    from numpy.testing import dec
-
-    @dec.knownfailureif(True, "This test is known to fail because of\
-                               complex matrices and Housholder.")
     def test_gmres(self):
         # Ensure repeatability
         random.seed(0)
@@ -145,10 +141,6 @@ class TestKrylov(TestCase):
                                               err_msg='CR and GMRES yield\
                                                        different answers')
 
-    from numpy.testing import dec
-
-    @dec.knownfailureif(True, "This test is known to fail because of complex\
-                               matrices and Housholder.")
     def test_krylov(self):
         # Oblique projectors reduce the residual
         for method in self.oblique:
