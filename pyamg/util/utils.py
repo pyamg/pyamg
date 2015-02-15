@@ -145,7 +145,7 @@ def scale_rows(A, v, copy=True):
 
     See Also
     --------
-    scipy.sparse.sparsetools.csr_scale_rows, scale_columns
+    scipy.sparse._sparsetools.csr_scale_rows, scale_columns
 
     Notes
     -----
@@ -164,7 +164,7 @@ def scale_rows(A, v, copy=True):
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
     >>> B = scale_rows(A,5*numpy.ones((A.shape[0],1)))
     """
-    from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
+    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
 
     v = numpy.ravel(v)
 
@@ -216,7 +216,7 @@ def scale_columns(A, v, copy=True):
 
     See Also
     --------
-    scipy.sparse.sparsetools.csr_scale_columns, scale_rows
+    scipy.sparse._sparsetools.csr_scale_columns, scale_rows
 
     Notes
     -----
@@ -241,7 +241,7 @@ def scale_columns(A, v, copy=True):
      [  0.   0.   0.  -5.]]
 
     """
-    from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
 
     v = numpy.ravel(v)
 
