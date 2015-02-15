@@ -52,8 +52,8 @@ PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
 LICENSE = 'BSD'
 MAJOR = 2
 MINOR = 2
-MICRO = 0
-ISRELEASED = True
+MICRO = 1
+ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
