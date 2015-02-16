@@ -8,6 +8,10 @@ from pyamg.aggregation.adaptive import adaptive_sa_solver
 
 from numpy.testing import TestCase
 
+import warnings
+from scipy.sparse import SparseEfficiencyWarning
+warnings.simplefilter('ignore', SparseEfficiencyWarning)
+
 
 class TestAdaptiveSA(TestCase):
     def setUp(self):
