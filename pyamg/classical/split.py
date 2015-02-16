@@ -95,8 +95,8 @@ References
 
 """
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
@@ -146,7 +146,7 @@ def RS(S):
 
     T = S.T.tocsr()  # transpose S for efficient column access
 
-    splitting = numpy.empty(S.shape[0], dtype='intc')
+    splitting = np.empty(S.shape[0], dtype='intc')
 
     amg_core.rs_cf_splitting(S.shape[0],
                              S.indptr, S.indices,
@@ -281,7 +281,7 @@ def CLJP(S, color=False):
         colorid = 1
 
     T = S.T.tocsr()  # transpose S for efficient column access
-    splitting = numpy.empty(S.shape[0], dtype='intc')
+    splitting = np.empty(S.shape[0], dtype='intc')
 
     amg_core.cljp_naive_splitting(S.shape[0],
                                   S.indptr, S.indices,
@@ -352,9 +352,9 @@ def MIS(G, weights, maxiter=None):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import MIS
-    >>> import numpy
+    >>> import numpy as np
     >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
-    >>> w = numpy.ones((G.shape[0],1)).ravel()
+    >>> w = np.ones((G.shape[0],1)).ravel()
     >>> mis = MIS(G,w)
 
     See Also
@@ -367,7 +367,7 @@ def MIS(G, weights, maxiter=None):
         raise TypeError('expected csr_matrix')
     G = remove_diagonal(G)
 
-    mis = numpy.empty(G.shape[0], dtype='intc')
+    mis = np.empty(G.shape[0], dtype='intc')
     mis[:] = -1
 
     fn = amg_core.maximal_independent_set_parallel
@@ -427,21 +427,21 @@ def preprocess(S, coloring_method=None):
         raise ValueError('expected square matrix, shape=%s' % (S.shape,))
 
     N = S.shape[0]
-    S = csr_matrix((numpy.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
+    S = csr_matrix((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
                    shape=(N, N))
     T = S.T.tocsr()  # transpose S for efficient column access
 
     G = S + T  # form graph (must be symmetric)
     G.data[:] = 1
 
-    weights = numpy.ravel(T.sum(axis=1))  # initial weights
+    weights = np.ravel(T.sum(axis=1))  # initial weights
     # weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
-        weights = weights + scipy.rand(len(weights))
+        weights = weights + sp.rand(len(weights))
     else:
         coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
-        weights = weights + (scipy.rand(len(weights)) + coloring)/num_colors
+        weights = weights + (sp.rand(len(weights)) + coloring)/num_colors
 
     return (weights, G, S, T)

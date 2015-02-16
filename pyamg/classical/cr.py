@@ -3,7 +3,7 @@
 __docformat__ = "restructuredtext en"
 
 import numpy as np
-import scipy
+import scipy as sp
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
 
@@ -80,7 +80,7 @@ def CR(S, method='habituated', maxiter=20):
         # random iterations ---------------
         for k in range(0, ntests):
 
-            e = 0.5*(1 + scipy.rand(n, 1))
+            e = 0.5*(1 + sp.rand(n, 1))
             e[splitting > 0] = 0
 
             enorm = norm(e)

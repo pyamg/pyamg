@@ -3,7 +3,7 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
+import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr
 from pyamg import amg_core
 
@@ -32,9 +32,9 @@ def direct_interpolation(A, C, splitting):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical import direct_interpolation
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((5,),format='csr')
-    >>> splitting = numpy.array([1,0,1,0,1], dtype='intc')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = direct_interpolation(A, A, splitting)
     >>> print P.todense()
     [[ 1.   0.   0. ]
@@ -57,14 +57,14 @@ def direct_interpolation(A, C, splitting):
     C.data[:] = 1.0
     C = C.multiply(A)
 
-    Pp = numpy.empty_like(A.indptr)
+    Pp = np.empty_like(A.indptr)
 
     amg_core.rs_direct_interpolation_pass1(A.shape[0],
                                            C.indptr, C.indices, splitting, Pp)
 
     nnz = Pp[-1]
-    Pj = numpy.empty(nnz, dtype=Pp.dtype)
-    Px = numpy.empty(nnz, dtype=A.dtype)
+    Pj = np.empty(nnz, dtype=Pp.dtype)
+    Px = np.empty(nnz, dtype=A.dtype)
 
     amg_core.rs_direct_interpolation_pass2(A.shape[0],
                                            A.indptr, A.indices, A.data,
