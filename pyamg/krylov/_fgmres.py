@@ -1,12 +1,12 @@
 from warnings import warn
-from numpy import array, zeros, sqrt, ravel, abs, max, dot, arange, \
-    conjugate, hstack, ceil, isnan, isinf
+from numpy import array, zeros, ravel, abs, max, dot, \
+    conjugate
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from pyamg import amg_core
 from scipy.linalg import get_blas_funcs
-import scipy
+import scipy as sp
 
 __docformat__ = "restructuredtext en"
 
@@ -95,10 +95,10 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     --------
     >>> from pyamg.krylov.fgmres import fgmres
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = fgmres(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
     6.5428213057
@@ -325,7 +325,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # piv = arange(inner+1)
         # y = lu_solve((H[0:(inner+1),0:(inner+1)], piv),
         #              g[0:(inner+1)], trans=0)
-        y = scipy.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+        y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
 
         # No Horner like scheme exists because the preconditioner can change
         # each iteration # Hence, we must store each preconditioned vector

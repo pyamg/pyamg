@@ -60,10 +60,10 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     --------
     >>> from pyamg.krylov.bicgstab import bicgstab
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = bicgstab(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
     4.68163045309

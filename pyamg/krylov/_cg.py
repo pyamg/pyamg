@@ -66,10 +66,10 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     --------
     >>> from pyamg.krylov.cg import cg
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
     10.9370700187
@@ -95,9 +95,9 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # choose tolerance for numerically zero values
     # t = A.dtype.char
-    # eps = numpy.finfo(numpy.float).eps
-    # feps = numpy.finfo(numpy.single).eps
-    # geps = numpy.finfo(numpy.longfloat).eps
+    # eps = np.finfo(np.float).eps
+    # feps = np.finfo(np.single).eps
+    # geps = np.finfo(np.longfloat).eps
     # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
     # numerically_zero = {0: feps*1e3, 1: eps*1e6,
     #                    2: geps*1e6}[_array_precision[t]]

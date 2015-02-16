@@ -66,10 +66,10 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     --------
     >>> from pyamg.krylov import steepest_descent
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = steepest_descent(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
     7.89436429704

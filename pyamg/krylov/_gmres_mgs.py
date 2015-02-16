@@ -4,7 +4,7 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from scipy.linalg import get_blas_funcs
 from warnings import warn
-import scipy
+import scipy as sp
 
 __docformat__ = "restructuredtext en"
 
@@ -37,7 +37,7 @@ def apply_givens(Q, v, k):
 
     for j in xrange(k):
         Qloc = Q[j]
-        v[j:j+2] = scipy.dot(Qloc, v[j:j+2])
+        v[j:j+2] = sp.dot(Qloc, v[j:j+2])
 
 
 def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
@@ -112,10 +112,10 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     --------
     >>> from pyamg.krylov import gmres
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8, orthog='mgs')
     >>> print norm(b - A*x)
     >>> 6.5428213057
@@ -307,7 +307,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
                     # Apply Givens Rotation to g,
                     #   the RHS for the linear system in the Krylov Subspace.
-                    g[inner:inner+2] = scipy.dot(Qblock, g[inner:inner+2])
+                    g[inner:inner+2] = sp.dot(Qblock, g[inner:inner+2])
 
                     # Apply effect of Givens Rotation to H
                     H[inner, inner] = dotu(Qblock[0, :],
@@ -332,8 +332,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
-        y = scipy.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
-        update = ravel(scipy.mat(V[:inner+1, :]).T*y.reshape(-1, 1))
+        y = sp.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
+        update = ravel(sp.mat(V[:inner+1, :]).T*y.reshape(-1, 1))
         x = x + update
         r = b - ravel(A*x)
 

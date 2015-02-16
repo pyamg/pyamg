@@ -5,7 +5,7 @@ from warnings import warn
 from pyamg.util.linalg import norm
 from pyamg import amg_core
 from scipy.linalg import get_blas_funcs
-import scipy
+import scipy as sp
 
 __docformat__ = "restructuredtext en"
 
@@ -89,10 +89,10 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
     --------
     >>> from pyamg.krylov import gmres
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10, 10))
-    >>> b = numpy.ones((A.shape[0],))
+    >>> b = np.ones((A.shape[0],))
     >>> (x, flag) = gmres(A, b, maxiter=2, tol=1e-8, orthog='householder')
     >>> print norm(b - A*x)
     6.5428213057
@@ -328,7 +328,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         # piv = arange(inner+1)
         # y = lu_solve((H[0:(inner+1), 0:(inner+1)], piv), g[0:(inner+1)],
         #             trans=0)
-        y = scipy.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+        y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
 
         # Use Horner like Scheme to map solution, y, back to original space.
         # Note that we do not use the last reflector.
