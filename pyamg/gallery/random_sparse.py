@@ -1,7 +1,7 @@
 """Random sparse matrices"""
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 
 __all__ = ['sprand']
 __docformat__ = "restructuredtext en"
@@ -14,12 +14,12 @@ def _rand_sparse(m, n, density, format='csr'):
 
     nnz = max(min(int(m*n*density), m*n), 0)
 
-    row = numpy.random.random_integers(low=0, high=m-1, size=nnz)
-    col = numpy.random.random_integers(low=0, high=n-1, size=nnz)
-    data = numpy.ones(nnz, dtype=float)
+    row = np.random.random_integers(low=0, high=m-1, size=nnz)
+    col = np.random.random_integers(low=0, high=n-1, size=nnz)
+    data = np.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together
-    return scipy.sparse.csr_matrix((data, (row, col)), shape=(m, n))
+    return sp.sparse.csr_matrix((data, (row, col)), shape=(m, n))
 
 
 def sprand(m, n, density, format='csr'):
@@ -51,7 +51,7 @@ def sprand(m, n, density, format='csr'):
     A = _rand_sparse(m, n, density, format='csr')
 
     # replace data with random values
-    A.data = scipy.rand(A.nnz)
+    A.data = sp.rand(A.nnz)
 
     return A.asformat(format)
 
@@ -87,13 +87,13 @@ def sprand(m, n, density, format='csr'):
 #    # get sparsity pattern
 #    A = _rand_sparse(n, n, density, format='csr')
 #
-#    A.data = scipy.rand(A.nnz)
+#    A.data = sp.rand(A.nnz)
 #
-#    A = scipy.sparse.tril(A, -1)
+#    A = sp.sparse.tril(A, -1)
 #
 #    A = A + A.T
 #
-#    d = numpy.array(A.sum(axis=1)).ravel()
+#    d = np.array(A.sum(axis=1)).ravel()
 #
 #    from pyamg.util.utils import symmetric_rescaling, diag_sparse
 #
