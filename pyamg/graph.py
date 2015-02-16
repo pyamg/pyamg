@@ -2,8 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 from scipy import sparse
 
 import amg_core
@@ -14,9 +14,9 @@ __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
 
 def max_value(datatype):
     try:
-        return numpy.iinfo(datatype).max
+        return np.iinfo(datatype).max
     except:
-        return numpy.finfo(datatype).max
+        return np.finfo(datatype).max
 
 
 def asgraph(G):
@@ -61,7 +61,7 @@ def maximal_independent_set(G, algo='serial', k=None):
     G = asgraph(G)
     N = G.shape[0]
 
-    mis = numpy.empty(N, dtype='intc')
+    mis = np.empty(N, dtype='intc')
     mis[:] = -1
 
     if k is None:
@@ -70,12 +70,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = amg_core.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, scipy.rand(N))
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N))
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
         fn = amg_core.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, scipy.rand(N))
+        fn(N, G.indptr, G.indices, k, mis, sp.rand(N))
 
     return mis
 
@@ -107,17 +107,17 @@ def vertex_coloring(G, method='MIS'):
     G = asgraph(G)
     N = G.shape[0]
 
-    coloring = numpy.empty(N, dtype='intc')
+    coloring = np.empty(N, dtype='intc')
 
     if method == 'MIS':
         fn = amg_core.vertex_coloring_mis
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = amg_core.vertex_coloring_jones_plassmann
-        fn(N, G.indptr, G.indices, coloring, scipy.rand(N))
+        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
     elif method == 'LDF':
         fn = amg_core.vertex_coloring_LDF
-        fn(N, G.indptr, G.indices, coloring, scipy.rand(N))
+        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
     else:
         raise ValueError('unknown method (%s)' % method)
 
@@ -153,17 +153,17 @@ def bellman_ford(G, seeds, maxiter=None):
         raise ValueError('Bellman-Ford algorithm only defined for real\
                           weights')
 
-    seeds = numpy.asarray(seeds, dtype='intc')
+    seeds = np.asarray(seeds, dtype='intc')
 
-    distances = numpy.empty(N, dtype=G.dtype)
+    distances = np.empty(N, dtype=G.dtype)
     distances[:] = max_value(G.dtype)
     distances[seeds] = 0
 
-    nearest_seed = numpy.empty(N, dtype='intc')
+    nearest_seed = np.empty(N, dtype='intc')
     nearest_seed[:] = -1
     nearest_seed[seeds] = seeds
 
-    old_distances = numpy.empty_like(distances)
+    old_distances = np.empty_like(distances)
 
     iter = 0
     while maxiter is None or iter < maxiter:
@@ -203,14 +203,14 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
     if G.dtype.kind == 'c':
         # complex dtype
-        G = numpy.abs(G)
+        G = np.abs(G)
 
     # interpret seeds argument
-    if numpy.isscalar(seeds):
-        seeds = numpy.random.permutation(N)[:seeds]
+    if np.isscalar(seeds):
+        seeds = np.random.permutation(N)[:seeds]
         seeds = seeds.astype('intc')
     else:
-        seeds = numpy.array(seeds, dtype='intc')
+        seeds = np.array(seeds, dtype='intc')
 
     if len(seeds) < 1:
         raise ValueError('at least one seed is required')
@@ -220,8 +220,8 @@ def lloyd_cluster(G, seeds, maxiter=10):
     if seeds.max() >= N:
         raise ValueError('invalid seed index (%d)' % seeds.max())
 
-    clusters = numpy.empty(N, dtype='intc')
-    distances = numpy.empty(N, dtype=G.dtype)
+    clusters = np.empty(N, dtype='intc')
+    distances = np.empty(N, dtype=G.dtype)
 
     for i in range(maxiter):
         last_seeds = seeds.copy()
@@ -261,8 +261,8 @@ def breadth_first_search(G, seed):
 
     # Check symmetry?
 
-    order = numpy.empty(N, G.indptr.dtype)
-    level = numpy.empty(N, G.indptr.dtype)
+    order = np.empty(N, G.indptr.dtype)
+    level = np.empty(N, G.indptr.dtype)
     level[:] = -1
 
     BFS = amg_core.breadth_first_search
@@ -309,7 +309,7 @@ def connected_components(G):
     N = G.shape[0]
 
     # Check symmetry?
-    components = numpy.empty(N, G.indptr.dtype)
+    components = np.empty(N, G.indptr.dtype)
 
     fn = amg_core.connected_components
     fn(N, G.indptr, G.indices, components)
@@ -359,14 +359,13 @@ def pseudo_peripheral_node(A):
     """
     Algorithm in Saad
     """
-    import numpy
     from pyamg.graph import breadth_first_search
     n = A.shape[0]
 
-    valence = numpy.diff(A.indptr)
+    valence = np.diff(A.indptr)
 
     # select an initial node x, set delta = 0
-    x = int(numpy.random.rand() * n)
+    x = int(np.random.rand() * n)
     delta = 0
 
     while 1:
@@ -375,10 +374,10 @@ def pseudo_peripheral_node(A):
 
         # select a node y in the last level with min degree
         maxlevel = level.max()
-        lastnodes = numpy.where(level == maxlevel)[0]
+        lastnodes = np.where(level == maxlevel)[0]
         lastnodesvalence = valence[lastnodes]
         minlastnodesvalence = lastnodesvalence.min()
-        y = numpy.where(lastnodesvalence == minlastnodesvalence)[0][0]
+        y = np.where(lastnodesvalence == minlastnodesvalence)[0][0]
         y = lastnodes[y]
 
         # if d(x,y)>delta, set, and go to bfs above
