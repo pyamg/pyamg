@@ -164,11 +164,11 @@ def classical_strength_of_connection(A, theta=0.0):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import classical_strength_of_connection
     >>> n=3
-    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    >>> stencil = np.array([[-1.0,-1.0,-1.0],
     ...                        [-1.0, 8.0,-1.0],
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
@@ -257,11 +257,11 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import symmetric_strength_of_connection
     >>> n=3
-    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    >>> stencil = np.array([[-1.0,-1.0,-1.0],
     ...                        [-1.0, 8.0,-1.0],
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
@@ -358,11 +358,11 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import energy_based_strength_of_connection
     >>> n=3
-    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    >>> stencil =  np.array([[-1.0,-1.0,-1.0],
     ...                        [-1.0, 8.0,-1.0],
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
@@ -502,15 +502,15 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.strength import evolution_strength_of_connection
     >>> n=3
-    >>> stencil = numpy.array([[-1.0,-1.0,-1.0],
+    >>> stencil =  np.array([[-1.0,-1.0,-1.0],
     ...                        [-1.0, 8.0,-1.0],
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
-    >>> S = evolution_strength_of_connection(A, numpy.ones((A.shape[0],1)))
+    >>> S = evolution_strength_of_connection(A,  np.ones((A.shape[0],1)))
     """
     # local imports for evolution_strength_of_connection
     from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
