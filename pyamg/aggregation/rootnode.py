@@ -2,10 +2,10 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
-import scipy
+import numpy as np
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
+    SparseEfficiencyWarning
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -210,9 +210,9 @@ def rootnode_solver(A, B=None, BH=None,
     >>> from pyamg import rootnode_solver
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((100, 100), format='csr')           # matrix
-    >>> b = numpy.ones((A.shape[0]))                   # RHS
+    >>> b = np.ones((A.shape[0]))                   # RHS
     >>> ml = rootnode_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
     >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
@@ -235,7 +235,7 @@ def rootnode_solver(A, B=None, BH=None,
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR",
-                 scipy.sparse.SparseEfficiencyWarning)
+                 SparseEfficiencyWarning)
         except:
             raise TypeError('Argument A must have type csr_matrix, \
                              bsr_matrix, or be convertible to csr_matrix')
@@ -252,10 +252,10 @@ def rootnode_solver(A, B=None, BH=None,
         raise ValueError('expected square matrix')
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = numpy.kron(numpy.ones((A.shape[0]/blocksize(A), 1), dtype=A.dtype),
-                       numpy.eye(blocksize(A)))
+        B = np.kron(np.ones((A.shape[0]/blocksize(A), 1), dtype=A.dtype),
+                    np.eye(blocksize(A)))
     else:
-        B = numpy.asarray(B, dtype=A.dtype)
+        B = np.asarray(B, dtype=A.dtype)
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if B.shape[0] != A.shape[0]:
@@ -269,7 +269,7 @@ def rootnode_solver(A, B=None, BH=None,
         if BH is None:
             BH = B.copy()
         else:
-            BH = numpy.asarray(BH, dtype=A.dtype)
+            BH = np.asarray(BH, dtype=A.dtype)
             if len(BH.shape) == 1:
                 BH = BH.reshape(-1, 1)
             if BH.shape[1] != B.shape[1]:
@@ -378,7 +378,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
-        b = numpy.zeros((A.shape[0], 1), dtype=A.dtype)
+        b = np.zeros((A.shape[0], 1), dtype=A.dtype)
         B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":

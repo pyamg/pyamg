@@ -2,7 +2,7 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
+import numpy as np
 from scipy.sparse import isspmatrix_csr, bsr_matrix
 from pyamg import amg_core
 
@@ -120,9 +120,9 @@ def fit_candidates(AggOp, B, tol=1e-10):
     if not isspmatrix_csr(AggOp):
         raise TypeError('expected csr_matrix for argument AggOp')
 
-    B = numpy.asarray(B)
+    B = np.asarray(B)
     if B.dtype not in ['float32', 'float64', 'complex64', 'complex128']:
-        B = numpy.asarray(B, dtype='float64')
+        B = np.asarray(B, dtype='float64')
 
     if len(B.shape) != 2:
         raise ValueError('expected 2d array for argument B')
@@ -137,8 +137,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
     K2 = B.shape[1]           # candidates
 
     # the first two dimensions of R and Qx are collapsed later
-    R = numpy.empty((N_coarse, K2, K2), dtype=B.dtype)  # coarse candidates
-    Qx = numpy.empty((AggOp.nnz, K1, K2), dtype=B.dtype)  # BSR data array
+    R = np.empty((N_coarse, K2, K2), dtype=B.dtype)  # coarse candidates
+    Qx = np.empty((AggOp.nnz, K1, K2), dtype=B.dtype)  # BSR data array
 
     AggOp_csc = AggOp.tocsc()
 

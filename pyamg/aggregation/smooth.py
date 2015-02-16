@@ -109,10 +109,10 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     >>> from pyamg.aggregation import jacobi_prolongation_smoother
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> import numpy
-    >>> data = numpy.ones((6,))
-    >>> row = numpy.arange(0,6)
-    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> import numpy as np
+    >>> data = np.ones((6,))
+    >>> row = np.arange(0,6)
+    >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
     matrix([[ 1.,  0.],
@@ -122,7 +122,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             [ 0.,  1.],
             [ 0.,  1.]])
     >>> A = poisson((6,),format='csr')
-    >>> P = jacobi_prolongation_smoother(A,T,A,numpy.ones((2,1)))
+    >>> P = jacobi_prolongation_smoother(A,T,A,np.ones((2,1)))
     >>> P.todense()
     matrix([[ 0.64930164,  0.        ],
             [ 1.        ,  0.        ],
@@ -239,10 +239,10 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     >>> from pyamg.aggregation import richardson_prolongation_smoother
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> import numpy
-    >>> data = numpy.ones((6,))
-    >>> row = numpy.arange(0,6)
-    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> import numpy as np
+    >>> data = np.ones((6,))
+    >>> row = np.arange(0,6)
+    >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.todense()
     matrix([[ 1.,  0.],
@@ -975,10 +975,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> from pyamg.aggregation import energy_prolongation_smoother
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse import coo_matrix
-    >>> import numpy
-    >>> data = numpy.ones((6,))
-    >>> row = numpy.arange(0,6)
-    >>> col = numpy.kron([0,1],numpy.ones((3,)))
+    >>> import numpy as np
+    >>> data = np.ones((6,))
+    >>> row = np.arange(0,6)
+    >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> print T.todense()
     [[ 1.  0.]
@@ -988,7 +988,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
      [ 0.  1.]
      [ 0.  1.]]
     >>> A = poisson((6,),format='csr')
-    >>> B = numpy.ones((2,1),dtype=float)
+    >>> B = np.ones((2,1),dtype=float)
     >>> P = energy_prolongation_smoother(A,T,A,B, None, (False,{}))
     >>> print P.todense()
     [[ 1.          0.        ]

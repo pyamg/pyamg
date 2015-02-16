@@ -4,8 +4,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 import numpy as np
-import scipy
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
+    SparseEfficiencyWarning
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -189,9 +189,9 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     >>> from pyamg import smoothed_aggregation_solver
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((100,100), format='csr')           # matrix
-    >>> b = numpy.ones((A.shape[0]))                   # RHS
+    >>> b = np.ones((A.shape[0]))                      # RHS
     >>> ml = smoothed_aggregation_solver(A)            # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
     >>> x,info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
@@ -210,7 +210,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR",
-                 scipy.sparse.SparseEfficiencyWarning)
+                 SparseEfficiencyWarning)
         except:
             raise TypeError('Argument A must have type csr_matrix or\
                              bsr_matrix, or be convertible to csr_matrix')
