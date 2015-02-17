@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-import numpy
+import numpy as np
 from scipy import sparse
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
@@ -47,10 +47,10 @@ def make_system(A, x, b, formats=None):
     --------
     >>> from pyamg.relaxation.relaxation import make_system
     >>> from pyamg.gallery import poisson
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
     >>> print str(x.shape)
     (100,)
@@ -76,9 +76,9 @@ def make_system(A, x, b, formats=None):
         else:
             A = sparse.csr_matrix(A).asformat(formats[0])
 
-    if not isinstance(x, numpy.ndarray):
+    if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')
-    if not isinstance(b, numpy.ndarray):
+    if not isinstance(b, np.ndarray):
         raise ValueError('expected numpy array for argument b')
 
     M, N = A.shape
@@ -97,8 +97,8 @@ def make_system(A, x, b, formats=None):
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
 
-    x = numpy.ravel(x)
-    b = numpy.ravel(b)
+    x = np.ravel(x)
+    b = np.ravel(b)
 
     return A, x, b
 
@@ -135,27 +135,27 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> from pyamg.relaxation import sor
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
     >>> print norm(b-A*x0)
     3.03888724811
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}),
     ...         postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
-    >>> x0 = numpy.zeros((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    x_old = numpy.empty_like(x)
+    x_old = np.empty_like(x)
 
     for i in range(iterations):
         x_old[:] = x
@@ -220,21 +220,21 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> from pyamg.relaxation import schwarz
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
     >>> print norm(b-A*x0)
     0.126326160522
     >>> #
     >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother='schwarz',
     ...         postsmoother='schwarz')
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -301,21 +301,21 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> from pyamg.relaxation import gauss_seidel
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
     >>> print norm(b-A*x0)
     4.00733716236
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('gauss_seidel', {'sweep':'symmetric'}),
     ...         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -345,7 +345,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         row_start = row_start / R
         row_stop = row_stop / R
         for iter in xrange(iterations):
-            amg_core.bsr_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
+            amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
 
 
@@ -375,21 +375,21 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg.relaxation import jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
     >>> print norm(b-A*x0)
     5.83475132751
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}),
     ...         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -401,7 +401,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     if (row_stop - row_start) * row_step <= 0:  # no work to do
         return
 
-    temp = numpy.empty_like(x)
+    temp = np.empty_like(x)
 
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
@@ -417,7 +417,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         row_start = row_start / R
         row_stop = row_stop / R
         for iter in xrange(iterations):
-            amg_core.bsr_jacobi(A.indptr, A.indices, numpy.ravel(A.data),
+            amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
                                 x, b, temp, row_start, row_stop,
                                 row_step, R, omega)
 
@@ -453,10 +453,10 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> from pyamg.relaxation import block_jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
     >>> print norm(b-A*x0)
     4.66474230129
@@ -464,11 +464,11 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> # Use block Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'omega': 4.0/3.0, 'iterations' : 2, 'blocksize' : 4}
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...        coarse_solver='pinv2', max_coarse=50,
     ...        presmoother=('block_jacobi', opts),
     ...        postsmoother=('block_jacobi', opts))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -489,14 +489,14 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     if (row_stop - row_start) * row_step <= 0:  # no work to do
         return
 
-    temp = numpy.empty_like(x)
+    temp = np.empty_like(x)
 
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
     for iter in xrange(iterations):
-        amg_core.block_jacobi(A.indptr, A.indices, numpy.ravel(A.data),
-                              x, b, numpy.ravel(Dinv), temp,
+        amg_core.block_jacobi(A.indptr, A.indices, np.ravel(A.data),
+                              x, b, np.ravel(Dinv), temp,
                               row_start, row_stop, row_step,
                               omega, blocksize)
 
@@ -534,10 +534,10 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> from pyamg.relaxation import block_gauss_seidel
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4,
                            sweep='symmetric')
     >>> print norm(b-A*x0)
@@ -546,11 +546,11 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'sweep':'symmetric', 'blocksize' : 4}
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...        coarse_solver='pinv2', max_coarse=50,
     ...        presmoother=('block_gauss_seidel', opts),
     ...        postsmoother=('block_gauss_seidel', opts))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -580,8 +580,8 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
                           'backward', and 'symmetric'")
 
     for iter in xrange(iterations):
-        amg_core.block_gauss_seidel(A.indptr, A.indices, numpy.ravel(A.data),
-                                    x, b, numpy.ravel(Dinv),
+        amg_core.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
+                                    x, b, np.ravel(Dinv),
                                     row_start, row_stop, row_step, blocksize)
 
 
@@ -633,15 +633,15 @@ def polynomial(A, x, b, coefficients, iterations=1):
     >>> # which automatically calculates the correct coefficients.
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.aggregation import smoothed_aggregation_solver
     >>> A = poisson((10,10), format='csr')
-    >>> b = numpy.ones((A.shape[0],1))
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> b = np.ones((A.shape[0],1))
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('chebyshev', {'degree':3, 'iterations':1}),
     ...         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -695,10 +695,10 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation import gauss_seidel_indexed
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((4,), format='csr')
-    >>> x = numpy.array([0.0, 0.0, 0.0, 0.0])
-    >>> b = numpy.array([0.0, 1.0, 2.0, 3.0])
+    >>> x = np.array([0.0, 0.0, 0.0, 0.0])
+    >>> b = np.array([0.0, 1.0, 2.0, 3.0])
     >>> gauss_seidel_indexed(A, x, b, [0,1,2,3])  # relax all rows in order
     >>> gauss_seidel_indexed(A, x, b, [0,1])      # relax first two rows
     >>> gauss_seidel_indexed(A, x, b, [2,0])      # relax row 2, then row 0
@@ -708,7 +708,7 @@ def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr'])
 
-    indices = numpy.asarray(indices, dtype='intc')
+    indices = np.asarray(indices, dtype='intc')
 
     # if indices.min() < 0:
     #     raise ValueError('row index (%d) is invalid' % indices.min())
@@ -776,10 +776,10 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg.relaxation import jacobi_ne
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((50,50), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
     >>> print norm(b-A*x0)
     49.3886046066
@@ -787,11 +787,11 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> # Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'iterations' : 2, 'omega' : 4.0/3.0}
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('jacobi_ne', opts),
     ...         postsmoother=('jacobi_ne', opts))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -800,7 +800,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     sweep = slice(None)
     (row_start, row_stop, row_step) = sweep.indices(A.shape[0])
 
-    temp = numpy.zeros_like(x)
+    temp = np.zeros_like(x)
 
     # Dinv for A*A.H
     Dinv = get_diagonal(A, norm_eq=2, inv=True)
@@ -809,7 +809,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     for i in range(iterations):
-        delta = (numpy.ravel(b - A*x)*numpy.ravel(Dinv)).astype(A.dtype)
+        delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
         amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                            x, b, delta, temp, row_start,
                            row_stop, row_step, omega)
@@ -858,21 +858,21 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> from pyamg.relaxation import gauss_seidel_ne
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
     >>> print norm(b-A*x0)
     8.47576806771
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...         coarse_solver='pinv2', max_coarse=50,
     ...         presmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}),
     ...         postsmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -881,7 +881,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     # Dinv for A*A.H
     if Dinv is None:
-        Dinv = numpy.ravel(get_diagonal(A, norm_eq=2, inv=True))
+        Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
 
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(x), 1
@@ -943,21 +943,21 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> from pyamg.relaxation import gauss_seidel_nr
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = numpy.zeros((A.shape[0],1))
-    >>> b = numpy.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
+    >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
     >>> print norm(b-A*x0)
     8.45044864352
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
-    >>> sa = smoothed_aggregation_solver(A, B=numpy.ones((A.shape[0],1)),
+    >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
     ...      coarse_solver='pinv2', max_coarse=50,
     ...      presmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}),
     ...      postsmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}))
-    >>> x0=numpy.zeros((A.shape[0],1))
+    >>> x0=np.zeros((A.shape[0],1))
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
@@ -966,7 +966,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     # Dinv for A.H*A
     if Dinv is None:
-        Dinv = numpy.ravel(get_diagonal(A, norm_eq=1, inv=True))
+        Dinv = np.ravel(get_diagonal(A, norm_eq=1, inv=True))
 
     if sweep == 'forward':
         col_start, col_stop, col_step = 0, len(x), 1

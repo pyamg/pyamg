@@ -1,8 +1,8 @@
 """Method to create pre and post-smoothers on the levels of a multilevel_solver
 """
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 import relaxation
 import smoothing
 from chebyshev import chebyshev_polynomial_coefficients
@@ -191,8 +191,8 @@ def rho_D_inv_A(A):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
     >>> from scipy.sparse import csr_matrix
-    >>> import numpy
-    >>> A = csr_matrix(numpy.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
+    >>> import numpy as np
+    >>> A = csr_matrix(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
     >>> print rho_D_inv_A(A)
     1.0
     """
@@ -226,7 +226,6 @@ def rho_block_D_inv_A(A, Dinv):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_block_D_inv_A
     >>> from pyamg.util.utils import get_block_diag
-    >>> import numpy
     >>> A = poisson((10,10), format='csr')
     >>> Dinv = get_block_diag(A, blocksize=4, inv_flag=True)
 
@@ -241,10 +240,10 @@ def rho_block_D_inv_A(A, Dinv):
         elif Dinv.shape[0] != A.shape[0]/blocksize:
             raise ValueError('Dinv and A have incompatible dimensions')
 
-        Dinv = scipy.sparse.bsr_matrix((Dinv,
-                                        scipy.arange(Dinv.shape[0]),
-                                        scipy.arange(Dinv.shape[0]+1)),
-                                       shape=A.shape)
+        Dinv = sp.sparse.bsr_matrix((Dinv,
+                                    sp.arange(Dinv.shape[0]),
+                                    sp.arange(Dinv.shape[0]+1)),
+                                    shape=A.shape)
 
         # Don't explicitly form Dinv*A
         def matvec(x):
@@ -332,8 +331,8 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
         if subdomain is not None and subdomain_ptr is not None:
             # check that the existing parameters correspond to the same
             # subdomains
-            if numpy.array(A.schwarz_parameters[0] == subdomain).all() and \
-               numpy.array(A.schwarz_parameters[1] == subdomain_ptr).all():
+            if np.array(A.schwarz_parameters[0] == subdomain).all() and \
+               np.array(A.schwarz_parameters[1] == subdomain_ptr).all():
                 return A.schwarz_parameters
         else:
             return A.schwarz_parameters
@@ -345,36 +344,36 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
     # Extract each subdomain's block from the matrix
     if inv_subblock is None or inv_subblock_ptr is None:
-        inv_subblock_ptr = numpy.zeros(subdomain_ptr.shape,
-                                       dtype=A.indices.dtype)
+        inv_subblock_ptr = np.zeros(subdomain_ptr.shape,
+                                    dtype=A.indices.dtype)
         blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
-        inv_subblock_ptr[1:] = numpy.cumsum(blocksize*blocksize)
+        inv_subblock_ptr[1:] = np.cumsum(blocksize*blocksize)
 
         # Extract each block column from A
-        inv_subblock = numpy.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
+        inv_subblock = np.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
         amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock,
                                    inv_subblock_ptr, subdomain, subdomain_ptr,
                                    int(subdomain_ptr.shape[0]-1), A.shape[0])
         # Choose tolerance for which singular values are zero in *gelss below
         t = A.dtype.char
-        eps = numpy.finfo(numpy.float).eps
-        feps = numpy.finfo(numpy.single).eps
-        geps = numpy.finfo(numpy.longfloat).eps
+        eps = np.finfo(np.float).eps
+        feps = np.finfo(np.single).eps
+        geps = np.finfo(np.longfloat).eps
         _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
         cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
         # Invert each block column
         my_pinv, = la.get_lapack_funcs(['gelss'],
-                                       (numpy.ones((1,), dtype=A.dtype)))
+                                       (np.ones((1,), dtype=A.dtype)))
         for i in xrange(subdomain_ptr.shape[0]-1):
             m = blocksize[i]
-            rhs = scipy.eye(m, m, dtype=A.dtype)
+            rhs = sp.eye(m, m, dtype=A.dtype)
             j0 = inv_subblock_ptr[i]
             j1 = inv_subblock_ptr[i+1]
             gelssoutput = my_pinv(inv_subblock[j0:j1].reshape(m, m),
                                   rhs, cond=cond, overwrite_a=True,
                                   overwrite_b=True)
-            inv_subblock[j0:j1] = numpy.ravel(gelssoutput[1])
+            inv_subblock[j0:j1] = np.ravel(gelssoutput[1])
 
     A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock,
                             inv_subblock_ptr)
@@ -457,9 +456,9 @@ def setup_block_jacobi(lvl, iterations=1, omega=1.0, Dinv=None, blocksize=None,
                        withrho=True):
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if scipy.sparse.isspmatrix_csr(lvl.A):
+        if sp.sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
-        elif scipy.sparse.isspmatrix_bsr(lvl.A):
+        elif sp.sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -486,9 +485,9 @@ def setup_block_gauss_seidel(lvl, iterations=1, sweep='forward', Dinv=None,
                              blocksize=None):
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if scipy.sparse.isspmatrix_csr(lvl.A):
+        if sp.sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
-        elif scipy.sparse.isspmatrix_bsr(lvl.A):
+        elif sp.sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
