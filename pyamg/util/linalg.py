@@ -200,7 +200,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     maxiter = min(A.shape[0], maxiter)
 
     if initial_guess is None:
-        v0 = np.rand(A.shape[1], 1)
+        v0 = sp.rand(A.shape[1], 1)
         if A.dtype == complex:
             v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
     else:
