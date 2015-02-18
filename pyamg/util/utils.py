@@ -4,8 +4,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
@@ -60,22 +60,22 @@ def profile_solver(ml, accel=None, **kwargs):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags, csr_matrix
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = csr_matrix(spdiags(data,[-1,0,1],n,n))
-    >>> b = A*numpy.ones(A.shape[0])
+    >>> b = A*np.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
 
     """
     A = ml.levels[0].A
-    b = A * scipy.rand(A.shape[0], 1)
+    b = A * sp.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:
@@ -83,11 +83,11 @@ def profile_solver(ml, accel=None, **kwargs):
         del x_sol
     else:
         def callback(x):
-            residuals.append(norm(numpy.ravel(b) - numpy.ravel(A*x)))
+            residuals.append(norm(np.ravel(b) - np.ravel(A*x)))
         M = ml.aspreconditioner(cycle=kwargs.get('cycle', 'V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
-    return numpy.asarray(residuals)
+    return np.asarray(residuals)
 
 
 def diag_sparse(A):
@@ -111,9 +111,9 @@ def diag_sparse(A):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.utils import diag_sparse
-    >>> d = 2.0*numpy.ones((3,)).ravel()
+    >>> d = 2.0*np.ones((3,)).ravel()
     >>> print diag_sparse(d).todense()
     [[ 2.  0.  0.]
      [ 0.  2.  0.]
@@ -123,10 +123,10 @@ def diag_sparse(A):
     if isspmatrix(A):
         return A.diagonal()
     else:
-        if(numpy.ndim(A) != 1):
+        if(np.ndim(A) != 1):
             raise ValueError('input diagonal array expected to be 1d')
-        return csr_matrix((numpy.asarray(A), numpy.arange(len(A)),
-                          numpy.arange(len(A)+1)), (len(A), len(A)))
+        return csr_matrix((np.asarray(A), np.arange(len(A)),
+                          np.arange(len(A)+1)), (len(A), len(A)))
 
 
 def scale_rows(A, v, copy=True):
@@ -162,17 +162,17 @@ def scale_rows(A, v, copy=True):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import scale_rows
     >>> n=5
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> B = scale_rows(A,5*numpy.ones((A.shape[0],1)))
+    >>> B = scale_rows(A,5*np.ones((A.shape[0],1)))
     """
 
-    v = numpy.ravel(v)
+    v = np.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M, N = A.shape
@@ -181,16 +181,16 @@ def scale_rows(A, v, copy=True):
 
         if copy:
             A = A.copy()
-            A.data = numpy.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
+            A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
         else:
-            v = numpy.asarray(v, dtype=A.dtype)
+            v = np.asarray(v, dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
             bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices,
-                           numpy.ravel(A.data), v)
+                           np.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -232,14 +232,14 @@ def scale_columns(A, v, copy=True):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import scale_columns
     >>> n=5
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*numpy.ones((A.shape[1],1))).todense()
+    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).todense()
     [[ 10.  -5.   0.   0.]
      [ -5.  10.  -5.   0.]
      [  0.  -5.  10.  -5.]
@@ -248,7 +248,7 @@ def scale_columns(A, v, copy=True):
 
     """
 
-    v = numpy.ravel(v)
+    v = np.ravel(v)
 
     if isspmatrix_csr(A) or isspmatrix_bsr(A):
         M, N = A.shape
@@ -257,16 +257,16 @@ def scale_columns(A, v, copy=True):
 
         if copy:
             A = A.copy()
-            A.data = numpy.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
+            A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
         else:
-            v = numpy.asarray(v, dtype=A.dtype)
+            v = np.asarray(v, dtype=A.dtype)
 
         if isspmatrix_csr(A):
             csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
             bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices,
-                              numpy.ravel(A.data), v)
+                              np.ravel(A.data), v)
 
         return A
     elif isspmatrix_csc(A):
@@ -311,11 +311,11 @@ def symmetric_rescaling(A, copy=True):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import symmetric_rescaling
     >>> n=5
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
@@ -335,12 +335,12 @@ def symmetric_rescaling(A, copy=True):
         mask = (D != 0)
 
         if A.dtype != complex:
-            D_sqrt = numpy.sqrt(abs(D))
+            D_sqrt = np.sqrt(abs(D))
         else:
             # We can take square roots of negative numbers
-            D_sqrt = numpy.sqrt(D)
+            D_sqrt = np.sqrt(D)
 
-        D_sqrt_inv = numpy.zeros_like(D_sqrt)
+        D_sqrt_inv = np.zeros_like(D_sqrt)
         D_sqrt_inv[mask] = 1.0/D_sqrt[mask]
 
         DAD = scale_rows(A, D_sqrt_inv, copy=copy)
@@ -387,11 +387,11 @@ def symmetric_rescaling_sa(A, B, BH=None):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.utils import symmetric_rescaling_sa
     >>> n=5
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> B = e.copy().reshape(-1,1)
@@ -414,7 +414,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
     # scale candidates
     for i in range(B.shape[1]):
-        B[:, i] = numpy.ravel(B[:, i])*numpy.ravel(D_sqrt)
+        B[:, i] = np.ravel(B[:, i])*np.ravel(D_sqrt)
 
     if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
@@ -422,7 +422,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
                 raise ValueError("BH should be an n x m array")
             else:
                 for i in range(BH.shape[1]):
-                    BH[:, i] = numpy.ravel(BH[:, i])*numpy.ravel(D_sqrt)
+                    BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
 
     return [A, B, BH]
 
@@ -454,19 +454,19 @@ def type_prep(upcast_type, varlist):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.utils import type_prep
     >>> from scipy.sparse.sputils import upcast
-    >>> x = numpy.ones((5,1))
-    >>> y = 2.0j*numpy.ones((5,1))
+    >>> x = np.ones((5,1))
+    >>> y = 2.0j*np.ones((5,1))
     >>> z = 2.3
     >>> varlist = type_prep(upcast(x.dtype, y.dtype), [x, y, z])
 
     """
     varlist = to_type(upcast_type, varlist)
     for i in range(len(varlist)):
-        if numpy.isscalar(varlist[i]):
-            varlist[i] = numpy.array([varlist[i]])
+        if np.isscalar(varlist[i]):
+            varlist[i] = np.array([varlist[i]])
 
     return varlist
 
@@ -494,22 +494,22 @@ def to_type(upcast_type, varlist):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.utils import to_type
     >>> from scipy.sparse.sputils import upcast
-    >>> x = numpy.ones((5,1))
-    >>> y = 2.0j*numpy.ones((5,1))
+    >>> x = np.ones((5,1))
+    >>> y = 2.0j*np.ones((5,1))
     >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
 
     """
 
-    # convert_type = type(numpy.array([0], upcast_type)[0])
+    # convert_type = type(np.array([0], upcast_type)[0])
 
     for i in range(len(varlist)):
 
         # convert scalars to complex
-        if numpy.isscalar(varlist[i]):
-            varlist[i] = numpy.array([varlist[i]], upcast_type)[0]
+        if np.isscalar(varlist[i]):
+            varlist[i] = np.array([varlist[i]], upcast_type)[0]
         else:
             # convert sparse and dense mats to complex
             try:
@@ -572,14 +572,14 @@ def get_diagonal(A, norm_eq=False, inv=False):
         # This transpose involves almost no work, use csr data structures as
         # csc, or vice versa
         At = A.T
-        D = (At.multiply(At.conjugate()))*numpy.ones((At.shape[0],))
+        D = (At.multiply(At.conjugate()))*np.ones((At.shape[0],))
     elif norm_eq == 2:
-        D = (A.multiply(A.conjugate()))*numpy.ones((A.shape[0],))
+        D = (A.multiply(A.conjugate()))*np.ones((A.shape[0],))
     else:
         D = A.diagonal()
 
     if inv:
-        Dinv = numpy.zeros_like(D)
+        Dinv = np.zeros_like(D)
         mask = (D != 0.0)
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
@@ -630,7 +630,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
         raise ValueError("Expected square matrix")
-    if scipy.mod(A.shape[0], blocksize) != 0:
+    if sp.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
 
     # If the block diagonal of A already exists, return that
@@ -654,10 +654,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = scipy.zeros((A.shape[0]/blocksize, blocksize, blocksize),
-                             dtype=A.dtype)
+    block_diag = sp.zeros((A.shape[0]/blocksize, blocksize, blocksize),
+                          dtype=A.dtype)
 
-    AAIJ = (scipy.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
+    AAIJ = (sp.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
     shape = (A.shape[0]/blocksize, A.shape[0]/blocksize)
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
@@ -726,12 +726,12 @@ def amalgamate(A, blocksize):
 
     if blocksize == 1:
         return A
-    elif scipy.mod(A.shape[0], blocksize) != 0:
+    elif sp.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
-    subI = (numpy.ones(A.indices.shape), A.indices, A.indptr)
+    subI = (np.ones(A.indices.shape), A.indices, A.indptr)
     shape = (A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1])
     return csr_matrix(subI, shape=shape)
 
@@ -781,7 +781,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
             [ 1.,  1.,  1.,  1.,  1.,  1.]])
 
     """
-    data = numpy.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
+    data = np.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
     blockI = (data, A.indices, A.indptr)
     shape = (RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1])
     return bsr_matrix(blockI, shape=shape)
@@ -888,7 +888,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         if len(headerchar) == 0:
             headerchar = ' '
         table_str += headerchar *\
-            int(scipy.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+            int(sp.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
 
         table = table[1:]
 
@@ -962,26 +962,26 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             A = A.tocsc()
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
-            nonzero_rowcols = scipy.union1d(nonzero_rows, nonzero_cols)
-            A = numpy.mat(A.todense())
+            nonzero_rowcols = sp.union1d(nonzero_rows, nonzero_cols)
+            A = np.mat(A.todense())
             A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
-            A = numpy.mat(A.todense())
+            A = np.mat(A.todense())
 
         e = eigvals(A)
         c = cond(A)
-        lambda_min = min(scipy.real(e))
-        lambda_max = max(scipy.real(e))
-        num_neg = max(e[scipy.real(e) < 0.0].shape)
-        num_pos = max(e[scipy.real(e) > 0.0].shape)
+        lambda_min = min(sp.real(e))
+        lambda_max = max(sp.real(e))
+        num_neg = max(e[sp.real(e) < 0.0].shape)
+        num_pos = max(e[sp.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min),
                           ('%1.3f' % lambda_max),
                           str(num_neg), str(num_pos), ('%1.2e' % c)])
 
-        lambda_min = min(scipy.imag(e))
-        lambda_max = max(scipy.imag(e))
-        num_neg = max(e[scipy.imag(e) < 0.0].shape)
-        num_pos = max(e[scipy.imag(e) > 0.0].shape)
+        lambda_min = min(sp.imag(e))
+        lambda_max = max(sp.imag(e))
+        num_neg = max(e[sp.imag(e) < 0.0].shape)
+        num_pos = max(e[sp.imag(e) > 0.0].shape)
         imag_table.append([str(i), ('%1.3f' % lambda_min),
                           ('%1.3f' % lambda_max),
                           str(num_neg), str(num_pos), ('%1.2e' % c)])
@@ -989,7 +989,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         if plot:
             import pylab
             pylab.figure(i+1)
-            pylab.plot(scipy.real(e), scipy.imag(e), 'kx')
+            pylab.plot(sp.real(e), sp.imag(e), 'kx')
             handle = pylab.title('Level %d Spectrum' % i)
             handle.set_fontsize(19)
             handle = pylab.xlabel('real(eig)')
@@ -1026,9 +1026,9 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.utils import Coord2RBM
-    >>> a = numpy.array([0,1,2])
+    >>> a = np.array([0,1,2])
     >>> Coord2RBM(3,6,a,a,a)
     matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
             [ 0.,  1.,  0., -0.,  0.,  0.],
@@ -1071,7 +1071,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     #    (numNodes x 1) or (1 x numNodes).")
 
     # preallocate rbm
-    rbm = numpy.mat(numpy.zeros((numNodes*numPDEs, numcols)))
+    rbm = np.mat(np.zeros((numNodes*numPDEs, numcols)))
 
     for node in range(numNodes):
         dof = node*numPDEs
@@ -1154,10 +1154,10 @@ def relaxation_as_linear_operator(method, A, b):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import relaxation_as_linear_operator
-    >>> import numpy
+    >>> import numpy as np
     >>> A = poisson((100,100), format='csr')           # matrix
-    >>> B = numpy.ones((A.shape[0],1))                 # Candidate vector
-    >>> b = numpy.zeros((A.shape[0]))                  # RHS
+    >>> B = np.ones((A.shape[0],1))                 # Candidate vector
+    >>> b = np.zeros((A.shape[0]))                  # RHS
     >>> relax = relaxation_as_linear_operator('gauss_seidel', A, b)
     >>> B = relax*B
 
@@ -1178,7 +1178,7 @@ def relaxation_as_linear_operator(method, A, b):
                         'block_jacobi', 'richardson', 'schwarz',
                         'strength_based_schwarz']
 
-    b = numpy.array(b, dtype=A.dtype)
+    b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
     lvl = pyamg.multilevel_solver.level()
     lvl.A = A
@@ -1313,11 +1313,11 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         NullDim = B.shape[1]
 
     if A.dtype == int:
-        A.data = numpy.array(A.data, dtype=float)
+        A.data = np.array(A.data, dtype=float)
     if B.dtype == int:
-        B.data = numpy.array(B.data, dtype=float)
+        B.data = np.array(B.data, dtype=float)
     if Bf.dtype == int:
-        Bf.data = numpy.array(Bf.data, dtype=float)
+        Bf.data = np.array(Bf.data, dtype=float)
     if (A.dtype != B.dtype) or (A.dtype != Bf.dtype):
         raise TypeError('A, B and Bf must of the same dtype')
 
@@ -1334,9 +1334,9 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # add explicit zeros to A wherever C is nonzero, but A is zero
     A = A.tocoo()
     C = C.tocoo()
-    A.data = numpy.hstack((numpy.zeros(C.data.shape, dtype=A.dtype), A.data))
-    A.row = numpy.hstack((C.row, A.row))
-    A.col = numpy.hstack((C.col, A.col))
+    A.data = np.hstack((np.zeros(C.data.shape, dtype=A.dtype), A.data))
+    A.row = np.hstack((C.row, A.row))
+    A.col = np.hstack((C.col, A.col))
     if isBSR:
         A = A.tobsr((RowsPerBlock, ColsPerBlock))
     else:
@@ -1352,10 +1352,10 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # row i in A_i.  A_i also represents just the nonzeros for row i.
     pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
                                               Nnodes, NullDim,
-                                              numpy.conjugate(numpy.ravel(B)),
-                                              numpy.ravel(diff),
-                                              numpy.ravel(BtBinv), A.indptr,
-                                              A.indices, numpy.ravel(A.data))
+                                              np.conjugate(np.ravel(B)),
+                                              np.ravel(diff),
+                                              np.ravel(BtBinv), A.indptr,
+                                              A.indices, np.ravel(A.data))
 
     A.eliminate_zeros()
     return A
@@ -1557,13 +1557,13 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     if isspmatrix_bsr(A) and A.blocksize[0] > 1:
         # Expand the list of Cpt nodes to a list of Cpt dofs
         blocksize = A.blocksize[0]
-        Cpts = numpy.repeat(blocksize*Cnodes, blocksize)
+        Cpts = np.repeat(blocksize*Cnodes, blocksize)
         for k in range(1, blocksize):
             Cpts[range(k, Cpts.shape[0], blocksize)] += k
     else:
         blocksize = 1
         Cpts = Cnodes
-    Cpts = numpy.array(Cpts, dtype=int)
+    Cpts = np.array(Cpts, dtype=int)
 
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
@@ -1592,10 +1592,10 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     # in Cpts
     if I_C.nnz > 0:
         indices = Cpts.copy()
-        indptr = numpy.arange(indices.shape[0]+1)
+        indptr = np.arange(indices.shape[0]+1)
     else:
-        indices = numpy.zeros((0,), dtype=T.indices.dtype)
-        indptr = numpy.zeros((ncoarse+1,), dtype=T.indptr.dtype)
+        indices = np.zeros((0,), dtype=T.indices.dtype)
+        indptr = np.zeros((ncoarse+1,), dtype=T.indptr.dtype)
 
     P_I = csc_matrix((I_C.data.copy(), indices, indptr),
                      shape=(I_C.shape[0], ncoarse))
@@ -1680,25 +1680,25 @@ def compute_BtBinv(B, C):
     Nnodes = Nfine/RowsPerBlock
 
     # Construct BtB
-    BtBinv = numpy.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
+    BtBinv = np.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
     BsqCols = sum(range(NullDim+1))
-    Bsq = numpy.zeros((Ncoarse, BsqCols), dtype=B.dtype)
+    Bsq = np.zeros((Ncoarse, BsqCols), dtype=B.dtype)
     counter = 0
     for i in range(NullDim):
         for j in range(i, NullDim):
-            Bsq[:, counter] = numpy.conjugate(numpy.ravel(numpy.asarray(B[:, i]))) * \
-                numpy.ravel(numpy.asarray(B[:, j]))
+            Bsq[:, counter] = np.conjugate(np.ravel(np.asarray(B[:, i]))) * \
+                np.ravel(np.asarray(B[:, j]))
             counter = counter + 1
     # This specialized C-routine calculates (B.T B) for each row using Bsq
     pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock,
-                            numpy.ravel(numpy.asarray(Bsq)),
-                            BsqCols, numpy.ravel(numpy.asarray(BtBinv)),
+                            np.ravel(np.asarray(Bsq)),
+                            BsqCols, np.ravel(np.asarray(BtBinv)),
                             C.indptr, C.indices)
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
     #   This is the old call to a specialized routine, but lacks robustness
-    #   pyamg.amg_core.pinv_array(numpy.ravel(BtBinv), Nnodes, NullDim, 'F')
+    #   pyamg.amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
     BtBinv = BtBinv.transpose((0, 2, 1)).copy()
     pinv_array(BtBinv)
 
@@ -1752,17 +1752,17 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
     # Find the diagonally dominant rows in A.
     A_abs = A.copy()
-    A_abs.data = numpy.abs(A_abs.data)
+    A_abs.data = np.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
-    diag_dom_rows = (D_abs > (theta*(A_abs*numpy.ones((A_abs.shape[0],),
+    diag_dom_rows = (D_abs > (theta*(A_abs*np.ones((A_abs.shape[0],),
                      dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
     if bsize > 1:
-        diag_dom_rows = numpy.array(diag_dom_rows, dtype=int)
+        diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
-        diag_dom_rows = numpy.sum(diag_dom_rows, axis=1)
+        diag_dom_rows = np.sum(diag_dom_rows, axis=1)
         diag_dom_rows = (diag_dom_rows == bsize)
 
     # Replace these rows/cols in # C with rows/cols of the identity.
@@ -1770,7 +1770,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     I.data[diag_dom_rows] = 0.0
     C = I*C*I
     I.data[diag_dom_rows] = 1.0
-    I.data[numpy.where(diag_dom_rows == 0)[0]] = 0.0
+    I.data[np.where(diag_dom_rows == 0)[0]] = 0.0
     C = C + I
 
     del A_abs
@@ -1856,7 +1856,7 @@ def scale_rows_by_largest_entry(S):
         raise TypeError('expected csr_matrix')
 
     # Scale S by the largest magnitude entry in each row
-    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
     pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry,
                                      S.indptr, S.indices, S.data)
 

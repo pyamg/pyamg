@@ -2,7 +2,6 @@
 
 
 def configuration(parent_package='', top_path=None):
-    import numpy
     from numpy.distutils.misc_util import Configuration
 
     config = Configuration('util', parent_package, top_path)

@@ -2,8 +2,8 @@
 
 __docformat__ = "restructuredtext en"
 
-import numpy
-import scipy
+import numpy as np
+import scipy as sp
 import scipy.sparse as sparse
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg import calc_lwork
@@ -46,12 +46,12 @@ def norm(x, pnorm='2'):
     # TODO check dimensions of x
     # TODO speedup complex case
 
-    x = numpy.ravel(x)
+    x = np.ravel(x)
 
     if pnorm == '2':
-        return numpy.sqrt(numpy.inner(x.conj(), x).real)
+        return np.sqrt(np.inner(x.conj(), x).real)
     elif pnorm == 'inf':
-        return numpy.max(numpy.abs(x))
+        return np.max(np.abs(x))
     else:
         raise ValueError('Only the 2-norm and infinity-norm are supported')
 
@@ -82,11 +82,11 @@ def infinity_norm(A):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.util.linalg import infinity_norm
     >>> n=10
-    >>> e = numpy.ones((n,1)).ravel()
+    >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n)
     >>> print infinity_norm(A)
@@ -95,20 +95,20 @@ def infinity_norm(A):
 
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
         # avoid copying index and ptr arrays
-        abs_A = A.__class__((numpy.abs(A.data), A.indices, A.indptr),
+        abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr),
                             shape=A.shape)
-        return (abs_A * numpy.ones((A.shape[1]), dtype=A.dtype)).max()
+        return (abs_A * np.ones((A.shape[1]), dtype=A.dtype)).max()
     elif sparse.isspmatrix(A):
-        return (abs(A) * numpy.ones((A.shape[1]), dtype=A.dtype)).max()
+        return (abs(A) * np.ones((A.shape[1]), dtype=A.dtype)).max()
     else:
-        return numpy.dot(numpy.abs(A), numpy.ones((A.shape[1],),
-                                                  dtype=A.dtype)).max()
+        return np.dot(np.abs(A), np.ones((A.shape[1],),
+                      dtype=A.dtype)).max()
 
 
 def residual_norm(A, x, b):
     """Compute ||b - A*x||"""
 
-    return norm(numpy.ravel(b) - A*numpy.ravel(x))
+    return norm(np.ravel(b) - A*np.ravel(x))
 
 
 def axpy(x, y, a=1.0):
@@ -187,9 +187,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
 
     # Choose tolerance for deciding if break-down has occurred
     t = A.dtype.char
-    eps = numpy.finfo(numpy.float).eps
-    feps = numpy.finfo(numpy.single).eps
-    geps = numpy.finfo(numpy.longfloat).eps
+    eps = np.finfo(np.float).eps
+    feps = np.finfo(np.single).eps
+    geps = np.finfo(np.longfloat).eps
     _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
     breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
     breakdown_flag = False
@@ -200,9 +200,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     maxiter = min(A.shape[0], maxiter)
 
     if initial_guess is None:
-        v0 = scipy.rand(A.shape[1], 1)
+        v0 = np.rand(A.shape[1], 1)
         if A.dtype == complex:
-            v0 = v0 + 1.0j * scipy.rand(A.shape[1], 1)
+            v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
     else:
         v0 = initial_guess
 
@@ -210,8 +210,8 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
 
     # Important to type H based on v0, so that a real nonsymmetric matrix, can
     # have an imaginary initial guess for its Arnoldi Krylov space
-    H = numpy.zeros((maxiter+1, maxiter),
-                    dtype=numpy.find_common_type([v0.dtype, A.dtype], []))
+    H = np.zeros((maxiter+1, maxiter),
+                 dtype=np.find_common_type([v0.dtype, A.dtype], []))
 
     V = [v0]
 
@@ -224,7 +224,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
                 H[j-1, j] = beta
                 w -= beta * V[-2]
 
-            alpha = numpy.dot(numpy.conjugate(w.ravel()), V[-1].ravel())
+            alpha = np.dot(np.conjugate(w.ravel()), V[-1].ravel())
             H[j, j] = alpha
             w -= alpha * V[-1]  # axpy(V[-1],w,-alpha)
 
@@ -243,7 +243,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
         else:
             # orthogonalize against Vs
             for i, v in enumerate(V):
-                H[i, j] = numpy.dot(numpy.conjugate(v.ravel()), w.ravel())
+                H[i, j] = np.dot(np.conjugate(v.ravel()), w.ravel())
                 w = w - H[i, j]*v
 
             H[j+1, j] = norm(w)
@@ -336,9 +336,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     Examples
     --------
     >>> from pyamg.util.linalg import approximate_spectral_radius
-    >>> import numpy
+    >>> import numpy as np
     >>> from scipy.linalg import eigvals, norm
-    >>> A = numpy.array([[1.,0.],[0.,1.]])
+    >>> A = np.array([[1.,0.],[0.,1.]])
     >>> print approximate_spectral_radius(A,maxiter=3)
     1.0
     >>> print max([norm(x) for x in eigvals(A)])
@@ -363,9 +363,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             raise ValueError('expected square A')
 
         if initial_guess is None:
-            v0 = scipy.rand(A.shape[1], 1)
+            v0 = sp.rand(A.shape[1], 1)
             if A.dtype == complex:
-                v0 = v0 + 1.0j * scipy.rand(A.shape[1], 1)
+                v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
         else:
             if initial_guess.shape[0] != A.shape[0]:
                 raise ValueError('initial_guess and A must have same shape')
@@ -373,7 +373,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
                 raise ValueError('initial_guess must be an (n,1) or\
                                   (n,) vector')
             v0 = initial_guess.reshape(-1, 1)
-            v0 = numpy.array(v0, dtype=A.dtype)
+            v0 = np.array(v0, dtype=A.dtype)
 
         for j in range(restart+1):
             [evect, ev, H, V, breakdown_flag] =\
@@ -381,28 +381,28 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
                                          symmetric, initial_guess=v0)
             # Calculate error in dominant eigenvector
             nvecs = ev.shape[0]
-            max_index = numpy.abs(ev).argmax()
+            max_index = np.abs(ev).argmax()
             error = H[nvecs, nvecs-1]*evect[-1, max_index]
 
             # error is a fast way of calculating the following line
-            # error2 = ( A - ev[max_index]*scipy.mat(
-            #           scipy.eye(A.shape[0],A.shape[1])) )*\
-            #           ( scipy.mat(scipy.hstack(V[:-1]))*\
+            # error2 = ( A - ev[max_index]*sp.mat(
+            #           sp.eye(A.shape[0],A.shape[1])) )*\
+            #           ( sp.mat(sp.hstack(V[:-1]))*\
             #           evect[:,max_index].reshape(-1,1) )
-            # print str(error) + "    " + str(scipy.linalg.norm(e2))
+            # print str(error) + "    " + str(sp.linalg.norm(e2))
 
-            if (numpy.abs(error)/numpy.abs(ev[max_index]) < tol) or\
+            if (np.abs(error)/np.abs(ev[max_index]) < tol) or\
                breakdown_flag:
                 # halt if below relative tolerance
-                v0 = numpy.dot(numpy.hstack(V[:-1]),
-                               evect[:, max_index].reshape(-1, 1))
+                v0 = np.dot(np.hstack(V[:-1]),
+                            evect[:, max_index].reshape(-1, 1))
                 break
             else:
-                v0 = numpy.dot(numpy.hstack(V[:-1]),
-                               evect[:, max_index].reshape(-1, 1))
+                v0 = np.dot(np.hstack(V[:-1]),
+                            evect[:, max_index].reshape(-1, 1))
         # end j-loop
 
-        rho = numpy.abs(ev[max_index])
+        rho = np.abs(ev[max_index])
         if sparse.isspmatrix(A):
             A.rho = rho
 
@@ -445,9 +445,9 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.linalg import condest
-    >>> c = condest(numpy.array([[1.,0.],[0.,2.]]))
+    >>> c = condest(np.array([[1.,0.],[0.,2.]]))
     >>> print c
     2.0
 
@@ -456,7 +456,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     [evect, ev, H, V, breakdown_flag] =\
         _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
-    return numpy.max([norm(x) for x in ev])/min([norm(x) for x in ev])
+    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])
 
 
 def cond(A):
@@ -482,9 +482,9 @@ def cond(A):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.linalg import condest
-    >>> c = condest(numpy.array([[1.0,0.],[0.,2.0]]))
+    >>> c = condest(np.array([[1.0,0.],[0.,2.0]]))
     >>> print c
     2.0
 
@@ -500,7 +500,7 @@ def cond(A):
     from scipy.linalg import svd
 
     U, Sigma, Vh = svd(A)
-    return numpy.max(Sigma)/min(Sigma)
+    return np.max(Sigma)/min(Sigma)
 
 
 def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
@@ -533,9 +533,9 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.linalg import ishermitian
-    >>> ishermitian(numpy.array([[1,2],[1,1]]))
+    >>> ishermitian(np.array([[1,2],[1,1]]))
     False
 
     >>> from pyamg.gallery import poisson
@@ -544,29 +544,29 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     """
     # convert to matrix type
     if not sparse.isspmatrix(A):
-        A = numpy.asmatrix(A)
+        A = np.asmatrix(A)
 
     if fast_check:
-        x = scipy.rand(A.shape[0], 1)
-        y = scipy.rand(A.shape[0], 1)
+        x = sp.rand(A.shape[0], 1)
+        y = sp.rand(A.shape[0], 1)
         if A.dtype == complex:
-            x = x + 1.0j*scipy.rand(A.shape[0], 1)
-            y = y + 1.0j*scipy.rand(A.shape[0], 1)
-        xAy = numpy.dot((A*x).conjugate().T, y)
-        xAty = numpy.dot(x.conjugate().T, A*y)
-        diff = float(numpy.abs(xAy - xAty) / numpy.sqrt(numpy.abs(xAy*xAty)))
+            x = x + 1.0j*sp.rand(A.shape[0], 1)
+            y = y + 1.0j*sp.rand(A.shape[0], 1)
+        xAy = np.dot((A*x).conjugate().T, y)
+        xAty = np.dot(x.conjugate().T, A*y)
+        diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
 
     else:
         # compute the difference, A - A.H
         if sparse.isspmatrix(A):
-            diff = numpy.ravel((A - A.H).data)
+            diff = np.ravel((A - A.H).data)
         else:
-            diff = numpy.ravel(A - A.H)
+            diff = np.ravel(A - A.H)
 
-        if numpy.max(diff.shape) == 0:
+        if np.max(diff.shape) == 0:
             diff = 0
         else:
-            diff = numpy.max(numpy.abs(diff))
+            diff = np.max(np.abs(diff))
 
     if diff < tol:
         diff = 0
@@ -603,9 +603,9 @@ def pinv_array(a, cond=None):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from pyamg.util.linalg import pinv_array
-    >>> a = numpy.array([[[1.,2.],[1.,1.]], [[1.,1.],[3.,3.]]])
+    >>> a = np.array([[[1.,2.],[1.,1.]], [[1.,1.],[3.,3.]]])
     >>> ac = a.copy()
     >>> # each block of a is inverted in-place
     >>> pinv_array(a)
@@ -628,16 +628,16 @@ def pinv_array(a, cond=None):
 
         # Create necessary arrays and function pointers for calculating pinv
         gelss, = get_lapack_funcs(('gelss',),
-                                  (numpy.ones((1,), dtype=a.dtype)))
-        RHS = numpy.eye(m, dtype=a.dtype)
+                                  (np.ones((1,), dtype=a.dtype)))
+        RHS = np.eye(m, dtype=a.dtype)
         lwork = calc_lwork.gelss(gelss.prefix, m, m, m)[1]
 
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
             t = a.dtype.char
-            eps = numpy.finfo(numpy.float).eps
-            feps = numpy.finfo(numpy.single).eps
-            geps = numpy.finfo(numpy.longfloat).eps
+            eps = np.finfo(np.float).eps
+            feps = np.finfo(np.single).eps
+            geps = np.finfo(np.longfloat).eps
             _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
             cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
