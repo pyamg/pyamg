@@ -412,8 +412,11 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     # step 1
     A_l = A
     if initial_candidate is None:
-        x = sp.rand(A_l.shape[0], 1)
-        if A_l.dtype == complex:
+        x = sp.rand(A_l.shape[0], 1).astype(A_l.dtype)
+        # The following type check matches the usual 'complex' type,
+        # but also numpy data types such as 'complex64', 'complex128'
+        # and 'complex256'.
+        if A_l.dtype.name.startswith('complex'):
             x = x + 1.0j*sp.rand(A_l.shape[0], 1)
     else:
         x = np.array(initial_candidate, dtype=A_l.dtype)
@@ -468,7 +471,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
         # In SA, strength represents "distance", so we take magnitude of
         # complex values
-        if C_l.dtype == complex:
+        if C_l.dtype.name.startswith('complex'):
             C_l.data = np.abs(C_l.data)
 
         # Create a unified strength framework so that large values represent
@@ -613,7 +616,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
     levels = ml.levels
 
     x = sp.rand(levels[0].A.shape[0], 1)
-    if levels[0].A.dtype == complex:
+    if levels[0].A.dtype.name.startswith('complex'):
         x = x + 1.0j*sp.rand(levels[0].A.shape[0], 1)
     b = np.zeros_like(x)
 
