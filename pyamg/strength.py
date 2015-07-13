@@ -775,13 +775,14 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     Atilde.data = np.array(np.real(Atilde.data), dtype=float)
 
     # Apply drop tolerance
-    if symmetrize_measure:
-        Atilde = 0.5*(Atilde + Atilde.T)
-
     if epsilon != np.inf:
         amg_core.apply_distance_filter(dimen, epsilon, Atilde.indptr,
                                        Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
+
+    # Symmetrize
+    if symmetrize_measure:
+        Atilde = 0.5*(Atilde + Atilde.T)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = sparse.eye(dimen, dimen, format="csr")
