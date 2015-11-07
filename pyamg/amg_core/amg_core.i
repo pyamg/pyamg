@@ -26,10 +26,6 @@
     import_array();
 %}
 
-
-
-
-
  /*
   * IN types
   */
@@ -99,13 +95,13 @@
 
 %define T_ARRAY_ARGOUT( ctype )
 %apply std::vector<ctype>* array_argout {
-    std::vector<ctype>* Ax, 
+    std::vector<ctype>* Ax,
     std::vector<ctype>* Bx,
-    std::vector<ctype>* Cx, 
+    std::vector<ctype>* Cx,
     std::vector<ctype>* Sx,
-    std::vector<ctype>* Tx, 
+    std::vector<ctype>* Tx,
     std::vector<ctype>* Xx,
-    std::vector<ctype>* Yx 
+    std::vector<ctype>* Yx
 };
 %enddef
 
@@ -191,7 +187,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
  /*
   * Order may be important here, list float before double
   */
- 
+
 %define INSTANTIATE_INDEX( f_name )
 %template(f_name)   f_name<int>;
 %enddef
@@ -218,7 +214,7 @@ DECLARE_DATA_TYPE( npy_cdouble_wrapper )
 %template(f_name)   f_name<int,float>;
 %template(f_name)   f_name<int,double>;
 %enddef
- 
+
 INSTANTIATE_INDEX(cljp_naive_splitting)
 INSTANTIATE_INDEX(naive_aggregation)
 INSTANTIATE_INDEX(standard_aggregation)
@@ -270,10 +266,8 @@ INSTANTIATE_INDEX(connected_components)
 INSTANTIATE_ALL(bellman_ford)
 INSTANTIATE_ALL(lloyd_cluster)
 
-
 %template(fit_candidates)   fit_candidates_real<int,float>;
 %template(fit_candidates)   fit_candidates_real<int,double>;
 %template(fit_candidates)   fit_candidates_complex<int,float,npy_cfloat_wrapper>;
 %template(fit_candidates)   fit_candidates_complex<int,double,npy_cdouble_wrapper>;
 /*INSTANTIATE_BOTH()*/
-
