@@ -838,19 +838,19 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  * Routine is designed to invert many small matrices at once.
  * Parameters
  * ----------
- * Ax : {float|complex array}
+ * AA : {float|complex array}
  *      (m, n, n) array, assumed to be "raveled" and in row major form
  * m,n : int
- *      dimensions of Ax
+ *      dimensions of AA
  * TransA : char
  *      'T' or 'F'.  Decides whether to transpose each nxn block
  *      of A before inverting.  If using Python array, should be 'T'.
  *
  * Return
  * ------
- * Ax : {array}
- *      Ax is modified in place with the pseduoinverse replacing each
- *      block of Ax.  Ax is returned in row-major form for Python
+ * AA : {array}
+ *      AA is modified in place with the pseduoinverse replacing each
+ *      block of AA.  AA is returned in row-major form for Python
  *
  * Notes
  * -----
@@ -879,7 +879,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  *
  */
 template<class I, class T, class F>
-void pinv_array(T Ax[], const int Ax_size,
+void pinv_array(T AA[], const int AA_size,
                 const I m, const I n, const char TransA)
 {
     I nsq = n*n;
@@ -895,7 +895,7 @@ void pinv_array(T Ax[], const int Ax_size,
     {
         if(TransA == 'T')
         {   // transpose block of A so that it is in col major for SVD
-            transpose(&(Ax[Acounter]), &(Tran[0]), n, n);
+            transpose(&(AA[Acounter]), &(Tran[0]), n, n);
 
             // calculate SVD
             svd_jacobi(&(Tran[0]), &(U[0]), &(V[0]), &(S[0]), n, n);
@@ -903,7 +903,7 @@ void pinv_array(T Ax[], const int Ax_size,
         else
         {
             // calculate SVD
-            svd_jacobi(&(Ax[Acounter]), &(U[0]), &(V[0]), &(S[0]), n, n);
+            svd_jacobi(&(AA[Acounter]), &(U[0]), &(V[0]), &(S[0]), n, n);
         }
 
         // invert S
@@ -932,7 +932,7 @@ void pinv_array(T Ax[], const int Ax_size,
 
         // A^{-1} = V*SinvUh
         gemm(&(Tran[0]), n, n, t, &(SinvUh[0]), n, n, t,
-             &(Ax[Acounter]), n, n, t, 'T');
+             &(AA[Acounter]), n, n, t, 'T');
 
         Acounter += nsq;
     }

@@ -5,6 +5,7 @@
 #include <stack>
 #include <cassert>
 #include <limits>
+#include <vector>
 
 /*
  *  Compute a maximal independent set for a graph stored in CSR format
@@ -19,28 +20,28 @@
  *       F         - value used to mark MIS vertices       (output)
  *      x[]        - state of each vertex
  *
- *  
+ *
  *  Returns:
  *      The number of nodes in the MIS.
  *
  *  Notes:
- *      Only the vertices with values with x[i] == active are considered 
+ *      Only the vertices with values with x[i] == active are considered
  *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the 
+ *      be assigned the value C or F depending on whether they are in the
  *      MIS or not.
  *
  */
 template<class I, class T>
 I maximal_independent_set_serial(const I num_rows,
-                                 const I Ap[], 
-                                 const I Aj[], 
+                                 const I Ap[], const int Ap_size,
+                                 const I Aj[], const int Aj_size,
                                  const T active,
                                  const T  C,
                                  const T  F,
-                                       T  x[])
+                                       T  x[], const int  x_size)
 {
     I N = 0;
-    
+
     for(I i = 0; i < num_rows; i++){
         if(x[i] != active) continue;
 
@@ -72,29 +73,29 @@ I maximal_independent_set_serial(const I num_rows,
  *       F         - value used to mark MIS vertices       (output)
  *      x[]        - state of each vertex
  *      y[]        - random values for each vertex
- *      max_iters  - maximum number of iterations 
- *                   by default max_iters=-1 and no limit 
+ *      max_iters  - maximum number of iterations
+ *                   by default max_iters=-1 and no limit
  *                   is imposed
- *  
+ *
  *  Returns:
  *      The number of nodes in the MIS.
  *
  *  Notes:
- *      Only the vertices with values with x[i] == active are considered 
+ *      Only the vertices with values with x[i] == active are considered
  *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the 
+ *      be assigned the value C or F depending on whether they are in the
  *      MIS or not.
- *  
+ *
  */
 template<class I, class T, class R>
 I maximal_independent_set_parallel(const I num_rows,
-                                   const I Ap[], 
-                                   const I Aj[],
+                                   const I Ap[], const int Ap_size,
+                                   const I Aj[], const int Aj_size,
                                    const T active,
                                    const T  C,
                                    const T  F,
-                                         T  x[],
-                                   const R  y[],
+                                         T  x[], const int  x_size,
+                                   const R  y[], const int  y_size,
                                    const I  max_iters=-1)
 {
     I N = 0;
@@ -106,15 +107,15 @@ I maximal_independent_set_parallel(const I num_rows,
         active_nodes = false;
 
         num_iters++;
-        
+
         for(I i = 0; i < num_rows; i++){
             const R yi = y[i];
 
             if(x[i] != active) continue;
-            
+
             const I row_start = Ap[i];
             const I row_end   = Ap[i+1];
-    
+
             I jj;
 
             for(jj = row_start; jj < row_end; jj++){
@@ -123,18 +124,18 @@ I maximal_independent_set_parallel(const I num_rows,
 
                 if(xj == C) {
                     x[i] = F;                      //neighbor is MIS
-                    break;  
+                    break;
                 }
-                
+
                 if(xj == active){
                     const R yj = y[j];
                     if(yj > yi)
-                        break;                     //neighbor is larger 
+                        break;                     //neighbor is larger
                     else if (yj == yi && j > i)
                         break;                     //tie breaker goes to neighbor
                 }
             }
-   
+
             if(jj == row_end){
                 for(jj = row_start; jj < row_end; jj++){
                     const I j  = Aj[jj];
@@ -148,7 +149,7 @@ I maximal_independent_set_parallel(const I num_rows,
             }
         }
     } // end while
-        
+
     //std::cout << std::endl << "Luby's finished in " << num_iters << " iterations " << std::endl;
 
     return N;
@@ -169,9 +170,9 @@ I maximal_independent_set_parallel(const I num_rows,
  */
 template<class I, class T>
 T vertex_coloring_mis(const I num_rows,
-                      const I Ap[], 
-                      const I Aj[], 
-                            T  x[])
+                      const I Ap[], const int Ap_size,
+                      const I Aj[], const int Aj_size,
+                            T  x[], const int  x_size)
 {
     std::fill( x, x + num_rows, -1);
 
@@ -179,7 +180,7 @@ T vertex_coloring_mis(const I num_rows,
     T K = 0;
 
     while(N < num_rows){
-        N += maximal_independent_set_serial(num_rows,Ap,Aj,-1-K,K,-2-K,x);
+        N += maximal_independent_set_serial(num_rows,Ap,Ap_size,Aj,Aj_size,-1-K,K,-2-K,x,x_size);
         K++;
     }
 
@@ -190,7 +191,7 @@ T vertex_coloring_mis(const I num_rows,
 /*
  *  Applies the first fit heuristic to a graph coloring.
  *
- *  For each vertex with color K the vertex is assigned the *first* 
+ *  For each vertex with color K the vertex is assigned the *first*
  *  available color such that no neighbor of the vertex has that
  *  color.  This heuristic is used to reduce the number of color used
  *  in the vertex coloring.
@@ -198,9 +199,9 @@ T vertex_coloring_mis(const I num_rows,
  */
 template<class I, class T>
 void vertex_coloring_first_fit(const I num_rows,
-                               const I Ap[], 
-                               const I Aj[], 
-                                     T  x[],
+                               const I Ap[], const int Ap_size,
+                               const I Aj[], const int Aj_size,
+                                     T  x[], const int  x_size,
                                const T  K)
 {
     for(I i = 0; i < num_rows; i++){
@@ -212,7 +213,7 @@ void vertex_coloring_first_fit(const I num_rows,
             if( x[j] < 0 ) continue; //ignore uncolored vertices
             mask[x[j]] = true;
         }
-        x[i] = std::find(mask.begin(), mask.end(), false) - mask.begin();            
+        x[i] = std::find(mask.begin(), mask.end(), false) - mask.begin();
     }
 }
 
@@ -221,7 +222,7 @@ void vertex_coloring_first_fit(const I num_rows,
 /*
  * Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
  *
- *  Parameters   
+ *  Parameters
  *      num_rows   - number of rows in A (number of vertices)
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
@@ -236,31 +237,31 @@ void vertex_coloring_first_fit(const I num_rows,
  *      A Parallel Graph Coloring Heuristic
  *      SIAM Journal on Scientific Computing 14:3 (1993) 654--669
  *      http://citeseer.ist.psu.edu/jones92parallel.html
- *      
+ *
  */
 template<class I, class T, class R>
 T vertex_coloring_jones_plassmann(const I num_rows,
-                                  const I Ap[], 
-                                  const I Aj[], 
-                                        T  x[],
-                                        R  y[])
+                                  const I Ap[], const int Ap_size,
+                                  const I Aj[], const int Aj_size,
+                                        T  x[], const int  x_size,
+                                        R  z[], const int  z_size)
 {
     std::fill( x, x + num_rows, -1);
 
     for(I i = 0; i < num_rows; i++){
-        y[i] += Ap[i+1] - Ap[i];
+        z[i] += Ap[i+1] - Ap[i];
     }
 
     I N = 0;
     T K = 0; //iteration number
 
     while(N < num_rows){
-        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,y,1);
+        N += maximal_independent_set_parallel(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,z,z_size,1);
         for(I i = 0; i < num_rows; i++){
             if(x[i] == -2)
                 x[i] = -1;
         }
-        vertex_coloring_first_fit(num_rows,Ap,Aj,x,K);
+        vertex_coloring_first_fit(num_rows,Ap,Ap_size,Aj,Aj_size,x,x_size,K);
         K++;
     }
 
@@ -269,10 +270,10 @@ T vertex_coloring_jones_plassmann(const I num_rows,
 
 
 /*
- * Compute a vertex coloring of a graph using the parallel 
+ * Compute a vertex coloring of a graph using the parallel
  * Largest-Degree-First (LDF) algorithm
  *
- *  Parameters   
+ *  Parameters
  *      num_rows   - number of rows in A (number of vertices)
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
@@ -288,10 +289,10 @@ T vertex_coloring_jones_plassmann(const I num_rows,
  */
 template<class I, class T, class R>
 T vertex_coloring_LDF(const I num_rows,
-                      const I Ap[], 
-                      const I Aj[], 
-                            T  x[],
-                      const R  y[])
+                      const I Ap[], const int Ap_size,
+                      const I Aj[], const int Aj_size,
+                            T  x[], const int  x_size,
+                      const R  y[], const int  y_size)
 {
     std::fill( x, x + num_rows, -1);
 
@@ -313,12 +314,12 @@ T vertex_coloring_LDF(const I num_rows,
             weights[i] = y[i] + num_neighbors;
         }
 
-        N += maximal_independent_set_parallel(num_rows,Ap,Aj,-1,K,-2,x,&weights[0],1);
+        N += maximal_independent_set_parallel(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,&weights[0],num_rows,1);
         for(I i = 0; i < num_rows; i++){
             if(x[i] == -2)
                 x[i] = -1;
         }
-        vertex_coloring_first_fit(num_rows,Ap,Aj,x,K);
+        vertex_coloring_first_fit(num_rows,Ap,Ap_size,Aj,Aj_size,x,x_size,K);
         K++;
     }
 
@@ -326,7 +327,7 @@ T vertex_coloring_LDF(const I num_rows,
 }
 
 
-/* 
+/*
  * Apply one iteration of Bellman-Ford iteration on a distance
  * graph stored in CSR format.
  *
@@ -343,33 +344,33 @@ T vertex_coloring_LDF(const I num_rows,
  */
 template<class I, class T>
 void bellman_ford(const I num_rows,
-                  const I Ap[], 
-                  const I Aj[], 
-                  const T Ax[],
-                        T  x[],
-                        I  y[])
+                  const I Ap[], const int Ap_size,
+                  const I Aj[], const int Aj_size,
+                  const T Ax[], const int Ax_size,
+                        T  x[], const int  x_size,
+                        I  z[], const int  z_size)
 {
     for(I i = 0; i < num_rows; i++){
         T xi = x[i];
-        I yi = y[i];
+        I zi = z[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
             if(d < xi){
                 xi = d;
-                yi = y[j];
+                zi = z[j];
             }
         }
         x[i] = xi;
-        y[i] = yi;
+        z[i] = zi;
     }
 }
- 
-    
+
+
 /*
  * Perform Lloyd clustering on a distance graph
  *
- *  Parameters   
+ *  Parameters
  *      num_rows       - number of rows in A (number of vertices)
  *      Ap[]           - CSR row pointer
  *      Aj[]           - CSR index array
@@ -386,23 +387,23 @@ void bellman_ford(const I num_rows,
  */
 template<class I, class T>
 void lloyd_cluster(const I num_rows,
-                   const I Ap[], 
-                   const I Aj[], 
-                   const T Ax[],
+                   const I Ap[], const int Ap_size,
+                   const I Aj[], const int Aj_size,
+                   const T Ax[], const int Ax_size,
                    const I num_seeds,
-                         T  x[],
-                         I  y[],
-                         I  z[])
+                         T  x[], const int  x_size,
+                         I  w[], const int  w_size,
+                         I  z[], const int  z_size)
 {
     for(I i = 0; i < num_rows; i++){
         x[i] = std::numeric_limits<T>::max();
-        y[i] = -1;
+        w[i] = -1;
     }
     for(I i = 0; i < num_seeds; i++){
         I seed = z[i];
         assert(seed >= 0 && seed < num_rows);
         x[seed] = 0;
-        y[seed] = i;
+        w[seed] = i;
     }
 
     std::vector<T> old_distances(num_rows);
@@ -410,7 +411,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances outward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Aj, Ax, x, y);
+        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
     //find boundaries
@@ -420,7 +421,7 @@ void lloyd_cluster(const I num_rows,
     for(I i = 0; i < num_rows; i++){
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             I j = Aj[jj];
-            if( y[i] != y[j] ){
+            if( w[i] != w[j] ){
                 x[i] = 0;
                 break;
             }
@@ -430,17 +431,17 @@ void lloyd_cluster(const I num_rows,
     // propagate distances inward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Aj, Ax, x, y);
+        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
     // compute new seeds
     for(I i = 0; i < num_rows; i++){
-        const I seed = y[i];
+        const I seed = w[i];
 
         if (seed == -1) //node belongs to no cluster
             continue;
-        
+
         assert(seed >= 0 && seed < num_seeds);
 
         if( x[z[seed]] < x[i] )
@@ -455,19 +456,19 @@ void lloyd_cluster(const I num_rows,
  * Propagate (key,value) pairs across a graph in CSR format.
  *
  * Each vertex in the graph looks at all neighboring vertices
- * and selects the (key,value) pair such that the value is 
+ * and selects the (key,value) pair such that the value is
  * greater or equal to every other neighboring value.  If
- * two (key,value) pairs have the same value, the one with 
+ * two (key,value) pairs have the same value, the one with
  * the higher index is chosen
  *
- * This method is used within a parallel MIS-k method to 
+ * This method is used within a parallel MIS-k method to
  * propagate the local maximia's information to neighboring
  * vertices at distance K > 1 away.
  *
  */
 template<typename IndexType, typename ValueType>
 void csr_propagate_max(const IndexType  num_rows,
-                       const IndexType  Ap[], 
+                       const IndexType  Ap[],
                        const IndexType  Aj[],
                        const IndexType  i_keys[],
                              IndexType  o_keys[],
@@ -499,7 +500,7 @@ void csr_propagate_max(const IndexType  num_rows,
 
 /*
  *  Compute a distance-k maximal independent set for a graph stored
- *  in CSR format using a parallel algorithm.  An MIS-k is a set of 
+ *  in CSR format using a parallel algorithm.  An MIS-k is a set of
  *  vertices such that all vertices in the MIS-k are separated by a
  *  path of at least K+1 edges and no additional vertex can be added
  *  to the set without destroying this property.  A standard MIS
@@ -511,25 +512,25 @@ void csr_propagate_max(const IndexType  num_rows,
  *      Aj[]       - CSR index array
  *      k          - minimum separation between MIS vertices
  *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
- *      y[]        - random values used during parallel MIS algorithm 
+ *      y[]        - random values used during parallel MIS algorithm
  *      max_iters  - maximum number of iterations to use (default, no limit)
- *  
+ *
  */
 template<class I, class T, class R>
 void maximal_independent_set_k_parallel(const I num_rows,
-                                        const I Ap[], 
-                                        const I Aj[],
+                                        const I Ap[], const int Ap_size,
+                                        const I Aj[], const int Aj_size,
                                         const I  k,
-                                              T  x[],
-                                        const R  y[],
+                                              T  x[], const int  x_size,
+                                        const R  y[], const int  y_size,
                                         const I  max_iters=-1)
 {
     std::vector<bool> active(num_rows,true);
 
     std::vector<I> i_keys(num_rows);
     std::vector<I> o_keys(num_rows);
-    std::vector<R> i_vals(num_rows); 
-    std::vector<R> o_vals(num_rows); 
+    std::vector<R> i_vals(num_rows);
+    std::vector<R> o_vals(num_rows);
 
     for(I i = 0; i < num_rows; i++){
         i_keys[i] = i;
@@ -547,12 +548,12 @@ void maximal_independent_set_k_parallel(const I num_rows,
         for(I i = 0; i < num_rows; i++){
             if( i_keys[i] == i && active[i]){
                 x[i] = 1; // i is a MIS-k node
-            } 
-            
+            }
+
             i_keys[i] = i;
             i_vals[i] = x[i];
         }
-       
+
         I rank = 0;
         //while(rank < k && 2*(k - rank) > k){
         //    csr_propagate_max(num_rows, Ap, Aj, &(i_keys[0]), &(o_keys[0]), &(i_vals[0]), &(o_vals[0]));
@@ -560,7 +561,7 @@ void maximal_independent_set_k_parallel(const I num_rows,
         //    std::swap(i_vals, o_vals);
         //    rank++;
         //}
-        
+
         while(rank < k){
             csr_propagate_max(num_rows, Ap, Aj, &(i_keys[0]), &(o_keys[0]), &(i_vals[0]), &(o_vals[0]));
             std::swap(i_keys, o_keys);
@@ -577,7 +578,7 @@ void maximal_independent_set_k_parallel(const I num_rows,
             } else {
                 i_vals[i] = y[i];
                 work_left = true;
-            } 
+            }
             i_keys[i] = i;
         }
 
@@ -603,16 +604,16 @@ void maximal_independent_set_k_parallel(const I num_rows,
  *
  */
 template <class I>
-void breadth_first_search(const I Ap[], 
-                          const I Aj[],
+void breadth_first_search(const I Ap[], const int Ap_size,
+                          const I Aj[], const int Aj_size,
                           const I seed,
-                                I order[],
-                                I level[])
+                                I order[], const int order_size,
+                                I level[], const int leveL_size)
 {
     // initialize seed
     order[0]    = seed;
     level[seed] = 0;
-   
+
     I N = 1;
     I level_begin = 0;
     I level_end   = N;
@@ -658,9 +659,9 @@ void breadth_first_search(const I Ap[],
  */
 template <class I>
 I connected_components(const I num_nodes,
-                       const I Ap[], 
-                       const I Aj[],
-                             I components[])
+                       const I Ap[], const int Ap_size,
+                       const I Aj[], const int Aj_size,
+                             I components[], const int components_size)
 {
     std::fill(components, components + num_nodes, -1);
     std::stack<I> DFS;
@@ -677,7 +678,7 @@ I connected_components(const I num_nodes,
             {
                 I top = DFS.top();
                 DFS.pop();
-    
+
                 for(I jj = Ap[top]; jj < Ap[top + 1]; jj++){
                     const I j = Aj[jj];
                     if(components[j] == -1){

@@ -164,12 +164,66 @@ def zero_imag(*args) -> "std::complex< double >":
 
 def pinv_array(*args) -> "void":
     """
-    pinv_array(float [] Ax, int const m, int const n, char const TransA)
-    pinv_array(double [] Ax, int const m, int const n, char const TransA)
-    pinv_array(std::complex< float > [] Ax, int const m, int const n, char const TransA)
-    pinv_array(std::complex< double > [] Ax, int const m, int const n, char const TransA)
+    pinv_array(float [] AA, int const m, int const n, char const TransA)
+    pinv_array(double [] AA, int const m, int const n, char const TransA)
+    pinv_array(std::complex< float > [] AA, int const m, int const n, char const TransA)
+    pinv_array(std::complex< double > [] AA, int const m, int const n, char const TransA)
     """
     return _amg_core.pinv_array(*args)
+
+def maximal_independent_set_serial(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', active: 'int const', C: 'int const', F: 'int const', x: 'int []') -> "int":
+    """maximal_independent_set_serial(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x) -> int"""
+    return _amg_core.maximal_independent_set_serial(num_rows, Ap, Aj, active, C, F, x)
+
+def maximal_independent_set_parallel(num_rows: 'I const', Ap: 'I const []', Ap_size: 'int const', Aj: 'I const []', Aj_size: 'int const', active: 'T const', C: 'T const', F: 'T const', x: 'T []', x_size: 'int const', y: 'R const []', y_size: 'int const', max_iters: 'I const'=-1) -> "int":
+    """
+    maximal_independent_set_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x, double const [] y, int const max_iters=-1) -> int
+    maximal_independent_set_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x, double const [] y) -> int
+    """
+    return _amg_core.maximal_independent_set_parallel(num_rows, Ap, Ap_size, Aj, Aj_size, active, C, F, x, x_size, y, y_size, max_iters)
+
+def maximal_independent_set_k_parallel(num_rows: 'I const', Ap: 'I const []', Ap_size: 'int const', Aj: 'I const []', Aj_size: 'int const', k: 'I const', x: 'T []', x_size: 'int const', y: 'R const []', y_size: 'int const', max_iters: 'I const'=-1) -> "void":
+    """
+    maximal_independent_set_k_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const k, int [] x, double const [] y, int const max_iters=-1)
+    maximal_independent_set_k_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const k, int [] x, double const [] y)
+    """
+    return _amg_core.maximal_independent_set_k_parallel(num_rows, Ap, Ap_size, Aj, Aj_size, k, x, x_size, y, y_size, max_iters)
+
+def vertex_coloring_mis(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []') -> "int":
+    """vertex_coloring_mis(int const num_rows, int const [] Ap, int const [] Aj, int [] x) -> int"""
+    return _amg_core.vertex_coloring_mis(num_rows, Ap, Aj, x)
+
+def vertex_coloring_jones_plassmann(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', z: 'double []') -> "int":
+    """vertex_coloring_jones_plassmann(int const num_rows, int const [] Ap, int const [] Aj, int [] x, double [] z) -> int"""
+    return _amg_core.vertex_coloring_jones_plassmann(num_rows, Ap, Aj, x, z)
+
+def vertex_coloring_LDF(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'double const []') -> "int":
+    """vertex_coloring_LDF(int const num_rows, int const [] Ap, int const [] Aj, int [] x, double const [] y) -> int"""
+    return _amg_core.vertex_coloring_LDF(num_rows, Ap, Aj, x, y)
+
+def bellman_ford(*args) -> "void":
+    """
+    bellman_ford(int const num_rows, int const [] Ap, int const [] Aj, int const [] Ax, int [] x, int [] z)
+    bellman_ford(int const num_rows, int const [] Ap, int const [] Aj, float const [] Ax, float [] x, int [] z)
+    bellman_ford(int const num_rows, int const [] Ap, int const [] Aj, double const [] Ax, double [] x, int [] z)
+    """
+    return _amg_core.bellman_ford(*args)
+
+def lloyd_cluster(*args) -> "void":
+    """
+    lloyd_cluster(int const num_rows, int const [] Ap, int const [] Aj, int const [] Ax, int const num_seeds, int [] x, int [] w, int [] z)
+    lloyd_cluster(int const num_rows, int const [] Ap, int const [] Aj, float const [] Ax, int const num_seeds, float [] x, int [] w, int [] z)
+    lloyd_cluster(int const num_rows, int const [] Ap, int const [] Aj, double const [] Ax, int const num_seeds, double [] x, int [] w, int [] z)
+    """
+    return _amg_core.lloyd_cluster(*args)
+
+def breadth_first_search(Ap: 'int const []', Aj: 'int const []', seed: 'int const', order: 'int []', level: 'int []', leveL_size: 'int const') -> "void":
+    """breadth_first_search(int const [] Ap, int const [] Aj, int const seed, int [] order, int [] level, int const leveL_size)"""
+    return _amg_core.breadth_first_search(Ap, Aj, seed, order, level, leveL_size)
+
+def connected_components(num_nodes: 'int const', Ap: 'int const []', Aj: 'int const []', components: 'int []') -> "int":
+    """connected_components(int const num_nodes, int const [] Ap, int const [] Aj, int [] components) -> int"""
+    return _amg_core.connected_components(num_nodes, Ap, Aj, components)
 # This file is compatible with both classic and new-style classes.
 
 

@@ -6,6 +6,7 @@
 #include "complex_ops.h"
 
 #include "linalg.h"
+#include "graph.h"
 %}
 
 %feature("autodoc", "1");
@@ -21,13 +22,22 @@
  */
 %define I_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
-    (ctype J [], const int J_size)
+    (const ctype Ap [], const int Ap_size),
+    (const ctype Aj [], const int Aj_size),
+    (      ctype order [], const int order_size),
+    (      ctype level [], const int level_size),
+    (      ctype components [], const int components_size)
 };
 %enddef
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
-    (ctype Ax [], const int Ax_size)
+    (      ctype  w [], const int  w_size),
+    (      ctype  x [], const int  x_size),
+    (const ctype  y [], const int  y_size),
+    (      ctype  z [], const int  z_size),
+    (const ctype Ax [], const int Ax_size),
+    (      ctype AA [], const int AA_size)
 };
 %enddef
 
@@ -88,3 +98,21 @@ DECLARE_DATA_TYPE( std::complex<double> )
   ---------------------------------------------------------------------------*/
 %include "linalg.h"
 INSTANTIATE_INDEXDATA_COMPLEX(pinv_array)
+
+/*----------------------------------------------------------------------------
+  graph.h
+  ---------------------------------------------------------------------------*/
+%include "graph.h"
+
+%template(maximal_independent_set_serial)     maximal_independent_set_serial<int,int>;
+%template(maximal_independent_set_parallel)   maximal_independent_set_parallel<int,int,double>;
+%template(maximal_independent_set_k_parallel) maximal_independent_set_k_parallel<int,int,double>;
+
+%template(vertex_coloring_mis)                vertex_coloring_mis<int,int>;
+%template(vertex_coloring_jones_plassmann)    vertex_coloring_jones_plassmann<int,int,double>;
+%template(vertex_coloring_LDF)                vertex_coloring_LDF<int,int,double>;
+
+INSTANTIATE_INDEXDATA_INT(bellman_ford)
+INSTANTIATE_INDEXDATA_INT(lloyd_cluster)
+INSTANTIATE_INDEX_ONLY(breadth_first_search)
+INSTANTIATE_INDEX_ONLY(connected_components)
