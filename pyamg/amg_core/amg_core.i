@@ -11,6 +11,7 @@
 #include "relaxation.h"
 #include "smoothed_aggregation.h"
 #include "ruge_stuben.h"
+#include "evolution_strength.h"
 %}
 
 %feature("autodoc", "1");
@@ -58,6 +59,7 @@
     (      ctype  y [], const int  y_size),
     (const ctype  z [], const int  z_size),
     (      ctype  z [], const int  z_size),
+    (const ctype Sx [], const int Sx_size),
     (      ctype Sx [], const int Sx_size),
     (const ctype Ax [], const int Ax_size),
     (      ctype Ax [], const int Ax_size),
@@ -206,3 +208,15 @@ INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
 INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
 INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
 INSTANTIATE_INDEXDATA(rs_direct_interpolation_pass2)
+
+/*----------------------------------------------------------------------------
+  evolution_strength.h
+  ---------------------------------------------------------------------------*/
+%include "evolution_strength.h"
+
+INSTANTIATE_INDEXDATA(apply_distance_filter)
+INSTANTIATE_INDEXDATA(apply_absolute_distance_filter)
+INSTANTIATE_INDEXDATA(min_blocks)
+
+INSTANTIATE_INDEXDATA_COMPLEX(evolution_strength_helper)
+INSTANTIATE_INDEXDATA_COMPLEX(incomplete_mat_mult_csr)

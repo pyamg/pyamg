@@ -454,10 +454,49 @@ def rs_direct_interpolation_pass1(n_nodes: 'int const', Sp: 'int const []', Sj: 
 
 def rs_direct_interpolation_pass2(*args) -> "void":
     """
-    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, float [] Bx)
-    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, double [] Bx)
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, float [] Bx)
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, double [] Bx)
     """
     return _amg_core.rs_direct_interpolation_pass2(*args)
+
+def apply_distance_filter(*args) -> "void":
+    """
+    apply_distance_filter(int const n_row, float const epsilon, int const [] Sp, int const [] Sj, float [] Sx)
+    apply_distance_filter(int const n_row, double const epsilon, int const [] Sp, int const [] Sj, double [] Sx)
+    """
+    return _amg_core.apply_distance_filter(*args)
+
+def apply_absolute_distance_filter(*args) -> "void":
+    """
+    apply_absolute_distance_filter(int const n_row, float const epsilon, int const [] Sp, int const [] Sj, float [] Sx)
+    apply_absolute_distance_filter(int const n_row, double const epsilon, int const [] Sp, int const [] Sj, double [] Sx)
+    """
+    return _amg_core.apply_absolute_distance_filter(*args)
+
+def min_blocks(*args) -> "void":
+    """
+    min_blocks(int const n_blocks, int const blocksize, float const [] Sx, float [] Tx)
+    min_blocks(int const n_blocks, int const blocksize, double const [] Sx, double [] Tx)
+    """
+    return _amg_core.min_blocks(*args)
+
+def evolution_strength_helper(*args) -> "void":
+    """
+    evolution_strength_helper(float [] Sx, int const [] Sp, int const [] Sj, int const nrows, float const [] x, float const [] y, float const [] b, int const BDBCols, int const NullDim, float const tol)
+    evolution_strength_helper(double [] Sx, int const [] Sp, int const [] Sj, int const nrows, double const [] x, double const [] y, double const [] b, int const BDBCols, int const NullDim, double const tol)
+    evolution_strength_helper(std::complex< float > [] Sx, int const [] Sp, int const [] Sj, int const nrows, std::complex< float > const [] x, std::complex< float > const [] y, std::complex< float > const [] b, int const BDBCols, int const NullDim, float const tol)
+    evolution_strength_helper(std::complex< double > [] Sx, int const [] Sp, int const [] Sj, int const nrows, std::complex< double > const [] x, std::complex< double > const [] y, std::complex< double > const [] b, int const BDBCols, int const NullDim, double const tol)
+    """
+    return _amg_core.evolution_strength_helper(*args)
+
+def incomplete_mat_mult_csr(*args) -> "void":
+    """
+    incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, float const [] Ax, int const [] Bp, int const [] Bj, float const [] Bx, int const [] Sp, int const [] Sj, float [] Sx, int const num_rows)
+    incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, double const [] Ax, int const [] Bp, int const [] Bj, double const [] Bx, int const [] Sp, int const [] Sj, double [] Sx, int const num_rows)
+    incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int const [] Bp, int const [] Bj, std::complex< float > const [] Bx, int const [] Sp, int const [] Sj, std::complex< float > [] Sx, int const num_rows)
+    incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int const [] Bp, int const [] Bj, std::complex< double > const [] Bx, int const [] Sp, int const [] Sj, std::complex< double > [] Sx, int const num_rows)
+    """
+    return _amg_core.incomplete_mat_mult_csr(*args)
 # This file is compatible with both classic and new-style classes.
 
 
