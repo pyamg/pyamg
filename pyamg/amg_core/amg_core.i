@@ -5,10 +5,11 @@
 %{
 #define SWIG_FILE_WITH_INIT
 
-#include "relaxation.h"
-#include "krylov.h"
 #include "linalg.h"
 #include "graph.h"
+#include "krylov.h"
+#include "relaxation.h"
+#include "smoothed_aggregation.h"
 %}
 
 %feature("autodoc", "1");
@@ -25,10 +26,15 @@
 %define I_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
     (const ctype Ap [], const int Ap_size),
+    (const ctype Bp [], const int Bp_size),
     (const ctype Tp [], const int Tp_size),
     (const ctype Sp [], const int Sp_size),
+    (      ctype Sp [], const int Sp_size),
+    (const ctype Ai [], const int Ai_size),
     (const ctype Aj [], const int Aj_size),
+    (const ctype Bj [], const int Bj_size),
     (const ctype Sj [], const int Sj_size),
+    (      ctype Sj [], const int Sj_size),
     (      ctype order [], const int order_size),
     (      ctype level [], const int level_size),
     (      ctype components [], const int components_size),
@@ -41,13 +47,20 @@
     (const ctype  B [], const int  B_size),
     (const ctype  b [], const int  b_size),
     (      ctype  w [], const int  w_size),
+    (const ctype  x [], const int  x_size),
     (      ctype  x [], const int  x_size),
     (const ctype  y [], const int  y_size),
+    (      ctype  y [], const int  y_size),
+    (const ctype  z [], const int  z_size),
     (      ctype  z [], const int  z_size),
+    (      ctype Sx [], const int Sx_size),
     (const ctype Ax [], const int Ax_size),
+    (      ctype Ax [], const int Ax_size),
+    (const ctype Bx [], const int Bx_size),
     (const ctype Tx [], const int Tx_size),
     (      ctype Tx [], const int Tx_size),
     (      ctype AA [], const int AA_size),
+    (      ctype  R [], const int  R_size),
     (      ctype temp [], const int temp_size),
     (const ctype omega [], const int omega_size)
 };
@@ -155,3 +168,21 @@ INSTANTIATE_INDEXDATA_COMPLEX(block_jacobi)
 INSTANTIATE_INDEXDATA_COMPLEX(block_gauss_seidel)
 INSTANTIATE_INDEXDATA_COMPLEX(extract_subblocks)
 INSTANTIATE_INDEXDATA_COMPLEX(overlapping_schwarz_csr)
+
+/*----------------------------------------------------------------------------
+  smoothed_aggregation.h
+  ---------------------------------------------------------------------------*/
+%include "smoothed_aggregation.h"
+
+INSTANTIATE_INDEXDATA_COMPLEX(symmetric_strength_of_connection)
+INSTANTIATE_INDEX_ONLY(naive_aggregation)
+INSTANTIATE_INDEX_ONLY(standard_aggregation)
+
+%template(fit_candidates)   fit_candidates_real<int,float>;
+%template(fit_candidates)   fit_candidates_real<int,double>;
+%template(fit_candidates)   fit_candidates_complex<int,float,std::complex<float>>;
+%template(fit_candidates)   fit_candidates_complex<int,double,std::complex<double>>;
+
+INSTANTIATE_INDEXDATA_COMPLEX(satisfy_constraints_helper)
+INSTANTIATE_INDEXDATA_COMPLEX(calc_BtB)
+INSTANTIATE_INDEXDATA_COMPLEX(incomplete_mat_mult_bsr)

@@ -359,6 +359,59 @@ def overlapping_schwarz_csr(*args) -> "void":
     overlapping_schwarz_csr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
     """
     return _amg_core.overlapping_schwarz_csr(*args)
+
+def symmetric_strength_of_connection(*args) -> "void":
+    """
+    symmetric_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
+    symmetric_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
+    symmetric_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int [] Sp, int [] Sj, std::complex< float > [] Sx)
+    symmetric_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int [] Sp, int [] Sj, std::complex< double > [] Sx)
+    """
+    return _amg_core.symmetric_strength_of_connection(*args)
+
+def naive_aggregation(n_row: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'int []') -> "int":
+    """naive_aggregation(int const n_row, int const [] Ap, int const [] Aj, int [] x, int [] y) -> int"""
+    return _amg_core.naive_aggregation(n_row, Ap, Aj, x, y)
+
+def standard_aggregation(n_row: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'int []') -> "int":
+    """standard_aggregation(int const n_row, int const [] Ap, int const [] Aj, int [] x, int [] y) -> int"""
+    return _amg_core.standard_aggregation(n_row, Ap, Aj, x, y)
+
+def fit_candidates(*args) -> "void":
+    """
+    fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, float [] Ax, float const [] B, float [] R, float const tol)
+    fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, double [] Ax, double const [] B, double [] R, double const tol)
+    fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, std::complex< float > [] Ax, std::complex< float > const [] B, std::complex< float > [] R, float const tol)
+    fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, std::complex< double > [] Ax, std::complex< double > const [] B, std::complex< double > [] R, double const tol)
+    """
+    return _amg_core.fit_candidates(*args)
+
+def satisfy_constraints_helper(*args) -> "void":
+    """
+    satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, float const [] x, float const [] y, float const [] z, int const [] Sp, int const [] Sj, float [] Sx)
+    satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, double const [] x, double const [] y, double const [] z, int const [] Sp, int const [] Sj, double [] Sx)
+    satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, std::complex< float > const [] x, std::complex< float > const [] y, std::complex< float > const [] z, int const [] Sp, int const [] Sj, std::complex< float > [] Sx)
+    satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, std::complex< double > const [] x, std::complex< double > const [] y, std::complex< double > const [] z, int const [] Sp, int const [] Sj, std::complex< double > [] Sx)
+    """
+    return _amg_core.satisfy_constraints_helper(*args)
+
+def calc_BtB(*args) -> "void":
+    """
+    calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, float const [] b, int const BsqCols, float [] x, int const [] Sp, int const [] Sj)
+    calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, double const [] b, int const BsqCols, double [] x, int const [] Sp, int const [] Sj)
+    calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, std::complex< float > const [] b, int const BsqCols, std::complex< float > [] x, int const [] Sp, int const [] Sj)
+    calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, std::complex< double > const [] b, int const BsqCols, std::complex< double > [] x, int const [] Sp, int const [] Sj)
+    """
+    return _amg_core.calc_BtB(*args)
+
+def incomplete_mat_mult_bsr(*args) -> "void":
+    """
+    incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, float const [] Ax, int const [] Bp, int const [] Bj, float const [] Bx, int const [] Sp, int const [] Sj, float [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
+    incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, double const [] Ax, int const [] Bp, int const [] Bj, double const [] Bx, int const [] Sp, int const [] Sj, double [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
+    incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int const [] Bp, int const [] Bj, std::complex< float > const [] Bx, int const [] Sp, int const [] Sj, std::complex< float > [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
+    incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int const [] Bp, int const [] Bj, std::complex< double > const [] Bx, int const [] Sp, int const [] Sj, std::complex< double > [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
+    """
+    return _amg_core.incomplete_mat_mult_bsr(*args)
 # This file is compatible with both classic and new-style classes.
 
 
