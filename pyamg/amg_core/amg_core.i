@@ -10,6 +10,7 @@
 #include "krylov.h"
 #include "relaxation.h"
 #include "smoothed_aggregation.h"
+#include "ruge_stuben.h"
 %}
 
 %feature("autodoc", "1");
@@ -27,18 +28,22 @@
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
     (const ctype Ap [], const int Ap_size),
     (const ctype Bp [], const int Bp_size),
+    (      ctype Bp [], const int Bp_size),
     (const ctype Tp [], const int Tp_size),
     (const ctype Sp [], const int Sp_size),
     (      ctype Sp [], const int Sp_size),
     (const ctype Ai [], const int Ai_size),
     (const ctype Aj [], const int Aj_size),
     (const ctype Bj [], const int Bj_size),
+    (      ctype Bj [], const int Bj_size),
     (const ctype Sj [], const int Sj_size),
     (      ctype Sj [], const int Sj_size),
+    (const ctype Tj [], const int Tj_size),
     (      ctype order [], const int order_size),
     (      ctype level [], const int level_size),
     (      ctype components [], const int components_size),
-    (const ctype Id [], const int Id_size)
+    (const ctype Id [], const int Id_size),
+    (      ctype splitting [], const int splitting_size)
 };
 %enddef
 
@@ -57,6 +62,7 @@
     (const ctype Ax [], const int Ax_size),
     (      ctype Ax [], const int Ax_size),
     (const ctype Bx [], const int Bx_size),
+    (      ctype Bx [], const int Bx_size),
     (const ctype Tx [], const int Tx_size),
     (      ctype Tx [], const int Tx_size),
     (      ctype AA [], const int AA_size),
@@ -186,3 +192,17 @@ INSTANTIATE_INDEX_ONLY(standard_aggregation)
 INSTANTIATE_INDEXDATA_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_INDEXDATA_COMPLEX(calc_BtB)
 INSTANTIATE_INDEXDATA_COMPLEX(incomplete_mat_mult_bsr)
+
+/*----------------------------------------------------------------------------
+  ruge_stuben.h
+  ---------------------------------------------------------------------------*/
+%include "ruge_stuben.h"
+
+INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection)
+
+INSTANTIATE_INDEXDATA_COMPLEX(maximum_row_value)
+
+INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
+INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
+INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
+INSTANTIATE_INDEXDATA(rs_direct_interpolation_pass2)

@@ -3089,6 +3089,7 @@ namespace swig {
 #include "krylov.h"
 #include "relaxation.h"
 #include "smoothed_aggregation.h"
+#include "ruge_stuben.h"
 
 
 #ifndef SWIG_FILE_WITH_INIT
@@ -22796,6 +22797,1948 @@ fail:
 }
 
 
+SWIGINTERN PyObject *F_NODE_swigconstant(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *module;
+  PyObject *d;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigconstant", &module)) return NULL;
+  d = PyModule_GetDict(module);
+  if (!d) return NULL;
+  SWIG_Python_SetConstant(d, "F_NODE",SWIG_From_int(static_cast< int >(0)));
+  return SWIG_Py_Void();
+}
+
+
+SWIGINTERN PyObject *C_NODE_swigconstant(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *module;
+  PyObject *d;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigconstant", &module)) return NULL;
+  d = PyModule_GetDict(module);
+  if (!d) return NULL;
+  SWIG_Python_SetConstant(d, "C_NODE",SWIG_From_int(static_cast< int >(1)));
+  return SWIG_Py_Void();
+}
+
+
+SWIGINTERN PyObject *U_NODE_swigconstant(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *module;
+  PyObject *d;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigconstant", &module)) return NULL;
+  d = PyModule_GetDict(module);
+  if (!d) return NULL;
+  SWIG_Python_SetConstant(d, "U_NODE",SWIG_From_int(static_cast< int >(2)));
+  return SWIG_Py_Void();
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  float arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  int *arg5 ;
+  int arg6 ;
+  float *arg7 ;
+  int arg8 ;
+  int *arg9 ;
+  int arg10 ;
+  int *arg11 ;
+  int arg12 ;
+  float *arg13 ;
+  int arg14 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyArrayObject *array5 = NULL ;
+  int i5 = 1 ;
+  PyArrayObject *array7 = NULL ;
+  int i7 = 1 ;
+  PyArrayObject *array9 = NULL ;
+  int i9 = 1 ;
+  PyArrayObject *array11 = NULL ;
+  int i11 = 1 ;
+  PyArrayObject *array13 = NULL ;
+  int i13 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (int*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  {
+    array5 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array5 || !require_dimensions(array5,1) || !require_contiguous(array5)
+      || !require_native(array5)) SWIG_fail;
+    arg5 = (int*) array_data(array5);
+    arg6 = 1;
+    for (i5=0; i5 < array_numdims(array5); ++i5) arg6 *= array_size(array5,i5);
+  }
+  {
+    array7 = obj_to_array_no_conversion(obj4, NPY_FLOAT);
+    if (!array7 || !require_dimensions(array7,1) || !require_contiguous(array7)
+      || !require_native(array7)) SWIG_fail;
+    arg7 = (float*) array_data(array7);
+    arg8 = 1;
+    for (i7=0; i7 < array_numdims(array7); ++i7) arg8 *= array_size(array7,i7);
+  }
+  {
+    array9 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array9 || !require_dimensions(array9,1) || !require_contiguous(array9)
+      || !require_native(array9)) SWIG_fail;
+    arg9 = (int*) array_data(array9);
+    arg10 = 1;
+    for (i9=0; i9 < array_numdims(array9); ++i9) arg10 *= array_size(array9,i9);
+  }
+  {
+    array11 = obj_to_array_no_conversion(obj6, NPY_INT);
+    if (!array11 || !require_dimensions(array11,1) || !require_contiguous(array11)
+      || !require_native(array11)) SWIG_fail;
+    arg11 = (int*) array_data(array11);
+    arg12 = 1;
+    for (i11=0; i11 < array_numdims(array11); ++i11) arg12 *= array_size(array11,i11);
+  }
+  {
+    array13 = obj_to_array_no_conversion(obj7, NPY_FLOAT);
+    if (!array13 || !require_dimensions(array13,1) || !require_contiguous(array13)
+      || !require_native(array13)) SWIG_fail;
+    arg13 = (float*) array_data(array13);
+    arg14 = 1;
+    for (i13=0; i13 < array_numdims(array13); ++i13) arg14 *= array_size(array13,i13);
+  }
+  classical_strength_of_connection< int,float,float >(arg1,arg2,(int const (*))arg3,arg4,(int const (*))arg5,arg6,(float const (*))arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  int *arg5 ;
+  int arg6 ;
+  double *arg7 ;
+  int arg8 ;
+  int *arg9 ;
+  int arg10 ;
+  int *arg11 ;
+  int arg12 ;
+  double *arg13 ;
+  int arg14 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyArrayObject *array5 = NULL ;
+  int i5 = 1 ;
+  PyArrayObject *array7 = NULL ;
+  int i7 = 1 ;
+  PyArrayObject *array9 = NULL ;
+  int i9 = 1 ;
+  PyArrayObject *array11 = NULL ;
+  int i11 = 1 ;
+  PyArrayObject *array13 = NULL ;
+  int i13 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (int*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  {
+    array5 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array5 || !require_dimensions(array5,1) || !require_contiguous(array5)
+      || !require_native(array5)) SWIG_fail;
+    arg5 = (int*) array_data(array5);
+    arg6 = 1;
+    for (i5=0; i5 < array_numdims(array5); ++i5) arg6 *= array_size(array5,i5);
+  }
+  {
+    array7 = obj_to_array_no_conversion(obj4, NPY_DOUBLE);
+    if (!array7 || !require_dimensions(array7,1) || !require_contiguous(array7)
+      || !require_native(array7)) SWIG_fail;
+    arg7 = (double*) array_data(array7);
+    arg8 = 1;
+    for (i7=0; i7 < array_numdims(array7); ++i7) arg8 *= array_size(array7,i7);
+  }
+  {
+    array9 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array9 || !require_dimensions(array9,1) || !require_contiguous(array9)
+      || !require_native(array9)) SWIG_fail;
+    arg9 = (int*) array_data(array9);
+    arg10 = 1;
+    for (i9=0; i9 < array_numdims(array9); ++i9) arg10 *= array_size(array9,i9);
+  }
+  {
+    array11 = obj_to_array_no_conversion(obj6, NPY_INT);
+    if (!array11 || !require_dimensions(array11,1) || !require_contiguous(array11)
+      || !require_native(array11)) SWIG_fail;
+    arg11 = (int*) array_data(array11);
+    arg12 = 1;
+    for (i11=0; i11 < array_numdims(array11); ++i11) arg12 *= array_size(array11,i11);
+  }
+  {
+    array13 = obj_to_array_no_conversion(obj7, NPY_DOUBLE);
+    if (!array13 || !require_dimensions(array13,1) || !require_contiguous(array13)
+      || !require_native(array13)) SWIG_fail;
+    arg13 = (double*) array_data(array13);
+    arg14 = 1;
+    for (i13=0; i13 < array_numdims(array13); ++i13) arg14 *= array_size(array13,i13);
+  }
+  classical_strength_of_connection< int,double,double >(arg1,arg2,(int const (*))arg3,arg4,(int const (*))arg5,arg6,(double const (*))arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  float arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  int *arg5 ;
+  int arg6 ;
+  std::complex< float > *arg7 ;
+  int arg8 ;
+  int *arg9 ;
+  int arg10 ;
+  int *arg11 ;
+  int arg12 ;
+  std::complex< float > *arg13 ;
+  int arg14 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyArrayObject *array5 = NULL ;
+  int i5 = 1 ;
+  PyArrayObject *array7 = NULL ;
+  int i7 = 1 ;
+  PyArrayObject *array9 = NULL ;
+  int i9 = 1 ;
+  PyArrayObject *array11 = NULL ;
+  int i11 = 1 ;
+  PyArrayObject *array13 = NULL ;
+  int i13 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (int*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  {
+    array5 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array5 || !require_dimensions(array5,1) || !require_contiguous(array5)
+      || !require_native(array5)) SWIG_fail;
+    arg5 = (int*) array_data(array5);
+    arg6 = 1;
+    for (i5=0; i5 < array_numdims(array5); ++i5) arg6 *= array_size(array5,i5);
+  }
+  {
+    array7 = obj_to_array_no_conversion(obj4, NPY_CFLOAT);
+    if (!array7 || !require_dimensions(array7,1) || !require_contiguous(array7)
+      || !require_native(array7)) SWIG_fail;
+    arg7 = (std::complex<float>*) array_data(array7);
+    arg8 = 1;
+    for (i7=0; i7 < array_numdims(array7); ++i7) arg8 *= array_size(array7,i7);
+  }
+  {
+    array9 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array9 || !require_dimensions(array9,1) || !require_contiguous(array9)
+      || !require_native(array9)) SWIG_fail;
+    arg9 = (int*) array_data(array9);
+    arg10 = 1;
+    for (i9=0; i9 < array_numdims(array9); ++i9) arg10 *= array_size(array9,i9);
+  }
+  {
+    array11 = obj_to_array_no_conversion(obj6, NPY_INT);
+    if (!array11 || !require_dimensions(array11,1) || !require_contiguous(array11)
+      || !require_native(array11)) SWIG_fail;
+    arg11 = (int*) array_data(array11);
+    arg12 = 1;
+    for (i11=0; i11 < array_numdims(array11); ++i11) arg12 *= array_size(array11,i11);
+  }
+  {
+    array13 = obj_to_array_no_conversion(obj7, NPY_CFLOAT);
+    if (!array13 || !require_dimensions(array13,1) || !require_contiguous(array13)
+      || !require_native(array13)) SWIG_fail;
+    arg13 = (std::complex<float>*) array_data(array13);
+    arg14 = 1;
+    for (i13=0; i13 < array_numdims(array13); ++i13) arg14 *= array_size(array13,i13);
+  }
+  classical_strength_of_connection< int,std::complex< float >,float >(arg1,arg2,(int const (*))arg3,arg4,(int const (*))arg5,arg6,(std::complex< float > const (*))arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double arg2 ;
+  int *arg3 ;
+  int arg4 ;
+  int *arg5 ;
+  int arg6 ;
+  std::complex< double > *arg7 ;
+  int arg8 ;
+  int *arg9 ;
+  int arg10 ;
+  int *arg11 ;
+  int arg12 ;
+  std::complex< double > *arg13 ;
+  int arg14 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyArrayObject *array3 = NULL ;
+  int i3 = 1 ;
+  PyArrayObject *array5 = NULL ;
+  int i5 = 1 ;
+  PyArrayObject *array7 = NULL ;
+  int i7 = 1 ;
+  PyArrayObject *array9 = NULL ;
+  int i9 = 1 ;
+  PyArrayObject *array11 = NULL ;
+  int i11 = 1 ;
+  PyArrayObject *array13 = NULL ;
+  int i13 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:classical_strength_of_connection",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "classical_strength_of_connection" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "classical_strength_of_connection" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  {
+    array3 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array3 || !require_dimensions(array3,1) || !require_contiguous(array3)
+      || !require_native(array3)) SWIG_fail;
+    arg3 = (int*) array_data(array3);
+    arg4 = 1;
+    for (i3=0; i3 < array_numdims(array3); ++i3) arg4 *= array_size(array3,i3);
+  }
+  {
+    array5 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array5 || !require_dimensions(array5,1) || !require_contiguous(array5)
+      || !require_native(array5)) SWIG_fail;
+    arg5 = (int*) array_data(array5);
+    arg6 = 1;
+    for (i5=0; i5 < array_numdims(array5); ++i5) arg6 *= array_size(array5,i5);
+  }
+  {
+    array7 = obj_to_array_no_conversion(obj4, NPY_CDOUBLE);
+    if (!array7 || !require_dimensions(array7,1) || !require_contiguous(array7)
+      || !require_native(array7)) SWIG_fail;
+    arg7 = (std::complex<double>*) array_data(array7);
+    arg8 = 1;
+    for (i7=0; i7 < array_numdims(array7); ++i7) arg8 *= array_size(array7,i7);
+  }
+  {
+    array9 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array9 || !require_dimensions(array9,1) || !require_contiguous(array9)
+      || !require_native(array9)) SWIG_fail;
+    arg9 = (int*) array_data(array9);
+    arg10 = 1;
+    for (i9=0; i9 < array_numdims(array9); ++i9) arg10 *= array_size(array9,i9);
+  }
+  {
+    array11 = obj_to_array_no_conversion(obj6, NPY_INT);
+    if (!array11 || !require_dimensions(array11,1) || !require_contiguous(array11)
+      || !require_native(array11)) SWIG_fail;
+    arg11 = (int*) array_data(array11);
+    arg12 = 1;
+    for (i11=0; i11 < array_numdims(array11); ++i11) arg12 *= array_size(array11,i11);
+  }
+  {
+    array13 = obj_to_array_no_conversion(obj7, NPY_CDOUBLE);
+    if (!array13 || !require_dimensions(array13,1) || !require_contiguous(array13)
+      || !require_native(array13)) SWIG_fail;
+    arg13 = (std::complex<double>*) array_data(array13);
+    arg14 = 1;
+    for (i13=0; i13 < array_numdims(array13); ++i13) arg14 *= array_size(array13,i13);
+  }
+  classical_strength_of_connection< int,std::complex< double >,double >(arg1,arg2,(int const (*))arg3,arg4,(int const (*))arg5,arg6,(std::complex< double > const (*))arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_classical_strength_of_connection(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[9] = {
+    0
+  };
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? (int)PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 8) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_float(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_FLOAT);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                {
+                  _v = is_array(argv[6]) && PyArray_EquivTypenums(array_type(argv[6]),
+                    NPY_INT);
+                }
+                if (_v) {
+                  {
+                    _v = is_array(argv[7]) && PyArray_EquivTypenums(array_type(argv[7]),
+                      NPY_FLOAT);
+                  }
+                  if (_v) {
+                    if (argc <= 8) {
+                      return _wrap_classical_strength_of_connection__SWIG_1(self, args);
+                    }
+                    return _wrap_classical_strength_of_connection__SWIG_1(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_float(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_CFLOAT);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                {
+                  _v = is_array(argv[6]) && PyArray_EquivTypenums(array_type(argv[6]),
+                    NPY_INT);
+                }
+                if (_v) {
+                  {
+                    _v = is_array(argv[7]) && PyArray_EquivTypenums(array_type(argv[7]),
+                      NPY_CFLOAT);
+                  }
+                  if (_v) {
+                    if (argc <= 8) {
+                      return _wrap_classical_strength_of_connection__SWIG_3(self, args);
+                    }
+                    return _wrap_classical_strength_of_connection__SWIG_3(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_double(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_DOUBLE);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                {
+                  _v = is_array(argv[6]) && PyArray_EquivTypenums(array_type(argv[6]),
+                    NPY_INT);
+                }
+                if (_v) {
+                  {
+                    _v = is_array(argv[7]) && PyArray_EquivTypenums(array_type(argv[7]),
+                      NPY_DOUBLE);
+                  }
+                  if (_v) {
+                    if (argc <= 8) {
+                      return _wrap_classical_strength_of_connection__SWIG_2(self, args);
+                    }
+                    return _wrap_classical_strength_of_connection__SWIG_2(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_double(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_CDOUBLE);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                {
+                  _v = is_array(argv[6]) && PyArray_EquivTypenums(array_type(argv[6]),
+                    NPY_INT);
+                }
+                if (_v) {
+                  {
+                    _v = is_array(argv[7]) && PyArray_EquivTypenums(array_type(argv[7]),
+                      NPY_CDOUBLE);
+                  }
+                  if (_v) {
+                    if (argc <= 8) {
+                      return _wrap_classical_strength_of_connection__SWIG_4(self, args);
+                    }
+                    return _wrap_classical_strength_of_connection__SWIG_4(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'classical_strength_of_connection'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    classical_strength_of_connection< int,float,float >(int const,float const,int const [],int const,int const [],int const,float const [],int const,int [],int const,int [],int const,float [],int const)\n"
+    "    classical_strength_of_connection< int,double,double >(int const,double const,int const [],int const,int const [],int const,double const [],int const,int [],int const,int [],int const,double [],int const)\n"
+    "    classical_strength_of_connection< int,std::complex< float >,float >(int const,float const,int const [],int const,int const [],int const,std::complex< float > const [],int const,int [],int const,int [],int const,std::complex< float > [],int const)\n"
+    "    classical_strength_of_connection< int,std::complex< double >,double >(int const,double const,int const [],int const,int const [],int const,std::complex< double > const [],int const,int [],int const,int [],int const,std::complex< double > [],int const)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximum_row_value__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  float *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  float *arg8 ;
+  int arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:maximum_row_value",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximum_row_value" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_FLOAT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (float*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_FLOAT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (float*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  maximum_row_value< int,float,float >(arg1,arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(float const (*))arg8,arg9);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximum_row_value__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  double *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  double *arg8 ;
+  int arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:maximum_row_value",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximum_row_value" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_DOUBLE);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (double*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_DOUBLE);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (double*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  maximum_row_value< int,double,double >(arg1,arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(double const (*))arg8,arg9);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximum_row_value__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  std::complex< float > *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  std::complex< float > *arg8 ;
+  int arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:maximum_row_value",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximum_row_value" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_CFLOAT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (std::complex<float>*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_CFLOAT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (std::complex<float>*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  maximum_row_value< int,std::complex< float >,float >(arg1,arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(std::complex< float > const (*))arg8,arg9);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximum_row_value__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  std::complex< double > *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  std::complex< double > *arg8 ;
+  int arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:maximum_row_value",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "maximum_row_value" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_CDOUBLE);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (std::complex<double>*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_CDOUBLE);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (std::complex<double>*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  maximum_row_value< int,std::complex< double >,double >(arg1,arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(std::complex< double > const (*))arg8,arg9);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_maximum_row_value(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[6] = {
+    0
+  };
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? (int)PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 5) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 5) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_FLOAT);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_FLOAT);
+            }
+            if (_v) {
+              if (argc <= 5) {
+                return _wrap_maximum_row_value__SWIG_1(self, args);
+              }
+              return _wrap_maximum_row_value__SWIG_1(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_DOUBLE);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_DOUBLE);
+            }
+            if (_v) {
+              if (argc <= 5) {
+                return _wrap_maximum_row_value__SWIG_2(self, args);
+              }
+              return _wrap_maximum_row_value__SWIG_2(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_CFLOAT);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_CFLOAT);
+            }
+            if (_v) {
+              if (argc <= 5) {
+                return _wrap_maximum_row_value__SWIG_3(self, args);
+              }
+              return _wrap_maximum_row_value__SWIG_3(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_CDOUBLE);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_INT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_CDOUBLE);
+            }
+            if (_v) {
+              if (argc <= 5) {
+                return _wrap_maximum_row_value__SWIG_4(self, args);
+              }
+              return _wrap_maximum_row_value__SWIG_4(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'maximum_row_value'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    maximum_row_value< int,float,float >(int const,float [],int const,int const [],int const,int const [],int const,float const [],int const)\n"
+    "    maximum_row_value< int,double,double >(int const,double [],int const,int const [],int const,int const [],int const,double const [],int const)\n"
+    "    maximum_row_value< int,std::complex< float >,float >(int const,std::complex< float > [],int const,int const [],int const,int const [],int const,std::complex< float > const [],int const)\n"
+    "    maximum_row_value< int,std::complex< double >,double >(int const,std::complex< double > [],int const,int const [],int const,int const [],int const,std::complex< double > const [],int const)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  int *arg8 ;
+  int arg9 ;
+  int *arg10 ;
+  int arg11 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:rs_cf_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_cf_splitting" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  {
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  rs_cf_splitting< int >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(int const (*))arg8,arg9,arg10,arg11);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_cljp_naive_splitting(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  int *arg8 ;
+  int arg9 ;
+  int *arg10 ;
+  int arg11 ;
+  int arg12 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
+  int val12 ;
+  int ecode12 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:cljp_naive_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "cljp_naive_splitting" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_INT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  {
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  ecode12 = SWIG_AsVal_int(obj6, &val12);
+  if (!SWIG_IsOK(ecode12)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "cljp_naive_splitting" "', argument " "12"" of type '" "int""'");
+  } 
+  arg12 = static_cast< int >(val12);
+  cljp_naive_splitting< int >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,(int const (*))arg8,arg9,arg10,arg11,arg12);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  int *arg6 ;
+  int arg7 ;
+  int *arg8 ;
+  int arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  int val7 ;
+  int ecode7 = 0 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:rs_direct_interpolation_pass1",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_direct_interpolation_pass1" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  res6 = SWIG_ConvertPtr(obj3, &argp6,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rs_direct_interpolation_pass1" "', argument " "6"" of type '" "int const []""'"); 
+  } 
+  arg6 = reinterpret_cast< int * >(argp6);
+  ecode7 = SWIG_AsVal_int(obj4, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "rs_direct_interpolation_pass1" "', argument " "7"" of type '" "int""'");
+  } 
+  arg7 = static_cast< int >(val7);
+  {
+    array8 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  rs_direct_interpolation_pass1< int >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(int const (*))arg6,arg7,arg8,arg9);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  float *arg6 ;
+  int arg7 ;
+  int *arg8 ;
+  int arg9 ;
+  int *arg10 ;
+  int arg11 ;
+  float *arg12 ;
+  int arg13 ;
+  int *arg14 ;
+  int arg15 ;
+  int *arg16 ;
+  int arg17 ;
+  int *arg18 ;
+  int arg19 ;
+  float *arg20 ;
+  int arg21 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
+  void *argp12 = 0 ;
+  int res12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  void *argp14 = 0 ;
+  int res14 = 0 ;
+  int val15 ;
+  int ecode15 = 0 ;
+  PyArrayObject *array16 = NULL ;
+  int i16 = 1 ;
+  PyArrayObject *array18 = NULL ;
+  int i18 = 1 ;
+  PyArrayObject *array20 = NULL ;
+  int i20 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:rs_direct_interpolation_pass2",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_direct_interpolation_pass2" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_FLOAT);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (float*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  {
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  res12 = SWIG_ConvertPtr(obj6, &argp12,SWIGTYPE_p_float, 0 |  0 );
+  if (!SWIG_IsOK(res12)) {
+    SWIG_exception_fail(SWIG_ArgError(res12), "in method '" "rs_direct_interpolation_pass2" "', argument " "12"" of type '" "float const []""'"); 
+  } 
+  arg12 = reinterpret_cast< float * >(argp12);
+  ecode13 = SWIG_AsVal_int(obj7, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "rs_direct_interpolation_pass2" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  res14 = SWIG_ConvertPtr(obj8, &argp14,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res14)) {
+    SWIG_exception_fail(SWIG_ArgError(res14), "in method '" "rs_direct_interpolation_pass2" "', argument " "14"" of type '" "int const []""'"); 
+  } 
+  arg14 = reinterpret_cast< int * >(argp14);
+  ecode15 = SWIG_AsVal_int(obj9, &val15);
+  if (!SWIG_IsOK(ecode15)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode15), "in method '" "rs_direct_interpolation_pass2" "', argument " "15"" of type '" "int""'");
+  } 
+  arg15 = static_cast< int >(val15);
+  {
+    array16 = obj_to_array_no_conversion(obj10, NPY_INT);
+    if (!array16 || !require_dimensions(array16,1) || !require_contiguous(array16)
+      || !require_native(array16)) SWIG_fail;
+    arg16 = (int*) array_data(array16);
+    arg17 = 1;
+    for (i16=0; i16 < array_numdims(array16); ++i16) arg17 *= array_size(array16,i16);
+  }
+  {
+    array18 = obj_to_array_no_conversion(obj11, NPY_INT);
+    if (!array18 || !require_dimensions(array18,1) || !require_contiguous(array18)
+      || !require_native(array18)) SWIG_fail;
+    arg18 = (int*) array_data(array18);
+    arg19 = 1;
+    for (i18=0; i18 < array_numdims(array18); ++i18) arg19 *= array_size(array18,i18);
+  }
+  {
+    array20 = obj_to_array_no_conversion(obj12, NPY_FLOAT);
+    if (!array20 || !require_dimensions(array20,1) || !require_contiguous(array20)
+      || !require_native(array20)) SWIG_fail;
+    arg20 = (float*) array_data(array20);
+    arg21 = 1;
+    for (i20=0; i20 < array_numdims(array20); ++i20) arg21 *= array_size(array20,i20);
+  }
+  rs_direct_interpolation_pass2< int,float >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(float const (*))arg6,arg7,(int const (*))arg8,arg9,(int const (*))arg10,arg11,(float const (*))arg12,arg13,(int const (*))arg14,arg15,(int const (*))arg16,arg17,arg18,arg19,arg20,arg21);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int *arg2 ;
+  int arg3 ;
+  int *arg4 ;
+  int arg5 ;
+  double *arg6 ;
+  int arg7 ;
+  int *arg8 ;
+  int arg9 ;
+  int *arg10 ;
+  int arg11 ;
+  double *arg12 ;
+  int arg13 ;
+  int *arg14 ;
+  int arg15 ;
+  int *arg16 ;
+  int arg17 ;
+  int *arg18 ;
+  int arg19 ;
+  double *arg20 ;
+  int arg21 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  PyArrayObject *array2 = NULL ;
+  int i2 = 1 ;
+  PyArrayObject *array4 = NULL ;
+  int i4 = 1 ;
+  PyArrayObject *array6 = NULL ;
+  int i6 = 1 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
+  void *argp12 = 0 ;
+  int res12 = 0 ;
+  int val13 ;
+  int ecode13 = 0 ;
+  void *argp14 = 0 ;
+  int res14 = 0 ;
+  int val15 ;
+  int ecode15 = 0 ;
+  PyArrayObject *array16 = NULL ;
+  int i16 = 1 ;
+  PyArrayObject *array18 = NULL ;
+  int i18 = 1 ;
+  PyArrayObject *array20 = NULL ;
+  int i20 = 1 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
+  PyObject * obj12 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOOO:rs_direct_interpolation_pass2",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11,&obj12)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_direct_interpolation_pass2" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  {
+    array2 = obj_to_array_no_conversion(obj1, NPY_INT);
+    if (!array2 || !require_dimensions(array2,1) || !require_contiguous(array2)
+      || !require_native(array2)) SWIG_fail;
+    arg2 = (int*) array_data(array2);
+    arg3 = 1;
+    for (i2=0; i2 < array_numdims(array2); ++i2) arg3 *= array_size(array2,i2);
+  }
+  {
+    array4 = obj_to_array_no_conversion(obj2, NPY_INT);
+    if (!array4 || !require_dimensions(array4,1) || !require_contiguous(array4)
+      || !require_native(array4)) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+    arg5 = 1;
+    for (i4=0; i4 < array_numdims(array4); ++i4) arg5 *= array_size(array4,i4);
+  }
+  {
+    array6 = obj_to_array_no_conversion(obj3, NPY_DOUBLE);
+    if (!array6 || !require_dimensions(array6,1) || !require_contiguous(array6)
+      || !require_native(array6)) SWIG_fail;
+    arg6 = (double*) array_data(array6);
+    arg7 = 1;
+    for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
+  }
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
+  {
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  res12 = SWIG_ConvertPtr(obj6, &argp12,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res12)) {
+    SWIG_exception_fail(SWIG_ArgError(res12), "in method '" "rs_direct_interpolation_pass2" "', argument " "12"" of type '" "double const []""'"); 
+  } 
+  arg12 = reinterpret_cast< double * >(argp12);
+  ecode13 = SWIG_AsVal_int(obj7, &val13);
+  if (!SWIG_IsOK(ecode13)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode13), "in method '" "rs_direct_interpolation_pass2" "', argument " "13"" of type '" "int""'");
+  } 
+  arg13 = static_cast< int >(val13);
+  res14 = SWIG_ConvertPtr(obj8, &argp14,SWIGTYPE_p_int, 0 |  0 );
+  if (!SWIG_IsOK(res14)) {
+    SWIG_exception_fail(SWIG_ArgError(res14), "in method '" "rs_direct_interpolation_pass2" "', argument " "14"" of type '" "int const []""'"); 
+  } 
+  arg14 = reinterpret_cast< int * >(argp14);
+  ecode15 = SWIG_AsVal_int(obj9, &val15);
+  if (!SWIG_IsOK(ecode15)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode15), "in method '" "rs_direct_interpolation_pass2" "', argument " "15"" of type '" "int""'");
+  } 
+  arg15 = static_cast< int >(val15);
+  {
+    array16 = obj_to_array_no_conversion(obj10, NPY_INT);
+    if (!array16 || !require_dimensions(array16,1) || !require_contiguous(array16)
+      || !require_native(array16)) SWIG_fail;
+    arg16 = (int*) array_data(array16);
+    arg17 = 1;
+    for (i16=0; i16 < array_numdims(array16); ++i16) arg17 *= array_size(array16,i16);
+  }
+  {
+    array18 = obj_to_array_no_conversion(obj11, NPY_INT);
+    if (!array18 || !require_dimensions(array18,1) || !require_contiguous(array18)
+      || !require_native(array18)) SWIG_fail;
+    arg18 = (int*) array_data(array18);
+    arg19 = 1;
+    for (i18=0; i18 < array_numdims(array18); ++i18) arg19 *= array_size(array18,i18);
+  }
+  {
+    array20 = obj_to_array_no_conversion(obj12, NPY_DOUBLE);
+    if (!array20 || !require_dimensions(array20,1) || !require_contiguous(array20)
+      || !require_native(array20)) SWIG_fail;
+    arg20 = (double*) array_data(array20);
+    arg21 = 1;
+    for (i20=0; i20 < array_numdims(array20); ++i20) arg21 *= array_size(array20,i20);
+  }
+  rs_direct_interpolation_pass2< int,double >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(double const (*))arg6,arg7,(int const (*))arg8,arg9,(int const (*))arg10,arg11,(double const (*))arg12,arg13,(int const (*))arg14,arg15,(int const (*))arg16,arg17,arg18,arg19,arg20,arg21);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rs_direct_interpolation_pass2(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[14] = {
+    0
+  };
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? (int)PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 13) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 13) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_INT);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_FLOAT);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_INT);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                void *vptr = 0;
+                int res = SWIG_ConvertPtr(argv[6], &vptr, SWIGTYPE_p_float, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_int(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    void *vptr = 0;
+                    int res = SWIG_ConvertPtr(argv[8], &vptr, SWIGTYPE_p_int, 0);
+                    _v = SWIG_CheckState(res);
+                    if (_v) {
+                      {
+                        int res = SWIG_AsVal_int(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        {
+                          _v = is_array(argv[10]) && PyArray_EquivTypenums(array_type(argv[10]),
+                            NPY_INT);
+                        }
+                        if (_v) {
+                          {
+                            _v = is_array(argv[11]) && PyArray_EquivTypenums(array_type(argv[11]),
+                              NPY_INT);
+                          }
+                          if (_v) {
+                            {
+                              _v = is_array(argv[12]) && PyArray_EquivTypenums(array_type(argv[12]),
+                                NPY_FLOAT);
+                            }
+                            if (_v) {
+                              if (argc <= 13) {
+                                return _wrap_rs_direct_interpolation_pass2__SWIG_1(self, args);
+                              }
+                              return _wrap_rs_direct_interpolation_pass2__SWIG_1(self, args);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 13) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        _v = is_array(argv[1]) && PyArray_EquivTypenums(array_type(argv[1]),
+          NPY_INT);
+      }
+      if (_v) {
+        {
+          _v = is_array(argv[2]) && PyArray_EquivTypenums(array_type(argv[2]),
+            NPY_INT);
+        }
+        if (_v) {
+          {
+            _v = is_array(argv[3]) && PyArray_EquivTypenums(array_type(argv[3]),
+              NPY_DOUBLE);
+          }
+          if (_v) {
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_INT);
+            }
+            if (_v) {
+              {
+                _v = is_array(argv[5]) && PyArray_EquivTypenums(array_type(argv[5]),
+                  NPY_INT);
+              }
+              if (_v) {
+                void *vptr = 0;
+                int res = SWIG_ConvertPtr(argv[6], &vptr, SWIGTYPE_p_double, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_int(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    void *vptr = 0;
+                    int res = SWIG_ConvertPtr(argv[8], &vptr, SWIGTYPE_p_int, 0);
+                    _v = SWIG_CheckState(res);
+                    if (_v) {
+                      {
+                        int res = SWIG_AsVal_int(argv[9], NULL);
+                        _v = SWIG_CheckState(res);
+                      }
+                      if (_v) {
+                        {
+                          _v = is_array(argv[10]) && PyArray_EquivTypenums(array_type(argv[10]),
+                            NPY_INT);
+                        }
+                        if (_v) {
+                          {
+                            _v = is_array(argv[11]) && PyArray_EquivTypenums(array_type(argv[11]),
+                              NPY_INT);
+                          }
+                          if (_v) {
+                            {
+                              _v = is_array(argv[12]) && PyArray_EquivTypenums(array_type(argv[12]),
+                                NPY_DOUBLE);
+                            }
+                            if (_v) {
+                              if (argc <= 13) {
+                                return _wrap_rs_direct_interpolation_pass2__SWIG_2(self, args);
+                              }
+                              return _wrap_rs_direct_interpolation_pass2__SWIG_2(self, args);
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'rs_direct_interpolation_pass2'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    rs_direct_interpolation_pass2< int,float >(int const,int const [],int const,int const [],int const,float const [],int const,int const [],int const,int const [],int const,float const [],int const,int const [],int const,int const [],int const,int [],int const,float [],int const)\n"
+    "    rs_direct_interpolation_pass2< int,double >(int const,int const [],int const,int const [],int const,double const [],int const,int const [],int const,int const [],int const,double const [],int const,int const [],int const,int const [],int const,int [],int const,double [],int const)\n");
+  return 0;
+}
+
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"signof", _wrap_signof, METH_VARARGS, (char *)"\n"
@@ -22996,6 +24939,28 @@ static PyMethodDef SwigMethods[] = {
 		"incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, double const [] Ax, int const [] Bp, int const [] Bj, double const [] Bx, int const [] Sp, int const [] Sj, double [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)\n"
 		"incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int const [] Bp, int const [] Bj, std::complex< float > const [] Bx, int const [] Sp, int const [] Sj, std::complex< float > [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)\n"
 		"incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int const [] Bp, int const [] Bj, std::complex< double > const [] Bx, int const [] Sp, int const [] Sj, std::complex< double > [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)\n"
+		""},
+	 { (char *)"F_NODE_swigconstant", F_NODE_swigconstant, METH_VARARGS, NULL},
+	 { (char *)"C_NODE_swigconstant", C_NODE_swigconstant, METH_VARARGS, NULL},
+	 { (char *)"U_NODE_swigconstant", U_NODE_swigconstant, METH_VARARGS, NULL},
+	 { (char *)"classical_strength_of_connection", _wrap_classical_strength_of_connection, METH_VARARGS, (char *)"\n"
+		"classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)\n"
+		"classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)\n"
+		"classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int [] Sp, int [] Sj, std::complex< float > [] Sx)\n"
+		"classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int [] Sp, int [] Sj, std::complex< double > [] Sx)\n"
+		""},
+	 { (char *)"maximum_row_value", _wrap_maximum_row_value, METH_VARARGS, (char *)"\n"
+		"maximum_row_value(int const n_row, float [] x, int const [] Ap, int const [] Aj, float const [] Ax)\n"
+		"maximum_row_value(int const n_row, double [] x, int const [] Ap, int const [] Aj, double const [] Ax)\n"
+		"maximum_row_value(int const n_row, std::complex< float > [] x, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax)\n"
+		"maximum_row_value(int const n_row, std::complex< double > [] x, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax)\n"
+		""},
+	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting)"},
+	 { (char *)"cljp_naive_splitting", _wrap_cljp_naive_splitting, METH_VARARGS, (char *)"cljp_naive_splitting(int const n, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"},
+	 { (char *)"rs_direct_interpolation_pass1", _wrap_rs_direct_interpolation_pass1, METH_VARARGS, (char *)"rs_direct_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int const splitting_size, int [] Bp)"},
+	 { (char *)"rs_direct_interpolation_pass2", _wrap_rs_direct_interpolation_pass2, METH_VARARGS, (char *)"\n"
+		"rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, float [] Bx)\n"
+		"rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, double [] Bx)\n"
 		""},
 	 { NULL, NULL, 0, NULL }
 };

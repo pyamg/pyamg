@@ -412,6 +412,52 @@ def incomplete_mat_mult_bsr(*args) -> "void":
     incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int const [] Bp, int const [] Bj, std::complex< double > const [] Bx, int const [] Sp, int const [] Sj, std::complex< double > [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
     """
     return _amg_core.incomplete_mat_mult_bsr(*args)
+
+_amg_core.F_NODE_swigconstant(_amg_core)
+F_NODE = _amg_core.F_NODE
+
+_amg_core.C_NODE_swigconstant(_amg_core)
+C_NODE = _amg_core.C_NODE
+
+_amg_core.U_NODE_swigconstant(_amg_core)
+U_NODE = _amg_core.U_NODE
+
+def classical_strength_of_connection(*args) -> "void":
+    """
+    classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
+    classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
+    classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int [] Sp, int [] Sj, std::complex< float > [] Sx)
+    classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int [] Sp, int [] Sj, std::complex< double > [] Sx)
+    """
+    return _amg_core.classical_strength_of_connection(*args)
+
+def maximum_row_value(*args) -> "void":
+    """
+    maximum_row_value(int const n_row, float [] x, int const [] Ap, int const [] Aj, float const [] Ax)
+    maximum_row_value(int const n_row, double [] x, int const [] Ap, int const [] Aj, double const [] Ax)
+    maximum_row_value(int const n_row, std::complex< float > [] x, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax)
+    maximum_row_value(int const n_row, std::complex< double > [] x, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax)
+    """
+    return _amg_core.maximum_row_value(*args)
+
+def rs_cf_splitting(n_nodes: 'int const', Sp: 'int const []', Sj: 'int const []', Tp: 'int const []', Tj: 'int const []', splitting: 'int []') -> "void":
+    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting)"""
+    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting)
+
+def cljp_naive_splitting(n: 'int const', Sp: 'int const []', Sj: 'int const []', Tp: 'int const []', Tj: 'int const []', splitting: 'int []', colorflag: 'int const') -> "void":
+    """cljp_naive_splitting(int const n, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"""
+    return _amg_core.cljp_naive_splitting(n, Sp, Sj, Tp, Tj, splitting, colorflag)
+
+def rs_direct_interpolation_pass1(n_nodes: 'int const', Sp: 'int const []', Sj: 'int const []', splitting: 'int const []', splitting_size: 'int const', Bp: 'int []') -> "void":
+    """rs_direct_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int const splitting_size, int [] Bp)"""
+    return _amg_core.rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, splitting_size, Bp)
+
+def rs_direct_interpolation_pass2(*args) -> "void":
+    """
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, float [] Bx)
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const Sx_size, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, double [] Bx)
+    """
+    return _amg_core.rs_direct_interpolation_pass2(*args)
 # This file is compatible with both classic and new-style classes.
 
 

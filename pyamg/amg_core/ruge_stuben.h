@@ -14,7 +14,7 @@
 
 /*
  *  Compute a strength of connection matrix using the classical strength
- *  of connection measure by Ruge and Stuben. Both the input and output 
+ *  of connection measure by Ruge and Stuben. Both the input and output
  *  matrices are stored in CSR format.  An off-diagonal nonzero entry
  *  A[i,j] is considered strong if:
  *
@@ -32,7 +32,7 @@
  *      Sj[]       - (output) CSR index array
  *      Sx[]       - (output) CSR data array
  *
- *  
+ *
  *  Returns:
  *      Nothing, S will be stored in Sp, Sj, Sx
  *
@@ -45,8 +45,12 @@
 template<class I, class T, class F>
 void classical_strength_of_connection(const I n_row,
                                       const F theta,
-                                      const I Ap[], const I Aj[], const T Ax[],
-                                            I Sp[],       I Sj[],       T Sx[])
+                                      const I Ap[], const int Ap_size,
+                                      const I Aj[], const int Aj_size,
+                                      const T Ax[], const int Ax_size,
+                                            I Sp[], const int Sp_size,
+                                            I Sj[], const int Sj_size,
+                                            T Sx[], const int Sx_size)
 {
     I nnz = 0;
     Sp[0] = 0;
@@ -66,7 +70,7 @@ void classical_strength_of_connection(const I n_row,
         F threshold = theta*max_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
             F norm_jj = mynorm(Ax[jj]);
-            
+
             // Add entry if it exceeds the threshold
             if(norm_jj >= threshold){
                 if(Aj[jj] != i){
@@ -75,7 +79,7 @@ void classical_strength_of_connection(const I n_row,
                     nnz++;
                 }
             }
-            
+
             // Always add the diagonal
             if(Aj[jj] == i){
                 Sj[nnz] = Aj[jj];
@@ -89,7 +93,7 @@ void classical_strength_of_connection(const I n_row,
 }
 
 /*
- *  Compute the maximum in magnitude row value for a CSR matrix 
+ *  Compute the maximum in magnitude row value for a CSR matrix
  *
  *  Parameters
  *      num_rows   - number of rows in A
@@ -97,14 +101,17 @@ void classical_strength_of_connection(const I n_row,
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array
  *       x[]       - num_rows array
- *  
+ *
  *  Returns:
  *      Nothing, x[i] will hold row i's maximum magnitude entry
  *
  */
 template<class I, class T, class F>
-void maximum_row_value(const I n_row, T x[],
-                       const I Ap[], const I Aj[], const T Ax[])
+void maximum_row_value(const I n_row,
+                              T x[], const int  x_size,
+                       const I Ap[], const int Ap_size,
+                       const I Aj[], const int Aj_size,
+                       const T Ax[], const int Ax_size)
 {
 
     for(I i = 0; i < n_row; i++){
@@ -112,12 +119,12 @@ void maximum_row_value(const I n_row, T x[],
 
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
-        
+
         // Find this row's max entry
         for(I jj = row_start; jj < row_end; jj++){
             max_entry = std::max(max_entry, mynorm(Ax[jj]) );
         }
-        
+
         x[i] = max_entry;
     }
 }
@@ -129,15 +136,15 @@ void maximum_row_value(const I n_row, T x[],
 #define U_NODE 2
 
 /*
- * Compute a C/F (coarse-fine( splitting using the classical coarse grid 
+ * Compute a C/F (coarse-fine( splitting using the classical coarse grid
  * selection method of Ruge and Stuben.  The strength of connection matrix S,
- * and its transpose T, are stored in CSR format.  Upon return, the  splitting 
- * array will consist of zeros and ones, where C-nodes (coarse nodes) are 
+ * and its transpose T, are stored in CSR format.  Upon return, the  splitting
+ * array will consist of zeros and ones, where C-nodes (coarse nodes) are
  * marked with the value 1 and F-nodes (fine nodes) with the value 0.
  *
  * Parameters:
  *   n_nodes   - number of rows in A
- *   Sp[]      - CSR pointer array 
+ *   Sp[]      - CSR pointer array
  *   Sj[]      - CSR index array
  *   Tp[]      - CSR pointer array
  *   Tj[]      - CSR index array
@@ -145,13 +152,15 @@ void maximum_row_value(const I n_row, T x[],
  *
  * Notes:
  *   The splitting array must be preallocated
- *    
+ *
  */
 template<class I>
 void rs_cf_splitting(const I n_nodes,
-                     const I Sp[], const I Sj[], 
-                     const I Tp[], const I Tj[], 
-                           I splitting[])
+                     const I Sp[], const int Sp_size,
+                     const I Sj[], const int Sj_size,
+                     const I Tp[], const int Tp_size,
+                     const I Tj[], const int Tj_size,
+                           I splitting[], const int splitting_size)
 {
     std::vector<I> lambda(n_nodes,0);
 
@@ -209,10 +218,10 @@ void rs_cf_splitting(const I n_nodes,
         if(splitting[i] == F_NODE)
         {
             continue;
-        } 
-        else 
+        }
+        else
         {
-            assert(splitting[i] == U_NODE); 
+            assert(splitting[i] == U_NODE);
 
             splitting[i] = C_NODE;
 
@@ -227,7 +236,7 @@ void rs_cf_splitting(const I n_nodes,
                     for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
                         I k = Sj[kk];
 
-                        if(splitting[k] == U_NODE){	      
+                        if(splitting[k] == U_NODE){
                             //move k to the end of its current interval
                             if(lambda[k] >= n_nodes - 1) continue;
 
@@ -235,7 +244,7 @@ void rs_cf_splitting(const I n_nodes,
                             //if(lambda[k] >= n_nodes -1)
                             //    std::cout << std::endl << "lambda[" << k << "]=" << lambda[k] << " n_nodes=" << n_nodes << std::endl;
                             //assert(lambda[k] < n_nodes - 1);//this would cause problems!
-                            
+
                             I lambda_k = lambda[k];
                             I old_pos  = node_to_index[k];
                             I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
@@ -267,7 +276,7 @@ void rs_cf_splitting(const I n_nodes,
                     //move j to the beginning of its current interval
                     I lambda_j = lambda[j];
                     I old_pos  = node_to_index[j];
-                    I new_pos  = interval_ptr[lambda_j]; 
+                    I new_pos  = interval_ptr[lambda_j];
 
                     node_to_index[index_to_node[old_pos]] = new_pos;
                     node_to_index[index_to_node[new_pos]] = old_pos;
@@ -298,7 +307,7 @@ void rs_cf_splitting(const I n_nodes,
  *      Tj[]       - CSR index array
  *      splitting  - array to store the C/F splitting
  *      colorflag  - flag to indicate coloring
- *  
+ *
  *  Notes:
  *      The splitting array must be preallocated.
  *      CLJP naive since it requires the transpose.
@@ -306,9 +315,11 @@ void rs_cf_splitting(const I n_nodes,
 
 template<class I>
 void cljp_naive_splitting(const I n,
-                          const I Sp[], const I Sj[],
-                          const I Tp[], const I Tj[], 
-                          I splitting[],
+                          const I Sp[], const int Sp_size,
+                          const I Sj[], const int Sj_size,
+                          const I Tp[], const int Tp_size,
+                          const I Tj[], const int Tj_size,
+                                I splitting[], const int splitting_size,
                           const I colorflag)
 {
   // initialize sizes
@@ -336,7 +347,7 @@ void cljp_naive_splitting(const I n,
   if(colorflag==1){ // with coloring
     //vertex_coloring_jones_plassmann(n, Sp, Sj, &coloring[0],&weight[0]);
     //vertex_coloring_IDO(n, Sp, Sj, &coloring[0]);
-    vertex_coloring_mis(n, Sp, Sj, &coloring[0]);
+    vertex_coloring_mis(n, Sp, Sp_size, Sj, Sj_size, &coloring[0], n);
     ncolors = *std::max_element(coloring.begin(), coloring.end()) + 1;
     for(I i=0; i < n; i++){
       weight[i] = double(coloring[i])/double(ncolors);
@@ -397,7 +408,7 @@ void cljp_naive_splitting(const I n,
       else{
         D[i]=0;
       }
-    } // end for 
+    } // end for
     for(I i = 0; i < nD; i++) {
       splitting[Dlist[i]] = C_NODE;
     }
@@ -422,7 +433,7 @@ void cljp_naive_splitting(const I n,
       }
     } // end P5
 
-    // P6 
+    // P6
     // If k and j both depend on c, a C point, and j influces k, then j is less
     // valuable as a C point.
     for(I iD=0; iD < nD; iD++){
@@ -452,7 +463,7 @@ void cljp_naive_splitting(const I n,
         }
       }
     } // end P6
-  } 
+  }
   // end SELECTION LOOP
 
   for(I i = 0; i < Sp[n]; i++){
@@ -473,7 +484,7 @@ void cljp_naive_splitting(const I n,
  *   Produce the Ruge-Stuben prolongator using "Direct Interpolation"
  *
  *
- *   The first pass uses the strength of connection matrix 'S' 
+ *   The first pass uses the strength of connection matrix 'S'
  *   and C/F splitting to compute the row pointer for the prolongator.
  *
  *   The second pass fills in the nonzero entries of the prolongator
@@ -481,12 +492,13 @@ void cljp_naive_splitting(const I n,
  *   Reference:
  *      Page 479 of "Multigrid"
  *
- */      
+ */
 template<class I>
 void rs_direct_interpolation_pass1(const I n_nodes,
-                                   const I Sp[], const I Sj[],
-                                   const I splitting[],
-                                         I Bp[])
+                                   const I Sp[], const int Sp_size,
+                                   const I Sj[], const int Sj_size,
+                                   const I splitting[], const int splitting_size,
+                                         I Bp[], const int Bp_size)
 {
     I nnz = 0;
     Bp[0] = 0;
@@ -506,10 +518,16 @@ void rs_direct_interpolation_pass1(const I n_nodes,
 
 template<class I, class T>
 void rs_direct_interpolation_pass2(const I n_nodes,
-                                   const I Ap[], const I Aj[], const T Ax[],
-                                   const I Sp[], const I Sj[], const T Sx[],
-                                   const I splitting[],
-                                   const I Bp[],       I Bj[],       T Bx[])
+                                   const I Ap[], const int Ap_size,
+                                   const I Aj[], const int Aj_size,
+                                   const T Ax[], const int Ax_size,
+                                   const I Sp[], const int Sp_size,
+                                   const I Sj[], const int Sj_size,
+                                   const T Sx[], const int Sx_size,
+                                   const I splitting[], const int splitting_size,
+                                   const I Bp[], const int Bp_size,
+                                         I Bj[], const int Bj_size,
+                                         T Bx[], const int Bx_size)
 {
 
     for(I i = 0; i < n_nodes; i++){
@@ -553,7 +571,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 
             I nnz = Bp[i];
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){ 
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
                     Bj[nnz] = Sj[jj];
                     if (Sx[jj] < 0)
                         Bx[nnz] = neg_coeff * Sx[jj];
@@ -717,7 +735,7 @@ void rs_standard_interpolation(const I n_nodes,
 //        assert(node_to_index[i] == top_index);
 //        assert(interval_ptr[lambda_i] + interval_count[lambda_i] - 1 == top_index);
 //        //max interval should have at least one element
-//        assert(interval_count[lambda_i] > 0);    
+//        assert(interval_count[lambda_i] > 0);
 //#endif
 //
 //
@@ -743,7 +761,7 @@ void rs_standard_interpolation(const I n_nodes,
 //                    for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
 //                        I k = Sj[kk];
 //
-//                        if(NodeSets[k] == U_NODE){	      
+//                        if(NodeSets[k] == U_NODE){
 //                            //move k to the end of its current interval
 //                            assert(lambda[j] < n_nodes - 1);//this would cause problems!
 //
@@ -783,7 +801,7 @@ void rs_standard_interpolation(const I n_nodes,
 //                    //move j to the beginning of its current interval
 //                    I lambda_j = lambda[j];
 //                    I old_pos  = node_to_index[j];
-//                    I new_pos  = interval_ptr[lambda_j]; 
+//                    I new_pos  = interval_ptr[lambda_j];
 //
 //                    node_to_index[index_to_node[old_pos]] = new_pos;
 //                    node_to_index[index_to_node[new_pos]] = old_pos;
@@ -826,7 +844,7 @@ void rs_standard_interpolation(const I n_nodes,
 //                }
 //            }
 //            assert(has_c_neighbor);
-//        }   
+//        }
 //    }
 //#endif
 //
@@ -838,7 +856,7 @@ void rs_standard_interpolation(const I n_nodes,
 //        if(NodeSets[i] == C_NODE){
 //            //interpolate directly
 //            Bj->push_back(i);
-//            Bx->push_back(1);      
+//            Bx->push_back(1);
 //            Bp->push_back(Bj->size());
 //        } else {
 //            //F_NODE
@@ -849,7 +867,7 @@ void rs_standard_interpolation(const I n_nodes,
 //            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ d_i -= Sx[jj]; }
 //
 //            //Create C_i, initialize d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
 //                I j = Sj[jj];
 //                if(NodeSets[j] == C_NODE){
 //                    C_i[j] = true;
@@ -873,7 +891,7 @@ void rs_standard_interpolation(const I n_nodes,
 //                    if(C_i[Sj[ll]]){
 //                        Sj_intersects_Ci = true;
 //                        a_jl += Sx[ll];
-//                    }	    
+//                    }
 //                }
 //
 //                if(!Sj_intersects_Ci){ break; }
@@ -883,30 +901,30 @@ void rs_standard_interpolation(const I n_nodes,
 //                    T  a_jk = Sx[kk];
 //                    if(C_i[k]){
 //                        d_k[k] += a_ij*a_jk / a_jl;
-//                    }	    
+//                    }
 //                }
 //            }
 //
 //            //Step 6
 //            if(Sj_intersects_Ci){
-//                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
 //                    I j = Sj[jj];
 //                    if(NodeSets[j] == C_NODE){
 //                        Bj->push_back(j);
-//                        Bx->push_back(-d_k[j]/d_i);      
+//                        Bx->push_back(-d_k[j]/d_i);
 //                    }
-//                }	
+//                }
 //                Bp->push_back(Bj->size());
 //            } else { //make i a C_NODE
 //                NodeSets[i] = C_NODE;
 //                Bj->push_back(i);
-//                Bx->push_back(1);      
+//                Bx->push_back(1);
 //                Bp->push_back(Bj->size());
 //            }
 //
 //
 //            //Clear C_i,d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ 
+//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
 //                I j = Sj[jj];
 //                C_i[j] = false;
 //                d_k[j] = 0;
