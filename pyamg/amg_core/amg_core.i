@@ -1,10 +1,11 @@
 /* -*- C -*-  (not really, but good for syntax highlighting) */
 %module amg_core
+%ignorewarn("509:") operator=;
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "complex_ops.h"
 
+#include "relaxation.h"
 #include "krylov.h"
 #include "linalg.h"
 #include "graph.h"
@@ -24,22 +25,31 @@
 %define I_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
     (const ctype Ap [], const int Ap_size),
+    (const ctype Tp [], const int Tp_size),
+    (const ctype Sp [], const int Sp_size),
     (const ctype Aj [], const int Aj_size),
+    (const ctype Sj [], const int Sj_size),
     (      ctype order [], const int order_size),
     (      ctype level [], const int level_size),
-    (      ctype components [], const int components_size)
+    (      ctype components [], const int components_size),
+    (const ctype Id [], const int Id_size)
 };
 %enddef
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
     (const ctype  B [], const int  B_size),
+    (const ctype  b [], const int  b_size),
     (      ctype  w [], const int  w_size),
     (      ctype  x [], const int  x_size),
     (const ctype  y [], const int  y_size),
     (      ctype  z [], const int  z_size),
     (const ctype Ax [], const int Ax_size),
-    (      ctype AA [], const int AA_size)
+    (const ctype Tx [], const int Tx_size),
+    (      ctype Tx [], const int Tx_size),
+    (      ctype AA [], const int AA_size),
+    (      ctype temp [], const int temp_size),
+    (const ctype omega [], const int omega_size)
 };
 %enddef
 
@@ -127,3 +137,21 @@ INSTANTIATE_INDEX_ONLY(connected_components)
 INSTANTIATE_INDEXDATA_COMPLEX(apply_householders)
 INSTANTIATE_INDEXDATA_COMPLEX(householder_hornerscheme)
 INSTANTIATE_INDEXDATA_COMPLEX(apply_givens)
+
+/*----------------------------------------------------------------------------
+  relaxation.h
+  ---------------------------------------------------------------------------*/
+%include "relaxation.h"
+
+INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel)
+INSTANTIATE_INDEXDATA_COMPLEX(bsr_gauss_seidel)
+INSTANTIATE_INDEXDATA_COMPLEX(jacobi)
+INSTANTIATE_INDEXDATA_COMPLEX(bsr_jacobi)
+INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel_indexed)
+INSTANTIATE_INDEXDATA_COMPLEX(jacobi_ne)
+INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel_nr)
+INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel_ne)
+INSTANTIATE_INDEXDATA_COMPLEX(block_jacobi)
+INSTANTIATE_INDEXDATA_COMPLEX(block_gauss_seidel)
+INSTANTIATE_INDEXDATA_COMPLEX(extract_subblocks)
+INSTANTIATE_INDEXDATA_COMPLEX(overlapping_schwarz_csr)

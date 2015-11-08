@@ -251,6 +251,114 @@ def apply_givens(*args) -> "void":
     apply_givens(std::complex< double > const [] B, std::complex< double > [] x, int const n, int const nrot)
     """
     return _amg_core.apply_givens(*args)
+
+def gauss_seidel(*args) -> "void":
+    """
+    gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, int const row_start, int const row_stop, int const row_step)
+    """
+    return _amg_core.gauss_seidel(*args)
+
+def bsr_gauss_seidel(*args) -> "void":
+    """
+    bsr_gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    bsr_gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    bsr_gauss_seidel(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    bsr_gauss_seidel(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    """
+    return _amg_core.bsr_gauss_seidel(*args)
+
+def jacobi(*args) -> "void":
+    """
+    jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega)
+    jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega)
+    jacobi(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< float > const [] omega)
+    jacobi(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< double > const [] omega)
+    """
+    return _amg_core.jacobi(*args)
+
+def bsr_jacobi(*args) -> "void":
+    """
+    bsr_jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, float const [] omega)
+    bsr_jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, double const [] omega)
+    bsr_jacobi(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, std::complex< float > const [] omega)
+    bsr_jacobi(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, std::complex< double > const [] omega)
+    """
+    return _amg_core.bsr_jacobi(*args)
+
+def gauss_seidel_indexed(*args) -> "void":
+    """
+    gauss_seidel_indexed(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel_indexed(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel_indexed(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
+    gauss_seidel_indexed(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
+    """
+    return _amg_core.gauss_seidel_indexed(*args)
+
+def jacobi_ne(*args) -> "void":
+    """
+    jacobi_ne(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega)
+    jacobi_ne(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega)
+    jacobi_ne(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > const [] Tx, std::complex< float > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< float > const [] omega)
+    jacobi_ne(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > const [] Tx, std::complex< double > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< double > const [] omega)
+    """
+    return _amg_core.jacobi_ne(*args)
+
+def gauss_seidel_nr(*args) -> "void":
+    """
+    gauss_seidel_nr(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float [] z, int const col_start, int const col_stop, int const col_step, float const [] Tx, float const omega)
+    gauss_seidel_nr(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double [] z, int const col_start, int const col_stop, int const col_step, double const [] Tx, double const omega)
+    gauss_seidel_nr(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > [] z, int const col_start, int const col_stop, int const col_step, std::complex< float > const [] Tx, float const omega)
+    gauss_seidel_nr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > [] z, int const col_start, int const col_stop, int const col_step, std::complex< double > const [] Tx, double const omega)
+    """
+    return _amg_core.gauss_seidel_nr(*args)
+
+def gauss_seidel_ne(*args) -> "void":
+    """
+    gauss_seidel_ne(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step, float const [] Tx, float const omega)
+    gauss_seidel_ne(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step, double const [] Tx, double const omega)
+    gauss_seidel_ne(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, int const row_start, int const row_stop, int const row_step, std::complex< float > const [] Tx, float const omega)
+    gauss_seidel_ne(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, int const row_start, int const row_stop, int const row_step, std::complex< double > const [] Tx, double const omega)
+    """
+    return _amg_core.gauss_seidel_ne(*args)
+
+def block_jacobi(*args) -> "void":
+    """
+    block_jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega, int const blocksize)
+    block_jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega, int const blocksize)
+    block_jacobi(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > const [] Tx, std::complex< float > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< float > const [] omega, int const blocksize)
+    block_jacobi(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > const [] Tx, std::complex< double > [] temp, int const row_start, int const row_stop, int const row_step, std::complex< double > const [] omega, int const blocksize)
+    """
+    return _amg_core.block_jacobi(*args)
+
+def block_gauss_seidel(*args) -> "void":
+    """
+    block_gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    block_gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    block_gauss_seidel(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    block_gauss_seidel(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
+    """
+    return _amg_core.block_gauss_seidel(*args)
+
+def extract_subblocks(*args) -> "void":
+    """
+    extract_subblocks(int const [] Ap, int const [] Aj, float const [] Ax, float [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
+    extract_subblocks(int const [] Ap, int const [] Aj, double const [] Ax, double [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
+    extract_subblocks(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
+    extract_subblocks(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
+    """
+    return _amg_core.extract_subblocks(*args)
+
+def overlapping_schwarz_csr(*args) -> "void":
+    """
+    overlapping_schwarz_csr(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
+    overlapping_schwarz_csr(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
+    overlapping_schwarz_csr(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, std::complex< float > const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
+    overlapping_schwarz_csr(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, std::complex< double > const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
+    """
+    return _amg_core.overlapping_schwarz_csr(*args)
 # This file is compatible with both classic and new-style classes.
 
 
