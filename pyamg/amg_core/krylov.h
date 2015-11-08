@@ -32,7 +32,12 @@
  * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
  */
 template<class I, class T, class F>
-void apply_householders(T z[], const T B[], const I n, const I start, const I stop, const I step)
+void apply_householders(      T z[], const int z_size,
+                        const T B[], const int B_size,
+                        const I n,
+                        const I start,
+                        const I stop,
+                        const I step)
 {
     I index = start*n;
     I index_step = step*n;
@@ -40,7 +45,8 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
     for(I i = start; i != stop; i+=step)
     {
         Bptr = &(B[index]);
-        T alpha = dot_prod(Bptr, z, n)*(-2.0);
+        T alpha = dot_prod(Bptr, z, n);
+        alpha *= -2;
         axpy(z, Bptr, alpha, n);
         index += index_step;
     }
@@ -51,10 +57,10 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
  * the original space via the Householder reflectors.
  *
  * Apply |start-stop| Householder reflectors in B to z
- * while also adding in the appropriate value from y, so 
+ * while also adding in the appropriate value from y, so
  * that we follow the Horner-like scheme to map our least squares
  * solution in y back to the original space
- * 
+ *
  * Implements the below python
  *
  * for j in range(inner,-1,-1):
@@ -85,11 +91,17 @@ void apply_householders(T z[], const T B[], const I n, const I start, const I st
  * Notes
  * -----
  * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
- * 
+ *
  * See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems"
  */
 template<class I, class T, class F>
-void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const I start, const I stop, const I step)
+void householder_hornerscheme (      T z[], const int z_size,
+                               const T B[], const int B_size,
+                               const T y[], const int y_size,
+                               const I n,
+                               const I start,
+                               const I stop,
+                               const I step)
 {
     I index = start*n;
     I index_step = step*n;
@@ -99,7 +111,8 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
         z[i] += y[i];
         Bptr = &(B[index]);
 
-        T alpha = dot_prod(Bptr, z, n)*(-2.0);
+        T alpha = dot_prod(Bptr, z, n);
+        alpha *= 2;
         axpy(z, Bptr, alpha, n);
 
         index += index_step;
@@ -113,7 +126,7 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
  * ----------
  * x : {float array}
  *  n-vector to be operated on
- * B : {float array} 
+ * B : {float array}
  *  Each 4 entries represent a Givens rotation
  *  length nrot*4
  * n : {int}
@@ -123,8 +136,8 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
  *
  * Returns
  * -------
- * x is modified in place to reflect the application of the nrot 
- * rotations in B.  It is assumed that the first rotation operates on 
+ * x is modified in place to reflect the application of the nrot
+ * rotations in B.  It is assumed that the first rotation operates on
  * degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
  * and so on
  *
@@ -133,12 +146,15 @@ void householder_hornerscheme(T z[], const T B[], const T y[], const I n, const 
  * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
  */
 template<class I, class T, class F>
-void apply_givens(const T B[], T x[], const I n, const I nrot)
+void apply_givens(const T B[], const int B_size,
+                        T x[], const int x_size,
+                  const I n,
+                  const I nrot)
 {
-    I ind1 = 0; 
-    I ind2 = 1; 
-    I ind3 = 2; 
-    I ind4 = 3; 
+    I ind1 = 0;
+    I ind2 = 1;
+    I ind3 = 2;
+    I ind4 = 3;
     T x_temp;
 
     for(I rot=0; rot < nrot; rot++)

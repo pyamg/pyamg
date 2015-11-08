@@ -5,6 +5,7 @@
 #define SWIG_FILE_WITH_INIT
 #include "complex_ops.h"
 
+#include "krylov.h"
 #include "linalg.h"
 #include "graph.h"
 %}
@@ -32,6 +33,7 @@
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
+    (const ctype  B [], const int  B_size),
     (      ctype  w [], const int  w_size),
     (      ctype  x [], const int  x_size),
     (const ctype  y [], const int  y_size),
@@ -116,3 +118,12 @@ INSTANTIATE_INDEXDATA_INT(bellman_ford)
 INSTANTIATE_INDEXDATA_INT(lloyd_cluster)
 INSTANTIATE_INDEX_ONLY(breadth_first_search)
 INSTANTIATE_INDEX_ONLY(connected_components)
+
+/*----------------------------------------------------------------------------
+  krylov.h
+  ---------------------------------------------------------------------------*/
+%include "krylov.h"
+
+INSTANTIATE_INDEXDATA_COMPLEX(apply_householders)
+INSTANTIATE_INDEXDATA_COMPLEX(householder_hornerscheme)
+INSTANTIATE_INDEXDATA_COMPLEX(apply_givens)

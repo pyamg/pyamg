@@ -224,6 +224,33 @@ def breadth_first_search(Ap: 'int const []', Aj: 'int const []', seed: 'int cons
 def connected_components(num_nodes: 'int const', Ap: 'int const []', Aj: 'int const []', components: 'int []') -> "int":
     """connected_components(int const num_nodes, int const [] Ap, int const [] Aj, int [] components) -> int"""
     return _amg_core.connected_components(num_nodes, Ap, Aj, components)
+
+def apply_householders(*args) -> "void":
+    """
+    apply_householders(float [] z, float const [] B, int const n, int const start, int const stop, int const step)
+    apply_householders(double [] z, double const [] B, int const n, int const start, int const stop, int const step)
+    apply_householders(std::complex< float > [] z, std::complex< float > const [] B, int const n, int const start, int const stop, int const step)
+    apply_householders(std::complex< double > [] z, std::complex< double > const [] B, int const n, int const start, int const stop, int const step)
+    """
+    return _amg_core.apply_householders(*args)
+
+def householder_hornerscheme(*args) -> "void":
+    """
+    householder_hornerscheme(float [] z, float const [] B, float const [] y, int const n, int const start, int const stop, int const step)
+    householder_hornerscheme(double [] z, double const [] B, double const [] y, int const n, int const start, int const stop, int const step)
+    householder_hornerscheme(std::complex< float > [] z, std::complex< float > const [] B, std::complex< float > const [] y, int const n, int const start, int const stop, int const step)
+    householder_hornerscheme(std::complex< double > [] z, std::complex< double > const [] B, std::complex< double > const [] y, int const n, int const start, int const stop, int const step)
+    """
+    return _amg_core.householder_hornerscheme(*args)
+
+def apply_givens(*args) -> "void":
+    """
+    apply_givens(float const [] B, float [] x, int const n, int const nrot)
+    apply_givens(double const [] B, double [] x, int const n, int const nrot)
+    apply_givens(std::complex< float > const [] B, std::complex< float > [] x, int const n, int const nrot)
+    apply_givens(std::complex< double > const [] B, std::complex< double > [] x, int const n, int const nrot)
+    """
+    return _amg_core.apply_givens(*args)
 # This file is compatible with both classic and new-style classes.
 
 
