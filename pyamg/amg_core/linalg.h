@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <limits>
+#include <complex>
 
 /*******************************************************************
  * Overloaded routines for real arithmetic for int, float and double
@@ -20,7 +21,7 @@ inline double signof(double a) { return (a<0.0 ? -1.0 : 1.0); }
 
 
 /*******************************************************************
- *         Overloaded routines for complex arithmetic for  
+ *         Overloaded routines for complex arithmetic for
  *         pyamg's complex class, float and double
  *******************************************************************/
 
@@ -31,22 +32,26 @@ inline float conjugate(const float& x)
     { return x; }
 inline double conjugate(const double& x)
     { return x; }
-inline npy_cfloat_wrapper conjugate(const npy_cfloat_wrapper& x)
-    { return npy_cfloat_wrapper(x.real, -x.imag); }
-inline npy_cdouble_wrapper conjugate(const npy_cdouble_wrapper& x)
-    { return npy_cdouble_wrapper(x.real, -x.imag); }
+inline std::complex<float> conjugate(const std::complex<float>& x)
+{
+    std::complex<float> tmp (x.real(), -x.imag());
+    return tmp; }
+inline std::complex<double> conjugate(const std::complex<double>& x)
+{
+    std::complex<double> tmp (x.real(), -x.imag());
+    return tmp; }
 
-/* 
+/*
  * Return the real part of a number
  */
 inline float real(const float& x)
     { return x; }
 inline double real(const double& x)
     { return x; }
-inline float real(const npy_cfloat_wrapper& x)
-    { return x.real; }
-inline double real(const npy_cdouble_wrapper& x)
-    { return x.real; }
+inline float real(const std::complex<float>& x)
+    { return x.real(); }
+inline double real(const std::complex<double>& x)
+    { return x.real(); }
 
 /*
  * Return the imaginary part of a number
@@ -55,58 +60,66 @@ inline float imag(const float& x)
     { return 0.0; }
 inline double imag(const double& x)
     { return 0.0; }
-inline float imag(const npy_cfloat_wrapper& x)
-    { return x.imag; }
-inline double imag(const npy_cdouble_wrapper& x)
-    { return x.imag; }
+inline float imag(const std::complex<float>& x)
+    { return x.imag(); }
+inline double imag(const std::complex<double>& x)
+    { return x.imag(); }
 
-/* 
+/*
  * Return the norm, i.e. the magnitude, of a single number
  */
 inline float mynorm(const float& x)
     { return fabs(x); }
 inline double mynorm(const double& x)
     { return fabs(x); }
-inline float mynorm(const npy_cfloat_wrapper& x)
-    { return sqrt(x.real*x.real + x.imag*x.imag); }
-inline double mynorm(const npy_cdouble_wrapper& x)
-    { return sqrt(x.real*x.real + x.imag*x.imag); }
+inline float mynorm(const std::complex<float>& x)
+    { return sqrt(x.real()*x.real() + x.imag()*x.imag()); }
+inline double mynorm(const std::complex<double>& x)
+    { return sqrt(x.real()*x.real() + x.imag()*x.imag()); }
 
-/* 
+/*
  * Return the norm squared of a single number, i.e.  save a square root
  */
 inline float mynormsq(const float& x)
     { return (x*x); }
 inline double mynormsq(const double& x)
     { return (x*x); }
-inline float mynormsq(const npy_cfloat_wrapper& x)
-    { return (x.real*x.real + x.imag*x.imag); }
-inline double mynormsq(const npy_cdouble_wrapper& x)
-    { return (x.real*x.real + x.imag*x.imag); }
+inline float mynormsq(const std::complex<float>& x)
+    { return (x.real()*x.real() + x.imag()*x.imag()); }
+inline double mynormsq(const std::complex<double>& x)
+    { return (x.real()*x.real() + x.imag()*x.imag()); }
 
-/* 
+/*
  * Return the input, but with the real part zeroed out
  */
 inline float zero_real(float& x)
     { return 0.0; }
 inline double zero_real(double& x)
     { return 0.0; }
-inline npy_cfloat_wrapper zero_real(npy_cfloat_wrapper& x)
-    { x.real = 0.0; return x; }
-inline npy_cdouble_wrapper zero_real(npy_cdouble_wrapper& x)
-    { x.real = 0.0; return x; }
+inline std::complex<float> zero_real(std::complex<float>& x)
+{
+    std::complex<float> tmp (0.0, x.imag());
+    return x; }
+inline std::complex<double> zero_real(std::complex<double>& x)
+{
+    std::complex<double> tmp (0.0, x.imag());
+    return x; }
 
-/* 
+/*
  * Return the input, but with the imag part zeroed out
  */
 inline float zero_imag(float& x)
     { return x; }
 inline double zero_imag(double& x)
     { return x; }
-inline npy_cfloat_wrapper zero_imag(npy_cfloat_wrapper& x)
-    { x.imag = 0.0; return x; }
-inline npy_cdouble_wrapper zero_imag(npy_cdouble_wrapper& x)
-    { x.imag = 0.0; return x; }
+inline std::complex<float> zero_imag(std::complex<float>& x)
+{
+    std::complex<float> tmp (x.real(), 0.0);
+    return x; }
+inline std::complex<double> zero_imag(std::complex<double>& x)
+{
+    std::complex<double> tmp (x.real(), 0.0);
+    return x; }
 
 
 /*******************************************************************
@@ -174,7 +187,7 @@ inline void norm(const T x[], const I n, F &normx)
  * n : {int}
  *      size of x and y
  * alpha : {scalar}
- *      
+ *
  * Return
  * ------
  * x = x + alpha*y
@@ -189,7 +202,7 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
 
 
 /* Transpose Ax by overwriting Bx
- * 
+ *
  * Parameters
  * ----------
  * Ax : {float|complex array}
@@ -205,17 +218,17 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
  *
  * Notes
  * -----
- * There is a fair amount of hard-coding to make this routine very 
- * fast for small (<10) square matrices, although it works for general 
+ * There is a fair amount of hard-coding to make this routine very
+ * fast for small (<10) square matrices, although it works for general
  * m x n matrices.
  *
  */
 template<class I, class T>
 inline void transpose(const T Ax[], T Bx[], const I m, const I n)
 {
-    // Almost all uses of this function are for 
+    // Almost all uses of this function are for
     // m==n, m,n<10.  Hence the attempts at speed.
-    
+
     //Hard code the smallest examples for speed
     if( (m==1) && (n==1))
     {   Bx[0] = Ax[0]; }
@@ -247,24 +260,24 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
             if(m == 4)
             {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+4]; Bx[i+2] = Ax[j+8]; Bx[i+3] = Ax[j+12]; }
             if(m == 5)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+5]; Bx[i+2] = Ax[j+10]; Bx[i+3] = Ax[j+15]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+5]; Bx[i+2] = Ax[j+10]; Bx[i+3] = Ax[j+15];
                 Bx[i+4] = Ax[j+20]; }
             if(m == 6)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+6]; Bx[i+2] = Ax[j+12]; Bx[i+3] = Ax[j+18]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+6]; Bx[i+2] = Ax[j+12]; Bx[i+3] = Ax[j+18];
                 Bx[i+4] = Ax[j+24];  Bx[i+5] = Ax[j+30]; }
             if(m == 7)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+7]; Bx[i+2] = Ax[j+14]; Bx[i+3] = Ax[j+21]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+7]; Bx[i+2] = Ax[j+14]; Bx[i+3] = Ax[j+21];
                 Bx[i+4] = Ax[j+28];  Bx[i+5] = Ax[j+35]; Bx[i+6] = Ax[j+42]; }
             if(m == 8)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+8]; Bx[i+2] = Ax[j+16]; Bx[i+3] = Ax[j+24]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+8]; Bx[i+2] = Ax[j+16]; Bx[i+3] = Ax[j+24];
                 Bx[i+4] = Ax[j+32];  Bx[i+5] = Ax[j+40]; Bx[i+6] = Ax[j+48]; Bx[i+7] = Ax[j+56]; }
             if(m == 9)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+9]; Bx[i+2] = Ax[j+18]; Bx[i+3] = Ax[j+27]; 
-                Bx[i+4] = Ax[j+36];  Bx[i+5] = Ax[j+45]; Bx[i+6] = Ax[j+54]; Bx[i+7] = Ax[j+63]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+9]; Bx[i+2] = Ax[j+18]; Bx[i+3] = Ax[j+27];
+                Bx[i+4] = Ax[j+36];  Bx[i+5] = Ax[j+45]; Bx[i+6] = Ax[j+54]; Bx[i+7] = Ax[j+63];
                 Bx[i+8] = Ax[j+72];}
             if(m == 10)
-            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+10]; Bx[i+2] = Ax[j+20]; Bx[i+3] = Ax[j+30]; 
-                Bx[i+4] = Ax[j+40];  Bx[i+5] = Ax[j+50]; Bx[i+6] = Ax[j+60]; Bx[i+7] = Ax[j+70]; 
+            {   Bx[i] = Ax[j]; Bx[i+1] = Ax[j+10]; Bx[i+2] = Ax[j+20]; Bx[i+3] = Ax[j+30];
+                Bx[i+4] = Ax[j+40];  Bx[i+5] = Ax[j+50]; Bx[i+6] = Ax[j+60]; Bx[i+7] = Ax[j+70];
                 Bx[i+8] = Ax[j+80]; Bx[i+9] = Ax[j+90];}
 
             j++;
@@ -295,7 +308,7 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *
  * Parameters
  * ----------
- * Ax : {float|complex array} 
+ * Ax : {float|complex array}
  *      Stored in row major
  * Arows : {int}
  *      Number of rows of A
@@ -303,7 +316,7 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *      Number of columns of A
  * Atrans : {char}
  *      Not Used
- * Bx : {float|complex array} 
+ * Bx : {float|complex array}
  *      Stored in col major
  * Brows : {int}
  *      Number of rows of B
@@ -313,7 +326,7 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *      Supported, essentially Btrans='F' assumes
  *      B is in column major, and Brans='T' assumes
  *      B is in row major
- * Sx : {float|complex array} 
+ * Sx : {float|complex array}
  *      Output array, Contents are overwritten
  * Srows : {int}
  *      Number of rows of S
@@ -324,8 +337,8 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *      'F' gives S in row major
  * overwrite : {char}
  *      'T' overwrite S
- *      'F' accumulate to S 
- *  
+ *      'F' accumulate to S
+ *
  *
  * Return
  * ------
@@ -337,34 +350,34 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *  Btrans = 'F' and Strans = 'T'
  *  Btrans = 'F' and Strans = 'F'
  *  Btrans = 'T' and Strans = 'F'
- *  
+ *
  *  All other combinations are not yet supported
  *
  *
  */
 template<class I, class T>
-inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans, 
-          const T Bx[], const I Brows, const I Bcols, const char Btrans, 
-          T Sx[], const I Srows, const I Scols, const char Strans, 
+inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
+          const T Bx[], const I Brows, const I Bcols, const char Btrans,
+          T Sx[], const I Srows, const I Scols, const char Strans,
           const char overwrite)
 {
     //Add checks for dimensions, but leaving them out speeds things up
     //Add functionality for transposes
-    
+
     if(overwrite == 'T'){
         std::fill(Sx, Sx + Srows*Scols,  0); }
 
     if( (Strans == 'T') && (Btrans == 'F'))
     {
-        // A is in row major, B is in column major, so compute 
+        // A is in row major, B is in column major, so compute
         // S(i,j) = A(i,:) B(:,j) by looping over the rows of A
         // and the columns of B.
-        
+
         I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
         for(I i = 0; i < Arows; i++)
         {
             s_counter = i;
-            b_counter = 0; 
+            b_counter = 0;
             for(I j = 0; j < Bcols; j++)
             {
                 a_counter = a_start;                                // a_counter cycles through rows of A
@@ -381,14 +394,14 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
     }
     else if((Strans == 'F') && (Btrans == 'F'))
     {
-        // A is in row major, B is in column major, so compute 
+        // A is in row major, B is in column major, so compute
         // S(i,j) = A(i,:) B(:,j) by looping over the rows of A
         // and the columns of B.
-        
+
         I s_counter = 0; I a_counter =0; I b_counter =0; I a_start = 0;
         for(I i = 0; i < Arows; i++)
         {
-            b_counter = 0; 
+            b_counter = 0;
             for(I j = 0; j < Bcols; j++)
             {
                 a_counter = a_start;
@@ -405,9 +418,9 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
     }
     else if((Strans == 'F') && (Btrans == 'T'))
     {
-        // A is in row major, B is in row major, so compute 
+        // A is in row major, B is in row major, so compute
         // S(i,j) = A(i,:) B(:,j) with the SMMP algorithm
-        
+
         I a_counter = 0;
 
         // Loop over rows of A
@@ -418,14 +431,14 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             {
                 I s_counter = i*Scols;
                 I b_counter = j*Bcols;
-                
+
                 // Loop over columns in row j of B
                 for(I k = 0; k < Bcols; k++)
                 {
                     // Accumulate A[i,j]*B[j,k] --> S[i,k]
                     Sx[s_counter] += Ax[a_counter]*Bx[b_counter];
                     b_counter++;
-                    s_counter++; 
+                    s_counter++;
                 }
                 a_counter++;
             }
@@ -444,22 +457,22 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * Ax : {float|complex array}
  *      m x n dense matrix, stored in col major form
  * U : {float|complex array}
- *      m x n dense matrix initialized to 0.0 
+ *      m x n dense matrix initialized to 0.0
  *      Passed in as Tx
  * V : {float|complex array}
- *      n x n dense matrix initialized to 0.0 
+ *      n x n dense matrix initialized to 0.0
  *      Passed in as Bx
  * S : {float|complex array}
- *      n x 1 dense matrix initialized to 0.0 
+ *      n x 1 dense matrix initialized to 0.0
  *      Passed in as Sx
- * m,n : {int} 
+ * m,n : {int}
  *      Dimensions of Ax, m > n.
  *
  * Return
  * ------
  * Returns Ax = U S V.H
  * U, V, S are modified in place
- * 
+ *
  * V : {array}
  *      Orthogonal n x n matrix, V, stored in col major
  * U : {array}
@@ -467,24 +480,24 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * S : {array}
  *      Singular values
  * int : {int}
- *      Function return value, 
+ *      Function return value,
  *      -1:  error
  *      0:  successful
  *      1:  did not converge
  *
  * Notes
  * -----
- * The Jacobi method is used to compute the SVD.  Conceptually, 
+ * The Jacobi method is used to compute the SVD.  Conceptually,
  * the Jacobi method applies successive Jacobi rotations, Q_i to
- * the system, Q_i^H Ax.H Ax Q_i.  Despite the normal equations 
- * appearing here, the actual method can be quite accurate.  
- * However, the method is slower than Golub-Reinsch for all 
- * but very small matrices.  For larger matrices, use 
+ * the system, Q_i^H Ax.H Ax Q_i.  Despite the normal equations
+ * appearing here, the actual method can be quite accurate.
+ * However, the method is slower than Golub-Reinsch for all
+ * but very small matrices.  For larger matrices, use
  * scipy.linalg.pinv or pyamg.util.linalg.pinv_array.
  *
  * References
  * ----------
- * De Rijk, "A One-Sided Jacobi Algorithm for computing the singular value 
+ * De Rijk, "A One-Sided Jacobi Algorithm for computing the singular value
  * decomposition on a vector computer", SIAM J Sci and Statistical Comp,
  * Vol 10, No 2, p 359-371, March 1989.
  *
@@ -502,22 +515,22 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     T * U = Tx;
     T * V = Bx;
     F * S = Sx;
-    
+
     // Hard code fast 1x1 SVD
     if ( (n==1) && (m==1) )
     {
         F normA = mynorm(A[0]);
 
         V[0] = 1.0;
-        S[0] = normA; 
+        S[0] = normA;
         if(normA == 0.0)
         {   U[0] = 1.0; }
         else
         {   U[0] = A[0]/normA; }
-        
+
         return 0;
     }
-  
+
     // Workspace
     I i, j, k;
     I nsq = n*n;
@@ -538,7 +551,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     for(i = 0; i < nsq; i+= (n+1) )
     {   V[i] = 1.0;}
 
-    // Copy A to U, note that the stop address &(A[m*n]) 
+    // Copy A to U, note that the stop address &(A[m*n])
     // should go one past the final element to be copied
     std::copy(&(A[0]), &(A[m*n]), &(U[0]));
 
@@ -549,7 +562,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
         norm(&(U[j*m]), m, normx);
         S[j] = std::numeric_limits<F>::epsilon()*normx;
     }
-  
+
     // Orthogonalize U by plane rotations.
     while( (count > 0) && (sweep <= sweepmax) )
     {
@@ -574,13 +587,13 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                 T d = dot_prod(&(U[jm]), &(U[km]), m);  // <U[:,j], U[:,k]>
                 F norm_d = mynorm(d);
 
-                // test for columns j,k orthogonal, or dominant errors 
+                // test for columns j,k orthogonal, or dominant errors
                 abserr_a = S[j];
                 abserr_b = S[k];
 
                 sorted = (a >= b);
                 orthog = (norm_d <= tolerance*a*b);
-                
+
                 // Test to see if col a or b has become noise
                 noisya = (a < abserr_a);
                 noisyb = (b < abserr_b);
@@ -588,11 +601,11 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                 // no need for rotations
                 if(sorted && (orthog || noisya || noisyb))
                 {
-                    // if count ever = 0, then everything is sorted and orthogonal 
+                    // if count ever = 0, then everything is sorted and orthogonal
                     // (or possibly just noise)
                     count--;
                 }
-                
+
                 // swap cols ||     Handle 0 matrix case
                 else if(!sorted   || ( (norm_d == 0.0) && (a==b)  ) )
                 {
@@ -600,7 +613,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                     // [ 0.0  1.0 ]
                     // [-1.0  0.0 ]
                     // Basically, swap columns in U and V with one sign flip
-                    
+
                     S[j] = abserr_b;
                     S[k] = abserr_a;
 
@@ -613,11 +626,11 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                         //   U[i,k] =   1.0*U[i,j] + 0.0*U[i,k]
                         const T Uij = U[joffset];
                         const T Uik = U[koffset];
-                        U[joffset] = -Uik; 
+                        U[joffset] = -Uik;
                         U[koffset] =  Uij;
                         koffset++;
                     }
-    
+
                     // apply rotation by right multiplication to V
                     koffset = kn;
                     for(I joffset = jn; joffset < (jn + n); joffset++)
@@ -627,8 +640,8 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                         //   V[i,k] =   1.0*V[i,j] + 0.0*V[i,k]
                         const T Vij = V[joffset];
                         const T Vik = V[koffset];
-                        V[joffset] = -Vik; 
-                        V[koffset] =  Vij; 
+                        V[joffset] = -Vik;
+                        V[koffset] =  Vij;
                         koffset++;
                     }
                 }
@@ -636,15 +649,15 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                 // Carry out Jacobi Rotations to orthogonalize column's j and k in U
                 else
                 {
-                    // calculate rotation angles for 
+                    // calculate rotation angles for
                     // jacobi_rot = [cos          sin]
                     //              [-conj(sin)   cos]
                     F tau = (b*b - a*a)/(2.0*norm_d);
                     F t = signof(tau)/(fabs(tau) + sqrt(1.0 + tau*tau));
                     cos = 1.0/(sqrt(1.0 + t*t));
                     sin = d*(t*cos/norm_d);
-                    neg_conj_sin = conjugate(sin)*-1.0;
-                
+                    neg_conj_sin = -conjugate(sin);
+
                     F norm_sin = mynorm(sin);
                     S[j] = fabs(cos)*abserr_a + norm_sin*abserr_b;
                     S[k] =  norm_sin*abserr_a + fabs(cos)*abserr_b;
@@ -658,11 +671,11 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                         //   U[i,k] =   sin*U[i,j] +       cos*U[i,k]
                         const T Uij = U[joffset];
                         const T Uik = U[koffset];
-                        U[joffset] = Uij*cos + neg_conj_sin*Uik; 
+                        U[joffset] = Uij*cos + neg_conj_sin*Uik;
                         U[koffset] = sin*Uij + Uik*cos;
                         koffset++;
                     }
-    
+
                     // apply rotation by right multiplication to V
                     koffset = kn;
                     for(I joffset = jn; joffset < (jn + n); joffset++)
@@ -672,8 +685,8 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
                         //   V[i,k] =   sin*V[i,j] +       cos*V[i,k]
                         const T Vij = V[joffset];
                         const T Vik = V[koffset];
-                        V[joffset] = Vij*cos + neg_conj_sin*Vik; 
-                        V[koffset] = sin*Vij + Vik*cos; 
+                        V[joffset] = Vij*cos + neg_conj_sin*Vik;
+                        V[koffset] = sin*Vij + Vik*cos;
                         koffset++;
                     }
                 }
@@ -685,7 +698,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
             jm += m;
             jn += n;
         } // end j loop
-        
+
         //Sweep completed.
         sweep++;
 
@@ -699,7 +712,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     {
         F curr_norm;
         norm(&(U[Uoffset]), m, curr_norm);              // || U[:,j] ||
-        
+
         if(j == 0)
         {
             // For j==0, curr_norm is sigma_max
@@ -709,7 +722,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 
         // Determine if singular value is zero
         if( curr_norm <= sigma_tol )
-        {   
+        {
             iszero--;                               // detect all zero matrix
             S[j] = 0.0;                             // singular
             for(i = Uoffset; i < (Uoffset + m); i++)
@@ -732,7 +745,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
         {   V[i] = 0.0;}
         for(i = 0; i < nsq; i+= (n+1) )
         {   V[i] = 1.0;}
-        
+
         // U is already 0.0
         for(i = 0; i < n*m; i+= (m+1) )
         {   U[i] = 1.0;}
@@ -748,15 +761,15 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 
     return 0;
 }
- 
+
 
 /*
- * Solve a system with the SVD, i.e. use a robust Moore-Penrose 
+ * Solve a system with the SVD, i.e. use a robust Moore-Penrose
  * Pseudoinverse to multiply the RHS
- * 
+ *
  * Parameters
  * ----------
- * A : {float|complex array} 
+ * A : {float|complex array}
  *      m x n dense column major array, m>n
  * m,n : {int}
  *      Dimensions of A, m > n
@@ -765,7 +778,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
  * sing_vals : {float array}
  *      Holds the singular values upon return
  * work : {float|complex array}
- *      worksize array for temporary space for routine 
+ *      worksize array for temporary space for routine
  * worksize : {int}
  *      must be > m*n + n
  *
@@ -776,7 +789,7 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
  *
  * Notes
  * -----
- * forcing preallocation of sing_vals and work, allows for 
+ * forcing preallocation of sing_vals and work, allows for
  * efficient multiple calls to this routine
  *
  */
@@ -789,18 +802,18 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     T * V = &(work[mn]);
     T * x = &(work[2*mn]);
     const char trans = 'F';
-    
+
     // calculate SVD
     svd_jacobi(&(Ax[0]), &(U[0]), &(V[0]), &(sing_vals[0]), n, n);
-        
+
     // Forming conjugate(U.T) in row major requires just
     // conjugating the current entries of U in col major
-    for(I i = 0; i < m*n; i++) 
+    for(I i = 0; i < m*n; i++)
     {   U[i] = conjugate(U[i]); }
 
     // A^{-1} b = V*Sinv*U.H*b, in 3 steps
     // Step 1, U.H*b
-    gemm(&(U[0]), n, n, trans, &(b[0]), n, 1, trans,  
+    gemm(&(U[0]), n, n, trans, &(b[0]), n, 1, trans,
          &(x[0]), n, 1, trans, 'T');
 
     // Setp 2, scale x by Sinv
@@ -815,9 +828,9 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // Step 3, multiply by V
     // transpose V so that it is in row major for gemm
     transpose(&(V[0]), &(U[0]), n, n);
-    gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,  
+    gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,
          &(b[0]), n, 1, trans, 'T');
-    
+
     return;
 }
 
@@ -825,14 +838,14 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  * Routine is designed to invert many small matrices at once.
  * Parameters
  * ----------
- * Ax : {float|complex array}  
+ * Ax : {float|complex array}
  *      (m, n, n) array, assumed to be "raveled" and in row major form
  * m,n : int
  *      dimensions of Ax
  * TransA : char
  *      'T' or 'F'.  Decides whether to transpose each nxn block
- *      of A before inverting.  If using Python array, should be 'T'.  
- * 
+ *      of A before inverting.  If using Python array, should be 'T'.
+ *
  * Return
  * ------
  * Ax : {array}
@@ -846,7 +859,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  *
  * This function offers substantial speedup over native Python
  * code for many small matrices, e.g. 5x5 and 10x10.  Tests have
- * indicated that matrices larger than 27x27 are faster if done 
+ * indicated that matrices larger than 27x27 are faster if done
  * in native Python.
  *
  * Examples
@@ -866,7 +879,8 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  *
  */
 template<class I, class T, class F>
-void pinv_array(T Ax[], const I m, const I n, const char TransA)
+void pinv_array(T Ax[], const int Ax_size,
+                const I m, const I n, const char TransA)
 {
     I nsq = n*n;
     I Acounter = 0;
@@ -881,8 +895,8 @@ void pinv_array(T Ax[], const I m, const I n, const char TransA)
     {
         if(TransA == 'T')
         {   // transpose block of A so that it is in col major for SVD
-            transpose(&(Ax[Acounter]), &(Tran[0]), n, n); 
-            
+            transpose(&(Ax[Acounter]), &(Tran[0]), n, n);
+
             // calculate SVD
             svd_jacobi(&(Tran[0]), &(U[0]), &(V[0]), &(S[0]), n, n);
         }
@@ -898,7 +912,7 @@ void pinv_array(T Ax[], const I m, const I n, const char TransA)
             if(S[j] != 0.0)
             {   S[j] = 1.0/S[j]; }
         }
-        
+
         // Sinv*conjugate(U.T), stored in column major form
         I counter = 0;
         for(I j = 0; j < n; j++)        // col of Uh
@@ -917,18 +931,18 @@ void pinv_array(T Ax[], const I m, const I n, const char TransA)
         transpose(&(V[0]), &(Tran[0]), n, n);
 
         // A^{-1} = V*SinvUh
-        gemm(&(Tran[0]), n, n, t, &(SinvUh[0]), n, n, t,  
+        gemm(&(Tran[0]), n, n, t, &(SinvUh[0]), n, n, t,
              &(Ax[Acounter]), n, n, t, 'T');
 
         Acounter += nsq;
     }
-    
+
     delete[] Tran;
     delete[] U;
     delete[] V;
     delete[] S;
     delete[] SinvUh;
-    
+
     return;
 }
 
