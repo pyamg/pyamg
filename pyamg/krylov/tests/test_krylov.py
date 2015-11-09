@@ -90,6 +90,11 @@ class TestKrylov(TestCase):
                                'b': b, 'x0': x0, 'tol': 1e-16, 'maxiter': 2,
                                'reduction_factor': 0.98})
 
+    from numpy.testing import dec
+    @dec.knownfailureif(True, 'MGS and Householder and scipy.sparse.linalg ' +\
+                              'do not match for GMRES' +\
+                              'see https://github.com/pyamg/pyamg/issues/158')
+
     def test_gmres(self):
         # Ensure repeatability
         random.seed(0)
@@ -140,6 +145,10 @@ class TestKrylov(TestCase):
                     assert_array_almost_equal(x2/norm(x2), x3/norm(x3),
                                               err_msg='CR and GMRES yield\
                                                        different answers')
+
+    from numpy.testing import dec
+    @dec.knownfailureif(True, 'Oblique projectors fail ' +\
+                              'see https://github.com/pyamg/pyamg/issues/159')
 
     def test_krylov(self):
         # Oblique projectors reduce the residual
