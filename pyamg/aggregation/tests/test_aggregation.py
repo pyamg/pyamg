@@ -530,7 +530,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-        assert(avg_convergence_ratio < 0.6)
+        assert(avg_convergence_ratio < 0.7)
 
         # test that nonsymmetric parameters give the same result as symmetric
         # parameters for the complex-symmetric matrix A
