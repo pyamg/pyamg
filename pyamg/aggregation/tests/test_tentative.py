@@ -1,4 +1,4 @@
-from numpy import ones, arange, array, diff, vstack
+from numpy import ones, arange, array, diff, vstack, where
 from scipy.sparse import csr_matrix
 
 from pyamg.aggregation.aggregation import fit_candidates
@@ -169,7 +169,7 @@ class TestFitCandidates(TestCase):
     def test_all_cases(self):
         def mask_candidate(AggOp, candidates):
             # mask out all dofs that are not included in the aggregation
-            candidates[diff(AggOp.indptr) == 0, :] = 0
+            candidates[where(diff(AggOp.indptr) == 0)[0], :] = 0
 
         for AggOp, fine_candidates in self.cases:
             mask_candidate(AggOp, fine_candidates)

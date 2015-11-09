@@ -12,7 +12,6 @@ import warnings
 from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
-
 class TestAdaptiveSA(TestCase):
     def setUp(self):
         from numpy.random import seed
@@ -72,6 +71,7 @@ class TestAdaptiveSA(TestCase):
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
         cases.append(A.todense())
+        warnings.filterwarnings('ignore',message='SparseEfficiencyWarning')
 
         random.seed(0)
         sa_old = adaptive_sa_solver(A, initial_candidates=ones((49, 1)),
