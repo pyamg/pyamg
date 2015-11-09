@@ -949,7 +949,7 @@ void overlapping_schwarz_csr(const I Ap[], const int Ap_size,
                                    I row_step)
 {
 
-    T zero = 0.0;
+    //T zero = 0.0;
     T *rsum = new T[nrows];
     T *Dinv_rsum = new T[nrows];
 

@@ -373,7 +373,7 @@ def MIS(G, weights, maxiter=None):
     fn = amg_core.maximal_independent_set_parallel
 
     if maxiter is None:
-        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights)
+        fn(G.shape[0], G.indptr, G.indices, -1, 1, 0, mis, weights, -1)
     else:
         if maxiter < 0:
             raise ValueError('maxiter must be >= 0')

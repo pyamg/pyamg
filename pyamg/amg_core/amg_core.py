@@ -91,7 +91,7 @@ except AttributeError:
 
 
 
-def signof(*args) -> "double":
+def signof(*args):
     """
     signof(int a) -> int
     signof(float a) -> float
@@ -99,7 +99,7 @@ def signof(*args) -> "double":
     """
     return _amg_core.signof(*args)
 
-def conjugate(*args) -> "std::complex< double >":
+def conjugate(*args):
     """
     conjugate(float const & x) -> float
     conjugate(double const & x) -> double
@@ -108,7 +108,7 @@ def conjugate(*args) -> "std::complex< double >":
     """
     return _amg_core.conjugate(*args)
 
-def real(*args) -> "double":
+def real(*args):
     """
     real(float const & x) -> float
     real(double const & x) -> double
@@ -117,7 +117,7 @@ def real(*args) -> "double":
     """
     return _amg_core.real(*args)
 
-def imag(*args) -> "double":
+def imag(*args):
     """
     imag(float const & x) -> float
     imag(double const & x) -> double
@@ -126,7 +126,7 @@ def imag(*args) -> "double":
     """
     return _amg_core.imag(*args)
 
-def mynorm(*args) -> "double":
+def mynorm(*args):
     """
     mynorm(float const & x) -> float
     mynorm(double const & x) -> double
@@ -135,7 +135,7 @@ def mynorm(*args) -> "double":
     """
     return _amg_core.mynorm(*args)
 
-def mynormsq(*args) -> "double":
+def mynormsq(*args):
     """
     mynormsq(float const & x) -> float
     mynormsq(double const & x) -> double
@@ -144,7 +144,7 @@ def mynormsq(*args) -> "double":
     """
     return _amg_core.mynormsq(*args)
 
-def zero_real(*args) -> "std::complex< double >":
+def zero_real(*args):
     """
     zero_real(float & x) -> float
     zero_real(double & x) -> double
@@ -153,7 +153,7 @@ def zero_real(*args) -> "std::complex< double >":
     """
     return _amg_core.zero_real(*args)
 
-def zero_imag(*args) -> "std::complex< double >":
+def zero_imag(*args):
     """
     zero_imag(float & x) -> float
     zero_imag(double & x) -> double
@@ -162,7 +162,7 @@ def zero_imag(*args) -> "std::complex< double >":
     """
     return _amg_core.zero_imag(*args)
 
-def pinv_array(*args) -> "void":
+def pinv_array(*args):
     """
     pinv_array(float [] AA, int const m, int const n, char const TransA)
     pinv_array(double [] AA, int const m, int const n, char const TransA)
@@ -171,37 +171,31 @@ def pinv_array(*args) -> "void":
     """
     return _amg_core.pinv_array(*args)
 
-def maximal_independent_set_serial(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', active: 'int const', C: 'int const', F: 'int const', x: 'int []') -> "int":
+def maximal_independent_set_serial(num_rows, Ap, Aj, active, C, F, x):
     """maximal_independent_set_serial(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x) -> int"""
     return _amg_core.maximal_independent_set_serial(num_rows, Ap, Aj, active, C, F, x)
 
-def maximal_independent_set_parallel(num_rows: 'I const', Ap: 'I const []', Ap_size: 'int const', Aj: 'I const []', Aj_size: 'int const', active: 'T const', C: 'T const', F: 'T const', x: 'T []', x_size: 'int const', y: 'R const []', y_size: 'int const', max_iters: 'I const'=-1) -> "int":
-    """
-    maximal_independent_set_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x, double const [] y, int const max_iters=-1) -> int
-    maximal_independent_set_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x, double const [] y) -> int
-    """
-    return _amg_core.maximal_independent_set_parallel(num_rows, Ap, Ap_size, Aj, Aj_size, active, C, F, x, x_size, y, y_size, max_iters)
+def maximal_independent_set_parallel(num_rows, Ap, Aj, active, C, F, x, y, max_iters):
+    """maximal_independent_set_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const active, int const C, int const F, int [] x, double const [] y, int const max_iters) -> int"""
+    return _amg_core.maximal_independent_set_parallel(num_rows, Ap, Aj, active, C, F, x, y, max_iters)
 
-def maximal_independent_set_k_parallel(num_rows: 'I const', Ap: 'I const []', Ap_size: 'int const', Aj: 'I const []', Aj_size: 'int const', k: 'I const', x: 'T []', x_size: 'int const', y: 'R const []', y_size: 'int const', max_iters: 'I const'=-1) -> "void":
-    """
-    maximal_independent_set_k_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const k, int [] x, double const [] y, int const max_iters=-1)
-    maximal_independent_set_k_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const k, int [] x, double const [] y)
-    """
-    return _amg_core.maximal_independent_set_k_parallel(num_rows, Ap, Ap_size, Aj, Aj_size, k, x, x_size, y, y_size, max_iters)
+def maximal_independent_set_k_parallel(num_rows, Ap, Aj, k, x, y, max_iters):
+    """maximal_independent_set_k_parallel(int const num_rows, int const [] Ap, int const [] Aj, int const k, int [] x, double const [] y, int const max_iters)"""
+    return _amg_core.maximal_independent_set_k_parallel(num_rows, Ap, Aj, k, x, y, max_iters)
 
-def vertex_coloring_mis(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []') -> "int":
+def vertex_coloring_mis(num_rows, Ap, Aj, x):
     """vertex_coloring_mis(int const num_rows, int const [] Ap, int const [] Aj, int [] x) -> int"""
     return _amg_core.vertex_coloring_mis(num_rows, Ap, Aj, x)
 
-def vertex_coloring_jones_plassmann(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', z: 'double []') -> "int":
+def vertex_coloring_jones_plassmann(num_rows, Ap, Aj, x, z):
     """vertex_coloring_jones_plassmann(int const num_rows, int const [] Ap, int const [] Aj, int [] x, double [] z) -> int"""
     return _amg_core.vertex_coloring_jones_plassmann(num_rows, Ap, Aj, x, z)
 
-def vertex_coloring_LDF(num_rows: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'double const []') -> "int":
+def vertex_coloring_LDF(num_rows, Ap, Aj, x, y):
     """vertex_coloring_LDF(int const num_rows, int const [] Ap, int const [] Aj, int [] x, double const [] y) -> int"""
     return _amg_core.vertex_coloring_LDF(num_rows, Ap, Aj, x, y)
 
-def bellman_ford(*args) -> "void":
+def bellman_ford(*args):
     """
     bellman_ford(int const num_rows, int const [] Ap, int const [] Aj, int const [] Ax, int [] x, int [] z)
     bellman_ford(int const num_rows, int const [] Ap, int const [] Aj, float const [] Ax, float [] x, int [] z)
@@ -209,7 +203,7 @@ def bellman_ford(*args) -> "void":
     """
     return _amg_core.bellman_ford(*args)
 
-def lloyd_cluster(*args) -> "void":
+def lloyd_cluster(*args):
     """
     lloyd_cluster(int const num_rows, int const [] Ap, int const [] Aj, int const [] Ax, int const num_seeds, int [] x, int [] w, int [] z)
     lloyd_cluster(int const num_rows, int const [] Ap, int const [] Aj, float const [] Ax, int const num_seeds, float [] x, int [] w, int [] z)
@@ -217,15 +211,15 @@ def lloyd_cluster(*args) -> "void":
     """
     return _amg_core.lloyd_cluster(*args)
 
-def breadth_first_search(Ap: 'int const []', Aj: 'int const []', seed: 'int const', order: 'int []', level: 'int []', leveL_size: 'int const') -> "void":
-    """breadth_first_search(int const [] Ap, int const [] Aj, int const seed, int [] order, int [] level, int const leveL_size)"""
-    return _amg_core.breadth_first_search(Ap, Aj, seed, order, level, leveL_size)
+def breadth_first_search(Ap, Aj, seed, order, level):
+    """breadth_first_search(int const [] Ap, int const [] Aj, int const seed, int [] order, int [] level)"""
+    return _amg_core.breadth_first_search(Ap, Aj, seed, order, level)
 
-def connected_components(num_nodes: 'int const', Ap: 'int const []', Aj: 'int const []', components: 'int []') -> "int":
+def connected_components(num_nodes, Ap, Aj, components):
     """connected_components(int const num_nodes, int const [] Ap, int const [] Aj, int [] components) -> int"""
     return _amg_core.connected_components(num_nodes, Ap, Aj, components)
 
-def apply_householders(*args) -> "void":
+def apply_householders(*args):
     """
     apply_householders(float [] z, float const [] B, int const n, int const start, int const stop, int const step)
     apply_householders(double [] z, double const [] B, int const n, int const start, int const stop, int const step)
@@ -234,7 +228,7 @@ def apply_householders(*args) -> "void":
     """
     return _amg_core.apply_householders(*args)
 
-def householder_hornerscheme(*args) -> "void":
+def householder_hornerscheme(*args):
     """
     householder_hornerscheme(float [] z, float const [] B, float const [] y, int const n, int const start, int const stop, int const step)
     householder_hornerscheme(double [] z, double const [] B, double const [] y, int const n, int const start, int const stop, int const step)
@@ -243,7 +237,7 @@ def householder_hornerscheme(*args) -> "void":
     """
     return _amg_core.householder_hornerscheme(*args)
 
-def apply_givens(*args) -> "void":
+def apply_givens(*args):
     """
     apply_givens(float const [] B, float [] x, int const n, int const nrot)
     apply_givens(double const [] B, double [] x, int const n, int const nrot)
@@ -252,7 +246,7 @@ def apply_givens(*args) -> "void":
     """
     return _amg_core.apply_givens(*args)
 
-def gauss_seidel(*args) -> "void":
+def gauss_seidel(*args):
     """
     gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step)
     gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step)
@@ -261,7 +255,7 @@ def gauss_seidel(*args) -> "void":
     """
     return _amg_core.gauss_seidel(*args)
 
-def bsr_gauss_seidel(*args) -> "void":
+def bsr_gauss_seidel(*args):
     """
     bsr_gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
     bsr_gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
@@ -270,7 +264,7 @@ def bsr_gauss_seidel(*args) -> "void":
     """
     return _amg_core.bsr_gauss_seidel(*args)
 
-def jacobi(*args) -> "void":
+def jacobi(*args):
     """
     jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega)
     jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega)
@@ -279,7 +273,7 @@ def jacobi(*args) -> "void":
     """
     return _amg_core.jacobi(*args)
 
-def bsr_jacobi(*args) -> "void":
+def bsr_jacobi(*args):
     """
     bsr_jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, float const [] omega)
     bsr_jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double [] temp, int const row_start, int const row_stop, int const row_step, int const blocksize, double const [] omega)
@@ -288,7 +282,7 @@ def bsr_jacobi(*args) -> "void":
     """
     return _amg_core.bsr_jacobi(*args)
 
-def gauss_seidel_indexed(*args) -> "void":
+def gauss_seidel_indexed(*args):
     """
     gauss_seidel_indexed(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
     gauss_seidel_indexed(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const [] Id, int const row_start, int const row_stop, int const row_step)
@@ -297,7 +291,7 @@ def gauss_seidel_indexed(*args) -> "void":
     """
     return _amg_core.gauss_seidel_indexed(*args)
 
-def jacobi_ne(*args) -> "void":
+def jacobi_ne(*args):
     """
     jacobi_ne(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega)
     jacobi_ne(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega)
@@ -306,7 +300,7 @@ def jacobi_ne(*args) -> "void":
     """
     return _amg_core.jacobi_ne(*args)
 
-def gauss_seidel_nr(*args) -> "void":
+def gauss_seidel_nr(*args):
     """
     gauss_seidel_nr(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float [] z, int const col_start, int const col_stop, int const col_step, float const [] Tx, float const omega)
     gauss_seidel_nr(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double [] z, int const col_start, int const col_stop, int const col_step, double const [] Tx, double const omega)
@@ -315,7 +309,7 @@ def gauss_seidel_nr(*args) -> "void":
     """
     return _amg_core.gauss_seidel_nr(*args)
 
-def gauss_seidel_ne(*args) -> "void":
+def gauss_seidel_ne(*args):
     """
     gauss_seidel_ne(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step, float const [] Tx, float const omega)
     gauss_seidel_ne(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const row_start, int const row_stop, int const row_step, double const [] Tx, double const omega)
@@ -324,7 +318,7 @@ def gauss_seidel_ne(*args) -> "void":
     """
     return _amg_core.gauss_seidel_ne(*args)
 
-def block_jacobi(*args) -> "void":
+def block_jacobi(*args):
     """
     block_jacobi(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, float [] temp, int const row_start, int const row_stop, int const row_step, float const [] omega, int const blocksize)
     block_jacobi(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, double [] temp, int const row_start, int const row_stop, int const row_step, double const [] omega, int const blocksize)
@@ -333,7 +327,7 @@ def block_jacobi(*args) -> "void":
     """
     return _amg_core.block_jacobi(*args)
 
-def block_gauss_seidel(*args) -> "void":
+def block_gauss_seidel(*args):
     """
     block_gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
     block_gauss_seidel(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, int const row_start, int const row_stop, int const row_step, int const blocksize)
@@ -342,7 +336,7 @@ def block_gauss_seidel(*args) -> "void":
     """
     return _amg_core.block_gauss_seidel(*args)
 
-def extract_subblocks(*args) -> "void":
+def extract_subblocks(*args):
     """
     extract_subblocks(int const [] Ap, int const [] Aj, float const [] Ax, float [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
     extract_subblocks(int const [] Ap, int const [] Aj, double const [] Ax, double [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int const nsdomains, int const nrows)
@@ -351,7 +345,7 @@ def extract_subblocks(*args) -> "void":
     """
     return _amg_core.extract_subblocks(*args)
 
-def overlapping_schwarz_csr(*args) -> "void":
+def overlapping_schwarz_csr(*args):
     """
     overlapping_schwarz_csr(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, float const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
     overlapping_schwarz_csr(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, double const [] Tx, int const [] Tp, int const [] Sj, int const [] Sp, int nsdomains, int nrows, int row_start, int row_stop, int row_step)
@@ -360,7 +354,7 @@ def overlapping_schwarz_csr(*args) -> "void":
     """
     return _amg_core.overlapping_schwarz_csr(*args)
 
-def symmetric_strength_of_connection(*args) -> "void":
+def symmetric_strength_of_connection(*args):
     """
     symmetric_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
     symmetric_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
@@ -369,15 +363,15 @@ def symmetric_strength_of_connection(*args) -> "void":
     """
     return _amg_core.symmetric_strength_of_connection(*args)
 
-def naive_aggregation(n_row: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'int []') -> "int":
+def naive_aggregation(n_row, Ap, Aj, x, y):
     """naive_aggregation(int const n_row, int const [] Ap, int const [] Aj, int [] x, int [] y) -> int"""
     return _amg_core.naive_aggregation(n_row, Ap, Aj, x, y)
 
-def standard_aggregation(n_row: 'int const', Ap: 'int const []', Aj: 'int const []', x: 'int []', y: 'int []') -> "int":
+def standard_aggregation(n_row, Ap, Aj, x, y):
     """standard_aggregation(int const n_row, int const [] Ap, int const [] Aj, int [] x, int [] y) -> int"""
     return _amg_core.standard_aggregation(n_row, Ap, Aj, x, y)
 
-def fit_candidates(*args) -> "void":
+def fit_candidates(*args):
     """
     fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, float [] Ax, float const [] B, float [] R, float const tol)
     fit_candidates(int const n_row, int const n_col, int const K1, int const K2, int const [] Ap, int const [] Ai, double [] Ax, double const [] B, double [] R, double const tol)
@@ -386,7 +380,7 @@ def fit_candidates(*args) -> "void":
     """
     return _amg_core.fit_candidates(*args)
 
-def satisfy_constraints_helper(*args) -> "void":
+def satisfy_constraints_helper(*args):
     """
     satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, float const [] x, float const [] y, float const [] z, int const [] Sp, int const [] Sj, float [] Sx)
     satisfy_constraints_helper(int const RowsPerBlock, int const ColsPerBlock, int const num_block_rows, int const NullDim, double const [] x, double const [] y, double const [] z, int const [] Sp, int const [] Sj, double [] Sx)
@@ -395,7 +389,7 @@ def satisfy_constraints_helper(*args) -> "void":
     """
     return _amg_core.satisfy_constraints_helper(*args)
 
-def calc_BtB(*args) -> "void":
+def calc_BtB(*args):
     """
     calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, float const [] b, int const BsqCols, float [] x, int const [] Sp, int const [] Sj)
     calc_BtB(int const NullDim, int const Nnodes, int const ColsPerBlock, double const [] b, int const BsqCols, double [] x, int const [] Sp, int const [] Sj)
@@ -404,7 +398,7 @@ def calc_BtB(*args) -> "void":
     """
     return _amg_core.calc_BtB(*args)
 
-def incomplete_mat_mult_bsr(*args) -> "void":
+def incomplete_mat_mult_bsr(*args):
     """
     incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, float const [] Ax, int const [] Bp, int const [] Bj, float const [] Bx, int const [] Sp, int const [] Sj, float [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
     incomplete_mat_mult_bsr(int const [] Ap, int const [] Aj, double const [] Ax, int const [] Bp, int const [] Bj, double const [] Bx, int const [] Sp, int const [] Sj, double [] Sx, int const n_brow, int const n_bcol, int const brow_A, int const bcol_A, int const bcol_B)
@@ -422,7 +416,7 @@ C_NODE = _amg_core.C_NODE
 _amg_core.U_NODE_swigconstant(_amg_core)
 U_NODE = _amg_core.U_NODE
 
-def classical_strength_of_connection(*args) -> "void":
+def classical_strength_of_connection(*args):
     """
     classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
     classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
@@ -431,7 +425,7 @@ def classical_strength_of_connection(*args) -> "void":
     """
     return _amg_core.classical_strength_of_connection(*args)
 
-def maximum_row_value(*args) -> "void":
+def maximum_row_value(*args):
     """
     maximum_row_value(int const n_row, float [] x, int const [] Ap, int const [] Aj, float const [] Ax)
     maximum_row_value(int const n_row, double [] x, int const [] Ap, int const [] Aj, double const [] Ax)
@@ -440,47 +434,47 @@ def maximum_row_value(*args) -> "void":
     """
     return _amg_core.maximum_row_value(*args)
 
-def rs_cf_splitting(n_nodes: 'int const', Sp: 'int const []', Sj: 'int const []', Tp: 'int const []', Tj: 'int const []', splitting: 'int []') -> "void":
+def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting):
     """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting)"""
     return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting)
 
-def cljp_naive_splitting(n: 'int const', Sp: 'int const []', Sj: 'int const []', Tp: 'int const []', Tj: 'int const []', splitting: 'int []', colorflag: 'int const') -> "void":
+def cljp_naive_splitting(n, Sp, Sj, Tp, Tj, splitting, colorflag):
     """cljp_naive_splitting(int const n, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"""
     return _amg_core.cljp_naive_splitting(n, Sp, Sj, Tp, Tj, splitting, colorflag)
 
-def rs_direct_interpolation_pass1(n_nodes: 'int const', Sp: 'int const []', Sj: 'int const []', splitting: 'int const []', splitting_size: 'int const', Bp: 'int []') -> "void":
-    """rs_direct_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int const splitting_size, int [] Bp)"""
-    return _amg_core.rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, splitting_size, Bp)
+def rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp):
+    """rs_direct_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int [] Bp)"""
+    return _amg_core.rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp)
 
-def rs_direct_interpolation_pass2(*args) -> "void":
+def rs_direct_interpolation_pass2(*args):
     """
-    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, float [] Bx)
-    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const splitting_size, int const [] Bp, int [] Bj, double [] Bx)
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, float [] Bx)
+    rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, double [] Bx)
     """
     return _amg_core.rs_direct_interpolation_pass2(*args)
 
-def apply_distance_filter(*args) -> "void":
+def apply_distance_filter(*args):
     """
     apply_distance_filter(int const n_row, float const epsilon, int const [] Sp, int const [] Sj, float [] Sx)
     apply_distance_filter(int const n_row, double const epsilon, int const [] Sp, int const [] Sj, double [] Sx)
     """
     return _amg_core.apply_distance_filter(*args)
 
-def apply_absolute_distance_filter(*args) -> "void":
+def apply_absolute_distance_filter(*args):
     """
     apply_absolute_distance_filter(int const n_row, float const epsilon, int const [] Sp, int const [] Sj, float [] Sx)
     apply_absolute_distance_filter(int const n_row, double const epsilon, int const [] Sp, int const [] Sj, double [] Sx)
     """
     return _amg_core.apply_absolute_distance_filter(*args)
 
-def min_blocks(*args) -> "void":
+def min_blocks(*args):
     """
     min_blocks(int const n_blocks, int const blocksize, float const [] Sx, float [] Tx)
     min_blocks(int const n_blocks, int const blocksize, double const [] Sx, double [] Tx)
     """
     return _amg_core.min_blocks(*args)
 
-def evolution_strength_helper(*args) -> "void":
+def evolution_strength_helper(*args):
     """
     evolution_strength_helper(float [] Sx, int const [] Sp, int const [] Sj, int const nrows, float const [] x, float const [] y, float const [] b, int const BDBCols, int const NullDim, float const tol)
     evolution_strength_helper(double [] Sx, int const [] Sp, int const [] Sj, int const nrows, double const [] x, double const [] y, double const [] b, int const BDBCols, int const NullDim, double const tol)
@@ -489,7 +483,7 @@ def evolution_strength_helper(*args) -> "void":
     """
     return _amg_core.evolution_strength_helper(*args)
 
-def incomplete_mat_mult_csr(*args) -> "void":
+def incomplete_mat_mult_csr(*args):
     """
     incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, float const [] Ax, int const [] Bp, int const [] Bj, float const [] Bx, int const [] Sp, int const [] Sj, float [] Sx, int const num_rows)
     incomplete_mat_mult_csr(int const [] Ap, int const [] Aj, double const [] Ax, int const [] Bp, int const [] Bj, double const [] Bx, int const [] Sp, int const [] Sj, double [] Sx, int const num_rows)

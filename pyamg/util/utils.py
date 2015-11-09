@@ -670,7 +670,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
-            pyamg.amg_core.pinv_array(block_diag, block_diag.shape[0],
+            pyamg.amg_core.pinv_array(block_diag.ravel(), block_diag.shape[0],
                                       block_diag.shape[1], 'T')
         else:
             pinv_array(block_diag)

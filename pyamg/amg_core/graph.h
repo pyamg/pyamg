@@ -96,7 +96,7 @@ I maximal_independent_set_parallel(const I num_rows,
                                    const T  F,
                                          T  x[], const int  x_size,
                                    const R  y[], const int  y_size,
-                                   const I  max_iters=-1)
+                                   const I  max_iters)
 {
     I N = 0;
     I num_iters = 0;
@@ -523,7 +523,7 @@ void maximal_independent_set_k_parallel(const I num_rows,
                                         const I  k,
                                               T  x[], const int  x_size,
                                         const R  y[], const int  y_size,
-                                        const I  max_iters=-1)
+                                        const I  max_iters)
 {
     std::vector<bool> active(num_rows,true);
 
@@ -608,7 +608,7 @@ void breadth_first_search(const I Ap[], const int Ap_size,
                           const I Aj[], const int Aj_size,
                           const I seed,
                                 I order[], const int order_size,
-                                I level[], const int leveL_size)
+                                I level[], const int level_size)
 {
     // initialize seed
     order[0]    = seed;

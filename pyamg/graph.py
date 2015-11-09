@@ -70,12 +70,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = amg_core.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N))
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N), -1)
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
         fn = amg_core.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, sp.rand(N))
+        fn(N, G.indptr, G.indices, k, mis, sp.rand(N), -1)
 
     return mis
 
