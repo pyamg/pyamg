@@ -3,7 +3,6 @@
 
 PyAMG is a library of Algebraic Multigrid (AMG) solvers
 with a convenient Python interface.
-
 """
 
 import os
@@ -51,9 +50,9 @@ CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
 LICENSE = 'BSD'
 MAJOR = 2
-MINOR = 2
-MICRO = 1
-ISRELEASED = False
+MINOR = 3
+MICRO = 2
+ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
@@ -69,7 +68,6 @@ INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 #       D: date in format YYYYMMDDHHMMSS
 #       R: which repository (fork) this came from with git remote show origin
 #       then add this to say fullversion.py
-
 
 # Return the git revision as a string
 def git_version():
