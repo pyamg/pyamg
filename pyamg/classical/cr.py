@@ -1,4 +1,5 @@
 """Compatible Relaxation"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -241,7 +242,7 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3, 0.5],
     # 3.1c
     for it in range(0, maxiter):
 
-        print it
+        print(it)
         # 3.1d (assuming constant initial e in _CRsweep)
         # should already be zero at C pts (Cindex)
         gamma[Findex] = np.abs(e[Findex]) / np.abs(e[Findex]).max()
@@ -284,7 +285,7 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3, 0.5],
         Findex = np.where(splitting == 0)[0]
         rho, e = _CRsweep(A, Findex, Cindex, nu, thetacr, method=method)
 
-        print rho
+        print(rho)
         if rho < thetacr:
             break
 
@@ -360,7 +361,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
             c1 = (n-2)*(beta[i] - d[i]*x[i])
             c0 = -d[i]*x[i]*x[i] + 2*beta[i]*x[i] - n*betabar
             if (-c0 < 1e-14):
-                print 'warning: A nearly un-binormalizable...'
+                print('warning: A nearly un-binormalizable...')
                 return A
             else:
                 # see equation (12)

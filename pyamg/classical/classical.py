@@ -1,4 +1,5 @@
 """Classical AMG (Ruge-Stuben AMG)"""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredtext en"
 
@@ -12,8 +13,8 @@ from pyamg.strength import classical_strength_of_connection, \
     distance_strength_of_connection, energy_based_strength_of_connection,\
     algebraic_distance
 
-from interpolate import direct_interpolation
-import split
+from .interpolate import direct_interpolation
+from . import split
 
 __all__ = ['ruge_stuben_solver']
 
