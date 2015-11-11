@@ -4,13 +4,14 @@
 PyAMG is a library of Algebraic Multigrid (AMG) solvers
 with a convenient Python interface.
 """
+from __future__ import unicode_literals
 
 import os
 import sys
 import subprocess
 
-if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
-    raise RuntimeError("Python version 2.6, 2.7 required.")
+#if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
+#    raise RuntimeError("Python version 2.6, 2.7 required.")
 
 if sys.version_info[0] >= 3:
     import builtins
@@ -88,7 +89,7 @@ def git_version():
 
     try:
         out = _minimal_ext_cmd(['git', 'describe', '--always'])
-        GIT_REVISION = out.strip()
+        GIT_REVISION = out.decode('utf-8', 'strict').strip()
     except OSError:
         GIT_REVISION = "Unknown"
 
