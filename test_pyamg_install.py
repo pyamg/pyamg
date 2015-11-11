@@ -7,6 +7,7 @@ Can be expand tof more verbose testing and coverage.
 
 See NumPy/SciPy examples.
 """
+from __future__ import print_function
 import sys
 
 sys.path.pop(0)
@@ -15,10 +16,10 @@ import pyamg
 
 result = pyamg.test()
 
-print result
+print(result)
 
-print "--------"
-print result.wasSuccessful()
+print("--------")
+print(result.wasSuccessful())
 
 if result.wasSuccessful():
     sys.exit(0)
