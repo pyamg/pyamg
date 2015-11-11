@@ -1,5 +1,6 @@
-from _gmres_mgs import gmres_mgs
-from _gmres_householder import gmres_householder
+from __future__ import absolute_import
+from ._gmres_mgs import gmres_mgs
+from ._gmres_householder import gmres_householder
 
 __docformat__ = "restructuredtext en"
 

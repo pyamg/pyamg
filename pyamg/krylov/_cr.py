@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import inner, mod, sqrt
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
@@ -201,23 +202,23 @@ if __name__ == '__main__':
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 
-    print '\n\nTesting CR with %d x %d 2D Laplace Matrix' % \
-          (A.shape[0], A.shape[0])
+    print('\n\nTesting CR with %d x %d 2D Laplace Matrix' % \
+          (A.shape[0], A.shape[0]))
     t1 = time.time()
     r = []
     (x, flag) = cr(A, b, x0, tol=1e-8, maxiter=100, residuals=r)
     t2 = time.time()
-    print '%s took %0.3f ms' % ('cr', (t2-t1)*1000.0)
-    print 'norm = %g' % (norm(b - A*x))
-    print 'info flag = %d' % (flag)
+    print('%s took %0.3f ms' % ('cr', (t2-t1)*1000.0))
+    print('norm = %g' % (norm(b - A*x)))
+    print('info flag = %d' % (flag))
 
     t1 = time.time()
     r2 = []
     (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100, residuals=r2)
     t2 = time.time()
-    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
-    print 'norm = %g' % (norm(b - A*x))
-    print 'info flag = %d' % (flag)
+    print('%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0))
+    print('norm = %g' % (norm(b - A*x)))
+    print('info flag = %d' % (flag))
 
     # from scipy.sparse.linalg.isolve import cg as icg
     # t1=time.time()

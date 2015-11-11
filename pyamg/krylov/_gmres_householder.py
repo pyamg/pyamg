@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import array, zeros, ravel, abs, max, dot, conjugate
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
@@ -391,19 +392,19 @@ if __name__ == '__main__':
     import time
     from scipy.sparse.linalg.isolve import gmres as igmres
 
-    print '\n\nTesting GMRES with %d x %d 2D Laplace Matrix' % \
-          (A.shape[0], A.shape[0])
+    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' % \
+          (A.shape[0], A.shape[0]))
     t1 = time.time()
     (x, flag) = gmres_householder(A, b, x0, tol=1e-8, maxiter=500)
     t2 = time.time()
-    print '%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0)
-    print 'norm = %g' % (norm(b - A*x))
-    print 'info flag = %d' % (flag)
+    print('%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0))
+    print('norm = %g' % (norm(b - A*x)))
+    print('info flag = %d' % (flag))
 
     t1 = time.time()
     # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
     (y, flag) = igmres(A, b, x0, tol=1e-8)
     t2 = time.time()
-    print '\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0)
-    print 'norm = %g' % (norm(b - A*y))
-    print 'info flag = %d' % (flag)
+    print('\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0))
+    print('norm = %g' % (norm(b - A*y)))
+    print('info flag = %d' % (flag))
