@@ -1,4 +1,5 @@
 ''' Linear Algebra Helper Routines '''
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -573,7 +574,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         return True
     else:
         if verbose:
-            print diff
+            print(diff)
         return False
 
     return diff

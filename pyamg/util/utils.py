@@ -1,4 +1,5 @@
 """General utility functions for pyamg"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -997,8 +998,8 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             handle = pylab.ylabel('imag(eig)')
             handle.set_fontsize(17)
 
-    print print_table(real_table)
-    print print_table(imag_table)
+    print(print_table(real_table))
+    print(print_table(imag_table))
 
     if plot:
         pylab.show()
