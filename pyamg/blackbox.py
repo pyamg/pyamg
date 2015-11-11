@@ -1,4 +1,5 @@
 """Solve an arbitrary system"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -39,7 +40,7 @@ def make_csr(A):
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            print 'Implicit conversion of A to CSR in pyamg.blackbox.make_csr'
+            print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
         except:
             raise TypeError('Argument A must have type csr_matrix or\
                     bsr_matrix, or be convertible to csr_matrix')
@@ -97,11 +98,11 @@ def solver_configuration(A, B=None, verb=True):
     if ishermitian(A, fast_check=True):
         config['symmetry'] = 'hermitian'
         if verb:
-            print "  Detected a Hermitian matrix"
+            print("  Detected a Hermitian matrix")
     else:
         config['symmetry'] = 'nonsymmetric'
         if verb:
-            print "  Detected a non-Hermitian matrix"
+            print("  Detected a non-Hermitian matrix")
 
     # Symmetry dependent parameters
     if config['symmetry'] == 'hermitian':
@@ -301,11 +302,11 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     # Callback function to print iteration number
     if verb:
         iteration = np.zeros((1,))
-        print "    maxiter = %d" % maxiter
+        print("    maxiter = %d" % maxiter)
 
         def callback(x, iteration):
             iteration[0] = iteration[0] + 1
-            print "    iteration %d" % iteration[0]
+            print("    iteration %d" % iteration[0])
 
         callback2 = lambda x: callback(x, iteration)
     else:
@@ -318,9 +319,9 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         r0 = norm(np.ravel(b) - np.ravel(A * x0))
         rk = norm(np.ravel(b) - np.ravel(A * x))
         if r0 != 0.0:
-            print "  Residual reduction ||r_k||/||r_0|| = %1.2e" % (rk / r0)
+            print("  Residual reduction ||r_k||/||r_0|| = %1.2e" % (rk / r0))
         else:
-            print "  Residuals ||r_k||, ||r_0|| = %1.2e, %1.2e" % (rk, r0)
+            print("  Residuals ||r_k||, ||r_0|| = %1.2e, %1.2e" % (rk, r0))
 
     if return_solver:
         return (x.reshape(b.shape), existing_solver)
