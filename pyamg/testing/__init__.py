@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy.testing import *
 
 
@@ -7,24 +8,24 @@ def _show_system_info(self):
     nose = nosetester.import_nose()
 
     import numpy
-    print "NumPy version %s" % numpy.__version__
+    print("NumPy version %s" % numpy.__version__)
     npdir = os.path.dirname(numpy.__file__)
-    print "NumPy is installed in %s" % npdir
+    print("NumPy is installed in %s" % npdir)
 
     import scipy
-    print "SciPy version %s" % scipy.__version__
+    print("SciPy version %s" % scipy.__version__)
     spdir = os.path.dirname(scipy.__file__)
-    print "SciPy is installed in %s" % spdir
+    print("SciPy is installed in %s" % spdir)
 
     pyversion = sys.version.replace('\n', '')
-    print "Python version %s" % pyversion
+    print("Python version %s" % pyversion)
 
-    print "nose version %d.%d.%d" % nose.__versioninfo__
+    print("nose version %d.%d.%d" % nose.__versioninfo__)
 
     import pyamg
-    print "PyAMG version %s" % pyamg.__version__
+    print("PyAMG version %s" % pyamg.__version__)
     spdir = os.path.dirname(pyamg.__file__)
-    print "PyAMG is installed in %s" % spdir
+    print("PyAMG is installed in %s" % spdir)
 
 
 nosetester.NoseTester._show_system_info = _show_system_info
