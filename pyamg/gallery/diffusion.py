@@ -7,6 +7,7 @@ The stencils include redundancy to maintain readability for simple cases (e.g.
 isotropic diffusion).
 
 """
+from __future__ import print_function
 
 import numpy as np
 
@@ -161,7 +162,7 @@ def _symbolic_rotation_helper():
 
     for i in range(3):
         for j in range(3):
-            print 'D[%d, %d] = %s' % (i, j, D[i, j])
+            print('D[%d, %d] = %s' % (i, j, D[i, j]))
 
 
 def _symbolic_product_helper():
@@ -181,7 +182,7 @@ def _symbolic_product_helper():
 
     a = div * D * grad
 
-    print a[0]
+    print(a[0])
 
 
 def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,

@@ -1,4 +1,5 @@
 """Construct sparse matrix from a local stencil"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -169,4 +170,4 @@ if __name__ == '__main__':
 
     A = stencil_grid(S, grid)
 
-    print A.todense()
+    print(A.todense())

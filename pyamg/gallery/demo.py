@@ -1,5 +1,6 @@
 """Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG
 with AMG"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 __all__ = ['demo']
@@ -17,7 +18,7 @@ def demo():
 
     # use AMG based on Smoothed Aggregation (SA) and display info
     mls = smoothed_aggregation_solver(A, B=B)
-    print mls
+    print(mls)
 
     # Solve Ax=b with no acceleration ('standalone' solver)
     standalone_residuals = []
@@ -37,8 +38,8 @@ def demo():
     factor1 = standalone_residuals[-1]**(1.0/len(standalone_residuals))
     factor2 = accelerated_residuals[-1]**(1.0/len(accelerated_residuals))
 
-    print "                     MG convergence factor: %g" % (factor1)
-    print "MG with CG acceleration convergence factor: %g" % (factor2)
+    print("                     MG convergence factor: %g" % (factor1))
+    print("MG with CG acceleration convergence factor: %g" % (factor2))
 
     # Plot convergence history
     try:
@@ -54,4 +55,4 @@ def demo():
         pylab.legend()
         pylab.show()
     except ImportError:
-        print "\n\nNote: pylab not available on your system."
+        print("\n\nNote: pylab not available on your system.")

@@ -1,4 +1,5 @@
 """Discretizations of the Poisson problem"""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredtext en"
 
@@ -7,7 +8,7 @@ __all__ = ['poisson', 'gauge_laplacian']
 import numpy as np
 import scipy as sp
 
-from stencil import stencil_grid
+from .stencil import stencil_grid
 
 
 def poisson(grid, spacing=None, dtype=float, format=None):
