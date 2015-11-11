@@ -12,7 +12,7 @@ from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
 from pyamg.multilevel import multilevel_solver
 from pyamg.strength import symmetric_strength_of_connection,\
     classical_strength_of_connection, evolution_strength_of_connection
-from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne,\
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne,\
     gauss_seidel_indexed, jacobi, polynomial
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres

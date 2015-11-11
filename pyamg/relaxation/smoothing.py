@@ -5,13 +5,11 @@ from __future__ import absolute_import
 import numpy as np
 import scipy as sp
 from . import relaxation
-from . import smoothing
 from .chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 from pyamg import amg_core
-from scipy.linalg import lapack as la
 
 __docformat__ = "restructuredtext en"
 
@@ -147,8 +145,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn, kwargs = unpack_arg(presmoother[i])
         # get function handle
         try:
-            setup_presmoother =\
-                getattr(smoothing, 'setup_' + str(fn))
+            setup_presmoother = eval('setup_' + str(fn))
         except NameError:
             raise NameError("invalid presmoother method: ", fn)
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs)
@@ -164,8 +161,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn, kwargs = unpack_arg(postsmoother[i])
         # get function handle
         try:
-            setup_postsmoother =\
-                getattr(smoothing, 'setup_' + str(fn))
+            setup_postsmoother = eval('setup_' + str(fn))
         except NameError:
             raise NameError("invalid postsmoother method: ", fn)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs)
@@ -295,90 +291,6 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
     return getattr(lvl, desired_matrix)
 
-# Appends
-# A.schwarz_tuple = (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr)
-# to the matrix passed in If this tuple already exists, return it, otherwise
-# compute it Should work for passing in both A and the Strength matrix C Make
-# sure to wrap an Acsr into the schwarz call
-# make sure that it handles passing in preset subdomain stuff, and recomputing
-# it
-
-# If subdomain and subdomain_ptr are passed in, check to see that they are the
-# same as any preexisting subdomain and subdomain_ptr?
-
-
-def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
-                       inv_subblock=None, inv_subblock_ptr=None):
-    '''
-    Helper function for setting up Schwarz relaxation.  This function avoids
-    recomputing the subdomains and block inverses manytimes, e.g., it avoids a
-    costly double computation when setting up pre and post smoothing with
-    Schwarz.
-
-    Parameters
-    ----------
-    A {csr_matrix}
-
-    Returns
-    -------
-    A.schwarz_parameters[0] is subdomain
-    A.schwarz_parameters[1] is subdomain_ptr
-    A.schwarz_parameters[2] is inv_subblock
-    A.schwarz_parameters[3] is inv_subblock_ptr
-    '''
-
-    # Check if A has a pre-existing set of Schwarz parameters
-    if hasattr(A, 'schwarz_parameters'):
-        if subdomain is not None and subdomain_ptr is not None:
-            # check that the existing parameters correspond to the same
-            # subdomains
-            if np.array(A.schwarz_parameters[0] == subdomain).all() and \
-               np.array(A.schwarz_parameters[1] == subdomain_ptr).all():
-                return A.schwarz_parameters
-        else:
-            return A.schwarz_parameters
-
-    # Default is to use the overlapping regions defined by A's sparsity pattern
-    if subdomain is None or subdomain_ptr is None:
-        subdomain_ptr = A.indptr.copy()
-        subdomain = A.indices.copy()
-
-    # Extract each subdomain's block from the matrix
-    if inv_subblock is None or inv_subblock_ptr is None:
-        inv_subblock_ptr = np.zeros(subdomain_ptr.shape,
-                                    dtype=A.indices.dtype)
-        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
-        inv_subblock_ptr[1:] = np.cumsum(blocksize*blocksize)
-
-        # Extract each block column from A
-        inv_subblock = np.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
-        amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock,
-                                   inv_subblock_ptr, subdomain, subdomain_ptr,
-                                   int(subdomain_ptr.shape[0]-1), A.shape[0])
-        # Choose tolerance for which singular values are zero in *gelss below
-        t = A.dtype.char
-        eps = np.finfo(np.float).eps
-        feps = np.finfo(np.single).eps
-        geps = np.finfo(np.longfloat).eps
-        _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-        cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
-
-        # Invert each block column
-        my_pinv, = la.get_lapack_funcs(['gelss'],
-                                       (np.ones((1,), dtype=A.dtype)))
-        for i in xrange(subdomain_ptr.shape[0]-1):
-            m = blocksize[i]
-            rhs = sp.eye(m, m, dtype=A.dtype)
-            j0 = inv_subblock_ptr[i]
-            j1 = inv_subblock_ptr[i+1]
-            gelssoutput = my_pinv(inv_subblock[j0:j1].reshape(m, m),
-                                  rhs, cond=cond, overwrite_a=True,
-                                  overwrite_b=True)
-            inv_subblock[j0:j1] = np.ravel(gelssoutput[1])
-
-    A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock,
-                            inv_subblock_ptr)
-    return A.schwarz_parameters
 
 """
     The following setup_smoother_name functions are helper functions for
@@ -427,7 +339,7 @@ def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None,
 
     matrix_asformat(lvl, 'A', 'csr')
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
-        schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr, inv_subblock,
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr, inv_subblock,
                            inv_subblock_ptr)
 
     def smoother(A, x, b):

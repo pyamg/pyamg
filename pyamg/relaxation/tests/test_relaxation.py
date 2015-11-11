@@ -6,9 +6,10 @@ from scipy import arange, ones, zeros, array, allclose, \
 from scipy.linalg import solve
 
 from pyamg.gallery import poisson, sprand, elasticity
-from pyamg.relaxation import gauss_seidel, jacobi, block_jacobi,\
-    block_gauss_seidel, jacobi_ne, schwarz, sor, gauss_seidel_indexed,\
-    polynomial, gauss_seidel_ne, gauss_seidel_nr
+from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
+    block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
+    gauss_seidel_indexed, polynomial, gauss_seidel_ne,\
+    gauss_seidel_nr
 from pyamg.util.utils import get_block_diag
 
 from numpy.testing import TestCase, assert_raises, assert_almost_equal

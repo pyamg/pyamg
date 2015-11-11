@@ -8,7 +8,7 @@ import scipy as sp
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
 
-from pyamg.relaxation import gauss_seidel, gauss_seidel_indexed
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 
 __all__ = ['CR', 'binormalize']
 

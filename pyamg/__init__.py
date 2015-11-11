@@ -14,7 +14,7 @@ Utility tools
 
 """
 
-# We first need to detect if we're being called as part of the numpy setup
+# We first need to detect if we're being called as part of the pyamg setup
 # procedure itself in a reliable manner.
 try:
     __PYAMG_SETUP__
@@ -24,11 +24,11 @@ except NameError:
 
 if __PYAMG_SETUP__:
     import sys as _sys
-    _sys.stderr.write('Running from numpy source directory.\n')
+    _sys.stderr.write('Running from pyamg source directory.\n')
     del _sys
 else:
     try:
-        from __config__ import show as show_config
+        from pyamg.__config__ import show as show_config
     except ImportError as e:
         msg = """Error importing pyamg: you cannot import pyamg while
         being in pyamg source directory; please exit the pyamg source

@@ -228,7 +228,7 @@ class TestUtils(TestCase):
                     x_linop = relax*x
 
                     # manually run the relaxation routine
-                    relax2 = getattr(pyamg.relaxation, method)
+                    relax2 = getattr(pyamg.relaxation.relaxation, method)
                     x_gold = x.copy()
                     blockflag = False
                     kwargs_gold = dict(kwargs)
