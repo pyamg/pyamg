@@ -1,4 +1,5 @@
 """Algorithms related to graphs"""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredtext en"
 
@@ -6,7 +7,7 @@ import numpy as np
 import scipy as sp
 from scipy import sparse
 
-import amg_core
+from . import amg_core
 
 __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
            'lloyd_cluster', 'connected_components']
