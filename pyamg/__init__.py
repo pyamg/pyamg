@@ -1,6 +1,7 @@
 """PyAMG: Algebraic Multigrid Solvers in Python"""
+from __future__ import absolute_import
 
-from info import __doc__
+from .info import __doc__
 
 __doc__ += """
 
@@ -28,7 +29,7 @@ if __PYAMG_SETUP__:
 else:
     try:
         from __config__ import show as show_config
-    except ImportError, e:
+    except ImportError as e:
         msg = """Error importing pyamg: you cannot import pyamg while
         being in pyamg source directory; please exit the pyamg source
         tree first, and relaunch your python interpreter."""
@@ -54,14 +55,14 @@ else:
 
     del _numpy, _scipy
 
-    from version import git_revision as __git_revision__
-    from version import version as __version__
+    from .version import git_revision as __git_revision__
+    from .version import version as __version__
 
-    from multilevel import *
-    from classical import ruge_stuben_solver
-    from aggregation import smoothed_aggregation_solver, rootnode_solver
-    from gallery import demo
-    from blackbox import solve, solver, solver_configuration
+    from .multilevel import *
+    from .classical import ruge_stuben_solver
+    from .aggregation import smoothed_aggregation_solver, rootnode_solver
+    from .gallery import demo
+    from .blackbox import solve, solver, solver_configuration
 
     __all__ = [s for s in dir() if not s.startswith('_')]
     __all__ += ['test', '__version__']
