@@ -1,5 +1,6 @@
 """Compute coefficients for polynomial smoothers
 """
+from __future__ import print_function
 
 import numpy as np
 
@@ -120,7 +121,7 @@ if __name__ == '__main__':
         degree = 4
 
         coeffs = chebyshev_polynomial_coefficients(a, b, degree)
-        print "coeffs", coeffs
+        print("coeffs", coeffs)
 
         import matplotlib.pyplot as plt
         x = np.linspace(-0.1, 1.1, 100)

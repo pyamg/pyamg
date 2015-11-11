@@ -1,11 +1,12 @@
 """Method to create pre and post-smoothers on the levels of a multilevel_solver
 """
+from __future__ import absolute_import
 
 import numpy as np
 import scipy as sp
-import relaxation
-import smoothing
-from chebyshev import chebyshev_polynomial_coefficients
+from . import relaxation
+from . import smoothing
+from .chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
