@@ -1,4 +1,5 @@
 """Adaptive Smoothed Aggregation"""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredtext en"
 
@@ -16,11 +17,11 @@ from pyamg.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne,\
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
 from pyamg.util.linalg import norm, approximate_spectral_radius
-from aggregation import smoothed_aggregation_solver
-from aggregate import standard_aggregation, lloyd_aggregation
-from smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
+from .aggregation import smoothed_aggregation_solver
+from .aggregate import standard_aggregation, lloyd_aggregation
+from .smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
     richardson_prolongation_smoother
-from tentative import fit_candidates
+from .tentative import fit_candidates
 from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
 

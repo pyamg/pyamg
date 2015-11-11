@@ -1,4 +1,5 @@
 """Support for aggregation-based AMG"""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredtext en"
 
@@ -18,10 +19,10 @@ from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance
-from aggregate import standard_aggregation, naive_aggregation, \
+from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
-from tentative import fit_candidates
-from smooth import energy_prolongation_smoother
+from .tentative import fit_candidates
+from .smooth import energy_prolongation_smoother
 
 __all__ = ['rootnode_solver']
 

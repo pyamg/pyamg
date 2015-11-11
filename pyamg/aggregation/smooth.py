@@ -1,4 +1,5 @@
 """Methods to smooth tentative prolongation operators"""
+from __future__ import print_function
 
 __docformat__ = "restructuredtext en"
 
@@ -381,8 +382,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n"
+        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
+               Returning tentative prolongator\n")
         return T
 
     # Calculate Frobenius norm of the residual
@@ -553,8 +554,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n"
+        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
+               Returning tentative prolongator\n")
         return T
 
     # Calculate Frobenius norm of the residual
@@ -785,8 +786,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     Satisfy_Constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print "Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n"
+        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
+               Returning tentative prolongator\n")
         return T
 
     # This is the RHS vector for the problem in the Krylov Space
