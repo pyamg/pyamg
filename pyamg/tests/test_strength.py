@@ -599,7 +599,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     # by zeroing out all entries in Atilde that aren't from your PDE.
     if numPDEs > 1:
         row_length = diff(mask.indptr)
-        my_pde = mod(range(dimen), numPDEs)
+        my_pde = mod(np.arange(dimen), numPDEs)
         my_pde = repeat(my_pde, row_length)
         mask.data[mod(mask.indices, numPDEs) != my_pde] = 0.0
         del row_length, my_pde
