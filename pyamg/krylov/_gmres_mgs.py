@@ -36,7 +36,7 @@ def apply_givens(Q, v, k):
     dofs 1 and 2, and so on.
     '''
 
-    for j in xrange(k):
+    for j in range(k):
         Qloc = Q[j]
         v[j:j+2] = sp.dot(Qloc, v[j:j+2])
 
@@ -233,7 +233,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     niter = 0
 
     # Begin GMRES
-    for outer in xrange(max_outer):
+    for outer in range(max_outer):
 
         # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(dimen*max_inner).
@@ -257,7 +257,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         g = zeros((dimen,), dtype=xtype)
         g[0] = normr
 
-        for inner in xrange(max_inner):
+        for inner in range(max_inner):
 
             # New Search Direction
             v = V[inner+1, :]
@@ -271,7 +271,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             #    return(postprocess(x), -1)
 
             #  Modified Gram Schmidt
-            for k in xrange(inner+1):
+            for k in range(inner+1):
                 vk = vs[k]
                 alpha = dotc(vk, v)
                 H[inner, k] = alpha
@@ -282,7 +282,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
             # Re-orthogonalize
             if (reorth is True) and (normv_old == normv_old + 0.001*normv):
-                for k in xrange(inner+1):
+                for k in range(inner+1):
                     vk = vs[k]
                     alpha = dotc(vk, v)
                     H[inner, k] = H[inner, k] + alpha
