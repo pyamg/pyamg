@@ -283,7 +283,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     data = empty((NE, D*(D+1), D*(D+1)), dtype=float)
 
-    for i in xrange(NE):
+    for i in range(NE):
         element_indices = elements[i, :]
         element_vertices = vertices[element_indices, :]
 
