@@ -660,7 +660,7 @@ def apply_givens(Q, v, k):
     2, and so on.
     '''
 
-    for j in xrange(k):
+    for j in range(k):
         Qloc = Q[j]
         v[j:j+2] = sp.dot(Qloc, v[j:j+2])
 
@@ -836,7 +836,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         V.append(AV.copy())
 
         # Modified Gram-Schmidt
-        for j in xrange(i+1):
+        for j in range(i+1):
             # Frobenius inner-product
             H[j, i] = (V[j].conjugate().multiply(V[i+1])).sum()
             V[i+1] = V[i+1] - H[j, i]*V[j]

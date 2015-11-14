@@ -385,11 +385,16 @@ class multilevel_solver:
                 raise ValueError('AMLI cycles require acceleration (accel) \
                         to be fgmres, or no acceleration')
 
+            # py23 compatibility:
+            try:
+                basestring
+            except NameError:
+                basestring = str
+
             # Acceleration is being used
             if isinstance(accel, basestring):
                 from pyamg import krylov
                 from scipy.sparse.linalg import isolve
-
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
                 else:
