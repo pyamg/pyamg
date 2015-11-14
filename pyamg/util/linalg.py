@@ -643,7 +643,7 @@ def pinv_array(a, cond=None):
             cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
         # Invert each block of a
-        for kk in xrange(n):
+        for kk in range(n):
             gelssoutput = gelss(a[kk], RHS, cond=cond, lwork=lwork,
                                 overwrite_a=True, overwrite_b=False)
             a[kk] = gelssoutput[1]

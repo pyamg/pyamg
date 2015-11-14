@@ -1560,7 +1560,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
         blocksize = A.blocksize[0]
         Cpts = np.repeat(blocksize*Cnodes, blocksize)
         for k in range(1, blocksize):
-            Cpts[range(k, Cpts.shape[0], blocksize)] += k
+            Cpts[list(range(k, Cpts.shape[0], blocksize))] += k
     else:
         blocksize = 1
         Cpts = Cnodes
