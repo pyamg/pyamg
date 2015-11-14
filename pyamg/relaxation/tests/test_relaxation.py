@@ -713,15 +713,16 @@ class TestRelaxation(TestCase):
                 subblocks.append(blkAinv)
 
             if sweep == 'forward':
-                indices = range(len(subdomains))
+                indices = np.arange(len(subdomains))
             elif sweep == 'backward':
-                indices = range(len(subdomains)-1, -1, -1)
+                indices = np.arange(len(subdomains)-1, -1, -1)
             elif sweep == 'symmetric':
-                indices = range(len(subdomains))
-                indices.extend(range(len(subdomains)-1, -1, -1))
+                indices1 = np.arange(len(subdomains))
+                indices2 = np.arange(len(subdomains)-1, -1, -1)
+                indices.concatenate((indices1, indices2))
 
             # Multiplicative Schwarz iterations
-            for j in xrange(iterations):
+            for j in range(iterations):
                 for i in indices:
                     si = subdomains[i]
                     x[si] = scipy.dot(subblocks[i],
@@ -927,8 +928,8 @@ class TestComplexRelaxation(TestCase):
                 subblocks.append(blkAinv)
 
             # Multiplicative Schwarz iterations
-            for j in xrange(iterations):
-                for i in xrange(len(subdomains)):
+            for j in range(iterations):
+                for i in range(len(subdomains)):
                     si = subdomains[i]
                     x[si] = scipy.dot(subblocks[i],
                                       (b[si] - A[si, :]*x)) + x[si]
