@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import scipy
 from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
 from scipy import arange, ones, zeros, array, allclose, \
@@ -140,7 +140,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         jacobi(A, x, b)
         assert_almost_equal(x, array([0]))
@@ -149,14 +149,14 @@ class TestRelaxation(TestCase):
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
         x = zeros(N)
-        b = arange(N).astype(numpy.float64)
+        b = arange(N).astype(np.float64)
         jacobi(A, x, b)
         assert_almost_equal(x, array([0.0, 0.5, 1.0]))
 
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         jacobi(A, x, b)
         assert_almost_equal(x, array([0.5, 1.0, 0.5]))
@@ -203,13 +203,13 @@ class TestRelaxation(TestCase):
             divisors =\
                 [n for n in range(1, A.shape[0]+1) if A.shape[0] % n == 0]
 
-            x_csr = arange(A.shape[0]).astype(numpy.float64)
+            x_csr = arange(A.shape[0]).astype(np.float64)
             b = x_csr**2
             jacobi(A, x_csr, b)
 
             for D in divisors:
                 B = A.tobsr(blocksize=(D, D))
-                x_bsr = arange(B.shape[0]).astype(numpy.float64)
+                x_bsr = arange(B.shape[0]).astype(np.float64)
                 jacobi(B, x_bsr, b)
                 assert_almost_equal(x_bsr, x_csr)
 
@@ -230,13 +230,13 @@ class TestRelaxation(TestCase):
                 divisors =\
                     [n for n in range(1, A.shape[0]+1) if A.shape[0] % n == 0]
 
-                x_csr = arange(A.shape[0]).astype(numpy.float64)
+                x_csr = arange(A.shape[0]).astype(np.float64)
                 b = x_csr**2
                 gauss_seidel(A, x_csr, b, sweep=sweep)
 
                 for D in divisors:
                     B = A.tobsr(blocksize=(D, D))
-                    x_bsr = arange(B.shape[0]).astype(numpy.float64)
+                    x_bsr = arange(B.shape[0]).astype(np.float64)
                     gauss_seidel(B, x_bsr, b, sweep=sweep)
                     assert_almost_equal(x_bsr, x_csr)
 
@@ -292,7 +292,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel(A, x, b)
         assert_almost_equal(x, array([0]))
@@ -300,7 +300,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel(A, x, b)
         assert_almost_equal(x, array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
@@ -308,7 +308,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel(A, x, b, sweep='backward')
         assert_almost_equal(x, array([0]))
@@ -316,7 +316,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel(A, x, b, sweep='backward')
         assert_almost_equal(x, array([1.0/8.0, 1.0/4.0, 1.0/2.0]))
@@ -345,10 +345,10 @@ class TestRelaxation(TestCase):
         x = ones(N)
         b = zeros(N)
         gauss_seidel(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
         x = ones(N)
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.01 and resid2 < 0.01)
         self.assert_(allclose(resid1, resid2))
 
@@ -356,7 +356,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_indexed(A, x, b, [0])
         assert_almost_equal(x, array([0]))
@@ -364,7 +364,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 1, 2])
         assert_almost_equal(x, array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
@@ -372,7 +372,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_indexed(A, x, b, [2, 1, 0], sweep='backward')
         assert_almost_equal(x, array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
@@ -380,7 +380,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 1, 2], sweep='backward')
         assert_almost_equal(x, array([1.0/8.0, 1.0/4.0, 1.0/2.0]))
@@ -405,7 +405,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, array([0]))
@@ -414,14 +414,14 @@ class TestRelaxation(TestCase):
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
         x = zeros(N)
-        b = arange(N).astype(numpy.float64)
+        b = arange(N).astype(np.float64)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, array([-1./6., -1./15., 19./30.]))
 
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, array([2./5., 7./5., 4./5.]))
@@ -460,13 +460,13 @@ class TestRelaxation(TestCase):
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
 
-            x_csr = arange(N).astype(numpy.float64)
+            x_csr = arange(N).astype(np.float64)
             b = x_csr**2
             gauss_seidel_ne(A, x_csr, b)
 
             for D in divisors:
                 B = A.tobsr(blocksize=(D, D))
-                x_bsr = arange(N).astype(numpy.float64)
+                x_bsr = arange(N).astype(np.float64)
                 gauss_seidel_ne(B, x_bsr, b)
                 assert_almost_equal(x_bsr, x_csr)
 
@@ -522,7 +522,7 @@ class TestRelaxation(TestCase):
         N = 1
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_ne(A, x, b)
         assert_almost_equal(x, array([0]))
@@ -530,7 +530,7 @@ class TestRelaxation(TestCase):
         N = 3
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1], N, N,
                     format='csr')
-        x = arange(N).astype(numpy.float64)
+        x = arange(N).astype(np.float64)
         b = zeros(N)
         gauss_seidel_ne(A, x, b)
         assert_almost_equal(x, array([4./15., 8./5., 4./5.]))
@@ -583,10 +583,10 @@ class TestRelaxation(TestCase):
         x = ones(N)
         b = zeros(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
         x = ones(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.2 and resid2 < 0.2)
         self.assert_(allclose(resid1, resid2))
 
@@ -598,13 +598,13 @@ class TestRelaxation(TestCase):
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
 
-            x_csr = arange(N).astype(numpy.float64)
+            x_csr = arange(N).astype(np.float64)
             b = x_csr**2
             gauss_seidel_nr(A, x_csr, b)
 
             for D in divisors:
                 B = A.tobsr(blocksize=(D, D))
-                x_bsr = arange(N).astype(numpy.float64)
+                x_bsr = arange(N).astype(np.float64)
                 gauss_seidel_nr(B, x_bsr, b)
                 assert_almost_equal(x_bsr, x_csr)
 
@@ -668,10 +668,10 @@ class TestRelaxation(TestCase):
         x = ones(N)
         b = zeros(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
         x = ones(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.2 and resid2 < 0.2)
         self.assert_(allclose(resid1, resid2))
 
@@ -719,7 +719,7 @@ class TestRelaxation(TestCase):
             elif sweep == 'symmetric':
                 indices1 = np.arange(len(subdomains))
                 indices2 = np.arange(len(subdomains)-1, -1, -1)
-                indices.concatenate((indices1, indices2))
+                indices = np.concatenate((indices1, indices2))
 
             # Multiplicative Schwarz iterations
             for j in range(iterations):
@@ -1097,11 +1097,11 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = zeros(N).astype(A.dtype)
         gauss_seidel(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
         x = ones(N).astype(A.dtype)
         x = x + 1.0j*x
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.03 and resid2 < 0.03)
         self.assert_(allclose(resid1, resid2))
 
@@ -1321,12 +1321,12 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = zeros(N).astype(A.dtype)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
 
         x = ones(N).astype(A.dtype)
         x = x + 1.0j*x
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.3 and resid2 < 0.3)
         self.assert_(allclose(resid1, resid2))
 
@@ -1417,12 +1417,12 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = zeros(N).astype(A.dtype)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')
-        resid1 = numpy.linalg.norm(A*x, 2)
+        resid1 = np.linalg.norm(A*x, 2)
 
         x = ones(N).astype(A.dtype)
         x = x + 1.0j*x
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
-        resid2 = numpy.linalg.norm(A*x, 2)
+        resid2 = np.linalg.norm(A*x, 2)
         self.assert_(resid1 < 0.3 and resid2 < 0.3)
         self.assert_(allclose(resid1, resid2))
 
