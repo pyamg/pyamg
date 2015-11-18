@@ -4,7 +4,6 @@
 PyAMG is a library of Algebraic Multigrid (AMG) solvers
 with a convenient Python interface.
 """
-from __future__ import unicode_literals
 
 import os
 import sys
@@ -194,8 +193,7 @@ def setup_package():
             author=AUTHOR,
             author_email=AUTHOR_EMAIL,
             platforms=PLATFORMS,
-            configuration=configuration,
-            install_requires=INSTALL_REQUIRES)
+            configuration=configuration)
     finally:
         del sys.path[0]
         os.chdir(old_path)
