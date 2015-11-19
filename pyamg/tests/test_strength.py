@@ -1,6 +1,4 @@
-import numpy
-from numpy import array, zeros, mat, eye, ones, min, ravel, diff, mod, repeat,\
-    sqrt, finfo, abs
+import numpy as np
 from scipy import rand, real, imag, arange
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, spdiags,\
     coo_matrix
@@ -30,7 +28,7 @@ class TestStrengthOfConnection(TestCase):
         self.cases = []
 
         # random matrices
-        numpy.random.seed(0)
+        np.random.seed(0)
         for N in [2, 3, 5]:
             self.cases.append(csr_matrix(rand(N, N)))
 
@@ -91,43 +89,43 @@ class TestStrengthOfConnection(TestCase):
         cases = []
 
         # 1x1 tests
-        A = csr_matrix(mat([[1.1]]))
-        B = csr_matrix(mat([[1.0]]))
-        A2 = csr_matrix(mat([[0.]]))
-        mask = csr_matrix(mat([[1.]]))
+        A = csr_matrix(np.mat([[1.1]]))
+        B = csr_matrix(np.mat([[1.0]]))
+        A2 = csr_matrix(np.mat([[0.]]))
+        mask = csr_matrix(np.mat([[1.]]))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A, A2, mask))
         cases.append((A2, A2, mask))
 
         # 2x2 tests
-        A = csr_matrix(mat([[1., 2.], [2., 4.]]))
-        B = csr_matrix(mat([[1.3, 2.], [2.8, 4.]]))
-        A2 = csr_matrix(mat([[1.3, 0.], [0., 4.]]))
-        B2 = csr_matrix(mat([[1.3, 0.], [2., 4.]]))
-        mask = csr_matrix((ones(4), (array([0, 0, 1, 1]),
-                                     array([0, 1, 0, 1]))), shape=(2, 2))
+        A = csr_matrix(np.mat([[1., 2.], [2., 4.]]))
+        B = csr_matrix(np.mat([[1.3, 2.], [2.8, 4.]]))
+        A2 = csr_matrix(np.mat([[1.3, 0.], [0., 4.]]))
+        B2 = csr_matrix(np.mat([[1.3, 0.], [2., 4.]]))
+        mask = csr_matrix((np.ones(4), (np.array([0, 0, 1, 1]),
+                                        np.array([0, 1, 0, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = csr_matrix((ones(3), (array([0, 0, 1]),
-                                     array([0, 1, 1]))), shape=(2, 2))
+        mask = csr_matrix((np.ones(3), (np.array([0, 0, 1]),
+                                        np.array([0, 1, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = csr_matrix((ones(2), (array([0, 1]),
-                                     array([0, 0]))), shape=(2, 2))
+        mask = csr_matrix((np.ones(2), (np.array([0, 1]),
+                                     np.array([0, 0]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
         # 5x5 tests
-        A = mat([[0.,  16.9,   6.4,   0.0,   5.8],
+        A = np.mat([[0.,  16.9,   6.4,   0.0,   5.8],
                  [16.9,  13.8,   7.2,   0.,   9.5],
                  [6.4,   7.2,  12.,   6.1,   5.9],
                  [0.0,   0.,   6.1,   0.,   0.],
@@ -175,7 +173,7 @@ class TestStrengthOfConnection(TestCase):
         B.data[1] = 3.5
         B.data[11] = 11.6
         B.data[28] = -3.2
-        C = csr_matrix(zeros(A.shape))
+        C = csr_matrix(np.zeros(A.shape))
         mask = A.copy()
         mask.data[:] = 1.0
         cases.append((A, A, mask))
@@ -186,7 +184,7 @@ class TestStrengthOfConnection(TestCase):
         cases.append((C, C, mask))
 
         # Imaginary tests
-        A = mat([[0.0 + 0.j, 0.0 + 16.9j, 6.4 + 1.2j, 0.0 + 0.j, 0.0 + 0.j],
+        A = np.mat([[0.0 + 0.j, 0.0 + 16.9j, 6.4 + 1.2j, 0.0 + 0.j, 0.0 + 0.j],
                  [16.9 + 0.j, 13.8 + 0.j, 7.2 + 0.j, 0.0 + 0.j, 0.0 + 9.5j],
                  [0.0 + 6.4j, 7.2 - 8.1j, 12.0 + 0.j, 6.1 + 0.j, 5.9 + 0.j],
                  [0.0 + 0.j, 0.0 + 0.j, 6.1 + 0.j, 0.0 + 0.j, 0.0 + 0.j],
@@ -230,17 +228,17 @@ class TestStrengthOfConnection(TestCase):
         # Ensure that isotropic diffusion results in isotropic strength stencil
         for N in [3, 5, 7, 10]:
             A = poisson((N,), format='csr')
-            B = ones((A.shape[0], 1))
+            B = np.ones((A.shape[0], 1))
             cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
                           'k': 2, 'proj': 'l2'})
 
         # Ensure that anisotropic diffusion results in an anisotropic
         # strength stencil
         for N in [3, 6, 7]:
-            u = ones(N*N)
+            u = np.ones(N*N)
             A = spdiags([-u, -0.001*u, 2.002*u, -0.001*u, -u],
                         [-N, -1, 0, 1, N], N*N, N*N, format='csr')
-            B = ones((A.shape[0], 1))
+            B = np.ones((A.shape[0], 1))
             cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
                           'k': 2, 'proj': 'l2'})
 
@@ -253,7 +251,7 @@ class TestStrengthOfConnection(TestCase):
         # Run an example with a non-uniform stencil
         ex = load_example('airfoil')
         A = ex['A'].tocsr()
-        B = ones((A.shape[0], 1))
+        B = np.ones((A.shape[0], 1))
         cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 8.0, 'k': 4,
                       'proj': 'D_A'})
         Absr = A.tobsr(blocksize=(5, 5))
@@ -317,7 +315,7 @@ class TestComplexStrengthOfConnection(TestCase):
         self.cases = []
 
         # random matrices
-        numpy.random.seed(0)
+        np.random.seed(0)
         for N in [2, 3, 5]:
             self.cases.append(csr_matrix(rand(N, N)) +
                               csr_matrix(1.0j*rand(N, N)))
@@ -362,14 +360,14 @@ class TestComplexStrengthOfConnection(TestCase):
         # Single near nullspace candidate
         stencil = [[0.0, -1.0, 0.0], [-0.001, 2.002, -0.001], [0.0, -1.0, 0.0]]
         A = 1.0j*stencil_grid(stencil, (4, 4), format='csr')
-        B = 1.0j*ones((A.shape[0], 1))
+        B = 1.0j*np.ones((A.shape[0], 1))
         B[0] = 1.2 - 12.0j
         B[11] = -14.2
         cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0, 'k': 2,
                       'proj': 'l2'})
 
         # Multiple near nullspace candidate
-        B = 1.0j*ones((A.shape[0], 2))
+        B = 1.0j*np.ones((A.shape[0], 2))
         B[0:-1:2, 0] = 0.0
         B[1:-1:2, 1] = 0.0
         B[-1, 0] = 0.0
@@ -459,15 +457,15 @@ def reference_classical_soc(A, theta):
     S.row = S.row[mask]
     S.col = S.col[mask]
     S.data = S.data[mask]
-    max_offdiag = numpy.empty(S.shape[0])
-    max_offdiag[:] = numpy.finfo(S.data.dtype).min
+    max_offdiag = np.empty(S.shape[0])
+    max_offdiag[:] = np.finfo(S.data.dtype).min
 
     # Note abs(.) takes the complex modulus
     for i, v in zip(S.row, S.data):
         max_offdiag[i] = max(max_offdiag[i], abs(v))
 
     # strong connections
-    mask = abs(S.data) >= (theta * max_offdiag[S.row])
+    mask = np.abs(S.data) >= (theta * max_offdiag[S.row])
     S.row = S.row[mask]
     S.col = S.col[mask]
     S.data = S.data[mask]
@@ -478,13 +476,13 @@ def reference_classical_soc(A, theta):
     S = S.tocsr() + D
 
     # Strength represents "distance", so take the magnitude
-    S.data = abs(S.data)
+    S.data = np.abs(S.data)
 
     # Scale S by the largest magnitude entry in each row
-    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
     for i in range(S.shape[0]):
         for j in range(S.indptr[i], S.indptr[i+1]):
-            val = numpy.abs(S.data[j])
+            val = abs(S.data[j])
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
@@ -505,12 +503,12 @@ def reference_symmetric_soc(A, theta):
     # if theta == 0:
     #    return A
 
-    D = abs(A.diagonal())
+    D = np.abs(A.diagonal())
 
     S = coo_matrix(A)
 
     mask = S.row != S.col
-    DD = array(D[S.row] * D[S.col]).reshape(-1,)
+    DD = np.array(D[S.row] * D[S.col]).reshape(-1,)
     # Note that abs takes the complex modulus element-wise
     # Note that using the square of the measure is the technique used
     # in the C++ routine, so we use it here.  Doing otherwise causes errors.
@@ -526,13 +524,13 @@ def reference_symmetric_soc(A, theta):
     S = S.tocsr() + D
 
     # Strength represents "distance", so take the magnitude
-    S.data = abs(S.data)
+    S.data = np.abs(S.data)
 
     # Scale S by the largest magnitude entry in each row
-    largest_row_entry = numpy.zeros((S.shape[0],), dtype=S.dtype)
+    largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
     for i in range(S.shape[0]):
         for j in range(S.indptr[i], S.indptr[i+1]):
-            val = numpy.abs(S.data[j])
+            val = abs(S.data[j])
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
@@ -563,9 +561,9 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
         A = A.tocsr()
 
     # Preliminaries
-    near_zero = finfo(float).eps
-    sqrt_near_zero = sqrt(sqrt(near_zero))
-    Bmat = mat(B)
+    near_zero = np.finfo(float).eps
+    sqrt_near_zero = np.sqrt(np.sqrt(near_zero))
+    Bmat = np.mat(B)
     A.eliminate_zeros()
     A.sort_indices()
     dimen = A.shape[1]
@@ -573,7 +571,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
     # Get spectral radius of Dinv*A, this is the time step size for the ODE
     D = A.diagonal()
-    Dinv = numpy.zeros_like(D)
+    Dinv = np.zeros_like(D)
     mask = (D != 0.0)
     Dinv[mask] = 1.0 / D[mask]
     Dinv[D == 0] = 1.0
@@ -598,10 +596,10 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     # Only consider strength at dofs from your PDE.  Use mask to enforce this
     # by zeroing out all entries in Atilde that aren't from your PDE.
     if numPDEs > 1:
-        row_length = diff(mask.indptr)
-        my_pde = mod(np.arange(dimen), numPDEs)
-        my_pde = repeat(my_pde, row_length)
-        mask.data[mod(mask.indices, numPDEs) != my_pde] = 0.0
+        row_length = np.diff(mask.indptr)
+        my_pde = np.mod(np.arange(dimen), numPDEs)
+        my_pde = np.repeat(my_pde, row_length)
+        mask.data[np.mod(mask.indices, numPDEs) != my_pde] = 0.0
         del row_length, my_pde
         mask.eliminate_zeros()
 
@@ -614,14 +612,14 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     del mask
 
     # Calculate strength based on constrained min problem of
-    LHS = mat(zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
-    RHS = mat(zeros((NullDim+1, 1)), dtype=A.dtype)
+    LHS = np.mat(np.zeros((NullDim+1, NullDim+1)), dtype=A.dtype)
+    RHS = np.mat(np.zeros((NullDim+1, 1)), dtype=A.dtype)
 
     # Choose tolerance for dropping "numerically zero" values later
     t = Atilde.dtype.char
-    eps = numpy.finfo(numpy.float).eps
-    feps = numpy.finfo(numpy.single).eps
-    geps = numpy.finfo(numpy.longfloat).eps
+    eps = np.finfo(np.float).eps
+    feps = np.finfo(np.single).eps
+    geps = np.finfo(np.longfloat).eps
     _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
     tol = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
@@ -634,7 +632,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
         colindx = Atilde.indices[rowstart:rowend]
 
         # Local diagonal of A is used for scale invariant min problem
-        D_A = mat(eye(length, dtype=A.dtype))
+        D_A = np.mat(np.eye(length, dtype=A.dtype))
         if proj_type == "D_A":
             for j in range(length):
                 D_A[j, j] = D[colindx[j]]
@@ -649,7 +647,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             Atilde.data[rowstart:rowend] = 1.0
         else:
             # Grab out what we want from Atilde and B.  Put into zi, Bi
-            zi = mat(Atilde.data[rowstart:rowend]).T
+            zi = np.mat(Atilde.data[rowstart:rowend]).T
 
             Bi = Bmat[colindx, :]
 
@@ -661,36 +659,36 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             RHS[NullDim, 0] = zi[iInRow, 0]
 
             # Calc Soln to Min Problem
-            x = mat(pinv(LHS))*RHS
+            x = np.mat(pinv(LHS))*RHS
 
             # Calculate best constrained approximation to zi with span(Bi), and
             # filter out "numerically" zero values.  This is important because
             # we look only at the sign of values below when calculating angle.
             zihat = Bi*x[:-1]
-            tol_i = max(abs(zihat))*tol
-            zihat.real[abs(zihat.real) < tol_i] = 0.0
-            if numpy.iscomplexobj(zihat):
-                zihat.imag[abs(zihat.imag) < tol_i] = 0.0
+            tol_i = np.max(np.abs(zihat))*tol
+            zihat.real[np.abs(zihat.real) < tol_i] = 0.0
+            if np.iscomplexobj(zihat):
+                zihat.imag[np.abs(zihat.imag) < tol_i] = 0.0
 
             # if angle in the complex plane between individual entries is
             # greater than 90 degrees, then weak.  We can just look at the dot
             # product to determine if angle is greater than 90 degrees.
-            angle = real(ravel(zihat))*real(ravel(zi)) +\
-                imag(ravel(zihat))*imag(ravel(zi))
+            angle = real(np.ravel(zihat))*real(np.ravel(zi)) +\
+                imag(np.ravel(zihat))*imag(np.ravel(zi))
             angle = angle < 0.0
-            angle = array(angle, dtype=bool)
+            angle = np.array(angle, dtype=bool)
 
             # Calculate approximation ratio
             zi = zihat/zi
 
             # If the ratio is small, then weak connection
-            zi[abs(zi) <= 1e-4] = 1e100
+            zi[np.abs(zi) <= 1e-4] = 1e100
 
             # If angle is greater than 90 degrees, then weak connection
             zi[angle] = 1e100
 
             # Calculate Relative Approximation Error
-            zi = abs(1.0 - zi)
+            zi = np.abs(1.0 - zi)
 
             # important to make "perfect" connections explicitly nonzero
             zi[zi < sqrt_near_zero] = 1e-4
@@ -698,13 +696,13 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             # Calculate and apply drop-tol.  Ignore diagonal by making it very
             # large
             zi[iInRow] = 1e5
-            drop_tol = min(zi)*epsilon
+            drop_tol = np.min(zi)*epsilon
             zi[zi > drop_tol] = 0.0
-            Atilde.data[rowstart:rowend] = ravel(zi)
+            Atilde.data[rowstart:rowend] = np.ravel(zi)
 
     # Clean up, and return Atilde
     Atilde.eliminate_zeros()
-    Atilde.data = array(real(Atilde.data), dtype=float)
+    Atilde.data = np.array(real(Atilde.data), dtype=float)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = scipy.sparse.eye(dimen, dimen, format="csr")
@@ -722,7 +720,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             Atmin = Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()]
             At.append(Atmin.min())
 
-        Atilde = csr_matrix((array(At), Atilde.indices, Atilde.indptr),
+        Atilde = csr_matrix((np.array(At), Atilde.indices, Atilde.indptr),
                             shape=(Atilde.shape[0]/numPDEs,
                                    Atilde.shape[1]/numPDEs))
 
@@ -731,10 +729,10 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     Atilde.data = 1.0/Atilde.data
 
     # Scale Atilde by the largest magnitude entry in each row
-    largest_row_entry = numpy.zeros((Atilde.shape[0],), dtype=Atilde.dtype)
+    largest_row_entry = np.zeros((Atilde.shape[0],), dtype=Atilde.dtype)
     for i in range(Atilde.shape[0]):
         for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
-            val = numpy.abs(Atilde.data[j])
+            val = abs(Atilde.data[j])
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
@@ -754,13 +752,13 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     # deal with the supernode case
     if isspmatrix_bsr(A):
         dimen = A.shape[0]/A.blocksize[0]
-        C = csr_matrix((numpy.ones((A.data.shape[0],)), A.indices, A.indptr),
+        C = csr_matrix((np.ones((A.data.shape[0],)), A.indices, A.indptr),
                        shape=(dimen, dimen))
     else:
         A = A.tocsr()
         dimen = A.shape[0]
         C = A.copy()
-        C.data = numpy.real(C.data)
+        C.data = np.real(C.data)
 
     if V.shape[1] == 2:
         three_d = False
@@ -774,7 +772,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
         for j in range(rowstart, rowend):
             if C.indices[j] == i:
                 # ignore the diagonal entry by making it large
-                C.data[j] = numpy.finfo(numpy.float).max
+                C.data[j] = np.finfo(np.float).max
             else:
                 # distance between entry j and i
                 pt_j = V[C.indices[j], :]
@@ -782,7 +780,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
                 dist += (pt_i[1] - pt_j[1])**2
                 if three_d:
                     dist += (pt_i[2] - pt_j[2])**2
-                C.data[j] = numpy.sqrt(dist)
+                C.data[j] = np.sqrt(dist)
 
         # apply drop tolerance
         this_row = C.data[rowstart:rowend]
@@ -802,10 +800,10 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     C.data = 1.0/C.data
 
     # Scale C by the largest magnitude entry in each row
-    largest_row_entry = numpy.zeros((C.shape[0],), dtype=C.dtype)
+    largest_row_entry = np.zeros((C.shape[0],), dtype=C.dtype)
     for i in range(C.shape[0]):
         for j in range(C.indptr[i], C.indptr[i+1]):
-            val = numpy.abs(C.data[j])
+            val = abs(C.data[j])
             if val > largest_row_entry[i]:
                 largest_row_entry[i] = val
 
