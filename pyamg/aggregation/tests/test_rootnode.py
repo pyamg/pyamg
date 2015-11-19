@@ -1,6 +1,5 @@
-import numpy
+import numpy as np
 import scipy.sparse
-from numpy import sqrt, arange, array, abs, dot, ravel
 from scipy import rand, hstack
 from scipy.sparse import csr_matrix, SparseEfficiencyWarning
 
@@ -29,7 +28,7 @@ class TestParameters(TestCase):
         for A, B in self.cases:
             ml = rootnode_solver(A, B, max_coarse=5, **opts)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
             x = rand(A.shape[0])
             b = A * rand(A.shape[0])
@@ -107,7 +106,7 @@ class TestComplexParameters(TestCase):
         for A, B in self.cases:
             ml = rootnode_solver(A, B, max_coarse=5, **opts)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
             x = rand(A.shape[0]) + 1.0j * rand(A.shape[0])
             b = A * rand(A.shape[0])
@@ -197,7 +196,7 @@ class TestSolverPerformance(TestCase):
             ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth,
                                  max_coarse=10)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
             x = rand(A.shape[0])
             b = A * rand(A.shape[0])
@@ -220,7 +219,7 @@ class TestSolverPerformance(TestCase):
         x = rand(A.shape[0])
         b = rand(A.shape[0])
 
-        D = diag_sparse(1.0 / sqrt(10 ** (12 * rand(A.shape[0]) - 6))).tocsr()
+        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * rand(A.shape[0]) - 6))).tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
         # DAD = D * A * D
@@ -252,7 +251,7 @@ class TestSolverPerformance(TestCase):
                                    [('block_gauss_seidel',
                                      {'iterations': 4, 'sweep': 'symmetric'})]]
         # make tests repeatable
-        numpy.random.seed(0)
+        np.random.seed(0)
 
         cases = []
         A_elas, B_elas = linear_elasticity((60, 60), format='bsr')
@@ -296,7 +295,7 @@ class TestSolverPerformance(TestCase):
                      'jacobi', 'block_jacobi']
         Bs = [np.ones((n, 1)),
               hstack((np.ones((n, 1)),
-                      arange(1, n + 1, dtype='float').reshape(-1, 1)))]
+                      np.arange(1, n + 1, dtype='float').reshape(-1, 1)))]
 
         for smoother in smoothers:
             for B in Bs:
@@ -306,14 +305,14 @@ class TestSolverPerformance(TestCase):
                 P = ml.aspreconditioner()
                 x = rand(n,)
                 y = rand(n,)
-                assert_approx_equal(dot(P * x, y), dot(x, P * y))
+                assert_approx_equal(np.dot(P * x, y), np.dot(x, P * y))
 
     def test_nonsymmetric(self):
         # problem data
         data = load_example('recirc_flow')
         A = data['A'].tocsr()
         B = data['B']
-        numpy.random.seed(625)
+        np.random.seed(625)
         x0 = scipy.rand(A.shape[0])
         b = A * scipy.rand(A.shape[0])
         # solver parameters
@@ -334,7 +333,7 @@ class TestSolverPerformance(TestCase):
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         # print "Test 1  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.7)
@@ -344,7 +343,7 @@ class TestSolverPerformance(TestCase):
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
         del x
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         # print "Test 2  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.45)
@@ -406,8 +405,8 @@ class TestSolverPerformance(TestCase):
         sa_old = rootnode_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = rootnode_solver(AA, max_coarse=10)
-            assert(abs(ravel(sa_old.levels[-1].A.todense() -
-                             sa_new.levels[-1].A.todense())).max() < 0.01)
+            assert(np.abs(np.ravel(sa_old.levels[-1].A.todense() -
+                                   sa_new.levels[-1].A.todense())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -457,7 +456,7 @@ class TestComplexSolverPerformance(TestCase):
             ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth,
                                  max_coarse=10)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
             x = rand(A.shape[0]) + 1.0j * rand(A.shape[0])
             b = A * rand(A.shape[0])
@@ -480,7 +479,7 @@ class TestComplexSolverPerformance(TestCase):
         data = load_example('helmholtz_2D')
         A = data['A'].tocsr()
         B = data['B']
-        numpy.random.seed(625)
+        np.random.seed(625)
         x0 = scipy.rand(A.shape[0]) + 1.0j * scipy.rand(A.shape[0])
         b = A * scipy.rand(A.shape[0]) + 1.0j * (A * scipy.rand(A.shape[0]))
         # solver parameters
@@ -497,7 +496,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         # print "Test 3  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.92)
@@ -507,7 +506,7 @@ class TestComplexSolverPerformance(TestCase):
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
         del x
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         # print "Test 4  %1.3e,  %1.3e" % (avg_convergence_ratio, 0.8)
