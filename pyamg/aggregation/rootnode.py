@@ -253,7 +253,7 @@ def rootnode_solver(A, B=None, BH=None,
         raise ValueError('expected square matrix')
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = np.kron(np.ones((A.shape[0]/blocksize(A), 1), dtype=A.dtype),
+        B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
                     np.eye(blocksize(A)))
     else:
         B = np.asarray(B, dtype=A.dtype)
@@ -301,7 +301,7 @@ def rootnode_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and \
-            levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
+            int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
