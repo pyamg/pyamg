@@ -133,8 +133,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     N_fine, N_coarse = AggOp.shape
 
-    K1 = B.shape[0] / N_fine  # dof per supernode (e.g. 3 for 3d vectors)
-    K2 = B.shape[1]           # candidates
+    K1 = int(B.shape[0] / N_fine)  # dof per supernode (e.g. 3 for 3d vectors)
+    K2 = B.shape[1]                # candidates
 
     # the first two dimensions of R and Qx are collapsed later
     R = np.empty((N_coarse, K2, K2), dtype=B.dtype)  # coarse candidates

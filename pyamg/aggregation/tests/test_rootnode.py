@@ -1,6 +1,6 @@
 import numpy
 import scipy.sparse
-from numpy import sqrt, ones, arange, array, abs, dot, ravel
+from numpy import sqrt, arange, array, abs, dot, ravel
 from scipy import rand, hstack
 from scipy.sparse import csr_matrix, SparseEfficiencyWarning
 
@@ -225,7 +225,7 @@ class TestSolverPerformance(TestCase):
 
         # DAD = D * A * D
 
-        B = ones((A.shape[0], 1))
+        B = np.ones((A.shape[0], 1))
 
         # TODO force 2 level method and check that result is the same
         kwargs = {'max_coarse': 1, 'max_levels': 2, 'coarse_solver': 'splu'}
@@ -258,7 +258,7 @@ class TestSolverPerformance(TestCase):
         A_elas, B_elas = linear_elasticity((60, 60), format='bsr')
         #                Matrix                       Candidates    rho_scale
         cases.append((poisson((75, 75), format='csr'),
-                      ones((75 * 75, 1)), 0.9))
+                      np.ones((75 * 75, 1)), 0.9))
         cases.append((A_elas, B_elas, 0.9))
         for (A, B, rho_scale) in cases:
             last_rho = -1.0
@@ -294,8 +294,8 @@ class TestSolverPerformance(TestCase):
                      ('schwarz', {'sweep': 'symmetric'}),
                      ('block_gauss_seidel', {'sweep': 'symmetric'}),
                      'jacobi', 'block_jacobi']
-        Bs = [ones((n, 1)),
-              hstack((ones((n, 1)),
+        Bs = [np.ones((n, 1)),
+              hstack((np.ones((n, 1)),
                       arange(1, n + 1, dtype='float').reshape(-1, 1)))]
 
         for smoother in smoothers:
@@ -355,13 +355,13 @@ class TestSolverPerformance(TestCase):
         A = poisson((15, 15), format='csr')
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = rootnode_solver(A, B=ones((A.shape[0], 1)), smooth=smooth,
+        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
                                      strength=strength,
                                      presmoother=smoother,
                                      postsmoother=smoother,
                                      improve_candidates=None, **SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = rootnode_solver(A, B=ones((A.shape[0], 1)), smooth=smooth,
+        sa_symm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
                                   strength=strength, presmoother=smoother,
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
@@ -517,12 +517,12 @@ class TestComplexSolverPerformance(TestCase):
         # parameters for the complex-symmetric matrix A
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = rootnode_solver(A, B=ones((A.shape[0], 1)), smooth=smooth,
+        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
                                      strength=strength, presmoother=smoother,
                                      postsmoother=smoother,
                                      improve_candidates=None, **SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = rootnode_solver(A, B=ones((A.shape[0], 1)), smooth=smooth,
+        sa_symm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
                                   strength=strength, presmoother=smoother,
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)

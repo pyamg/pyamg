@@ -190,7 +190,7 @@ def scale_rows(A, v, copy=True):
             csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
-            bsr_scale_rows(M/R, N/C, R, C, A.indptr, A.indices,
+            bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                            np.ravel(A.data), v)
 
         return A
@@ -266,7 +266,7 @@ def scale_columns(A, v, copy=True):
             csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
         else:
             R, C = A.blocksize
-            bsr_scale_columns(M/R, N/C, R, C, A.indptr, A.indices,
+            bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                               np.ravel(A.data), v)
 
         return A
@@ -638,12 +638,12 @@ def get_block_diag(A, blocksize, inv_flag=True):
     if hasattr(A, 'block_D_inv') and inv_flag:
         if (A.block_D_inv.shape[1] == blocksize) and\
            (A.block_D_inv.shape[2] == blocksize) and \
-           (A.block_D_inv.shape[0] == A.shape[0]/blocksize):
+           (A.block_D_inv.shape[0] == int(A.shape[0]/blocksize)):
             return A.block_D_inv
     elif hasattr(A, 'block_D') and (not inv_flag):
         if (A.block_D.shape[1] == blocksize) and\
            (A.block_D.shape[2] == blocksize) and \
-           (A.block_D.shape[0] == A.shape[0]/blocksize):
+           (A.block_D.shape[0] == int(A.shape[0]/blocksize)):
             return A.block_D
 
     # Convert to BSR
@@ -655,11 +655,11 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = sp.zeros((A.shape[0]/blocksize, blocksize, blocksize),
+    block_diag = sp.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
     AAIJ = (sp.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
-    shape = (A.shape[0]/blocksize, A.shape[0]/blocksize)
+    shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
     nonzero_mask = (diag_entries != -1)
@@ -733,7 +733,8 @@ def amalgamate(A, blocksize):
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
     subI = (np.ones(A.indices.shape), A.indices, A.indptr)
-    shape = (A.shape[0]/A.blocksize[0], A.shape[1]/A.blocksize[1])
+    shape = (int(A.shape[0]/A.blocksize[0]),\
+             int(A.shape[1]/A.blocksize[1]))
     return csr_matrix(subI, shape=shape)
 
 
@@ -1280,7 +1281,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         isBSR = True
         ColsPerBlock = C.blocksize[1]
         RowsPerBlock = C.blocksize[0]
-        Nnodes = Nfine/RowsPerBlock
+        Nnodes = int(Nfine/RowsPerBlock)
         if not isspmatrix_bsr(A):
             raise ValueError('A and C must either both be CSR or BSR')
         elif (ColsPerBlock != A.blocksize[1]) or\
@@ -1290,7 +1291,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         isBSR = False
         ColsPerBlock = 1
         RowsPerBlock = 1
-        Nnodes = Nfine/RowsPerBlock
+        Nnodes = int(Nfine/RowsPerBlock)
         if not isspmatrix_csr(A):
             raise ValueError('A and C must either both be CSR or BSR')
     else:
@@ -1572,7 +1573,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
             raise ValueError('Expected number of Cpts to match T.shape[1]')
     if blocksize != T.blocksize[0]:
         raise ValueError('Expected identical blocksize in A and T')
-    if AggOp.shape[0] != T.shape[0]/blocksize:
+    if AggOp.shape[0] != int(T.shape[0]/blocksize):
         raise ValueError('Number of rows in AggOp must equal number of\
                           fine-grid nodes')
 
@@ -1678,7 +1679,7 @@ def compute_BtBinv(B, C):
     Ncoarse = C.shape[1]
     Nfine = C.shape[0]
     NullDim = B.shape[1]
-    Nnodes = Nfine/RowsPerBlock
+    Nnodes = int(Nfine/RowsPerBlock)
 
     # Construct BtB
     BtBinv = np.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
