@@ -125,7 +125,7 @@ def solver_configuration(A, B=None, verb=True):
         # B is the constant for each variable in a node
         if isspmatrix_bsr(A) and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
-            config['B'] = np.kron(np.ones((A.shape[0] / bsize, 1),
+            config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
                                   dtype=A.dtype), np.eye(bsize))
         else:
             config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)

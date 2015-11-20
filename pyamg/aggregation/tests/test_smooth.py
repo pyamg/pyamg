@@ -249,8 +249,8 @@ class TestEnergyMin(TestCase):
                                     B.indptr, B.indices, ravel(B.data),
                                     result.indptr, result.indices,
                                     ravel(result.data),
-                                    A.shape[0] / A.blocksize[0],
-                                    result.shape[1] / result.blocksize[1],
+                                    int(A.shape[0] / A.blocksize[0]),
+                                    int(result.shape[1] / result.blocksize[1]),
                                     A.blocksize[0], A.blocksize[1],
                                     B.blocksize[1])
             exact = incomplete_mat_mult_bsr_gold(A, B, mask)
@@ -269,8 +269,8 @@ class TestEnergyMin(TestCase):
                                     A.indptr, A.indices, ravel(A.data),
                                     result.indptr, result.indices,
                                     ravel(result.data),
-                                    B.shape[0] / B.blocksize[0],
-                                    result.shape[1] / result.blocksize[1],
+                                    int(B.shape[0] / B.blocksize[0]),
+                                    int(result.shape[1] / result.blocksize[1]),
                                     B.blocksize[0], B.blocksize[1],
                                     A.blocksize[1])
             exact = incomplete_mat_mult_bsr_gold(B, A, mask)

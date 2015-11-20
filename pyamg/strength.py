@@ -71,7 +71,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     """
     # Amalgamate for the supernode case
     if sparse.isspmatrix_bsr(A):
-        sn = A.shape[0]/A.blocksize[0]
+        sn = int(A.shape[0]/A.blocksize[0])
         u = np.ones((A.data.shape[0],))
         A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
 
@@ -295,13 +295,13 @@ def symmetric_strength_of_connection(A, theta=0):
         if theta == 0:
             data = np.ones(len(A.indices), dtype=A.dtype)
             S = sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()),
-                                  shape=(M / R, N / C))
+                                  shape=(int(M / R), int(N / C)))
         else:
             # the strength of connection matrix is based on the
             # Frobenius norms of the blocks
             data = (np.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1)
             A = sparse.csr_matrix((data, A.indices, A.indptr),
-                                  shape=(M / R, N / C))
+                                  shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix')
@@ -450,8 +450,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
         uone = np.ones((nblocks,))
         Atilde = sparse.csr_matrix((uone, Atilde.indices, Atilde.indptr),
                                    shape=(
-                                       Atilde.shape[0] / numPDEs,
-                                       Atilde.shape[1] / numPDEs))
+                                       int(Atilde.shape[0] / numPDEs),
+                                       int(Atilde.shape[1] / numPDEs)))
 
     # Scale C by the largest magnitude entry in each row
     Atilde = scale_rows_by_largest_entry(Atilde)
@@ -802,8 +802,8 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
                             np.ravel(np.asarray(Atilde.data)), CSRdata)
         # Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
         Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr),
-                                   shape=(Atilde.shape[0] / numPDEs,
-                                          Atilde.shape[1] / numPDEs))
+                                   shape=(int(Atilde.shape[0] / numPDEs),
+                                          int(Atilde.shape[1] / numPDEs)))
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the algebraic distances computed here
