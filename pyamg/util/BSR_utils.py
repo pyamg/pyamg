@@ -41,7 +41,7 @@ def BSR_Get_Row(A, i):
     """
 
     blocksize = A.blocksize[0]
-    BlockIndx = i/blocksize
+    BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i % blocksize
@@ -96,7 +96,7 @@ def BSR_Row_WriteScalar(A, i, x):
     """
 
     blocksize = A.blocksize[0]
-    BlockIndx = i/blocksize
+    BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i % blocksize
@@ -146,7 +146,7 @@ def BSR_Row_WriteVect(A, i, x):
     """
 
     blocksize = A.blocksize[0]
-    BlockIndx = i/blocksize
+    BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]
     rowend = A.indptr[BlockIndx+1]
     localRowIndx = i % blocksize
