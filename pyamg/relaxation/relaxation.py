@@ -343,8 +343,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
-        row_start = row_start / R
-        row_stop = row_stop / R
+        row_start = int(row_start / R)
+        row_stop = int(row_stop / R)
         for iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
@@ -415,8 +415,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
-        row_start = row_start / R
-        row_stop = row_stop / R
+        row_start = int(row_start / R)
+        row_stop = int(row_stop / R)
         for iter in range(iterations):
             amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
                                 x, b, temp, row_start, row_stop,
@@ -479,13 +479,13 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
 
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
-    elif Dinv.shape[0] != A.shape[0]/blocksize:
+    elif Dinv.shape[0] != int(A.shape[0]/blocksize):
         raise ValueError('Dinv and A have incompatible dimensions')
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
     sweep = slice(None)
-    (row_start, row_stop, row_step) = sweep.indices(A.shape[0]/blocksize)
+    (row_start, row_stop, row_step) = sweep.indices(int(A.shape[0]/blocksize))
 
     if (row_stop - row_start) * row_step <= 0:  # no work to do
         return
@@ -560,15 +560,15 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
 
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
-    elif Dinv.shape[0] != A.shape[0]/blocksize:
+    elif Dinv.shape[0] != int(A.shape[0]/blocksize):
         raise ValueError('Dinv and A have incompatible dimensions')
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
     if sweep == 'forward':
-        row_start, row_stop, row_step = 0, len(x)/blocksize, 1
+        row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
-        row_start, row_stop, row_step = len(x)/blocksize-1, -1, -1
+        row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
         for iter in range(iterations):
             block_gauss_seidel(A, x, b, iterations=1, sweep='forward',
