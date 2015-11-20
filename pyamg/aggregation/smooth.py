@@ -47,7 +47,7 @@ def Satisfy_Constraints(U, B, BtBinv):
 
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
-    num_block_rows = U.shape[0]/RowsPerBlock
+    num_block_rows = int(U.shape[0]/RowsPerBlock)
 
     UB = np.ravel(U*B)
 
@@ -372,8 +372,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                            np.ravel(T.data),
                                            R.indptr, R.indices,
                                            np.ravel(R.data),
-                                           T.shape[0]/T.blocksize[0],
-                                           T.shape[1]/T.blocksize[1],
+                                           int(T.shape[0]/T.blocksize[0]),
+                                           int(T.shape[1]/T.blocksize[1]),
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
@@ -425,8 +425,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                                np.ravel(P.data),
                                                AP.indptr, AP.indices,
                                                np.ravel(AP.data),
-                                               T.shape[0]/T.blocksize[0],
-                                               T.shape[1]/T.blocksize[1],
+                                               int(T.shape[0]/T.blocksize[0]),
+                                               int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                P.blocksize[1])
 
@@ -545,8 +545,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            np.ravel(AT.data),
                                            R.indptr,  R.indices,
                                            np.ravel(R.data),
-                                           T.shape[0]/T.blocksize[0],
-                                           T.shape[1]/T.blocksize[1],
+                                           int(T.shape[0]/T.blocksize[0]),
+                                           int(T.shape[1]/T.blocksize[1]),
                                            Ah.blocksize[0], Ah.blocksize[1],
                                            T.blocksize[1])
 
@@ -600,8 +600,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                np.ravel(AP_temp.data),
                                                AP.indptr, AP.indices,
                                                np.ravel(AP.data),
-                                               T.shape[0]/T.blocksize[0],
-                                               T.shape[1]/T.blocksize[1],
+                                               int(T.shape[0]/T.blocksize[0]),
+                                               int(T.shape[1]/T.blocksize[1]),
                                                Ah.blocksize[0],
                                                Ah.blocksize[1], T.blocksize[1])
         del AP_temp
@@ -770,8 +770,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            np.ravel(T.data),
                                            R.indptr, R.indices,
                                            np.ravel(R.data),
-                                           T.shape[0]/T.blocksize[0],
-                                           T.shape[1]/T.blocksize[1],
+                                           int(T.shape[0]/T.blocksize[0]),
+                                           int(T.shape[1]/T.blocksize[1]),
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
@@ -821,8 +821,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                np.ravel(V[i].data),
                                                AV.indptr, AV.indices,
                                                np.ravel(AV.data),
-                                               T.shape[0]/T.blocksize[0],
-                                               T.shape[1]/T.blocksize[1],
+                                               int(T.shape[0]/T.blocksize[0]),
+                                               int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                T.blocksize[1])
 
@@ -1037,8 +1037,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if Atilde is None:
         AtildeCopy = sparse.csr_matrix((np.ones(len(A.indices)),
                                         A.indices.copy(), A.indptr.copy()),
-                                       shape=(A.shape[0]/A.blocksize[0],
-                                              A.shape[1]/A.blocksize[1]))
+                                       shape=(int(A.shape[0]/A.blocksize[0]),
+                                              int(A.shape[1]/A.blocksize[1])))
     else:
         AtildeCopy = Atilde.copy()
 
@@ -1059,8 +1059,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     T.sort_indices()
     Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
                                           T.indices, T.indptr),
-                                         shape=(T.shape[0]/T.blocksize[0],
-                                                T.shape[1]/T.blocksize[1]))
+                                         shape=(int(T.shape[0]/T.blocksize[0]),
+                                                int(T.shape[1]/T.blocksize[1])))
     AtildeCopy.data[:] = 1.0
     for i in range(degree):
         Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
