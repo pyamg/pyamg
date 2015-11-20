@@ -349,8 +349,8 @@ class TestRelaxation(TestCase):
         x = ones(N)
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.01 and resid2 < 0.01)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.01 and resid2 < 0.01)
+        self.assertTrue(allclose(resid1, resid2))
 
     def test_gauss_seidel_indexed(self):
         N = 1
@@ -587,8 +587,8 @@ class TestRelaxation(TestCase):
         x = ones(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.2 and resid2 < 0.2)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        self.assertTrue(allclose(resid1, resid2))
 
     def test_gauss_seidel_nr_bsr(self):
 
@@ -672,8 +672,8 @@ class TestRelaxation(TestCase):
         x = ones(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.2 and resid2 < 0.2)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        self.assertTrue(allclose(resid1, resid2))
 
     def test_schwarz_gold(self):
         scipy.random.seed(0)
@@ -1102,8 +1102,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.03 and resid2 < 0.03)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.03 and resid2 < 0.03)
+        self.assertTrue(allclose(resid1, resid2))
 
     def test_jacobi_ne(self):
         N = 1
@@ -1327,8 +1327,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.3 and resid2 < 0.3)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        self.assertTrue(allclose(resid1, resid2))
 
     def test_gauss_seidel_nr_bsr(self):
         for N in [1, 2, 3, 4, 5, 6, 10]:
@@ -1423,8 +1423,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assert_(resid1 < 0.3 and resid2 < 0.3)
-        self.assert_(allclose(resid1, resid2))
+        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        self.assertTrue(allclose(resid1, resid2))
 
 
 # Test both complex and real arithmetic

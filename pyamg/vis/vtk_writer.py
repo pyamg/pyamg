@@ -123,9 +123,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     if type(fname) is str:
         try:
             fname = open(fname, 'w')
-        except IOError as xxx_todo_changeme:
-            (errno, strerror) = xxx_todo_changeme.args
-            print(".vtu error (%s): %s" % (errno, strerror))
+        except IOError as e:
+            print(".vtu error (%s): %s" % (e.errno, e.strerror))
     else:
         raise ValueError('fname is assumed to be a string')
 
