@@ -260,7 +260,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and\
-            levels[-1].A.shape[0]/blocksize(levels[-1].A) > max_coarse:
+            int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 

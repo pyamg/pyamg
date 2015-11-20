@@ -602,13 +602,13 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         data = np.zeros((bnnz, K+1, K), dtype=T.dtype)
         data[:, :-1, :] = T.data
         return bsr_matrix((data, T.indices, T.indptr),
-                          shape=((K + 1) * (M / K), N))
+                          shape=((K + 1) * int(M / K), N))
 
     def expand_candidates(B_old, nodesize):
         # insert a new dof that is always zero, to create NullDim+1 dofs per
         # node in B
         NullDim = B_old.shape[1]
-        nnodes = B_old.shape[0] / nodesize
+        nnodes = int(B_old.shape[0] / nodesize)
         Bnew = np.zeros((nnodes, nodesize+1, NullDim), dtype=B_old.dtype)
         Bnew[:, :-1, :] = B_old.reshape(nnodes, nodesize, NullDim)
         return Bnew.reshape(-1, NullDim)
