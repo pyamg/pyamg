@@ -234,7 +234,7 @@ def rho_block_D_inv_A(A, Dinv):
         blocksize = Dinv.shape[1]
         if Dinv.shape[1] != Dinv.shape[2]:
             raise ValueError('Dinv has incorrect dimensions')
-        elif Dinv.shape[0] != A.shape[0]/blocksize:
+        elif Dinv.shape[0] != int(A.shape[0]/blocksize):
             raise ValueError('Dinv and A have incompatible dimensions')
 
         Dinv = sp.sparse.bsr_matrix((Dinv,

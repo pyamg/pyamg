@@ -1481,7 +1481,7 @@ class TestBlockRelaxation(TestCase):
 
             for i in range(0, A.shape[0], blocksize):
                 r = A_no_D[i:(i+blocksize), :]*temp
-                r = scipy.mat(Dinv[i/blocksize, :, :]) *\
+                r = scipy.mat(Dinv[int(i/blocksize), :, :]) *\
                     scipy.mat(scipy.ravel(b[i:(i+blocksize)]) -
                               scipy.ravel(r)).reshape(-1, 1)
                 x[i:(i+blocksize)] = (1.0 - omega)*temp[i:(i+blocksize)] +\
@@ -1594,7 +1594,7 @@ class TestBlockRelaxation(TestCase):
 
             for i in range(start, stop, step):
                 r = A_no_D[i:(i+blocksize), :]*x
-                r = scipy.mat(Dinv[i/blocksize, :, :]) *\
+                r = scipy.mat(Dinv[int(i/blocksize), :, :]) *\
                     scipy.mat(scipy.ravel(b[i:(i+blocksize)]) -
                               scipy.ravel(r)).reshape(-1, 1)
                 x[i:(i+blocksize)] = scipy.ravel(r)
