@@ -78,7 +78,7 @@ class TestWriteVtu(TestCase):
 
             try:
                 parser = xml.parsers.expat.ParserCreate()
-                with open(mesh.file_name, 'r') as f:
+                with open(mesh.file_name, 'rb') as f:
                     parser.ParseFile(f)
             except Exception as ex:
                 assert False, 'problem: %s' % (ex)
