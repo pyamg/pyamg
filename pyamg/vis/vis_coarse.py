@@ -212,7 +212,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     check_input(Verts, splitting)
 
     N = Verts.shape[0]
-    Ndof = len(splitting) / N
+    Ndof = int(len(splitting) / N)
 
     E2V = np.arange(0, N, dtype=int)
 
