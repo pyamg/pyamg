@@ -104,7 +104,7 @@ class TestGraph(TestCase):
             G.data = rand(G.nnz)
             N = G.shape[0]
 
-            for n_seeds in [N/20, N/10, N-2, N]:
+            for n_seeds in [int(N/20), int(N/10), N-2, N]:
                 if n_seeds > G.shape[0] or n_seeds < 1:
                     continue
 

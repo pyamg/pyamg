@@ -721,8 +721,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             At.append(Atmin.min())
 
         Atilde = csr_matrix((np.array(At), Atilde.indices, Atilde.indptr),
-                            shape=(Atilde.shape[0]/numPDEs,
-                                   Atilde.shape[1]/numPDEs))
+                            shape=(int(Atilde.shape[0]/numPDEs),
+                                   int(Atilde.shape[1]/numPDEs)))
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the algebraic distances computed here
@@ -751,7 +751,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
 
     # deal with the supernode case
     if isspmatrix_bsr(A):
-        dimen = A.shape[0]/A.blocksize[0]
+        dimen = int(A.shape[0]/A.blocksize[0])
         C = csr_matrix((np.ones((A.data.shape[0],)), A.indices, A.indptr),
                        shape=(dimen, dimen))
     else:
