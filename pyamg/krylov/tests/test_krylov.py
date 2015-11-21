@@ -90,10 +90,10 @@ class TestKrylov(TestCase):
                                'b': b, 'x0': x0, 'tol': 1e-16, 'maxiter': 2,
                                'reduction_factor': 0.98})
 
-    from numpy.testing import dec
-    @dec.knownfailureif(True, 'MGS and Householder and scipy.sparse.linalg ' +\
-                              'do not match for GMRES' +\
-                              'see https://github.com/pyamg/pyamg/issues/158')
+    #from numpy.testing import dec
+    #@dec.knownfailureif(True, 'MGS and Householder and scipy.sparse.linalg ' +\
+    #                          'do not match for GMRES' +\
+    #                          'see https://github.com/pyamg/pyamg/issues/158')
 
     def test_gmres(self):
         # Ensure repeatability
@@ -116,10 +116,17 @@ class TestKrylov(TestCase):
                                               maxiter=min(A.shape[0], maxiter))
                 (x2, flag2) = gmres_mgs(A, b, x0=x0, maxiter=min(A.shape[0],
                                         maxiter))
-                assert_array_almost_equal(x/norm(x), x2/norm(x2),
-                                          err_msg='Householder GMRES and MGS\
-                                                   GMRES gave different\
-                                                   results for small matrix')
+                try:
+                    assert_array_almost_equal(x/norm(x), x2/norm(x2),
+                                              err_msg='Householder GMRES and MGS\
+                                                       GMRES gave different\
+                                                       results for small matrix')
+                except AssertionError:
+                    from nose import SkipTest
+                    raise SkipTest('MGS and Householder and scipy.sparse.linalg' +\
+                                   'do not match for GMRES' +\
+                                   'see https://github.com/pyamg/pyamg/issues/158')
+
                 assert_equal(flag, flag2,
                              err_msg='Householder GMRES and MGS GMRES returned\
                                       different convergence flags for small\
@@ -146,9 +153,9 @@ class TestKrylov(TestCase):
                                               err_msg='CR and GMRES yield\
                                                        different answers')
 
-    from numpy.testing import dec
-    @dec.knownfailureif(True, 'Oblique projectors fail ' +\
-                              'see https://github.com/pyamg/pyamg/issues/159')
+    #from numpy.testing import dec
+    #@dec.knownfailureif(True, 'Oblique projectors fail ' +\
+    #                          'see https://github.com/pyamg/pyamg/issues/159')
 
     def test_krylov(self):
         # Oblique projectors reduce the residual
@@ -160,9 +167,14 @@ class TestKrylov(TestCase):
                 (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
                                       maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
-                assert_equal((norm(b - A*xNew)/norm(b - A*x0)) <
-                             case['reduction_factor'], True,
-                             err_msg='Oblique Krylov Method Failed Test')
+                try:
+                    assert_equal((norm(b - A*xNew)/norm(b - A*x0)) <
+                                 case['reduction_factor'], True,
+                                 err_msg='Oblique Krylov Method Failed Test')
+                except AssertionError:
+                    from nose import SkipTest
+                    raise SkipTest('Oblique projectors fail ' +\
+                                   'see https://github.com/pyamg/pyamg/issues/159')
 
         # Oblique projectors reduce the residual, here we consider oblique
         # projectors for symmetric matrices
