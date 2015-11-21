@@ -1,17 +1,19 @@
+sudo: false
 language: python
 python:
   - "2.7"
-virtualenv:
-  system_site_packages: true
+  - "3.4"
+cache: apt
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq python-scipy python-nose
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda update --yes conda
 install:
-  # pip install . will run setup and check pip success
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy nose
+  - pip install python-coveralls
   - pip install .
-  - pip install coveralls
 script:
-  #- nosetests pyamg --with-coverage --cover-package=pyamg
-  - python test_pyamg_install.py
+  - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO pyamg
 after_success:
   - coveralls
