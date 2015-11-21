@@ -322,10 +322,18 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
+    if sparse.isspmatrix_csr(A):
+        blocksize = 1
+    else:
+        R, C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        blocksize = R
+
     if sweep == 'forward':
-        row_start, row_stop, row_step = 0, len(x), 1
+        row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
-        row_start, row_stop, row_step = len(x)-1, -1, -1
+        row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
         for iter in range(iterations):
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
@@ -340,11 +348,6 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
     else:
-        R, C = A.blocksize
-        if R != C:
-            raise ValueError('BSR blocks must be square')
-        row_start = int(row_start / R)
-        row_stop = int(row_stop / R)
         for iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
