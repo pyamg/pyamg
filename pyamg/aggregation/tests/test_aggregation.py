@@ -321,7 +321,7 @@ class TestSolverPerformance(TestCase):
                 y = rand(n,)
                 out=(dot(P * x, y), dot(x, P * y))
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
-                assert_approx_equal(out[0], out[1], significant=6)
+                assert_approx_equal(out[0], out[1])
 
     def test_nonsymmetric(self):
         # problem data
