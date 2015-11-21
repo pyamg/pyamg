@@ -8,7 +8,7 @@ __all__ = ['gmres']
 
 
 def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
-          M=None, callback=None, residuals=None, orthog='mgs', **kwargs):
+          M=None, callback=None, residuals=None, orthog='householder', **kwargs):
     '''
     Generalized Minimum Residual Method (GMRES)
         GMRES iteratively refines the initial solution guess to the
