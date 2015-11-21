@@ -18,7 +18,9 @@ install:
   - conda install --yes pip numpy scipy nose
   - pip install python-coveralls
   - pip install .
+
 script:
   - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO
+
 after_success:
-  - coveralls
+  - coveralls --verbose
