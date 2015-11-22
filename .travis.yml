@@ -15,15 +15,15 @@ before_install:
 install:
   - conda create -n testenv --yes python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
-  - conda install --yes pip numpy scipy nose coverage
-  - pip install coveralls
+  - conda install --yes pip numpy scipy nose
   - pip install python-coveralls
   - pip install .
 
 script:
-  - cd ..
+  - mkdir cov
+  - cd cov
   - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO pyamg
   - ls -ltra
 
 after_success:
-  - coveralls
+  - coveralls debug
