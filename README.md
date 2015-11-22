@@ -2,7 +2,6 @@
 [![Coverage Status](https://img.shields.io/coveralls/pyamg/pyamg/master.svg?style=flat-square)](https://coveralls.io/r/pyamg/pyamg)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://img.shields.io/pypi/dm/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
-[![Version](https://img.shields.io/github/tag/pyamg/pyamg.svg?style=flat-square)](https://github.com/pyamg/pyamg)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
