@@ -1,7 +1,9 @@
 [![Build Status](https://travis-ci.org/pyamg/pyamg.png?branch=master)](https://travis-ci.org/pyamg/pyamg)
 [![Coverage Status](https://coveralls.io/repos/pyamg/pyamg/badge.svg)](https://coveralls.io/r/pyamg/pyamg)
-[![Latest Version](https://img.shields.io/pypi/pyversions/pyamg.svg)](https://pypi.python.org/pypi/pyamg/)
+[![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://img.shields.io/pypi/dm/pyamg.svg)](https://pypi.python.org/pypi/pyamg/)
+[![Version](https://img.shields.io/github/tag/pyamg/pyamg.svg)](https://github.com/pyamg/pyamg)
+
 # Installation
 PyAMG requires `numpy` and `scipy`
 
