@@ -21,7 +21,8 @@ install:
   - pip install .
 
 script:
-  - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO
+  - cd ..
+  - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO pyamg
 
 after_success:
   - coveralls
