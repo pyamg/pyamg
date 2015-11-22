@@ -23,7 +23,6 @@ script:
   - mkdir cov
   - cd cov
   - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO pyamg
-  - ls -ltra
 
 after_success:
-  - coveralls debug
+  - coveralls
