@@ -63,7 +63,7 @@ def CR(S, method='habituated', maxiter=20):
     beta2 = np.inf     # quality criterion, oldest
     n = S.shape[0]    # problem size
     nC = 0          # number of current Coarse points
-    # rhs = np.zeros((n, 1))  # rhs for Ae=0
+    rhs = np.zeros((n, 1))  # rhs for Ae=0
 
     if not isspmatrix(S):
         raise TypeError('expecting sparse matrix')
@@ -75,6 +75,8 @@ def CR(S, method='habituated', maxiter=20):
     # out iterations ---------------
     for m in range(0, maxiter):
 
+        Cpts = np.where(splitting == 1)[0]
+        Fpts = np.where(splitting == 0)[0]
         mu = 0.0  # convergence rate
         E = np.zeros((n, 1))  # slowness measure
 
@@ -82,7 +84,7 @@ def CR(S, method='habituated', maxiter=20):
         for k in range(0, ntests):
 
             e = 0.5*(1 + sp.rand(n, 1))
-            e[splitting > 0] = 0
+            e[Cpts] = 0
 
             enorm = norm(e)
 
@@ -90,11 +92,10 @@ def CR(S, method='habituated', maxiter=20):
             for l in range(0, nrelax):
 
                 if method == 'habituated':
-                    gauss_seidel(S, e, np.zeros((n, 1)), iterations=1)
-                    e[splitting > 0] = 0
+                    gauss_seidel(S, e, rhs, iterations=1)
+                    e[Cpts] = 0
                 elif method == 'concurrent':
-                    raise NotImplementedError('not implemented: need an \
-                                                F-smoother')
+                    gauss_seidel_indexed(S, e, rhs, indices=Fpts, iterations=1)
                 else:
                     raise NotImplementedError('method not recognized: need \
                                                habituated or concurrent')
