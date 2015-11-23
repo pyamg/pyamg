@@ -20,6 +20,7 @@ import pyamg
 from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from scipy import sparse
 from pyamg import amg_core
+from pyamg.relaxation.relaxation import jacobi
 
 __all__ = ['classical_strength_of_connection',
            'symmetric_strength_of_connection',
@@ -878,7 +879,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
 
     # relax k times
     for r in range(0, R):
-        pyamg.relaxation.jacobi(A, x[:, r], b, iterations=k, omega=alpha)
+        jacobi(A, x[:, r], b, iterations=k, omega=alpha)
 
     # get distance measure d
     C = A.tocoo()
