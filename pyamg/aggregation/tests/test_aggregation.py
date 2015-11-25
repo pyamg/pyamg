@@ -319,7 +319,7 @@ class TestSolverPerformance(TestCase):
                 np.random.seed(0)
                 x = rand(n,)
                 y = rand(n,)
-                out=(dot(P * x, y), dot(x, P * y))
+                out = (dot(P * x, y), dot(x, P * y))
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
                 assert_approx_equal(out[0], out[1])
 

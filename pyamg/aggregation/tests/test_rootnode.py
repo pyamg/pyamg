@@ -219,7 +219,7 @@ class TestSolverPerformance(TestCase):
         x = rand(A.shape[0])
         b = rand(A.shape[0])
 
-        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * rand(A.shape[0]) - 6))).tocsr()
+        D = diag_sparse(1.0 / np.sqrt(10**(12 * rand(A.shape[0]) - 6))).tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
         # DAD = D * A * D
@@ -354,7 +354,8 @@ class TestSolverPerformance(TestCase):
         A = poisson((15, 15), format='csr')
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
+        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)),
+                                     smooth=smooth,
                                      strength=strength,
                                      presmoother=smoother,
                                      postsmoother=smoother,
@@ -405,8 +406,8 @@ class TestSolverPerformance(TestCase):
         sa_old = rootnode_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = rootnode_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(sa_old.levels[-1].A.todense() -
-                                   sa_new.levels[-1].A.todense())).max() < 0.01)
+            dff = sa_old.levels[-1].A.todense() - sa_new.levels[-1].A.todense()
+            assert(np.abs(np.ravel(dff)).max() < 0.01)
             sa_old = sa_new
 
 
@@ -516,12 +517,14 @@ class TestComplexSolverPerformance(TestCase):
         # parameters for the complex-symmetric matrix A
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
+        sa_nonsymm = rootnode_solver(A, B=np.ones((A.shape[0], 1)),
+                                     smooth=smooth,
                                      strength=strength, presmoother=smoother,
                                      postsmoother=smoother,
                                      improve_candidates=None, **SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = rootnode_solver(A, B=np.ones((A.shape[0], 1)), smooth=smooth,
+        sa_symm = rootnode_solver(A, B=np.ones((A.shape[0], 1)),
+                                  smooth=smooth,
                                   strength=strength, presmoother=smoother,
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
