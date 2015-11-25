@@ -388,8 +388,8 @@ if __name__ == '__main__':
     import time
     from scipy.sparse.linalg.isolve import gmres as igmres
 
-    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %\
-        (A.shape[0], A.shape[0]))
+    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %
+          (A.shape[0], A.shape[0]))
     t1 = time.time()
     (x, flag) = gmres_mgs(A, b, x0, tol=1e-8, maxiter=500)
     t2 = time.time()
