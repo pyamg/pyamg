@@ -202,7 +202,7 @@ if __name__ == '__main__':
     b = random((A.shape[0],))
     x0 = random((A.shape[0],))
 
-    print('\n\nTesting CR with %d x %d 2D Laplace Matrix' % \
+    print('\n\nTesting CR with %d x %d 2D Laplace Matrix' %
           (A.shape[0], A.shape[0]))
     t1 = time.time()
     r = []
