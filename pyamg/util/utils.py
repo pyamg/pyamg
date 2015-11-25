@@ -80,8 +80,7 @@ def profile_solver(ml, accel=None, **kwargs):
     residuals = []
 
     if accel is None:
-        x_sol = ml.solve(b, residuals=residuals, **kwargs)
-        del x_sol
+        ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
             residuals.append(norm(np.ravel(b) - np.ravel(A*x)))
@@ -733,7 +732,7 @@ def amalgamate(A, blocksize):
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
     subI = (np.ones(A.indices.shape), A.indices, A.indptr)
-    shape = (int(A.shape[0]/A.blocksize[0]),\
+    shape = (int(A.shape[0]/A.blocksize[0]),
              int(A.shape[1]/A.blocksize[1]))
     return csr_matrix(subI, shape=shape)
 

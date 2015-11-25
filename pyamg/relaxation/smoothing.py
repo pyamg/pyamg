@@ -2,14 +2,12 @@
 """
 from __future__ import absolute_import
 
-import numpy as np
 import scipy as sp
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
-from pyamg import amg_core
 
 __docformat__ = "restructuredtext en"
 
@@ -339,8 +337,8 @@ def setup_schwarz(lvl, iterations=1, subdomain=None, subdomain_ptr=None,
 
     matrix_asformat(lvl, 'A', 'csr')
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
-        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr, inv_subblock,
-                           inv_subblock_ptr)
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
+                                      inv_subblock, inv_subblock_ptr)
 
     def smoother(A, x, b):
         relaxation.schwarz(A, x, b, iterations=iterations, subdomain=subdomain,

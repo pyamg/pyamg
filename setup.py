@@ -9,8 +9,8 @@ import os
 import sys
 import subprocess
 
-#if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
-#    raise RuntimeError("Python version 2.6, 2.7 required.")
+# if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
+#     raise RuntimeError("Python version 2.6, 2.7 required.")
 
 if sys.version_info[0] >= 3:
     import builtins
@@ -75,6 +75,7 @@ INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 #       D: date in format YYYYMMDDHHMMSS
 #       R: which repository (fork) this came from with git remote show origin
 #       then add this to say fullversion.py
+
 
 # Return the git revision as a string
 def git_version():

@@ -94,7 +94,7 @@ def mls_polynomial_coefficients(rho, degree):
     # print std_roots
 
     roots = rho/2.0 * (1.0 - np.cos(2*np.pi*(np.arange(degree,
-                                       dtype='float64') + 1)/(2.0*degree+1.0)))
+                                    dtype='float64') + 1)/(2.0*degree+1.0)))
     # print roots
     roots = 1.0/roots
 

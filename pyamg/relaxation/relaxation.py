@@ -12,7 +12,8 @@ from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
 from pyamg import amg_core
 from scipy.linalg import lapack as la
 
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'schwarz', 'schwarz_parameters']
+__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
+__all__ += ['schwarz', 'schwarz_parameters']
 __all__ += ['jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']
 __all__ += ['gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel']
 
