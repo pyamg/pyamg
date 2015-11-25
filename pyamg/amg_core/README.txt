@@ -9,3 +9,8 @@ or
 
 Try to keep numpy.i and pyfragments.swg:
 https://github.com/numpy/numpy/tree/master/tools/swig
+
+Use pep8 to fix safely
+autopep8 --select=E302 --in-place amg_core.py
+autopep8 --select=E303 --in-place amg_core.py
+autopep8 --select=W391 --in-place amg_core.py
