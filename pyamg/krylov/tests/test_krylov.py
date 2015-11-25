@@ -116,17 +116,10 @@ class TestKrylov(TestCase):
                                               maxiter=min(A.shape[0], maxiter))
                 (x2, flag2) = gmres_mgs(A, b, x0=x0, maxiter=min(A.shape[0],
                                         maxiter))
-                try:
-                    err_msg = ('Householder GMRES and MGS GMRES gave '
-                               'different results for small matrix')
-                    assert_array_almost_equal(x/norm(x), x2/norm(x2),
-                                              err_msg=err_msg)
-                except AssertionError:
-                    from nose import SkipTest
-                    skip_msg = ('MGS and Householder and scipy.sparse.linalg '
-                                'do not match for GMRES'
-                                'https://github.com/pyamg/pyamg/issues/158')
-                    raise SkipTest(skip_msg)
+                err_msg = ('Householder GMRES and MGS GMRES gave '
+                           'different results for small matrix')
+                assert_array_almost_equal(x/norm(x), x2/norm(x2),
+                                          err_msg=err_msg)
 
                 err_msg = ('Householder GMRES and MGS GMRES returned '
                            'different convergence flags for small matrix')
@@ -168,15 +161,9 @@ class TestKrylov(TestCase):
                 (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
                                       maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
-                try:
-                    assert_equal((norm(b - A*xNew)/norm(b - A*x0)) <
-                                 case['reduction_factor'], True,
-                                 err_msg='Oblique Krylov Method Failed Test')
-                except AssertionError:
-                    from nose import SkipTest
-                    skip_msg = ('Oblique projectors fail '
-                                'https://github.com/pyamg/pyamg/issues/159')
-                    raise SkipTest(skip_msg)
+                assert_equal((norm(b - A*xNew)/norm(b - A*x0)) <
+                             case['reduction_factor'], True,
+                             err_msg='Oblique Krylov Method Failed Test')
 
         # Oblique projectors reduce the residual, here we consider oblique
         # projectors for symmetric matrices

@@ -112,7 +112,7 @@ void householder_hornerscheme (      T z[], const int z_size,
         Bptr = &(B[index]);
 
         T alpha = dot_prod(Bptr, z, n);
-        alpha *= 2;
+        alpha *= -2;
         axpy(z, Bptr, alpha, n);
 
         index += index_step;
