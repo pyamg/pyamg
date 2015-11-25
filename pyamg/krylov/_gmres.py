@@ -8,7 +8,7 @@ __all__ = ['gmres']
 
 
 def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
-          M=None, callback=None, residuals=None, orthog='mgs', **kwargs):
+          M=None, callback=None, residuals=None, orthog='householder', **kwargs):
     '''
     Generalized Minimum Residual Method (GMRES)
         GMRES iteratively refines the initial solution guess to the
@@ -98,11 +98,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     '''
-
-    # known bug vvvvvv remove when fixed
-    if A.dtype == complex and orthog == 'householder':
-        raise ValueError('[Known Bug] Housholder fails with complex matrices; \
-                          use MGS')
 
     # pass along **kwargs
     if orthog == 'householder':
