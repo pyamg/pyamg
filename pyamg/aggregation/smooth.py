@@ -1057,10 +1057,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     # Expand allowed sparsity pattern for P through multiplication by Atilde
     T.sort_indices()
+    shape = (int(T.shape[0]/T.blocksize[0]), int(T.shape[1]/T.blocksize[1]))
     Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
                                           T.indices, T.indptr),
-                                         shape=(int(T.shape[0]/T.blocksize[0]),
-                                                int(T.shape[1]/T.blocksize[1])))
+                                         shape=shape)
     AtildeCopy.data[:] = 1.0
     for i in range(degree):
         Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
