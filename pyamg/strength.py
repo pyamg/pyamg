@@ -16,7 +16,6 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 import numpy as np
-import pyamg
 from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from scipy import sparse
 from pyamg import amg_core
@@ -461,14 +460,14 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 @np.deprecate
-def ode_strength_of_connection(A, B='ones', epsilon=4.0, k=2, proj_type="l2",
+def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
                                block_flag=False, symmetrize_measure=True):
     """Use evolution_strength_of_connection instead"""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 
 
-def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
+def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                      proj_type="l2", block_flag=False,
                                      symmetrize_measure=True):
     """
@@ -479,7 +478,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix
     B : {string, array}
-        If B='ones', then the near nullspace vector used is all ones.  If B is
+        If B=None, then the near nullspace vector used is all ones.  If B is
         an (NxK) array, then B is taken to be the near nullspace vectors.
     epsilon : scalar
         Drop tolerance
@@ -532,7 +531,7 @@ def evolution_strength_of_connection(A, B='ones', epsilon=4.0, k=2,
     # ====================================================================
     # Format A and B correctly.
     # B must be in mat format, this isn't a deep copy
-    if B == 'ones':
+    if B is None:
         Bmat = np.mat(np.ones((A.shape[0], 1), dtype=A.dtype))
     else:
         Bmat = np.mat(B)
