@@ -36,24 +36,24 @@ else:
         raise ImportError(msg)
 
     # Emit a warning if numpy is too old
-    import numpy as _numpy
-    majver, minver = [float(i) for i in _numpy.version.version.split('.')[:2]]
+    import numpy as np
+    majver, minver = [float(i) for i in np.version.version.split('.')[:2]]
     if majver < 1 or (majver == 1 and minver < 2):
         import warnings
         warnings.warn("Numpy 1.2.0 or above is recommended for this version of\
-                      PyAMG (detected version %s)" % _numpy.version.version,
+                      PyAMG (detected version %s)" % np.version.version,
                       UserWarning)
 
     # Emit a warning if scipy is too old
-    import scipy as _scipy
-    majver, minver = [float(i) for i in _scipy.version.version.split('.')[:2]]
+    import scipy as sp
+    majver, minver = [float(i) for i in sp.version.version.split('.')[:2]]
     if minver < 0.7:
         import warnings
         warnings.warn("SciPy 0.7 or above is recommended for this version of\
-                      PyAMG (detected version %s)" % _scipy.version.version,
+                      PyAMG (detected version %s)" % sp.version.version,
                       UserWarning)
 
-    del _numpy, _scipy
+    del np, sp
 
     from .version import git_revision as __git_revision__
     from .version import version as __version__

@@ -262,12 +262,12 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     Examples
     --------
-    >>> from numpy import arange, array
+    >>> import numpy as np
     >>> from pyamg import solve
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> A = poisson((40,40),format='csr')
-    >>> b = array(arange(A.shape[0]), dtype=float)
+    >>> b = np.array(np.arange(A.shape[0]), dtype=float)
     >>> x = solve(A,b,verb=False)
     >>> print "%1.2e"%(norm(b - A*x)/norm(b))
     6.28e-06

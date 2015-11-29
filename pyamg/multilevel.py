@@ -296,9 +296,9 @@ class multilevel_solver:
         >>> from pyamg.aggregation import smoothed_aggregation_solver
         >>> from pyamg.gallery import poisson
         >>> from scipy.sparse.linalg import cg
-        >>> from scipy import rand
+        >>> import scipy as sp
         >>> A = poisson((100, 100), format='csr')          # matrix
-        >>> b = rand(A.shape[0])                           # random RHS
+        >>> b = sp.rand(A.shape[0])                        # random RHS
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
@@ -587,12 +587,12 @@ def coarse_grid_solver(solver):
 
     Examples
     --------
-    >>> from numpy import ones
+    >>> import numpy as np
     >>> from scipy.sparse import spdiags
     >>> from pyamg.gallery import poisson
     >>> from pyamg import coarse_grid_solver
     >>> A = poisson((10, 10), format='csr')
-    >>> b = A * ones(A.shape[0])
+    >>> b = A * np.ones(A.shape[0])
     >>> cgs = coarse_grid_solver('lu')
     >>> x = cgs(A, b)
     """
