@@ -1,6 +1,6 @@
-import numpy
-from numpy import ravel, ones, concatenate, cumsum
-from scipy import rand
+import numpy as np
+import scipy as sp
+
 from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
@@ -18,9 +18,9 @@ class TestRugeStubenFunctions(TestCase):
         self.cases = []
 
         # random matrices
-        numpy.random.seed(0)
+        np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(rand(N, N)))
+            self.cases.append(csr_matrix(sp.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -124,10 +124,10 @@ class TestSolverPerformance(TestCase):
         for case in cases:
             A = poisson(case, format='csr')
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
-            x = rand(A.shape[0])
-            b = A*rand(A.shape[0])  # zeros_like(x)
+            x = sp.rand(A.shape[0])
+            b = A*sp.rand(A.shape[0])  # zeros_like(x)
 
             ml = ruge_stuben_solver(A, max_coarse=50)
 
@@ -151,8 +151,8 @@ class TestSolverPerformance(TestCase):
         rs_old = ruge_stuben_solver(A, max_coarse=10)
         for AA in cases:
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
-            assert(abs(ravel(rs_old.levels[-1].A.todense() -
-                       rs_new.levels[-1].A.todense())).max() < 0.01)
+            assert(np.abs(np.ravel(rs_old.levels[-1].A.todense() -
+                          rs_new.levels[-1].A.todense())).max() < 0.01)
             rs_old = rs_new
 
 
@@ -201,20 +201,20 @@ def reference_direct_interpolation(A, S, splitting):
     C_s_neg = coo_matrix((C_s.data[mask], (C_s.row[mask], C_s.col[mask])),
                          shape=A.shape)
 
-    sum_strong_pos = ravel(C_s_pos.sum(axis=1))
-    sum_strong_neg = ravel(C_s_neg.sum(axis=1))
+    sum_strong_pos = np.ravel(C_s_pos.sum(axis=1))
+    sum_strong_neg = np.ravel(C_s_neg.sum(axis=1))
 
-    sum_all_pos = ravel(A_pos.sum(axis=1))
-    sum_all_neg = ravel(A_neg.sum(axis=1))
+    sum_all_pos = np.ravel(A_pos.sum(axis=1))
+    sum_all_neg = np.ravel(A_neg.sum(axis=1))
 
     diag = A.diagonal()
 
     mask = (sum_strong_neg != 0.0)
-    alpha = numpy.zeros_like(sum_all_neg)
+    alpha = np.zeros_like(sum_all_neg)
     alpha[mask] = sum_all_neg[mask] / sum_strong_neg[mask]
 
     mask = (sum_strong_pos != 0.0)
-    beta = numpy.zeros_like(sum_all_pos)
+    beta = np.zeros_like(sum_all_pos)
     beta[mask] = sum_all_pos[mask] / sum_strong_pos[mask]
 
     mask = sum_strong_pos == 0
@@ -225,12 +225,12 @@ def reference_direct_interpolation(A, S, splitting):
     C_s_pos.data *= -beta[C_s_pos.row]/diag[C_s_pos.row]
 
     C_rows = splitting.nonzero()[0]
-    C_inject = coo_matrix((ones(sum(splitting)), (C_rows, C_rows)),
+    C_inject = coo_matrix((np.ones(sum(splitting)), (C_rows, C_rows)),
                           shape=A.shape)
 
     P = C_s_neg.tocsr() + C_s_pos.tocsr() + C_inject.tocsr()
 
-    map = concatenate(([0], cumsum(splitting)))
+    map = np.concatenate(([0], np.cumsum(splitting)))
     P = csr_matrix((P.data, map[P.indices], P.indptr),
                    shape=(P.shape[0], map[-1]))
 
