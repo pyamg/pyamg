@@ -1,5 +1,4 @@
-import numpy
-from numpy import array, ones, arange, empty, array_split, zeros
+import numpy as np
 from numpy.lib.arraysetops import setdiff1d
 from scipy.sparse import csr_matrix, spdiags
 
@@ -15,7 +14,7 @@ class TestAggregate(TestCase):
         self.cases = []
 
         # random matrices
-        numpy.random.seed(0)
+        np.random.seed(0)
         for N in [2, 3, 5]:
             self.cases.append(csr_matrix(rand(N, N)))
 
@@ -43,7 +42,7 @@ class TestAggregate(TestCase):
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = standard_aggregation(S)
-        expected = array([[0], [0], [0], [0]])
+        expected = np.array([[0], [0], [0], [0]])
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 0)
 
@@ -61,7 +60,7 @@ class TestAggregate(TestCase):
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = naive_aggregation(S)
-        expected = numpy.eye(4)
+        expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
 
@@ -103,7 +102,7 @@ class TestComplexAggregate(TestCase):
 # note that this method only tests the current implementation, not
 # all possible implementations
 def reference_standard_aggregation(C):
-    S = array_split(C.indices, C.indptr[1:-1])
+    S = np.array_split(C.indices, C.indptr[1:-1])
 
     n = C.shape[0]
 
@@ -111,7 +110,7 @@ def reference_standard_aggregation(C):
     j = 0
     Cpts = []
 
-    aggregates = empty(n, dtype=C.indices.dtype)
+    aggregates = np.empty(n, dtype=C.indices.dtype)
     aggregates[:] = -1
 
     # Pass #1
@@ -152,18 +151,18 @@ def reference_standard_aggregation(C):
     assert(len(R) == 0)
 
     Pj = aggregates
-    Pp = arange(n+1)
-    Px = ones(n)
+    Pp = np.arange(n+1)
+    Px = np.ones(n)
 
-    return csr_matrix((Px, Pj, Pp)), array(Cpts)
+    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_naive_aggregation(C):
-    S = array_split(C.indices, C.indptr[1:-1])
+    S = np.array_split(C.indices, C.indptr[1:-1])
     n = C.shape[0]
-    aggregates = empty(n, dtype=C.indices.dtype)
+    aggregates = np.empty(n, dtype=C.indices.dtype)
     aggregates[:] = -1  # aggregates[j] denotes the aggregate j is in
-    R = zeros((0,))     # R stores already aggregated nodes
+    R = np.zeros((0,))     # R stores already aggregated nodes
     j = 0               # j is the aggregate counter
     Cpts = []
 
@@ -172,20 +171,20 @@ def reference_naive_aggregation(C):
 
         # if i isn't already aggregated, grab all his neighbors
         if aggregates[i] == -1:
-            unaggregated_neighbors = numpy.setdiff1d(row, R)
+            unaggregated_neighbors = np.setdiff1d(row, R)
             aggregates[unaggregated_neighbors] = j
             aggregates[i] = j
             j += 1
-            R = numpy.union1d(R, unaggregated_neighbors)
-            R = numpy.union1d(R, numpy.array([i]))
+            R = np.union1d(R, unaggregated_neighbors)
+            R = np.union1d(R, np.array([i]))
             Cpts.append(i)
         else:
             pass
 
-    assert(numpy.unique(R).shape[0] == n)
+    assert(np.unique(R).shape[0] == n)
 
     Pj = aggregates
-    Pp = arange(n+1)
-    Px = ones(n)
+    Pp = np.arange(n+1)
+    Px = np.ones(n)
 
-    return csr_matrix((Px, Pj, Pp)), array(Cpts)
+    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)

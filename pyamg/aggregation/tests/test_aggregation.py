@@ -1,8 +1,6 @@
-import numpy
 import numpy as np
+import scipy as sp
 import scipy.sparse
-from numpy import sqrt, ones, arange, array, abs, dot, ravel
-from scipy import rand, hstack
 from scipy.sparse import csr_matrix, SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
@@ -30,10 +28,10 @@ class TestParameters(TestCase):
         for A, B in self.cases:
             ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
-            x = rand(A.shape[0])
-            b = A * rand(A.shape[0])
+            x = sp.rand(A.shape[0])
+            b = A * sp.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -109,10 +107,10 @@ class TestComplexParameters(TestCase):
         for A, B in self.cases:
             ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
-            x = rand(A.shape[0]) + 1.0j * rand(A.shape[0])
-            b = A * rand(A.shape[0])
+            x = sp.rand(A.shape[0]) + 1.0j * sp.rand(A.shape[0])
+            b = A * sp.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -205,10 +203,10 @@ class TestSolverPerformance(TestCase):
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
-            x = rand(A.shape[0])
-            b = A * rand(A.shape[0])
+            x = sp.rand(A.shape[0])
+            b = A * sp.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -226,15 +224,15 @@ class TestSolverPerformance(TestCase):
     def test_DAD(self):
         A = poisson((50, 50), format='csr')
 
-        x = rand(A.shape[0])
-        b = rand(A.shape[0])
+        x = sp.rand(A.shape[0])
+        b = sp.rand(A.shape[0])
 
-        D = diag_sparse(1.0 / sqrt(10 ** (12 * rand(A.shape[0]) - 6))).tocsr()
+        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * sp.rand(A.shape[0]) - 6))).tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
         # DAD = D * A * D
 
-        B = ones((A.shape[0], 1))
+        B = np.ones((A.shape[0], 1))
 
         # TODO force 2 level method and check that result is the same
         kwargs = {'max_coarse': 1, 'max_levels': 2, 'coarse_solver': 'splu'}
@@ -261,18 +259,18 @@ class TestSolverPerformance(TestCase):
         improve_candidates_list = [None, [('block_gauss_seidel',
                                    {'iterations': 4, 'sweep': 'symmetric'})]]
         # make tests repeatable
-        numpy.random.seed(0)
+        np.random.seed(0)
 
         cases = []
         A_elas, B_elas = linear_elasticity((60, 60), format='bsr')
         # Matrix, Candidates, rho_scale
         cases.append((poisson((61, 61), format='csr'),
-                      ones((61 * 61, 1)), 0.9))
+                      np.ones((61 * 61, 1)), 0.9))
         cases.append((A_elas, B_elas, 0.9))
         for (A, B, rho_scale) in cases:
             last_rho = -1.0
-            x0 = rand(A.shape[0], 1)
-            b = rand(A.shape[0], 1)
+            x0 = sp.rand(A.shape[0], 1)
+            b = sp.rand(A.shape[0], 1)
             for ic in improve_candidates_list:
                 ml = smoothed_aggregation_solver(A, B, max_coarse=10,
                                                  improve_candidates=ic)
@@ -303,8 +301,8 @@ class TestSolverPerformance(TestCase):
                      ('schwarz', {'sweep': 'symmetric'}),
                      ('block_gauss_seidel', {'sweep': 'symmetric'}),
                      'jacobi', 'block_jacobi']
-        rng = arange(1, n + 1, dtype='float').reshape(-1, 1)
-        Bs = [ones((n, 1)), hstack((ones((n, 1)), rng))]
+        rng = np.arange(1, n + 1, dtype='float').reshape(-1, 1)
+        Bs = [np.ones((n, 1)), sp.hstack((np.ones((n, 1)), rng))]
 
         # TODO:
         # why does python 3 require significant=6 while python 2 passes
@@ -317,9 +315,9 @@ class TestSolverPerformance(TestCase):
                                                  postsmoother=smoother)
                 P = ml.aspreconditioner()
                 np.random.seed(0)
-                x = rand(n,)
-                y = rand(n,)
-                out = (dot(P * x, y), dot(x, P * y))
+                x = sp.rand(n,)
+                y = sp.rand(n,)
+                out = (np.dot(P * x, y), np.dot(x, P * y))
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
                 assert_approx_equal(out[0], out[1])
 
@@ -328,7 +326,7 @@ class TestSolverPerformance(TestCase):
         data = load_example('recirc_flow')
         A = data['A'].tocsr()
         B = data['B']
-        numpy.random.seed(625)
+        np.random.seed(625)
         x0 = scipy.rand(A.shape[0])
         b = A * scipy.rand(A.shape[0])
         # solver parameters
@@ -350,7 +348,7 @@ class TestSolverPerformance(TestCase):
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         assert(avg_convergence_ratio < 0.65)
@@ -359,7 +357,7 @@ class TestSolverPerformance(TestCase):
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
         del x
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         assert(avg_convergence_ratio < 0.45)
@@ -369,7 +367,7 @@ class TestSolverPerformance(TestCase):
         A = poisson((15, 15), format='csr')
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0], 1)),
+        sa_nonsymm = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)),
                                                  smooth=smooth,
                                                  strength=strength,
                                                  presmoother=smoother,
@@ -377,7 +375,7 @@ class TestSolverPerformance(TestCase):
                                                  improve_candidates=None,
                                                  **SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0], 1)),
+        sa_symm = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)),
                                               smooth=smooth,
                                               strength=strength,
                                               presmoother=smoother,
@@ -393,7 +391,7 @@ class TestSolverPerformance(TestCase):
         # passed parameters
 
         A = poisson((30, 30), format='csr')
-        b = rand(A.shape[0], 1)
+        b = sp.rand(A.shape[0], 1)
 
         # for each pair, the first entry should yield an SA solver that
         # converges in fewer iterations for a basic Poisson problem
@@ -425,7 +423,7 @@ class TestSolverPerformance(TestCase):
         sa_old = smoothed_aggregation_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
-            assert(abs(ravel(sa_old.levels[-1].A.todense() -
+            assert(np.abs(np.ravel(sa_old.levels[-1].A.todense() -
                              sa_new.levels[-1].A.todense())).max() < 0.01)
             sa_old = sa_new
 
@@ -484,10 +482,10 @@ class TestComplexSolverPerformance(TestCase):
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
 
-            numpy.random.seed(0)  # make tests repeatable
+            np.random.seed(0)  # make tests repeatable
 
-            x = rand(A.shape[0]) + 1.0j * rand(A.shape[0])
-            b = A * rand(A.shape[0])
+            x = sp.rand(A.shape[0]) + 1.0j * sp.rand(A.shape[0])
+            b = A * sp.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -507,7 +505,7 @@ class TestComplexSolverPerformance(TestCase):
         data = load_example('helmholtz_2D')
         A = data['A'].tocsr()
         B = data['B']
-        numpy.random.seed(625)
+        np.random.seed(625)
         x0 = scipy.rand(A.shape[0]) + 1.0j * scipy.rand(A.shape[0])
         b = A * scipy.rand(A.shape[0]) + 1.0j * (A * scipy.rand(A.shape[0]))
         # solver parameters
@@ -526,7 +524,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = []
         # stand-alone solve
         x = sa.solve(b, x0=x0, residuals=residuals, **SA_solve_args)
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         assert(avg_convergence_ratio < 0.85)
@@ -535,7 +533,7 @@ class TestComplexSolverPerformance(TestCase):
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
                      **SA_solve_args)
         del x
-        residuals = array(residuals)
+        residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
         assert(avg_convergence_ratio < 0.7)
@@ -544,7 +542,7 @@ class TestComplexSolverPerformance(TestCase):
         # parameters for the complex-symmetric matrix A
         strength = 'symmetric'
         SA_build_args['symmetry'] = 'nonsymmetric'
-        sa_nonsymm = smoothed_aggregation_solver(A, B=ones((A.shape[0], 1)),
+        sa_nonsymm = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)),
                                                  smooth=smooth,
                                                  strength=strength,
                                                  presmoother=smoother,
@@ -552,7 +550,7 @@ class TestComplexSolverPerformance(TestCase):
                                                  improve_candidates=None,
                                                  **SA_build_args)
         SA_build_args['symmetry'] = 'symmetric'
-        sa_symm = smoothed_aggregation_solver(A, B=ones((A.shape[0], 1)),
+        sa_symm = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)),
                                               smooth=smooth,
                                               strength=strength,
                                               presmoother=smoother,

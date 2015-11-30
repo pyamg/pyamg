@@ -1,9 +1,8 @@
-from numpy import ones, zeros, random, ravel
-from scipy import rand
-
-from pyamg.aggregation import smoothed_aggregation_solver
+import numpy as np
+import scipy as sp
 
 from pyamg.gallery import poisson, linear_elasticity
+from pyamg.aggregation import smoothed_aggregation_solver
 from pyamg.aggregation.adaptive import adaptive_sa_solver
 
 from numpy.testing import TestCase
@@ -22,9 +21,9 @@ class TestAdaptiveSA(TestCase):
         A = poisson((50, 50), format='csr')
 
         [asa, work] = adaptive_sa_solver(A, num_candidates=1)
-        sa = smoothed_aggregation_solver(A, B=ones((A.shape[0], 1)))
+        sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)))
 
-        b = rand(A.shape[0])
+        b = sp.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -49,7 +48,7 @@ class TestAdaptiveSA(TestCase):
                                          prepostsmoother=smoother)
         sa = smoothed_aggregation_solver(A, B=B)
 
-        b = rand(A.shape[0])
+        b = sp.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -74,15 +73,16 @@ class TestAdaptiveSA(TestCase):
         cases.append(A.todense())
         warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
 
-        random.seed(0)
-        sa_old = adaptive_sa_solver(A, initial_candidates=ones((49, 1)),
+        np.random.seed(0)
+        sa_old = adaptive_sa_solver(A, initial_candidates=np.ones((49, 1)),
                                     max_coarse=10)[0]
         for AA in cases:
-            random.seed(0)
-            sa_new = adaptive_sa_solver(AA, initial_candidates=ones((49, 1)),
+            np.random.seed(0)
+            sa_new = adaptive_sa_solver(AA,
+                                        initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
-            assert(abs(ravel(sa_old.levels[-1].A.todense() -
-                             sa_new.levels[-1].A.todense())).max() < 0.01)
+            assert(abs(np.ravel(sa_old.levels[-1].A.todense() -
+                                sa_new.levels[-1].A.todense())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -97,7 +97,7 @@ class TestComplexAdaptiveSA(TestCase):
         # perturbed Laplacian
         A = poisson((50, 50), format='csr')
         Ai = A.copy()
-        Ai.data = Ai.data + 1e-5j * rand(Ai.nnz)
+        Ai.data = Ai.data + 1e-5j * sp.rand(Ai.nnz)
         cases.append((Ai, 0.25))
 
         # imaginary Laplacian
@@ -112,10 +112,10 @@ class TestComplexAdaptiveSA(TestCase):
         for A, rratio in cases:
             [asa, work] = adaptive_sa_solver(A, num_candidates=1,
                                              symmetry='symmetric')
-            # sa  = smoothed_aggregation_solver(A, B = ones((A.shape[0],1)) )
+            # sa  = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
-            b = zeros((A.shape[0],))
-            x0 = rand(A.shape[0],) + 1.0j * rand(A.shape[0],)
+            b = np.zeros((A.shape[0],))
+            x0 = sp.rand(A.shape[0],) + 1.0j * sp.rand(A.shape[0],)
 
             residuals0 = []
 
@@ -136,7 +136,7 @@ class TestComplexAdaptiveSA(TestCase):
 #
 # block candidates
 # self.cases.append((
-#   csr_matrix((ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
+#   csr_matrix((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
 #   shape=(9,3)), vstack((array([1]*9 + [0]*9),arange(2*9))).T ))
 #
 #    def test_first_level(self):
@@ -144,32 +144,32 @@ class TestComplexAdaptiveSA(TestCase):
 #
 # tests where AggOp includes all DOFs
 #        cases.append((
-#           csr_matrix((ones(4),array([0,0,1,1]),arange(5)),
-#           shape=(4,2)), vstack((ones(4),arange(4))).T ))
+#           csr_matrix((np.ones(4),array([0,0,1,1]),arange(5)),
+#           shape=(4,2)), vstack((np.ones(4),arange(4))).T ))
 #        cases.append((
-#           csr_matrix((ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
-#           shape=(9,3)), vstack((ones(9),arange(9))).T ))
+#           csr_matrix((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
+#           shape=(9,3)), vstack((np.ones(9),arange(9))).T ))
 #        cases.append((
-#           csr_matrix((ones(9),array([0,0,1,1,2,2,3,3,3]),arange(10)),
-#           shape=(9,4)), vstack((ones(9),arange(9))).T ))
+#           csr_matrix((np.ones(9),array([0,0,1,1,2,2,3,3,3]),arange(10)),
+#           shape=(9,4)), vstack((np.ones(9),arange(9))).T ))
 #
 # tests where AggOp excludes some DOFs
 #        cases.append((
-#           csr_matrix((ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
-#           shape=(5,2)), vstack((ones(5),arange(5))).T ))
+#           csr_matrix((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
+#           shape=(5,2)), vstack((np.ones(5),arange(5))).T ))
 #
 # overdetermined blocks
 #        cases.append((
-#           csr_matrix((ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
-#           shape=(5,2)), vstack((ones(5),arange(5),arange(5)**2)).T  ))
+#           csr_matrix((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
+#           shape=(5,2)), vstack((np.ones(5),arange(5),arange(5)**2)).T  ))
 #        cases.append((
 #           csr_matrix(
-#               (ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
-#           shape=(9,4)), vstack((ones(9),arange(9),arange(9)**2)).T ))
+#               (np.ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
+#           shape=(9,4)), vstack((np.ones(9),arange(9),arange(9)**2)).T ))
 #        cases.append((
 #           csr_matrix(
-#               (ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
-#           shape=(9,4)), vstack((ones(9),arange(9))).T ))
+#               (np.ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
+#           shape=(9,4)), vstack((np.ones(9),arange(9))).T ))
 #
 #        def mask_candidate(AggOp,candidates):
 # mask out all DOFs that are not included in the aggregation
