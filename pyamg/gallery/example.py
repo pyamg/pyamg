@@ -3,7 +3,6 @@
 __docformat__ = "restructuredtext en"
 
 import os
-from fnmatch import fnmatch
 from glob import glob
 
 from scipy.io import loadmat

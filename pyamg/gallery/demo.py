@@ -27,6 +27,7 @@ def demo():
     # Solve Ax=b with Conjugate Gradient (AMG as a preconditioner to CG)
     accelerated_residuals = []
     x = mls.solve(b, tol=1e-10, accel='cg', residuals=accelerated_residuals)
+    del x
 
     # Compute relative residuals
     standalone_residuals = \
