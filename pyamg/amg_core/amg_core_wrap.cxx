@@ -3096,6 +3096,10 @@ namespace swig {
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#ifndef NPY_ARRAY_F_CONTIGUOUS
+#define NPY_ARRAY_F_CONTIGUOUS NPY_F_CONTIGUOUS
+#endif
+
 
 #include <complex> 
 

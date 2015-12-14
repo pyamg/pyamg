@@ -14,3 +14,15 @@ Use pep8 to fix safely
 autopep8 --select=E302 --in-place amg_core.py
 autopep8 --select=E303 --in-place amg_core.py
 autopep8 --select=W391 --in-place amg_core.py
+
+For 1.6 compatibility add:
+
+#ifndef NPY_ARRAY_F_CONTIGUOUS
+#define NPY_ARRAY_F_CONTIGUOUS NPY_F_CONTIGUOUS
+#endif
+
+right after the
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
+in amg_core_wrap.cxx
