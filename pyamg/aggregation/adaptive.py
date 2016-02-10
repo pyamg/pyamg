@@ -399,7 +399,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                    omega=1.0 / rho_D_inv_A(A))
         elif fn == 'richardson':
             polynomial(A, x, np.zeros_like(x), iterations=1,
-                       coeffients=[1.0/approximate_spectral_radius(A)])
+                       coefficients=[1.0/approximate_spectral_radius(A)])
         elif fn == 'gmres':
             x[:] = (gmres(A, np.zeros_like(x), x0=x,
                     maxiter=candidate_iters)[0]).reshape(x.shape)
@@ -748,7 +748,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
 
         elif fn == 'richardson':
             polynomial(lvl.A, x, np.zeros_like(x), iterations=1,
-                       coeffients=[1.0/approximate_spectral_radius(lvl.A)])
+                       coefficients=[1.0/approximate_spectral_radius(lvl.A)])
 
         elif fn == 'gmres':
             x[:] = (gmres(lvl.A, np.zeros_like(x), x0=x,
