@@ -11,7 +11,7 @@ from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection,\
-    algebraic_distance
+    algebraic_distance, affinity_distance
 
 from .interpolate import direct_interpolation
 from . import split
@@ -31,7 +31,8 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', None]
+    strength : ['symmetric', 'classical', 'evolution', 'algebraic_distance',
+                'affinity', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -141,6 +142,8 @@ def extend_hierarchy(levels, strength, CF, keep):
         C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'algebraic_distance':
         C = algebraic_distance(A, **kwargs)
+    elif fn == 'affinity':
+        C = affinity_distance(A, **kwargs)
     elif fn is None:
         C = A
     else:

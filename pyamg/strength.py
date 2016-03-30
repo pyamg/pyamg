@@ -26,6 +26,7 @@ __all__ = ['classical_strength_of_connection',
            'evolution_strength_of_connection',
            'distance_strength_of_connection',
            'algebraic_distance',
+           'affinity_distance',
            # deprecated:
            'ode_strength_of_connection']
 
@@ -814,8 +815,96 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     return Atilde
 
+def relaxation_vectors(A, R, k, alpha):
+    """Generate test vectors by relaxing on Ax=0 for some random vectors x.
 
-def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
+    Parameters
+    ----------
+    A : {csr_matrix}
+        Sparse NxN matrix
+    alpha : scalar
+        Weight for Jacobi
+    R : integer
+        Number of random vectors
+    k : integer
+        Number of relaxation passes
+
+    Returns
+    -------
+    x : {array}
+        Dense array N x k array of relaxation vectors
+    """
+    # random n x R block in column ordering
+    n = A.shape[0]
+    x = np.random.rand(n * R) - 0.5
+    x = np.reshape(x, (n, R), order='F')
+    # for i in range(R):
+    #     x[:,i] = x[:,i] - np.mean(x[:,i])
+    b = np.zeros((n, 1))
+
+    for r in range(0, R):
+        jacobi(A, x[:, r], b, iterations=k, omega=alpha)
+        # x[:,r] = x[:,r]/norm(x[:,r])
+
+    return x
+
+def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
+    """Construct an AMG strength of connection matrix using an affinity
+    distance measure.
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+        Sparse NxN matrix
+    alpha : scalar
+        Weight for Jacobi
+    R : integer
+        Number of random vectors
+    k : integer
+        Number of relaxation passes
+    epsilon : scalar
+        Drop tolerance
+
+    Returns
+    -------
+    C : {csr_matrix}
+        Sparse matrix of strength values
+
+    References
+    ----------
+    .. [1] "Lean Algebraic Multigrid (LAMG): Fast Graph Laplacian Linear Solver"
+            by Oren E. Livne, Achi Brandt
+
+    Notes
+    -----
+    No unit testing yet.
+
+    Does not handle BSR matrices yet.
+    """
+
+    if not sparse.isspmatrix_csr(A):
+        A = sparse.csr_matrix(A)
+
+    if alpha < 0:
+        raise ValueError('expected alpha>0')
+
+    if R <= 0 or not isinstance(R, int):
+        raise ValueError('expected integer R>0')
+
+    if k <= 0 or not isinstance(k, int):
+        raise ValueError('expected integer k>0')
+
+    if epsilon < 1:
+        raise ValueError('expected epsilon>1.0')
+
+    def distance(x):
+        (rows, cols) = A.nonzero()
+        return 1 - np.sum(x[rows] * x[cols], axis=1)**2 / \
+            (np.sum(x[rows]**2, axis=1) * np.sum(x[cols]**2, axis=1))
+
+    return distance_measure_common(A, distance, alpha, R, k, epsilon)
+
+def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
     """Construct an AMG strength of connection matrix using an algebraic
     distance measure.
 
@@ -829,8 +918,8 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
         Number of random vectors
     k : integer
         Number of relaxation passes
-    theta : scalar
-        Drop values larger than theta
+    epsilon : scalar
+        Drop tolerance
     p : scalar or inf
         p-norm of the measure
 
@@ -850,9 +939,8 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
 
     Does not handle BSR matrices yet.
     """
-    print(A.format)
+
     if not sparse.isspmatrix_csr(A):
-        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     if alpha < 0:
@@ -864,41 +952,44 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, theta=0.1, p=2):
     if k <= 0 or not isinstance(k, int):
         raise ValueError('expected integer k>0')
 
-    if theta < 0:
-        raise ValueError('expected theta>0.0')
+    if epsilon < 1:
+        raise ValueError('expected epsilon>1.0')
 
     if p < 1:
         raise ValueError('expected p>1 or equal to numpy.inf')
 
-    # random n x R block in column ordering
-    n = A.shape[0]
-    x = np.random.rand(n * R) - 0.5
-    x = np.reshape(x, (n, R), order='F')
-    b = np.zeros((n, 1))
+    def distance(x):
+        (rows, cols) = A.nonzero()
+        if p != np.inf:
+            return (np.sum(np.abs(x[rows] - x[cols])**p, axis=1)/R)**(1.0/p)
+        else:
+            return np.abs(x[rows] - x[cols]).max(axis=1)
 
-    # relax k times
-    for r in range(0, R):
-        jacobi(A, x[:, r], b, iterations=k, omega=alpha)
+    return distance_measure_common(A, distance, alpha, R, k, epsilon)
 
-    # get distance measure d
-    C = A.tocoo()
-    I = C.row
-    J = C.col
-    # TODO : this is not right vvvvvvv
-    if p != np.inf:
-        d = np.sum((x[I] - x[J])**p, axis=1)**(1.0/p)
-    else:
-        d = np.abs(x[I] - x[J]).max(axis=1)
-    del d
+"""
+Helper function to create strength of connection matrix from a function applied
+to relaxation vectors.
+"""
+def distance_measure_common(A, func, alpha, R, k, epsilon):
+    # create test vectors
+    x = relaxation_vectors(A, R, k, alpha)
 
-    # drop weak connections larger than theta
-    weak = np.where(C.data > theta)[0]
-    C.data[weak] = 0
-    C = C.tocsr()
+    # apply distance measure function to vectors
+    d = func(x)
+
+    # drop distances to self
+    (rows, cols) = A.nonzero()
+    weak = np.where(rows == cols)[0]
+    d[weak] = 0
+    C = sparse.csr_matrix((d, (rows, cols)), shape=A.shape)
     C.eliminate_zeros()
 
-    # Strength represents "distance", so take the magnitude
-    C.data = np.abs(C.data)
+    # remove weak connections
+    # removes entry e from a row if e > theta * min of all entries in the row
+    amg_core.apply_distance_filter(C.shape[0], epsilon, C.indptr,
+                                   C.indices, C.data)
+    C.eliminate_zeros()
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.

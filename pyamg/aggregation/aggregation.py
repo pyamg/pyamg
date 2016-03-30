@@ -16,7 +16,7 @@ from pyamg.util.utils import relaxation_as_linear_operator,\
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
-    algebraic_distance
+    algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
     lloyd_aggregation
 from .tentative import fit_candidates
@@ -62,6 +62,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Note, in the strictly real case, symmetric and hermitian are the same
         Note, this flag does not denote definiteness of the operator.
     strength : {list} : default ['symmetric', 'classical', 'evolution',
+               'algebraic_distance', 'affinity',
                ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
@@ -308,6 +309,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         C = kwargs['C'].tocsr()
     elif fn == 'algebraic_distance':
         C = algebraic_distance(A, **kwargs)
+    elif fn == 'affinity':
+        C = affinity_distance(A, **kwargs)
     elif fn is None:
         C = A.tocsr()
     else:
