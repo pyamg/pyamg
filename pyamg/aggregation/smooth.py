@@ -9,7 +9,7 @@ import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
     UnAmal, filter_operator, compute_BtBinv, filter_matrix_rows, \
-    filter_matrix_columns, truncate_rows
+    truncate_rows
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
@@ -1057,24 +1057,25 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     if min(T.nnz, A.nnz) == 0:
         return T
+        
+    if not sparse.isspmatrix_csr(Atilde):
+        raise TypeError("Atilde must be csr_matrix")
+
+    # Prepocess Atilde, the strength matrix
+    if Atilde is None:
+        Atilde = sparse.csr_matrix((np.ones(len(A.indices)),
+                                    A.indices.copy(), A.indptr.copy()),
+                                    shape=(A.shape[0]/A.blocksize[0],
+                                           A.shape[1]/A.blocksize[1]))
+    
+    # If Atilde has no nonzeros, then return T
+    if min(T.nnz, A.nnz) == 0:
+        return T
+
+
 
     # Expand allowed sparsity pattern for P through multiplication by Atilde
     if degree > 0:
-        if not sparse.isspmatrix_csr(Atilde):
-            raise TypeError("Atilde must be csr_matrix")
-
-        # Prepocess Atilde, the strength matrix
-        if Atilde is None:
-            AtildeCopy = sparse.csr_matrix((np.ones(len(A.indices)),
-                                            A.indices.copy(), A.indptr.copy()),
-                                           shape=(A.shape[0]/A.blocksize[0],
-                                                  A.shape[1]/A.blocksize[1]))
-        else:
-            AtildeCopy = Atilde.copy()
-
-        # If Atilde has no nonzeros, then return T
-        if min(T.nnz, A.nnz) == 0:
-            return T
 
         # Construct Sparsity_Pattern by multiplying with Atilde
         T.sort_indices()
@@ -1083,6 +1084,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                               T.indices, T.indptr),
                                               shape=shape)
         
+        AtildeCopy = Atilde.copy()
         AtildeCopy.data[:] = 1.0
         for i in range(degree):
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
