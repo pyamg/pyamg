@@ -21,7 +21,8 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
            'levelize_strength_or_aggregation',
-           'levelize_smooth_or_improve_candidates']
+           'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
+           'filter_matrix_rows', 'truncate_rows']
 
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
@@ -2003,6 +2004,205 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
         to_levelize = [(None, {}) for i in range(max_levels)]
 
     return to_levelize
+
+
+def filter_matrix_columns(A, theta):
+    """
+    Filter each column of A with tol, i.e., drop all entries in column k where
+        abs(A[i,k]) < tol max( abs(A[:,k]) )
+
+    Parameters
+    ----------
+    A : sparse_matrix
+
+    theta : float
+        In range [0,1) and defines drop-tolerance used to filter the columns
+        of A
+
+    Returns
+    -------
+    A_filter : sparse_matrix
+        Each column has been filtered by dropping all entries where
+        abs(A[i,k]) < tol max( abs(A[:,k]) )
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import filter_matrix_columns
+    >>> from scipy import array
+    >>> from scipy.sparse import csr_matrix
+    >>> A = csr_matrix( array([[ 0.24,  1.  ,  0.  ],
+    ...                        [-0.5 ,  1.  , -0.5 ],
+    ...                        [ 0.  ,  0.49,  1.  ],
+    ...                        [ 0.  ,  0.  , -0.5 ]]) )
+    >>> filter_matrix_columns(A, 0.5).todense()
+    matrix([[ 0. ,  1. ,  0. ],
+            [-0.5,  1. , -0.5],
+            [ 0. ,  0. ,  1. ],
+            [ 0. ,  0. , -0.5]])
+
+    """
+    if not isspmatrix(A):
+        raise ValueError("Sparse matrix input needed")
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize
+    Aformat = A.format
+
+    if (theta < 0) or (theta >= 1.0):
+        raise ValueError("theta must be in [0,1)")
+
+    # Apply drop-tolerance to each column of A, which is most easily
+    # accessed by converting to CSC.  We apply the drop-tolerance with
+    # amg_core.classical_strength_of_connection(), which ignores
+    # diagonal entries, thus necessitating the trick where we add
+    # A.shape[1] to each of the column indices
+    A = A.copy().tocsc()
+    A_filter = A.copy()
+    A.indices += A.shape[1]
+    A_filter.indices += A.shape[1]
+    # classical_strength_of_connection takes an absolute value internally
+    pyamg.amg_core.classical_strength_of_connection(A.shape[1], theta,
+                                                    A.indptr, A.indices,
+                                                    A.data, A_filter.indptr,
+                                                    A_filter.indices,
+                                                    A_filter.data)
+    A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
+    A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
+                           A_filter.indices[:A_filter.indptr[-1]],
+                           A_filter.indptr), shape=A_filter.shape)
+    del A
+
+    if Aformat == 'bsr':
+        A_filter = A_filter.tobsr(blocksize)
+    else:
+        A_filter = A_filter.asformat(Aformat)
+
+    return A_filter
+
+
+def filter_matrix_rows(A, theta):
+    """
+    Filter each row of A with tol, i.e., drop all entries in row k where
+        abs(A[i,k]) < tol max( abs(A[:,k]) )
+
+    Parameters
+    ----------
+    A : sparse_matrix
+
+    theta : float
+        In range [0,1) and defines drop-tolerance used to filter the row of A
+
+    Returns
+    -------
+    A_filter : sparse_matrix
+        Each row has been filtered by dropping all entries where
+        abs(A[i,k]) < tol max( abs(A[:,k]) )
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import filter_matrix_rows
+    >>> from scipy import array
+    >>> from scipy.sparse import csr_matrix
+    >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
+    ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
+    ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
+    >>> filter_matrix_rows(A, 0.5).todense()
+    matrix([[ 0. , -0.5,  0. ,  0. ],
+            [ 1. ,  1. ,  0. ,  0. ],
+            [ 0. , -0.5,  1. , -0.5]])
+
+    """
+    if not isspmatrix(A):
+        raise ValueError("Sparse matrix input needed")
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize
+    Aformat = A.format
+    A = A.tocsr()
+
+    if (theta < 0) or (theta >= 1.0):
+        raise ValueError("theta must be in [0,1)")
+
+    # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
+    # amg_core.classical_strength_of_connection(), which ignores diagonal
+    # entries, thus necessitating the trick where we add A.shape[0] to each of
+    # the row indices
+    A_filter = A.copy()
+    A.indices += A.shape[0]
+    A_filter.indices += A.shape[0]
+    # classical_strength_of_connection takes an absolute value internally
+    pyamg.amg_core.classical_strength_of_connection(A.shape[0], theta,
+                                                    A.indptr, A.indices,
+                                                    A.data, A_filter.indptr,
+                                                    A_filter.indices,
+                                                    A_filter.data)
+    A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
+    A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
+                           A_filter.indices[:A_filter.indptr[-1]],
+                           A_filter.indptr), shape=A_filter.shape)
+
+    if Aformat == 'bsr':
+        A_filter = A_filter.tobsr(blocksize)
+    else:
+        A_filter = A_filter.asformat(Aformat)
+
+    A.indices -= A.shape[0]
+    return A_filter
+
+
+def truncate_rows(A, nz_per_row):
+    """
+    Truncate the rows of A by keeping only the largest in magnitude entries in
+    each row.
+
+    Parameters
+    ----------
+    A : sparse_matrix
+
+    nz_per_row : int
+        Determines how many entries in each row to keep
+
+    Returns
+    -------
+    A : sparse_matrix
+        Each row has been truncated to at most nz_per_row entries
+
+    Example
+    -------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import truncate_rows
+    >>> from scipy import array
+    >>> from scipy.sparse import csr_matrix
+    >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
+    ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
+    ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
+    >>> truncate_rows(A, 2).todense()
+    matrix([[-0.24, -0.5 ,  0.  ,  0.  ],
+            [ 1.  , -1.1 ,  0.  ,  0.  ],
+            [ 0.  ,  0.  ,  1.  ,  0.5 ]])
+
+    """
+    if not isspmatrix(A):
+        raise ValueError("Sparse matrix input needed")
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize
+    if isspmatrix_csr(A):
+        A = A.copy()    # don't modify A in-place
+    Aformat = A.format
+    A = A.tocsr()
+    nz_per_row = int(nz_per_row)
+
+    # Truncate rows of A, and then convert A back to original format
+    pyamg.amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr, 
+                                     A.indices, A.data)
+
+    A.eliminate_zeros()
+    if Aformat == 'bsr':
+        A = A.tobsr(blocksize)
+    else:
+        A = A.asformat(Aformat)
+
+    return A
 
 
 # from functools import partial, update_wrapper

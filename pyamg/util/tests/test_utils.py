@@ -166,7 +166,7 @@ class TestUtils(TestCase):
                               9., 10., 11., 11., 12., 13.,
                               14., 15., 16., 16., 18., 19.,
                               20., 21., 22., 23.,  0.,  0.,
-                              26., 27., 28., 29.,  0.,  0., ]).reshape(6, 6),
+                              26., 27., 28., 29.,  0.,  0.]).reshape(6, 6),
                        blocksize=(3, 3))
         block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
         answer = array([[[-1.5,  0.5],
@@ -184,7 +184,7 @@ class TestUtils(TestCase):
                               0.,  0.,  0.,  0.,  0.,  0.,
                               0.,  0.,  0.,  0.,  0.,  0.,
                               0.,  0.,  0.,  0., 22., 23.,
-                              0.,  0.,  0.,  0., 28., 29., ]).reshape(6, 6),
+                              0.,  0.,  0.,  0., 28., 29.]).reshape(6, 6),
                        blocksize=(2, 2))
         block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
         answer = array([[[0.,  0.],
@@ -955,6 +955,67 @@ class TestUtils(TestCase):
                        [0., -0.5,  1., -0.5],
                        [0.,  0., -0.5,  1.]])
         assert_array_almost_equal(A.todense(), exact)
+
+    def test_filter_matrix_rows(self):
+        from pyamg.util.utils import filter_matrix_rows
+        A = csr_matrix(array([[0.24, -0.5,  0.,  0.],
+                              [1.,  1.,  0.49,  0.],
+                              [0., -0.5,  1., -0.5]]))
+        A = filter_matrix_rows(A, 0.5)
+        exact = array([[0.0, -0.5,  0.,  0.],
+                       [1.,  1.,  0.,  0.],
+                       [0., -0.5,  1., -0.5]])
+        assert_array_almost_equal(A.todense(), exact)
+
+    def test_filter_matrix_columns(self):
+        from pyamg.util.utils import filter_matrix_columns
+        A = csr_matrix(array([[0.24,  1.,  0.],
+                              [-0.5,  1., -0.5],
+                              [0.,  0.49,  1.],
+                              [0.,  0., -0.5]]))
+        A = filter_matrix_columns(A, 0.5)
+        exact = array([[0.,  1.,  0.],
+                       [-0.5,  1., -0.5],
+                       [0.,  0.,  1.],
+                       [0.,  0., -0.5]])
+        assert_array_almost_equal(A.todense(), exact)
+
+    def test_truncate_rows(self):
+        from pyamg.util.utils import truncate_rows
+        A = csr_matrix(array([[-0.24, -0.5,  0.,  0.],
+                              [1., -1.1,  0.49,  0.1],
+                              [0.,  0.4,  1.,  0.5]]))
+        Acopy = A.copy()
+        Acopy = truncate_rows(Acopy, 4)
+        assert_array_almost_equal(A.todense(), Acopy.todense())
+
+        Acopy = A.copy()
+        Acopy = truncate_rows(Acopy, 3)
+        exact = array([[-0.24, -0.5,  0.,  0.],
+                       [1., -1.1,  0.49,  0.],
+                       [0.,  0.4,  1.,  0.5]])
+        assert_array_almost_equal(Acopy.todense(), exact)
+
+        Acopy = A.copy()
+        Acopy = truncate_rows(Acopy, 2)
+        exact = array([[-0.24, -0.5,  0.,  0.],
+                       [1., -1.1,  0.,  0.],
+                       [0.,  0.,  1.,  0.5]])
+        assert_array_almost_equal(Acopy.todense(), exact)
+
+        Acopy = A.copy()
+        Acopy = truncate_rows(Acopy, 1)
+        exact = array([[0., -0.5,  0.,  0.],
+                       [0., -1.1,  0.,  0.],
+                       [0.,  0.,  1.,  0.]])
+        assert_array_almost_equal(Acopy.todense(), exact)
+
+        Acopy = A.copy()
+        Acopy = truncate_rows(Acopy, 0)
+        exact = array([[0.,  0.,  0.,  0.],
+                       [0.,  0.,  0.,  0.],
+                       [0.,  0.,  0.,  0.]])
+        assert_array_almost_equal(Acopy.todense(), exact)
 
 
 class TestComplexUtils(TestCase):

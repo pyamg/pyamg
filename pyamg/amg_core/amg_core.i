@@ -195,6 +195,7 @@ INSTANTIATE_INDEX_ONLY(standard_aggregation)
 INSTANTIATE_INDEXDATA_COMPLEX(satisfy_constraints_helper)
 INSTANTIATE_INDEXDATA_COMPLEX(calc_BtB)
 INSTANTIATE_INDEXDATA_COMPLEX(incomplete_mat_mult_bsr)
+INSTANTIATE_INDEXDATA_COMPLEX(truncate_rows_csr)
 
 /*----------------------------------------------------------------------------
   ruge_stuben.h

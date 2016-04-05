@@ -866,5 +866,95 @@ void incomplete_mat_mult_bsr(const I Ap[], const int Ap_size,
     }
 }
 
+/* Swap x[i] and x[j], and
+ *      y[i] and y[j]
+ * Use in the qsort_twoarrays funcion
+ */
+template<class I, class T>
+inline void swap(T x[], I y[], I i, I j )
+{
+   T temp_t;
+   I temp_i;
+
+   temp_t = x[i];
+   x[i]   = x[j];
+   x[j]   = temp_t;
+   temp_i = y[i];
+   y[i]   = y[j];
+   y[j]   = temp_i;
+}
+
+/* Apply quicksort to the array x, while simultaneously shuffling 
+ * the array y to mirror the swapping of entries done in x.   Then 
+ * aftwards x[i] and y[i] correspond to some x[k] and y[k] 
+ * before the sort.
+ *
+ * This function is particularly useful for sorting the rows (or columns)
+ * of a sparse matrix according to the values
+ * */
+template<class I, class T>
+void qsort_twoarrays( T x[], I y[], I left, I right )
+{
+    I i, last;
+
+    if (left >= right)
+    {   return; }
+    swap( x, y, left, (left+right)/2);
+    last = left;
+    for (i = left+1; i <= right; i++)
+    {
+       if (mynorm(x[i]) < mynorm(x[left]))
+       {    swap(x, y, ++last, i); }
+    }
+    swap(x, y, left, last);
+    
+    /* Recursive calls */
+    qsort_twoarrays(x, y, left, last-1);
+    qsort_twoarrays(x, y, last+1, right);
+}
+
+/*
+ *  Truncate the entries in A, such that only the largest (in magnitude) 
+ *  k entries per row are left.   Smaller entries are zeroed out. 
+ *
+ *  Parameters
+ *      n_row      - number of rows in A 
+ *      k          - number of entries per row to keep
+ *      Sp[]       - CSR row pointer
+ *      Sj[]       - CSR index array
+ *      Sx[]       - CSR data array
+ *
+ *  
+ *  Returns:
+ *      Nothing, A will be stored in Sp, Sj, Sx with some entries zeroed out
+ *
+ */
+template<class I, class T, class F>
+void truncate_rows_csr(const I n_row, 
+                       const I k, 
+                       const I Sp[],  const int Sp_size,
+                             I Sj[],  const int Sj_size,
+                             T Sx[],  const int Sx_size)
+{
+
+    // Loop over each row of A, sort based on the entries in Sx,
+    // and then truncate all but the largest k entries
+    for(I i = 0; i < n_row; i++)
+    {
+        // Only truncate entries if row is long enough
+        I rowstart = Sp[i];
+        I rowend = Sp[i+1];
+        if(rowend - rowstart > k)
+        {
+            // Sort this row
+            qsort_twoarrays( Sx, Sj, rowstart, rowend-1);
+            // Zero out all but the largest k
+            for(I jj = rowstart; jj < rowend-k; jj++)
+            {   Sx[jj] = 0.0; }
+        }
+    }
+
+    return;
+}
 
 #endif
