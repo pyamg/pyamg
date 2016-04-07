@@ -8,7 +8,8 @@ import scipy as sp
 import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
-    UnAmal, filter_operator, compute_BtBinv
+    UnAmal, filter_operator, compute_BtBinv, filter_matrix_rows, \
+    truncate_rows
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
@@ -902,7 +903,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
-                                 degree=1, weighting='local'):
+                                 degree=1, weighting='local',
+                                 Pfilter=None):
     """Minimize the energy of the coarse basis functions (columns of T).  Both
     root-node and non-root-node style prolongation smoothing is available, see
     Cpt_params description below.
@@ -950,6 +952,14 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             radius estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A
         'diagonal': Use inverse of the diagonal of A
+    Pfilter : {tuple, None}
+        Only supported if using the rootnode_solver.  If None, no dropping in P
+        is done.  Otherwise, Pfilter == ('rowwise', kwargs).  Here, entries are
+        dropped row-wise.  If kwargs contains 'k', then the largest 'k' entries
+        are kept in each row.  If kwargs has key 'theta', all entries such that
+          P[i,j] < kwargs['theta']*max(abs(P[i,:]))
+        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
+        are used in conjunction, with the union of their patterns used. 
 
     Returns
     -------
@@ -1012,7 +1022,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
        966--991, 2011.
     """
 
-    # ====================================================================
+    def unpack_arg(v):
+        if isinstance(v, tuple):
+            return v[0], v[1]
+        else:
+            return v, {}
 
     # Test Inputs
     if maxiter < 0:
@@ -1034,17 +1048,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     else:
         raise TypeError("T must be csr_matrix or bsr_matrix")
 
-    if Atilde is None:
-        AtildeCopy = sparse.csr_matrix((np.ones(len(A.indices)),
-                                        A.indices.copy(), A.indptr.copy()),
-                                       shape=(int(A.shape[0]/A.blocksize[0]),
-                                              int(A.shape[1]/A.blocksize[1])))
-    else:
-        AtildeCopy = Atilde.copy()
-
-    if not sparse.isspmatrix_csr(AtildeCopy):
-        raise TypeError("Atilde must be csr_matrix")
-
     if T.blocksize[0] != A.blocksize[0]:
         raise ValueError("T row-blocksize should be the same as A blocksize")
 
@@ -1052,22 +1055,49 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         raise ValueError("B is the candidates for the coarse grid. \
                             num_rows(b) = num_cols(T)")
 
-    if min(T.nnz, AtildeCopy.nnz, A.nnz) == 0:
+    if min(T.nnz, A.nnz) == 0:
+        return T
+        
+    if not sparse.isspmatrix_csr(Atilde):
+        raise TypeError("Atilde must be csr_matrix")
+
+    # Prepocess Atilde, the strength matrix
+    if Atilde is None:
+        Atilde = sparse.csr_matrix((np.ones(len(A.indices)),
+                                    A.indices.copy(), A.indptr.copy()),
+                                    shape=(A.shape[0]/A.blocksize[0],
+                                           A.shape[1]/A.blocksize[1]))
+    
+    # If Atilde has no nonzeros, then return T
+    if min(T.nnz, A.nnz) == 0:
         return T
 
-    # Expand allowed sparsity pattern for P through multiplication by Atilde
-    T.sort_indices()
-    shape = (int(T.shape[0]/T.blocksize[0]), int(T.shape[1]/T.blocksize[1]))
-    Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
-                                          T.indices, T.indptr),
-                                         shape=shape)
-    AtildeCopy.data[:] = 1.0
-    for i in range(degree):
-        Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
 
-    # UnAmal returns a BSR matrix
-    Sparsity_Pattern = UnAmal(Sparsity_Pattern, T.blocksize[0], T.blocksize[1])
-    Sparsity_Pattern.sort_indices()
+
+    # Expand allowed sparsity pattern for P through multiplication by Atilde
+    if degree > 0:
+
+        # Construct Sparsity_Pattern by multiplying with Atilde
+        T.sort_indices()
+        shape = (int(T.shape[0]/T.blocksize[0]), int(T.shape[1]/T.blocksize[1]))
+        Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
+                                              T.indices, T.indptr),
+                                              shape=shape)
+        
+        AtildeCopy = Atilde.copy()
+        AtildeCopy.data[:] = 1.0
+        for i in range(degree):
+            Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
+
+        # UnAmal returns a BSR matrix with 1's in the nonzero locations
+        Sparsity_Pattern = UnAmal(Sparsity_Pattern,
+                                  T.blocksize[0], T.blocksize[1])
+        Sparsity_Pattern.sort_indices()
+    else:
+        # If degree is 0, just copy T for the sparsity pattern
+        Sparsity_Pattern = T.copy()
+        Sparsity_Pattern.data[:] = 1.0
+        Sparsity_Pattern.sort_indices()
 
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
@@ -1080,8 +1110,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     BtBinv = compute_BtBinv(B, Sparsity_Pattern)
 
     # If using root nodes and B has more columns that A's blocksize, then
-    # T must be updated so that T*B = Bfine
-    if Cpt_params[0] and (B.shape[1] > A.blocksize[0]):
+    # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
+    # after dropping entries in P, then we must re-enforce the constraints
+    if (Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or\
+       unpack_arg(Pfilter)[0] == 'secondpass':
         T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
@@ -1101,5 +1133,39 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                          maxiter, tol, weighting, Cpt_params)
 
     T.eliminate_zeros()
+
+    # Filter entries in P, only in the rootnode case, i.e., Cpt_params[0] == True
+    fn, kwargs = unpack_arg(Pfilter)
+    if (fn is None) or (fn == 'secondpass') or (Cpt_params[0] is False):
+        return T
+    else:
+        if fn == 'rowwise':
+            if 'theta' in kwargs and 'k' in kwargs:
+                T_theta = filter_matrix_rows(T, kwargs['theta'])
+                T_k = truncate_rows(T, kwargs['k'])
+
+                # Union two sparsity patterns
+                T_theta.data[:] = 1.0
+                T_k.data[:] = 1.0
+                T_filter = T_theta + T_k
+                T_filter.data[:] = 1.0
+                T_filter = T.multiply(T_filter)
+
+            elif 'k' in kwargs:
+                T_filter = truncate_rows(T, kwargs['k'])
+            elif 'theta' in kwargs:
+                T_filter = filter_matrix_rows(T, kwargs['theta'])
+        else:
+            raise ValueError("Unrecognized Pfilter option")
+
+        # Re-smooth T_filter and re-fit the modes B into the span. 
+        # Note, we set 'secondpass', because this is the second 
+        # filtering pass
+        T = energy_prolongation_smoother(A, T_filter,
+                                         Atilde, B, Bf, Cpt_params,
+                                         krylov=krylov, maxiter=1,
+                                         tol=1e-8, degree=0,
+                                         weighting=weighting,
+                                         Pfilter=('secondpass', {}))
 
     return T
