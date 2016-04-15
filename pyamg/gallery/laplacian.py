@@ -62,7 +62,7 @@ def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
             stencil[(1,)*i + (2,) + (1,)*(N-i-1)] = -1
         stencil[(1,)*N] = 2*N
 
-    if type == 'FD':
+    if type == 'FE':
         stencil = -np.ones((3,) * N, dtype=dtype)
         stencil[(1,)*N] = 3**N - 1
 
