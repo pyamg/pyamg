@@ -11,7 +11,7 @@ import scipy as sp
 from .stencil import stencil_grid
 
 
-def poisson(grid, spacing=None, dtype=float, format=None):
+def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
     """Returns a sparse matrix for the N-dimensional Poisson problem
 
     The matrix represents a finite Difference approximation to the
@@ -55,11 +55,16 @@ def poisson(grid, spacing=None, dtype=float, format=None):
         raise ValueError('invalid grid shape: %s' % str(grid))
 
     # create N-dimension Laplacian stencil
-    stencil = np.zeros((3,) * N, dtype=dtype)
-    for i in range(N):
-        stencil[(1,)*i + (0,) + (1,)*(N-i-1)] = -1
-        stencil[(1,)*i + (2,) + (1,)*(N-i-1)] = -1
-    stencil[(1,)*N] = 2*N
+    if type == 'FD':
+        stencil = np.zeros((3,) * N, dtype=dtype)
+        for i in range(N):
+            stencil[(1,)*i + (0,) + (1,)*(N-i-1)] = -1
+            stencil[(1,)*i + (2,) + (1,)*(N-i-1)] = -1
+        stencil[(1,)*N] = 2*N
+
+    if type == 'FD':
+        stencil = -np.ones((3,) * N, dtype=dtype)
+        stencil[(1,)*N] = 3**N - 1
 
     return stencil_grid(stencil, grid, format=format)
 
