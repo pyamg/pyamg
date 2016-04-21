@@ -201,7 +201,8 @@ def setup_package():
             author=AUTHOR,
             author_email=AUTHOR_EMAIL,
             platforms=PLATFORMS,
-            configuration=configuration)
+            configuration=configuration,
+            version=VERSION)
     finally:
         del sys.path[0]
         os.chdir(old_path)
