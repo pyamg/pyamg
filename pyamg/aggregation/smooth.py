@@ -904,7 +904,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
-                                 Pfilter=None):
+                                 Pfilter=None, prefilter=None):
     """Minimize the energy of the coarse basis functions (columns of T).  Both
     root-node and non-root-node style prolongation smoothing is available, see
     Cpt_params description below.
@@ -953,13 +953,24 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         'block': If A is a BSR matrix, use a block diagonal inverse of A
         'diagonal': Use inverse of the diagonal of A
     Pfilter : {tuple, None}
+        Filters elements by row in smoothed P to reduce operator complexity. 
         Only supported if using the rootnode_solver.  If None, no dropping in P
         is done.  Otherwise, Pfilter == ('rowwise', kwargs).  Here, entries are
         dropped row-wise.  If kwargs contains 'k', then the largest 'k' entries
         are kept in each row.  If kwargs has key 'theta', all entries such that
-          P[i,j] < kwargs['theta']*max(abs(P[i,:]))
+            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
         are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
         are used in conjunction, with the union of their patterns used. 
+    prefilter : {tuple, None}
+        Filters elements in sparsity pattern for P by row to reduce operator and
+        setup complexity. If None, no dropping in P is done.  Otherwise,
+        Pfilter == ('rowwise', kwargs).  Here, entries are dropped row-wise. 
+        If kwargs contains 'k', then the largest 'k' entries  are kept in each
+        row.  If kwargs has key 'theta', all entries such that
+            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
+        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
+        are used in conjunction, with the union of their patterns used. Not
+        implemented for degree 0 sparsity patterns. 
 
     Returns
     -------
@@ -1072,8 +1083,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if min(T.nnz, A.nnz) == 0:
         return T
 
-
-
     # Expand allowed sparsity pattern for P through multiplication by Atilde
     if degree > 0:
 
@@ -1089,10 +1098,26 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         for i in range(degree):
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
 
+        # Optional filtering of sparsity pattern before smoothing
+        fn, kwargs = unpack_arg(prefilter)
+        if fn == 'rowwise':
+            if 'theta' in kwargs and 'k' in kwargs:
+                Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, kwargs['theta'])
+                Sparsity_Pattern = truncate_rows(Sparsity_Pattern, kwargs['k'])
+                # Union two sparsity patterns
+                Sparsity_Pattern += Sparsity_theta
+            elif 'k' in kwargs:
+                Sparsity_Pattern = truncate_rows(Sparsity_Pattern, kwargs['k'])
+            elif 'theta' in kwargs:
+                Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, kwargs['theta'])
+        elif fn is not None:
+            raise ValueError("Unrecognized prefilter option")
+
         # UnAmal returns a BSR matrix with 1's in the nonzero locations
         Sparsity_Pattern = UnAmal(Sparsity_Pattern,
                                   T.blocksize[0], T.blocksize[1])
         Sparsity_Pattern.sort_indices()
+
     else:
         # If degree is 0, just copy T for the sparsity pattern
         Sparsity_Pattern = T.copy()
