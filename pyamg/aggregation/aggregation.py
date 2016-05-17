@@ -227,6 +227,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
         B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
