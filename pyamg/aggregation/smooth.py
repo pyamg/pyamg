@@ -904,7 +904,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
-                                 Pfilter=None, prefilter=None):
+                                 prefilter=None, postfilter=None):
     """Minimize the energy of the coarse basis functions (columns of T).  Both
     root-node and non-root-node style prolongation smoothing is available, see
     Cpt_params description below.
@@ -952,25 +952,25 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             radius estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A
         'diagonal': Use inverse of the diagonal of A
-    Pfilter : {tuple, None}
-        Filters elements by row in smoothed P to reduce operator complexity. 
-        Only supported if using the rootnode_solver.  If None, no dropping in P
-        is done.  Otherwise, Pfilter == ('rowwise', kwargs).  Here, entries are
-        dropped row-wise.  If kwargs contains 'k', then the largest 'k' entries
-        are kept in each row.  If kwargs has key 'theta', all entries such that
-            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
-        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
-        are used in conjunction, with the union of their patterns used. 
     prefilter : {tuple, None}
         Filters elements in sparsity pattern for P by row to reduce operator and
         setup complexity. If None, no dropping in P is done.  Otherwise,
-        Pfilter == ('rowwise', kwargs).  Here, entries are dropped row-wise. 
+        postfilter == ('rowwise', kwargs).  Here, entries are dropped row-wise. 
         If kwargs contains 'k', then the largest 'k' entries  are kept in each
         row.  If kwargs has key 'theta', all entries such that
             P[i,j] < kwargs['theta']*max(abs(P[i,:]))
         are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
         are used in conjunction, with the union of their patterns used. Not
         implemented for degree 0 sparsity patterns. 
+    postfilter : {tuple, None}
+        Filters elements by row in smoothed P to reduce operator complexity. 
+        Only supported if using the rootnode_solver.  If None, no dropping in P
+        is done.  Otherwise, postfilter == ('rowwise', kwargs).  Here, entries are
+        dropped row-wise.  If kwargs contains 'k', then the largest 'k' entries
+        are kept in each row.  If kwargs has key 'theta', all entries such that
+            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
+        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
+        are used in conjunction, with the union of their patterns used. 
 
     Returns
     -------
@@ -1138,7 +1138,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
     if (Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or\
-       unpack_arg(Pfilter)[0] == 'secondpass':
+       unpack_arg(postfilter)[0] == 'secondpass':
         T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
@@ -1160,7 +1160,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     T.eliminate_zeros()
 
     # Filter entries in P, only in the rootnode case, i.e., Cpt_params[0] == True
-    fn, kwargs = unpack_arg(Pfilter)
+    fn, kwargs = unpack_arg(postfilter)
     if (fn is None) or (fn == 'secondpass') or (Cpt_params[0] is False):
         return T
     else:
@@ -1181,7 +1181,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             elif 'theta' in kwargs:
                 T_filter = filter_matrix_rows(T, kwargs['theta'])
         else:
-            raise ValueError("Unrecognized Pfilter option")
+            raise ValueError("Unrecognized postfilter option")
 
         # Re-smooth T_filter and re-fit the modes B into the span. 
         # Note, we set 'secondpass', because this is the second 
@@ -1191,6 +1191,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                          krylov=krylov, maxiter=1,
                                          tol=1e-8, degree=0,
                                          weighting=weighting,
-                                         Pfilter=('secondpass', {}))
+                                         postfilter=('secondpass', {}))
 
     return T

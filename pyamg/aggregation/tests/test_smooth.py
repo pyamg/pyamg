@@ -331,7 +331,7 @@ class TestEnergyMin(TestCase):
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                      ('energy',
                       {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
-                       'Pfilter': ('rowwise', {'theta': 0.05})})))
+                       'postfilter': ('rowwise', {'theta': 0.05})})))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                      ('energy',
                       {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3})))
@@ -372,7 +372,7 @@ class TestEnergyMin(TestCase):
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
                      ('energy',
                       {'krylov': 'gmres', 'degree': 2, 'maxiter': 3,
-                       'Pfilter': ('rowwise', {'theta': 0.05})})))
+                       'postfilter': ('rowwise', {'theta': 0.05})})))
 
         A = gauge_laplacian(10, spacing=1.0, beta=0.21)
         B = np.ones((A.shape[0], 1))
@@ -388,7 +388,7 @@ class TestEnergyMin(TestCase):
         cases.append((A.tobsr(blocksize=(2, 2)), B,
                      ('energy',
                       {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
-                       'Pfilter': ('rowwise', {'theta': 0.05})})))
+                       'postfilter': ('rowwise', {'theta': 0.05})})))
 
         cases.append((A.tobsr(blocksize=(2, 2)), B,
                      ('energy',
@@ -402,7 +402,7 @@ class TestEnergyMin(TestCase):
         cases.append((A.tobsr(blocksize=(2, 2)), B,
                      ('energy',
                       {'krylov': 'gmres', 'degree': 2, 'maxiter': 3,
-                       'Pfilter': ('rowwise', {'theta': 0.05})})))
+                       'postfilter': ('rowwise', {'theta': 0.05})})))
 
         #
         A, B = linear_elasticity((10, 10))
@@ -415,7 +415,7 @@ class TestEnergyMin(TestCase):
 
         cases.append((A, B, ('energy', {'degree': 2})))
         cases.append((A, B, ('energy',
-                     {'degree': 3, 'Pfilter': ('rowwise', {'theta': 0.05})})))
+                     {'degree': 3, 'postfilter': ('rowwise', {'theta': 0.05})})))
         cases.append((A, B, ('energy', {'krylov': 'cgnr'})))
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2})))
 
@@ -478,8 +478,8 @@ class TestEnergyMin(TestCase):
                 assert_equal(I.indptr, I2.indptr)
                 assert_equal(I.indices, I2.indices)
     
-    def test_Pfilter(self):
-        """Check that using Pfilter reduces NNZ in P"""
+    def test_postfilter(self):
+        """Check that using postfilter reduces NNZ in P"""
         np.random.seed(0)  # make tests repeatable
         cases = []
 
@@ -520,9 +520,9 @@ class TestEnergyMin(TestCase):
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
                      ('rowwise', {'theta': 0.1}) ))
         
-        for A, B, smooth, Pfilter in cases:
+        for A, B, smooth, postfilter in cases:
             ml_nofilter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
-            smooth[1]['Pfilter'] = Pfilter
+            smooth[1]['postfilter'] = postfilter
             ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
             assert_equal(ml_nofilter.levels[0].P.nnz > ml_filter.levels[0].P.nnz, True)
                     
