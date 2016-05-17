@@ -952,25 +952,23 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             radius estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A
         'diagonal': Use inverse of the diagonal of A
-    prefilter : {tuple, None}
-        Filters elements in sparsity pattern for P by row to reduce operator and
-        setup complexity. If None, no dropping in P is done.  Otherwise,
-        postfilter == ('rowwise', kwargs).  Here, entries are dropped row-wise. 
-        If kwargs contains 'k', then the largest 'k' entries  are kept in each
-        row.  If kwargs has key 'theta', all entries such that
+    prefilter : {dictionary} : Default None
+        Filters elements by row in sparsity pattern for P to reduce operator and
+        setup complexity. If None or empty dictionary, no dropping in P is done.
+        If postfilter has key 'k', then the largest 'k' entries  are kept in each
+        row.  If postfilter has key 'theta', all entries such that
             P[i,j] < kwargs['theta']*max(abs(P[i,:]))
-        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
-        are used in conjunction, with the union of their patterns used. Not
-        implemented for degree 0 sparsity patterns. 
-    postfilter : {tuple, None}
+        are dropped.  If postfilter['k'] and postfiler['theta'] are present, then
+        they are used in conjunction, with the union of their patterns used.
+    postfilter : {dictionary} : Default None
         Filters elements by row in smoothed P to reduce operator complexity. 
-        Only supported if using the rootnode_solver.  If None, no dropping in P
-        is done.  Otherwise, postfilter == ('rowwise', kwargs).  Here, entries are
-        dropped row-wise.  If kwargs contains 'k', then the largest 'k' entries
-        are kept in each row.  If kwargs has key 'theta', all entries such that
+        Only supported if using the rootnode_solver. If None or empty dictionary,
+        no dropping in P is done. If postfilter has key 'k', then the largest 'k'
+        entries  are kept in each row.  If postfilter has key 'theta', all entries
+        such that
             P[i,j] < kwargs['theta']*max(abs(P[i,:]))
-        are dropped.  If kwargs['k'] and kwargs['theta'] are present, then they
-        are used in conjunction, with the union of their patterns used. 
+        are dropped.  If postfilter['k'] and postfiler['theta'] are present, then
+        they are used in conjunction, with the union of their patterns used.
 
     Returns
     -------
@@ -1033,12 +1031,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
        966--991, 2011.
     """
 
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            return v[0], v[1]
-        else:
-            return v, {}
-
     # Test Inputs
     if maxiter < 0:
         raise ValueError('maxiter must be > 0')
@@ -1099,18 +1091,16 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
 
         # Optional filtering of sparsity pattern before smoothing
-        fn, kwargs = unpack_arg(prefilter)
-        if fn == 'rowwise':
-            if 'theta' in kwargs and 'k' in kwargs:
-                Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, kwargs['theta'])
-                Sparsity_Pattern = truncate_rows(Sparsity_Pattern, kwargs['k'])
-                # Union two sparsity patterns
-                Sparsity_Pattern += Sparsity_theta
-            elif 'k' in kwargs:
-                Sparsity_Pattern = truncate_rows(Sparsity_Pattern, kwargs['k'])
-            elif 'theta' in kwargs:
-                Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, kwargs['theta'])
-        elif fn is not None:
+        if 'theta' in prefilter and 'k' in prefilter:
+            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            # Union two sparsity patterns
+            Sparsity_Pattern += Sparsity_theta
+        elif 'k' in prefilter:
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+        elif 'theta' in prefilter:
+            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+        elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
         # UnAmal returns a BSR matrix with 1's in the nonzero locations
@@ -1121,12 +1111,24 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     else:
         # If degree is 0, just copy T for the sparsity pattern
         Sparsity_Pattern = T.copy()
+        if 'theta' in prefilter and 'k' in prefilter:
+            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            # Union two sparsity patterns
+            Sparsity_Pattern += Sparsity_theta
+        elif 'k' in prefilter:
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+        elif 'theta' in prefilter:
+            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+        elif len(prefilter) > 0:
+            raise ValueError("Unrecognized prefilter option")
+
         Sparsity_Pattern.data[:] = 1.0
         Sparsity_Pattern.sort_indices()
 
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
-        Sparsity_Pattern = Cpt_params[1]['I_F']*Sparsity_Pattern
+        Sparsity_Pattern = Cpt_params[1]['I_F'] * Sparsity_Pattern
         Sparsity_Pattern = Cpt_params[1]['P_I'] + Sparsity_Pattern
 
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
@@ -1137,8 +1139,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
-    if (Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or\
-       unpack_arg(postfilter)[0] == 'secondpass':
+    if (Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or ('secondpass' in postfilter):
         T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
@@ -1160,26 +1161,24 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     T.eliminate_zeros()
 
     # Filter entries in P, only in the rootnode case, i.e., Cpt_params[0] == True
-    fn, kwargs = unpack_arg(postfilter)
-    if (fn is None) or (fn == 'secondpass') or (Cpt_params[0] is False):
+    if (len(postfilter) == 0) or ('secondpass' in postfilter) or (Cpt_params[0] is False):
         return T
     else:
-        if fn == 'rowwise':
-            if 'theta' in kwargs and 'k' in kwargs:
-                T_theta = filter_matrix_rows(T, kwargs['theta'])
-                T_k = truncate_rows(T, kwargs['k'])
+        if 'theta' in postfilter and 'k' in postfilter:
+            T_theta = filter_matrix_rows(T, postfilter['theta'])
+            T_k = truncate_rows(T, postfilter['k'])
 
-                # Union two sparsity patterns
-                T_theta.data[:] = 1.0
-                T_k.data[:] = 1.0
-                T_filter = T_theta + T_k
-                T_filter.data[:] = 1.0
-                T_filter = T.multiply(T_filter)
+            # Union two sparsity patterns
+            T_theta.data[:] = 1.0
+            T_k.data[:] = 1.0
+            T_filter = T_theta + T_k
+            T_filter.data[:] = 1.0
+            T_filter = T.multiply(T_filter)
 
-            elif 'k' in kwargs:
-                T_filter = truncate_rows(T, kwargs['k'])
-            elif 'theta' in kwargs:
-                T_filter = filter_matrix_rows(T, kwargs['theta'])
+        elif 'k' in postfilter:
+            T_filter = truncate_rows(T, postfilter['k'])
+        elif 'theta' in postfilter:
+            T_filter = filter_matrix_rows(T, postfilter['theta'])
         else:
             raise ValueError("Unrecognized postfilter option")
 
@@ -1191,6 +1190,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                          krylov=krylov, maxiter=1,
                                          tol=1e-8, degree=0,
                                          weighting=weighting,
-                                         postfilter=('secondpass', {}))
+                                         prefilter=prefilter,
+                                         postfilter={'secondpass' : True} )
 
     return T
