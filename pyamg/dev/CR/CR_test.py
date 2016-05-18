@@ -89,10 +89,10 @@ def plot_multiple_poisson(splittings, labels, N):
 # ------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------#
 
-N 			= 25
+N 			= 30
 problem_dim = 2
-epsilon 	= 1.0
-theta 		= 3.0*np.pi/4
+epsilon 	= 0.0
+theta 		= 1.0*np.pi/4
 
 # 1d Poisson 
 if problem_dim == 1:
@@ -113,13 +113,12 @@ elif problem_dim == -1:
 # ------------------------------------------------------------------------------#
 
 thetacs = [0.3,0.4]
-thetacr = 0.5
+thetacr = 0.7
 nu = 3
 maxiter = 20
 
 h_split = CR(A, method='habituated', nu=nu, thetacr=thetacr, thetacs=thetacs, maxiter=maxiter)
 c_split = CR(A, method='concurrent', nu=nu, thetacr=thetacr, thetacs=thetacs, maxiter=maxiter)
-
 
 h_split_auto = CR(A, method='habituated', nu=nu, thetacr=thetacr, thetacs='auto', maxiter=maxiter)
 c_split_auto = CR(A, method='concurrent', nu=nu, thetacr=thetacr, thetacs='auto', maxiter=maxiter)
@@ -132,7 +131,7 @@ splittings = [h_split,c_split,h_split_auto,c_split_auto]
 
 plot_multiple_poisson(splittings,labels,N)
 
-
+print len(np.where(c_split_auto == 1)[0]), " / ", N*N
 
 
 
