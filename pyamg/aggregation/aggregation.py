@@ -240,8 +240,8 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             raise ValueError('The near null-space modes B have incorrect \
                               dimensions for matrix A')
         if B.shape[1] < blocksize(A):
-            raise warning('Having less target vectors, B.shape[1], than \
-                            blocksize of A can degrade convergence factors.')
+            warn('Having less target vectors, B.shape[1], than \
+                  blocksize of A can degrade convergence factors.')
 
     # Left near nullspace candidates
     if A.symmetry == 'nonsymmetric':
