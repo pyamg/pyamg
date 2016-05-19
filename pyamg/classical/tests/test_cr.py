@@ -5,8 +5,6 @@ from pyamg.classical.cr import binormalize, CR
 
 from numpy.testing import TestCase
 
-import pdb
-
 class TestCR(TestCase):
     def setUp(self):
         self.cases = []
@@ -75,11 +73,3 @@ class TestCR(TestCase):
             c_split = CR(A, method='concurrent', thetacr=0.7, thetacs=[0.3,0.5])
             assert(c_split.sum() <= (c_split.shape[0]+1)/2 )
             assert(c_split.sum() >= (c_split.shape[0]-1)/4 )
-
-        pdb.set_trace()
-
-
-
-
-
-

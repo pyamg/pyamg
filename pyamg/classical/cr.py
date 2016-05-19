@@ -1,9 +1,6 @@
 """Compatible Relaxation"""
 from __future__ import print_function
-
 __docformat__ = "restructuredtext en"
-
-import pdb
 
 import numpy as np
 import scipy as sp
