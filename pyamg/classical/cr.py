@@ -18,6 +18,32 @@ __all__ = ['CR', 'binormalize']
 
 
 def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
+    """ Internal function called by CR. Performs habituated or concurrent
+    relaxation sweeps on target vector. Stops when either (i) very fast 
+    convergence, CF < 0.1*thetacr, are observed, or at least a given number 
+    of sweeps have been performed and the relative change in CF < 0.1. 
+
+    Parameters
+    ----------
+    A : csr_matrix
+    B : array like
+        Target near null space mode
+    Findex : array like
+        List of F indices in current splitting
+    Cindex : array like
+        List of C indices in current splitting
+    nu : int
+        minimum number of relaxation sweeps to do
+    thetacr
+        Desired convergence factor
+
+    Returns
+    -------
+    rho : float
+        Convergence factor of last iteration
+    e : array like
+        Smoothed error vector
+    """
 
     n = A.shape[0]    # problem size
     numax = nu
@@ -43,23 +69,23 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         rhok = enorm / enorm_old
         it += 1
 
-        # criteria 1 -- at least nu iters, relative change in CF is small (<0.1)
-        if ( (abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
+        # criteria 1 -- fast convergence 
+        if rhok < 0.1 * thetacr:
             break
-        # criteria 2 -- fast convergence 
-        elif rhok < 0.1 * thetacr:
+        # criteria 2 -- at least nu iters, relative change in CF is small (<0.1)
+        elif ( (abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
             break
 
     return rhok, e
 
 
-def CR(A, method='habituated', B=None, nu=3, thetacr=0.5,
+def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
         thetacs='auto', maxiter=20, verbose=False):
     """Use Compatible Relaxation to compute a C/F splitting
 
     Parameters
     ----------
-    S : csr_matrix
+    A : csr_matrix
         sparse matrix (n x n) usually matrix A of Ax=b
     method : {'habituated','concurrent'}, Default 'habituated'
         Method used during relaxation:
@@ -71,8 +97,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.5,
         constant vector is used.
     nu : {int} : Default 3
         Number of smoothing iterations to apply each CR sweep.
-    thetacr : {float} : Default [0.5]
-        Desired convergence factor of relaxations, 0 < thetacs < 1.  
+    thetacr : {float} : Default [0.7]
+        Desired convergence factor of relaxations, 0 < thetacr < 1.  
     thetacs : {list, float, 'auto'} : Default 'auto'
         Threshold value, 0 < thetacs < 1, to consider nodes from
         candidate set for coarse grid. If e[i] > thetacs for relaxed
