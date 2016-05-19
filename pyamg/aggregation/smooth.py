@@ -904,7 +904,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
-                                 prefilter=None, postfilter=None):
+                                 prefilter={}, postfilter={}):
     """Minimize the energy of the coarse basis functions (columns of T).  Both
     root-node and non-root-node style prolongation smoothing is available, see
     Cpt_params description below.
@@ -952,7 +952,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             radius estimates.
         'block': If A is a BSR matrix, use a block diagonal inverse of A
         'diagonal': Use inverse of the diagonal of A
-    prefilter : {dictionary} : Default None
+    prefilter : {dictionary} : Default {}
         Filters elements by row in sparsity pattern for P to reduce operator and
         setup complexity. If None or empty dictionary, no dropping in P is done.
         If postfilter has key 'k', then the largest 'k' entries  are kept in each
@@ -960,7 +960,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             P[i,j] < kwargs['theta']*max(abs(P[i,:]))
         are dropped.  If postfilter['k'] and postfiler['theta'] are present, then
         they are used in conjunction, with the union of their patterns used.
-    postfilter : {dictionary} : Default None
+    postfilter : {dictionary} : Default {}
         Filters elements by row in smoothed P to reduce operator complexity. 
         Only supported if using the rootnode_solver. If None or empty dictionary,
         no dropping in P is done. If postfilter has key 'k', then the largest 'k'
@@ -1190,7 +1190,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                          krylov=krylov, maxiter=1,
                                          tol=1e-8, degree=0,
                                          weighting=weighting,
-                                         prefilter=prefilter,
+                                         prefilter={},
                                          postfilter={'secondpass' : True} )
 
     return T
