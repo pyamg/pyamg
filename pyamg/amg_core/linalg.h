@@ -4,6 +4,7 @@
 #include <math.h>
 #include <limits>
 #include <complex>
+#include <iostream>
 
 /*******************************************************************
  * Overloaded routines for real arithmetic for int, float and double
@@ -806,10 +807,10 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // calculate SVD
     I check = svd_jacobi(&(Ax[0]), &(U[0]), &(V[0]), &(sing_vals[0]), m, n);
     if (check == 1) {
-        std::cout << "SVD iterations did not converge.\n";
+        std::cout << "Warning: SVD iterations did not converge.\n";
     }
     else if (check != 0) {
-        std::cout << "Error in computing SVD\n";
+        std::cout << "Warning: Error in computing SVD\n";
     }    
 
     // Forming conjugate(U.T) in row major requires just
