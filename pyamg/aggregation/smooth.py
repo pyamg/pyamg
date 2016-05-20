@@ -1064,6 +1064,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if not sparse.isspmatrix_csr(Atilde):
         raise TypeError("Atilde must be csr_matrix")
 
+    if ('theta' in prefilter) and (prefilter['theta'] == 0):
+        prefilter.pop('theta', None)
+
+    if ('theta' in postfilter) and (postfilter['theta'] == 0):
+        postfilter.pop('theta', None)
+
     # Prepocess Atilde, the strength matrix
     if Atilde is None:
         Atilde = sparse.csr_matrix((np.ones(len(A.indices)),
