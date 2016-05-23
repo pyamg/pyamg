@@ -7,6 +7,7 @@ from warnings import warn
 import scipy as sp
 import numpy as np
 
+import pdb
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -212,6 +213,8 @@ class multilevel_solver:
         cycle = str(cycle).upper()
 
         nnz = [level.A.nnz for level in self.levels]
+
+        pdb.set_trace()
 
         def V(level):
             if len(self.levels) == 1:
