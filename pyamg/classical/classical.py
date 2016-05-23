@@ -90,8 +90,6 @@ def ruge_stuben_solver(A,
 
     """
 
-    levels = [multilevel_solver.level()]
-
     # convert A to csr
     if not isspmatrix_csr(A):
         try:
@@ -106,12 +104,21 @@ def ruge_stuben_solver(A,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    levels[-1].A = A
+    # Assuming symmetric matrix
+    A.symmetry = True
+
+    # Get copy of construction parameters for solver
+    params = dict(**locals())
+
+    # Construct multilevel structure
+    levels = []
+    levels.append(multilevel_solver.level())
+    levels[-1].A = A          # matrix
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = multilevel_solver(levels, solver_type='amg', params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -162,6 +169,8 @@ def extend_hierarchy(levels, strength, CF, keep):
         splitting = split.CLJP(C)
     elif fn == 'CLJPc':
         splitting = split.CLJPc(C)
+    elif fn == 'CR':
+        splitting = cr.CR(A, **kwargs)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
