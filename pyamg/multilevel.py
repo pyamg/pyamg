@@ -342,13 +342,14 @@ class multilevel_solver:
             correction_cost.append(cost)
 
         # Recursive functions to sum cost of given cycle type over all levels,
-        # including coarse grid direct solve.
+        # including coarse grid direct solve (assume ~ 30n^3 for pinv).
+        C_pinv = 1.0
         def V(level):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
-                         rel_nnz_A[level + 1]
+                        C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                         schwarz_work[level] + V(level + 1)
@@ -358,7 +359,7 @@ class multilevel_solver:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
-                         rel_nnz_A[level + 1]
+                        C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                         schwarz_work[level] + 2*W(level + 1)
@@ -368,7 +369,7 @@ class multilevel_solver:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
-                         rel_nnz_A[level + 1]
+                        C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                         schwarz_work[level] + F(level + 1) + V(level + 1)

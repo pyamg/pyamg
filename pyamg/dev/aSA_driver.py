@@ -25,7 +25,7 @@ from pyamg.util.utils import symmetric_rescaling
 # General multilevel parameters
 # -----------------------------
 max_levels 		   = 20 		# Max levels in hierarchy
-max_coarse 		   = 100 		# Max points allowed on coarse grid
+max_coarse 		   = 25 		# Max points allowed on coarse grid
 tol 			   = 1e-8		# Residual convergence tolerance
 is_pdef 		   = True		# Assume matrix positive definite (only for aSA)
 keep_levels 	   = False		# Also store SOC, aggregation, and tentative P operators
@@ -248,8 +248,6 @@ for i in range(0,len(sa_residuals)-1):
 
 print "Smoothed aggregation - ", sa_time, " seconds"
 print sa_conv_factors
-
-pdb.set_trace()
 
 cc = ml_sa.cycle_complexity()
 print "Cycle complexity = ",cc
