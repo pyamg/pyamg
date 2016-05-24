@@ -184,21 +184,10 @@ def cycle_complexity(self, cycle='V'):
 
         # Smoothing cost scaled by A_i.nnz / A_0.nnz
         smoother_cost.append( (pre_factor + post_factor)*rel_nnz_A[i] ) 
-    
-    # Compute work for computing residual, restricting to coarse grid,
-    # and coarse grid correction
-    correction_cost = []
-    for i in range(len(presmoother)):
-        cost = 0
-        cost += rel_nnz_A[i]    # Computing residual
-        cost += rel_nnz_R[i]    # Restricting residual
-        cost += rel_nnz_P[i]    # Coarse grid correction
-        correction_cost.append(cost)
 
     # Compute work for any Schwarz relaxation 
-    #   - The multiplier is the average row length, which is how many times each
-    #     the residual (on average) must be computed for each row.  This will
-    #     multiply the nnz.
+    #   - The multiplier is the average row length, which is how many times
+    #     the residual (on average) must be computed for each row.
     #   - schwarz_work is the cost of multiplying with the
     #     A[region_i, region_i]^{-1}
     schwarz_multiplier = np.zeros((len(presmoother),))
@@ -214,11 +203,20 @@ def cycle_complexity(self, cycle='V'):
             rowlen = S.indptr[1:] - S.indptr[:-1]
             schwarz_work[i] = np.sum(rowlen**2)
             schwarz_multiplier[i] = np.mean(rowlen)
-            # Remove scaling of nnz for additive Schwarz?
-            nnz[i] = nnz[i]*schwarz_multiplier[i]
+            # Note this scaling only applies to multiplicative 
+            # Schwarz, which is what is currently available.
+            smoother_cost[i] *= schwarz_multiplier[i]
     
-    # ---> SCHWARZ NEEDS TO BE FIXED. WHERE DO I APPLY MULTIPLIER?
-    #       FIX SO THAT MULTIPLIER ONLY APPLIES TO MULTIPLICATIVE?
+    # Compute work for computing residual, restricting to coarse grid,
+    # and coarse grid correction
+    correction_cost = []
+    for i in range(len(presmoother)):
+        cost = 0
+        cost += rel_nnz_A[i]    # Computing residual
+        cost += rel_nnz_R[i]    # Restricting residual
+        cost += rel_nnz_P[i]    # Coarse grid correction
+        correction_cost.append(cost)
+
     # PROBABLY NEED TO INCLUDE COARSE GRID SOLVE TOO
 
     # Recursive functions to sum cost of given cycle type over all levels,

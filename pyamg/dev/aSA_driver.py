@@ -106,7 +106,7 @@ aggregation = ('standard')
 #			~ block - block diagonal inverse for A, USE FOR BLOCK SYSTEMS
 # interp_smooth = ('jacobi', {'omega': 3.0/3.0, 'filter': True, 'weighting':'local'} )
 # interp_smooth = ('jacobi', {'omega': 3.0/3.0 } )
-interp_smooth = ('richardson', {'omega': 3.0/2.0} )
+interp_smooth = ('richardson', {'omega': 3.0/2.0, 'degree': 3} )
 
 
 # Relaxation
@@ -231,23 +231,28 @@ else:
 # Classical SA solver
 # -------------------
 
-# start = time.clock()
-# ml_sa = smoothed_aggregation_solver(A, B=bad_guy, strength=strength_connection, aggregate=aggregation,
-# 						 			smooth=interp_smooth, max_levels=max_levels, max_coarse=max_coarse,
-# 						 			presmoother=relaxation, postsmoother=relaxation,
-# 						 			improve_candidates=improve_candidates, coarse_solver=coarse_solver,
-# 						 			keep=keep_levels )
+start = time.clock()
+ml_sa = smoothed_aggregation_solver(A, B=bad_guy, strength=strength_connection, aggregate=aggregation,
+						 			smooth=interp_smooth, max_levels=max_levels, max_coarse=max_coarse,
+						 			presmoother=relaxation, postsmoother=relaxation,
+						 			improve_candidates=improve_candidates, coarse_solver=coarse_solver,
+						 			keep=keep_levels )
 
-# sa_sol = ml_sa.solve(b, x0, tol, residuals=sa_residuals)
+sa_sol = ml_sa.solve(b, x0, tol, residuals=sa_residuals)
 
-# end = time.clock()
-# sa_time = end-start
-# sa_conv_factors = np.zeros((len(sa_residuals)-1,1))
-# for i in range(0,len(sa_residuals)-1):
-# 	sa_conv_factors[i] = sa_residuals[i]/sa_residuals[i-1]
+end = time.clock()
+sa_time = end-start
+sa_conv_factors = np.zeros((len(sa_residuals)-1,1))
+for i in range(0,len(sa_residuals)-1):
+	sa_conv_factors[i] = sa_residuals[i]/sa_residuals[i-1]
 
-# print "Smoothed aggregation - ", sa_time, " seconds"
-# print sa_conv_factors
+print "Smoothed aggregation - ", sa_time, " seconds"
+print sa_conv_factors
+
+pdb.set_trace()
+
+cc = ml_sa.cycle_complexity()
+print "Cycle complexity = ",cc
 
 # ----------------------------------------------------------------------------- #
 # ----------------------------------------------------------------------------- #
@@ -280,29 +285,29 @@ else:
 # New aSA solver
 # --------------
 
-start = time.clock()
-[ml_new_asa, work] = asa_solver(A, B=bad_guy,
-			                    max_targets=max_targets,
-	                            min_targets=min_targets,
-	                            num_targets=num_candidates,
-	                            targets_iters=candidate_iters, conv_tol=tol,
-	                            weak_tol=weak_tol, local_weak_tol=local_weak_tol,
-	                            max_coarse=max_coarse, max_levels=max_levels,
-	                            max_level_iterations=max_level_iterations,
-	                            prepostsmoother=relaxation,
-	                            smooth=interp_smooth, strength=strength_connection, aggregate=aggregation,
-	                            coarse_solver=coarse_solver, coarse_size=coarse_size)
+# start = time.clock()
+# [ml_new_asa, work] = asa_solver(A, B=bad_guy,
+# 			                    max_targets=max_targets,
+# 	                            min_targets=min_targets,
+# 	                            num_targets=num_candidates,
+# 	                            targets_iters=candidate_iters, conv_tol=tol,
+# 	                            weak_tol=weak_tol, local_weak_tol=local_weak_tol,
+# 	                            max_coarse=max_coarse, max_levels=max_levels,
+# 	                            max_level_iterations=max_level_iterations,
+# 	                            prepostsmoother=relaxation,
+# 	                            smooth=interp_smooth, strength=strength_connection, aggregate=aggregation,
+# 	                            coarse_solver=coarse_solver, coarse_size=coarse_size)
 
-new_asa_sol = ml_new_asa.solve(b, x0, tol, residuals=new_asa_residuals)
+# new_asa_sol = ml_new_asa.solve(b, x0, tol, residuals=new_asa_residuals)
 
-end = time.clock()
-new_asa_time = end-start
-new_asa_conv_factors = np.zeros((len(new_asa_residuals)-1,1))
-for i in range(0,len(new_asa_residuals)-1):
-	new_asa_conv_factors[i] = new_asa_residuals[i]/new_asa_residuals[i-1]
+# end = time.clock()
+# new_asa_time = end-start
+# new_asa_conv_factors = np.zeros((len(new_asa_residuals)-1,1))
+# for i in range(0,len(new_asa_residuals)-1):
+# 	new_asa_conv_factors[i] = new_asa_residuals[i]/new_asa_residuals[i-1]
 
-print "New  aSA - ", new_asa_time, " seconds"
-print new_asa_conv_factors
+# print "New  aSA - ", new_asa_time, " seconds"
+# print new_asa_conv_factors
 
 
 # pdb.set_trace()

@@ -251,6 +251,10 @@ def rootnode_solver(A, B=None, BH=None,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+
+    # Get copy of construction parameters for solver
+    params = dict(**locals())
+
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
         B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
@@ -305,7 +309,8 @@ def rootnode_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    # Construct and return multilevel hierarchy
+    ml = multilevel_solver(levels, solver_type='rn', params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 

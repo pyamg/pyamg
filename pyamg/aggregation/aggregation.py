@@ -228,8 +228,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    # Get copy of construction parameters for solver
-    params = locals()
+    # Get copy of construction parameters for solver. If statement is to
+    # save parameters if passed in from from adaptive method calling SA.
+    if 'params' in kwargs:
+        params = kwargs['params']
+    else:
+        params = dict(**locals())
 
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
@@ -286,7 +290,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, type='sa', **params, **kwargs)
+    # Get solver hierarchy type
+    if 'solver_type' in kwargs:
+        solver_type = kwargs['solver_type']
+    else:
+        solver_type = 'sa'
+
+    # Construct and return multilevel hierarchy
+    ml = multilevel_solver(levels, solver_type=solver_type, params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 

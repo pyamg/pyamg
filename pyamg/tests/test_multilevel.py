@@ -8,6 +8,7 @@ from pyamg.multilevel import multilevel_solver, coarse_grid_solver
 
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
+import pdb
 
 def precon_norm(v, ml):
     ''' helper function to calculate preconditioner norm of v '''
@@ -111,6 +112,8 @@ class TestMultilevel(TestCase):
         levels[2].P = csr_matrix(ones((3, 2)))
         levels.append(multilevel_solver.level())
         levels[3].A = csr_matrix(ones((2, 2)))
+
+        pdb.set_trace()
 
         # one level hierarchy
         mg = multilevel_solver(levels[:1])

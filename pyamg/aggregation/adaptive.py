@@ -110,7 +110,7 @@ def unpack_arg(v):
         return v, {}
 
 
-def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
+def adaptive_sa_solver(A, B=None, symmetry='hermitian',
                        pdef=True, num_candidates=1, candidate_iters=5,
                        improvement_iters=0, epsilon=0.1,
                        max_levels=10, max_coarse=100, aggregate='standard',
@@ -127,7 +127,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     ----------
     A : {csr_matrix, bsr_matrix}
         Square matrix in CSR or BSR format
-    initial_candidates : {None, n x m dense matrix}
+    B : {None, n x m dense matrix}
         If a matrix, then this forms the basis for the first m candidates.
         Also in this case, the initial setup stage is skipped, because this
         provides the first candidate(s).  If None, then a random initial guess
@@ -233,6 +233,9 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
+    # Get copy of construction parameters for solver
+    params = dict(**locals())
+    
     # Track work in terms of relaxation
     work = np.zeros((1,))
 
@@ -246,7 +249,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     # Develop initial candidate(s).  Note that any predefined aggregation is
     # preserved.
-    if initial_candidates is None:
+    if B is None:
         B, aggregate, strength =\
             initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                                 max_levels, max_coarse, aggregate,
@@ -256,19 +259,19 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         num_candidates -= 1
     else:
         # Otherwise, use predefined candidates
-        B = initial_candidates
         num_candidates -= B.shape[1]
         # Generate Aggregation and Strength Operators (the brute force way)
         sa = smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                                          presmoother=prepostsmoother,
                                          postsmoother=prepostsmoother,
-                                         smooth=smooth, strength=strength,
+                                         smooth=smooth,
+                                         strength=strength,
                                          max_levels=max_levels,
                                          max_coarse=max_coarse,
                                          aggregate=aggregate,
                                          coarse_solver=coarse_solver,
-                                         improve_candidates=None, keep=True,
-                                         **kwargs)
+                                         improve_candidates=None,
+                                         keep=True, **kwargs)
         if len(sa.levels) > 1:
             # Set strength-of-connection and aggregation
             aggregate = [('predefined', {'AggOp': sa.levels[i].AggOp.tocsr()})
@@ -283,9 +286,11 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         presmoother=prepostsmoother,
                                         postsmoother=prepostsmoother,
                                         smooth=smooth,
-                                        coarse_solver=coarse_solver,
-                                        aggregate=aggregate,
                                         strength=strength,
+                                        max_levels=max_levels,
+                                        max_coarse=max_coarse,
+                                        aggregate=aggregate,
+                                        coarse_solver=coarse_solver,
                                         improve_candidates=None,
                                         keep=True, **kwargs),
             symmetry, candidate_iters, prepostsmoother, smooth,
@@ -311,9 +316,11 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 presmoother=prepostsmoother,
                                                 postsmoother=prepostsmoother,
                                                 smooth=smooth,
-                                                coarse_solver=coarse_solver,
-                                                aggregate=aggregate,
                                                 strength=strength,
+                                                max_levels=max_levels,
+                                                max_coarse=max_coarse,
+                                                aggregate=aggregate,
+                                                coarse_solver=coarse_solver,
                                                 improve_candidates=None,
                                                 keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0,
@@ -349,13 +356,22 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
             # Normalize B
             B = (1.0/norm(B, 'inf'))*B
 
+    # Return smoother. Note, solver parameters are passed in via params
+    # argument to be stored in final solver hierarchy and used to estimate
+    # complexity. 
     return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                                         presmoother=prepostsmoother,
                                         postsmoother=prepostsmoother,
                                         smooth=smooth,
+                                        strength=strength,
+                                        max_levels=max_levels,
+                                        max_coarse=max_coarse,
+                                        aggregate=aggregate,
                                         coarse_solver=coarse_solver,
-                                        aggregate=aggregate, strength=strength,
-                                        improve_candidates=None, keep=keep,
+                                        improve_candidates=None,
+                                        keep=keep,
+                                        solver_type='asa',
+                                        params=params,
                                         **kwargs),
             work[0]/A.nnz]
 
