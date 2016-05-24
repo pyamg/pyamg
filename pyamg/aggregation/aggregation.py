@@ -227,11 +227,21 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
-    # Right near nullspace candidates
+
+    # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = np.ones((A.shape[0], 1), dtype=A.dtype)  # use constant vector
+        B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
+                    np.eye(blocksize(A)))
     else:
         B = np.asarray(B, dtype=A.dtype)
+        if len(B.shape) == 1:
+            B = B.reshape(-1, 1)
+        if B.shape[0] != A.shape[0]:
+            raise ValueError('The near null-space modes B have incorrect \
+                              dimensions for matrix A')
+        if B.shape[1] < blocksize(A):
+            warn('Having less target vectors, B.shape[1], than \
+                  blocksize of A can degrade convergence factors.')
 
     # Left near nullspace candidates
     if A.symmetry == 'nonsymmetric':
@@ -239,6 +249,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             BH = B.copy()
         else:
             BH = np.asarray(BH, dtype=A.dtype)
+            if len(BH.shape) == 1:
+                BH = BH.reshape(-1, 1)
+            if BH.shape[1] != B.shape[1]:
+                raise ValueError('The number of left and right near \
+                                  null-space modes B and BH, must be equal')
+            if BH.shape[0] != A.shape[0]:
+                raise ValueError('The near null-space modes BH have \
+                                  incorrect dimensions for matrix A')
 
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
