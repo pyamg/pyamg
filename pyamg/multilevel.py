@@ -68,7 +68,7 @@ class multilevel_solver:
         def __init__(self):
             pass
 
-    def __init__(self, levels, coarse_solver='pinv2'):
+    def __init__(self, levels, coarse_solver='pinv2', solver_type=None, **kwargs):
         """
         Class constructor responsible for initializing the cycle and ensuring
         the list of levels is complete.
@@ -95,14 +95,21 @@ class multilevel_solver:
                   pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov
                   take precedence.
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
-
-
-
-            - Dense methods:
+           - Dense methods:
                 + pinv     : pseudoinverse (QR)
                 + pinv2    : pseudoinverse (SVD)
                 + lu       : LU factorization
                 + cholesky : Cholesky factorization
+
+        solver_type : string 
+            Type of hierarchy this is, options are
+            - 'sa'  => smoothed aggregation
+            - 'asa' => adaptive smoothed aggregation
+            - 'rn'  => root node
+            - 'amg' => ruge-stuben amg
+        **kwargs: This is expected to be a pointer to a dictionary containing
+            all parameter choices used in setup. Passed in from solver
+            construction routines.
 
         Notes
         -----
@@ -149,8 +156,13 @@ class multilevel_solver:
         """
 
         self.levels = levels
-
         self.coarse_solver = coarse_grid_solver(coarse_solver)
+
+        # Store solver type and parameters used to construct hierarchy
+        self.solver_type = solver_type
+        self.solver_params = {}
+        for key, value in kwargs.iteritems():
+            self.solver_params[key] = value
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):

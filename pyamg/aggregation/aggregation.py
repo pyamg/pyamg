@@ -286,7 +286,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **params, **kwargs)
+    ml = multilevel_solver(levels, type='sa', **params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
