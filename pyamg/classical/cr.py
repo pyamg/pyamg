@@ -1,31 +1,115 @@
 """Compatible Relaxation"""
 from __future__ import print_function
-
 __docformat__ = "restructuredtext en"
 
 import numpy as np
 import scipy as sp
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
+from copy import deepcopy
 
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
+from pyamg import amg_core
 
 __all__ = ['CR', 'binormalize']
 
 
-def CR(S, method='habituated', maxiter=20):
+def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
+    """ Internal function called by CR. Performs habituated or concurrent
+    relaxation sweeps on target vector. Stops when either (i) very fast 
+    convergence, CF < 0.1*thetacr, are observed, or at least a given number 
+    of sweeps have been performed and the relative change in CF < 0.1. 
+
+    Parameters
+    ----------
+    A : csr_matrix
+    B : array like
+        Target near null space mode
+    Findex : array like
+        List of F indices in current splitting
+    Cindex : array like
+        List of C indices in current splitting
+    nu : int
+        minimum number of relaxation sweeps to do
+    thetacr
+        Desired convergence factor
+
+    Returns
+    -------
+    rho : float
+        Convergence factor of last iteration
+    e : array like
+        Smoothed error vector
+    """
+
+    n = A.shape[0]    # problem size
+    numax = nu
+    z = np.zeros((n,))
+    e = deepcopy(B[:,0])
+    e[Cindex] = 0.0
+    enorm = norm(e)
+    rhok = 1
+    it = 0
+
+    while True:
+        if method == 'habituated':
+            gauss_seidel(A, e, z, iterations=1)
+            e[Cindex] = 0.0
+        elif method == 'concurrent':
+            gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
+        else:
+            raise NotImplementedError('method not recognized: need habituated or concurrent')
+
+        enorm_old = enorm
+        enorm = norm(e)
+        rhok_old = rhok
+        rhok = enorm / enorm_old
+        it += 1
+
+        # criteria 1 -- fast convergence 
+        if rhok < 0.1 * thetacr:
+            break
+        # criteria 2 -- at least nu iters, relative change in CF is small (<0.1)
+        elif ( (abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
+            break
+
+    return rhok, e
+
+
+def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
+        thetacs='auto', maxiter=20, verbose=False):
     """Use Compatible Relaxation to compute a C/F splitting
 
     Parameters
     ----------
-    S : csr_matrix
+    A : csr_matrix
         sparse matrix (n x n) usually matrix A of Ax=b
-    method : {'habituated','concurrent'}
+    method : {'habituated','concurrent'}, Default 'habituated'
         Method used during relaxation:
             - concurrent: GS relaxation on F-points, leaving e_c = 0
             - habituated: full relaxation, setting e_c = 0
-    maxiter : int
-        maximum number of outer iterations (lambda)
+    B : {array like} : Default None
+        Target algebraically smooth vector used in CR. If multiple
+        vectors passed in, only first one is used. If B=None, the
+        constant vector is used.
+    nu : {int} : Default 3
+        Number of smoothing iterations to apply each CR sweep.
+    thetacr : {float} : Default [0.7]
+        Desired convergence factor of relaxations, 0 < thetacr < 1.  
+    thetacs : {list, float, 'auto'} : Default 'auto'
+        Threshold value, 0 < thetacs < 1, to consider nodes from
+        candidate set for coarse grid. If e[i] > thetacs for relaxed
+        error vector, e, node i is considered for the coarse grid. 
+        Can be passed in as float to be used for every iteration, 
+        list of floats to be used on progressive iterations, or as
+        string 'auto,' wherein each iteration thetacs = 1 - rho, for
+        convergence factor rho from most recent smoothing. 
+    maxiter : {int} : Default 20
+        Maximum number of CR iterations (updating of C/F splitting)
+        to do. 
+    verbose : {bool} : Default False
+        If true, print iteration number, convergence factor and 
+        coarsening factor after each iteration. 
 
     Returns
     -------
@@ -34,196 +118,34 @@ def CR(S, method='habituated', maxiter=20):
 
     References
     ----------
-    .. [1] Livne, O.E., "Coarsening by compatible relaxation."
-       Numer. Linear Algebra Appl. 11, No. 2-3, 205-227 (2004).
+    [1] Brannick, James J., and Robert D. Falgout. "Compatible
+    relaxation and coarsening in algebraic multigrid." SIAM Journal
+    on Scientific Computing 32.3 (2010): 1393-1416.
 
-    Examples
+    Examples 
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical.cr import CR
+    >>> from cr import CR
     >>> A = poisson((20,20),format='csr')
     >>> splitting = CR(A)
-
     """
-    # parameters (paper notation)
-    ntests = 3      # (nu) number of random tests to do per iteration
-    nrelax = 4      # (eta) number of relaxation sweeps per test
-
-    smagic = 1.0    # (s) parameter in [1,5] to account for fill-in
-    gamma = 1.5     # (gamma) cycle index.  use 1.5 for 2d
-    G = 30          # (G) number of equivalence classes (# of bins)
-    tdepth = 1      # (t) drop depth on parse of L bins
-    delta = 0       # (delta) drop threshold on parse of L bins
-    alphai = 0.25   # (alpha_inc) quota increase
-
-    # initializations
-    alpha = 0.0     # coarsening ratio, quota
-    beta = np.inf      # quality criterion
-    beta1 = np.inf     # quality criterion, older
-    beta2 = np.inf     # quality criterion, oldest
-    n = S.shape[0]    # problem size
-    nC = 0          # number of current Coarse points
-    rhs = np.zeros((n, 1))  # rhs for Ae=0
-
-    if not isspmatrix(S):
-        raise TypeError('expecting sparse matrix')
-
-    S = binormalize(S)
-
-    splitting = np.zeros((S.shape[0], 1), dtype='intc')
-
-    # out iterations ---------------
-    for m in range(0, maxiter):
-
-        Cpts = np.where(splitting == 1)[0]
-        Fpts = np.where(splitting == 0)[0]
-        mu = 0.0  # convergence rate
-        E = np.zeros((n, 1))  # slowness measure
-
-        # random iterations ---------------
-        for k in range(0, ntests):
-
-            e = 0.5*(1 + sp.rand(n, 1))
-            e[Cpts] = 0
-
-            enorm = norm(e)
-
-            # relaxation iterations ---------------
-            for l in range(0, nrelax):
-
-                if method == 'habituated':
-                    gauss_seidel(S, e, rhs, iterations=1)
-                    e[Cpts] = 0
-                elif method == 'concurrent':
-                    gauss_seidel_indexed(S, e, rhs, indices=Fpts, iterations=1)
-                else:
-                    raise NotImplementedError('method not recognized: need \
-                                               habituated or concurrent')
-
-                enorm_old = enorm
-                enorm = norm(e)
-
-                if enorm <= 1e-14:
-                    # break out of loops
-                    ntests = k
-                    nrelax = l
-                    maxiter = m
-            # end relax
-
-            # check slowness
-            E = np.where(np.abs(e) > E, np.abs(e), E)
-
-            # update convergence rate
-            mu = mu + enorm/enorm_old
-        # end random tests
-        mu = mu/ntests
-
-        # work
-        alpha = float(nC)/n
-
-        W = (1 + (smagic-1)*gamma*alpha)/(1-gamma*alpha)
-
-        # quality criterion
-        beta2 = beta1
-        beta1 = beta
-        beta = np.power(max([mu, 0.1]), 1.0 / W)
-
-        # check if we're doing well
-        if (beta > beta1 and beta1 > beta2) or \
-           m == (maxiter-1) or max(E) < 1e-13:
-            return splitting.ravel()
-
-        # now add points
-        #
-        # update limit on additions to splitting (C)
-        if alpha < 1e-13:
-            alpha = 0.25
-        else:
-            alpha = (1-alphai) * alpha + alphai * (1/gamma)
-
-        nCmax = np.ceil(alpha * n)
-
-        L = np.ceil(G * E / E.max()).ravel()
-
-        binid = G
-
-        # add whole bins (and t-depth nodes) at a time
-        # u = np.zeros((n, 1))
-        # TODO This loop may never halt...
-        #      Perhaps loop over nC < nCmax and binid > 0 ?
-        while nC < nCmax:
-            if delta > 0:
-                raise NotImplementedError
-            if tdepth != 1:
-                raise NotImplementedError
-
-            (roots,) = np.where(L == binid)
-
-            for root in roots:
-                if L[root] >= 0:
-                    cols = S[root, :].indices
-                    splitting[root] = 1    # add roots
-                    nC += 1
-                    L[cols] = -1
-            binid -= 1
-
-            # L[troots] = -1          # mark t-rings visited
-            # u[:]=0.0
-            # u[roots] = 1.0
-            # for depth in range(0,tdepth):
-            #     u = np.abs(S) * u
-            # (troots,tmp) = np.where(u>0)
-
-    return splitting.ravel()
-
-
-def _CRsweep(A, Findex, Cindex, nu, thetacr, method):
 
     n = A.shape[0]    # problem size
-    numax = nu
-    z = np.zeros((n,))
-    e = np.ones((n,))
-    e[Cindex] = 0.0
-    enorm = norm(e)
-    rhok = 1
 
-    for it in range(1, numax+1):
+    if thetacs == 'auto':
+        pass
+    else:
+        if isinstance(thetacs,list):
+            thetacs.reverse()
+        elif isinstance(thetacs,float):
+            thetacs = list(thetacs)
 
-        if method == 'habituated':
-            gauss_seidel(A, e, z, iterations=1)
-            e[Cindex] = 0.0
-        elif method == 'concurrent':
-            gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
-        else:
-            raise NotImplementedError('method not recognized: need \
-                                       habituated or concurrent')
+        if (np.max(thetacs) >= 1) or (np.min(thetacs) <= 0):
+            raise ValueError("Must have 0 < thetacs < 1")
+    
 
-        enorm_old = enorm
-        enorm = norm(e)
-        rhok_old = rhok
-        rhok = enorm / enorm_old
-
-        # criteria 1
-        if (abs(rhok - rhok_old) / rhok < 0.1) and (it >= nu):
-            return rhok, e
-
-        # criteria 2
-        if rhok < 0.1 * thetacr:
-            return rhok, e
-
-
-def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3, 0.5],
-            maxiter=20):
-    """
-    >>> from pyamg.gallery import poisson
-    >>> from cr import CRalpha
-    >>> A = poisson((20,20),format='csr')
-    >>> splitting = CRalpha(A)
-    """
-    n = A.shape[0]    # problem size
-
-    thetacs = list(thetacs)
-    thetacs.reverse()
+    if (thetacr >= 1) or (thetacr <= 0):
+        raise ValueError("Must have 0 < thetacr < 1")
 
     if not isspmatrix_csr(A):
         raise TypeError('expecting csr sparse matrix A')
@@ -231,62 +153,62 @@ def CRalpha(A, method='habituated', nu=3, thetacr=0.7, thetacs=[0.3, 0.5],
     if A.dtype == complex:
         raise NotImplementedError('complex A not implemented')
 
-    # 3.1a
+    # Set initial vector. If none provided, set default
+    # initial vector of ones
+    if B is None:
+        B = np.ones((n,1))
+    elif (B.ndim == 1):
+        B = B.reshape((len(B),1))
+
+    target = B[:,0]
+
+    # 3.1a - Initialize all nodes as F points
     splitting = np.zeros((n,), dtype='intc')
+    indices = np.zeros((n+1,), dtype='intc')
+    indices[0] = n
+    indices[1:] = np.arange(0,n, dtype='intc')
+    Findex = indices[1:]
+    Cindex = np.empty((0,), dtype='intc')
     gamma = np.zeros((n,))
 
-    # 3.1b
-    Cindex = np.where(splitting == 1)[0]
-    Findex = np.where(splitting == 0)[0]
-    rho, e = _CRsweep(A, Findex, Cindex, nu, thetacr, method=method)
+    # 3.1b - Run initial smoothing sweep
+    rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method=method)
 
-    # 3.1c
+    # 3.1c - Loop until desired convergence or maximum iterations reached
     for it in range(0, maxiter):
 
-        print(it)
-        # 3.1d (assuming constant initial e in _CRsweep)
-        # should already be zero at C pts (Cindex)
-        gamma[Findex] = np.abs(e[Findex]) / np.abs(e[Findex]).max()
+        # Set thetacs value
+        if thetacs == 'auto':
+            tcs = 1-rho
+        else:
+            tcs = thetacs[-1]
+            if len(thetacs) > 1:
+                thetacs.pop()
 
-        # 3.1e
-        Uindex = np.where(gamma > thetacs[0])[0]
-        if len(thetacs) > 1:
-            thetacs.pop()
+        # 3.1d - 3.1f, see amg_core.ruge_stuben
+        fn = amg_core.cr_helper
+        fn(A.indptr,
+           A.indices,
+           target,
+           e,
+           indices,
+           splitting,
+           gamma,
+           tcs )
 
-        # 3.1f
-        # first find the weights: omega_i = |N_i\C| + gamma_i
-        omega = -np.inf * np.ones((n,))
-        for i in Uindex:
-            J = A.indices[np.arange(A.indptr[i], A.indptr[i+1])]
-            J = np.where(splitting[J] == 0)[0]
-            omega[i] = len(J) + gamma[i]
+        # Separate F indices and C indices
+        num_F = indices[0] 
+        Findex = indices[1:(num_F+1)]
+        Cindex = indices[(num_F+1):]
 
-        # independent set
-        Usize = len(Uindex)
-        while Usize > 0:
-            # step 1
-            i = omega.argmax()
-            splitting[i] = 1
-            gamma[i] = 0.0
-            # step 2
-            J = A.indices[np.arange(A.indptr[i], A.indptr[i+1])]
-            J = np.intersect1d(J, Uindex, assume_unique=True)
-            omega[i] = -np.inf
-            omega[J] = -np.inf
+        # 3.1g - Call CR smoothing iteration
+        rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method=method)
 
-            # step 3
-            for j in J:
-                K = A.indices[np.arange(A.indptr[j], A.indptr[j+1])]
-                K = np.intersect1d(K, Uindex, assume_unique=True)
-                omega[K] = omega[K] + 1.0
+        # Print details on current iteration
+        if verbose:
+            print("CR Iteration ",it,", CF = ", rho,", Coarsening factor = ", float(n-indices[0]))/n
 
-            Usize -= 1
-
-        Cindex = np.where(splitting == 1)[0]
-        Findex = np.where(splitting == 0)[0]
-        rho, e = _CRsweep(A, Findex, Cindex, nu, thetacr, method=method)
-
-        print(rho)
+        # If convergence factor satisfactory, break loop
         if rho < thetacr:
             break
 
