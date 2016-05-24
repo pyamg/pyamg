@@ -214,19 +214,23 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             warn("Implicit conversion of A to CSR",
                  SparseEfficiencyWarning)
         except:
-            raise TypeError('Argument A must have type csr_matrix or\
-                             bsr_matrix, or be convertible to csr_matrix')
+            raise TypeError('Argument A must have type csr_matrix or '
+                            'bsr_matrix, or be convertible to csr_matrix')
 
     A = A.asfptype()
 
     if (symmetry != 'symmetric') and (symmetry != 'hermitian') and\
             (symmetry != 'nonsymmetric'):
-        raise ValueError('expected \'symmetric\', \'nonsymmetric\' or\
-                         \'hermitian\' for the symmetry parameter ')
+        raise ValueError('expected \'symmetric\', \'nonsymmetric\' or '
+                         'hermitian\' for the symmetry parameter ')
     A.symmetry = symmetry
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+
+    # Get copy of construction parameters for solver
+    params = locals()
+
     # Right near nullspace candidates
     if B is None:
         B = np.ones((A.shape[0], 1), dtype=A.dtype)  # use constant vector
@@ -265,7 +269,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = multilevel_solver(levels, **params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
