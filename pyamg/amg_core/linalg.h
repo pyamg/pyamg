@@ -4,6 +4,7 @@
 #include <math.h>
 #include <limits>
 #include <complex>
+#include <iostream>
 
 /*******************************************************************
  * Overloaded routines for real arithmetic for int, float and double
@@ -802,21 +803,27 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     T * V = &(work[mn]);
     T * x = &(work[2*mn]);
     const char trans = 'F';
-
+    
     // calculate SVD
-    svd_jacobi(&(Ax[0]), &(U[0]), &(V[0]), &(sing_vals[0]), n, n);
+    I check = svd_jacobi(&(Ax[0]), &(U[0]), &(V[0]), &(sing_vals[0]), m, n);
+    if (check == 1) {
+        std::cout << "Warning: SVD iterations did not converge.\n";
+    }
+    else if (check != 0) {
+        std::cout << "Warning: Error in computing SVD\n";
+    }    
 
     // Forming conjugate(U.T) in row major requires just
     // conjugating the current entries of U in col major
-    for(I i = 0; i < m*n; i++)
+    for(I i = 0; i < m*n; i++) 
     {   U[i] = conjugate(U[i]); }
 
     // A^{-1} b = V*Sinv*U.H*b, in 3 steps
     // Step 1, U.H*b
-    gemm(&(U[0]), n, n, trans, &(b[0]), n, 1, trans,
+    gemm(&(U[0]), n, m, trans, &(b[0]), m, 1, trans,  
          &(x[0]), n, 1, trans, 'T');
 
-    // Setp 2, scale x by Sinv
+    // Step 2, scale x by Sinv
     for(I j = 0; j < n; j++)
     {
         if(sing_vals[j] != 0.0)
@@ -828,9 +835,9 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // Step 3, multiply by V
     // transpose V so that it is in row major for gemm
     transpose(&(V[0]), &(U[0]), n, n);
-    gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,
+    gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,  
          &(b[0]), n, 1, trans, 'T');
-
+    
     return;
 }
 
