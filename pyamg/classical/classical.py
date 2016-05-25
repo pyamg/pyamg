@@ -104,6 +104,9 @@ def ruge_stuben_solver(A,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
+    # Assuming symmetric matrix
+    A.symmetry = True
+
     # Get copy of construction parameters for solver
     params = dict(**locals())
 
@@ -166,6 +169,8 @@ def extend_hierarchy(levels, strength, CF, keep):
         splitting = split.CLJP(C)
     elif fn == 'CLJPc':
         splitting = split.CLJPc(C)
+    elif fn == 'CR':
+        splitting = cr.CR(A, **kwargs)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 

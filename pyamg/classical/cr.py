@@ -76,7 +76,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     return rhok, e
 
 
-def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
+def CR(A, B=None, method='habituated', nu=3, thetacr=0.7,
         thetacs='auto', maxiter=20, verbose=False):
     """Use Compatible Relaxation to compute a C/F splitting
 

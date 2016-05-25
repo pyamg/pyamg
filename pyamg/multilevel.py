@@ -157,14 +157,52 @@ class multilevel_solver:
         """
 
         self.levels = levels
+        self.nlevels = len(levels)
         self.coarse_solver = coarse_grid_solver(coarse_solver)
+        try:
+            self.symmetry = levels[0].A.symmetry
+        except:
+            warn("Symmetry not specified, assuming A is symmetric.")
+            self.symmetry = True
+
+        # Empty variables for complexity measures
+        self.CC = {}
+        self.SC = None
 
         # Store solver type and parameters used to construct hierarchy
         self.solver_type = solver_type
         self.solver_params = {}
         for key, value in params.iteritems():
-            if (key is not 'B') and (key is not 'A') and (key is not 'Bh'):
+            # Convert pre and post smoother to list of length num_levels - 1
+            if (key is 'presmoother') or (key is 'postsmoother'):
+                if isinstance(value, tuple):
+                    temp = [ value ]  
+                elif isinstance(value, str):
+                    temp = [ (value,{}) ]  
+                else:
+                    temp = value
+                # Repeat final smoothing strategy until end of hiearchy
+                for i in range(len(temp), self.nlevels-1):
+                    temp.append(temp[-1])
+
+                self.solver_params[key] = temp
+
+            # Levelize strength and aggregate parameters
+            elif (key is 'strength') or (key is 'aggregate'):
+
+
+            # Levelize interpolation smoothing and improve candidates parameters
+            elif (key is 'smooth') or (key is 'improve'):
+
+
+
+            else:
                 self.solver_params[key] = value
+
+        
+        if len(presmoother) != len(postsmoother):
+            raise ValueError("presmoother and postsmoother must be same length")
+
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
@@ -175,7 +213,7 @@ class multilevel_solver:
         """Prints basic statistics about the multigrid hierarchy.
         """
         output = 'multilevel_solver\n'
-        output += 'Number of Levels:     %d\n' % len(self.levels)
+        output += 'Number of Levels:     %d\n' % self.nlevels
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
@@ -193,32 +231,234 @@ class multilevel_solver:
 
 
     def setup_complexity(self):
+        """Setup complexity of this multigrid hierarchy.
 
+        Setup complexity is an approximate measure of the number of
+        floating point operations (FLOPs) required to construct the 
+        multigrid hierarchy, relative to the cost of performing a 
+        single matrix-vector multiply on the finest grid.
 
-        def cost_presmooth(params):
+        Parameters
+        ----------
+        None, passed into solver object when constructed. 
+
+        Returns
+        -------
+        sc : float
+            Complexity of a constructing hierarchy in work units. 
+            A 'work unit' is defined as the number of FLOPs required 
+            to perform a matrix-vector multiply on the finest grid. 
+
+        Notes
+        -----
+            - Designed to be modular with individual functions called
+              for the complexity of each part of setup. This will 
+              allow for easy inclusion of future methods into the 
+              interface. 
+            - Once computed, SC is stored in self.SC. 
+            - Needs to be done:
+                + all distance based SOC measures
+                + clean up Evolution SOC measure
+                + all CF splittings
+                + lloyd aggregation
+                + Schwarz relaxation
+                + energy smoothing
+                    ~ same cost for SA vs. RN?
+                    ~ why is satisy constraints commented out?
+                    ~ should save in code number of iters done,
+                      and any info on post-filtering.
+                    ~ filtering takes 1 or 2 A.nnz / A0.nnz?
+
+        """
+
+        def unpack_arg(v):
+            if isinstance(v, tuple):
+                return v[0], v[1]
+            else:
+                return v, {}
+
+        def cost_strength(fn, fn_args, lvl, A0_nnz):
+
+            # One pass through all entries to find largest element in each row,
+            # one pass to filter by theta, and one to scale each row by largest entry
+            if fn == 'symmetric':
+                return 2.0 * lvl.A.nnz / A0_nnz
+            # One pass to filter by theta, and one to scale each row by largest entry
+            elif fn == 'classical':
+                return 3.0 * lvl.A.nnz / A0_nnz
+
+            # ---> NEED TO TALK TO JACOB ABOUT THIS ONE. MAYBE SAVE SIZE WHE COMPUTING?
+            #       COMPUTING MATRIX POWERS AGAIN IS SUBOPTIMAL, AND PERHAPS NOT AS 
+            #       ACCURATE BASED ON EPISLON? WHAT ABOUT K <= 2?
+            elif (fn == 'ode') or (fn == 'evolution'):
+                #work += lvl.A.nnz*(lvl.A.nnz/float(lvl.A.shape[0]))
+                
+                # Compute the work for kwargs['k'] > 2
+                #     (nnz to compute) * (average stencil size in matrix that you're multiplying)
+                return lvl.A.nnz*( (lvl.A**(int(fn_args['k']/2))).nnz / float(lvl.A.shape[0]))
+
+            elif fn == 'energy_based':
+                warn("Setup cost not implemented for energy-based SOC.\n\
+                      Only implemented in python, so it is always slow.")
+                return 0
+            elif fn == 'distance':
+                warn("Setup cost not implemented for distance-based SOC.")
+                return 0
+            elif fn == 'algebraic_distance':
+                warn("Setup cost not implemented for algebraic distance SOC.")
+                return 0
+            elif fn == 'affinity_distance':
+                warn("Setup cost not implemented for affinity distance SOC.")
+                return 0
+            else:
+                warn("Unrecognized SOC measure. Setup cost not computed.")
+                return 0
+
+        def cost_CF(fn, fn_args, lvl, A0_nnz):
+            if fn == 'RS':
+                warn("Setup cost not implemented for RS splitting.")
+                return 0
+            elif fn == 'PMIS':
+                warn("Setup cost not implemented for PMIS splitting.")
+                return 0
+            elif fn == 'PMISc':
+                warn("Setup cost not implemented for PMISc splitting.")
+                return 0
+            elif fn == 'CLJP':
+                warn("Setup cost not implemented for CLJP splitting.")
+                return 0
+            elif fn == 'CLJPc':
+                warn("Setup cost not implemented for CLJPc splitting.")
+                return 0
+            elif fn == 'CR':
+                warn("Setup cost not implemented for CR.")
+                return 0
+            else:
+                warn("Unrecognized CF splitting. Setup cost not computed.")
+                return 0
+
+        def cost_aggregate(fn, fn_args, lvl, A0_nnz):
+            # Roughly one pass through all nonzero elements to aggregate.
+            # Technically it is one pass through strength matrix, C. If C is
+            # not stored, A is reasonable estimate, A.nnz >= C.nnz, as more
+            # counting one pass through nonzeros is a slight underestimate. 
+            if (fn == 'standard')or (fn == 'naive'):
+                try:
+                    return 1.0*lvl.C.nnz / A0_nnz
+                except:
+                    return 1.0*lvl.A.nnz / A0_nnz
+            elif fn == 'lloyd':
+                warn("Setup cost not implemented for lloyd aggregation.")
+                return 0
+            else:
+                warn("Unrecognized aggregation method. Setup cost not computed.")
+                return 0
+
+        def cost_improve(fn, fn_args, lvl, A0_nnz, symmetry):
+            # Compute cost multiplier for relaxation method
+            cost_factor = 1
+            if fn.endswith(('nr','ne')):
+                cost_factor *= 2
+            if 'sweep' in fn_args:
+                if fn_args['sweep'] == 'symmetric':
+                    cost_factor *= 2
+            if 'iterations' in fn_args:
+                cost_factor *= fn_args['iterations']
+            if 'degree' in fn_args:
+                cost_factor *= fn_args['degree']
+            if symmetry == False:
+                cost_factor *= 2
+
+            return cost_factor*lvl.A.nnz*lvl.B.shape[1] / A0_nnz
+
+        def cost_schwarz(fn, fn_args, lvl, A0_nnz):
             return None
+        
+        def cost_interpsmooth(fn, fn_args, lvl, A0_nnz, symmetry):
+            cost = 0
+            if (fn == 'jacobi') or (fn == 'richardson'):
+                cost += lvl.A.nnz*(lvl.P.nnz/float(lvl.P.shape[0]))
+                if symmetry == False:
+                    cost += lvl.A.nnz*(lvl.R.nnz/float(lvl.R.shape[1]))
+                if 'degree' in fn_args:
+                    cost *= fn_args['degree']
 
-        def cost_postsmooth(params):
-            return None
+            # NEED TO FILL THIS IN
+            # --------------------
+            elif fn == 'energy':
+                cost = 1
 
-        def cost_interpsmooth(params):
-            return None
+            return cost
 
-        def cost_SOC(params):
-            return None
 
-        def cost_CF(params):
-            return None
+        def cost_RAP(lvl, A0_nnz):
+            RA = lvl.A.nnz*(lvl.R.nnz/float(lvl.R.shape[1])) / A0_nnz
+            AP = lvl.A.nnz*(lvl.P.nnz/float(lvl.P.shape[0])) / A0_nnz
+            return (RA + AP)
 
-        def cost_agg(params):
-            return None
+        def get_sa_cost():
+            cost = 0
+            A0_nnz = float(self.levels[0].A.nnz)
+            symmetry = self.params
+            # Loop through all but last level (no work done on final level)
+            for i in range(0,(self.nlevels-1) ):
+                lvl = self.levels[i]
 
-        def cost_improve(params):
-            return None
+                # Strength of connection cost
+                fn,fn_args = unpack_arg(strength[i])
+                if fn is not None:
+                    cost += cost_strength(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
 
-        def cost_RAP(params):
-            return None
+                # Aggregation cost
+                fn,fn_args = unpack_arg(aggregate[i])
+                if fn is not None:
+                    cost += cost_aggregate(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
 
+                # Improve candidate vectors cost
+                fn,fn_args = unpack_arg(improve_candidates[i])
+                if fn is not None:
+                    cost += cost_improve(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz,
+                                         symmetry=self.symmetry)
+
+                # Schwarz relaxation cost
+                # ---> THIS NEEDS TO BE LOOKED AT CAREFULLY
+                fn,fn_args = unpack_arg(smooth[i])
+                if fn is not None:
+                    cost += cost_schwarz(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
+
+                # Smoothing interpolation operator cost
+                fn,fn_args = unpack_arg(smooth[i])
+                if fn is not None:
+                    cost += cost_interpsmooth(fn=fn, fn_args=fn_args, lvl=lvl,
+                                              A0_nnz=A0_nnz, symmetry=self.symmetry)
+
+                # Cost of computing coarse grid
+                cost += cost_RAP(lvl=lvl, A0_nnz=A0_nnz)
+
+            return cost
+
+
+        def get_amg_cost():
+
+
+
+
+        # Check if setup complexity has already been computed
+        if self.SC != None:
+            if self.solver_type == 'sa':
+                self.SC = get_sa_cost()
+            elif self.solver_type == 'rn':
+                self.SC = get_sa_cost()
+            elif self.solver_type == 'amg':
+                self.SC = get_amg_cost()
+            elif self.solver_type == 'asa':
+                warn("Setup complexity not implemented for aSA. Returning zero.")
+                self.SC = 0    
+            else:
+                warn("Unrecognized solver type. Returning setup complexity zero.")
+                self.SC = 0  
+
+        return self.SC
 
 
     def cycle_complexity(self, cycle='V'):
@@ -240,6 +480,11 @@ class multilevel_solver:
             A 'work unit' is defined as the number of FLOPs required 
             to perform a matrix-vector multiply on the finest grid. 
 
+        Notes
+        -----
+        Once computed, CC is stored in dictionary self.CC, with a key
+        given by the cycle type.
+
         """
 
         def unpack_arg(v):
@@ -247,6 +492,10 @@ class multilevel_solver:
                 return v[0], v[1]
             else:
                 return v, {}
+
+        # Return if already stored
+        if cycle in self.CC:
+            return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
         nnz = [ level.A.nnz for level in self.levels ]
@@ -258,25 +507,6 @@ class multilevel_solver:
         presmoother = self.solver_params['presmoother']
         postsmoother = self.solver_params['postsmoother']
         cycle = str(cycle).upper()
-
-        # Convert everything to list
-        if isinstance(presmoother, tuple):
-            presmoother = [ presmoother ]  
-        if isinstance(postsmoother, tuple): 
-            postsmoother = [ postsmoother ]
-        if isinstance(presmoother, str):
-            presmoother = [ (presmoother,{}) ]  
-        if isinstance(postsmoother, str): 
-            postsmoother = [ (postsmoother,{}) ]
-
-        # Repeat final smoothing strategy till end of hiearchy
-        for i in range(len(presmoother), len(self.levels)):
-            presmoother.append(presmoother[-1])
-        for i in range(len(postsmoother), len(self.levels)):
-            postsmoother.append(postsmoother[-1])
-
-        if len(presmoother) != len(postsmoother):
-            raise ValueError("presmoother and postsmoother must be same length")
 
         # Determine cost per nnz for smoothing on each level
         smoother_cost = []
@@ -345,9 +575,9 @@ class multilevel_solver:
         # including coarse grid direct solve (assume ~ 30n^3 for pinv).
         C_pinv = 1.0
         def V(level):
-            if len(self.levels) == 1:
+            if self.nlevels == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
+            elif level == self.nlevels - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                         C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -355,9 +585,9 @@ class multilevel_solver:
                         schwarz_work[level] + V(level + 1)
         
         def W(level):
-            if len(self.levels) == 1:
+            if self.nlevels == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
+            elif level == self.nlevels - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                         C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -365,9 +595,9 @@ class multilevel_solver:
                         schwarz_work[level] + 2*W(level + 1)
         
         def F(level):
-            if len(self.levels) == 1:
+            if self.nlevels == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
+            elif level == self.nlevels - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                         C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -383,7 +613,8 @@ class multilevel_solver:
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
         
-        return float(flops)
+        self.CC[cycle] = float(flops)
+        return self.CC[cycle]
 
 
     def operator_complexity(self):
@@ -599,7 +830,7 @@ class multilevel_solver:
         self.first_pass = True
 
         while len(residuals) <= maxiter and residuals[-1] > tol:
-            if len(self.levels) == 1:
+            if self.nlevels == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
@@ -646,7 +877,7 @@ class multilevel_solver:
         coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)
 
-        if lvl == len(self.levels) - 2:
+        if lvl == self.nlevels - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
             if cycle == 'V':
