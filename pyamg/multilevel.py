@@ -282,10 +282,10 @@ class multilevel_solver:
             # One pass through all entries to find largest element in each row,
             # one pass to filter by theta, and one to scale each row by largest entry
             if fn == 'symmetric':
-                return 2.0 * lvl.A.nnz / A0_nnz
+                return 3.0 * lvl.A.nnz / A0_nnz
             # One pass to filter by theta, and one to scale each row by largest entry
             elif fn == 'classical':
-                return 3.0 * lvl.A.nnz / A0_nnz
+                return 2.0 * lvl.A.nnz / A0_nnz
 
             # ---> NEED TO TALK TO JACOB ABOUT THIS ONE. MAYBE SAVE SIZE WHE COMPUTING?
             #       COMPUTING MATRIX POWERS AGAIN IS SUBOPTIMAL, AND PERHAPS NOT AS 
@@ -399,7 +399,7 @@ class multilevel_solver:
         def get_sa_cost():
             cost = 0
             A0_nnz = float(self.levels[0].A.nnz)
-            symmetry = self.params
+            symmetry = self.symmetry
             # Loop through all but last level (no work done on final level)
             for i in range(0,(self.nlevels-1) ):
                 lvl = self.levels[i]
@@ -437,11 +437,34 @@ class multilevel_solver:
 
             return cost
 
-
         def get_amg_cost():
+            cost = 0
+            A0_nnz = float(self.levels[0].A.nnz)
+            symmetry = self.symmetry
+            # Loop through all but last level (no work done on final level)
+            for i in range(0,(self.nlevels-1) ):
+                lvl = self.levels[i]
 
+                # Strength of connection cost
+                fn,fn_args = unpack_arg(strength[i])
+                if fn is not None:
+                    cost += cost_strength(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
 
+                # CF splitting cost
+                fn,fn_args = unpack_arg(CF[i])
+                if fn is not None:
+                    cost += cost_CF(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
 
+                # Schwarz relaxation cost
+                # ---> DOES THIS APPLY TO CLASSICAL AMG?
+                fn,fn_args = unpack_arg(smooth[i])
+                if fn is not None:
+                    cost += cost_schwarz(fn=fn, fn_args=fn_args, lvl=lvl, A0_nnz=A0_nnz)
+
+                # Cost of computing coarse grid
+                cost += cost_RAP(lvl=lvl, A0_nnz=A0_nnz)
+
+            return cost
 
         # Check if setup complexity has already been computed
         if self.SC != None:
