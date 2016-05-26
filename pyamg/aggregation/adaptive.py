@@ -235,7 +235,7 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
 
     # Get copy of construction parameters for solver
     params = dict(**locals())
-    
+
     # Track work in terms of relaxation
     work = np.zeros((1,))
 
@@ -352,13 +352,13 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
                 initial_setup_stage(A, symmetry, pdef, candidate_iters,
                                     epsilon, max_levels, max_coarse,
                                     aggregate, prepostsmoother, smooth,
-                                    strength, work, initial_candidate=B)
+                                    strength, work, B=B)
             # Normalize B
             B = (1.0/norm(B, 'inf'))*B
 
     # Return smoother. Note, solver parameters are passed in via params
     # argument to be stored in final solver hierarchy and used to estimate
-    # complexity. 
+    # complexity.
     return [smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                                         presmoother=prepostsmoother,
                                         postsmoother=prepostsmoother,
@@ -378,7 +378,7 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
 
 def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                         max_levels, max_coarse, aggregate, prepostsmoother,
-                        smooth, strength, work, initial_candidate=None):
+                        smooth, strength, work, B=None):
     """
     Computes a complete aggregation and the first near-nullspace candidate
     following Algorithm 3 in Brezina et al.
@@ -427,7 +427,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
     # step 1
     A_l = A
-    if initial_candidate is None:
+    if B is None:
         x = sp.rand(A_l.shape[0], 1).astype(A_l.dtype)
         # The following type check matches the usual 'complex' type,
         # but also numpy data types such as 'complex64', 'complex128'
@@ -435,7 +435,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         if A_l.dtype.name.startswith('complex'):
             x = x + 1.0j*sp.rand(A_l.shape[0], 1)
     else:
-        x = np.array(initial_candidate, dtype=A_l.dtype)
+        x = np.array(B, dtype=A_l.dtype)
 
     # step 2
     relax(A_l, x)
