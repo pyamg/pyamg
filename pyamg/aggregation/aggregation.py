@@ -214,19 +214,26 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             warn("Implicit conversion of A to CSR",
                  SparseEfficiencyWarning)
         except:
-            raise TypeError('Argument A must have type csr_matrix or\
-                             bsr_matrix, or be convertible to csr_matrix')
+            raise TypeError('Argument A must have type csr_matrix or '
+                            'bsr_matrix, or be convertible to csr_matrix')
 
     A = A.asfptype()
 
     if (symmetry != 'symmetric') and (symmetry != 'hermitian') and\
             (symmetry != 'nonsymmetric'):
-        raise ValueError('expected \'symmetric\', \'nonsymmetric\' or\
-                         \'hermitian\' for the symmetry parameter ')
+        raise ValueError('expected \'symmetric\', \'nonsymmetric\' or '
+                         'hermitian\' for the symmetry parameter ')
     A.symmetry = symmetry
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+
+    # Get copy of construction parameters for solver. If statement is to
+    # save parameters if passed in from from adaptive method calling SA.
+    if 'params' in kwargs:
+        params = kwargs['params']
+    else:
+        params = dict(**locals())
 
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
@@ -283,7 +290,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    # Get solver hierarchy type
+    if 'solver_type' in kwargs:
+        solver_type = kwargs['solver_type']
+    else:
+        solver_type = 'sa'
+
+    # Construct and return multilevel hierarchy
+    ml = multilevel_solver(levels, solver_type=solver_type, params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
