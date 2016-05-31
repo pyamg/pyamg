@@ -8,3 +8,4 @@ pyamg/version.py
 MANIFEST
 .coverage
 .DS_Store
+**/build
