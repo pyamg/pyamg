@@ -10,7 +10,7 @@ from pyamg.graph import lloyd_cluster
 __all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation']
 
 
-def standard_aggregation(C):
+def standard_aggregation(C, cost=[0]):
     """Compute the sparsity pattern of the tentative prolongator
 
     Parameters
@@ -96,7 +96,7 @@ def standard_aggregation(C):
             return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def naive_aggregation(C):
+def naive_aggregation(C, cost=[0]):
     """Compute the sparsity pattern of the tentative prolongator
 
     Parameters
@@ -179,7 +179,7 @@ def naive_aggregation(C):
         return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
+def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10, cost=[0]):
     """Aggregated nodes using Lloyd Clustering
 
     Parameters

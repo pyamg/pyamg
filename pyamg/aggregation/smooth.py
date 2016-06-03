@@ -65,7 +65,8 @@ def Satisfy_Constraints(U, B, BtBinv):
 
 
 def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
-                                 filter=False, weighting='diagonal'):
+                                 filter=False, weighting='diagonal',
+                                 cost=[0]):
     """Jacobi prolongation smoother
 
     Parameters
@@ -156,6 +157,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         C = UnAmal(C, numPDEs, numPDEs)
         S = S.multiply(C)
         S.eliminate_zeros()
+        cost[0] += 1.0
 
     if weighting == 'diagonal':
         # Use diagonal of S
@@ -204,11 +206,12 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         P = T
         for i in range(degree):
             P = P - (D_inv_S*P)
+            cost[0] += float(P.nnz) / S.nnz
 
     return P
 
 
-def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
+def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0]):
     """Richardson prolongation smoother
 
     Parameters
@@ -271,6 +274,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     for i in range(degree):
         P = P - weight*(S*P)
 
+    cost[0] += float(P.nnz) / S.nnz
     return P
 
 

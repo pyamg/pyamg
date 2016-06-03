@@ -31,7 +31,7 @@ __all__ = ['classical_strength_of_connection',
            'ode_strength_of_connection']
 
 
-def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
+def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0]):
     """
     Distance based strength-of-connection
 
@@ -119,7 +119,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.0):
+def classical_strength_of_connection(A, theta=0.0, cost=[0]):
     """
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
@@ -197,20 +197,23 @@ def classical_strength_of_connection(A, theta=0.0):
     fn = amg_core.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+    cost[0] += 2
 
     if blocksize > 1:
         S = amalgamate(S, blocksize)
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
+    cost[0] += 1
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-
+    cost[0] += 1 + float(S.shape[0]) / A.nnz    # TODO : Division more expensive?
+ 
     return S
 
 
-def symmetric_strength_of_connection(A, theta=0):
+def symmetric_strength_of_connection(A, theta=0, cost=[0]):
     """
     Compute strength of connection matrix using the standard symmetric measure
 
@@ -274,8 +277,6 @@ def symmetric_strength_of_connection(A, theta=0):
         raise ValueError('expected a positive theta')
 
     if sparse.isspmatrix_csr(A):
-        # if theta == 0:
-        #     return A
 
         Sp = np.empty_like(A.indptr)
         Sj = np.empty_like(A.indices)
@@ -283,6 +284,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
         fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
+        cost[0] += 2
 
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
@@ -303,20 +305,22 @@ def symmetric_strength_of_connection(A, theta=0):
             data = (np.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1)
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
-            return symmetric_strength_of_connection(A, theta)
+            return symmetric_strength_of_connection(A, theta, cost)
     else:
         raise TypeError('expected csr_matrix or bsr_matrix')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
+    cost[0] += 1
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
+    cost[0] += 2 + float(S.shape[0]) / A.nnz    # TODO : Division more expensive?
 
     return S
 
 
-def energy_based_strength_of_connection(A, theta=0.0, k=2):
+def energy_based_strength_of_connection(A, theta=0.0, k=2, cost=[0]):
     """
     Compute a strength of connection matrix using an energy-based measure.
 
@@ -462,15 +466,17 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 @np.deprecate
 def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
-                               block_flag=False, symmetrize_measure=True):
+                               block_flag=False, symmetrize_measure=True,
+                               cost=[0]):
     """Use evolution_strength_of_connection instead"""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
-                                            block_flag, symmetrize_measure)
+                                            block_flag, symmetrize_measure,
+                                            cost)
 
 
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                      proj_type="l2", block_flag=False,
-                                     symmetrize_measure=True):
+                                     symmetrize_measure=True, cost=[0]):
     """
     Construct strength of connection matrix using an Evolution-based measure
 
@@ -848,7 +854,7 @@ def relaxation_vectors(A, R, k, alpha):
 
     return x
 
-def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
+def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0, cost=[0]):
     """Construct an AMG strength of connection matrix using an affinity
     distance measure.
 
@@ -902,9 +908,9 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
         return 1 - np.sum(x[rows] * x[cols], axis=1)**2 / \
             (np.sum(x[rows]**2, axis=1) * np.sum(x[cols]**2, axis=1))
 
-    return distance_measure_common(A, distance, alpha, R, k, epsilon)
+    return distance_measure_common(A, distance, alpha, R, k, epsilon, cost)
 
-def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
+def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2, cost=[0]):
     """Construct an AMG strength of connection matrix using an algebraic
     distance measure.
 
@@ -965,18 +971,20 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
         else:
             return np.abs(x[rows] - x[cols]).max(axis=1)
 
-    return distance_measure_common(A, distance, alpha, R, k, epsilon)
+    return distance_measure_common(A, distance, alpha, R, k, epsilon, cost)
 
 """
 Helper function to create strength of connection matrix from a function applied
 to relaxation vectors.
 """
-def distance_measure_common(A, func, alpha, R, k, epsilon):
+def distance_measure_common(A, func, alpha, R, k, epsilon, cost):
     # create test vectors
     x = relaxation_vectors(A, R, k, alpha)
+    cost[0] += R*k
 
     # apply distance measure function to vectors
     d = func(x)
+    cost[0] += 100000       # TODO : fix this
 
     # drop distances to self
     (rows, cols) = A.nonzero()
@@ -984,21 +992,27 @@ def distance_measure_common(A, func, alpha, R, k, epsilon):
     d[weak] = 0
     C = sparse.csr_matrix((d, (rows, cols)), shape=A.shape)
     C.eliminate_zeros()
+    cost[0] += 1
 
     # remove weak connections
     # removes entry e from a row if e > theta * min of all entries in the row
     amg_core.apply_distance_filter(C.shape[0], epsilon, C.indptr,
                                    C.indices, C.data)
     C.eliminate_zeros()
+    cost[0] += 2 * float(C.nnz) / A.nnz
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
+    cost[0] += 1        # Note this is one WU of divides
 
     # Put an identity on the diagonal
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
+    cost[0] += 1
 
     # Scale C by the largest magnitude entry in each row
     C = scale_rows_by_largest_entry(C)
+    cost[0] += 1    # Only 1 WU because largest element same as
+                    # smallest found when removing weak connections.
 
     return C
