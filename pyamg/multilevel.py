@@ -159,7 +159,6 @@ class multilevel_solver:
         """
 
         self.levels = levels
-        self.nlevels = len(levels)
         self.coarse_solver = coarse_grid_solver(coarse_solver)
         self.CC = {}
         self.SC = None
@@ -173,7 +172,7 @@ class multilevel_solver:
         """Prints basic statistics about the multigrid hierarchy.
         """
         output = 'multilevel_solver\n'
-        output += 'Number of Levels:     %d\n' % self.nlevels
+        output += 'Number of Levels:     %d\n' % len(self.levels)
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
@@ -442,7 +441,7 @@ class multilevel_solver:
             A0_nnz = float(self.levels[0].A.nnz)
             symmetry = self.symmetry
             # Loop through all but last level (no work done on final level)
-            for i in range(0, self.nlevels-1):
+            for i in range(0, len(self.levels)-1):
                 lvl = self.levels[i]
 
                 # Strength of connection cost
@@ -487,7 +486,7 @@ class multilevel_solver:
             A0_nnz = float(self.levels[0].A.nnz)
             symmetry = self.symmetry
             # Loop through all but last level (no work done on final level)
-            for i in range(0, self.nlevels-1):
+            for i in range(0, len(self.levels)-1):
                 lvl = self.levels[i]
 
                 # Strength of connection cost
@@ -642,9 +641,9 @@ class multilevel_solver:
         # including coarse grid direct solve (assume ~ 30n^3 for pinv).
         C_pinv = 1.0
         def V(level):
-            if self.nlevels == 1:
+            if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == self.nlevels - 2:
+            elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                     C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -652,9 +651,9 @@ class multilevel_solver:
                     schwarz_work[level] + V(level + 1)
 
         def W(level):
-            if self.nlevels == 1:
+            if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == self.nlevels - 2:
+            elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                     C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -662,9 +661,9 @@ class multilevel_solver:
                     schwarz_work[level] + 2*W(level + 1)
 
         def F(level):
-            if self.nlevels == 1:
+            if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == self.nlevels - 2:
+            elif level == len(self.levels) - 2:
                 return smoother_cost[level] + schwarz_work[level] + \
                     C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
             else:
@@ -897,7 +896,7 @@ class multilevel_solver:
         self.first_pass = True
 
         while len(residuals) <= maxiter and residuals[-1] > tol:
-            if self.nlevels == 1:
+            if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
@@ -944,7 +943,7 @@ class multilevel_solver:
         coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)
 
-        if lvl == self.nlevels - 2:
+        if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
             if cycle == 'V':
