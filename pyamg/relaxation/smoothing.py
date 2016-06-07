@@ -270,21 +270,21 @@ def change_smoothers(ml, presmoother, postsmoother):
             elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
                  (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
                 try:
-                        sweep1 = kwargs1['sweep']
-                    except:
-                        if (fn1 == 'strength_based_schwarz') or (fn1 == 'schwarz'):
-                            sweep1 = 'symmetric'
-                        else:
-                            sweep1 = 'forward'
-                    try:
-                        sweep2 = kwargs2['sweep']
-                    except:
-                        if (fn2 == 'strength_based_schwarz') or (fn2 == 'schwarz'):
-                            sweep2 = 'symmetric'
-                        else:
-                            sweep2 = 'forward'
-                    if (sweep1 != 'symmetric') or (sweep2 != 'symmetric'):
-                        ml.symmetric_smoothing = False     
+                    sweep1 = kwargs1['sweep']
+                except:
+                    if (fn1 == 'strength_based_schwarz') or (fn1 == 'schwarz'):
+                        sweep1 = 'symmetric'
+                    else:
+                        sweep1 = 'forward'
+                try:
+                    sweep2 = kwargs2['sweep']
+                except:
+                    if (fn2 == 'strength_based_schwarz') or (fn2 == 'schwarz'):
+                        sweep2 = 'symmetric'
+                    else:
+                        sweep2 = 'forward'
+                if (sweep1 != 'symmetric') or (sweep2 != 'symmetric'):
+                    ml.symmetric_smoothing = False     
 
     else:  
         mid_len = min_len
