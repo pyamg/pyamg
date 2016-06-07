@@ -123,6 +123,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
     '''
 
+    ml.symmetric_smoothing = True
+
     # interpret arguments into list
     if isinstance(presmoother, str) or isinstance(presmoother, tuple) or\
        (presmoother is None):
@@ -136,37 +138,99 @@ def change_smoothers(ml, presmoother, postsmoother):
     elif not isinstance(postsmoother, list):
         raise ValueError('Unrecognized postsmoother')
 
-    # set ml.levels[i].presmoother = presmoother[i]
-    i = 0
-    for i in range(min(len(presmoother), len(ml.levels[:-1]))):
+
+    # set ml.levels[i].presmoother = presmoother[i],
+    #     ml.levels[i].postsmoother = postsmoother[i]
+    fn1 = None      # Predefine to keep scope beyond first loop
+    fn2 = None
+    kwargs1 = {}
+    kwargs2 = {}
+    min_len = min(len(presmoother), len(postsmoother), len(ml.levels[:-1]))
+    same = (len(presmoother) == len(postsmoother))
+    for i in range(0, min_len):
         # unpack presmoother[i]
-        fn, kwargs = unpack_arg(presmoother[i])
+        fn1, kwargs1 = unpack_arg(presmoother[i])
         # get function handle
         try:
-            setup_presmoother = eval('setup_' + str(fn))
+            setup_presmoother = eval('setup_' + str(fn1))
         except NameError:
-            raise NameError("invalid presmoother method: ", fn)
-        ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs)
+            raise NameError("invalid presmoother method: ", fn1)
+        ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
-    # Fill in remaining levels
-    for j in range(i+1, len(ml.levels[:-1])):
-        ml.levels[j].presmoother = setup_presmoother(ml.levels[j], **kwargs)
-
-    # set ml.levels[i].postsmoother = postsmoother[i]
-    i = 0
-    for i in range(min(len(postsmoother), len(ml.levels[:-1]))):
         # unpack postsmoother[i]
-        fn, kwargs = unpack_arg(postsmoother[i])
+        fn2, kwargs2 = unpack_arg(postsmoother[i])
         # get function handle
         try:
-            setup_postsmoother = eval('setup_' + str(fn))
+            setup_postsmoother = eval('setup_' + str(fn2))
         except NameError:
-            raise NameError("invalid postsmoother method: ", fn)
-        ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs)
+            raise NameError("invalid postsmoother method: ", fn2)
+        ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+
+        # Check if symmetric smoothing scheme
+        if (fn1 != fn2) or (kwargs1['iterations'] != kwargs2['iterations']):
+            ml.symmetric_smoothing = False
+        elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
+             (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+             if (kwargs1['sweep'] != 'symmetric') or \
+                (kwargs2['sweep'] != 'symmetric'):
+                ml.symmetric_smoothing = False
+
+    if len(presmoother) < len(postsmoother):
+        mid_len = min(len(postsmoother), len(ml.levels[:-1]))
+        for i in range(min_len, mid_len):
+            # Set up presmoother
+            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
+            
+            # unpack postsmoother[i]
+            fn2, kwargs2 = unpack_arg(postsmoother[i])
+            # get function handle
+            try:
+                setup_postsmoother = eval('setup_' + str(fn2))
+            except NameError:
+                raise NameError("invalid postsmoother method: ", fn2)
+            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+
+            # Check if symmetric smoothing scheme
+            if (fn1 != fn2) or (kwargs1['iterations'] != kwargs2['iterations']):
+                ml.symmetric_smoothing = False
+            elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
+                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+                 if (kwargs1['sweep'] != 'symmetric') or \
+                    (kwargs2['sweep'] != 'symmetric'):
+                    ml.symmetric_smoothing = False
+
+    elif len(presmoother) > len(postsmoother):
+        mid_len = min(len(postsmoother), len(ml.levels[:-1]))
+        for i in range(min_len, mid_len):
+            # unpack presmoother[i]
+            fn1, kwargs1 = unpack_arg(presmoother[i])
+            # get function handle
+            try:
+                setup_presmoother = eval('setup_' + str(fn1))
+            except NameError:
+                raise NameError("invalid presmoother method: ", fn1)
+            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
+
+            # Set up postsmoother
+            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+
+            # Check if symmetric smoothing scheme
+            if (fn1 != fn2) or (kwargs1['iterations'] != kwargs2['iterations']):
+                ml.symmetric_smoothing = False
+            elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
+                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+                 if (kwargs1['sweep'] != 'symmetric') or \
+                    (kwargs2['sweep'] != 'symmetric'):
+                    ml.symmetric_smoothing = False       
+
+    else:  
+        mid_len = min_len
 
     # Fill in remaining levels
-    for j in range(i+1, len(ml.levels[:-1])):
-        ml.levels[j].postsmoother = setup_postsmoother(ml.levels[j], **kwargs)
+    for i in range(mid_len, len(ml.levels[:-1])):
+        ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
+        ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+
 
 
 def rho_D_inv_A(A):

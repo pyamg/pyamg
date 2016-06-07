@@ -380,6 +380,11 @@ class multilevel_solver:
 
         if accel is not None:
 
+            # Check for symmetric smoothing scheme when using CG
+            if (accel is 'cg') and (self.symmetric_smoothing == False):
+                warn('CG requires SPD matrix. Non-symmetric smoothing scheme '\
+                     'may significantly increase convergence factors.')
+
             # Check for AMLI compatability
             if (accel != 'fgmres') and (cycle == 'AMLI'):
                 raise ValueError('AMLI cycles require acceleration (accel) \
