@@ -107,7 +107,7 @@ __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
 
 
-def RS(S):
+def RS(S, cost=[0]):
     """Compute a C/F splitting using Ruge-Stuben coarsening
 
     Parameters
@@ -156,7 +156,7 @@ def RS(S):
     return splitting
 
 
-def PMIS(S):
+def PMIS(S, cost=[0]):
     """C/F splitting using the Parallel Modified Independent Set method
 
     Parameters
@@ -193,7 +193,7 @@ def PMIS(S):
     return MIS(G, weights)
 
 
-def PMISc(S, method='JP'):
+def PMISc(S, method='JP', cost=[0]):
     """C/F splitting using Parallel Modified Independent Set (in color)
 
     PMIS-c, or PMIS in color, improves PMIS by perturbing the initial
@@ -238,7 +238,7 @@ def PMISc(S, method='JP'):
     return MIS(G, weights)
 
 
-def CLJP(S, color=False):
+def CLJP(S, color=False, cost=[0]):
     """Compute a C/F splitting using the parallel CLJP algorithm
 
     Parameters
@@ -292,7 +292,7 @@ def CLJP(S, color=False):
     return splitting
 
 
-def CLJPc(S):
+def CLJPc(S, cost=[0]):
     """Compute a C/F splitting using the parallel CLJP-c algorithm
 
     CLJP-c, or CLJP in color, improves CLJP by perturbing the initial
@@ -331,7 +331,7 @@ def CLJPc(S):
     return CLJP(S, color=True)
 
 
-def MIS(G, weights, maxiter=None):
+def MIS(G, weights, maxiter=None, cost=[0]):
     """Compute a maximal independent set of a graph in parallel
 
     Parameters

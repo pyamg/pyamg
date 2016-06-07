@@ -273,8 +273,8 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0]):
     P = T
     for i in range(degree):
         P = P - weight*(S*P)
+        cost[0] += float(P.nnz) / S.nnz
 
-    cost[0] += float(P.nnz) / S.nnz
     return P
 
 

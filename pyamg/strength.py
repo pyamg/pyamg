@@ -197,6 +197,7 @@ def classical_strength_of_connection(A, theta=0.0, cost=[0]):
     fn = amg_core.classical_strength_of_connection
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+    # One pass through nnz to find largest entry, one to filter
     cost[0] += 2
 
     if blocksize > 1:
@@ -204,11 +205,13 @@ def classical_strength_of_connection(A, theta=0.0, cost=[0]):
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
-    cost[0] += 1
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-    cost[0] += 1 + float(S.shape[0]) / A.nnz    # TODO : Division more expensive?
+
+    # Assume largest entry can be tracked from filtering. Then set constant
+    # 1 / largest entry for each row, scale all elements by it. 
+    cost[0] += (float(S.nnz) + S.shape[0]) / A.nnz 
  
     return S
 
@@ -284,7 +287,8 @@ def symmetric_strength_of_connection(A, theta=0, cost=[0]):
 
         fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
-        cost[0] += 2
+        # Assume takes ~0.5 pass to find diagonals, 1 pass to filter
+        cost[0] += 1.5
 
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
@@ -303,6 +307,7 @@ def symmetric_strength_of_connection(A, theta=0, cost=[0]):
             # the strength of connection matrix is based on the
             # Frobenius norms of the blocks
             data = (np.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1)
+            cost[0] += 1
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta, cost)
@@ -311,11 +316,13 @@ def symmetric_strength_of_connection(A, theta=0, cost=[0]):
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
-    cost[0] += 1
 
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
-    cost[0] += 2 + float(S.shape[0]) / A.nnz    # TODO : Division more expensive?
+
+    # One pass to find largest entry, n/nnz to set constant 1/max
+    # for each row, 1 pass to scale all elements by it. 
+    cost[0] += (2*float(S.nnz) + S.shape[0]) / A.nnz 
 
     return S
 

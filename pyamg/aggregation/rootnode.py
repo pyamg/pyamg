@@ -470,8 +470,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].P = P                          # smoothed prolongator
     levels[-1].R = R                          # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
-    levels[-1].complexity['RAP'] = lvl.R.nnz/float(lvl.R.shape[1]) + \
-                                    lvl.P.nnz/float(lvl.P.shape[0])
+    levels[-1].complexity['RAP'] = R.nnz/float(R.shape[1]) + \
+                                    P.nnz/float(P.shape[0])
 
     levels.append(multilevel_solver.level())
     A = R * A * P                                 # Galerkin operator

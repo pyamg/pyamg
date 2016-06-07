@@ -119,11 +119,13 @@ def ruge_stuben_solver(A,
 # internal function
 def extend_hierarchy(levels, strength, CF, keep):
     """ helper function for local methods """
+
     def unpack_arg(v):
         if isinstance(v, tuple):
-            return v[0], v[1]
+            (v[1])['cost'] = [0.0]
+            return v[0], params
         else:
-            return v, {}
+            return v, {'cost' : [0.0]}
 
     A = levels[-1].A
 
@@ -150,24 +152,30 @@ def extend_hierarchy(levels, strength, CF, keep):
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
 
+    levels[-1].complexity['strength'] = kwargs['cost'][0]
+
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
-        splitting = split.RS(C)
+        splitting = split.RS(C, **kwargs)
     elif fn == 'PMIS':
-        splitting = split.PMIS(C)
+        splitting = split.PMIS(C, **kwargs)
     elif fn == 'PMISc':
-        splitting = split.PMISc(C)
+        splitting = split.PMISc(C, **kwargs)
     elif fn == 'CLJP':
-        splitting = split.CLJP(C)
+        splitting = split.CLJP(C, **kwargs)
     elif fn == 'CLJPc':
-        splitting = split.CLJPc(C)
+        splitting = split.CLJPc(C, **kwargs)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
+    levels[-1].complexity['CF'] = kwargs['cost'][0]
+
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
-    P = direct_interpolation(A, C, splitting)
+    temp_cost = [0]
+    P = direct_interpolation(A, C, splitting, temp_cost)
+    levels[-1].complexity['interpolate'] = temp_cost[0]
 
     # Generate the restriction matrix that maps from the fine-grid to the
     # coarse-grid
@@ -180,6 +188,8 @@ def extend_hierarchy(levels, strength, CF, keep):
 
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
+    levels[-1].complexity['RAP'] = R.nnz/float(R.shape[1]) + \
+                                    P.nnz/float(P.shape[0])
 
     levels.append(multilevel_solver.level())
 

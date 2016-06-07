@@ -1126,7 +1126,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     return rbm
 
 
-def relaxation_as_linear_operator(method, A, b):
+def relaxation_as_linear_operator(method, A, b, cost=[0]):
     """
     Create a linear operator that applies a relaxation method for the
     given right-hand-side
@@ -1200,6 +1200,12 @@ def relaxation_as_linear_operator(method, A, b):
         xcopy = x.copy()
         relax(A, xcopy, b)
         return xcopy
+
+    # Estimate cost in WUs for different relaxation methods 
+
+
+
+
 
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
 

@@ -1,0 +1,34 @@
+- Not doing for adaptive, because old adaptive code is a mess.
+
+- Relaxation on targets
+	+ Started relaxation_as_linear_operator in utils.py
+		~ Think use estimates Jacob wrote, 1 WU, 2 WU, etc. based on smoother
+		~ What about Schwarz?
+- Aggregation
+	+ Cost implemented for classical aggregation
+	+ Cost implemented for naive aggregation
+	+ Not implemented for lloyd
+- Smoothing P
+	+ Implemented for Richardson 
+	+ Started Jacobi, haven’t accounted for constraints
+	+ Haven’t done energy 
+- Strength
+	+ Not implemented for distance
+	+ Done for classical
+	+ Done for symmetric
+	+ Not implemented for energy 
+	+ Not implemented for evolution 
+	+ Started for algebraic distance
+	+ Started for affinity distance
+- Split (classical)
+	+ Not implemented in any CF-splittings
+	+ Not implemented in CR
++ Interpolate (classical)
+	+ Not implemented
+- In code
+	+ Accounted for RAP
+	+ Accounted for diagonal dominance
+	+ Accounted for non-symmetric
+	+ Have not accounted for fit candidates (rn or sa)
+	+ Have not accounted for creating root node matrices (rn)
+	+ Have not accounted for injecting numb space modes (rn)

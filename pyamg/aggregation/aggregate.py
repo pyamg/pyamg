@@ -74,13 +74,13 @@ def standard_aggregation(C, cost=[0]):
 
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
+    cost[0] += 1    # Cost roughly 1 WU for classical aggregation
 
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
         return csr_matrix((num_rows, 1), dtype='int8'),\
             np.array([], dtype=index_type)
     else:
-
         shape = (num_rows, num_aggregates)
         if Tj.min() == -1:
             # some nodes not aggregated
@@ -167,6 +167,7 @@ def naive_aggregation(C, cost=[0]):
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
     Tj = Tj - 1
+    cost[0] += 1    # Cost roughly 1 WU for naive aggregation
 
     if num_aggregates == 0:
         # all zero matrix

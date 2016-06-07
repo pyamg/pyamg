@@ -77,7 +77,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
 
 def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
-        thetacs='auto', maxiter=20, verbose=False):
+        thetacs='auto', maxiter=20, verbose=False, cost=[0]):
     """Use Compatible Relaxation to compute a C/F splitting
 
     Parameters
