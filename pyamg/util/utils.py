@@ -1192,6 +1192,21 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
         setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
     except NameError:
         raise NameError("invalid presmoother method: ", fn)
+
+    # Estimate cost in WUs for different relaxation methods 
+    dcost = 1
+    if fn.endswith(('nr', 'ne')):
+        dcost *= 2
+    if 'sweep' in kwargs:
+        if kwargs['sweep'] == 'symmetric':
+            dcost *= 2
+    if 'iterations' in kwargs:
+        dcost *= kwargs['iterations']
+    if 'degree' in kwargs:
+        dcost *= kwargs['degree']
+
+    cost[0] += dcost
+
     # Get relaxation routine that takes only (A, x, b) as parameters
     relax = setup_smoother(lvl, **kwargs)
 
@@ -1200,12 +1215,6 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
         xcopy = x.copy()
         relax(A, xcopy, b)
         return xcopy
-
-    # Estimate cost in WUs for different relaxation methods 
-
-
-
-
 
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
 

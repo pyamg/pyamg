@@ -394,34 +394,35 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
-    levels[-1].complexity['candidates'] = kwargs['cost'][0]
+    levels[-1].complexity['candidates'] = kwargs['cost'][0] * B.shape[1]
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine[:, 0:blocksize(A)] = T B_coarse[:, 0:blocksize(A)].
+    # Orthogonalization complexity ~ 2nk^2, k = blocksize(A).
+    levels[-1].complexity['tentative'] = 2.0 * blocksize(A) * blocksize(A) * \
+                                            float(A.shape[0])/A.nnz
     T, dummy = fit_candidates(AggOp, B[:, 0:blocksize(A)])
     del dummy
     if A.symmetry == "nonsymmetric":
         TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)])
         del dummyH
-
-
+        levels[-1].complexity['tentative'] += 2.0 * blocksize(A) * \
+                                        blocksize(A) * float(A.shape[0])/A.nnz
 
     # Create necessary root node matrices
     Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
     T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+    levels[-1].complexity['tentative'] += T.nnz / float(A.nnz)
     if A.symmetry == "nonsymmetric":
         TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
-
-
+        levels[-1].complexity['tentative'] += TH.nnz / float(A.nnz)
 
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
     B = Cpt_params[1]['P_I'].T*levels[-1].B
     if A.symmetry == "nonsymmetric":
         BH = Cpt_params[1]['P_I'].T*levels[-1].BH
-
-
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.

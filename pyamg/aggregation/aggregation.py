@@ -371,17 +371,18 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
-    levels[-1].complexity['candidates'] = kwargs['cost'][0]
+    levels[-1].complexity['candidates'] = kwargs['cost'][0] * B.shape[1]
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
-    # B_fine = T B_coarse.
+    # B_fine = T B_coarse. Orthogonalization complexity ~ 2nk^2, k=B.shape[1].
+    levels[-1].complexity['tentative'] = 2.0 * B.shape[1] * B.shape[1] * \
+                                            float(A.shape[0])/A.nnz
     T, B = fit_candidates(AggOp, B)
     if A.symmetry == "nonsymmetric":
         TH, BH = fit_candidates(AggOp, BH)
-
-
-
+        levels[-1].complexity['tentative'] += 2.0 * BH.shape[1] * BH.shape[1] * \
+                                            float(A.shape[0])/A.nnz
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.

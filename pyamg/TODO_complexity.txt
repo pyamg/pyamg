@@ -1,9 +1,7 @@
 - Not doing for adaptive, because old adaptive code is a mess.
 
 - Relaxation on targets
-	+ Started relaxation_as_linear_operator in utils.py
-		~ Think use estimates Jacob wrote, 1 WU, 2 WU, etc. based on smoother
-		~ What about Schwarz?
+	+ Need to account for Schwarz - is this done on targets?
 - Aggregation
 	+ Cost implemented for classical aggregation
 	+ Cost implemented for naive aggregation
@@ -11,7 +9,10 @@
 - Smoothing P
 	+ Implemented for Richardson 
 	+ Started Jacobi, haven’t accounted for constraints
-	+ Haven’t done energy 
+	+ Energy
+		~ most of cgnr done, need to account for SatisfyConstraints()
+		  and incomplete_mat_mul().
+	+ most of Main function done, except compute_BtBinv() and filter_operator()
 - Strength
 	+ Not implemented for distance
 	+ Done for classical
@@ -29,6 +30,4 @@
 	+ Accounted for RAP
 	+ Accounted for diagonal dominance
 	+ Accounted for non-symmetric
-	+ Have not accounted for fit candidates (rn or sa)
-	+ Have not accounted for creating root node matrices (rn)
-	+ Have not accounted for injecting numb space modes (rn)
+	+ Accounted for tentative T
