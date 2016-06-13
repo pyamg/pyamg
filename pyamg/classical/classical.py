@@ -123,7 +123,7 @@ def extend_hierarchy(levels, strength, CF, keep):
     def unpack_arg(v):
         if isinstance(v, tuple):
             (v[1])['cost'] = [0.0]
-            return v[0], params
+            return v[0], v[1]
         else:
             return v, {'cost' : [0.0]}
 

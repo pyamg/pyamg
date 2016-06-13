@@ -190,6 +190,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         P = T
         for i in range(degree):
             U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
+            cost[0] += P.nnz / float(S.nnz)
 
             # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
@@ -197,16 +198,18 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             BtBinv = compute_BtBinv(B, U)
             # (2) Apply satisfy constraints
             Satisfy_Constraints(U, B, BtBinv)
+            # TODO
 
             # Update P
             P = P - U
+            cost[0] += max(P.nnz, U.nnz) / float(S.nnz)
 
     else:
         # Carry out Jacobi as normal
         P = T
         for i in range(degree):
             P = P - (D_inv_S*P)
-            cost[0] += float(P.nnz) / S.nnz
+            cost[0] += P.nnz / float(S.nnz)
 
     return P
 
@@ -360,6 +363,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
         Dinv = np.zeros_like(D)
         Dinv[D != 0] = 1.0 / np.abs(D[D != 0])
+        cost[0] += 1
     else:
         raise ValueError('weighting value is invalid')
 
@@ -382,9 +386,11 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
+    # TODO
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
+    # TODO 
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -393,8 +399,6 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
     # Calculate Frobenius norm of the residual
     resid = R.nnz  # np.sqrt((R.data.conjugate()*R.data).sum())
-    # print "Energy Minimization of Prolongator \
-    #       --- Iteration 0 --- r = " + str(resid)
 
     i = 0
     while i < maxiter and resid > tol:
@@ -404,8 +408,11 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         else:
             Z = Dinv*R
 
+        cost[0] += R.nnz / float(A.nnz)
+
         # Frobenius inner-product of (R,Z) = sum( np.conjugate(rk).*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
+        cost[0] += Z.nnz / float(A.nnz)
         if newsum < tol:
             # met tolerance, so halt
             break
@@ -417,6 +424,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         else:
             beta = newsum / oldsum
             P = Z + beta*P
+            cost[0] += max(Z.nnz, P.nnz) / float(A.nnz)
         oldsum = newsum
 
         # Calculate new direction and enforce constraints
@@ -434,29 +442,33 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                                int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                P.blocksize[1])
+        # TODO
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
+        # TODO
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
+        cost[0] += max(P.nnz, AP.nnz) / float(A.nnz)
 
         # Update the prolongator, T
         T = T + alpha*P
+        cost[0] += max(P.nnz, T.nnz) / float(A.nnz)
 
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+            cost[0] += T.nnz / float(A).nnz
 
         # Update residual
         R = R - alpha*AP
+        cost[0] += max(R.nnz,AP.nnz) / float(A.nnz)
 
         i += 1
 
         # Calculate Frobenius norm of the residual
         resid = R.nnz  # np.sqrt((R.data.conjugate()*R.data).sum())
-        # print "Energy Minimization of Prolongator \
-        # --- Iteration " + str(i) + " --- r = " + str(resid)
 
     return T
 
@@ -555,9 +567,11 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            int(T.shape[1]/T.blocksize[1]),
                                            Ah.blocksize[0], Ah.blocksize[1],
                                            T.blocksize[1])
+    # TODO
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
+    # TODO
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -587,7 +601,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         else:
             beta = newsum/oldsum
             P = Z + beta*P
-            cost[0] += np.max(Z.nnz, P.nnz) / float(A.nnz)
+            cost[0] += max(Z.nnz, P.nnz) / float(A.nnz)
 
         oldsum = newsum
 
@@ -609,17 +623,19 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                Ah.blocksize[0],
                                                Ah.blocksize[1], T.blocksize[1])
         del AP_temp
+        # TODO
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
+        # TODO
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
-        cost[0] += P.nnz / float(A.nnz)
+        cost[0] += max(P.nnz, AP.nnz) / float(A.nnz)
 
         # Update the prolongator, T
         T = T + alpha*P
-        cost[0] += T.nnz / float(A.nnz)
+        cost[0] += max(T.nnz, P.nnz) / float(A.nnz)
 
         # Ensure identity at C-pts
         if Cpt_params[0]:
@@ -628,7 +644,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
         # Update residual
         R = R - alpha*AP
-        cost[0] += R.nnz / float(A.nnz)
+        cost[0] += max(R.nnz, AP.nnz) / float(A.nnz)
 
         i += 1
 
@@ -755,6 +771,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
         Dinv = np.zeros_like(D)
         Dinv[D != 0] = 1.0 / np.abs(D[D != 0])
+        cost[0] += 1.0
     else:
         raise ValueError('weighting value is invalid')
 
@@ -777,6 +794,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
+    # TODO
 
     # Apply diagonal preconditioner
     if weighting == 'local' or weighting == 'diagonal':
@@ -784,8 +802,11 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     else:
         R = Dinv*R
 
+    cost[0] += R.nnz / float(A.nnz)
+
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
+    # TODO
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -802,13 +823,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     if normr > 0.0:
         V.append((1.0/normr)*R)
 
-    # print "Energy Minimization of Prolongator \
-    # --- Iteration 0 --- r = " + str(normr)
     i = -1
-    # vect = np.ravel((A*T).data)
-    # print "Iteration " + str(i+1) + "   \
-    # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
-    # print "Iteration " + str(i+1) + "   Normr  %1.3e"%normr
     while i < maxiter-1 and normr > tol:
         i = i+1
 
@@ -827,28 +842,35 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                T.blocksize[1])
+        # TODO
 
         if weighting == 'local' or weighting == 'diagonal':
             AV = scale_rows(AV, Dinv)
         else:
             AV = Dinv*AV
+        
+        cost[0] += AV.nnz / float(A.nnz)
 
         # Enforce AV*B = 0
         Satisfy_Constraints(AV, B, BtBinv)
         V.append(AV.copy())
+        # TODO
 
         # Modified Gram-Schmidt
         for j in range(i+1):
             # Frobenius inner-product
             H[j, i] = (V[j].conjugate().multiply(V[i+1])).sum()
             V[i+1] = V[i+1] - H[j, i]*V[j]
+            cost[0] += 2.0 * max(V[i+1].nnz, V[j].nnz) / float(A.nnz)
 
         # Frobenius Norm
         H[i+1, i] = np.sqrt((V[i+1].data.conjugate()*V[i+1].data).sum())
+        cost[0] += V[i+1].nnz / float(A.nnz)
 
         # Check for breakdown
         if H[i+1, i] != 0.0:
             V[i+1] = (1.0 / H[i+1, i]) * V[i+1]
+            cost[0] += V[i+1].nnz / float(A.nnz)
 
         # Apply previous Givens rotations to H
         if i > 0:
@@ -882,7 +904,6 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
             H[i+1, i] = 0.0
 
         normr = np.abs(g[i+1])
-        # print "Iteration " + str(i+1) + "   Normr  %1.3e"%normr
     # End while loop
 
     # Find best update to x in Krylov Space, V.  Solve (i x i) system.
@@ -890,14 +911,12 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         y = la.solve(H[0:i+1, 0:i+1], g[0:i+1])
         for j in range(i+1):
             T = T + y[j]*V[j]
-
-    # vect = np.ravel((A*T).data)
-    # print "Final Iteration " + str(i) + "   \
-    # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
+            cost[0] += max(T.nnz,V[j].nnz) / float(A.nnz)
 
     # Ensure identity at C-pts
     if Cpt_params[0]:
         T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+        cost[0] += T.nnz / float(A.nnz)
 
     return T
 
@@ -1097,7 +1116,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         AtildeCopy.data[:] = 1.0
         for i in range(degree):
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
-            cost[0] += (AtildeCopy.nnz / float(A.nnz)) *
+            cost[0] += (AtildeCopy.nnz / float(A.nnz)) * \
                     Sparsity_Pattern.nnz/float(Sparsity_Pattern.shape[0]) 
 
         # Optional filtering of sparsity pattern before smoothing
@@ -1105,7 +1124,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         #     each row for k-filter, adding matrices if both.
         if 'theta' in prefilter and 'k' in prefilter:
             cost[0] += (2.0 * Sparsity_Pattern.nnz +
-                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + 
+                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
                         np.log2(Sparsity_Pattern.nnz /
                             float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
 
@@ -1115,7 +1134,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             Sparsity_Pattern += Sparsity_theta
             cost[0] += Sparsity_Pattern.nnz / float(A.nnz)
         elif 'k' in prefilter:
-            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + 
+            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
                         np.log2(Sparsity_Pattern.nnz /
                             float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
             Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
@@ -1135,7 +1154,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         Sparsity_Pattern = T.copy()
         if 'theta' in prefilter and 'k' in prefilter:
             cost[0] += (2.0 * Sparsity_Pattern.nnz +
-                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + 
+                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
                         np.log2(Sparsity_Pattern.nnz /
                             float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
             Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
@@ -1144,7 +1163,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             Sparsity_Pattern += Sparsity_theta
             cost[0] += Sparsity_Pattern.nnz / float(A.nnz)
         elif 'k' in prefilter:
-            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + 
+            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
                         np.log2(Sparsity_Pattern.nnz /
                             float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
             Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
@@ -1212,7 +1231,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
             cost[0] += ( 2.0 * T.nnz +
                 ( (T.nnz / float(T.shape[0])) + np.log2(T.nnz / float(T.shape[0]))) +
-                np.max(T_filter.nnz, T_theta.nnz) ) / float(A.nnz)
+                max(T_filter.nnz, T_theta.nnz) ) / float(A.nnz)
 
         elif 'k' in postfilter:
             cost[0] += (T.nnz / float(T.shape[0]) +  np.log2(T.nnz /

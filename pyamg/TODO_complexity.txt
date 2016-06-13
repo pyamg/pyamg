@@ -10,9 +10,10 @@
 	+ Implemented for Richardson 
 	+ Started Jacobi, haven’t accounted for constraints
 	+ Energy
-		~ most of cgnr done, need to account for SatisfyConstraints()
-		  and incomplete_mat_mul().
-	+ most of Main function done, except compute_BtBinv() and filter_operator()
+		~ Need to account for SatisfyConstraints()
+		  and incomplete_mat_mul() in cg, cg_nr, germs (search TODO)
+		~ most of Main function done, except compute_BtBinv()
+		  and filter_operator()
 - Strength
 	+ Not implemented for distance
 	+ Done for classical

@@ -74,6 +74,7 @@ class multilevel_solver:
         """
         def __init__(self):
             self.complexity = {}
+            self.SC = None
 
     def __init__(self, levels, coarse_solver='pinv2'):
         """
@@ -189,7 +190,7 @@ class multilevel_solver:
         return output
 
 
-    def setup_complexity(self):
+    def setup_complexity(self, verbose=False):
         """Setup complexity of this multigrid hierarchy.
 
         Setup complexity is an approximate measure of the number of
@@ -215,321 +216,33 @@ class multilevel_solver:
               allow for easy inclusion of future methods into the
               interface.
             - Once computed, SC is stored in self.SC.
-            - Needs to be done:
-                + all distance based SOC measures
-                + clean up Evolution SOC measure
-                + all CF splittings
-                + lloyd aggregation
-                + Schwarz relaxation
-                + energy smoothing
-                    ~ same cost for SA vs. RN?
-                    ~ why is satisy constraints commented out?
-                    ~ should save in code number of iters done,
-                      and any info on post-filtering.
-                    ~ filtering takes 1 or 2 A.nnz / A0.nnz?
 
         """
 
-        def _cost_strength(fn, fn_args, lvl, A0_nnz):
-            # One pass to find diagonal element of each row, one to filter
-            # by theta, one to find largest entry of each row, and one 
-            # to normalize each row by largest entry.
-            #   - Note, should be able to find diagonal in ~ 0.5 WU if
-            #     no duplicate indices in CSR matrix? Currently full
-            #     search is done, which would be ~ 4 WU. 
-            #   - 1.5 WU should be based on C.nnz <= A.nnz
-            if fn == 'symmetric':
-                return 3.5 * lvl.A.nnz / A0_nnz
+        n = float(self.levels[0].A.shape[0])
 
-            # One pass to find largest element in each row, one to filter
-            # by theta, and one to normalize each row by largest entry.
-            #   - Note, in PyAMG the largest element is found twice,
-            #     once to filter and once to scale. Only one WU is counted
-            #     because one could easily remove that extra search.
-            #   - 1 WU should be based on C.nnz <= A.nnz
-            elif fn == 'classical':
-                return 3.0 * lvl.A.nnz / A0_nnz
+        if self.SC is None: 
+            self.SC = 0.0
+            for lvl in self.levels:
+                if lvl.SC is None:
+                    lvl.SC = 0.0
+                    for cost in (lvl.complexity).itervalues():
+                        lvl.SC += cost * (lvl.A.shape[0] / n)
 
-            # TODO MAYBE SAVE SIZE WHE COMPUTING?
-            #      COMPUTING MATRIX POWERS AGAIN IS SUBOPTIMAL, AND PERHAPS NOT
-            #      ACCURATE BASED ON EPISLON? WHAT ABOUT K <= 2?
-            #   - 1 WU for scaling diagonal
-            #   - ? for spectral radius?
-            #   - 1 WU for first time step
-            #   - if k = 2^p
-            #       + (p-1) mat mults, see below...
-            #       + 1 incomplete mat-mult?
-            elif (fn == 'ode') or (fn == 'evolution'):
-                # work += lvl.A.nnz*(lvl.A.nnz/float(lvl.A.shape[0]))
-                # Compute the work for kwargs['k'] > 2
-                #  (nnz to compute) * (avg stencil size in multiplying matrix)
-                # Apow = lvl.A**(int(fn_args['k']/2))
-                
-                # Preprocess A (must have linear time sort indices)
+                self.SC += lvl.SC
 
-                # Approximate spectral radius
-
-                # Compute Atilde ^ k
-
-                # Solve constrained minimum
-
-                # Apply drop tolerance
-
-                # Symmetrize measure
-
-                # Normalize by largest entry in each row (divides)
-
-                return lvl.A.nnz*(Apow.nnz / float(lvl.A.shape[0]))
-
-            elif fn == 'energy_based':
-                warn("Setup cost not implemented for energy-based SOC.\n\
-                      Only implemented in python, so it is always slow.")
-                return 0
-
-            elif fn == 'distance':
-                warn("Setup cost not implemented for distance-based SOC.")
-                return 0
-
-            elif fn == 'algebraic_distance':
-                if 'k' not in fn_args:
-                    warn("Number of relaxations not provided in Algebraic SOC.\n"
-                         "Setting to default, k = 20.")
-                    k = 20
-                if 'R' not in fn_args:
-                    warn("Number of random vectors not provided in Algebraic SOC.\n"
-                         "Setting to default, R = 5.")
-                    R = 5
-
-                matvecs = 0.0
-                # Relaxing on random vectors
-                matvecs += R*k
-                # Compute distance measure
-                matvecs += 
-                # Drop distances to self
-                matvecs += 1
-                # Find largest element in each row, filter based on theta * max
-                matvecs += 2
-                # Invert distances (this may be > 1 because it is nnz divides)
-                #   - This should be C.nnz <= A.nnz 
-                matvecs += 1
-                # Find largest entry in each row, scale row by 1/max 
-                #   - This should be C.nnz <= A.nnz 
-                matvecs += 2
-                return matvecs * lvl.A.nnz / A0_nnz
-
-            elif fn == 'affinity_distance':
-                if 'k' not in fn_args:
-                    warn("Number of relaxations not provided in Algebraic SOC.\n"
-                         "Setting to default, k = 20.")
-                    k = 20
-                if 'R' not in fn_args:
-                    warn("Number of random vectors not provided in Algebraic SOC.\n"
-                         "Setting to default, R = 5.")
-                    R = 5
-
-                matvecs = 0.0
-                # Relaxing on random vectors
-                matvecs += R*k
-                # Compute distance measure
-                matvecs += 
-                # Drop distances to self
-                matvecs += 1
-                # Find largest element in each row, filter based on theta * max
-                matvecs += 2
-                # Invert distances (this may be > 1 because it is nnz divides)
-                #   - This should be C.nnz <= A.nnz 
-                matvecs += 1
-                # Find largest entry in each row, scale row by 1/max 
-                #   - This should be C.nnz <= A.nnz 
-                matvecs += 2
-                return matvecs * lvl.A.nnz / A0_nnz
-
-            else:
-                warn("Unrecognized SOC measure. Setup cost not computed.")
-                return 0
-
-        def _cost_CF(fn, fn_args, lvl, A0_nnz):
-            if fn == 'RS':
-                warn("Setup cost not implemented for RS splitting.")
-                return 0
-            elif fn == 'PMIS':
-                warn("Setup cost not implemented for PMIS splitting.")
-                return 0
-            elif fn == 'PMISc':
-                warn("Setup cost not implemented for PMISc splitting.")
-                return 0
-            elif fn == 'CLJP':
-                warn("Setup cost not implemented for CLJP splitting.")
-                return 0
-            elif fn == 'CLJPc':
-                warn("Setup cost not implemented for CLJPc splitting.")
-                return 0
-            elif fn == 'CR':
-                warn("Setup cost not implemented for CR.")
-                return 0
-            else:
-                warn("Unrecognized CF splitting. Setup cost not computed.")
-                return 0
-
-        def _cost_aggregate(fn, fn_args, lvl, A0_nnz):
-            # Roughly one pass through all nonzero elements to aggregate.
-            # Technically it is one pass through strength matrix, C. If C is
-            # not stored, A is reasonable estimate, A.nnz >= C.nnz, as more
-            # counting one pass through nonzeros is a slight underestimate.
-            if (fn == 'standard')or (fn == 'naive'):
-                try:
-                    return 1.0*lvl.C.nnz / A0_nnz
-                except:
-                    return 1.0*lvl.A.nnz / A0_nnz
-            elif fn == 'lloyd':
-                warn("Setup cost not implemented for lloyd aggregation.")
-                return 0
-            else:
-                warn("Unrecognized aggregation method."
-                     "Setup cost not computed.")
-                return 0
-
-        def _cost_improve(fn, fn_args, lvl, A0_nnz, symmetry):
-            # Compute cost multiplier for relaxation method
-            cost_factor = 1
-            if fn.endswith(('nr', 'ne')):
-                cost_factor *= 2
-            if 'sweep' in fn_args:
-                if fn_args['sweep'] == 'symmetric':
-                    cost_factor *= 2
-            if 'iterations' in fn_args:
-                cost_factor *= fn_args['iterations']
-            if 'degree' in fn_args:
-                cost_factor *= fn_args['degree']
-            if symmetry is False:
-                cost_factor *= 2
-
-            return cost_factor*lvl.A.nnz*lvl.B.shape[1] / A0_nnz
-
-        def _cost_schwarz(fn, fn_args, lvl, A0_nnz):
-            return None
-
-        def _cost_interpsmooth(fn, fn_args, lvl, A0_nnz, symmetry):
-            cost = 0
-            if (fn == 'jacobi') or (fn == 'richardson'):
-                cost += lvl.A.nnz*(lvl.P.nnz/float(lvl.P.shape[0]))
-                if symmetry is False:
-                    cost += lvl.A.nnz*(lvl.R.nnz/float(lvl.R.shape[1]))
-                if 'degree' in fn_args:
-                    cost *= fn_args['degree']
-
-
-            # TODO FILL THIS IN
-            # --------------------
-            elif fn == 'energy':
-                cost = 1
-
-
-                
-
-
-
-            return cost
-
-        def _cost_RAP(lvl, A0_nnz):
-            RA = lvl.A.nnz*(lvl.R.nnz/float(lvl.R.shape[1])) / A0_nnz
-            AP = lvl.A.nnz*(lvl.P.nnz/float(lvl.P.shape[0])) / A0_nnz
-            return (RA + AP)
-
-        def _get_sa_cost():
-            cost = 0
-            A0_nnz = float(self.levels[0].A.nnz)
-            symmetry = self.symmetry
-            # Loop through all but last level (no work done on final level)
-            for i in range(0, len(self.levels)-1):
+        if verbose:
+            for i in range(0,len(self.levels)-1):
                 lvl = self.levels[i]
+                print "Level ",i," cost = ","%.3f"%lvl.SC, " WUs"
+                for method, cost in (lvl.complexity).iteritems(): 
+                    temp = cost*(lvl.A.shape[0] / n)
+                    if method == "RAP":
+                        print "\t",method,"\t\t= ","%.3f"%temp,"WUs"
+                    else:
+                        print "\t",method,"\t= ","%.3f"%temp,"WUs"
 
-                # Strength of connection cost
-                fn, fn_args = unpack_arg(strength[i])
-                if fn is not None:
-                    cost += _cost_strength(fn=fn, fn_args=fn_args, lvl=lvl,
-                                           A0_nnz=A0_nnz)
-
-                # Aggregation cost
-                fn, fn_args = unpack_arg(aggregate[i])
-                if fn is not None:
-                    cost += _cost_aggregate(fn=fn, fn_args=fn_args, lvl=lvl,
-                                            A0_nnz=A0_nnz)
-
-                # Improve candidate vectors cost
-                fn, fn_args = unpack_arg(improve_candidates[i])
-                if fn is not None:
-                    cost += _cost_improve(fn=fn, fn_args=fn_args, lvl=lvl,
-                                          A0_nnz=A0_nnz, symmetry=symmetry)
-
-                # Schwarz relaxation cost
-                # ---> TODO : verify
-                fn, fn_args = unpack_arg(smooth[i])
-                if fn is not None:
-                    cost += _cost_schwarz(fn=fn, fn_args=fn_args, lvl=lvl,
-                                          A0_nnz=A0_nnz)
-
-                # Smoothing interpolation operator cost
-                fn, fn_args = unpack_arg(smooth[i])
-                if fn is not None:
-                    cost += _cost_interpsmooth(fn=fn, fn_args=fn_args, lvl=lvl,
-                                               A0_nnz=A0_nnz,
-                                               symmetry=self.symmetry)
-
-                # Cost of computing coarse grid
-                cost += _cost_RAP(lvl=lvl, A0_nnz=A0_nnz)
-
-            return cost
-
-        def _get_amg_cost():
-            cost = 0
-            A0_nnz = float(self.levels[0].A.nnz)
-            symmetry = self.symmetry
-            # Loop through all but last level (no work done on final level)
-            for i in range(0, len(self.levels)-1):
-                lvl = self.levels[i]
-
-                # Strength of connection cost
-                fn, fn_args = unpack_arg(strength[i])
-                if fn is not None:
-                    cost += _cost_strength(fn=fn, fn_args=fn_args, lvl=lvl,
-                                           A0_nnz=A0_nnz)
-
-                # Aggregation cost
-                fn, fn_args = unpack_arg(CF[i])
-                if fn is not None:
-                    cost += _cost_CF(fn=fn, fn_args=fn_args, lvl=lvl,
-                                     A0_nnz=A0_nnz)
-
-                # Schwarz relaxation cost
-                # ---> TODO : can Schwarz be applied in setup cost to AMG?
-                fn, fn_args = unpack_arg(smooth[i])
-                if fn is not None:
-                    cost += _cost_schwarz(fn=fn, fn_args=fn_args, lvl=lvl,
-                                          A0_nnz=A0_nnz)
-
-                # Cost of computing coarse grid
-                cost += _cost_RAP(lvl=lvl, A0_nnz=A0_nnz)
-
-            return cost
-
-        # Check if setup complexity has already been computed
-        if self.SC is not None:
-
-            if self.solver_type == 'sa':
-                self.SC = _get_sa_cost()
-            elif self.solver_type == 'rn':
-                self.SC = _get_sa_cost()
-            elif self.solver_type == 'amg':
-                self.SC = _get_amg_cost() 
-            elif self.solver_type == 'asa':
-                warn("Setup complexity not implemented for aSA."
-                     "Returning zero.")
-                self.SC = 0
-            else:
-                warn("Unrecognized solver type."
-                     "Returning setup complexity zero.")
-                self.SC = 0
+        return self.SC
 
     def cycle_complexity(self, cycle='V'):
         """Cycle complexity of this multigrid hierarchy.
