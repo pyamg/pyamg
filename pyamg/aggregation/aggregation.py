@@ -295,12 +295,18 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     smoothed_aggregation_solver.
     """
 
-    def unpack_arg(v):
+    def unpack_arg(v, cost=True):
         if isinstance(v, tuple):
-            (v[1])['cost'] = [0.0]
-            return v[0], v[1]
+            if cost:
+                (v[1])['cost'] = [0.0]
+                return v[0], v[1]
+            else:
+                return v[0], v[1]
         else:
-            return v, {'cost' : [0.0]}
+            if cost:
+                return v, {'cost' : [0.0]}
+            else:
+                return v, {}
 
     A = levels[-1].A
     B = levels[-1].B
@@ -362,16 +368,17 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].complexity['aggregation'] = kwargs['cost'][0] * (float(C.nnz)/A.nnz)
 
     # Improve near nullspace candidates by relaxing on A B = 0
-    fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
+    temp_cost = [0.0]
+    fn, kwargs = unpack_arg(improve_candidates[len(levels)-1], cost=False)
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b, temp_cost) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b, temp_cost) * BH
             levels[-1].BH = BH
 
-    levels[-1].complexity['candidates'] = kwargs['cost'][0] * B.shape[1]
+    levels[-1].complexity['candidates'] = temp_cost[0] * B.shape[1]
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates

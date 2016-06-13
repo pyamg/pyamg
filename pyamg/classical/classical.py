@@ -15,6 +15,7 @@ from pyamg.strength import classical_strength_of_connection, \
 
 from .interpolate import direct_interpolation
 from . import split
+from .cr import CR
 
 __all__ = ['ruge_stuben_solver']
 
@@ -31,15 +32,15 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'algebraic_distance',
-                'affinity', None]
+    strength : ['symmetric', 'classical', 'evolution', 'distance',
+                'algebraic_distance','affinity', 'energy_based', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
-        Supported methods are RS, PMIS, PMISc, CLJP, and CLJPc
+        Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -166,6 +167,8 @@ def extend_hierarchy(levels, strength, CF, keep):
         splitting = split.CLJP(C, **kwargs)
     elif fn == 'CLJPc':
         splitting = split.CLJPc(C, **kwargs)
+    elif fn == 'CR':
+        splitting = CR(C, **kwargs)
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 

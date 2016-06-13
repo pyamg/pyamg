@@ -1208,10 +1208,7 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
     cost[0] += dcost
 
     # Get relaxation routine that takes only (A, x, b) as parameters
-    temp = kwargs['cost'][0]
-    del kwargs['cost']
     relax = setup_smoother(lvl, **kwargs)
-    kwargs['cost'] = [temp]
 
     # Define matvec
     def matvec(x):

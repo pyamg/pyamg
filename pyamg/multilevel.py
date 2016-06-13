@@ -7,8 +7,6 @@ from warnings import warn
 import scipy as sp
 import numpy as np
 
-import pdb
-
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
@@ -73,6 +71,7 @@ class multilevel_solver:
         The functionality of this class is a struct
         """
         def __init__(self):
+            self.smoothers = {}
             self.complexity = {}
             self.SC = None
 
@@ -271,47 +270,46 @@ class multilevel_solver:
         """
 
         # Return if already stored
+        cycle = str(cycle).upper()
         if cycle in self.CC:
             return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
-        nnz = [level.A.nnz for level in self.levels]
-        rel_nnz_A = [level.A.nnz/float(nnz[0]) for level in self.levels]
-        rel_nnz_P = [level.P.nnz/float(nnz[0]) for level in self.levels[0:-1]]
-        rel_nnz_R = [level.R.nnz/float(nnz[0]) for level in self.levels[0:-1]]
-
-        # Cycle type and pre/post smoothers
-        presmoother = self.solver_params['presmoother']
-        postsmoother = self.solver_params['postsmoother']
-        cycle = str(cycle).upper()
+        nnz = [float(level.A.nnz) for level in self.levels]
+        rel_nnz_A = [level.A.nnz/nnz[0] for level in self.levels]
+        rel_nnz_P = [level.P.nnz/nnz[0] for level in self.levels[0:-1]]
+        rel_nnz_R = [level.R.nnz/nnz[0] for level in self.levels[0:-1]]
 
         # Determine cost per nnz for smoothing on each level
         smoother_cost = []
-        for i in range(len(presmoother)):
+        for i in range(0,len(self.levels)-1):
+            lvl = self.levels[i]
+            presmoother = lvl.smoothers['presmoother']
+            postsmoother = lvl.smoothers['postsmoother']
 
             # Presmoother
             pre_factor = 1
-            if presmoother[i][0].endswith(('nr', 'ne')):
+            if presmoother[0].endswith(('nr', 'ne')):
                 pre_factor *= 2
-            if 'sweep' in presmoother[i][1]:
-                if presmoother[i][1]['sweep'] == 'symmetric':
+            if 'sweep' in presmoother[1]:
+                if presmoother[1]['sweep'] == 'symmetric':
                     pre_factor *= 2
-            if 'iterations' in presmoother[i][1]:
-                pre_factor *= presmoother[i][1]['iterations']
-            if 'degree' in presmoother[i][1]:
-                pre_factor *= presmoother[i][1]['degree']
+            if 'iterations' in presmoother[1]:
+                pre_factor *= presmoother[1]['iterations']
+            if 'degree' in presmoother[1]:
+                pre_factor *= presmoother[1]['degree']
 
             # Postsmoother
             post_factor = 1
-            if postsmoother[i][0].endswith(('nr', 'ne')):
+            if postsmoother[0].endswith(('nr', 'ne')):
                 post_factor *= 2
-            if 'sweep' in postsmoother[i][1]:
-                if postsmoother[i][1]['sweep'] == 'symmetric':
+            if 'sweep' in postsmoother[1]:
+                if postsmoother[1]['sweep'] == 'symmetric':
                     post_factor *= 2
-            if 'iterations' in postsmoother[i][1]:
-                post_factor *= postsmoother[i][1]['iterations']
-            if 'degree' in postsmoother[i][1]:
-                post_factor *= postsmoother[i][1]['degree']
+            if 'iterations' in postsmoother[1]:
+                post_factor *= postsmoother[1]['iterations']
+            if 'degree' in postsmoother[1]:
+                post_factor *= postsmoother[1]['degree']
 
             # Smoothing cost scaled by A_i.nnz / A_0.nnz
             smoother_cost.append((pre_factor + post_factor)*rel_nnz_A[i])
@@ -321,18 +319,18 @@ class multilevel_solver:
         #     the residual (on average) must be computed for each row.
         #   - schwarz_work is the cost of multiplying with the
         #     A[region_i, region_i]^{-1}
-        schwarz_multiplier = np.zeros((len(presmoother),))
-        schwarz_work = np.zeros((len(presmoother),))
+        schwarz_multiplier = np.zeros((len(self.levels)-1,))
+        schwarz_work = np.zeros((len(self.levels)-1,))
         for i, lvl in enumerate(self.levels[:-1]):
-            fn1, kwargs1 = unpack_arg(presmoother[i])
-            fn2, kwargs2 = unpack_arg(postsmoother[i])
-            if (fn1 == 'schwarz') or (fn2 == 'schwarz'):
+            presmoother = lvl.smoothers['presmoother'][0]
+            postsmoother = lvl.smoothers['postsmoother'][0]
+            if (presmoother == 'schwarz') or (postsmoother == 'schwarz'):
                 S = lvl.A
-            if (fn1 == 'strength_based_schwarz') or \
-               (fn2 == 'strength_based_schwarz'):
+            if (presmoother == 'strength_based_schwarz') or \
+               (postsmoother == 'strength_based_schwarz'):
                 S = lvl.C
-            if (fn1.find('schwarz') > 0) or \
-               (fn2.find('schwarz') > 0):
+            if (presmoother.find('schwarz') > 0) or \
+               (postsmoother.find('schwarz') > 0):
                 rowlen = S.indptr[1:] - S.indptr[:-1]
                 schwarz_work[i] = np.sum(rowlen**2)
                 schwarz_multiplier[i] = np.mean(rowlen)
@@ -351,8 +349,8 @@ class multilevel_solver:
             correction_cost.append(cost)
 
         # Recursive functions to sum cost of given cycle type over all levels,
-        # including coarse grid direct solve (assume ~ 30n^3 for pinv).
-        C_pinv = 1.0
+        #   - TODO : include coarse grid direct solve?? (~ 30n^3 for pinv?)
+        C_pinv = 0.0
         def V(level):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]

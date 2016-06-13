@@ -1111,9 +1111,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
                                               T.indices, T.indptr),
                                               shape=shape)
-        
+
         AtildeCopy = Atilde.copy()
-        AtildeCopy.data[:] = 1.0
         for i in range(degree):
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
             cost[0] += (AtildeCopy.nnz / float(A.nnz)) * \
