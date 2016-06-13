@@ -1178,7 +1178,7 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
                         'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
                         'block_jacobi', 'richardson', 'schwarz',
-                        'strength_based_schwarz']
+                        'strength_based_schwarz', 'jacobi_ne']
 
     b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
