@@ -19,7 +19,8 @@
 	+ Done for classical
 	+ Done for symmetric
 	+ Not implemented for energy 
-	+ Not implemented for evolution 
+	+ Evolution 
+		~ Started, need to finish (search TODO)
 	+ Started for algebraic distance
 	+ Started for affinity distance
 - Split (classical)
@@ -32,3 +33,4 @@
 	+ Accounted for diagonal dominance
 	+ Accounted for non-symmetric
 	+ Accounted for tentative T
+	+ Accounted for improving bad guys

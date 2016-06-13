@@ -563,12 +563,14 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                      np.arange(Dinv.shape[0] + 1)),
                                      shape=A.shape)
             Dinv_A = (Dinv * A).tocsr()
+            cost[0] += 1
         else:
             Dinv = np.zeros_like(D)
             mask = (D != 0.0)
             Dinv[mask] = 1.0 / D[mask]
             Dinv[D == 0] = 1.0
             Dinv_A = scale_rows(A, Dinv, copy=True)
+            cost[0] += 1
         A = A.tocsr()
     else:
         csrflag = True
@@ -579,6 +581,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Dinv[mask] = 1.0 / D[mask]
         Dinv[D == 0] = 1.0
         Dinv_A = scale_rows(A, Dinv, copy=True)
+        cost[0] += 1
 
     A.eliminate_zeros()
     A.sort_indices()
@@ -590,6 +593,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # Get spectral radius of Dinv*A, this will be used to scale the time step
     # size for the ODE
     rho_DinvA = approximate_spectral_radius(Dinv_A)
+    # TODO
 
     # Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
@@ -609,6 +613,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     I = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
     Atilde = (I - (1.0/rho_DinvA)*Dinv_A)
     Atilde = Atilde.T.tocsr()
+    cost[0] += 1
 
     # Construct a sparsity mask for Atilde that will restrict Atilde^T to the
     # nonzero pattern of A, with the added constraint that row i of Atilde^T
@@ -632,13 +637,16 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
              Method is done in powers of two.\nYou have chosen " + str(k) +
              " time steps.")
 
+        JacobiStep = csr_matrix(Atilde, copy=True)
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
             Atilde = Atilde*Atilde
+            cost[0] += Atilde.nnz/float(Atilde.shape[0]) * (Atilde.nnz / float(A.nnz))
 
-        JacobiStep = (I - (1.0/rho_DinvA)*Dinv_A).T.tocsr()
         for i in range(ninc):
             Atilde = Atilde*JacobiStep
+            cost[0] += JacobiStep.nnz/float(JacobiStep.shape[0]) * (Atilde.nnz / float(A.nnz))
+
         del JacobiStep
 
         # Apply mask to Atilde, zeros in mask have already been eliminated at
@@ -647,6 +655,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde = Atilde.multiply(mask)
         Atilde.eliminate_zeros()
         Atilde.sort_indices()
+        cost[0] += (Atilde.nnz / float(A.nnz)
 
     elif nsquare == 0:
         if numPDEs > 1:
@@ -662,6 +671,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Calculate Atilde^k only at the sparsity pattern of mask.
         for i in range(nsquare-1):
             Atilde = Atilde*Atilde
+            cost[0] += Atilde.nnz/float(Atilde.shape[0]) * (Atilde.nnz / float(A.nnz))
 
         # Call incomplete mat-mat mult
         AtildeCSC = Atilde.tocsc()
@@ -673,6 +683,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                          AtildeCSC.indices, AtildeCSC.data,
                                          mask.indptr, mask.indices, mask.data,
                                          dimen)
+        # TODO
 
         del AtildeCSC, Atilde
         Atilde = mask
@@ -712,6 +723,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Bmat_forscaling[Bmat_forscaling == 0] = 1.0
         DAtilde = Atilde.diagonal()
         DAtildeDivB = np.ravel(DAtilde) / Bmat_forscaling
+        cost[0] += Atilde.shape[0] / float(A.nnz)
 
         # Calculate best approximation, z_tilde, in span(B)
         #   Importantly, scale_rows and scale_columns leave zero entries
@@ -721,6 +733,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde.data[:] = 1.0
         Atilde = scale_rows(Atilde, DAtildeDivB)
         Atilde = scale_columns(Atilde, np.ravel(Bmat_forscaling))
+        cost[0] += 2.0 * Atilde.nnz / float(A.nnz)
 
         # If angle in the complex plane between z and z_tilde is
         # greater than 90 degrees, then weak.  We can just look at the
@@ -729,15 +742,20 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
             np.imag(Atilde.data) * np.imag(data)
         angle = angle < 0.0
         angle = np.array(angle, dtype=bool)
+        cost[0] += Atilde.nnz / float(A.nnz)
+        if Atilde.dtype is 'complex':
+            cost[0] += Atilde.nnz / float(A.nnz)
 
         # Calculate Approximation ratio
         Atilde.data = Atilde.data/data
+        cost[0] += Atilde.nnz / float(A.nnz)
 
         # If approximation ratio is less than tol, then weak connection
         weak_ratio = (np.abs(Atilde.data) < 1e-4)
 
         # Calculate Approximation error
         Atilde.data = abs(1.0 - Atilde.data)
+        cost[0] += Atilde.nnz / float(A.nnz)
 
         # Set small ratios and large angles to weak
         Atilde.data[weak_ratio] = 0.0
@@ -763,6 +781,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                     (np.conjugate(np.ravel(np.asarray(B[:, i]))) *
                         np.ravel(np.asarray(D_A * B[:, j])))
                 counter = counter + 1
+                # TODO
+
 
         # Choose tolerance for dropping "numerically zero" values later
         t = Atilde.dtype.char
@@ -784,6 +804,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                            BDBCols, NullDim, tol)
 
         Atilde.eliminate_zeros()
+        # TODO
+
 
     # All of the strength values are real by this point, so ditch the complex
     # part
@@ -794,15 +816,18 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         amg_core.apply_distance_filter(dimen, epsilon, Atilde.indptr,
                                        Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
+        # TODO
 
     # Symmetrize
     if symmetrize_measure:
         Atilde = 0.5*(Atilde + Atilde.T)
+        cost[0] += Atilde.nnz / float(A.nnz)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = sparse.eye(dimen, dimen, format="csr")
     I.data -= Atilde.diagonal()
     Atilde = Atilde + I
+    cost[0] += Atilde.shape[0] / float(A.nnz)
 
     # If converted BSR to CSR, convert back and return amalgamated matrix,
     #   i.e. the sparsity structure of the blocks of Atilde
@@ -822,9 +847,11 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the algebraic distances computed here
     Atilde.data = 1.0/Atilde.data
+    cost[0] += Atilde.nnz / float(A.nnz)
 
     # Scale C by the largest magnitude entry in each row
     Atilde = scale_rows_by_largest_entry(Atilde)
+    cost[0] += Atilde.nnz / float(A.nnz)
 
     return Atilde
 

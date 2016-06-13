@@ -33,6 +33,10 @@ class multilevel_solver:
         Array of level objects that contain A, R, and P.
     coarse_solver : string
         String passed to coarse_grid_solver indicating the solve type
+    CC : {dict}
+        Dictionary storing cycle complexity with key as cycle type.
+    SC : float
+        Setup complexity for constructing solver.
 
     Methods
     -------
@@ -65,6 +69,14 @@ class multilevel_solver:
             Restriction matrix between levels (often R = P.T)
         P : csr_matrix
             Prolongation or Interpolation matrix.
+        smoothers : {dict}
+            Dictionary with keys 'presmoother' and 'postsmoother', giving
+            the relaxation schemes used on this level. Used to compute 
+            cycle complexity.
+        complexity : {dict}
+            Dictionary to store complexity for each step in setup process.
+        SC : float
+            Setup complexity on this level in WUs relative to fine grid. 
 
         Notes
         -----
@@ -173,8 +185,10 @@ class multilevel_solver:
         """
         output = 'multilevel_solver\n'
         output += 'Number of Levels:     %d\n' % len(self.levels)
+        output += 'Setup Complexity:     %6.3f\n' % self.setup_complexity()
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
+        output += 'Cycle Complexity:    %6.3f\n' % self.cycle_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
 
         total_nnz = sum([level.A.nnz for level in self.levels])
@@ -199,7 +213,9 @@ class multilevel_solver:
 
         Parameters
         ----------
-        None, passed into solver object when constructed.
+        verbose : bool
+            If True, prints setup cost of each step, e.g. strength,
+            aggregation, etc., in setup process on each level. 
 
         Returns
         -------
@@ -210,10 +226,6 @@ class multilevel_solver:
 
         Notes
         -----
-            - Designed to be modular with individual functions called
-              for the complexity of each part of setup. This will
-              allow for easy inclusion of future methods into the
-              interface.
             - Once computed, SC is stored in self.SC.
 
         """
@@ -390,6 +402,9 @@ class multilevel_solver:
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
         
+        import pdb
+        pdb.set_trace()
+
         self.CC[cycle] = float(flops)
         return self.CC[cycle]
 
