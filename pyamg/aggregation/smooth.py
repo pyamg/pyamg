@@ -39,6 +39,11 @@ def Satisfy_Constraints(U, B, BtBinv):
     Update is computed by orthogonally (in 2-norm) projecting
     out the components of span(B) in U in a row-wise fashion.
 
+    Notes
+    -----
+    Flops are approximately 
+        U.nnz*(2*B.shape[1] + B.shape[1]^2) + B.shape[0]*B.shape[1]^3
+
     See Also
     --------
     The principal calling routine,
@@ -163,7 +168,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # Use diagonal of S
         D_inv = get_diagonal(S, inv=True)
         D_inv_S = scale_rows(S, D_inv, copy=True)
-        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
+        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S  # TODO cost+=
     elif weighting == 'block':
         # Use block diagonal of S
         D_inv = get_block_diag(S, blocksize=S.blocksize[0], inv_flag=True)
@@ -171,7 +176,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
                                    np.arange(D_inv.shape[0]+1)),
                                   shape=S.shape)
         D_inv_S = D_inv*S
-        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
+        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S  # TODO cost+=
     elif weighting == 'local':
         # Use the Gershgorin estimate as each row's weight, instead of a global
         # spectral radius estimate
@@ -179,7 +184,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         D_inv = np.zeros_like(D)
         D_inv[D != 0] = 1.0 / np.abs(D[D != 0])
 
-        D_inv_S = scale_rows(S, D_inv, copy=True)
+        D_inv_S = scale_rows(S, D_inv, copy=True)   # TODO cost+=
         D_inv_S = omega*D_inv_S
     else:
         raise ValueError('Incorrect weighting option')
@@ -196,9 +201,14 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
             # array is used multiple times in Satisfy_Constraints(...).
             BtBinv = compute_BtBinv(B, U)
+            # TODO
+            # SVD( B.shape[1] ) * (U.shape[0]/U.blocksize[0])
+            # For B.shaoe[1] = 1, there is no leading constant. what about 2? 
+
             # (2) Apply satisfy constraints
             Satisfy_Constraints(U, B, BtBinv)
-            # TODO
+            cost[0] += (U.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                        (B.shape[1]**3) * B.shape[0] ) / float(S.nnz)
 
             # Update P
             P = P - U
@@ -271,7 +281,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0]):
 
     """
 
-    weight = omega/approximate_spectral_radius(S)
+    weight = omega/approximate_spectral_radius(S)   # TODO
 
     P = T
     for i in range(degree):
@@ -390,7 +400,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
-    # TODO 
+    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -446,7 +458,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
-        # TODO
+        cost[0] += (AP.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
@@ -465,10 +479,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         R = R - alpha*AP
         cost[0] += max(R.nnz,AP.nnz) / float(A.nnz)
 
-        i += 1
-
         # Calculate Frobenius norm of the residual
         resid = R.nnz  # np.sqrt((R.data.conjugate()*R.data).sum())
+        i += 1
 
     return T
 
@@ -571,7 +584,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
-    # TODO
+    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -627,7 +641,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
-        # TODO
+        cost[0] += (AP.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
@@ -646,10 +661,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         R = R - alpha*AP
         cost[0] += max(R.nnz, AP.nnz) / float(A.nnz)
 
-        i += 1
-
         # Calculate Frobenius norm of the residual
         resid = R.nnz  # np.sqrt((R.data.conjugate()*R.data).sum())
+        i += 1
 
     return T
 
@@ -806,7 +820,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
-    # TODO
+    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -854,7 +869,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         # Enforce AV*B = 0
         Satisfy_Constraints(AV, B, BtBinv)
         V.append(AV.copy())
-        # TODO
+        cost[0] += (AV.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
 
         # Modified Gram-Schmidt
         for j in range(i+1):
@@ -1185,7 +1201,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # sparsity pattern in Sparsity Pattern. This array is used multiple times
     # in Satisfy_Constraints(...).
     BtBinv = compute_BtBinv(B, Sparsity_Pattern)
-
+    # TODO
 
 
     # If using root nodes and B has more columns that A's blocksize, then
