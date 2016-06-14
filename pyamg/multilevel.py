@@ -401,9 +401,6 @@ class multilevel_solver:
             flops = F(0)
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
-        
-        import pdb
-        pdb.set_trace()
 
         self.CC[cycle] = float(flops)
         return self.CC[cycle]

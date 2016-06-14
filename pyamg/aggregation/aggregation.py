@@ -12,7 +12,8 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     eliminate_diag_dom_nodes, blocksize,\
-    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
+    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, \
+    mat_mat_complexity
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -441,8 +442,11 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
-    levels[-1].complexity['RAP'] = R.nnz/float(R.shape[1]) + \
-                                    P.nnz/float(P.shape[0])
+    if symmetry == 'nonsymmetric':
+        levels[-1].complexity['RAP'] = (mat_mat_complexity(A,P) + 
+                                    mat_mat_complexity(R,A) ) / float(A.nnz)
+    else:
+        levels[-1].complexity['RAP'] = 2*mat_mat_complexity(A,P) / float(A.nnz)
 
     levels.append(multilevel_solver.level())
     A = R * A * P              # Galerkin operator

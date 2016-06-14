@@ -7,14 +7,9 @@
 	+ Cost implemented for naive aggregation
 	+ Not implemented for lloyd
 - Smoothing P
-	+ Implemented for Richardson 
-	+ Started Jacobi
-		~ Finish BtBinv and spectral radius for filtering
-	+ Energy
-		~ Need to account for BtBinv() and incomplete_mat_mul()
-		  in cg, cg_nr, germs (search TODO)
-		~ most of Main function done, except compute_BtBinv()
-		  and filter_operator()
+	+ Done for Richardson 
+	+ Done for Jacobi
+	+ Done for energy
 - Strength
 	+ Not implemented for distance
 	+ Done for classical

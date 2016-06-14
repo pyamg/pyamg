@@ -16,7 +16,8 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 import numpy as np
-from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
+from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate, \
+    mat_mat_complexity
 from scipy import sparse
 from pyamg import amg_core
 from pyamg.relaxation.relaxation import jacobi
@@ -320,9 +321,8 @@ def symmetric_strength_of_connection(A, theta=0, cost=[0]):
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
 
-    # One pass to find largest entry, n/nnz to set constant 1/max
-    # for each row, 1 pass to scale all elements by it. 
-    cost[0] += (2*float(S.nnz) + S.shape[0]) / A.nnz 
+    # One pass to find largest entry, 1 pass to scale all elements by it. 
+    cost[0] += 2*float(S.nnz) / A.nnz 
 
     return S
 
@@ -593,7 +593,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # Get spectral radius of Dinv*A, this will be used to scale the time step
     # size for the ODE
     rho_DinvA = approximate_spectral_radius(Dinv_A)
-    # TODO
+    cost[0] += 15   # 15 lanczos iterations to approximate spectral radius
 
     # Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
@@ -640,12 +640,12 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         JacobiStep = csr_matrix(Atilde, copy=True)
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
+            cost[0] += mat_mat_complexity(Atilde,Atilde)
             Atilde = Atilde*Atilde
-            cost[0] += Atilde.nnz/float(Atilde.shape[0]) * (Atilde.nnz / float(A.nnz))
 
         for i in range(ninc):
+            cost[0] += mat_mat_complexity(Atilde,JacobiStep)
             Atilde = Atilde*JacobiStep
-            cost[0] += JacobiStep.nnz/float(JacobiStep.shape[0]) * (Atilde.nnz / float(A.nnz))
 
         del JacobiStep
 
@@ -655,7 +655,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde = Atilde.multiply(mask)
         Atilde.eliminate_zeros()
         Atilde.sort_indices()
-        cost[0] += (Atilde.nnz / float(A.nnz)
+        cost[0] += Atilde.nnz / float(A.nnz)
 
     elif nsquare == 0:
         if numPDEs > 1:
@@ -670,8 +670,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
         # Calculate Atilde^k only at the sparsity pattern of mask.
         for i in range(nsquare-1):
+            cost[0] += mat_mat_complexity(Atilde,Atilde)
             Atilde = Atilde*Atilde
-            cost[0] += Atilde.nnz/float(Atilde.shape[0]) * (Atilde.nnz / float(A.nnz))
 
         # Call incomplete mat-mat mult
         AtildeCSC = Atilde.tocsc()
@@ -683,7 +683,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                          AtildeCSC.indices, AtildeCSC.data,
                                          mask.indptr, mask.indices, mask.data,
                                          dimen)
-        # TODO
+        cost[0] += mat_mat_complexity(Atilde,mask,incomplete=True)
 
         del AtildeCSC, Atilde
         Atilde = mask
@@ -781,8 +781,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                     (np.conjugate(np.ravel(np.asarray(B[:, i]))) *
                         np.ravel(np.asarray(D_A * B[:, j])))
                 counter = counter + 1
-                # TODO
-
+                cost[0] += B.shape[0] / float(A.nnz)
 
         # Choose tolerance for dropping "numerically zero" values later
         t = Atilde.dtype.char
@@ -813,10 +812,10 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     # Apply drop tolerance
     if epsilon != np.inf:
+        cost[0] += Atilde.nnz / float(A.nnz)
         amg_core.apply_distance_filter(dimen, epsilon, Atilde.indptr,
                                        Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
-        # TODO
 
     # Symmetrize
     if symmetrize_measure:

@@ -9,7 +9,7 @@ import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
     UnAmal, filter_operator, compute_BtBinv, filter_matrix_rows, \
-    truncate_rows
+    truncate_rows, mat_mat_complexity
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
@@ -168,7 +168,9 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # Use diagonal of S
         D_inv = get_diagonal(S, inv=True)
         D_inv_S = scale_rows(S, D_inv, copy=True)
-        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S  # TODO cost+=
+        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
+        # 15 WU to find spectral radius, 2 to scale D_inv_S twice
+        cost[0] += 17
     elif weighting == 'block':
         # Use block diagonal of S
         D_inv = get_block_diag(S, blocksize=S.blocksize[0], inv_flag=True)
@@ -176,7 +178,9 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
                                    np.arange(D_inv.shape[0]+1)),
                                   shape=S.shape)
         D_inv_S = D_inv*S
-        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S  # TODO cost+=
+        # 15 WU to find spectral radius, 2 to scale D_inv_S twice
+        D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
+        cost[0] += 17
     elif weighting == 'local':
         # Use the Gershgorin estimate as each row's weight, instead of a global
         # spectral radius estimate
@@ -184,8 +188,9 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         D_inv = np.zeros_like(D)
         D_inv[D != 0] = 1.0 / np.abs(D[D != 0])
 
-        D_inv_S = scale_rows(S, D_inv, copy=True)   # TODO cost+=
+        D_inv_S = scale_rows(S, D_inv, copy=True)
         D_inv_S = omega*D_inv_S
+        cost[0] += 3
     else:
         raise ValueError('Incorrect weighting option')
 
@@ -201,9 +206,11 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
             # array is used multiple times in Satisfy_Constraints(...).
             BtBinv = compute_BtBinv(B, U)
-            # TODO
-            # SVD( B.shape[1] ) * (U.shape[0]/U.blocksize[0])
-            # For B.shaoe[1] = 1, there is no leading constant. what about 2? 
+
+            # Ignore leading constant in block inverse, because for small blocks
+            # seen in bad guys, constant of 30n^3 is way overestimating. 
+            cost[0] += ( B.shape[0]*B.shape[1] + (B.shape[1]**3)*U.shape[0] ) /\
+                        float( U.blocksize[0] * A.nnz)
 
             # (2) Apply satisfy constraints
             Satisfy_Constraints(U, B, BtBinv)
@@ -281,7 +288,9 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0]):
 
     """
 
-    weight = omega/approximate_spectral_radius(S)   # TODO
+    # Default 15 Lanczos iterations to find spectral radius
+    weight = omega/approximate_spectral_radius(S)
+    cost[0] += 15
 
     P = T
     for i in range(degree):
@@ -396,7 +405,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
-    # TODO
+    # Only ~ 1WU assuming T is block diagonal 
+    cost[0] += mat_mat_complexity(A,T,incomplete=False) / float(A.nnz)
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
@@ -454,7 +464,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                                int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                P.blocksize[1])
-        # TODO
+        cost[0] += mat_mat_complexity(A,AP,incomplete=True) / float(A.nnz)
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
@@ -473,7 +483,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
-            cost[0] += T.nnz / float(A).nnz
+            cost[0] += T.nnz / float(A.nnz)
 
         # Update residual
         R = R - alpha*AP
@@ -580,7 +590,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            int(T.shape[1]/T.blocksize[1]),
                                            Ah.blocksize[0], Ah.blocksize[1],
                                            T.blocksize[1])
-    # TODO
+    # Ah*AT will generally be contained in sparsity of R,
+    # using incomplete=False is more accurate. 
+    cost[0] += mat_mat_complexity(Ah,AT,incomplete=False)
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
@@ -636,8 +648,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                int(T.shape[1]/T.blocksize[1]),
                                                Ah.blocksize[0],
                                                Ah.blocksize[1], T.blocksize[1])
+        cost[0] += mat_mat_complexity(A,AP,incomplete=True) / float(A.nnz)
         del AP_temp
-        # TODO
 
         # Enforce AP*B = 0
         Satisfy_Constraints(AP, B, BtBinv)
@@ -808,7 +820,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
-    # TODO
+    # Only ~ 1WU assuming T is block diagonal 
+    cost[0] += mat_mat_complexity(A,T,incomplete=False) / float(A.nnz)
 
     # Apply diagonal preconditioner
     if weighting == 'local' or weighting == 'diagonal':
@@ -857,7 +870,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                                int(T.shape[1]/T.blocksize[1]),
                                                A.blocksize[0], A.blocksize[1],
                                                T.blocksize[1])
-        # TODO
+        cost[0] += mat_mat_complexity(A,AV,incomplete=True) / float(A.nnz)
 
         if weighting == 'local' or weighting == 'diagonal':
             AV = scale_rows(AV, Dinv)
@@ -1201,8 +1214,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # sparsity pattern in Sparsity Pattern. This array is used multiple times
     # in Satisfy_Constraints(...).
     BtBinv = compute_BtBinv(B, Sparsity_Pattern)
-    # TODO
 
+    # Ignore leading constant in block inverse, because for small blocks
+    # seen in bad guys, constant of 30n^3 is way overestimating. 
+    cost[0] += ( B.shape[0]*B.shape[1] + (B.shape[1]**3)*Sparsity_Pattern.shape[0] ) /\
+                float( Sparsity_Pattern.blocksize[0] * A.nnz)
 
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
