@@ -683,7 +683,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                          AtildeCSC.indices, AtildeCSC.data,
                                          mask.indptr, mask.indices, mask.data,
                                          dimen)
-        cost[0] += mat_mat_complexity(Atilde,mask,incomplete=True)
+        cost[0] += mat_mat_complexity(Atilde,mask,incomplete=True) / float(A.nnz)
 
         del AtildeCSC, Atilde
         Atilde = mask
