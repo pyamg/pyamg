@@ -12,6 +12,7 @@ from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection,\
     algebraic_distance, affinity_distance
+from pyamg.util.utils import mat_mat_complexity
 
 from .interpolate import direct_interpolation
 from . import split
