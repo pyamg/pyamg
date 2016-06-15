@@ -61,6 +61,20 @@ def ruge_stuben_solver(A,
     ml : multilevel_solver
         Multigrid hierarchy of matrices and prolongation operators
 
+    Other Parameters
+    ----------------
+    cycle_type : ['V','W','F']
+        Structrure of multigrid cycle
+    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+        Solver used at the coarsest level of the MG hierarchy.
+            Optionally, may be a tuple (fn, args), where fn is a string such as
+        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        arguments to be passed to fn.
+    setup_complexity : bool
+        For a detailed, more accurate setup complexity, pass in 
+        'setup_complexity' = True. This will slow down performance, but
+        increase accuracy of complexiy count. 
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
@@ -91,7 +105,10 @@ def ruge_stuben_solver(A,
 
     """
 
-    levels = [multilevel_solver.level()]
+    if ('setup_complexity' in kwargs):
+        if kwargs['setup_complexity'] == True:
+            mat_mat_complexity.__detailed__ = True
+        del kwargs['setup_complexity']
 
     # convert A to csr
     if not isspmatrix_csr(A):
@@ -107,6 +124,7 @@ def ruge_stuben_solver(A,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
+    levels = [multilevel_solver.level()]
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
@@ -193,10 +211,10 @@ def extend_hierarchy(levels, strength, CF, keep):
     levels[-1].R = R                  # restriction operator
 
     # Form coarse grid operator, get complexity
-    levels[-1].complexity['RAP'] = mat_mat_complexity(A,P) / float(A.nnz)
-    AP = A * P
-    levels[-1].complexity['RAP'] += mat_mat_complexity(R,AP) / float(A.nnz)
-    A = R * AP              # Galerkin operator
+    levels[-1].complexity['RAP'] = mat_mat_complexity(R,A) / float(A.nnz)
+    RA = R * A
+    levels[-1].complexity['RAP'] += mat_mat_complexity(RA,P) / float(A.nnz)
+    A = RA * P      # Galerkin operator, Ac = RAP
 
     # Form next level through Galerkin product
     levels.append(multilevel_solver.level())

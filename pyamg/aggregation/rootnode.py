@@ -130,6 +130,10 @@ def rootnode_solver(A, B=None, BH=None,
             Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
+    setup_complexity : bool
+        For a detailed, more accurate setup complexity, pass in 
+        'setup_complexity' = True. This will slow down performance, but
+        increase accuracy of complexiy count. 
 
     Returns
     -------
@@ -232,6 +236,11 @@ def rootnode_solver(A, B=None, BH=None,
        on Scientific Computing (SISC), vol. 33, pp.
        966--991, 2011.
     """
+
+    if ('setup_complexity' in kwargs):
+        if kwargs['setup_complexity'] == True:
+            mat_mat_complexity.__detailed__ = True
+        del kwargs['setup_complexity']
 
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
@@ -481,10 +490,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].Cpts = Cpt_params[1]['Cpts']     # Cpts (i.e., rootnodes)
 
     # Form coarse grid operator, get complexity
-    levels[-1].complexity['RAP'] = mat_mat_complexity(A,P) / float(A.nnz)
-    AP = A * P
-    levels[-1].complexity['RAP'] += mat_mat_complexity(R,AP) / float(A.nnz)
-    A = R * AP              # Galerkin operator
+    levels[-1].complexity['RAP'] = mat_mat_complexity(R,A) / float(A.nnz)
+    RA = R * A
+    levels[-1].complexity['RAP'] += mat_mat_complexity(RA,P) / float(A.nnz)
+    A = RA * P      # Galerkin operator, Ac = RAP
     A.symmetry = symmetry
 
     levels.append(multilevel_solver.level())

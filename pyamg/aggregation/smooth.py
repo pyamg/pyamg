@@ -405,7 +405,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
-    # Only ~ 1WU assuming T is block diagonal 
+    # T is block diagonal, using sparsity pattern of R with 
+    # incomplete=True significantly overestimates complexity. 
+    # More accurate to use full mat-mat with block diagonal T.
     cost[0] += mat_mat_complexity(A,T,incomplete=False) / float(A.nnz)
 
     # Enforce R*B = 0
@@ -590,9 +592,10 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            int(T.shape[1]/T.blocksize[1]),
                                            Ah.blocksize[0], Ah.blocksize[1],
                                            T.blocksize[1])
-    # Ah*AT will generally be contained in sparsity of R,
-    # using incomplete=False is more accurate. 
-    cost[0] += mat_mat_complexity(Ah,AT,incomplete=False)
+    # T is block diagonal, sparsity of AT should be well contained
+    # in R. incomplete=True significantly overestimates complexity
+    # with R. More accurate to use full mat-mat with block diagonal T.
+    cost[0] += mat_mat_complexity(Ah,AT,incomplete=False) / float(A.nnz)
 
     # Enforce R*B = 0
     Satisfy_Constraints(R, B, BtBinv)
@@ -820,7 +823,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            A.blocksize[0], A.blocksize[1],
                                            T.blocksize[1])
     R.data *= -1.0
-    # Only ~ 1WU assuming T is block diagonal 
+    # T is block diagonal, using sparsity pattern of R with 
+    # incomplete=True significantly overestimates complexity. 
+    # More accurate to use full mat-mat with block diagonal T.
     cost[0] += mat_mat_complexity(A,T,incomplete=False) / float(A.nnz)
 
     # Apply diagonal preconditioner
@@ -1143,9 +1148,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
         AtildeCopy = Atilde.copy()
         for i in range(degree):
+            cost[0] += mat_mat_complexity(AtildeCopy, Sparsity_Pattern) / float(A.nnz)
             Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
-            cost[0] += (AtildeCopy.nnz / float(A.nnz)) * \
-                    Sparsity_Pattern.nnz/float(Sparsity_Pattern.shape[0]) 
 
         # Optional filtering of sparsity pattern before smoothing
         #   - Complexity: two passes through T for theta-filter, a sort on

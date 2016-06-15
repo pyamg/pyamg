@@ -2223,11 +2223,20 @@ def truncate_rows(A, nz_per_row):
 def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
     """
     Function to approximate the complexity of a sparse matrix
-    matrix multiplication, A*P. A sample of test_cols columns
-    in P, p_i, are randomly selected, and the complexity to compute 
-    A * p_i found as the number of nonzeros in A which overlap
-    with the sparsity of p_i. This is averaged over the set of
-    randomly selected columns.
+    matrix multiplication, A*P.
+        
+        For a detailed estimate, a sample of test_cols columns
+        in P, p_i, are randomly selected, and the complexity to
+        compute A * p_i found as the number of nonzeros in A
+        which overlap with the sparsity of p_i. This is averaged
+        over the set of randomly selected columns.
+
+        The fast approximation is given by ... TODO
+
+    If the function attribute mat_mat_complexity.__detailed__
+    is set to True, the detailed estimate is used, otherwise 
+    the fast approximation is used. Note that the detailed 
+    estimate will slow down the seutp process. 
 
     Parameters
     ----------
@@ -2251,26 +2260,34 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
 
     """
 
-    from random import randint
-    A0 = A.tocsr()
-    P0 = P.tocsc()
+    # Detailed estimate of complexity for matrix product 
+    # using random sampling. 
+    if hasattr(mat_mat_complexity, '__detailed__') and\
+        mat_mat_complexity.__detailed__ == True:
+        from random import randint
+        A0 = A.tocsr()
+        P0 = P.tocsc()
 
-    # Random set of test columns
-    test_cols = min(test_cols, P0.shape[1])
-    k = P0.shape[1]
-    cols = [randint(0,P0.shape[1]-1) for i in range(0,test_cols)]
+        # Random set of test columns
+        test_cols = min(test_cols, P0.shape[1])
+        k = P0.shape[1]
+        cols = [randint(0,P0.shape[1]-1) for i in range(0,test_cols)]
 
-    work = 0.0
-    for c in cols:
-        inds = P0[:,c].indices
-        if incomplete:
-            work += A0[inds,:][:,inds].nnz
-        else:
-            work += A0[:,inds].nnz
+        work = 0.0
+        for c in cols:
+            inds = P0[:,c].indices
+            if incomplete:
+                work += A0[inds,:][:,inds].nnz
+            else:
+                work += A0[:,inds].nnz
 
-    work = work * P0.shape[1] / float(test_cols)
+        work = work * P0.shape[1] / float(test_cols)
 
-    return work
+        return work
+    # Approximation of complexity of matrix product.
+    # TODO
+    else:
+        return -1
 
 
 # from functools import partial, update_wrapper
