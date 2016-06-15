@@ -791,7 +791,12 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
         tol = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 
-        # Use constrained min problem to define strength
+        # Use constrained min problem to define strength.
+        # This function is doing similar to NullDim=1 with more bad guys.
+        # Complexity accounts for computing the block inverse, and
+        #   hat{z_i} = B_i*x, hat{z_i} .* hat{z_i},
+        #   hat{z_i} = hat{z_i} / z_i, and abs(1.0 - hat{z_i}).
+        cost[0] += ( Atilde.nnz*(3+NullDim) + (NullDim**3)*dimen ) / float(A.nnz)
         amg_core.evolution_strength_helper(Atilde.data,
                                            Atilde.indptr,
                                            Atilde.indices,
@@ -803,8 +808,6 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                            BDBCols, NullDim, tol)
 
         Atilde.eliminate_zeros()
-        # TODO
-
 
     # All of the strength values are real by this point, so ditch the complex
     # part
