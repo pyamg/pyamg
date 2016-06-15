@@ -483,8 +483,7 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         levels[-1].complexity['RAP'] = (mat_mat_complexity(A,P) + 
                                     mat_mat_complexity(R,A) ) / float(A.nnz)
     else:
-        levels[-1].complexity['RAP'] = 2*mat_mat_complexity(A,P) / float(A.nnz)
-
+        levels[-1].complexity['RAP'] = 2.0*mat_mat_complexity(A,P) / float(A.nnz)
 
     levels.append(multilevel_solver.level())
     A = R * A * P                                 # Galerkin operator
