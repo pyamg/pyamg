@@ -191,11 +191,13 @@ def extend_hierarchy(levels, strength, CF, keep):
 
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
-    levels[-1].complexity['RAP'] = R.nnz/float(R.shape[1]) + \
-                                    P.nnz/float(P.shape[0])
 
-    levels.append(multilevel_solver.level())
+    # Form coarse grid operator, get complexity
+    levels[-1].complexity['RAP'] = mat_mat_complexity(A,P) / float(A.nnz)
+    AP = A * P
+    levels[-1].complexity['RAP'] += mat_mat_complexity(R,AP) / float(A.nnz)
+    A = R * AP              # Galerkin operator
 
     # Form next level through Galerkin product
-    A = R * A * P
+    levels.append(multilevel_solver.level())
     levels[-1].A = A
