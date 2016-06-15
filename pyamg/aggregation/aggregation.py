@@ -436,21 +436,21 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         levels[-1].complexity['smooth_R'] = kwargs['cost'][0]
 
     if keep:
-        levels[-1].C = C  # strength of connection matrix
-        levels[-1].AggOp = AggOp  # aggregation operator
-        levels[-1].T = T  # tentative prolongator
+        levels[-1].C = C            # strength of connection matrix
+        levels[-1].AggOp = AggOp    # aggregation operator
+        levels[-1].T = T            # tentative prolongator
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
-    if symmetry == 'nonsymmetric':
-        levels[-1].complexity['RAP'] = (mat_mat_complexity(A,P) + 
-                                    mat_mat_complexity(R,A) ) / float(A.nnz)
-    else:
-        levels[-1].complexity['RAP'] = 2*mat_mat_complexity(A,P) / float(A.nnz)
+
+    # Form coarse grid operator, get complexity
+    levels[-1].complexity['RAP'] = mat_mat_complexity(A,P) / float(A.nnz)
+    AP = A * P
+    levels[-1].complexity['RAP'] += mat_mat_complexity(R,AP) / float(A.nnz)
+    A = R * AP              # Galerkin operator
+    A.symmetry = symmetry
 
     levels.append(multilevel_solver.level())
-    A = R * A * P              # Galerkin operator
-    A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates
 

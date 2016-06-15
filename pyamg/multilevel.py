@@ -230,7 +230,7 @@ class multilevel_solver:
 
         """
 
-        n = float(self.levels[0].A.shape[0])
+        nnz = float(self.levels[0].A.nnz)
 
         if self.SC is None: 
             self.SC = 0.0
@@ -238,7 +238,7 @@ class multilevel_solver:
                 if lvl.SC is None:
                     lvl.SC = 0.0
                     for cost in (lvl.complexity).itervalues():
-                        lvl.SC += cost * (lvl.A.shape[0] / n)
+                        lvl.SC += cost * (lvl.A.nnz / nnz)
 
                 self.SC += lvl.SC
 
@@ -247,7 +247,7 @@ class multilevel_solver:
                 lvl = self.levels[i]
                 print "Level ",i," cost = ","%.3f"%lvl.SC, " WUs"
                 for method, cost in (lvl.complexity).iteritems(): 
-                    temp = cost*(lvl.A.shape[0] / n)
+                    temp = cost*(lvl.A.nnz / nnz)
                     if method == "RAP":
                         print "\t",method,"\t\t= ","%.3f"%temp,"WUs"
                     else:
