@@ -2276,6 +2276,8 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
         work = 0.0
         for c in cols:
             inds = P0[:,c].indices
+            if len(inds) == 0:
+                continue
             if incomplete:
                 work += A0[inds,:][:,inds].nnz
             else:
