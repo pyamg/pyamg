@@ -247,12 +247,15 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10, cost=[0]):
         data = np.ones_like(C.data).astype(float)
     elif distance == 'abs':
         data = abs(C.data)
+        cost[0] += 1
     elif distance == 'inv':
         data = 1.0/abs(C.data)
+        cost[0] += 1
     elif distance is 'same':
         data = C.data
     elif distance is 'min':
         data = C.data - C.data.min()
+        cost[0] += 1
     else:
         raise ValueError('unrecognized value distance=%s' % distance)
 

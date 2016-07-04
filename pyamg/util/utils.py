@@ -1722,7 +1722,7 @@ def compute_BtBinv(B, C):
     return BtBinv
 
 
-def eliminate_diag_dom_nodes(A, C, theta=1.02):
+def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
     ''' Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
     which we don't want coarsened.  These eliminated nodes in C just become

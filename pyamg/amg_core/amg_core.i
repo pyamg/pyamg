@@ -77,7 +77,8 @@
     (      ctype  R [], const int  R_size),
     (      ctype temp [], const int temp_size),
     (      ctype gamma [], const int gamma_size),
-    (const ctype omega [], const int omega_size)
+    (const ctype omega [], const int omega_size),
+    (      ctype cost [], const int cost_size)
 };
 %enddef
 

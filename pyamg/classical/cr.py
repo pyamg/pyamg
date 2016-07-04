@@ -14,7 +14,7 @@ from pyamg import amg_core
 __all__ = ['CR', 'binormalize']
 
 
-def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
+def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method, cost):
     """ Internal function called by CR. Performs habituated or concurrent
     relaxation sweeps on target vector. Stops when either (i) very fast 
     convergence, CF < 0.1*thetacr, are observed, or at least a given number 
@@ -55,8 +55,10 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         if method == 'habituated':
             gauss_seidel(A, e, z, iterations=1)
             e[Cindex] = 0.0
+            cost[0] += 1
         elif method == 'concurrent':
             gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
+            cost[0] += float(len(Findex)) / n
         else:
             raise NotImplementedError('method not recognized: need habituated or concurrent')
 
@@ -65,6 +67,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         rhok_old = rhok
         rhok = enorm / enorm_old
         it += 1
+        cost[0] += float(len(Findex)) / A.nnz
 
         # criteria 1 -- fast convergence 
         if rhok < 0.1 * thetacr:
@@ -142,7 +145,6 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
         if (np.max(thetacs) >= 1) or (np.min(thetacs) <= 0):
             raise ValueError("Must have 0 < thetacs < 1")
-    
 
     if (thetacr >= 1) or (thetacr <= 0):
         raise ValueError("Must have 0 < thetacr < 1")
@@ -172,7 +174,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     gamma = np.zeros((n,))
 
     # 3.1b - Run initial smoothing sweep
-    rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method=method)
+    rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method, cost)
 
     # 3.1c - Loop until desired convergence or maximum iterations reached
     for it in range(0, maxiter):
@@ -194,7 +196,10 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
            indices,
            splitting,
            gamma,
-           tcs )
+           tcs,
+           cost )
+
+        #   2numFpts + 
 
         # Separate F indices and C indices
         num_F = indices[0] 
@@ -202,7 +207,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
         Cindex = indices[(num_F+1):]
 
         # 3.1g - Call CR smoothing iteration
-        rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method=method)
+        rho, e = _CRsweep(A, B, Findex, Cindex, nu, thetacr, method, cost)
 
         # Print details on current iteration
         if verbose:

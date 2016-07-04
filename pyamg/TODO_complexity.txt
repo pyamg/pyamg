@@ -3,25 +3,24 @@
 - Relaxation on targets
 	+ Need to account for Schwarz - is this done on targets?
 - Aggregation
-	+ Cost implemented for classical aggregation
-	+ Cost implemented for naive aggregation
-	+ Not implemented for lloyd
+	+ Done for classical aggregation
+	+ Done for naive aggregation
+	+ Started for lloyd, need to add to amg_core
 - Smoothing P
 	+ Done for Richardson 
 	+ Done for Jacobi
 	+ Done for energy
 - Strength
-	+ Not implemented for distance
+	+ Done for distance
 	+ Done for classical
 	+ Done for symmetric
 	+ Not implemented for energy 
-	+ Evolution 
-		~ Started, need to finish (search TODO)
-	+ Started for algebraic distance
-	+ Started for affinity distance
+	+ Done for evolution 
+	+ Done for algebraic distance
+	+ Done for affinity distance
 - Split (classical)
 	+ Not implemented in any CF-splittings
-	+ Not implemented in CR
+	+ Started for CR, need to finish in amg_core
 + Interpolate (classical)
 	+ Not implemented
 - In code
@@ -30,3 +29,5 @@
 	+ Accounted for non-symmetric
 	+ Accounted for tentative T
 	+ Accounted for improving bad guys
+
+——> Make cheap approximation to mat-mat mults

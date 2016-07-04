@@ -98,24 +98,37 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0
     C = sparse.csr_matrix((C, A.indices.copy(), A.indptr.copy()),
                           shape=A.shape)
 
+    # 2 len(rows) operations initially, 3 each loop iteration,
+    # and after --> 3*len(rows) / A.nnz WUs 
+    cost[0] += float( 3*len(rows) ) / A.nnz
+
     # Apply drop tolerance
     if relative_drop is True:
         if theta != np.inf:
             amg_core.apply_distance_filter(C.shape[0], theta, C.indptr,
                                            C.indices, C.data)
+            cost[0] += float(2.0*C.nnz) / A.nnz
     else:
         amg_core.apply_absolute_distance_filter(C.shape[0], theta, C.indptr,
                                                 C.indices, C.data)
+        cost[0] += float(C.nnz) / A.nnz
+
     C.eliminate_zeros()
 
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
+    cost[0] += C.shape
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
+    cost[0] += float(C.nnz) / A.nnz
 
     # Scale C by the largest magnitude entry in each row
     C = scale_rows_by_largest_entry(C)
+    
+    # Assume largest entry can be tracked in applying distance filter.
+    # 1 WU to scale matrix.
+    cost[0] += float(C.nnz) / A.nnz
 
     return C
 
@@ -210,9 +223,9 @@ def classical_strength_of_connection(A, theta=0.0, cost=[0]):
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
 
-    # Assume largest entry can be tracked from filtering. Then set constant
-    # 1 / largest entry for each row, scale all elements by it. 
-    cost[0] += (float(S.nnz) + S.shape[0]) / A.nnz 
+    # Assume largest entry can be tracked from filtering.
+    # 1 WU to scale matrix. 
+    cost[0] += float(S.nnz) / A.nnz 
  
     return S
 
@@ -925,6 +938,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0, cost=[0]):
     """
 
     if not sparse.isspmatrix_csr(A):
+        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     if alpha < 0:
@@ -939,10 +953,11 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0, cost=[0]):
     if epsilon < 1:
         raise ValueError('expected epsilon>1.0')
 
-    def distance(x):
-        (rows, cols) = A.nonzero()
-        return 1 - np.sum(x[rows] * x[cols], axis=1)**2 / \
+    def distance(x, rows, cols):
+        d = 1 - np.sum(x[rows] * x[cols], axis=1)**2 / \
             (np.sum(x[rows]**2, axis=1) * np.sum(x[cols]**2, axis=1))
+        temp = 3 * len(rows)    # cost
+        return [d,temp]
 
     return distance_measure_common(A, distance, alpha, R, k, epsilon, cost)
 
@@ -983,6 +998,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2, cost=[0]):
     """
 
     if not sparse.isspmatrix_csr(A):
+        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     if alpha < 0:
@@ -1000,12 +1016,14 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2, cost=[0]):
     if p < 1:
         raise ValueError('expected p>1 or equal to numpy.inf')
 
-    def distance(x):
-        (rows, cols) = A.nonzero()
+    def distance(x, rows, cols):
         if p != np.inf:
-            return (np.sum(np.abs(x[rows] - x[cols])**p, axis=1)/R)**(1.0/p)
+            d = (np.sum(np.abs(x[rows] - x[cols])**p, axis=1)/R)**(1.0/p)
+            temp = 2*len(rows)  # cost
         else:
-            return np.abs(x[rows] - x[cols]).max(axis=1)
+            d = np.abs(x[rows] - x[cols]).max(axis=1)
+            temp = 2*len(rows)  # cost
+        return [d, temp]
 
     return distance_measure_common(A, distance, alpha, R, k, epsilon, cost)
 
@@ -1019,11 +1037,11 @@ def distance_measure_common(A, func, alpha, R, k, epsilon, cost):
     cost[0] += R*k
 
     # apply distance measure function to vectors
-    d = func(x)
-    cost[0] += 100000       # TODO : fix this
+    (rows, cols) = A.nonzero()
+    [d,temp] = func(x, rows, cols, cost)
+    cost[0] += float(temp) / A.nnz
 
     # drop distances to self
-    (rows, cols) = A.nonzero()
     weak = np.where(rows == cols)[0]
     d[weak] = 0
     C = sparse.csr_matrix((d, (rows, cols)), shape=A.shape)
@@ -1040,15 +1058,15 @@ def distance_measure_common(A, func, alpha, R, k, epsilon, cost):
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
     C.data = 1.0/C.data
-    cost[0] += 1        # Note this is one WU of divides
+    cost[0] += float(C.nnz) / A.nnz        # Note this is one WU of divides
 
     # Put an identity on the diagonal
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
-    cost[0] += 1
+    cost[0] += float(C.shape[0]) / A.nnz
 
     # Scale C by the largest magnitude entry in each row
     C = scale_rows_by_largest_entry(C)
-    cost[0] += 1    # Only 1 WU because largest element same as
-                    # smallest found when removing weak connections.
+    cost[0] += float(C.nnz) / A.nnz # Only 1 WU because largest element same as
+                                    # smallest found when removing weak connections.
 
     return C
