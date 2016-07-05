@@ -30,6 +30,4 @@
 	+ Accounted for tentative T
 	+ Accounted for improving bad guys
 
-
-——> Make cheap approximation to mat-mat mults
 ——> Fill out unit tests in ./tests/test_complexity.py

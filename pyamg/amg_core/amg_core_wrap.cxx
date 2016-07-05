@@ -24619,6 +24619,8 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyO
   float *arg13 ;
   int arg14 ;
   float arg15 ;
+  float *arg16 ;
+  int arg17 ;
   PyArrayObject *array1 = NULL ;
   int i1 = 1 ;
   PyArrayObject *array3 = NULL ;
@@ -24635,6 +24637,8 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyO
   int i13 = 1 ;
   float val15 ;
   int ecode15 = 0 ;
+  PyArrayObject *array16 = NULL ;
+  int i16 = 1 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -24643,8 +24647,9 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyO
   PyObject * obj5 = 0 ;
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:cr_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:cr_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
   {
     array1 = obj_to_array_no_conversion(obj0, NPY_INT);
     if (!array1 || !require_dimensions(array1,1) || !require_contiguous(array1)
@@ -24706,7 +24711,15 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyO
     SWIG_exception_fail(SWIG_ArgError(ecode15), "in method '" "cr_helper" "', argument " "15"" of type '" "float""'");
   } 
   arg15 = static_cast< float >(val15);
-  cr_helper< int,float >((int const (*))arg1,arg2,(int const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14,arg15);
+  {
+    array16 = obj_to_array_no_conversion(obj8, NPY_FLOAT);
+    if (!array16 || !require_dimensions(array16,1) || !require_contiguous(array16)
+      || !require_native(array16)) SWIG_fail;
+    arg16 = (float*) array_data(array16);
+    arg17 = 1;
+    for (i16=0; i16 < array_numdims(array16); ++i16) arg17 *= array_size(array16,i16);
+  }
+  cr_helper< int,float >((int const (*))arg1,arg2,(int const (*))arg3,arg4,(float const (*))arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14,arg15,arg16,arg17);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -24731,6 +24744,8 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyO
   double *arg13 ;
   int arg14 ;
   double arg15 ;
+  double *arg16 ;
+  int arg17 ;
   PyArrayObject *array1 = NULL ;
   int i1 = 1 ;
   PyArrayObject *array3 = NULL ;
@@ -24747,6 +24762,8 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyO
   int i13 = 1 ;
   double val15 ;
   int ecode15 = 0 ;
+  PyArrayObject *array16 = NULL ;
+  int i16 = 1 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -24755,8 +24772,9 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyO
   PyObject * obj5 = 0 ;
   PyObject * obj6 = 0 ;
   PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:cr_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:cr_helper",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
   {
     array1 = obj_to_array_no_conversion(obj0, NPY_INT);
     if (!array1 || !require_dimensions(array1,1) || !require_contiguous(array1)
@@ -24818,7 +24836,15 @@ SWIGINTERN PyObject *_wrap_cr_helper__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyO
     SWIG_exception_fail(SWIG_ArgError(ecode15), "in method '" "cr_helper" "', argument " "15"" of type '" "double""'");
   } 
   arg15 = static_cast< double >(val15);
-  cr_helper< int,double >((int const (*))arg1,arg2,(int const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14,arg15);
+  {
+    array16 = obj_to_array_no_conversion(obj8, NPY_DOUBLE);
+    if (!array16 || !require_dimensions(array16,1) || !require_contiguous(array16)
+      || !require_native(array16)) SWIG_fail;
+    arg16 = (double*) array_data(array16);
+    arg17 = 1;
+    for (i16=0; i16 < array_numdims(array16); ++i16) arg17 *= array_size(array16,i16);
+  }
+  cr_helper< int,double >((int const (*))arg1,arg2,(int const (*))arg3,arg4,(double const (*))arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12,arg13,arg14,arg15,arg16,arg17);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -24828,15 +24854,15 @@ fail:
 
 SWIGINTERN PyObject *_wrap_cr_helper(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[9];
+  PyObject *argv[10];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? (int)PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 8) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 9) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 8) {
+  if (argc == 9) {
     int _v;
     {
       _v = is_array(argv[0]) && PyArray_EquivTypenums(array_type(argv[0]),
@@ -24878,7 +24904,16 @@ SWIGINTERN PyObject *_wrap_cr_helper(PyObject *self, PyObject *args) {
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
-                    return _wrap_cr_helper__SWIG_1(self, args);
+                    {
+                      _v = is_array(argv[8]) && PyArray_EquivTypenums(array_type(argv[8]),
+                        NPY_FLOAT);
+                    }
+                    if (_v) {
+                      if (argc <= 9) {
+                        return _wrap_cr_helper__SWIG_1(self, args);
+                      }
+                      return _wrap_cr_helper__SWIG_1(self, args);
+                    }
                   }
                 }
               }
@@ -24888,7 +24923,7 @@ SWIGINTERN PyObject *_wrap_cr_helper(PyObject *self, PyObject *args) {
       }
     }
   }
-  if (argc == 8) {
+  if (argc == 9) {
     int _v;
     {
       _v = is_array(argv[0]) && PyArray_EquivTypenums(array_type(argv[0]),
@@ -24930,7 +24965,16 @@ SWIGINTERN PyObject *_wrap_cr_helper(PyObject *self, PyObject *args) {
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
-                    return _wrap_cr_helper__SWIG_2(self, args);
+                    {
+                      _v = is_array(argv[8]) && PyArray_EquivTypenums(array_type(argv[8]),
+                        NPY_DOUBLE);
+                    }
+                    if (_v) {
+                      if (argc <= 9) {
+                        return _wrap_cr_helper__SWIG_2(self, args);
+                      }
+                      return _wrap_cr_helper__SWIG_2(self, args);
+                    }
                   }
                 }
               }
@@ -24944,8 +24988,8 @@ SWIGINTERN PyObject *_wrap_cr_helper(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'cr_helper'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    cr_helper< int,float >(int const [],int const,int const [],int const,float const [],int const,float [],int const,int [],int const,int [],int const,float [],int const,float const)\n"
-    "    cr_helper< int,double >(int const [],int const,int const [],int const,double const [],int const,double [],int const,int [],int const,int [],int const,double [],int const,double const)\n");
+    "    cr_helper< int,float >(int const [],int const,int const [],int const,float const [],int const,float [],int const,int [],int const,int [],int const,float [],int const,float const,float [],int const)\n"
+    "    cr_helper< int,double >(int const [],int const,int const [],int const,double const [],int const,double [],int const,int [],int const,int [],int const,double [],int const,double const,double [],int const)\n");
   return 0;
 }
 
@@ -27444,8 +27488,8 @@ static PyMethodDef SwigMethods[] = {
 		"rs_direct_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, double [] Bx)\n"
 		""},
 	 { (char *)"cr_helper", _wrap_cr_helper, METH_VARARGS, (char *)"\n"
-		"cr_helper(int const [] A_rowptr, int const [] A_colinds, float const [] B, float [] e, int [] indices, int [] splitting, float [] gamma, float const thetacs)\n"
-		"cr_helper(int const [] A_rowptr, int const [] A_colinds, double const [] B, double [] e, int [] indices, int [] splitting, double [] gamma, double const thetacs)\n"
+		"cr_helper(int const [] A_rowptr, int const [] A_colinds, float const [] B, float [] e, int [] indices, int [] splitting, float [] gamma, float const thetacs, float [] cost)\n"
+		"cr_helper(int const [] A_rowptr, int const [] A_colinds, double const [] B, double [] e, int [] indices, int [] splitting, double [] gamma, double const thetacs, double [] cost)\n"
 		""},
 	 { (char *)"apply_distance_filter", _wrap_apply_distance_filter, METH_VARARGS, (char *)"\n"
 		"apply_distance_filter(int const n_row, float const epsilon, int const [] Sp, int const [] Sj, float [] Sx)\n"

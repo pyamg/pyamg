@@ -2233,7 +2233,10 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
         which overlap with the sparsity of p_i. This is averaged
         over the set of randomly selected columns.
 
-        The fast approximation is given by ... TODO
+        The fast approximation is given by taking the average
+        number of nonzeros per column in P, and multiplying this
+        by the number of nonzeros in A. Is generally a pretty
+        good and cheap approximation.
 
     If the function attribute mat_mat_complexity.__detailed__
     is set to True, the detailed estimate is used, otherwise 
@@ -2243,7 +2246,7 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
     Parameters
     ----------
     A : sparse matrix (preferably csr)
-        Left hand side of matrix multipliaction
+        Left hand side of matrix multiplication
     P : sparse matrix (preferably csc)
         Right hand side of matrix multiplication
     test_cols : int : Default 10
@@ -2261,6 +2264,8 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
     Approximate number of FLOPs to compute A*P.
 
     """
+    A.eliminate_zeros()
+    P.eliminate_zeros()
 
     # Detailed estimate of complexity for matrix product 
     # using random sampling. 
@@ -2286,36 +2291,9 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
                 work += A0[:,inds].nnz
 
         work = work * P0.shape[1] / float(test_cols)
-
         return work
+
     # Approximation of complexity of matrix product.
-    # TODO
     else:
-        return -1
+        return A.nnz * (float(P.nnz) / P.shape[0])
 
-
-# from functools import partial, update_wrapper
-# def dispatcher(name_to_handle):
-#    def dispatcher(arg):
-#        if isinstance(arg,tuple):
-#            fn,opts = arg[0],arg[1]
-#        else:
-#            fn,opts = arg,{}
-#
-#        if fn in name_to_handle:
-#            # convert string into function handle
-#            fn = name_to_handle[fn]
-#        #elif isinstance(fn, type(numpy.ones)):
-#        #    pass
-#        elif callable(fn):
-#            # if fn is itself a function handle
-#            pass
-#        else:
-#            raise TypeError('Expected function')
-#
-#        wrapped = partial(fn, **opts)
-#        update_wrapper(wrapped, fn)
-#
-#        return wrapped
-#
-#    return dispatcher

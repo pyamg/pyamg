@@ -1080,6 +1080,3 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock,
                             inv_subblock_ptr)
     return A.schwarz_parameters
-
-# from pyamg.utils import dispatcher
-# dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )
