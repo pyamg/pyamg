@@ -51,8 +51,13 @@ def Satisfy_Constraints(U, B, BtBinv):
 
     """
 
-    RowsPerBlock = U.blocksize[0]
-    ColsPerBlock = U.blocksize[1]
+    if sparse.isspmatrix_bsr(U):
+        RowsPerBlock = U.blocksize[0]
+        ColsPerBlock = U.blocksize[1]
+    else:
+        RowsPerBlock = 1
+        ColsPerBlock = 1
+ 
     num_block_rows = int(U.shape[0]/RowsPerBlock)
 
     UB = np.ravel(U*B)
@@ -199,10 +204,15 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # apply satisfy constraints so that U*B = 0
         P = T
         for i in range(degree):
-            U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
             cost[0] += P.nnz / float(S.nnz)
+            if sparse.isspmatrix_bsr(P):
+                U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
+                U_block = U.blocksize
+            else:
+                U = D_inv_S*P
+                U_block = [1,1]
 
-            # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
+            # (1) Enforce U*B = 0. Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
             # array is used multiple times in Satisfy_Constraints(...).
             BtBinv = compute_BtBinv(B, U)
@@ -210,7 +220,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             # Ignore leading constant in block inverse, because for small blocks
             # seen in bad guys, constant of 30n^3 is way overestimating. 
             cost[0] += ( B.shape[0]*B.shape[1] + (B.shape[1]**3)*U.shape[0] ) /\
-                        float( U.blocksize[0] * A.nnz)
+                        float( U_block[0] * S.nnz)
 
             # (2) Apply satisfy constraints
             Satisfy_Constraints(U, B, BtBinv)
@@ -220,7 +230,6 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             # Update P
             P = P - U
             cost[0] += max(P.nnz, U.nnz) / float(S.nnz)
-
     else:
         # Carry out Jacobi as normal
         P = T

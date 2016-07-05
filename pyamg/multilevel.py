@@ -255,7 +255,7 @@ class multilevel_solver:
 
         return self.SC
 
-    def cycle_complexity(self, cycle='V'):
+    def cycle_complexity(self, cycle='V', init_level=0, recompute=False):
         """Cycle complexity of this multigrid hierarchy.
 
         Cycle complexity is an approximate measure of the number of
@@ -266,6 +266,12 @@ class multilevel_solver:
         ----------
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
+        init_level : int : Default 0
+            Compute CC for levels init_level,...,end. Used primarily
+            for tracking SC in adaptive methods. 
+        recompute : bool : Default False
+            Recompute CC if already stored. Used if matrices or
+            options in hierarchy have changed between computing CC.
 
         Returns
         -------
@@ -277,13 +283,15 @@ class multilevel_solver:
         Notes
         -----
         Once computed, CC is stored in dictionary self.CC, with a key
-        given by the cycle type.
+        given by the cycle type. Note, this is only for init_level=0.
 
         """
+        if init_level >= len(self.levels)-1:
+            raise ValueError("Initial CC level must be less than %i"%(len(self.levels)-1))
 
         # Return if already stored
         cycle = str(cycle).upper()
-        if cycle in self.CC:
+        if cycle in self.CC and not recompute and init_level==0:
             return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
@@ -360,15 +368,13 @@ class multilevel_solver:
             cost += rel_nnz_P[i]    # Coarse grid correction
             correction_cost.append(cost)
 
-        # Recursive functions to sum cost of given cycle type over all levels,
-        #   - TODO : include coarse grid direct solve?? (~ 30n^3 for pinv?)
-        C_pinv = 0.0
+        # Recursive functions to sum cost of given cycle type over all levels.
+        # Note, ignores coarse grid direct solve.
         def V(level):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level] + \
-                    C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
+                return smoother_cost[level] + schwarz_work[level]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + V(level + 1)
@@ -377,8 +383,7 @@ class multilevel_solver:
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level] + \
-                    C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
+                return smoother_cost[level] + schwarz_work[level] 
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + 2*W(level + 1)
@@ -387,23 +392,25 @@ class multilevel_solver:
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level] + \
-                    C_pinv*(self.levels[level + 1].A.shape[0])**3 / nnz[0]
+                return smoother_cost[level] + schwarz_work[level]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + F(level + 1) + V(level + 1)
 
         if cycle == 'V':
-            flops = V(0)
+            flops = V(init_level)
         elif (cycle == 'W') or (cycle == 'AMLI'):
-            flops = W(0)
+            flops = W(init_level)
         elif cycle == 'F':
-            flops = F(0)
+            flops = F(init_level)
         else:
             raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
-        self.CC[cycle] = float(flops)
-        return self.CC[cycle]
+        # Only save CC if computed for all levels to avoid confusion
+        if init_level == 0:
+            self.CC[cycle] = float(flops)
+
+        return float(flops)
 
 
     def operator_complexity(self):

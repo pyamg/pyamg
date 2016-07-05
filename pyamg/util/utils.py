@@ -1773,6 +1773,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
     diag_dom_rows = (D_abs > (theta*(A_abs*np.ones((A_abs.shape[0],),
                      dtype=A_abs) - D_abs)))
+    cost[0] += 2
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
@@ -1783,6 +1784,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
         diag_dom_rows = (diag_dom_rows == bsize)
 
     # Replace these rows/cols in # C with rows/cols of the identity.
+    # Cost ignored, as a careful implementation could do this very cheaply. 
     I = eye(C.shape[0], C.shape[1], format='csr')
     I.data[diag_dom_rows] = 0.0
     C = I*C*I
