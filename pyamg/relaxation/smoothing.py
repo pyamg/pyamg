@@ -193,7 +193,11 @@ def change_smoothers(ml, presmoother, postsmoother):
                     sweep2 = 'symmetric'
                 else:
                     sweep2 = 'forward'
-            if (sweep1 != 'symmetric') or (sweep2 != 'symmetric'):
+            if  (sweep1 == 'forward' and sweep2 == 'backward') or \
+                (sweep1 == 'backward' and sweep2 == 'forward') or \
+                (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+                pass
+            else:
                 ml.symmetric_smoothing = False
 
     if len(presmoother) < len(postsmoother):
@@ -238,7 +242,11 @@ def change_smoothers(ml, presmoother, postsmoother):
                         sweep2 = 'symmetric'
                     else:
                         sweep2 = 'forward'
-                if (sweep1 != 'symmetric') or (sweep2 != 'symmetric'):
+                if  (sweep1 == 'forward' and sweep2 == 'backward') or \
+                    (sweep1 == 'backward' and sweep2 == 'forward') or \
+                    (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+                    pass
+                else:
                     ml.symmetric_smoothing = False
 
     elif len(presmoother) > len(postsmoother):
@@ -283,8 +291,12 @@ def change_smoothers(ml, presmoother, postsmoother):
                         sweep2 = 'symmetric'
                     else:
                         sweep2 = 'forward'
-                if (sweep1 != 'symmetric') or (sweep2 != 'symmetric'):
-                    ml.symmetric_smoothing = False     
+                if  (sweep1 == 'forward' and sweep2 == 'backward') or \
+                    (sweep1 == 'backward' and sweep2 == 'forward') or \
+                    (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+                    pass
+                else:
+                    ml.symmetric_smoothing = False
 
     else:  
         mid_len = min_len
