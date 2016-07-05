@@ -178,7 +178,8 @@ def change_smoothers(ml, presmoother, postsmoother):
         if (fn1 != fn2) or (it1 != it2):
             ml.symmetric_smoothing = False
         elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
-             (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+             (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne') and \
+             (fn1 != 'chebyshev') and (fn1 != None):
             try:
                 sweep1 = kwargs1['sweep']
             except:
@@ -227,7 +228,8 @@ def change_smoothers(ml, presmoother, postsmoother):
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
-                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne') and \
+                 (fn1 != 'chebyshev') and (fn1 != None):
                 try:
                     sweep1 = kwargs1['sweep']
                 except:
@@ -276,7 +278,8 @@ def change_smoothers(ml, presmoother, postsmoother):
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif (fn1 != 'jacobi') and (fn1 != 'richardson') and \
-                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne'):
+                 (fn1 != 'block_jacobi') and (fn1 != 'jacobi_ne') and \
+                 (fn1 != 'chebyshev') and (fn1 != None):
                 try:
                     sweep1 = kwargs1['sweep']
                 except:

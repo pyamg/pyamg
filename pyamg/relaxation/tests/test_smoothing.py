@@ -5,15 +5,15 @@ from pyamg.relaxation.smoothing import change_smoothers
 
 from numpy.testing import TestCase
 
-methods = [('gauss_seidel', {'sweep' : 'symmetric'})
+methods = [('gauss_seidel', {'sweep' : 'symmetric'}),
            'jacobi',
            'richardson',
-           ('sor', {'sweep' : 'symmetric'})
+           ('sor', {'sweep' : 'symmetric'}),
            'chebyshev',
-           ('gauss_seidel_ne', {'sweep' : 'symmetric'})
+           ('gauss_seidel_ne', {'sweep' : 'symmetric'}),
            'jacobi_ne',
-           ('gauss_seidel_nr', {'sweep' : 'symmetric'})
-           ('schwarz', {'sweep' : 'symmetric'})
+           ('gauss_seidel_nr', {'sweep' : 'symmetric'}),
+           ('schwarz', {'sweep' : 'symmetric'}),
            ('strength_based_schwarz', {'sweep' : 'symmetric'})]
 
 methods2 = [('gauss_seidel', 'richardson'),
@@ -79,6 +79,9 @@ class TestSmoothing(TestCase):
             assert((residuals[-1]/residuals[0])**(1.0/len(residuals)) < 0.95)
             assert(not ml.symmetric_smoothing)
 
+        import pdb
+        pdb.set_trace()
+        
         for method in methods3:
             ml = smoothed_aggregation_solver(A, max_coarse=10)
             change_smoothers(ml, presmoother=method[0], postsmoother=method[1])
