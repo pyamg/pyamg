@@ -42,6 +42,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0
         Square, sparse matrix in CSR or BSR format
     V : array
         Coordinates of the vertices of the graph of A
+    theta : float
+        Drop tolerance of distance between points, see relative_drop
     relative_drop : bool
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
@@ -99,8 +101,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0
                           shape=A.shape)
 
     # 2 len(rows) operations initially, 3 each loop iteration,
-    # and after --> 3*len(rows) / A.nnz WUs 
-    cost[0] += float( 3*len(rows) ) / A.nnz
+    # and one after --> 3*dim*len(rows) / A.nnz WUs = 3*dim WUs
+    cost[0] += 3*dim
 
     # Apply drop tolerance
     if relative_drop is True:
@@ -116,7 +118,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0
     C.eliminate_zeros()
 
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
-    cost[0] += C.shape
+    cost[0] += float(C.shape) / A.nnz
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.
@@ -334,7 +336,8 @@ def symmetric_strength_of_connection(A, theta=0, cost=[0]):
     # Scale S by the largest magnitude entry in each row
     S = scale_rows_by_largest_entry(S)
 
-    # One pass to find largest entry, 1 pass to scale all elements by it. 
+    # One pass to find largest entry, 1 pass to scale all elements
+    # by it and adjust signs
     cost[0] += 2*float(S.nnz) / A.nnz 
 
     return S

@@ -204,13 +204,14 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # apply satisfy constraints so that U*B = 0
         P = T
         for i in range(degree):
-            cost[0] += P.nnz / float(S.nnz)
             if sparse.isspmatrix_bsr(P):
                 U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
                 U_block = U.blocksize
             else:
                 U = D_inv_S*P
                 U_block = [1,1]
+
+            cost[0] += P.nnz / float(S.nnz)
 
             # (1) Enforce U*B = 0. Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
