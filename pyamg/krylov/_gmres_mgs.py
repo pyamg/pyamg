@@ -3,7 +3,7 @@ from numpy import array, zeros, sqrt, ravel, abs, max, conjugate, real,\
     iscomplexobj
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
-from scipy.linalg import get_blas_funcs
+from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from warnings import warn
 import scipy as sp
 
@@ -155,13 +155,14 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
+    [lartg] = get_lapack_funcs(['lartg'], [x] )
     if iscomplexobj(zeros((1,), dtype=xtype)):
-        [axpy, dotu, dotc, scal, rotg] =\
-            get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal', 'rotg'], [x])
+        [axpy, dotu, dotc, scal] =\
+            get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal'], [x])
     else:
         # real type
-        [axpy, dotu, dotc, scal, rotg] =\
-            get_blas_funcs(['axpy', 'dot', 'dot',  'scal', 'rotg'], [x])
+        [axpy, dotu, dotc, scal] =\
+            get_blas_funcs(['axpy', 'dot', 'dot',  'scal'], [x])
 
     # Make full use of direct access to BLAS by defining own norm
     def norm(z):
@@ -248,7 +249,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # vs store the pointers to each column of V.
         #   This saves a considerable amount of time.
         vs = []
-
         # v = r/normr
         V[0, :] = scal(1.0/normr, r)
         vs.append(V[0, :])
@@ -302,7 +302,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             #     iteration, when inner = dimen-1.
             if inner != dimen-1:
                 if H[inner, inner+1] != 0:
-                    [c, s] = rotg(H[inner, inner], H[inner, inner+1])
+                    [c, s, r] = lartg(H[inner, inner], H[inner, inner+1])
                     Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
                     Q.append(Qblock)
 
