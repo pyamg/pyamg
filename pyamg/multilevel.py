@@ -308,7 +308,7 @@ class multilevel_solver:
             postsmoother = lvl.smoothers['postsmoother']
 
             # Presmoother
-            if presmoother is not None:
+            if presmoother[0] is not None:
                 pre_factor = 1
                 if presmoother[0].endswith(('nr', 'ne')):
                     pre_factor *= 2
@@ -323,7 +323,7 @@ class multilevel_solver:
                 pre_factor = 0
 
             # Postsmoother
-            if postsmoother is not None:
+            if postsmoother[0] is not None:
                 post_factor = 1
                 if postsmoother[0].endswith(('nr', 'ne')):
                     post_factor *= 2
