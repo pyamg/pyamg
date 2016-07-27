@@ -308,28 +308,34 @@ class multilevel_solver:
             postsmoother = lvl.smoothers['postsmoother']
 
             # Presmoother
-            pre_factor = 1
-            if presmoother[0].endswith(('nr', 'ne')):
-                pre_factor *= 2
-            if 'sweep' in presmoother[1]:
-                if presmoother[1]['sweep'] == 'symmetric':
+            if presmoother is not None:
+                pre_factor = 1
+                if presmoother[0].endswith(('nr', 'ne')):
                     pre_factor *= 2
-            if 'iterations' in presmoother[1]:
-                pre_factor *= presmoother[1]['iterations']
-            if 'degree' in presmoother[1]:
-                pre_factor *= presmoother[1]['degree']
+                if 'sweep' in presmoother[1]:
+                    if presmoother[1]['sweep'] == 'symmetric':
+                        pre_factor *= 2
+                if 'iterations' in presmoother[1]:
+                    pre_factor *= presmoother[1]['iterations']
+                if 'degree' in presmoother[1]:
+                    pre_factor *= presmoother[1]['degree']
+            else:  
+                pre_factor = 0
 
             # Postsmoother
-            post_factor = 1
-            if postsmoother[0].endswith(('nr', 'ne')):
-                post_factor *= 2
-            if 'sweep' in postsmoother[1]:
-                if postsmoother[1]['sweep'] == 'symmetric':
+            if postsmoother is not None:
+                post_factor = 1
+                if postsmoother[0].endswith(('nr', 'ne')):
                     post_factor *= 2
-            if 'iterations' in postsmoother[1]:
-                post_factor *= postsmoother[1]['iterations']
-            if 'degree' in postsmoother[1]:
-                post_factor *= postsmoother[1]['degree']
+                if 'sweep' in postsmoother[1]:
+                    if postsmoother[1]['sweep'] == 'symmetric':
+                        post_factor *= 2
+                if 'iterations' in postsmoother[1]:
+                    post_factor *= postsmoother[1]['iterations']
+                if 'degree' in postsmoother[1]:
+                    post_factor *= postsmoother[1]['degree']
+            else:  
+                post_factor = 0
 
             # Smoothing cost scaled by A_i.nnz / A_0.nnz
             smoother_cost.append((pre_factor + post_factor)*rel_nnz_A[i])
@@ -349,8 +355,8 @@ class multilevel_solver:
             if (presmoother == 'strength_based_schwarz') or \
                (postsmoother == 'strength_based_schwarz'):
                 S = lvl.C
-            if (presmoother.find('schwarz') > 0) or \
-               (postsmoother.find('schwarz') > 0):
+            if (presmoother is not None and presmoother.find('schwarz') > 0) or \
+               (postsmoother is not None and postsmoother.find('schwarz') > 0):
                 rowlen = S.indptr[1:] - S.indptr[:-1]
                 schwarz_work[i] = np.sum(rowlen**2)
                 schwarz_multiplier[i] = np.mean(rowlen)
