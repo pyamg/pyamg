@@ -178,11 +178,11 @@ def change_smoothers(ml, presmoother, postsmoother):
         try:
             it1 = kwargs1['iterations']
         except:
-            it1 = 1
+            it1 = DEFAULT_NITER
         try:
             it2 = kwargs2['iterations']
         except:
-            it2 = 1
+            it2 = DEFAULT_NITER
         if (fn1 != fn2) or (it1 != it2):
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
@@ -220,11 +220,11 @@ def change_smoothers(ml, presmoother, postsmoother):
             try:
                 it1 = kwargs1['iterations']
             except:
-                it1 = 1
+                it1 = DEFAULT_NITER
             try:
                 it2 = kwargs2['iterations']
             except:
-                it2 = 1
+                it2 = DEFAULT_NITER
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
@@ -244,7 +244,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                     ml.symmetric_smoothing = False
 
     elif len(presmoother) > len(postsmoother):
-        mid_len = min(len(postsmoother), len(ml.levels[:-1]))
+        mid_len = min(len(presmoother), len(ml.levels[:-1]))
         for i in range(min_len, mid_len):
             # unpack presmoother[i]
             fn1, kwargs1 = unpack_arg(presmoother[i])
@@ -262,11 +262,11 @@ def change_smoothers(ml, presmoother, postsmoother):
             try:
                 it1 = kwargs1['iterations']
             except:
-                it1 = 1
+                it1 = DEFAULT_NITER
             try:
                 it2 = kwargs2['iterations']
             except:
-                it2 = 1
+                it2 = DEFAULT_NITER
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
