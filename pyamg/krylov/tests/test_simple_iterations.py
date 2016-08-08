@@ -128,7 +128,7 @@ class TestSimpleIterations(TestCase):
         (x, flag) = steepest_descent(A, b, x0, tol=1e-8, maxiter=20,
                                      residuals=resvec, M=sa.aspreconditioner(),
                                      callback=callback)
-        assert(resvec[-1] < 1e-8)
+        assert(resvec[-1]/resvec[0] < 1e-8)
         for i in range(len(fvals)-1):
             assert(fvals[i+1] <= fvals[i])
 
@@ -177,6 +177,6 @@ class TestSimpleIterations(TestCase):
         (x, flag) = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,
                                      residuals=resvec, M=sa.aspreconditioner(),
                                      callback=callback)
-        assert(resvec[-1] < 1e-8)
+        assert(resvec[-1]/resvec[0] < 1e-8)
         for i in range(len(fvals)-1):
             assert(fvals[i+1] <= fvals[i])

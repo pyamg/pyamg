@@ -113,7 +113,7 @@ def unpack_arg(v):
 def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                        pdef=True, num_candidates=1, candidate_iters=5,
                        improvement_iters=0, epsilon=0.1,
-                       max_levels=10, max_coarse=100, aggregate='standard',
+                       max_levels=10, max_coarse=10, aggregate='standard',
                        prepostsmoother=('gauss_seidel',
                                         {'sweep': 'symmetric'}),
                        smooth=('jacobi', {}), strength='symmetric',

@@ -405,8 +405,8 @@ class TestSolverPerformance(TestCase):
         for coarse1, coarse2 in coarse_solver_pairs:
             r1 = []
             r2 = []
-            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1)
-            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2)
+            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1, max_coarse=500)
+            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2, max_coarse=500)
             x1 = sa1.solve(b, residuals=r1)
             x2 = sa2.solve(b, residuals=r2)
             del x1, x2
