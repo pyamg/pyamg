@@ -1,4 +1,4 @@
-- Not doing for adaptive, because old adaptive code is a mess.
+- Not doing for adaptive, because old adaptive code is questionable.
 
 - Relaxation on targets
 	+ Need to account for Schwarz - is this done on targets?
@@ -23,7 +23,7 @@
 	+ Started for CR, need to finish in amg_core
 + Interpolate (classical)
 	+ Not implemented
-- In code
+- In code (SA, classical, RN)
 	+ Accounted for RAP
 	+ Accounted for diagonal dominance
 	+ Accounted for non-symmetric
@@ -31,3 +31,4 @@
 	+ Accounted for improving bad guys
 
 ——> Fill out unit tests in ./tests/test_complexity.py
+——> Change scaling of matrix products vs. scalar/vector operations? 
