@@ -35,10 +35,10 @@ def rootnode_solver(A, B=None, BH=None,
                                  {'sweep': 'symmetric'}),
                     postsmoother=('block_gauss_seidel',
                                   {'sweep': 'symmetric'}),
-                    improve_candidates=[('block_gauss_seidel',
+                    improve_candidates=('block_gauss_seidel',
                                         {'sweep': 'symmetric',
-                                         'iterations': 4}), None],
-                    max_levels = 10, max_coarse = 500,
+                                         'iterations': 4}),
+                    max_levels = 10, max_coarse = 10,
                     diagonal_dominance=False, keep=False, **kwargs):
     """
     Create a multilevel solver using root-node based Smoothed Aggregation (SA).

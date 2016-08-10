@@ -26,7 +26,7 @@ def ruge_stuben_solver(A,
                        CF='RS',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
-                       max_levels=10, max_coarse=500, keep=False, **kwargs):
+                       max_levels=10, max_coarse=10, keep=False, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
     Parameters
