@@ -557,8 +557,9 @@ class multilevel_solver:
 
             # Check for symmetric smoothing scheme when using CG
             if (accel is 'cg') and (self.symmetric_smoothing == False):
-                warn('CG requires SPD matrix. Non-symmetric smoothing scheme '\
-                     'may significantly increase convergence factors.')
+                warn('Incompatible non-symmetric multigrid preconditioner detected, '
+                     'due to presmoother/postsmoother combination. CG requires SPD '
+                     'preconditioner, not just SPD matrix.')
 
             # Check for AMLI compatability
             if (accel != 'fgmres') and (cycle == 'AMLI'):
