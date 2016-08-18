@@ -6,6 +6,7 @@ from warnings import warn
 
 import scipy as sp
 import numpy as np
+from pyamg.vis.vis_coarse import vis_splitting
 
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -555,6 +556,27 @@ class multilevel_solver:
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
         self.levels[lvl].postsmoother(A, x, b)
+
+    def visualize_coarse_grids(self, directory):
+        """ Dump a visualization of the coarse grids (c/f splittings on each level) in vtu format in the given directory.
+
+        Parameters
+        ----------
+        directory : {string}
+            String of form 'path/to/save/directory'
+
+        Returns
+        -------
+        nothing
+
+        """
+        if (self.levels[0].verts.any()):
+            for i in range(len(self.levels) - 1):
+                filename = directory + '/cf_' + str(i) + '.vtu'
+                vis_splitting(self.levels[i].verts, self.levels[i].splitting, fname=filename)
+        else:
+            print 'Cannot visulize coarse grids: missing dof locations or splittings in multilevel instance. \
+                Pass in parameters verts = [nx2 array of dof locations] and keep = True when creating multilevel instance.'
 
 
 def coarse_grid_solver(solver):
