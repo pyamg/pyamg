@@ -1,11 +1,12 @@
 from __future__ import print_function
-from numpy import array, zeros, ravel, abs, max, dot, conjugate
+from numpy import array, zeros, ravel, abs, max, dot, conjugate, sqrt,\
+        iscomplexobj
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from warnings import warn
 from pyamg.util.linalg import norm
 from pyamg import amg_core
-from scipy.linalg import get_blas_funcs
+from scipy.linalg import get_blas_funcs, get_lapack_funcs
 import scipy as sp
 
 __docformat__ = "restructuredtext en"
@@ -157,8 +158,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
             maxiter = min(dimen, 40)
         max_inner = maxiter
 
-    # Get fast access to underlying BLAS routines
-    [rotg] = get_blas_funcs(['rotg'], [x])
+    # Get fast access to underlying LAPACK routine
+    [lartg] = get_lapack_funcs(['lartg'], [x] )
 
     # Is this a one dimensional matrix?
     if dimen == 1:
@@ -288,7 +289,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
             # anything out.
             if inner != dimen-1:
                 if v[inner+1] != 0:
-                    [c, s] = rotg(v[inner], v[inner+1])
+                    [c, s, r] = lartg(v[inner], v[inner+1])
                     Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
                     Q[(inner*4): ((inner+1)*4)] = ravel(Qblock).copy()
 

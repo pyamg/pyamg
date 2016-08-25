@@ -206,7 +206,7 @@ def CR(A, B=None, method='habituated', nu=3, thetacr=0.7,
 
         # Print details on current iteration
         if verbose:
-            print("CR Iteration ",it,", CF = ", rho,", Coarsening factor = ", float(n-indices[0]))/n
+            print("CR Iteration ",it,", CF = ", rho,", Coarsening factor = ", float(n-indices[0])/n)
 
         # If convergence factor satisfactory, break loop
         if rho < thetacr:
