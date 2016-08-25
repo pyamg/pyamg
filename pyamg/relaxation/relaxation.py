@@ -240,7 +240,9 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> residuals=[]
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
     """
+
     A, x, b = make_system(A, x, b, formats=['csr'])
+    A.sort_indices()
 
     if subdomain is None and inv_subblock is not None:
         raise ValueError("inv_subblock must be None if subdomain is None")

@@ -462,12 +462,13 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None, subdomain_ptr=N
                   inv_subblock=None, inv_subblock_ptr=None, sweep=DEFAULT_SWEEP):
 
     matrix_asformat(lvl, 'A', 'csr')
+    lvl.Acsr.sort_indices()
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
         relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
                                       inv_subblock, inv_subblock_ptr)
 
     def smoother(A, x, b):
-        relaxation.schwarz(A, x, b, iterations=iterations, subdomain=subdomain,
+        relaxation.schwarz(lvl.Acsr, x, b, iterations=iterations, subdomain=subdomain,
                            subdomain_ptr=subdomain_ptr,
                            inv_subblock=inv_subblock,
                            inv_subblock_ptr=inv_subblock_ptr, sweep=sweep)
@@ -482,6 +483,7 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SW
     else:
         C = lvl.C.tocsr()
 
+    C.sort_indices()
     subdomain_ptr = C.indptr.copy()
     subdomain = C.indices.copy()
 
