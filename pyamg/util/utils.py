@@ -1139,6 +1139,8 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
         and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
         {'sweep':symmetric}.  If string, must be that of a supported smoother,
         e.g., gauss_seidel.
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -1629,7 +1631,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     return {'P_I': P_I, 'I_F': I_F, 'I_C': I_C, 'Cpts': Cpts, 'Fpts': Fpts}
 
 
-def compute_BtBinv(B, C):
+def compute_BtBinv(B, C, cost=[0]):
     ''' Helper function that creates inv(B_i.T B_i) for each block row i in C,
         where B_i is B restricted to the sparsity pattern of block row i.
 
@@ -1640,6 +1642,8 @@ def compute_BtBinv(B, C):
     C : {csr_matrix, bsr_matrix}
         Sparse NxM matrix, whose sparsity structure (i.e., matrix graph)
         is used to determine BtBinv.
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -1718,6 +1722,11 @@ def compute_BtBinv(B, C):
     #   pyamg.amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
     BtBinv = BtBinv.transpose((0, 2, 1)).copy()
     pinv_array(BtBinv)
+    
+    # Ignore leading constant in block inverse, because for small blocks
+    # seen in bad guys, constant of 30n^3 is way overestimating. 
+    cost[0] += B.shape[0]*B.shape[1] + (B.shape[1]**3)*C.shape[0] ) /\
+                        float( blocksize(C) )
 
     return BtBinv
 
@@ -1737,6 +1746,8 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
         is CSR or is BSR with blocksize 1.  Otherwise M = N/blocksize.
     theta : {float}
         determines diagonal dominance threshhold
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -2097,7 +2108,7 @@ def filter_matrix_columns(A, theta):
     return A_filter
 
 
-def filter_matrix_rows(A, theta):
+def filter_matrix_rows(A, theta, cost=[0]):
     """
     Filter each row of A with tol, i.e., drop all entries in row k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
@@ -2108,6 +2119,9 @@ def filter_matrix_rows(A, theta):
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
+    
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -2164,10 +2178,12 @@ def filter_matrix_rows(A, theta):
         A_filter = A_filter.asformat(Aformat)
 
     A.indices -= A.shape[0]
+    
+    cost[0] += 2.0 * A.nnz
     return A_filter
 
 
-def truncate_rows(A, nz_per_row):
+def truncate_rows(A, nz_per_row, cost=[0]):
     """
     Truncate the rows of A by keeping only the largest in magnitude entries in
     each row.
@@ -2177,7 +2193,10 @@ def truncate_rows(A, nz_per_row):
     A : sparse_matrix
 
     nz_per_row : int
+
         Determines how many entries in each row to keep
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -2218,6 +2237,10 @@ def truncate_rows(A, nz_per_row):
         A = A.tobsr(blocksize)
     else:
         A = A.asformat(Aformat)
+    
+    # Track cost as the cost to sort each row
+    avg_row_size = A.nnz / float(A.shape[0])
+    cost[0] += a.shape[0]*(avg_row_size * np.log2(avg_row_size))
 
     return A
 

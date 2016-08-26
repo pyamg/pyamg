@@ -18,7 +18,7 @@ __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
 
 
 # Satisfy_Constraints is a helper function for prolongation smoothing routines
-def Satisfy_Constraints(U, B, BtBinv):
+def Satisfy_Constraints(U, B, BtBinv, cost=[0]):
     """U is the prolongator update.
        Project out components of U such that U*B = 0
 
@@ -32,17 +32,14 @@ def Satisfy_Constraints(U, B, BtBinv):
     BtBinv : {array}
         Local inv(B_i.H*B_i) matrices for each supernode, i
         B_i is B restricted to the sparsity pattern of supernode i in U
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
     Updated U, so that U*B = 0.
     Update is computed by orthogonally (in 2-norm) projecting
     out the components of span(B) in U in a row-wise fashion.
-
-    Notes
-    -----
-    Flops are approximately 
-        U.nnz*(2*B.shape[1] + B.shape[1]^2) + B.shape[0]*B.shape[1]^3
 
     See Also
     --------
@@ -71,6 +68,8 @@ def Satisfy_Constraints(U, B, BtBinv):
                                               U.indptr, U.indices,
                                               np.ravel(U.data))
 
+    cost[0] += U.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
+                        (B.shape[1]**3) * B.shape[0]
     return U
 
 
@@ -206,27 +205,25 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         for i in range(degree):
             if sparse.isspmatrix_bsr(P):
                 U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
-                U_block = U.blocksize
             else:
                 U = D_inv_S*P
-                U_block = [1,1]
 
             cost[0] += P.nnz / float(S.nnz)
 
             # (1) Enforce U*B = 0. Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in Sparsity Pattern. This
             # array is used multiple times in Satisfy_Constraints(...).
-            BtBinv = compute_BtBinv(B, U)
-
-            # Ignore leading constant in block inverse, because for small blocks
-            # seen in bad guys, constant of 30n^3 is way overestimating. 
-            cost[0] += ( B.shape[0]*B.shape[1] + (B.shape[1]**3)*U.shape[0] ) /\
-                        float( U_block[0] * S.nnz)
+            temp_cost = [0.0]
+            BtBinv = compute_BtBinv(B, U, cost=temp_cost)
+            cost[0] += temp_cost[0] / float(S.nnz)
 
             # (2) Apply satisfy constraints
-            Satisfy_Constraints(U, B, BtBinv)
-            cost[0] += (U.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                        (B.shape[1]**3) * B.shape[0] ) / float(S.nnz)
+            temp_cost=[0.0]
+            Satisfy_Constraints(U, B, BtBinv, cost=temp_cost)
+            cost[0] += temp_cost[0] / float(S.nnz)
+
+            cost[0] +=  U.nnz*(2*B.shape[1] + B.shape[1]**2) + B.shape[0]*B.shape[1]**3
+            cost[0] +=  / float(S.nnz)
 
             # Update P
             P = P - U
@@ -421,10 +418,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     cost[0] += mat_mat_complexity(A,T,incomplete=False) / float(A.nnz)
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
-    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
-
+    temp_cost=[0.0]
+    Satisfy_Constraints(R, B, BtBinv, cost=temp_cost)
+    cost[0] += temp_cost[0] / float(A.nnz)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -479,9 +475,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         cost[0] += mat_mat_complexity(A,AP,incomplete=True) / float(A.nnz)
 
         # Enforce AP*B = 0
-        Satisfy_Constraints(AP, B, BtBinv)
-        cost[0] += (AP.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+        temp_cost=[0.0]
+        Satisfy_Constraints(AP, B, BtBinv, cost=temp_cost)
+        cost[0] += temp_cost[0] / float(A.nnz)
 
 
         # Frobenius inner-product of (P, AP)
@@ -608,9 +604,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     cost[0] += mat_mat_complexity(Ah,AT,incomplete=False) / float(A.nnz)
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
-    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+    temp_cost=[0.0]
+    Satisfy_Constraints(R, B, BtBinv, cost=temp_cost)
+    cost[0] += temp_cost[0] / float(A.nnz)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -665,9 +661,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         del AP_temp
 
         # Enforce AP*B = 0
-        Satisfy_Constraints(AP, B, BtBinv)
-        cost[0] += (AP.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+        temp_cost=[0.0]
+        Satisfy_Constraints(AP, B, BtBinv, cost=temp_cost)
+        cost[0] += temp_cost[0] / float(A.nnz)
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
@@ -847,9 +843,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     cost[0] += R.nnz / float(A.nnz)
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
-    cost[0] += (R.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+    temp_cost=[0.0]
+    Satisfy_Constraints(R, B, BtBinv, cost=temp_cost)
+    cost[0] += temp_cost[0] / float(A.nnz)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -895,10 +891,10 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         cost[0] += AV.nnz / float(A.nnz)
 
         # Enforce AV*B = 0
-        Satisfy_Constraints(AV, B, BtBinv)
+        temp_cost=[0.0]
+        Satisfy_Constraints(AV, B, BtBinv, cost=temp_cost)
         V.append(AV.copy())
-        cost[0] += (AV.nnz * (2.0*B.shape[1] + B.shape[1]**2) + \
-                    (B.shape[1]**3) * B.shape[0] ) / float(A.nnz)
+        cost[0] += temp_cost[0] / float(A.nnz)
 
         # Modified Gram-Schmidt
         for j in range(i+1):
@@ -1165,24 +1161,21 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         #   - Complexity: two passes through T for theta-filter, a sort on
         #     each row for k-filter, adding matrices if both.
         if 'theta' in prefilter and 'k' in prefilter:
-            cost[0] += (2.0 * Sparsity_Pattern.nnz +
-                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
-                        np.log2(Sparsity_Pattern.nnz /
-                            float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
-
-            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            temp_cost=[0.0]
+            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'], cost=temp_cost)
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
             # Union two sparsity patterns
             Sparsity_Pattern += Sparsity_theta
             cost[0] += Sparsity_Pattern.nnz / float(A.nnz)
         elif 'k' in prefilter:
-            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
-                        np.log2(Sparsity_Pattern.nnz /
-                            float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            temp_cost=[0.0]
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         elif 'theta' in prefilter:
-            cost[0] += 2.0 * Sparsity_Pattern.nnz / float(A.nnz)
-            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+            temp_cost=[0.0]
+            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
@@ -1195,23 +1188,21 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         # If degree is 0, just copy T for the sparsity pattern
         Sparsity_Pattern = T.copy()
         if 'theta' in prefilter and 'k' in prefilter:
-            cost[0] += (2.0 * Sparsity_Pattern.nnz +
-                        Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
-                        np.log2(Sparsity_Pattern.nnz /
-                            float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
-            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            temp_cost=[0.0]
+            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'], cost=temp_cost)
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
             # Union two sparsity patterns
             Sparsity_Pattern += Sparsity_theta
             cost[0] += Sparsity_Pattern.nnz / float(A.nnz)
         elif 'k' in prefilter:
-            cost[0] += (Sparsity_Pattern.nnz / float(Sparsity_Pattern.shape[0]) + \
-                        np.log2(Sparsity_Pattern.nnz /
-                            float(Sparsity_Pattern.shape[0])) ) / float(A.nnz)
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            temp_cost=[0.0]
+            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         elif 'theta' in prefilter:
-            cost[0] += 2.0 * Sparsity_Pattern.nnz / float(A.nnz)
-            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'])
+            temp_cost=[0.0]
+            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern, prefilter['theta'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
@@ -1227,12 +1218,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
     # sparsity pattern in Sparsity Pattern. This array is used multiple times
     # in Satisfy_Constraints(...).
-    BtBinv = compute_BtBinv(B, Sparsity_Pattern)
-
-    # Ignore leading constant in block inverse, because for small blocks
-    # seen in bad guys, constant of 30n^3 is way overestimating. 
-    cost[0] += ( B.shape[0]*B.shape[1] + (B.shape[1]**3)*Sparsity_Pattern.shape[0] ) /\
-                float( Sparsity_Pattern.blocksize[0] * A.nnz)
+    temp_cost = [0.0]
+    BtBinv = compute_BtBinv(B, Sparsity_Pattern, cost=temp_cost)
+    cost[0] += temp_cost[0] / float(A.nnz)
 
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
@@ -1264,8 +1252,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         return T
     else:
         if 'theta' in postfilter and 'k' in postfilter:
-            T_theta = filter_matrix_rows(T, postfilter['theta'])
-            T_k = truncate_rows(T, postfilter['k'])
+            temp_cost=[0.0]
+            T_theta = filter_matrix_rows(T, postfilter['theta'], cost=temp_cost)
+            T_k = truncate_rows(T, postfilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
 
             # Union two sparsity patterns
             T_theta.data[:] = 1.0
@@ -1274,17 +1264,14 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             T_filter.data[:] = 1.0
             T_filter = T.multiply(T_filter)
 
-            cost[0] += ( 2.0 * T.nnz +
-                ( (T.nnz / float(T.shape[0])) + np.log2(T.nnz / float(T.shape[0]))) +
-                max(T_filter.nnz, T_theta.nnz) ) / float(A.nnz)
-
         elif 'k' in postfilter:
-            cost[0] += (T.nnz / float(T.shape[0]) +  np.log2(T.nnz /
-                            float(T.shape[0])) ) / float(A.nnz)
-            T_filter = truncate_rows(T, postfilter['k'])
+            temp_cost=[0.0]
+            T_filter = truncate_rows(T, postfilter['k'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         elif 'theta' in postfilter:
-            cost[0] += 2.0 * T.nnz / float(A.nnz)
-            T_filter = filter_matrix_rows(T, postfilter['theta'])
+            temp_cost=[0.0]
+            T_filter = filter_matrix_rows(T, postfilter['theta'], cost=temp_cost)
+            cost[0] += temp_cost[0] / float(A.nnz)
         else:
             raise ValueError("Unrecognized postfilter option")
 
