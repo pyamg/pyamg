@@ -16,7 +16,7 @@ from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_
     gauss_seidel_indexed, jacobi, polynomial
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
-from pyamg.util.linalg import norm, approximate_spectral_radius
+from pyamg.util.linalg import norm, approximate_spectral_radius, unpack_arg
 from .aggregation import smoothed_aggregation_solver
 from .aggregate import standard_aggregation, lloyd_aggregation
 from .smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
@@ -100,14 +100,6 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         mask = nPDEs*AggOp[:, mask].indices
         for j in range(nPDEs):
             x[mask+j] = 0.0
-
-
-def unpack_arg(v):
-    """Helper function for local methods"""
-    if isinstance(v, tuple):
-        return v[0], v[1]
-    else:
-        return v, {}
 
 
 def adaptive_sa_solver(A, B=None, symmetry='hermitian',
@@ -232,9 +224,6 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
-
-    # Get copy of construction parameters for solver
-    params = dict(**locals())
 
     # Track work in terms of relaxation
     work = np.zeros((1,))
@@ -370,7 +359,6 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
                                         coarse_solver=coarse_solver,
                                         improve_candidates=None,
                                         keep=keep,
-                                        solver_type='asa',
                                         params=params,
                                         **kwargs),
             work[0]/A.nnz]

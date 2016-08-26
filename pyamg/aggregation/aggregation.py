@@ -13,7 +13,7 @@ from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     eliminate_diag_dom_nodes, blocksize,\
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, \
-    mat_mat_complexity
+    mat_mat_complexity, unpack_arg
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -238,13 +238,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    # Get copy of construction parameters for solver. If statement is to
-    # save parameters if passed in from from adaptive method calling SA.
-    if 'params' in kwargs:
-        params = kwargs['params']
-    else:
-        params = dict(**locals())
-
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
         B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
@@ -300,14 +293,8 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
-    # Get solver hierarchy type
-    if 'solver_type' in kwargs:
-        solver_type = kwargs['solver_type']
-    else:
-        solver_type = 'sa'
-
     # Construct and return multilevel hierarchy
-    ml = multilevel_solver(levels, solver_type=solver_type, params=params, **kwargs)
+    ml = multilevel_solver(levels, params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -318,19 +305,6 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
     """
-
-    def unpack_arg(v, cost=True):
-        if isinstance(v, tuple):
-            if cost:
-                (v[1])['cost'] = [0.0]
-                return v[0], v[1]
-            else:
-                return v[0], v[1]
-        else:
-            if cost:
-                return v, {'cost' : [0.0]}
-            else:
-                return v, {}
 
     A = levels[-1].A
     B = levels[-1].B

@@ -125,28 +125,28 @@ class TestMultilevel(TestCase):
 
         for p in params:
             # one level hierarchy
-            mg = multilevel_solver(levels[:1], solver_type='test', params=p)
+            mg = multilevel_solver(levels[:1])
             assert_equal(mg.cycle_complexity(cycle='V'), 100.0/100.0)  # 1
             assert_equal(mg.cycle_complexity(cycle='W'), 100.0/100.0)  # 1
             assert_equal(mg.cycle_complexity(cycle='AMLI'), 100.0/100.0)  # 1
             assert_equal(mg.cycle_complexity(cycle='F'), 100.0/100.0)  # 1
 
             # two level hierarchy
-            mg = multilevel_solver(levels[:2], solver_type='test', params=p)
+            mg = multilevel_solver(levels[:2])
             assert_equal(mg.cycle_complexity(cycle='V'), 225.0/100.0)  # 2,1
             assert_equal(mg.cycle_complexity(cycle='W'), 225.0/100.0)  # 2,1
             assert_equal(mg.cycle_complexity(cycle='AMLI'), 225.0/100.0)  # 2,1
             assert_equal(mg.cycle_complexity(cycle='F'), 225.0/100.0)  # 2,1
 
             # three level hierarchy
-            mg = multilevel_solver(levels[:3], solver_type='test', params=p)
+            mg = multilevel_solver(levels[:3])
             assert_equal(mg.cycle_complexity(cycle='V'), 259.0/100.0)  # 2,2,1
             assert_equal(mg.cycle_complexity(cycle='W'), 318.0/100.0)  # 2,4,2
             assert_equal(mg.cycle_complexity(cycle='AMLI'), 318.0/100.0)  # 2,4,2
             assert_equal(mg.cycle_complexity(cycle='F'), 318.0/100.0)  # 2,4,2
 
             # four level hierarchy
-            mg = multilevel_solver(levels[:4], solver_type='test', params=p)
+            mg = multilevel_solver(levels[:4])
             assert_equal(mg.cycle_complexity(cycle='V'), 272.0/100.0)  # 2,2,2,1
             assert_equal(mg.cycle_complexity(cycle='W'), 388.0/100.0)  # 2,4,8,4
             assert_equal(mg.cycle_complexity(cycle='AMLI'), 388.0/100.0)  # 2,4,8,4

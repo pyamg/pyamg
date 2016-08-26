@@ -3,18 +3,12 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from pyamg.util.utils import unpack_arg
 
 import scipy as sp
 import numpy as np
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
-
-
-def unpack_arg(v):
-    if isinstance(v, tuple):
-        return v[0], v[1]
-    else:
-        return v, {}
 
 
 class multilevel_solver:
@@ -87,7 +81,7 @@ class multilevel_solver:
             self.complexity = {}
             self.SC = None
 
-    def __init__(self, levels, coarse_solver='pinv2', **kwargs):
+    def __init__(self, levels, coarse_solver='pinv2'):
         """
         Class constructor responsible for initializing the cycle and ensuring
         the list of levels is complete.
@@ -771,12 +765,6 @@ def coarse_grid_solver(solver):
     >>> cgs = coarse_grid_solver('lu')
     >>> x = cgs(A, b)
     """
-
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            return v[0], v[1]
-        else:
-            return v, {}
 
     solver, kwargs = unpack_arg(solver)
 

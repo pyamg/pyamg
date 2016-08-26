@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import scipy as sp
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
+from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal, unpack_arg
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 
@@ -20,13 +20,6 @@ DEFAULT_SWEEP = 'forward'
 DEFAULT_NITER = 1
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
                         'jacobi_ne', 'chebyshev', None ]
-
-def unpack_arg(v):
-    if isinstance(v, tuple):
-        return v[0], v[1]
-    else:
-        return v, {}
-
 
 def change_smoothers(ml, presmoother, postsmoother):
     '''

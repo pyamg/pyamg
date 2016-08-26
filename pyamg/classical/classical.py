@@ -12,7 +12,7 @@ from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection,\
     algebraic_distance, affinity_distance
-from pyamg.util.utils import mat_mat_complexity
+from pyamg.util.utils import mat_mat_complexity, unpack_arg
 
 from .interpolate import direct_interpolation
 from . import split
@@ -131,7 +131,7 @@ def ruge_stuben_solver(A,
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF, keep)
 
-    ml = multilevel_solver(levels, solver_type='amg', params=params, **kwargs)
+    ml = multilevel_solver(levels, params=params, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -139,13 +139,6 @@ def ruge_stuben_solver(A,
 # internal function
 def extend_hierarchy(levels, strength, CF, keep):
     """ helper function for local methods """
-
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            (v[1])['cost'] = [0.0]
-            return v[0], v[1]
-        else:
-            return v, {'cost' : [0.0]}
 
     A = levels[-1].A
 

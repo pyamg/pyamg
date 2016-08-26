@@ -18,7 +18,7 @@ __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
 
 
 # Satisfy_Constraints is a helper function for prolongation smoothing routines
-def Satisfy_Constraints(U, B, BtBinv, cost=[0]):
+def Satisfy_Constraints(U, B, BtBinv, cost=[0.0]):
     """U is the prolongator update.
        Project out components of U such that U*B = 0
 
@@ -75,7 +75,7 @@ def Satisfy_Constraints(U, B, BtBinv, cost=[0]):
 
 def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
                                  filter=False, weighting='diagonal',
-                                 cost=[0]):
+                                 cost=[0.0]):
     """Jacobi prolongation smoother
 
     Parameters
@@ -238,7 +238,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     return P
 
 
-def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0]):
+def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1, cost=[0.0]):
     """Richardson prolongation smoother
 
     Parameters
@@ -314,7 +314,7 @@ prolongator for use in SA
 
 
 def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
-                              weighting='local', Cpt_params=None, cost=[0]):
+                              weighting='local', Cpt_params=None, cost=[0.0]):
     '''
     Helper function for energy_prolongation_smoother(...)
 
@@ -491,7 +491,6 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
-            cost[0] += T.nnz / float(A.nnz)
 
         # Update residual
         R = R - alpha*AP
@@ -505,7 +504,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
 
 def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
-                                tol, weighting='local', Cpt_params=None, cost=[0]):
+                                tol, weighting='local', Cpt_params=None, cost=[0.0]):
     '''
     Helper function for energy_prolongation_smoother(...)
 
@@ -676,7 +675,6 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
-            cost[0] += T.nnz / float(A.nnz)
 
         # Update residual
         R = R - alpha*AP
@@ -719,7 +717,7 @@ def apply_givens(Q, v, k):
 
 
 def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
-                                 tol, weighting='local', Cpt_params=None, cost=[0]):
+                                 tol, weighting='local', Cpt_params=None, cost=[0.0]):
     '''
     Helper function for energy_prolongation_smoother(...).
 
@@ -956,7 +954,6 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     # Ensure identity at C-pts
     if Cpt_params[0]:
         T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
-        cost[0] += T.nnz / float(A.nnz)
 
     return T
 
@@ -965,7 +962,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
                                  prefilter={}, postfilter={},
-                                 cost=[0]):
+                                 cost=[0.0]):
     """Minimize the energy of the coarse basis functions (columns of T).  Both
     root-node and non-root-node style prolongation smoothing is available, see
     Cpt_params description below.
@@ -1226,11 +1223,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
     if (Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or ('secondpass' in postfilter):
-        T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
+        temp_cost = [0.0]
+        T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv, cost=temp_cost)
+        cost[0] += temp_cost[0] / float(A.nnz)
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
-            cost[0] += T.nnz/float(A.nnz) 
 
     # Iteratively minimize the energy of T subject to the constraints of
     # Sparsity_Pattern and maintaining T's effect on B, i.e. T*B =

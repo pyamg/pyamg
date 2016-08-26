@@ -14,8 +14,8 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
-           'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
+__all__ = ['unpack_arg', 'blocksize', 'diag_sparse', 'profile_solver', 
+           'to_type', 'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
            'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
            'symmetric_rescaling', 'symmetric_rescaling_sa',
            'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
@@ -31,6 +31,21 @@ except ImportError:
     from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
     from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
 
+
+def unpack_arg(v, cost=True):
+    # Helper function for unpacking a function name and parameter
+    # dictionary tuple
+    if isinstance(v, tuple):
+        if cost:
+            (v[1])['cost'] = [0.0]
+            return v[0], v[1]
+        else:
+            return v[0], v[1]
+    else:
+        if cost:
+            return v, {'cost' : [0.0]}
+        else:
+            return v, {}
 
 def blocksize(A):
     # Helper Function: return the blocksize of a matrix
@@ -1126,7 +1141,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     return rbm
 
 
-def relaxation_as_linear_operator(method, A, b, cost=[0]):
+def relaxation_as_linear_operator(method, A, b, cost=[0.0]):
     """
     Create a linear operator that applies a relaxation method for the
     given right-hand-side
@@ -1169,12 +1184,6 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
     from pyamg import relaxation
     from scipy.sparse.linalg.interface import LinearOperator
     import pyamg.multilevel
-
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            return v[0], v[1]
-        else:
-            return v, {}
 
     # setup variables
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
@@ -1221,7 +1230,7 @@ def relaxation_as_linear_operator(method, A, b, cost=[0]):
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
 
 
-def filter_operator(A, C, B, Bf, BtBinv=None):
+def filter_operator(A, C, B, Bf, BtBinv=None, cost=[0.0]):
     """
     Filter the matrix A according to the matrix graph of C,
     while ensuring that the new, filtered A satisfies:  A_new*B = Bf.
@@ -1240,6 +1249,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         to the neighborhood (with respect to the matrix graph
         of C) of dof of i.  If None is passed in, this array is
         computed internally.
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -1344,12 +1355,14 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
     # C. This array is used multiple times in Satisfy_Constraints(...).
     if BtBinv is None:
-        BtBinv = compute_BtBinv(B, C)
+        BtBinv = compute_BtBinv(B, C, cost)
 
     # Filter A according to C's matrix graph
     C = C.copy()
     C.data[:] = 1
     A = A.multiply(C)
+    cost[0] += float(max(A.nnz, C.nnz))
+
     # add explicit zeros to A wherever C is nonzero, but A is zero
     A = A.tocoo()
     C = C.tocoo()
@@ -1361,7 +1374,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     else:
         A = A.tocsr()
 
-    # Calculate difference between A*B and Bf
+    # Calculate difference between A*B and Bf, cost updated below for
+    # this operation
     diff = A*B - Bf
 
     # Right multiply each row i of A with
@@ -1375,6 +1389,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
                                               np.ravel(diff),
                                               np.ravel(BtBinv), A.indptr,
                                               A.indices, np.ravel(A.data))
+    cost[0] += A.nnz * (2.0*B.shape[1] + B.shape[1]**2) + (B.shape[1]**3) * B.shape[0]
 
     A.eliminate_zeros()
     return A
@@ -1631,7 +1646,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     return {'P_I': P_I, 'I_F': I_F, 'I_C': I_C, 'Cpts': Cpts, 'Fpts': Fpts}
 
 
-def compute_BtBinv(B, C, cost=[0]):
+def compute_BtBinv(B, C, cost=[0.0]):
     ''' Helper function that creates inv(B_i.T B_i) for each block row i in C,
         where B_i is B restricted to the sparsity pattern of block row i.
 
@@ -1731,7 +1746,7 @@ def compute_BtBinv(B, C, cost=[0]):
     return BtBinv
 
 
-def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
+def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0.0]):
     ''' Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
     which we don't want coarsened.  These eliminated nodes in C just become
@@ -2108,7 +2123,7 @@ def filter_matrix_columns(A, theta):
     return A_filter
 
 
-def filter_matrix_rows(A, theta, cost=[0]):
+def filter_matrix_rows(A, theta, cost=[0.0]):
     """
     Filter each row of A with tol, i.e., drop all entries in row k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
@@ -2183,7 +2198,7 @@ def filter_matrix_rows(A, theta, cost=[0]):
     return A_filter
 
 
-def truncate_rows(A, nz_per_row, cost=[0]):
+def truncate_rows(A, nz_per_row, cost=[0.0]):
     """
     Truncate the rows of A by keeping only the largest in magnitude entries in
     each row.

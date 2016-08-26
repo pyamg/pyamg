@@ -618,8 +618,11 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
 
     # Calculate (I - delta_t Dinv A)^k
-    #      In order to later access columns, we calculate the transpose in
-    #      CSR format so that columns will be accessed efficiently
+    # We transpose the product, so that we can efficiently access
+    # the columns in CSR format.  We want the columns (not rows) because 
+    # strength is based on the columns of (I - delta_t Dinv A)^k, i.e., 
+    # relaxed delta functions
+    
     # Calculate the number of time steps that can be done by squaring, and
     # the number of time steps that must be done incrementally
     nsquare = int(np.log2(k))
