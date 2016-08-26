@@ -1,0 +1,34 @@
+- Not doing for adaptive, because old adaptive code is questionable.
+
+- Relaxation on targets
+	+ Need to account for Schwarz - is this done on targets?
+- Aggregation
+	+ Done for classical aggregation
+	+ Done for naive aggregation
+	+ Started for lloyd, need to add to amg_core
+- Smoothing P
+	+ Done for Richardson 
+	+ Done for Jacobi
+	+ Done for energy
+- Strength
+	+ Done for distance
+	+ Done for classical
+	+ Done for symmetric
+	+ Not implemented for energy 
+	+ Done for evolution 
+	+ Done for algebraic distance
+	+ Done for affinity distance
+- Split (classical)
+	+ Not implemented in any CF-splittings
+	+ Started for CR, need to finish in amg_core
++ Interpolate (classical)
+	+ Not implemented
+- In code (SA, classical, RN)
+	+ Accounted for RAP
+	+ Accounted for diagonal dominance
+	+ Accounted for non-symmetric
+	+ Accounted for tentative T
+	+ Accounted for improving bad guys
+
+——> Fill out unit tests in ./tests/test_complexity.py
+——> Change scaling of matrix products vs. scalar/vector operations? 

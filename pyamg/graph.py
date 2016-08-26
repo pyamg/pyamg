@@ -318,12 +318,13 @@ def connected_components(G):
     return components
 
 
-def symmetric_rcm(A):
+def symmetric_rcm(A, B=None):
     """
     Symmetric Reverse Cutthill-McKee
     Get a pseudo-peripheral node, then call BFS
 
-    return a symmetric permuted matrix
+    Return a symmetric permuted matrix, and a scaled target
+    vector B, where B is assumed to be a low-energy mode of A. 
 
     Example
     -------
@@ -353,7 +354,10 @@ def symmetric_rcm(A):
     p = level.argsort()
     Perm = Perm[p, :]
 
-    return Perm * A * Perm.T
+    if B is None:
+        return Perm * A * Perm.T
+    else:
+        return Perm * A * Perm.T, Perm * B
 
 
 def pseudo_peripheral_node(A):

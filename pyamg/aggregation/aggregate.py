@@ -10,7 +10,7 @@ from pyamg.graph import lloyd_cluster
 __all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation']
 
 
-def standard_aggregation(C):
+def standard_aggregation(C, cost=[0]):
     """Compute the sparsity pattern of the tentative prolongator
 
     Parameters
@@ -74,13 +74,13 @@ def standard_aggregation(C):
 
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
+    cost[0] += 1    # Cost roughly 1 WU for classical aggregation
 
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
         return csr_matrix((num_rows, 1), dtype='int8'),\
             np.array([], dtype=index_type)
     else:
-
         shape = (num_rows, num_aggregates)
         if Tj.min() == -1:
             # some nodes not aggregated
@@ -96,7 +96,7 @@ def standard_aggregation(C):
             return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def naive_aggregation(C):
+def naive_aggregation(C, cost=[0]):
     """Compute the sparsity pattern of the tentative prolongator
 
     Parameters
@@ -167,6 +167,7 @@ def naive_aggregation(C):
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
     Tj = Tj - 1
+    cost[0] += 1    # Cost roughly 1 WU for naive aggregation
 
     if num_aggregates == 0:
         # all zero matrix
@@ -179,7 +180,7 @@ def naive_aggregation(C):
         return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
+def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10, cost=[0]):
     """Aggregated nodes using Lloyd Clustering
 
     Parameters
@@ -246,12 +247,15 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         data = np.ones_like(C.data).astype(float)
     elif distance == 'abs':
         data = abs(C.data)
+        cost[0] += 1
     elif distance == 'inv':
         data = 1.0/abs(C.data)
+        cost[0] += 1
     elif distance is 'same':
         data = C.data
     elif distance is 'min':
         data = C.data - C.data.min()
+        cost[0] += 1
     else:
         raise ValueError('unrecognized value distance=%s' % distance)
 

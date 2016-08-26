@@ -12,7 +12,8 @@ from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     eliminate_diag_dom_nodes, blocksize,\
-    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
+    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, \
+    mat_mat_complexity
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -121,6 +122,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
+    setup_complexity : bool
+        For a detailed, more accurate setup complexity, pass in 
+        'setup_complexity' = True. This will slow down performance, but
+        increase accuracy of complexiy count. 
 
     Returns
     -------
@@ -207,6 +212,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
        http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
+
+    if ('setup_complexity' in kwargs):
+        if kwargs['setup_complexity'] == True:
+            mat_mat_complexity.__detailed__ = True
+        del kwargs['setup_complexity']
 
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
@@ -309,11 +319,18 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     smoothed_aggregation_solver.
     """
 
-    def unpack_arg(v):
+    def unpack_arg(v, cost=True):
         if isinstance(v, tuple):
-            return v[0], v[1]
+            if cost:
+                (v[1])['cost'] = [0.0]
+                return v[0], v[1]
+            else:
+                return v[0], v[1]
         else:
-            return v, {}
+            if cost:
+                return v, {'cost' : [0.0]}
+            else:
+                return v, {}
 
     A = levels[-1].A
     B = levels[-1].B
@@ -349,10 +366,13 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         raise ValueError('unrecognized strength of connection method: %s' %
                          str(fn))
 
+    levels[-1].complexity['strength'] = kwargs['cost'][0]
+ 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
+        levels[-1].complexity['diag_dom'] = kwargs['cost'][0]
 
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
@@ -369,22 +389,31 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized aggregation method %s' % str(fn))
 
+    levels[-1].complexity['aggregation'] = kwargs['cost'][0] * (float(C.nnz)/A.nnz)
+
     # Improve near nullspace candidates by relaxing on A B = 0
-    fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
+    temp_cost = [0.0]
+    fn, kwargs = unpack_arg(improve_candidates[len(levels)-1], cost=False)
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b, temp_cost) * B
         levels[-1].B = B
         if A.symmetry == "nonsymmetric":
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b, temp_cost) * BH
             levels[-1].BH = BH
+
+    levels[-1].complexity['candidates'] = temp_cost[0] * B.shape[1]
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
-    # B_fine = T B_coarse.
+    # B_fine = T B_coarse. Orthogonalization complexity ~ 2nk^2, k=B.shape[1].
+    levels[-1].complexity['tentative'] = 2.0 * B.shape[1] * B.shape[1] * \
+                                            float(A.shape[0])/A.nnz
     T, B = fit_candidates(AggOp, B)
     if A.symmetry == "nonsymmetric":
         TH, BH = fit_candidates(AggOp, BH)
+        levels[-1].complexity['tentative'] += 2.0 * BH.shape[1] * BH.shape[1] * \
+                                            float(A.shape[0])/A.nnz
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
@@ -401,6 +430,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     else:
         raise ValueError('unrecognized prolongation smoother method %s' %
                          str(fn))
+
+    levels[-1].complexity['smooth_P'] = kwargs['cost'][0]
 
     # Compute the restriction matrix, R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
@@ -425,18 +456,24 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         else:
             raise ValueError('unrecognized prolongation smoother method %s' %
                              str(fn))
+        levels[-1].complexity['smooth_R'] = kwargs['cost'][0]
 
     if keep:
-        levels[-1].C = C  # strength of connection matrix
-        levels[-1].AggOp = AggOp  # aggregation operator
-        levels[-1].T = T  # tentative prolongator
+        levels[-1].C = C            # strength of connection matrix
+        levels[-1].AggOp = AggOp    # aggregation operator
+        levels[-1].T = T            # tentative prolongator
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
 
-    levels.append(multilevel_solver.level())
-    A = R * A * P              # Galerkin operator
+    # Form coarse grid operator, get complexity
+    levels[-1].complexity['RAP'] = mat_mat_complexity(R,A) / float(A.nnz)
+    RA = R * A
+    levels[-1].complexity['RAP'] += mat_mat_complexity(RA,P) / float(A.nnz)
+    A = RA * P      # Galerkin operator, Ac = RAP
     A.symmetry = symmetry
+
+    levels.append(multilevel_solver.level())
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates
 
