@@ -22,7 +22,7 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
            'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows']
+           'filter_matrix_rows', 'truncate_rows', 'mat_mat_complexity']
 
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
@@ -1126,7 +1126,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     return rbm
 
 
-def relaxation_as_linear_operator(method, A, b):
+def relaxation_as_linear_operator(method, A, b, cost=[0]):
     """
     Create a linear operator that applies a relaxation method for the
     given right-hand-side
@@ -1192,6 +1192,21 @@ def relaxation_as_linear_operator(method, A, b):
         setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
     except NameError:
         raise NameError("invalid presmoother method: ", fn)
+
+    # Estimate cost in WUs for different relaxation methods 
+    dcost = 1
+    if fn.endswith(('nr', 'ne')):
+        dcost *= 2
+    if 'sweep' in kwargs:
+        if kwargs['sweep'] == 'symmetric':
+            dcost *= 2
+    if 'iterations' in kwargs:
+        dcost *= kwargs['iterations']
+    if 'degree' in kwargs:
+        dcost *= kwargs['degree']
+
+    cost[0] += dcost
+
     # Get relaxation routine that takes only (A, x, b) as parameters
     relax = setup_smoother(lvl, **kwargs)
 
@@ -1707,7 +1722,7 @@ def compute_BtBinv(B, C):
     return BtBinv
 
 
-def eliminate_diag_dom_nodes(A, C, theta=1.02):
+def eliminate_diag_dom_nodes(A, C, theta=1.02, cost=[0]):
     ''' Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
     which we don't want coarsened.  These eliminated nodes in C just become
@@ -1758,6 +1773,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
     diag_dom_rows = (D_abs > (theta*(A_abs*np.ones((A_abs.shape[0],),
                      dtype=A_abs) - D_abs)))
+    cost[0] += 2
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
@@ -1768,6 +1784,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = (diag_dom_rows == bsize)
 
     # Replace these rows/cols in # C with rows/cols of the identity.
+    # Cost ignored, as a careful implementation could do this very cheaply. 
     I = eye(C.shape[0], C.shape[1], format='csr')
     I.data[diag_dom_rows] = 0.0
     C = I*C*I
@@ -2205,28 +2222,78 @@ def truncate_rows(A, nz_per_row):
     return A
 
 
-# from functools import partial, update_wrapper
-# def dispatcher(name_to_handle):
-#    def dispatcher(arg):
-#        if isinstance(arg,tuple):
-#            fn,opts = arg[0],arg[1]
-#        else:
-#            fn,opts = arg,{}
-#
-#        if fn in name_to_handle:
-#            # convert string into function handle
-#            fn = name_to_handle[fn]
-#        #elif isinstance(fn, type(numpy.ones)):
-#        #    pass
-#        elif callable(fn):
-#            # if fn is itself a function handle
-#            pass
-#        else:
-#            raise TypeError('Expected function')
-#
-#        wrapped = partial(fn, **opts)
-#        update_wrapper(wrapped, fn)
-#
-#        return wrapped
-#
-#    return dispatcher
+def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
+    """
+    Function to approximate the complexity of a sparse matrix
+    matrix multiplication, A*P.
+        
+        For a detailed estimate, a sample of test_cols columns
+        in P, p_i, are randomly selected, and the complexity to
+        compute A * p_i found as the number of nonzeros in A
+        which overlap with the sparsity of p_i. This is averaged
+        over the set of randomly selected columns.
+
+        The fast approximation is given by taking the average
+        number of nonzeros per column in P, and multiplying this
+        by the number of nonzeros in A. Is generally a pretty
+        good and cheap approximation.
+
+    If the function attribute mat_mat_complexity.__detailed__
+    is set to True, the detailed estimate is used, otherwise 
+    the fast approximation is used. Note that the detailed 
+    estimate will slow down the seutp process. 
+
+    Parameters
+    ----------
+    A : sparse matrix (preferably csr)
+        Left hand side of matrix multiplication
+    P : sparse matrix (preferably csc)
+        Right hand side of matrix multiplication
+    test_cols : int : Default 10
+        Number of columns to sample for overlapping sparsity
+        patterns of A, P. More samples is more work, but 
+        more accurate. 
+    incomplete : bool : Default False
+        Complexity of incomplete matrix multiplication,
+        where A*P is only computed in the sparsity pattern
+        of P. Used particularly in energy minimization 
+        smoothing of prolongation operators. 
+
+    Returns
+    -------
+    Approximate number of FLOPs to compute A*P.
+
+    """
+    A.eliminate_zeros()
+    P.eliminate_zeros()
+
+    # Detailed estimate of complexity for matrix product 
+    # using random sampling. 
+    if hasattr(mat_mat_complexity, '__detailed__') and\
+        mat_mat_complexity.__detailed__ == True:
+        from random import randint
+        A0 = A.tocsr()
+        P0 = P.tocsc()
+
+        # Random set of test columns
+        test_cols = min(test_cols, P0.shape[1])
+        k = P0.shape[1]
+        cols = [randint(0,P0.shape[1]-1) for i in range(0,test_cols)]
+
+        work = 0.0
+        for c in cols:
+            inds = P0[:,c].indices
+            if len(inds) == 0:
+                continue
+            if incomplete:
+                work += A0[inds,:][:,inds].nnz
+            else:
+                work += A0[:,inds].nnz
+
+        work = work * P0.shape[1] / float(test_cols)
+        return work
+
+    # Approximation of complexity of matrix product.
+    else:
+        return A.nnz * (float(P.nnz) / P.shape[0])
+

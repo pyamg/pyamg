@@ -57,7 +57,7 @@ class TestStrengthOfConnection(TestCase):
                 result = symmetric_soc(A, theta)
                 expected = reference_symmetric_soc(A, theta)
 
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
     def test_distance_strength_of_connection(self):
@@ -67,9 +67,9 @@ class TestStrengthOfConnection(TestCase):
 
         for (A, V) in cases:
             for theta in [1.5, 2.0, 2.5]:
-                result = distance_soc(A, V, theta=theta)
-                expected = reference_distance_soc(A, V, theta=theta)
-                assert_equal(result.nnz,       expected.nnz)
+                result = distance_soc(A, V, theta=theta, relative_drop=True)
+                expected = reference_distance_soc(A, V, theta=theta, relative_drop=True)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
         for (A, V) in cases:
@@ -77,7 +77,7 @@ class TestStrengthOfConnection(TestCase):
                 result = distance_soc(A, V, theta=theta, relative_drop=False)
                 expected = reference_distance_soc(A, V, theta=theta,
                                                   relative_drop=False)
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
     def test_incomplete_mat_mult_csr(self):

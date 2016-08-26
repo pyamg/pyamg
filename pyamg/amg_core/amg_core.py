@@ -464,8 +464,8 @@ def rs_direct_interpolation_pass2(*args):
 
 def cr_helper(*args):
     """
-    cr_helper(int const [] A_rowptr, int const [] A_colinds, float const [] B, float [] e, int [] indices, int [] splitting, float [] gamma, float const thetacs)
-    cr_helper(int const [] A_rowptr, int const [] A_colinds, double const [] B, double [] e, int [] indices, int [] splitting, double [] gamma, double const thetacs)
+    cr_helper(int const [] A_rowptr, int const [] A_colinds, float const [] B, float [] e, int [] indices, int [] splitting, float [] gamma, float const thetacs, float [] cost)
+    cr_helper(int const [] A_rowptr, int const [] A_colinds, double const [] B, double [] e, int [] indices, int [] splitting, double [] gamma, double const thetacs, double [] cost)
     """
     return _amg_core.cr_helper(*args)
 

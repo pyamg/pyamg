@@ -16,7 +16,7 @@
  *    Strength values are _Not_ evaluated relatively, i.e. an off-diagonal
  *    entry A[i,j] is a strong connection iff
  *
- *            S[i,j] <= epsilon,   where k != i
+ *            S[i,j] <= epsilon,   where j != i
  *
  *   Also, set the diagonal to 1.0, as each node is perfectly close to itself
  *

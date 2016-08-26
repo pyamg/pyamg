@@ -174,6 +174,10 @@ def change_smoothers(ml, presmoother, postsmoother):
             raise NameError("invalid postsmoother method: ", fn2)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
+        # Save tuples in ml to check cycle complexity
+        ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
+        ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
+
         # Check if symmetric smoothing scheme
         try:
             it1 = kwargs1['iterations']
@@ -215,6 +219,10 @@ def change_smoothers(ml, presmoother, postsmoother):
             except NameError:
                 raise NameError("invalid postsmoother method: ", fn2)
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+
+            # Save tuples in ml to check cycle complexity
+            ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
+            ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
 
             # Check if symmetric smoothing scheme
             try:
@@ -258,6 +266,10 @@ def change_smoothers(ml, presmoother, postsmoother):
             # Set up postsmoother
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
+            # Save tuples in ml to check cycle complexity
+            ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
+            ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
+
             # Check if symmetric smoothing scheme
             try:
                 it1 = kwargs1['iterations']
@@ -292,7 +304,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     for i in range(mid_len, len(ml.levels[:-1])):
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
-
+        ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
+        ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
 
 
 def rho_D_inv_A(A):

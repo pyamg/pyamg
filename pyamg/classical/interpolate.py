@@ -10,7 +10,7 @@ from pyamg import amg_core
 __all__ = ['direct_interpolation']
 
 
-def direct_interpolation(A, C, splitting):
+def direct_interpolation(A, C, splitting, cost=[0]):
     """Create prolongator using direct interpolation
 
     Parameters

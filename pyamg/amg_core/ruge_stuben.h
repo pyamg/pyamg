@@ -645,9 +645,11 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
                I indices[], const int indices_size,
                I splitting[], const int splitting_size,
                T gamma[], const int gamma_size,
-               const T thetacs  )
+               const T thetacs, 
+               T cost[], const int cost_size )
 {
-    I n = splitting_size;
+    const T &Annz = A_colinds_size;
+    const I &n = splitting_size;
     I &num_Fpts = indices[0];
 
     // Steps 3.1d, 3.1e in Falgout / Brannick (2010)
@@ -661,6 +663,7 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
             inf_norm = e[pt];
         }   
     }
+    cost[0] += num_Fpts / Annz;
 
     // Compute candidate set measure, pick coarse grid candidates.
     std::vector<I> Uindex;
@@ -672,6 +675,7 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
         }
     }
     I set_size = Uindex.size();
+    cost[0] += num_Fpts / Annz;
 
     // Step 3.1f in Falgout / Brannick (2010)
     // Find weights: omega_i = |N_i\C| + gamma_i
