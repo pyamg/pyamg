@@ -5,6 +5,7 @@ from scipy.sparse import csr_matrix
 
 from pyamg.gallery import poisson
 from pyamg.multilevel import multilevel_solver, coarse_grid_solver
+from pyamg.relaxation.smoothing import change_smoothers
 
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
@@ -113,14 +114,14 @@ class TestMultilevel(TestCase):
 
         # V(1,1) forward cycle, V(1,1) symmetric cycle,
         # V(2,1) backward cycle, V(2,2) jacobi cycle
-        params = [ {'presmoother': ('jacobi': {'iterations' : 1}),
-                    'postsmoother': ('jacobi': {'iterations' : 1})},
-                   {'presmoother': ('gauss_seidel': {'sweep' : 'symmetric', 'iterations' : 1}),
-                    'postsmoother': ('gauss_seidel': {'sweep' : 'symmetric', 'iterations' : 1})},
-                   {'presmoother': ('gauss_seidel': {'sweep' : 'backward', 'iterations' : 1}),
-                    'postsmoother': ('gauss_seidel': {'sweep' : 'backward', 'iterations' : 2})},
-                   {'presmoother': ('gauss_seidel_nr': {'sweep' : 'forward', 'iterations' : 1}),
-                    'postsmoother': ('gauss_seidel_nr': {'sweep' : 'forward', 'iterations' : 1})},
+        params = [ {'presmoother': ('jacobi', {'iterations' : 1}),
+                    'postsmoother': ('jacobi', {'iterations' : 1})},
+                   {'presmoother': ('gauss_seidel', {'sweep' : 'symmetric', 'iterations' : 1}),
+                    'postsmoother': ('gauss_seidel', {'sweep' : 'symmetric', 'iterations' : 1})},
+                   {'presmoother': ('gauss_seidel', {'sweep' : 'backward', 'iterations' : 1}),
+                    'postsmoother': ('gauss_seidel', {'sweep' : 'backward', 'iterations' : 2})},
+                   {'presmoother': ('gauss_seidel_nr', {'sweep' : 'forward', 'iterations' : 1}),
+                    'postsmoother': ('gauss_seidel_nr', {'sweep' : 'forward', 'iterations' : 1})},
                     ]
 
         for p in params:
@@ -133,24 +134,27 @@ class TestMultilevel(TestCase):
 
             # two level hierarchy
             mg = multilevel_solver(levels[:2])
-            assert_equal(mg.cycle_complexity(cycle='V'), 225.0/100.0)  # 2,1
-            assert_equal(mg.cycle_complexity(cycle='W'), 225.0/100.0)  # 2,1
-            assert_equal(mg.cycle_complexity(cycle='AMLI'), 225.0/100.0)  # 2,1
-            assert_equal(mg.cycle_complexity(cycle='F'), 225.0/100.0)  # 2,1
+            change_smoothers(mg, 'gauss_seidel', 'gauss_seidel')
+            assert_equal(mg.cycle_complexity(cycle='V'), 4.0)
+            assert_equal(mg.cycle_complexity(cycle='W'), 4.0)
+            assert_equal(mg.cycle_complexity(cycle='AMLI'), 4.0)
+            assert_equal(mg.cycle_complexity(cycle='F'), 4.0)
 
             # three level hierarchy
             mg = multilevel_solver(levels[:3])
-            assert_equal(mg.cycle_complexity(cycle='V'), 259.0/100.0)  # 2,2,1
-            assert_equal(mg.cycle_complexity(cycle='W'), 318.0/100.0)  # 2,4,2
-            assert_equal(mg.cycle_complexity(cycle='AMLI'), 318.0/100.0)  # 2,4,2
-            assert_equal(mg.cycle_complexity(cycle='F'), 318.0/100.0)  # 2,4,2
+            change_smoothers(mg, ('gauss_seidel', {'iterations':2}) , 'gauss_seidel')
+            assert_equal(mg.cycle_complexity(cycle='V'), 6.3)
+            assert_equal(mg.cycle_complexity(cycle='W'), 7.6)
+            assert_equal(mg.cycle_complexity(cycle='AMLI'), 7.6)
+            assert_equal(mg.cycle_complexity(cycle='F'), 7.6)
 
             # four level hierarchy
             mg = multilevel_solver(levels[:4])
-            assert_equal(mg.cycle_complexity(cycle='V'), 272.0/100.0)  # 2,2,2,1
-            assert_equal(mg.cycle_complexity(cycle='W'), 388.0/100.0)  # 2,4,8,4
-            assert_equal(mg.cycle_complexity(cycle='AMLI'), 388.0/100.0)  # 2,4,8,4
-            assert_equal(mg.cycle_complexity(cycle='F'), 366.0/100.0)  # 2,4,6,3
+            change_smoothers(mg, ('gauss_seidel', {'sweep':'symmetric'}), 'gauss_seidel')
+            assert_equal(mg.cycle_complexity(cycle='V'), 6.78)
+            assert_equal(mg.cycle_complexity(cycle='W'), 9.52)
+            assert_equal(mg.cycle_complexity(cycle='AMLI'), 9.52)
+            assert_equal(mg.cycle_complexity(cycle='F'), 9.04)
 
 
 class TestComplexMultilevel(TestCase):

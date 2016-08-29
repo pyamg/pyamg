@@ -118,7 +118,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True, cost=[0
     C.eliminate_zeros()
 
     C = C + sparse.eye(C.shape[0], C.shape[1], format='csr')
-    cost[0] += float(C.shape) / A.nnz
+    cost[0] += float(C.shape[0]) / A.nnz
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.

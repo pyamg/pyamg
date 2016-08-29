@@ -222,9 +222,6 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             Satisfy_Constraints(U, B, BtBinv, cost=temp_cost)
             cost[0] += temp_cost[0] / float(S.nnz)
 
-            cost[0] +=  U.nnz*(2*B.shape[1] + B.shape[1]**2) + B.shape[0]*B.shape[1]**3
-            cost[0] +=  / float(S.nnz)
-
             # Update P
             P = P - U
             cost[0] += max(P.nnz, U.nnz) / float(S.nnz)

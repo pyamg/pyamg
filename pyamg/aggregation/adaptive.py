@@ -16,7 +16,8 @@ from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_
     gauss_seidel_indexed, jacobi, polynomial
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
-from pyamg.util.linalg import norm, approximate_spectral_radius, unpack_arg
+from pyamg.util.utils import unpack_arg
+from pyamg.util.linalg import norm, approximate_spectral_radius
 from .aggregation import smoothed_aggregation_solver
 from .aggregate import standard_aggregation, lloyd_aggregation
 from .smooth import jacobi_prolongation_smoother, energy_prolongation_smoother,\
@@ -359,7 +360,6 @@ def adaptive_sa_solver(A, B=None, symmetry='hermitian',
                                         coarse_solver=coarse_solver,
                                         improve_candidates=None,
                                         keep=keep,
-                                        params=params,
                                         **kwargs),
             work[0]/A.nnz]
 
@@ -388,7 +388,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
     # Define relaxation routine
     def relax(A, x):
-        fn, kwargs = unpack_arg(prepostsmoother)
+        fn, kwargs = unpack_arg(prepostsmoother, cost=False)
         if fn == 'gauss_seidel':
             gauss_seidel(A, x, np.zeros_like(x),
                          iterations=candidate_iters, sweep='symmetric')
@@ -726,7 +726,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         levels[i+1].T = T_bridge
 
     # note that we only use the x from the second coarsest level
-    fn, kwargs = unpack_arg(prepostsmoother)
+    fn, kwargs = unpack_arg(prepostsmoother, cost=False)
     for lvl in reversed(levels[:-2]):
         x = lvl.P * x
         work[:] += lvl.A.nnz*candidate_iters*2

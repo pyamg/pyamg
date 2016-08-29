@@ -10,7 +10,7 @@ from pyamg.gallery import poisson, linear_elasticity, load_example,\
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     distance_strength_of_connection, algebraic_distance, affinity_distance
-
+from pyamg.aggregation import standard_aggregation, fit_candidates
 
 from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
     assert_array_equal, assert_almost_equal
@@ -19,17 +19,18 @@ from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
 
 class TestStrengthComplexity(TestCase):
 
-    self.cases = []
+    def setUp(self):
+        self.cases = []
 
-    # Poisson problems in 1D and 2D
-    for N in [2, 3, 5, 7, 10, 11, 19]:
-        self.cases.append(poisson((N,), format='csr'))
-    for N in [2, 3, 7, 9]:
-        self.cases.append(poisson((N, N), format='csr'))
+        # Poisson problems in 1D and 2D
+        for N in [2, 3, 5, 7, 10, 11, 19]:
+            self.cases.append(poisson((N,), format='csr'))
+        for N in [2, 3, 7, 9]:
+            self.cases.append(poisson((N, N), format='csr'))
 
-    for name in ['knot', 'airfoil', 'bar']:
-        ex = load_example(name)
-        self.cases.append(ex['A'].tocsr())
+        for name in ['knot', 'airfoil', 'bar']:
+            ex = load_example(name)
+            self.cases.append(ex['A'].tocsr())
 
     def test_classical(self):
 
@@ -77,7 +78,7 @@ class TestStrengthComplexity(TestCase):
             est = 1.5 + 2.0*float(A.shape[0]) / A.nnz
             assert_almost_equal(cost[0],est)
 
-    def test_evolution(self):
+    #def test_evolution(self):
 
 
     def test_distance(self):
@@ -91,7 +92,7 @@ class TestStrengthComplexity(TestCase):
                 cost = [0]
                 lower_bound = 3*dim + float(A.shape[0]) / A.nnz
                 upper_bound = 3*dim + 3
-                distance_soc(A, V, theta=theta, relative_drop=True, cost=cost)
+                distance_strength_of_connection(A, V, theta=theta, relative_drop=True, cost=cost)
                 assert(cost[0] >= lower_bound)
                 assert(cost[0] <= upper_bound)
 
@@ -100,38 +101,39 @@ class TestStrengthComplexity(TestCase):
                 cost = [0]
                 lower_bound = 3*dim + float(A.shape[0]) / A.nnz
                 upper_bound = 3*dim + 3
-                distance_soc(A, V, theta=theta, relative_drop=False, cost=cost)
+                distance_strength_of_connection(A, V, theta=theta, relative_drop=False, cost=cost)
                 assert(cost[0] >= lower_bound)
                 assert(cost[0] <= upper_bound)
 
-    def test_affinity(self):
+    #def test_affinity(self):
 
 
-    def test_algebraic(self):
+    #def test_algebraic(self):
 
 
 
 class TestSmoothComplexity(TestCase):
 
-    self.cases = []
+    def setUp(self):
+        self.cases = []
 
-    # Poisson problems in 1D and 2D
-    for N in [10, 11, 19, 26]:
-        A = poisson((N,), format='csr')
-        tempAgg = standard_aggregation(A)
-        T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
-        self.cases.append( {'A': A, 'T': T, 'B': B} )
-    for N in [5, 7, 9]:
-        A = poisson((N,N), format='csr')
-        tempAgg = standard_aggregation(A)
-        T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
-        self.cases.append( {'A': A, 'T': T, 'B': B} )
+        # Poisson problems in 1D and 2D
+        for N in [10, 11, 19, 26]:
+            A = poisson((N,), format='csr')
+            tempAgg = standard_aggregation(A)
+            T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
+            self.cases.append( {'A': A, 'T': T, 'B': B} )
+        for N in [5, 7, 9]:
+            A = poisson((N,N), format='csr')
+            tempAgg = standard_aggregation(A)
+            T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
+            self.cases.append( {'A': A, 'T': T, 'B': B} )
 
-    for name in ['knot', 'airfoil', 'bar']:
-        A = ex['A'].tocsr()
-        tempAgg = standard_aggregation(A)
-        T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
-        self.cases.append( {'A': A, 'T': T, 'B': B} )
+        for name in ['knot', 'airfoil', 'bar']:
+            A = ex['A'].tocsr()
+            tempAgg = standard_aggregation(A)
+            T, B = fit_candidates(tempAgg, np.ones((A.shape[0],)) )
+            self.cases.append( {'A': A, 'T': T, 'B': B} )
 
     def test_richardson(self):
 
@@ -175,19 +177,19 @@ class TestSmoothComplexity(TestCase):
                 assert(cost[0] <= (3 + 7*degree*float(P.nnz)/A.nnz) )
 
 
-    def test_energy(self):
+    #def test_energy(self):
 
 
 
-class TestMethodsComplexity(TestCase):
+#class TestMethodsComplexity(TestCase):
 
-    def test_sa(self):
-
-
-    def test_classical(self):
+#    def test_sa(self):
 
 
-    def test_rootnode(self):
+#    def test_classical(self):
+
+
+#    def test_rootnode(self):
 
 
     

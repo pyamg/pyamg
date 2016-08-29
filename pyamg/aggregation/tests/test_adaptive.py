@@ -74,12 +74,11 @@ class TestAdaptiveSA(TestCase):
         warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
 
         np.random.seed(0)
-        sa_old = adaptive_sa_solver(A, initial_candidates=np.ones((49, 1)),
+        sa_old = adaptive_sa_solver(A, B=np.ones((49, 1)),
                                     max_coarse=10)[0]
         for AA in cases:
             np.random.seed(0)
-            sa_new = adaptive_sa_solver(AA,
-                                        initial_candidates=np.ones((49, 1)),
+            sa_new = adaptive_sa_solver(AA, B=np.ones((49, 1)),
                                         max_coarse=10)[0]
             assert(abs(np.ravel(sa_old.levels[-1].A.todense() -
                                 sa_new.levels[-1].A.todense())).max() < 0.01)

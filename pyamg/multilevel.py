@@ -78,6 +78,8 @@ class multilevel_solver:
         """
         def __init__(self):
             self.smoothers = {}
+            self.smoothers['presmoother'] = [None, {}]
+            self.smoothers['postsmoother'] = [None, {}]
             self.complexity = {}
             self.SC = None
 
@@ -273,8 +275,8 @@ class multilevel_solver:
         given by the cycle type. Note, this is only for init_level=0.
 
         """
-        if init_level >= len(self.levels)-1:
-            raise ValueError("Initial CC level must be less than %i"%(len(self.levels)-1))
+        if init_level > len(self.levels)-1:
+            raise ValueError("Initial CC level must be in the range [0, %i]"%len(self.levels))
 
         # Return if already stored
         cycle = str(cycle).upper()
@@ -288,6 +290,8 @@ class multilevel_solver:
         rel_nnz_R = [level.R.nnz/nnz[0] for level in self.levels[0:-1]]
 
         # Determine cost per nnz for smoothing on each level
+        # Note: It is assumed that the default parameters in smoothing.py for each
+        # relaxation scheme corresponds to a single workunit operation.
         smoother_cost = []
         for i in range(0,len(self.levels)-1):
             lvl = self.levels[i]
@@ -304,9 +308,11 @@ class multilevel_solver:
                         pre_factor *= 2
                 if 'iterations' in presmoother[1]:
                     pre_factor *= presmoother[1]['iterations']
+                if 'maxiter' in presmoother[1]:
+                    pre_factor *= presmoother[1]['maxiter']
                 if 'degree' in presmoother[1]:
                     pre_factor *= presmoother[1]['degree']
-            else:  
+            else:
                 pre_factor = 0
 
             # Postsmoother
@@ -319,9 +325,11 @@ class multilevel_solver:
                         post_factor *= 2
                 if 'iterations' in postsmoother[1]:
                     post_factor *= postsmoother[1]['iterations']
+                if 'maxiter' in postsmoother[1]:
+                    post_factor *= postsmoother[1]['maxiter']
                 if 'degree' in postsmoother[1]:
                     post_factor *= postsmoother[1]['degree']
-            else:  
+            else:
                 post_factor = 0
 
             # Smoothing cost scaled by A_i.nnz / A_0.nnz
@@ -367,7 +375,8 @@ class multilevel_solver:
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level]
+                return smoother_cost[level] + correction_cost[level] + \
+                    schwarz_work[level]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + V(level + 1)
@@ -376,7 +385,8 @@ class multilevel_solver:
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level] 
+                return smoother_cost[level] +  correction_cost[level] + \
+                    schwarz_work[level] 
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + 2*W(level + 1)
@@ -385,7 +395,8 @@ class multilevel_solver:
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
-                return smoother_cost[level] + schwarz_work[level]
+                return smoother_cost[level] + correction_cost[level] + \
+                    schwarz_work[level]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + F(level + 1) + V(level + 1)
@@ -625,7 +636,7 @@ class multilevel_solver:
         self.first_pass = True
 
         while len(residuals) <= maxiter and residuals[-1] > tol:
-            if self.nlevels == 1:
+            if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
@@ -672,7 +683,7 @@ class multilevel_solver:
         coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)
 
-        if lvl == self.nlevels - 2:
+        if lvl == len(self.levels) - 2:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
             if cycle == 'V':
@@ -766,7 +777,7 @@ def coarse_grid_solver(solver):
     >>> x = cgs(A, b)
     """
 
-    solver, kwargs = unpack_arg(solver)
+    solver, kwargs = unpack_arg(solver, cost=False)
 
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):

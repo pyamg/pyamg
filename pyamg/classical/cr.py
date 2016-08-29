@@ -189,6 +189,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
         # 3.1d - 3.1f, see amg_core.ruge_stuben
         fn = amg_core.cr_helper
+        temp_cost = np.array([0.0])
         fn(A.indptr,
            A.indices,
            target,
@@ -197,7 +198,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
            splitting,
            gamma,
            tcs,
-           cost )
+           temp_cost )
+        cost += temp_cost[0]
 
         #   2numFpts + 
 

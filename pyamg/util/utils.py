@@ -1192,7 +1192,7 @@ def relaxation_as_linear_operator(method, A, b, cost=[0.0]):
                         'strength_based_schwarz', 'jacobi_ne']
 
     b = np.array(b, dtype=A.dtype)
-    fn, kwargs = unpack_arg(method)
+    fn, kwargs = unpack_arg(method, cost=False)
     lvl = pyamg.multilevel_solver.level()
     lvl.A = A
 
@@ -1740,7 +1740,7 @@ def compute_BtBinv(B, C, cost=[0.0]):
     
     # Ignore leading constant in block inverse, because for small blocks
     # seen in bad guys, constant of 30n^3 is way overestimating. 
-    cost[0] += B.shape[0]*B.shape[1] + (B.shape[1]**3)*C.shape[0] ) /\
+    cost[0] += (B.shape[0]*B.shape[1] + (B.shape[1]**3)*C.shape[0] ) /\
                         float( blocksize(C) )
 
     return BtBinv
@@ -2255,7 +2255,8 @@ def truncate_rows(A, nz_per_row, cost=[0.0]):
     
     # Track cost as the cost to sort each row
     avg_row_size = A.nnz / float(A.shape[0])
-    cost[0] += a.shape[0]*(avg_row_size * np.log2(avg_row_size))
+    if avg_row_size > 0:
+        cost[0] += A.shape[0]*(avg_row_size * np.log2(avg_row_size))
 
     return A
 
@@ -2302,8 +2303,6 @@ def mat_mat_complexity(A, P, test_cols=10, incomplete=False):
     Approximate number of FLOPs to compute A*P.
 
     """
-    A.eliminate_zeros()
-    P.eliminate_zeros()
 
     # Detailed estimate of complexity for matrix product 
     # using random sampling. 

@@ -131,7 +131,7 @@ def ruge_stuben_solver(A,
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         extend_hierarchy(levels, strength, CF, keep)
 
-    ml = multilevel_solver(levels, params=params, **kwargs)
+    ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
