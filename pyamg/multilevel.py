@@ -68,7 +68,8 @@ class multilevel_solver:
             the relaxation schemes used on this level. Used to compute 
             cycle complexity.
         complexity : {dict}
-            Dictionary to store complexity for each step in setup process.
+            Dictionary to store complexity for each step in setup process,
+            such as constructing P or computing strength-of-connection
         SC : float
             Setup complexity on this level in WUs relative to fine grid. 
 
