@@ -9,7 +9,7 @@ from pyamg import amg_core
 __all__ = ['fit_candidates']
 
 
-def fit_candidates(AggOp, B, tol=1e-10):
+def fit_candidates(AggOp, B, tol=1e-10, cost=[0.0]):
     """Fit near-nullspace candidates to form the tentative prolongator
 
     Parameters
@@ -24,6 +24,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
         Threshold for eliminating local basis functions.
         If after orthogonalization a local basis function Q[:, j] is small,
         i.e. ||Q[:, j]|| < tol, then Q[:, j] is set to zero.
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
 
     Returns
     -------
@@ -152,5 +154,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
                     AggOp_csc.indptr), shape=(K2*N_coarse, K1*N_fine))
     Q = Q.T.tobsr()
     R = R.reshape(-1, K2)
+
+    cost[0] += 2.0*B.shape[1]*B.shape[1]*float(Q.shape[0])
 
     return Q, R

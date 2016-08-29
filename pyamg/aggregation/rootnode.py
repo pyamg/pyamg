@@ -133,7 +133,7 @@ def rootnode_solver(A, B=None, BH=None,
     setup_complexity : bool
         For a detailed, more accurate setup complexity, pass in 
         'setup_complexity' = True. This will slow down performance, but
-        increase accuracy of complexiy count. 
+        increase accuracy of complexity count. 
 
     Returns
     -------
@@ -406,16 +406,15 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine[:, 0:blocksize(A)] = T B_coarse[:, 0:blocksize(A)].
     # Orthogonalization complexity ~ 2nk^2, k = blocksize(A).
-    levels[-1].complexity['tentative'] = 2.0 * blocksize(A) * blocksize(A) * \
-                                            float(A.shape[0])/A.nnz
-    T, dummy = fit_candidates(AggOp, B[:, 0:blocksize(A)])
+    temp_cost=[0.0]
+    T, dummy = fit_candidates(AggOp, B[:, 0:blocksize(A)], cost=temp_cost)
     del dummy
     if A.symmetry == "nonsymmetric":
-        TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)])
+        TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)], cost=temp_cost)
         del dummyH
-        levels[-1].complexity['tentative'] += 2.0 * blocksize(A) * \
-                                        blocksize(A) * float(A.shape[0])/A.nnz
 
+    levels[-1].complexity['tentative'] = temp_cost[0]/A.nnz
+    
     # Create necessary root node matrices
     Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
     T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])

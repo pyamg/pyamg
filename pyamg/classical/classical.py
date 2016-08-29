@@ -74,7 +74,7 @@ def ruge_stuben_solver(A,
     setup_complexity : bool
         For a detailed, more accurate setup complexity, pass in 
         'setup_complexity' = True. This will slow down performance, but
-        increase accuracy of complexiy count. 
+        increase accuracy of complexity count. 
 
     Examples
     --------

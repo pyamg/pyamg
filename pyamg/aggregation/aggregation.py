@@ -125,7 +125,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     setup_complexity : bool
         For a detailed, more accurate setup complexity, pass in 
         'setup_complexity' = True. This will slow down performance, but
-        increase accuracy of complexiy count. 
+        increase accuracy of complexity count. 
 
     Returns
     -------
@@ -381,13 +381,12 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine = T B_coarse. Orthogonalization complexity ~ 2nk^2, k=B.shape[1].
-    levels[-1].complexity['tentative'] = 2.0 * B.shape[1] * B.shape[1] * \
-                                            float(A.shape[0])/A.nnz
-    T, B = fit_candidates(AggOp, B)
+    temp_cost=[0.0]
+    T, B = fit_candidates(AggOp, B, cost=temp_cost)
     if A.symmetry == "nonsymmetric":
-        TH, BH = fit_candidates(AggOp, BH)
-        levels[-1].complexity['tentative'] += 2.0 * BH.shape[1] * BH.shape[1] * \
-                                            float(A.shape[0])/A.nnz
+        TH, BH = fit_candidates(AggOp, BH, cost=temp_cost)
+
+    levels[-1].complexity['tentative'] = temp_cost[0]/A.nnz
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
