@@ -1255,7 +1255,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None, cost=[0.0]):
     Returns
     -------
     A : sparse matrix updated such that sparsity structure of A now matches
-    that of C, and that the relationship A*B = Bf holds.
+    that of C, and that the relationship A*B = Bf holds.  A will even hold
+    explicit zeros, if necessary.
 
     Notes
     -----
@@ -1391,7 +1392,6 @@ def filter_operator(A, C, B, Bf, BtBinv=None, cost=[0.0]):
                                               A.indices, np.ravel(A.data))
     cost[0] += A.nnz * (2.0*B.shape[1] + B.shape[1]**2) + (B.shape[1]**3) * B.shape[0]
 
-    A.eliminate_zeros()
     return A
 
 

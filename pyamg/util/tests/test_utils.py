@@ -271,6 +271,17 @@ class TestUtils(TestCase):
         A_known = array([[3.0]])
         assert_array_almost_equal(A_known, A_filter)
 
+        # 1x1, heck for explicit zero being stored in A
+        B = array([[0.0]])
+        Bf = array([[0.0]])
+        A = csr_matrix(array([[0.]]))
+        C = csr_matrix(array([[1.]]))
+        C.data[0] = 0.0
+        A_filter = filter_operator(A, C, B, Bf)
+        assert_equal(A_filter.data, array([0.0])) 
+        A_known = array([[0.0]])
+        assert_array_almost_equal(A_known, A_filter.todense())
+
         # 1x2
         A = csr_matrix(array([[1.2, 1.]]))
         C = csr_matrix(array([[1.,  1.]]))
