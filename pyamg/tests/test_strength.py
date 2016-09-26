@@ -290,6 +290,18 @@ class TestStrengthOfConnection(TestCase):
             assert_array_almost_equal(result.todense(), expected.todense(),
                                       decimal=4)
 
+            scipy.random.seed(0)  # make results deterministic
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
+                                   k=ca['k'], proj_type=ca['proj'],
+                                   symmetrize_measure=False, weighting='local')
+            scipy.random.seed(0)  # make results deterministic
+            expected = reference_evolution_soc(ca['A'], ca['B'],
+                                               epsilon=ca['epsilon'],
+                                               k=ca['k'], proj_type=ca['proj'],
+                                               weighting='local')
+            assert_array_almost_equal(result.todense(), expected.todense(),
+                                      decimal=4)
+
         # Test Scale Invariance for multiple near nullspace candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
         scipy.random.seed(0)  # make results deterministic
@@ -389,6 +401,17 @@ class TestComplexStrengthOfConnection(TestCase):
             expected = reference_evolution_soc(ca['A'], ca['B'],
                                                epsilon=ca['epsilon'],
                                                k=ca['k'], proj_type=ca['proj'])
+            assert_array_almost_equal(result.todense(), expected.todense())
+
+            scipy.random.seed(0)  # make results deterministic
+            result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
+                                   k=ca['k'], proj_type=ca['proj'],
+                                   symmetrize_measure=False, weighting='local')
+            scipy.random.seed(0)  # make results deterministic
+            expected = reference_evolution_soc(ca['A'], ca['B'],
+                                               epsilon=ca['epsilon'],
+                                               k=ca['k'], proj_type=ca['proj'],
+                                               weighting='local' )
             assert_array_almost_equal(result.todense(), expected.todense())
 
         # Test Scale Invariance for a single candidate
@@ -543,7 +566,7 @@ def reference_symmetric_soc(A, theta):
     return S
 
 
-def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
+def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2", weighting='diagonal'):
     """
     All python reference implementation for Evolution Strength of Connection
 
@@ -551,6 +574,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     entry
 
     --> This does the "unsymmetrized" version of the ode measure
+    
+    --> This supports 'local' and 'diagonal' weighting
     """
 
     # number of PDEs per point is defined implicitly by block size
@@ -570,14 +595,22 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     dimen = A.shape[1]
     NullDim = Bmat.shape[1]
 
-    # Get spectral radius of Dinv*A, this is the time step size for the ODE
-    D = A.diagonal()
-    Dinv = np.zeros_like(D)
-    mask = (D != 0.0)
-    Dinv[mask] = 1.0 / D[mask]
-    Dinv[D == 0] = 1.0
-    Dinv_A = scale_rows(A, Dinv, copy=True)
-    rho_DinvA = approximate_spectral_radius(Dinv_A)
+    # Get the scaled A for ODE time-stepping 
+    D = A.diagonal()  # This D is used later
+    if weighting == 'diagonal':
+        Dinv = np.zeros_like(D)
+        mask = (D != 0.0)
+        Dinv[mask] = 1.0 / D[mask]
+        Dinv[D == 0] = 1.0
+        Dinv_A = scale_rows(A, Dinv, copy=True)
+        rho_DinvA = approximate_spectral_radius(Dinv_A)
+    elif weighting == 'local':
+        Dsum = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+        Dinv = np.zeros_like(Dsum)
+        Dinv[Dsum != 0] = 1.0 / np.abs(Dsum[Dsum != 0])
+        Dinv[Dsum == 0] = 1.0
+        Dinv_A = scale_rows(A, Dinv, copy=True)
+        rho_DinvA = 1.0
 
     # Calculate (Atilde^k) naively
     S = (scipy.sparse.eye(dimen, dimen, format="csr") - (1.0/rho_DinvA)*Dinv_A)

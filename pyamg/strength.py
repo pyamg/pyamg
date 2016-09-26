@@ -17,7 +17,7 @@ from warnings import warn
 
 import numpy as np
 from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate, \
-    mat_mat_complexity
+    mat_mat_complexity, get_diagonal
 from scipy import sparse
 from pyamg import amg_core
 from pyamg.relaxation.relaxation import jacobi
@@ -489,16 +489,16 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2, cost=[0]):
 
 @np.deprecate
 def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
-                               block_flag=False, symmetrize_measure=True,
+                               weighting='diagonal', symmetrize_measure=True,
                                cost=[0]):
     """Use evolution_strength_of_connection instead"""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
-                                            block_flag, symmetrize_measure,
+                                            weighting, symmetrize_measure, 
                                             cost)
 
 
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
-                                     proj_type="l2", block_flag=False,
+                                     proj_type="l2", weighting='diagonal',
                                      symmetrize_measure=True, cost=[0]):
     """
     Construct strength of connection matrix using an Evolution-based measure
@@ -516,9 +516,10 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         ODE num time steps, step size is assumed to be 1/rho(DinvA)
     proj_type : {'l2','D_A'}
         Define norm for constrained min prob, i.e. define projection
-    block_flag : {boolean}
-        If True, use a block D inverse as preconditioner for A during
-        weighted-Jacobi
+    weighting : {string}
+        'block', 'diagonal' or 'local' construction of the D-inverse 
+        used to precondition A before "evolving" delta-functions.  The
+        local option is the cheapest.
 
     Returns
     -------
@@ -565,40 +566,41 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Bmat = np.mat(np.ones((A.shape[0], 1), dtype=A.dtype))
     else:
         Bmat = np.mat(B)
-
-    # Pre-process A.  We need A in CSR, to be devoid of explicit 0's and have
-    # sorted indices
+    
+    # Is matrix A CSR?
     if (not sparse.isspmatrix_csr(A)):
-        csrflag = False
         numPDEs = A.blocksize[0]
-        D = A.diagonal()
-        # Calculate Dinv*A
-        if block_flag:
-            Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
-            Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
-                                     np.arange(Dinv.shape[0] + 1)),
-                                     shape=A.shape)
-            Dinv_A = (Dinv * A).tocsr()
-            cost[0] += 1
-        else:
-            Dinv = np.zeros_like(D)
-            mask = (D != 0.0)
-            Dinv[mask] = 1.0 / D[mask]
-            Dinv[D == 0] = 1.0
-            Dinv_A = scale_rows(A, Dinv, copy=True)
-            cost[0] += 1
-        A = A.tocsr()
+        csrflag = False
     else:
-        csrflag = True
         numPDEs = 1
+        csrflag = True
+
+    # Pre-process A.  We need A in CSR, to be devoid of explicit 0's, have
+    # sorted indices and be scaled by D-inverse
+    if weighting == 'block': 
+        Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
+        Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
+                                 np.arange(Dinv.shape[0] + 1)),
+                                 shape=A.shape)
+        Dinv_A = (Dinv * A).tocsr()
+        cost[0] += 1
+    elif weighting == 'diagonal':
         D = A.diagonal()
-        Dinv = np.zeros_like(D)
-        mask = (D != 0.0)
-        Dinv[mask] = 1.0 / D[mask]
+        Dinv = get_diagonal(A, norm_eq=False, inv=True)
         Dinv[D == 0] = 1.0
         Dinv_A = scale_rows(A, Dinv, copy=True)
         cost[0] += 1
+    elif weighting == 'local':
+        D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+        Dinv = np.zeros_like(D)
+        Dinv[D != 0] = 1.0 / np.abs(D[D != 0])
+        Dinv[D == 0] = 1.0
+        Dinv_A = scale_rows(A, Dinv, copy=True)
+        cost[0] += 1
+    else:
+        raise ValueError('Unrecognized weighting for Evolution measure')
 
+    A = A.tocsr()
     A.eliminate_zeros()
     A.sort_indices()
 
@@ -606,13 +608,17 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     dimen = A.shape[1]
     NullDim = Bmat.shape[1]
 
-    # Get spectral radius of Dinv*A, this will be used to scale the time step
-    # size for the ODE
-    rho_DinvA = approximate_spectral_radius(Dinv_A)
-    cost[0] += 15   # 15 lanczos iterations to approximate spectral radius
+    if weighting == 'diagonal' or weighting == 'block':
+        # Get spectral radius of Dinv*A, scales the time step size for the ODE
+        rho_DinvA = approximate_spectral_radius(Dinv_A)
+        cost[0] += 15   # 15 lanczos iterations to approximate spectral radius
+    else:
+        # Using local weighting, no need for spectral radius
+        rho_DinvA = 1.0
 
     # Calculate D_A for later use in the minimization problem
     if proj_type == "D_A":
+        D = A.diagonal()
         D_A = sparse.spdiags([D], [0], dimen, dimen, format='csr')
     else:
         D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
