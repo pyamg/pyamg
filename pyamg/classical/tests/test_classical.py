@@ -8,7 +8,8 @@ from pyamg.strength import classical_strength_of_connection
 
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
-from pyamg.classical.interpolate import direct_interpolation
+from pyamg.classical.interpolate import direct_interpolation, \
+                                        standard_interpolation
 
 from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
@@ -111,25 +112,46 @@ class TestRugeStubenFunctions(TestCase):
             expected = reference_direct_interpolation(A, S, splitting)
 
             assert_almost_equal(result.todense(), expected.todense())
+    
+    def test_standard_interpolation(self):
+        for A in self.cases:
+            # the reference code is very slow, so just take a small block of A 
+            mini = min(100, A.shape[0])
+            A = ((A.tocsr()[0:mini, :])[:,0:mini]).tocsr()
 
+            S = classical_strength_of_connection(A, 0.0)
+            splitting = split.RS(S)
+
+            result = standard_interpolation(A, S, splitting)
+            expected = reference_standard_interpolation(A, S, splitting)
+            
+            # elasticity produces large entries, so normalize
+            Diff = result - expected
+            Diff.data = abs(Diff.data)
+            expected.data = 1./abs(expected.data)
+            Diff = Diff.multiply(expected)
+            Diff.data[ Diff.data < 1e-7] = 0.0
+            Diff.eliminate_zeros()
+            assert( Diff.nnz == 0)
 
 class TestSolverPerformance(TestCase):
-    def test_poisson(self):
-        cases = []
 
-        cases.append((500,))
-        cases.append((250, 250))
-        cases.append((25, 25, 25))
+    def setUp(self):
+        self.cases = []
 
-        for case in cases:
-            A = poisson(case, format='csr')
+        self.cases.append(poisson((500, ), format='csr'))
+        self.cases.append(poisson((250, 250), format='csr'))
+        self.cases.append(poisson((25, 25, 25), format='csr'))
 
+    def run_cases(self, opts):
+        for A in self.cases:
+            ml = ruge_stuben_solver(A, max_coarse=10)
+            
             np.random.seed(0)  # make tests repeatable
 
             x = sp.rand(A.shape[0])
             b = A*sp.rand(A.shape[0])  # zeros_like(x)
 
-            ml = ruge_stuben_solver(A, max_coarse=50)
 
             res = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
@@ -139,6 +161,10 @@ class TestSolverPerformance(TestCase):
             avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
 
             assert(avg_convergence_ratio < 0.20)
+
+    def test_interp(self):
+        for interp in ['direct', 'standard']:
+            self.run_cases({'interp': interp})
 
     def test_matrix_formats(self):
 
@@ -235,3 +261,81 @@ def reference_direct_interpolation(A, S, splitting):
                    shape=(P.shape[0], map[-1]))
 
     return P
+
+# strength has zero diagonal...?
+def reference_standard_interpolation(A, S, splitting):
+
+    # this routine only tests the computation of the "weights" the computation
+    # of the sparsity pattern is the same as for direct interpolation, and is
+    # tested through the reference_direct_interpolation routine.
+    from pyamg import amg_core
+    S = S.copy()
+    S.data[:] = 1.0
+    S = S.multiply(A)
+    Pp = np.empty_like(A.indptr)
+    amg_core.rs_direct_interpolation_pass1(A.shape[0],
+                     S.indptr, S.indices, splitting, Pp)
+    nnz = Pp[-1]
+    Pj = np.empty(nnz, dtype=Pp.dtype)
+    Px = np.empty(nnz, dtype=A.dtype)
+    SD = S.diagonal()
+    F_NODE = 0
+    C_NODE = 1
+
+    # Now, we implement the second pass in Python to double check the C++ code 
+    for i in range(A.shape[0]):
+        # If node is is a C-point, do injection 
+        if(splitting[i] == C_NODE):
+            Pj[Pp[i]] = i
+            Px[Pp[i]] = 1
+        
+        # Else compute standard interpolation weight
+        else:
+            rowstartA = A.indptr[i]
+            rowendA   = A.indptr[i+1]
+            rowstartS = S.indptr[i]
+            rowendS   = S.indptr[i+1]
+
+            # Denominator = a_ii + sum_{m in weak connections} a_im
+            denominator = sum(A.data[rowstartA:rowendA])
+            denominator -= sum(S.data[rowstartS:rowendS])
+            denominator += SD[i]
+
+            # Compute interpolation weights from strongly connected C-points
+            nnz = Pp[i]
+            for jj in range(rowstartS, rowendS): 
+                Sj = S.indices[jj]
+                if (splitting[Sj] == C_NODE) and (Sj != i):
+                    Pj[nnz] = Sj
+                    numerator = S.data[jj]
+                    for kk in range(rowstartS, rowendS):
+                        Sk = S.indices[kk]
+                        if (splitting[Sk] == F_NODE) and (Sk != i):
+                            inner_denominator = 0.0
+                            for ll in range(rowstartS, rowendS):
+                                Sl = S.indices[ll]
+                                if (splitting[Sl] == C_NODE) and (Sl != i):
+                                    for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
+                                        if ( A.indices[search_ind] == Sl ):
+                                            inner_denominator += A.data[search_ind]
+                            
+                            for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
+                                if (A.indices[search_ind] == Sj) and (inner_denominator != 0.0):
+                                    numerator += (S.data[kk]*A.data[search_ind]/inner_denominator)
+                    
+                    Px[nnz] = -numerator/denominator
+                    nnz += 1
+    
+    reorder = np.zeros((A.shape[0],))
+    cumulative = 0
+    for i in range(A.shape[0]):
+        reorder[i]  = cumulative
+        cumulative += splitting[i]
+    
+    for i in range(Pp[A.shape[0]]):
+        Pj[i] = reorder[Pj[i]]
+    
+
+    return  csr_matrix((Px, Pj, Pp)) 
+
+

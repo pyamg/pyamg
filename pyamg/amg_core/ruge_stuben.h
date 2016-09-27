@@ -597,15 +597,116 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 
 
 
+
+/*
+ *   Produce the Ruge-Stuben prolongator using standard interpolation
+ *
+ *
+ *   The first pass uses the strength of connection matrix 'S'
+ *   and C/F splitting to compute the row pointer for the prolongator.
+ *   The first pass is identical to the direct interpolation pass 1 
+ *   above, so we do not duplicate it here.
+ *
+ *   The second pass fills in the nonzero entries of the prolongator
+ *
+ *   Reference:
+ *      Page 144 "A Multigrid Tutorial"
+ *
+ */
+
 template<class I, class T>
-void rs_standard_interpolation(const I n_nodes,
-                               const I Ap[], const I Aj[], const T Ax[],
-                               const I Sp[], const I Sj[], const T Sx[],
-                               const I Tp[], const I Tj[], const T Tx[],
-                                     I Bp[],       I Bj[],       T Bx[])
+void rs_standard_interpolation_pass2(const I n_nodes,
+                                   const I Ap[], const int Ap_size,
+                                   const I Aj[], const int Aj_size,
+                                   const T Ax[], const int Ax_size,
+                                   const I Sp[], const int Sp_size,
+                                   const I Sj[], const int Sj_size,
+                                   const T Sx[], const int Sx_size,
+                                   const I splitting[], const int splitting_size,
+                                   const I Bp[], const int Bp_size,
+                                         I Bj[], const int Bj_size,
+                                         T Bx[], const int Bx_size)
 {
 
-    // TODO
+    for(I i = 0; i < n_nodes; i++){
+        // If node i is a C-point, then set interpolation as injection
+        if(splitting[i] == C_NODE){
+            Bj[Bp[i]] = i;
+            Bx[Bp[i]] = 1;
+        } 
+        // Otherwise, use RS standard interpolation formula
+        else {
+
+            // Calculate denominator
+            T denominator = 0;
+            // Start by summing entire row of A
+            for(I mm = Ap[i]; mm < Ap[i+1]; mm++) denominator += Ax[mm];
+            // Then subtract off the strong connections so that you are left with 
+            // denominator = a_ii + sum_{m in weak connections} a_im
+            for(I mm = Sp[i]; mm < Sp[i+1]; mm++){
+                if ( Sj[mm] != i ) denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
+            }
+
+            // Set entries in P (interpolation weights w_ij from strongly connected C-points)
+            I nnz = Bp[i];
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
+                    // Set temporary value for Bj to be mapped to appropriate coarse-grid column index later and get column index j
+                    Bj[nnz] = Sj[jj];
+                    I j = Sj[jj];
+                    // printf("Weight i = %d, j = %d\n", i, j);
+                    // Initialize numerator as a_ij
+                    T numerator = Sx[jj];
+                    // printf("  numerator initialized to %f\n", numerator);
+                    // Sum over strongly connected fine points
+                    for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
+                        if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ){
+                            // Get column index k
+                            I k = Sj[kk];
+                            // printf("  top sum k = %d\n", k);
+                            // Calculate sum for inner denominator (loop over strongly connected C-points)
+                            T inner_denominator = 0;
+                            for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
+                                if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) ){
+                                    // Get column index l
+                                    I l = Sj[ll];
+                                    // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                    for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                        if ( Aj[search_ind] == l ) inner_denominator += Ax[search_ind];
+                                    }
+                                }
+                            }
+                            // printf("    inner_denominator = %f\n", i, inner_denominator);
+                            // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
+                            //
+                            // TODO: the below check on inner denominator is required, even for a simple elasticity 
+                            // example 'bar' This (may) mean that there is an error in the code.
+                            for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                if ( (Aj[search_ind] == j) && (inner_denominator != 0.0) ){
+                                    numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
+                                    // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
+                                }
+                            }
+                        }
+                    }
+                    // Set w_ij = -numerator/denominator
+                    // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
+                    Bx[nnz] = -numerator/denominator;
+                    nnz++;
+                }
+            }
+        }
+    }
+
+
+    std::vector<I> map(n_nodes);
+    for(I i = 0, sum = 0; i < n_nodes; i++){
+        map[i]  = sum;
+        sum    += splitting[i];
+    }
+    for(I i = 0; i < Bp[n_nodes]; i++){
+        Bj[i] = map[Bj[i]];
+    }
 }
 
 

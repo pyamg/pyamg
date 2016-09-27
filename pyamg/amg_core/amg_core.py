@@ -464,6 +464,13 @@ def rs_direct_interpolation_pass2(*args):
     """
     return _amg_core.rs_direct_interpolation_pass2(*args)
 
+def rs_standard_interpolation_pass2(*args):
+    """
+    rs_standard_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, float [] Bx)
+    rs_standard_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, double [] Bx)
+    """
+    return _amg_core.rs_standard_interpolation_pass2(*args)
+
 def cr_helper(*args):
     """
     cr_helper(int const [] A_rowptr, int const [] A_colinds, float const [] B, float [] e, int [] indices, int [] splitting, float [] gamma, float const thetacs, float [] cost)

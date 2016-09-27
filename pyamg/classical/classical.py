@@ -14,7 +14,7 @@ from pyamg.strength import classical_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.util.utils import mat_mat_complexity, unpack_arg
 
-from .interpolate import direct_interpolation
+from .interpolate import direct_interpolation, standard_interpolation
 from . import split
 from .cr import CR
 
@@ -24,6 +24,7 @@ __all__ = ['ruge_stuben_solver']
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
                        CF='RS',
+                       interp='direct',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=10, max_coarse=10, keep=False, **kwargs):
@@ -42,6 +43,8 @@ def ruge_stuben_solver(A,
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
+    interp : {string} : default 'direct'
+        Use direct or standard interpolation
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -86,6 +89,10 @@ def ruge_stuben_solver(A,
     Notes
     -----
 
+    Standard interpolation is generally considered more robust than
+    direct, but direct is the currently the default until our new 
+    implementation of standard has been more rigorously tested.
+
     "coarse_solver" is an optional argument and is the solver used at the
     coarsest grid.  The default is a pseudo-inverse.  Most simply,
     coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
@@ -129,7 +136,7 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, keep)
+        extend_hierarchy(levels, strength, CF, interp, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -137,7 +144,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, keep):
+def extend_hierarchy(levels, strength, CF, interp, keep):
     """ helper function for local methods """
 
     A = levels[-1].A
@@ -190,6 +197,17 @@ def extend_hierarchy(levels, strength, CF, keep):
     # fine-grid
     temp_cost = [0]
     P = direct_interpolation(A, C, splitting, temp_cost)
+
+    # Generate the interpolation matrix that maps from the coarse-grid to the
+    # fine-grid
+    temp_cost = [0]
+    fn, kwargs = unpack_arg(interp)
+    if fn == 'standard':
+        P = standard_interpolation(A, C, splitting, temp_cost)
+    elif fn == 'direct':
+        P = direct_interpolation(A, C, splitting, temp_cost)
+    else:
+        raise ValueError('unknown interpolation method (%s)' % interp)
     levels[-1].complexity['interpolate'] = temp_cost[0]
 
     # Generate the restriction matrix that maps from the fine-grid to the
