@@ -128,6 +128,25 @@ inline std::complex<double> zero_imag(std::complex<double>& x)
  *      templated for pyamg's complex class, float and double
  *******************************************************************/
 
+/* 
+ * Return row-major index from 2d array index, A[row,col].
+ */
+template<class I>
+inline I row_major(const I &row, const I &col, const I &num_cols) 
+{
+    return row*num_cols + col;
+}
+
+/*
+ * Return column-major index from 2d array index, A[row,col]. 
+ */
+template<class I>
+inline I col_major(const I &row, const I &col, const I &num_rows) 
+{
+    return col*num_rows + row;
+}
+
+
 /* dot(x, y, n)
  *
  * Parameters
@@ -144,7 +163,7 @@ inline std::complex<double> zero_imag(std::complex<double>& x)
  * conjugate(x).T y
  *
  */
-template<class I, class T>
+template<class I, class T, class F>
 inline T dot_prod(const T x[], const T y[], const I n)
 {
     T sum = 0.0;
@@ -152,6 +171,40 @@ inline T dot_prod(const T x[], const T y[], const I n)
     {   sum += conjugate(x[i])*y[i]; }
     return sum;
 }
+
+/* Returns dot product of sparse vector and dense vector.                   */
+/*      + size1  - number of nonzero elements in sparse vector              */
+/*      + ind1   - array of indices of nonzero elements in sparse vector    */
+/*      + value1 - nonzero values in sparse vector                          */
+/*      + size2  - size of dense vector                                     */
+/*      + value2 - list of values in dense vector                           */
+template<class I, class T>
+T sparse_dense_dot(const I &size1, const I ind1[], const T value1[],
+                   const I &size2, const T value2[], const F &scale = 1.0)
+{
+    T result = 0.0;
+    I lowerInd = 0;
+    // Loop over elements in sparse vector, 
+    for (I k=0; k<size1; k++) {
+        for (I j=lowerInd; j<size2; j++) {
+            // If indices overlap, add product to dot product
+            if ( ind1[k] == j ) {
+                result += scale * value1[k] * value2[j];
+                lowerInd = j+1;
+                break;
+            }
+            // If inner loop vector index > outer loop vector index (assuming sorted indices),
+            // the outer loop vector index is not contained in inner loop indices. 
+            else if ( ind1[k] < j ) {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+
+
 
 
 /* norm(x, n)
@@ -841,7 +894,8 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     return;
 }
 
- /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
+
+/* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
  * Routine is designed to invert many small matrices at once.
  * Parameters
  * ----------
@@ -953,5 +1007,448 @@ void pinv_array(T AA[], const int AA_size,
     return;
 }
 
+
+/* QR-decomposition using Householer transformations on dense
+ * 2d array stored in either column- or row-major form. 
+ * 
+ * Parameters
+ * ----------
+ *        A : double array
+ *            2d matrix A stored in 1d column- or row-major.
+ *        m : &int
+ *            Number of rows in A
+ *        n : &int
+ *            Number of columns in A
+ *        is_col_major : bool
+ *            True if A is stored in column-major, false
+ *            if A is stored in row-major.
+ *
+ * Returns
+ * -------
+ *        Q : vector<double>
+ *            Matrix Q stored in same format as A.
+ *        R : in-place
+ *            R is stored over A in place, in same format.
+ * 
+ * Notes
+ * ------
+ * Currently only set up for real-valued matrices. May easily
+ * generalize to complex, but haven't checked.
+ *
+ */
+template<class I, class T>
+std::vector<T> QR(T A[],
+                  const I &m,
+                  const I &n,
+                  const I is_col_major)
+{
+    // Funciton poIer for row or column major matrices
+    I (*get_ind)(const I&, const I&, const I&);
+    const I *C;
+    if (is_col_major) {
+        get_ind = &col_major;
+        C = &m;
+    }
+    else {
+        get_ind = &row_major;
+        C = &n;
+    }
+
+    // Initialize Q to identity
+    std::vector<T> Q(m*m,0);
+    for (I i=0; i<m; i++) {
+        Q[get_ind(i,i,m)] = 1;
+    }
+
+    // Loop over columns of A using Householder reflections
+    for (I j=0; j<n; j++) {
+
+        // Break loop for short fat matrices
+        if (m <= j) {
+            break;
+        }
+
+        // Get norm of next column of A to be reflected. Choose sign
+        // opposite that of A_jj to avoid catastrophic cancellation.
+        T normx = 0;
+        for (I i=j; i<m; i++) {
+            T temp = A[get_ind(i,j,*C)];
+            normx += temp*temp;
+        }
+        normx = std::sqrt(normx);
+        normx *= -1*signof(A[get_ind(j,j,*C)]);
+
+        // Form vector v for Householder matrix H = I - tau*vv^T
+        // where v = R(j:end,j) / scale, v[0] = 1.
+        T scale = A[get_ind(j,j,*C)] - normx;
+        T tau = -scale / normx;
+        std::vector<T> v(m-j,0);
+        v[0] = 1;
+        for (I i=1; i<(m-j); i++) {
+            v[i] = A[get_ind(j+i,j,*C)] / scale;    
+        }
+
+        // Modify R in place, R := H*R, looping over columns then rows
+        for (I k=j; k<n; k++) {
+
+            // Compute the kth element of v^T * R
+            T vtR_k = 0;
+            for (I i=0; i<(m-j); i++) {
+                vtR_k += v[i] * A[get_ind(j+i,k,*C)];
+            }
+
+            // Correction for each row of kth column, given by 
+            // R_ik -= tau * v_i * (vtR_k)_k
+            for (I i=0; i<(m-j); i++) {
+                A[get_ind(j+i,k,*C)] -= tau * v[i] * vtR_k;
+            }
+        }
+
+        // Modify Q in place, Q = Q*H
+        for (I i=0; i<m; i++) {
+
+            // Compute the ith element of Q * v
+            T Qv_i = 0;
+            for (I k=0; k<(m-j); k++) {
+                Qv_i += v[k] * Q[get_ind(i,k+j,m)];
+            }
+
+            // Correction for each column of ith row, given by
+            // Q_ik -= tau * Qv_i * v_k
+            for (I k=0; k<(m-j); k++) { 
+                Q[get_ind(i,k+j,m)] -= tau * v[k] * Qv_i;
+            }
+        }
+    }
+
+    return Q;
+}
+
+
+/* Backward substitution solve on upper-triangular linear system,
+ * Rx = rhs, where R is stored in column- or row-major form. 
+ * 
+ * Parameters
+ * ----------
+ *        R : double array, length m*n
+ *            Upper-triangular array stored in column- or row-major.
+ *        rhs : double array, length m
+ *            Right hand side of linear system
+ *        x : double array, length n
+ *            Preallocated array for solution
+ *        m : &int
+ *            Number of rows in R
+ *        n : &int
+ *            Number of columns in R
+ *        is_col_major : bool
+ *            True if R is stored in column-major, false
+ *            if R is stored in row-major.
+ *
+ * Returns
+ * -------
+ *        Nothing, solution is stored in x[].
+ *
+ * Notes
+ * -----
+ * R need not be square, the system will be solved over the
+ * rank r upper-triangular block. If remaining entries in
+ * solution are unused, they will be set to zero.
+ *
+ */        
+template<class I, class T, class F>
+void upper_tri_solve(const T R[],
+                     const T rhs[],
+                     T x[],
+                     const I &m,
+                     const I &n,
+                     const I is_col_major)
+{
+    // Funciton poIer for row or column major matrices
+    I (*get_ind)(const I&, const I&, const I&);
+    const I *C;
+    if (is_col_major) {
+        get_ind = &col_major;
+        C = &m;
+    }
+    else {
+        get_ind = &row_major;
+        C = &n;
+    }
+
+    // Backward substitution
+    I rank = std::min(m,n);
+    for (I i=(rank-1); i>=0; i--) {
+        T temp = rhs[i];
+        for (I j=(i+1); j<rank; j++) {
+            temp -= R[get_ind(i,j,*C)]*x[j];
+        }
+        if (std::abs(R[get_ind(i,i,*C)]) < 1e-12) {
+            std::cout << "Warning: Upper triangular matrix near singular.\n"
+                         "Dividing by ~ 0.\n";
+        }
+        x[i] = temp / R[get_ind(i,i,*C)];
+    }
+
+    // If rank < size of rhs, set free elements in x to zero
+    for (I i=m; i<n; i++) {
+        x[i] = 0;
+    }
+}
+
+
+/* Forward substitution solve on lower-triangular linear system,
+ * Lx = rhs, where L is stored in column- or row-major form. 
+ * 
+ * Parameters
+ * ----------
+ *        L : double array, length m*n
+ *            Lower-triangular array stored in column- or row-major.
+ *        rhs : double array, length m
+ *            Right hand side of linear system
+ *        x : double array, length n
+ *            Preallocated array for solution
+ *        m : &int
+ *            Number of rows in L
+ *        n : &int
+ *            Number of columns in L
+ *        is_col_major : bool
+ *            True if L is stored in column-major, false
+ *            if L is stored in row-major.
+ *
+ * Returns
+ * -------
+ *        Nothing, solution is stored in x[].
+ *
+ * Notes
+ * -----
+ * L need not be square, the system will be solved over the
+ * rank r lower-triangular block. If remaining entries in
+ * solution are unused, they will be set to zero.
+ *
+ */
+template<class I, class T, class F>
+void lower_tri_solve(const T L[],
+                     const T rhs[],
+                     T x[],
+                     const I &m,
+                     const I &n,
+                     const I is_col_major)
+{
+    // Funciton poIer for row or column major matrices
+    I (*get_ind)(const I&, const I&, const I&);
+    const I *C;
+    if (is_col_major) {
+        get_ind = &col_major;
+        C = &m;
+    }
+    else {
+        get_ind = &row_major;
+        C = &n;
+    }
+
+    // Forward substitution
+    I rank = std::min(m,n);
+    for (I i=0; i<rank; i++) {
+        T temp = rhs[i];
+        for (I j=0; j<i; j++) {
+            temp -= L[get_ind(i,j,*C)]*x[j];
+        }
+        if (std::abs(L[get_ind(i,i,*C)]) < 1e-12) {
+            std::cout << "Warning: Lower triangular matrix near singular.\n"
+                         "Dividing by ~ 0.\n";
+        }
+        x[i] = temp / L[get_ind(i,i,*C)];
+    }
+
+    // If rank < size of rhs, set free elements in x to zero
+    for (I i=m; i<n; i++) {
+        x[i] = 0;
+    }
+}
+
+
+/* Method to solve the linear least squares problem.
+ *
+ * Parameters
+ * ----------
+ *        A : double array, length m*n
+ *            2d array stored in column- or row-major.
+ *        b : double array, length m
+ *            Right hand side of unconstrained problem.
+ *        x : double array, length n
+ *            Container for solution
+ *        m : &int
+ *            Number of rows in A
+ *        n : &int
+ *            Number of columns in A
+ *        is_col_major : bool
+ *            True if A is stored in column-major, false
+ *            if A is stored in row-major.
+ *
+ * Returns
+ * -------
+ *         x : vector<double>
+ *            Solution to constrained least sqaures problem.
+ *
+ * Notes
+ * -----
+ * If system is under determined, free entries are set to zero. 
+ * Currently only set up for real-valued matrices. May easily
+ * generalize to complex, but haven't checked.
+ *
+ */
+template<class I, class T>
+void least_squares(T A[],
+                   T b[],
+                   T x[],
+                   const I &m,
+                   const I &n,
+                   const I is_col_major=0)
+{
+    // Funciton pointer for row or column major matrices
+    I (*get_ind)(const I&, const I&, const I&);
+    if (is_col_major) {
+        get_ind = &col_major;
+    }
+    else {
+        get_ind = &row_major;
+    }
+
+    // Take QR of A
+    std::vector<T> Q = QR(A,m,n,is_col_major);
+
+    // Multiply right hand side, b:= Q^T*b. Have to make new vetor, rhs.
+    std::vector<T> rhs(m,0);
+    for (I i=0; i<m; i++) {
+        for (I k=0; k<m; k++) {
+            rhs[i] += b[k] * Q[get_ind(k,i,m)];
+        }
+    }
+
+    // Solve upper triangular system, store solution in x.
+    upper_tri_solve(A,&rhs[0],x,m,n,is_col_major);
+}
+
+
+/* Method to solve an arbitrary constrained least squares.
+ * Can be used one of two ways, with any shape and rank
+ * operator A.
+ *
+ *     1. Suppose we want to solve
+ *        x = argmin || xA - b || s.t. xC = d                 (1)
+ *     Let C = QR, and make the change of variable z := xQ.
+ *     Then (1) is equivalent to
+ *        z = argmin || zQ^TA - b ||   s.t. zR = d
+ *          = argmin || A^TQz^T - b || s.t. R^Tz^T = d         (2)
+ *     This is solved by passing in A in *row major* and
+ *     C in *column major.*
+ *        - A is nxm
+ *        - C is mxs
+ *
+ *     2. Suppose we want to solve
+ *        x = argmin || Ax - b || s.t. Cx = d                 (3)
+ *     Let C^T = QR, and make the change of variable z := Q^Tx.
+ *     Then (1) is equivalent to
+ *        z = argmin || AQx - b ||   s.t. R^Tz = d             (4)
+ *     This is solved by passing in A in *column major* and
+ *     C in *row major.* 
+ *        - A is mxn
+ *        - C is sxn
+ *
+ * Parameters
+ * ----------
+ *        A : vector<double>
+ *            2d array stored in column- or row-major.
+ *        b : vector<double>
+ *            Right hand side of unconstrained problem.
+ *        C : vector<double>
+ *            Constraint operator, stored in opposite form as
+ *            A. E.g. A in column-major means C in row-major.
+ *        d : vector<double> 
+ *            Right hand side of contraint equation.
+ *        m : &int
+ *            Number of columns if A is in row-major, number
+ *            of rows if A is in column-major.
+ *        n : &int
+ *            Number of rows if A is in row-major, number
+ *            of columns if A is in column-major.
+ *        s : &int
+ *            Number of constraints.
+ *
+ * Returns
+ * -------
+ *         x : vector<double>
+ *            Solution to constrained least sqaures problem.
+ *
+ * Notes
+ * ------
+ * Currently only set up for real-valued matrices. May easily
+ * generalize to complex, but haven't checked.
+ *
+ */
+template<class I, class T>
+std::vector<T> constrained_least_squares(std::vector<T> &A,
+                                         std::vector<T> &b,
+                                         std::vector<T> &C,
+                                         std::vector<T> &d,
+                                         const I &m,
+                                         const I &n,
+                                         const I &s)
+{
+
+    // Perform QR on matrix C. R is written over C in column major,
+    // and Q is returned in column major. 
+    std::vector<T> Qc = QR(&C[0],n,s,1);
+
+    // Form matrix product S = A^T * Q. For A passed in as row
+    // major, perform S = A * Q, assuming that A is in column major
+    // (A^T row major = A column major).
+    std::vector<T> temp_vec(n,0);
+    for (I i=0; i<m; i++) {
+        for (I j=0; j<n; j++) {
+            T val = 0.0;
+            for (I k=0; k<n; k++) {
+                val += A[col_major(i,k,m)] * Qc[col_major(k,j,n)];
+            }
+            temp_vec[j] = val;
+        }
+        for (I j=0; j<n; j++) {
+            A[col_major(i,j,m)] = temp_vec[j];
+        }
+    }
+
+    // Change R to R^T. Probably dirtier, cheaper ways to use R^T
+    // in place, don't think it's worth it.
+    for (I i=1; i<s; i++) {
+        for (I j=0; j<i; j++) {
+            C[col_major(i,j,n)] = C[col_major(j,i,n)];
+        }
+    }
+
+    // Satisfy constraints R^Tz = d, move to rhs of LS
+    lower_tri_solve(&C[0],&d[0],&temp_vec[0],n,s,1);
+    for (I i=0; i<m; i++) {
+        T val = 0.0;
+        for (I j=0; j<s; j++) {
+            val += A[col_major(i,j,m)] * temp_vec[j];
+        }
+        b[i] -= val;
+    }
+
+    // Call LS on reduced system
+    I temp_ind = n-s;
+    least_squares(&A[col_major(0,s,m)], &b[0], &temp_vec[s], m, temp_ind, 1);
+
+    // Form x = Q*z
+    std::vector<T> x(n,0);
+    for (I i=0; i<n; i++) {
+        x[i] = 0;
+        for (I k=0; k<n; k++) {
+            x[i] += Qc[col_major(i,k,n)] * temp_vec[k];
+        }
+    }
+
+    return x;
+}
 
 #endif
