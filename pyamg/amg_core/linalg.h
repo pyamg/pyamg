@@ -5,6 +5,7 @@
 #include <limits>
 #include <complex>
 #include <iostream>
+#include <vector>
 
 /*******************************************************************
  * Overloaded routines for real arithmetic for int, float and double
@@ -18,7 +19,6 @@
 inline int signof(int a) { return (a<0 ? -1 : 1); }
 inline float signof(float a) { return (a<0.0 ? -1.0 : 1.0); }
 inline double signof(double a) { return (a<0.0 ? -1.0 : 1.0); }
-
 
 
 /*******************************************************************
@@ -172,12 +172,27 @@ inline T dot_prod(const T x[], const T y[], const I n)
     return sum;
 }
 
-/* Returns dot product of sparse vector and dense vector.                   */
-/*      + size1  - number of nonzero elements in sparse vector              */
-/*      + ind1   - array of indices of nonzero elements in sparse vector    */
-/*      + value1 - nonzero values in sparse vector                          */
-/*      + size2  - size of dense vector                                     */
-/*      + value2 - list of values in dense vector                           */
+
+/* Dot product of sparse vector and dense vector.
+ *
+ * Parameters
+ * ----------
+ *      size1  : int
+ *          Number of nonzero elements in sparse vector
+ *      ind1   : array<int>
+ *          *Sorted* array of indices in sparse vector
+ *      value1 : array<float>
+ *          Nonzero values in sparse vector
+ *      size2  : int
+ *          Size of dense vector
+ *      value2 : array<float>
+ *          List of values in dense vector (zero-indexed)
+ *
+ * Returns
+ * -------
+ * Dot product of vectors. 
+ *
+ */
 template<class I, class T>
 T sparse_dense_dot(const I &size1, const I ind1[], const T value1[],
                    const I &size2, const T value2[], const F &scale = 1.0)
@@ -204,7 +219,53 @@ T sparse_dense_dot(const I &size1, const I ind1[], const T value1[],
 }
 
 
-
+/* Dot product of two sparse vectors.
+ *
+ * Parameters
+ * ----------
+ *      size1  : int
+ *          Number of nonzero elements in sparse vector
+ *      ind1   : array<int>
+ *          *Sorted* array of indices in sparse vector
+ *      value1 : array<float>
+ *          Nonzero values in sparse vector
+ *      size2  : int
+ *          Number of nonzero elements in sparse vector
+ *      ind2   : array<int>
+ *          *Sorted* array of indices in sparse vector
+ *      value2 : array<float>
+ *          Nonzero values in sparse vector
+ *
+ * Returns
+ * -------
+ * Dot product of vectors. 
+ *
+ */
+T sparse_dot(const I &size1, const I ind1[], const T value1[],
+             const I &size2, const I ind2[], const T value2[],
+             const F &scale = 1.0)
+{
+    T result = 0.0;
+    I lowerInd = 0;
+    // Loop over elements in sparse vector, 
+    for (I k=0; k<size1; k++) {
+        for (I j=lowerInd; j<size2; j++) {
+            // If indices overlap, add product to dot product
+            if ( ind1[k] == ind2[j] ) {
+                result += scale * value1[k] * value2[j];
+                lowerInd = j+1;
+                break;
+            }
+            // If inner loop vector index > outer loop vector index
+            // (assuming sorted indices), the outer loop vector index
+            // is not contained in inner loop indices. 
+            else if ( ind1[k] < ind2[j] ) {
+                break;
+            }
+        }
+    }
+    return result;
+}
 
 
 /* norm(x, n)
