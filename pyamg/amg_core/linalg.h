@@ -163,7 +163,7 @@ inline I col_major(const I &row, const I &col, const I &num_rows)
  * conjugate(x).T y
  *
  */
-template<class I, class T, class F>
+template<class I, class T>
 inline T dot_prod(const T x[], const T y[], const I n)
 {
     T sum = 0.0;
@@ -193,7 +193,7 @@ inline T dot_prod(const T x[], const T y[], const I n)
  * Dot product of vectors. 
  *
  */
-template<class I, class T>
+template<class I, class T, class F>
 T sparse_dense_dot(const I &size1, const I ind1[], const T value1[],
                    const I &size2, const T value2[], const F &scale = 1.0)
 {
@@ -241,6 +241,7 @@ T sparse_dense_dot(const I &size1, const I ind1[], const T value1[],
  * Dot product of vectors. 
  *
  */
+template<class I, class T, class F>
 T sparse_dot(const I &size1, const I ind1[], const T value1[],
              const I &size2, const I ind2[], const T value2[],
              const F &scale = 1.0)
