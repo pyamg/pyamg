@@ -6,7 +6,7 @@ from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
 
-from numpy.testing import TestCase, rand, assert_equal
+from numpy.testing import TestCase, assert_equal
 
 
 class TestAggregate(TestCase):
@@ -16,7 +16,7 @@ class TestAggregate(TestCase):
         # random matrices
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(rand(N, N)))
+            self.cases.append(csr_matrix(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -72,7 +72,7 @@ class TestComplexAggregate(TestCase):
         # Poisson problems in 2D
         for N in [2, 3, 5, 7, 8]:
             A = poisson((N, N), format='csr')
-            A.data = A.data + 0.001j*rand(A.nnz)
+            A.data = A.data + 0.001j*np.random.rand(A.nnz)
             self.cases.append(A)
 
     def test_standard_aggregation(self):

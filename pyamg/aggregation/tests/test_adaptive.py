@@ -14,8 +14,7 @@ warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 class TestAdaptiveSA(TestCase):
     def setUp(self):
-        from numpy.random import seed
-        seed(0)
+        np.random.seed(0)
 
     def test_poisson(self):
         A = poisson((50, 50), format='csr')

@@ -8,7 +8,7 @@ from pyamg.gallery import poisson, linear_elasticity, load_example,\
 from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
 from pyamg.amg_core import incomplete_mat_mult_bsr
 
-from numpy.testing import TestCase, rand, assert_array_almost_equal,\
+from numpy.testing import TestCase, assert_array_almost_equal,\
     assert_equal, assert_almost_equal
 
 
@@ -74,8 +74,10 @@ class TestEnergyMin(TestCase):
 
         B2 = csr_matrix(np.mat([[0.0, 2.3]])).tobsr(blocksize=(1, 1))
         B3 = csr_matrix(np.mat([[3.0, 0.0]])).tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1., 1.], [1., 1.]])).tobsr(blocksize=(1, 1))
-        mask3 = csr_matrix(np.mat([[0., 1.], [1., 0.]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.mat([[1., 1.],
+                                  [1., 1.]])).tobsr(blocksize=(1, 1))
+        mask3 = csr_matrix(np.mat([[0., 1.],
+                                   [1., 0.]])).tobsr(blocksize=(1, 1))
         cases.append((B.T.copy(), B2, mask))                      # 2x1,  1x2
         cases.append((B.T.copy(), B2, mask3))                     # 2x1,  1x2
         cases.append((B.T.copy(), B3, mask))                      # 2x1,  1x2
@@ -84,8 +86,10 @@ class TestEnergyMin(TestCase):
         B = B.tobsr(blocksize=(1, 2))
         B2 = B2.tobsr(blocksize=(1, 2))
         B3 = B3.tobsr(blocksize=(1, 2))
-        mask = csr_matrix(np.mat([[1., 1.], [1., 1.]])).tobsr(blocksize=(2, 2))
-        mask2 = csr_matrix(np.mat([[0., 0.], [0., 0.]])).tobsr(blocksize=(2, 2))
+        mask = csr_matrix(np.mat([[1., 1.],
+                                  [1., 1.]])).tobsr(blocksize=(2, 2))
+        mask2 = csr_matrix(np.mat([[0., 0.],
+                                   [0., 0.]])).tobsr(blocksize=(2, 2))
         cases.append((B.T.copy(), B2, mask))                      # 2x1,  1x2
         cases.append((B.T.copy(), B2, mask2))                     # 2x1,  1x2
         cases.append((B.T.copy(), B3, mask))                      # 2x1,  1x2
@@ -310,7 +314,8 @@ class TestEnergyMin(TestCase):
 
         # Simple, imaginary-valued problems
         iA = 1.0j * A
-        iB = 1.0 + rand(iA.shape[0], 2) + 1.0j * (1.0 + rand(iA.shape[0], 2))
+        iB = 1.0 + np.random.rand(iA.shape[0], 2)\
+                 + 1.0j * (1.0 + np.random.rand(iA.shape[0], 2))
 
         cases.append((iA, B, ('jacobi',
                               {'filter': True, 'weighting': 'diagonal'})))
@@ -494,7 +499,7 @@ class TestEnergyMin(TestCase):
                 assert_almost_equal(I.data, I2.data)
                 assert_equal(I.indptr, I2.indptr)
                 assert_equal(I.indices, I2.indices)
-    
+
     def test_postfilter(self):
         """Check that using postfilter reduces NNZ in P"""
         np.random.seed(0)  # make tests repeatable
@@ -507,42 +512,47 @@ class TestEnergyMin(TestCase):
 
         cases.append((A, B,
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.05}) )
+                     {'theta': 0.05}))
 
         cases.append((A, B,
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     {'k': 3}) )
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'k': 3}))
 
-
-        cases.append((A.tobsr(blocksize=(2, 2)), 
-                     np.hstack((B, np.random.rand(B.shape[0],1))),
-                     ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.1}) )
+        cases.append((A.tobsr(blocksize=(2, 2)),
+                     np.hstack((B, np.random.rand(B.shape[0], 1))),
+                     ('energy', {'krylov': 'cg', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'theta': 0.1}))
 
         # Simple, imaginary-valued problems
         iA = 1.0j * A
-        iB = 1.0 + rand(iA.shape[0], 2) + 1.0j * (1.0 + rand(iA.shape[0], 2))
+        iB = 1.0 + np.random.rand(iA.shape[0], 2)\
+                 + 1.0j * (1.0 + np.random.rand(iA.shape[0], 2))
 
-        cases.append((iA, B, 
+        cases.append((iA, B,
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.05}) )
+                     {'theta': 0.05}))
 
-        cases.append((iA, iB, 
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     {'k': 3}) )
+        cases.append((iA, iB,
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'k': 3}))
 
-
-        cases.append((A.tobsr(blocksize=(2, 2)), 
-                     np.hstack((B, np.random.rand(B.shape[0],1))),
+        cases.append((A.tobsr(blocksize=(2, 2)),
+                     np.hstack((B, np.random.rand(B.shape[0], 1))),
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.1}) )
-        
+                     {'theta': 0.1}))
+
         for A, B, smooth, postfilter in cases:
-            ml_nofilter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
+            ml_nofilter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
+                                          smooth=smooth, keep=True)
             smooth[1]['postfilter'] = postfilter
-            ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz > ml_filter.levels[0].P.nnz, True)
-                    
+            ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
+                                        smooth=smooth, keep=True)
+            assert_equal(ml_nofilter.levels[0].P.nnz >
+                         ml_filter.levels[0].P.nnz, True)
+
     def test_prefilter(self):
         """Check that using prefilter reduces NNZ in P"""
         np.random.seed(0)  # make tests repeatable
@@ -555,41 +565,46 @@ class TestEnergyMin(TestCase):
 
         cases.append((A, B,
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.05}) )
+                     {'theta': 0.05}))
 
         cases.append((A, B,
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     {'k': 3}) )
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'k': 3}))
 
-
-        cases.append((A.tobsr(blocksize=(2, 2)), 
-                     np.hstack((B, np.random.rand(B.shape[0],1))),
-                     ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.1}) )
+        cases.append((A.tobsr(blocksize=(2, 2)),
+                     np.hstack((B, np.random.rand(B.shape[0], 1))),
+                     ('energy', {'krylov': 'cg', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'theta': 0.1}))
 
         # Simple, imaginary-valued problems
         iA = 1.0j * A
-        iB = 1.0 + rand(iA.shape[0], 2) + 1.0j * (1.0 + rand(iA.shape[0], 2))
+        iB = 1.0 + np.random.rand(iA.shape[0], 2)\
+                 + 1.0j * (1.0 + np.random.rand(iA.shape[0], 2))
 
-        cases.append((iA, B, 
+        cases.append((iA, B,
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.05}) )
+                     {'theta': 0.05}))
 
-        cases.append((iA, iB, 
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     {'k': 3}) )
+        cases.append((iA, iB,
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                                 'maxiter': 3}),
+                     {'k': 3}))
 
-
-        cases.append((A.tobsr(blocksize=(2, 2)), 
-                     np.hstack((B, np.random.rand(B.shape[0],1))),
+        cases.append((A.tobsr(blocksize=(2, 2)),
+                     np.hstack((B, np.random.rand(B.shape[0], 1))),
                      ('energy', {'krylov': 'cg', 'degree': 2, 'maxiter': 3}),
-                     {'theta': 0.1}) )
-        
+                     {'theta': 0.1}))
+
         for A, B, smooth, prefilter in cases:
-            ml_nofilter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
+            ml_nofilter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
+                                          smooth=smooth, keep=True)
             smooth[1]['prefilter'] = prefilter
-            ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz > ml_filter.levels[0].P.nnz, True)
+            ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
+                                        smooth=smooth, keep=True)
+            assert_equal(ml_nofilter.levels[0].P.nnz >
+                         ml_filter.levels[0].P.nnz, True)
 
 # class TestSatisfyConstaints(TestCase):
 #    def test_scalar(self):
