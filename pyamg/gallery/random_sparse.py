@@ -14,8 +14,8 @@ def _rand_sparse(m, n, density, format='csr'):
 
     nnz = max(min(int(m*n*density), m*n), 0)
 
-    row = np.random.random_integers(low=0, high=m-1, size=nnz)
-    col = np.random.random_integers(low=0, high=n-1, size=nnz)
+    row = np.random.randint(low=0, high=m-1, size=nnz)
+    col = np.random.randint(low=0, high=n-1, size=nnz)
     data = np.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together
