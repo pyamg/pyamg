@@ -5,6 +5,9 @@ from pyamg.gallery import poisson, load_example
 from pyamg.blackbox import solve
 
 from numpy.testing import TestCase
+import warnings
+warnings.filterwarnings(action="ignore", module="scipy",
+                        message="^internal gelsd")
 
 
 class TestBlackbox(TestCase):
