@@ -75,8 +75,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
-        callback( ||rk||_2 ), where rk is the current preconditioned residual
-        vector
+        callback(xk), where xk is the current solution vector
     residuals : list
         residuals contains the preconditioned residual norm history,
         including the initial residual.
@@ -218,8 +217,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     if normb == 0.0:
         normb = 1.0
     if normr < tol*normb:
-        if callback is not None:
-            callback(norm(r))
         return (postprocess(x), 0)
 
     # Scale tol by ||r_0||_2, we use the preconditioned residual
@@ -324,9 +321,9 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
                 if normr < tol:
                     break
 
-                # Allow user access to residual
+                # Allow user access to the iterates
                 if callback is not None:
-                    callback(normr)
+                    callback(x)
                 if keep_r:
                     residuals.append(normr)
 
@@ -346,9 +343,9 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         #    warn('inf or nan after application of preconditioner')
         #    return(postprocess(x), -1)
 
-        # Allow user access to residual
+        # Allow user access to the iterates
         if callback is not None:
-            callback(normr)
+            callback(x)
         if keep_r:
             residuals.append(normr)
 
