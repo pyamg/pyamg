@@ -11,6 +11,10 @@ from pyamg.amg_core import incomplete_mat_mult_bsr
 from numpy.testing import TestCase, assert_array_almost_equal,\
     assert_equal, assert_almost_equal
 
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning,
+                        message='Having less target vectors')
+
 
 class TestEnergyMin(TestCase):
     def test_incomplete_mat_mult_bsr(self):
