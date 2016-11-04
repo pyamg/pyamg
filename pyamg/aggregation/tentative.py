@@ -137,7 +137,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     K2 = B.shape[1]                # candidates
 
     # the first two dimensions of R and Qx are collapsed later
-    R = np.empty((N_coarse, K2, K2), dtype=B.dtype)  # coarse candidates
+    R = np.empty((N_coarse, K2, K2), dtype=B.dtype)    # coarse candidates
     Qx = np.empty((AggOp.nnz, K1, K2), dtype=B.dtype)  # BSR data array
 
     AggOp_csc = AggOp.tocsc()
@@ -147,7 +147,6 @@ def fit_candidates(AggOp, B, tol=1e-10):
        AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(),
        B.ravel(), R.ravel(), tol)
 
-    # TODO replace with BSC matrix here
     Q = bsr_matrix((Qx.swapaxes(1, 2).copy(), AggOp_csc.indices,
                     AggOp_csc.indptr), shape=(K2*N_coarse, K1*N_fine))
     Q = Q.T.tobsr()

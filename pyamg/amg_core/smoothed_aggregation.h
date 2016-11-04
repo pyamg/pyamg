@@ -426,7 +426,7 @@ void fit_candidates_common(const I n_row,
             } else {
                 scale = 0;
 
-                // JBS code...explicitly zero out this column of R
+                // Explicitly zero out this column of R
                 //for(I bi = 0; bi <= bj; bi++){
                 //    R_start[K2 * bi + bj] = 0.0;
                 //}

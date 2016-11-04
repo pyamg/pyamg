@@ -54,7 +54,6 @@ void gauss_seidel(const I Ap[], const int Ap_size,
                 rsum += Ax[jj]*x[j];
         }
 
-        //TODO raise error? inform user?
         if (diag != (F) 0.0){
             x[i] = (b[i] - rsum)/diag;
         }
@@ -162,9 +161,6 @@ void bsr_gauss_seidel(const I Ap[], const int Ap_size,
                     x[i*blocksize+k] = rsum[k]/diag; }
             }
         }
-        //else {
-        //    //TODO raise error? Inform user no diagonal block?
-        //}
 
     } // end outer-most for loop
 
@@ -231,7 +227,6 @@ void jacobi(const I Ap[], const int Ap_size,
                 rsum += Ax[jj]*temp[j];
         }
 
-        //TODO raise error? inform user?
         if (diag != (F) 0.0){
             x[i] = (one - omega2) * temp[i] + omega2 * ((b[i] - rsum)/diag);
         }
@@ -349,9 +344,6 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
                     x[i*blocksize+k] = (one - omega2) * temp[i*blocksize+k] + omega2 * rsum[k]/diag; }
             }
         }
-        //else {
-        //    //TODO raise error? Inform user no diagonal block?
-        //}
 
     } // end outer-most for loop
 

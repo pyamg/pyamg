@@ -240,11 +240,6 @@ void rs_cf_splitting(const I n_nodes,
                             //move k to the end of its current interval
                             if(lambda[k] >= n_nodes - 1) continue;
 
-                            // TODO make this robust
-                            //if(lambda[k] >= n_nodes -1)
-                            //    std::cout << std::endl << "lambda[" << k << "]=" << lambda[k] << " n_nodes=" << n_nodes << std::endl;
-                            //assert(lambda[k] < n_nodes - 1);//this would cause problems!
-
                             I lambda_k = lambda[k];
                             I old_pos  = node_to_index[k];
                             I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
@@ -604,13 +599,12 @@ void rs_standard_interpolation(const I n_nodes,
                                const I Tp[], const I Tj[], const T Tx[],
                                      I Bp[],       I Bj[],       T Bx[])
 {
-
-    // TODO
+    // Not implemented
 }
 
 
 /* Helper function for compatible relaxation to perform steps 3.1d - 3.1f
- * in Falgout / Brannick (2010).  
+ * in Falgout / Brannick (2010).
  *
  * Input:
  * ------
@@ -619,7 +613,7 @@ void rs_standard_interpolation(const I n_nodes,
  * A_colinds : const {int array}
  *      Column indices for sparse matrix in CSR format.
  * B : const {float array}
- *      Target near null space vector for computing candidate set measure. 
+ *      Target near null space vector for computing candidate set measure.
  * e : {float array}
  *      Relaxed vector for computing candidate set measure.
  * indices : {int array}
@@ -627,19 +621,19 @@ void rs_standard_interpolation(const I n_nodes,
  *      followed by F indices in elements 1:nf, and C indices in (nf+1):n.
  * splitting : {int array}
  *      Integer array with current C/F splitting of nodes, 0 = C-point,
- *      1 = F-point. 
+ *      1 = F-point.
  * gamma : {float array}
- *      Preallocated vector to store candidate set measure.  
+ *      Preallocated vector to store candidate set measure.
  * thetacs : const {float}
- *      Threshold for coarse grid candidates from set measure. 
+ *      Threshold for coarse grid candidates from set measure.
  *
  * Returns:
- * --------  
- * Nothing, updated C/F-splitting and corresponding indices modified in place. 
+ * --------
+ * Nothing, updated C/F-splitting and corresponding indices modified in place.
  */
 template<class I, class T>
 void cr_helper(const I A_rowptr[], const int A_rowptr_size,
-               const I A_colinds[], const int A_colinds_size, 
+               const I A_colinds[], const int A_colinds_size,
                const T B[], const int B_size,
                T e[], const int e_size,
                I indices[], const int indices_size,
@@ -659,14 +653,14 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
         e[pt] = std::abs(e[pt] / B[pt]);
         if (e[pt] > inf_norm) {
             inf_norm = e[pt];
-        }   
+        }
     }
 
     // Compute candidate set measure, pick coarse grid candidates.
     std::vector<I> Uindex;
     for (I i=1; i<(num_Fpts+1); i++) {
         I pt = indices[i];
-        gamma[pt] = e[pt] / inf_norm; 
+        gamma[pt] = e[pt] / inf_norm;
         if (gamma[pt] > thetacs) {
             Uindex.push_back(pt);
         }
@@ -692,7 +686,7 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
 
     // Form maximum independent set
     while (true) {
-        // 1. Add point i in U with maximal weight to C 
+        // 1. Add point i in U with maximal weight to C
         T max_weight = 0;
         I new_pt = -1;
         for (I i=0; i<set_size; i++) {
@@ -709,7 +703,7 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
         splitting[new_pt] = 1;
         gamma[new_pt] = 0;
 
-        // 2. Remove from candidate set all nodes connected to 
+        // 2. Remove from candidate set all nodes connected to
         // new C-point by marking weight zero.
         std::vector<I> neighbors;
         I A_ind0 = A_rowptr[new_pt];
@@ -720,7 +714,7 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
             omega[temp] = 0;
         }
 
-        // 3. For each node removed in step 2, set the weight for 
+        // 3. For each node removed in step 2, set the weight for
         // each of its neighbors still in the candidate set +1.
         I num_neighbors = neighbors.size();
         for (I i=0; i<num_neighbors; i++) {
@@ -730,14 +724,14 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
             for (I j=A_ind0; j<A_ind1; j++) {
                 I temp = A_colinds[j];
                 if (omega[temp] != 0) {
-                    omega[temp] += 1;                   
+                    omega[temp] += 1;
                 }
             }
         }
     }
 
     // Reorder indices array, with the first element giving the number
-    // of F indices, nf, followed by F indices in elements 1:nf, and 
+    // of F indices, nf, followed by F indices in elements 1:nf, and
     // C indices in (nf+1):n. Note, C indices sorted largest to smallest.
     num_Fpts = 0;
     I next_Find = 1;
