@@ -1,4 +1,4 @@
-from numpy import inner, ceil, asmatrix, mod
+import numpy as np
 from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -87,7 +87,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AH = A.H
     else:
         # TODO avoid doing this since A may be a different sparse type
-        AH = aslinearoperator(asmatrix(A).H)
+        AH = aslinearoperator(np.asmatrix(A).H)
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
@@ -121,13 +121,13 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # easily, so we arbitrarily let the method go up to 130% over the
     # theoretically necessary limit of maxiter=dimen
     if maxiter is None:
-        maxiter = int(ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*dimen)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > (1.3*dimen):
         warn('maximum allowed inner iterations (maxiter) are the 130% times \
               the number of dofs')
-        maxiter = int(ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*dimen)) + 2
 
     # Prep for method
     r = b - A*x
@@ -154,18 +154,18 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Apply preconditioner and calculate initial search direction
     z = M*r
     p = AH*z
-    old_zr = inner(z.conjugate(), r)
+    old_zr = np.inner(z.conjugate(), r)
 
     for iter in range(maxiter):
 
         # alpha = (z_j, r_j) / (p_j, p_j)
-        alpha = old_zr / inner(p.conjugate(), p)
+        alpha = old_zr / np.inner(p.conjugate(), p)
 
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
 
         # r_{j+1} = r_j - alpha*w_j,   where w_j = A*p_j
-        if mod(iter, recompute_r) and iter > 0:
+        if np.mod(iter, recompute_r) and iter > 0:
             r -= alpha*(A*p)
         else:
             r = b - A*x
@@ -174,7 +174,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*r
 
         # beta = (z_{j+1}, r_{j+1}) / (z_j, r_j)
-        new_zr = inner(z.conjugate(), r)
+        new_zr = np.inner(z.conjugate(), r)
         beta = new_zr / old_zr
         old_zr = new_zr
 

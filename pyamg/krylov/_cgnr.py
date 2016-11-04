@@ -1,4 +1,4 @@
-from numpy import inner, ceil, asmatrix, mod
+import numpy as np
 from scipy.sparse import isspmatrix
 from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -88,7 +88,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AH = A.H
     else:
         # TODO avoid doing this since A may be a different sparse type
-        AH = aslinearoperator(asmatrix(A).H)
+        AH = aslinearoperator(np.asmatrix(A).H)
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
@@ -122,13 +122,13 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # easily, so we arbitrarily let the method go up to 130% over the
     # theoretically necessary limit of maxiter=dimen
     if maxiter is None:
-        maxiter = int(ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*dimen)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > (1.3*dimen):
         warn('maximum allowed inner iterations (maxiter) are the 130% times \
               the number of dofs')
-        maxiter = int(ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*dimen)) + 2
 
     # Prep for method
     r = b - A*x
@@ -156,7 +156,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # Apply preconditioner and calculate initial search direction
     z = M*rhat
     p = z.copy()
-    old_zr = inner(z.conjugate(), rhat)
+    old_zr = np.inner(z.conjugate(), rhat)
 
     for iter in range(maxiter):
 
@@ -164,13 +164,13 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         w = A*p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
-        alpha = old_zr / inner(w.conjugate(), w)
+        alpha = old_zr / np.inner(w.conjugate(), w)
 
         # x_{j+1} = x_j + alpha*p_j
         x += alpha*p
 
         # r_{j+1} = r_j - alpha*w_j
-        if mod(iter, recompute_r) and iter > 0:
+        if np.mod(iter, recompute_r) and iter > 0:
             r -= alpha*w
         else:
             r = b - A*x
@@ -182,7 +182,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
-        new_zr = inner(z.conjugate(), rhat)
+        new_zr = np.inner(z.conjugate(), rhat)
         beta = new_zr / old_zr
         old_zr = new_zr
 

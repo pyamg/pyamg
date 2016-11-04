@@ -1,11 +1,10 @@
 from warnings import warn
-from numpy import array, zeros, ravel, abs, max, dot, conjugate, sqrt,\
-        iscomplexobj
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from pyamg.util.linalg import norm
 from pyamg import amg_core
-from scipy.linalg import get_blas_funcs, get_lapack_funcs
+from scipy.linalg import get_lapack_funcs
 import scipy as sp
 
 __docformat__ = "restructuredtext en"
@@ -18,7 +17,7 @@ def mysign(x):
         return 1.0
     else:
         # return the complex "sign"
-        return x/abs(x)
+        return x/np.abs(x)
 
 
 def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
@@ -158,17 +157,15 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         max_inner = maxiter
 
     # Get fast access to underlying BLAS routines
-    [lartg] = get_lapack_funcs(['lartg'], [x] )
-
-
+    [lartg] = get_lapack_funcs(['lartg'], [x])
 
     # Is this a one dimensional matrix?
     if dimen == 1:
-        entry = ravel(A*array([1.0], dtype=xtype))
+        entry = np.ravel(A*np.array([1.0], dtype=xtype))
         return (postprocess(b/entry), 0)
 
     # Prep for method
-    r = b - ravel(A*x)
+    r = b - np.ravel(A*x)
     normr = norm(r)
     if keep_r:
         residuals.append(normr)
@@ -208,32 +205,32 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # matrix
         # Space required is O(dimen*max_inner)
         # Givens Rotations
-        Q = zeros((4*max_inner,), dtype=xtype)
+        Q = np.zeros((4*max_inner,), dtype=xtype)
         # upper Hessenberg matrix (made upper tri with Givens Rotations)
-        H = zeros((max_inner, max_inner), dtype=xtype)
-        W = zeros((max_inner, dimen), dtype=xtype)  # Householder reflectors
+        H = np.zeros((max_inner, max_inner), dtype=xtype)
+        W = np.zeros((max_inner, dimen), dtype=xtype)  # Householder reflectors
         # For fGMRES, preconditioned vectors must be stored
         # No Horner-like scheme exists that allow us to avoid this
-        Z = zeros((dimen, max_inner), dtype=xtype)
+        Z = np.zeros((dimen, max_inner), dtype=xtype)
         W[0, :] = w
 
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
         # This is the RHS vector for the problem in the Krylov Space
-        g = zeros((dimen,), dtype=xtype)
+        g = np.zeros((dimen,), dtype=xtype)
         g[0] = -beta
 
         for inner in range(max_inner):
             # Calculate Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
-            v = -2.0*conjugate(w[inner])*w
+            v = -2.0*np.conjugate(w[inner])*w
             v[inner] += 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             # for j in range(inner-1,-1,-1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, ravel(W), dimen, inner-1, -1, -1)
+            amg_core.apply_householders(v, np.ravel(W), dimen, inner-1, -1, -1)
 
             # Apply preconditioner
-            v = ravel(M*v)
+            v = np.ravel(M*v)
             # Check for nan, inf
             # if isnan(v).any() or isinf(v).any():
             #    warn('inf or nan after application of preconditioner')
@@ -241,13 +238,13 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             Z[:, inner] = v
 
             # Calculate new search direction
-            v = ravel(A*v)
+            v = np.ravel(A*v)
 
             # Factor in all Householder orthogonal reflections on new search
             # direction
             # for j in range(inner+1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, ravel(W), dimen, 0, inner+1, 1)
+            amg_core.apply_householders(v, np.ravel(W), dimen, 0, inner+1, 1)
 
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
@@ -287,17 +284,18 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             if inner != dimen-1:
                 if v[inner+1] != 0:
                     [c, s, r] = lartg(v[inner], v[inner+1])
-                    Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
-                    Q[(inner*4): ((inner+1)*4)] = ravel(Qblock).copy()
+                    Qblock = np.array([[c, s], [-np.conjugate(s), c]],
+                                      dtype=xtype)
+                    Q[(inner*4): ((inner+1)*4)] = np.ravel(Qblock).copy()
 
                     # Apply Givens Rotation to g, the RHS for the linear system
                     # in the Krylov Subspace.  Note that this dot does a matrix
                     # multiply, not an actual dot product where a conjugate
                     # transpose is taken
-                    g[inner:inner+2] = dot(Qblock, g[inner:inner+2])
+                    g[inner:inner+2] = np.dot(Qblock, g[inner:inner+2])
 
                     # Apply effect of Givens Rotation to v
-                    v[inner] = dot(Qblock[0, :], v[inner:inner+2])
+                    v[inner] = np.dot(Qblock[0, :], v[inner:inner+2])
                     v[inner+1] = 0.0
 
             # Write to upper Hessenberg Matrix,
@@ -307,7 +305,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             # Don't update normr if last inner iteration, because
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
-                normr = abs(g[inner+1])
+                normr = np.abs(g[inner+1])
                 if normr < tol:
                     break
 
@@ -331,9 +329,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
         # No Horner like scheme exists because the preconditioner can change
         # each iteration # Hence, we must store each preconditioned vector
-        update = dot(Z[:, 0:inner+1], y)
+        update = np.dot(Z[:, 0:inner+1], y)
         x = x + update
-        r = b - ravel(A*x)
+        r = b - np.ravel(A*x)
         normr = norm(r)
 
         # Allow user access to residual
@@ -345,7 +343,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # Has fGMRES stagnated?
         indices = (x != 0)
         if indices.any():
-            change = max(abs(update[indices] / x[indices]))
+            change = np.max(np.abs(update[indices] / x[indices]))
             if change < 1e-12:
                 # No change, halt
                 return (postprocess(x), -1)

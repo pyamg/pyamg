@@ -89,8 +89,7 @@ class TestAdaptiveSA(TestCase):
 
 class TestComplexAdaptiveSA(TestCase):
     def setUp(self):
-        from numpy.random import seed
-        seed(0)
+        np.random.seed(0)
 
     def test_poisson(self):
         cases = []

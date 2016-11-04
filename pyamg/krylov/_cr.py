@@ -1,5 +1,6 @@
 from __future__ import print_function
-from numpy import inner, mod, sqrt
+
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
@@ -108,10 +109,10 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     r = b - A*x
     z = M*r
     p = z.copy()
-    zz = inner(z.conjugate(), z)
+    zz = np.inner(z.conjugate(), z)
 
     # use preconditioner norm
-    normr = sqrt(zz)
+    normr = np.sqrt(zz)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
@@ -134,17 +135,17 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     iter = 0
 
     Az = A*z
-    rAz = inner(r.conjugate(), Az)
+    rAz = np.inner(r.conjugate(), Az)
     Ap = A*p
 
     while True:
 
         rAz_old = rAz
 
-        alpha = rAz / inner(Ap.conjugate(), Ap)       # 3
+        alpha = rAz / np.inner(Ap.conjugate(), Ap)       # 3
         x += alpha * p                           # 4
 
-        if mod(iter, recompute_r) and iter > 0:       # 5
+        if np.mod(iter, recompute_r) and iter > 0:       # 5
             r -= alpha * Ap
         else:
             r = b - A*x
@@ -152,7 +153,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*r
 
         Az = A*z
-        rAz = inner(r.conjugate(), Az)
+        rAz = np.inner(r.conjugate(), Az)
 
         beta = rAz/rAz_old                        # 6
 
@@ -164,8 +165,8 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         iter += 1
 
-        zz = inner(z.conjugate(), z)
-        normr = sqrt(zz)                          # use preconditioner norm
+        zz = np.inner(z.conjugate(), z)
+        normr = np.sqrt(zz)                          # use preconditioner norm
 
         if residuals is not None:
             residuals.append(normr)

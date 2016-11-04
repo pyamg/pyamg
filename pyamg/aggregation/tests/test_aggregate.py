@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.arraysetops import setdiff1d
 from scipy.sparse import csr_matrix, spdiags
 
 from pyamg.gallery import poisson, load_example
@@ -37,7 +36,7 @@ class TestAggregate(TestCase):
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+            assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
@@ -55,7 +54,7 @@ class TestAggregate(TestCase):
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+            assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
@@ -84,7 +83,7 @@ class TestComplexAggregate(TestCase):
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+            assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
     def test_naive_aggregation(self):
         for A in self.cases:
@@ -95,7 +94,7 @@ class TestComplexAggregate(TestCase):
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
-            assert_equal(setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+            assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
 
 # reference implementations for unittests  #

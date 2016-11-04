@@ -1,4 +1,4 @@
-from numpy import array, inner, ravel
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
@@ -110,13 +110,13 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Is this a one dimensional matrix?
     if A.shape[0] == 1:
-        entry = ravel(A*array([1.0], dtype=xtype))
+        entry = np.ravel(A*np.array([1.0], dtype=xtype))
         return (postprocess(b/entry), 0)
 
     rstar = r.copy()
     p = r.copy()
 
-    rrstarOld = inner(rstar.conjugate(), r)
+    rrstarOld = np.inner(rstar.conjugate(), r)
 
     iter = 0
 
@@ -126,7 +126,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AMp = A*Mp
 
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
-        alpha = rrstarOld/inner(rstar.conjugate(), AMp)
+        alpha = rrstarOld/np.inner(rstar.conjugate(), AMp)
 
         # s_j = r_j - alpha*A*M*p_j
         s = r - alpha*AMp
@@ -134,7 +134,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AMs = A*Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
-        omega = inner(AMs.conjugate(), s)/inner(AMs.conjugate(), AMs)
+        omega = np.inner(AMs.conjugate(), s)/np.inner(AMs.conjugate(), AMs)
 
         # x_{j+1} = x_j +  alpha*M*p_j + omega*M*s_j
         x = x + alpha*Mp + omega*Ms
@@ -143,7 +143,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         r = s - omega*AMs
 
         # beta_j = (r_{j+1}, rstar)/(r_j, rstar) * (alpha/omega)
-        rrstarNew = inner(rstar.conjugate(), r)
+        rrstarNew = np.inner(rstar.conjugate(), r)
         beta = (rrstarNew / rrstarOld) * (alpha / omega)
         rrstarOld = rrstarNew
 

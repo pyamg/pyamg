@@ -1,4 +1,4 @@
-from numpy import inner, mod
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
@@ -124,16 +124,16 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         p = M*(A*r)
 
-        rMAr = inner(p.conjugate(), r)  # check curvature of M^-1 A
+        rMAr = np.inner(p.conjugate(), r)  # check curvature of M^-1 A
         if rMAr < 0.0:
             warn("\nIndefinite matrix detected in minimal residual,\
                   aborting\n")
             return (postprocess(x), -1)
 
-        alpha = rMAr / inner(p.conjugate(), p)
+        alpha = rMAr / np.inner(p.conjugate(), p)
         x = x + alpha*r
 
-        if mod(iter, recompute_r) and iter > 0:
+        if np.mod(iter, recompute_r) and iter > 0:
             r = M*(b - A*x)
         else:
             r = r - alpha*p

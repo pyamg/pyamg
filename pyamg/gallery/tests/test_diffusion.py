@@ -1,4 +1,4 @@
-from numpy import array, pi
+import numpy as np
 from pyamg.gallery.diffusion import diffusion_stencil_2d
 
 from numpy.testing import TestCase, assert_equal, assert_almost_equal
@@ -24,14 +24,14 @@ class TestDiffusionStencil2D(TestCase):
         stencil = [[0.0, -0.5, 0.0],
                    [-1.0, 3.0, -1.0],
                    [0.0, -0.5, 0.0]]
-        assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=pi/2,
+        assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=np.pi/2,
                             type='FD'), stencil)
 
     def test_simple_finite_element(self):
         # isotropic
-        stencil = array([[-1.0, -1.0, -1.0],
-                         [-1.0, 8.0, -1.0],
-                         [-1.0, -1.0, -1.0]]) / 3.0
+        stencil = np.array([[-1.0, -1.0, -1.0],
+                            [-1.0, 8.0, -1.0],
+                            [-1.0, -1.0, -1.0]]) / 3.0
         assert_almost_equal(diffusion_stencil_2d(epsilon=1.0, theta=0.0,
                             type='FE'), stencil)
 
@@ -46,7 +46,7 @@ class TestDiffusionStencil2D(TestCase):
     def test_zero_sum(self):
         """test that stencil entries sum to zero"""
         for type in ['FD', 'FE']:
-            for theta in [pi/8, pi/5, pi/4, pi/3, pi/2, pi]:
+            for theta in [np.pi/8, np.pi/5, np.pi/4, np.pi/3, np.pi/2, np.pi]:
                 for epsilon in [0.001, 0.01, 1.0]:
                     stencil = diffusion_stencil_2d(epsilon=epsilon,
                                                    theta=theta, type=type)
@@ -57,7 +57,7 @@ class TestDiffusionStencil2D(TestCase):
 
         for type in ['FD', 'FE']:
             expected = diffusion_stencil_2d(epsilon=1.0, theta=0.0, type=type)
-            for theta in [pi/8, pi/4, pi/3, pi/2, pi]:
+            for theta in [np.pi/8, np.pi/4, np.pi/3, np.pi/2, np.pi]:
                 result = diffusion_stencil_2d(epsilon=1.0,
                                               theta=theta, type=type)
                 assert_almost_equal(result, expected)

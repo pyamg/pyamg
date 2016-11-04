@@ -1,4 +1,4 @@
-from numpy import inner, mod, sqrt
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
@@ -97,10 +97,10 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # setup method
     r = b - A*x
     z = M*r
-    rz = inner(r.conjugate(), z)
+    rz = np.inner(r.conjugate(), z)
 
     # use preconditioner norm
-    normr = sqrt(rz)
+    normr = np.sqrt(rz)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
@@ -126,7 +126,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         iter = iter+1
 
         q = A*z
-        zAz = inner(z.conjugate(), q)                # check curvature of A
+        zAz = np.inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
             warn("\nIndefinite matrix detected in steepest descent,\
                   aborting\n")
@@ -135,20 +135,20 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         alpha = rz / zAz                            # step size
         x = x + alpha*z
 
-        if mod(iter, recompute_r) and iter > 0:
+        if np.mod(iter, recompute_r) and iter > 0:
             r = b - A*x
         else:
             r = r - alpha*q
 
         z = M*r
-        rz = inner(r.conjugate(), z)
+        rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                                # check curvature of M
             warn("\nIndefinite preconditioner detected in steepest descent,\
                   aborting\n")
             return (postprocess(x), -1)
 
-        normr = sqrt(rz)                            # use preconditioner norm
+        normr = np.sqrt(rz)                   # use preconditioner norm
 
         if residuals is not None:
             residuals.append(normr)

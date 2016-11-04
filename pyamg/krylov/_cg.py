@@ -1,4 +1,4 @@
-from numpy import inner, mod, sqrt
+import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
@@ -106,10 +106,10 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     r = b - A*x
     z = M*r
     p = z.copy()
-    rz = inner(r.conjugate(), z)
+    rz = np.inner(r.conjugate(), z)
 
     # use preconditioner norm
-    normr = sqrt(rz)
+    normr = np.sqrt(rz)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
@@ -136,7 +136,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         rz_old = rz
         # Step number in Saad's pseudocode
-        pAp = inner(Ap.conjugate(), p)            # check curvature of A
+        pAp = np.inner(Ap.conjugate(), p)            # check curvature of A
         if pAp < 0.0:
             warn("\nIndefinite matrix detected in CG, aborting\n")
             return (postprocess(x), -1)
@@ -144,13 +144,13 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         alpha = rz/pAp                            # 3
         x += alpha * p                            # 4
 
-        if mod(iter, recompute_r) and iter > 0:   # 5
+        if np.mod(iter, recompute_r) and iter > 0:   # 5
             r -= alpha * Ap
         else:
             r = b - A*x
 
         z = M*r                                   # 6
-        rz = inner(r.conjugate(), z)
+        rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                              # check curvature of M
             warn("\nIndefinite preconditioner detected in CG, aborting\n")
@@ -162,7 +162,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         iter += 1
 
-        normr = sqrt(rz)                          # use preconditioner norm
+        normr = np.sqrt(rz)                          # use preconditioner norm
 
         if residuals is not None:
             residuals.append(normr)

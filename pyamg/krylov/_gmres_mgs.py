@@ -1,11 +1,10 @@
 from __future__ import print_function
-from numpy import array, zeros, sqrt, ravel, abs, max, conjugate, real,\
-    iscomplexobj
+import numpy as np
+import scipy as sp
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from warnings import warn
-import scipy as sp
 
 __docformat__ = "restructuredtext en"
 
@@ -38,7 +37,7 @@ def apply_givens(Q, v, k):
 
     for j in range(k):
         Qloc = Q[j]
-        v[j:j+2] = sp.dot(Qloc, v[j:j+2])
+        v[j:j+2] = np.dot(Qloc, v[j:j+2])
 
 
 def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
@@ -155,8 +154,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Get fast access to underlying BLAS routines
     # dotc is the conjugate dot, dotu does no conjugation
-    [lartg] = get_lapack_funcs(['lartg'], [x] )
-    if iscomplexobj(zeros((1,), dtype=xtype)):
+    [lartg] = get_lapack_funcs(['lartg'], [x])
+    if np.iscomplexobj(np.zeros((1,), dtype=xtype)):
         [axpy, dotu, dotc, scal] =\
             get_blas_funcs(['axpy', 'dotu', 'dotc', 'scal'], [x])
     else:
@@ -166,7 +165,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Make full use of direct access to BLAS by defining own norm
     def norm(z):
-        return sqrt(real(dotc(z, z)))
+        return np.sqrt(np.real(dotc(z, z)))
 
     # Should norm(r) be kept
     if residuals == []:
@@ -197,14 +196,14 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Is this a one dimensional matrix?
     if dimen == 1:
-        entry = ravel(A*array([1.0], dtype=xtype))
+        entry = np.ravel(A*np.array([1.0], dtype=xtype))
         return (postprocess(b/entry), 0)
 
     # Prep for method
-    r = b - ravel(A*x)
+    r = b - np.ravel(A*x)
 
     # Apply preconditioner
-    r = ravel(M*r)
+    r = np.ravel(M*r)
     normr = norm(r)
     if keep_r:
         residuals.append(normr)
@@ -244,8 +243,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         Q = []  # Givens Rotations
         # Upper Hessenberg matrix, which is then
         #   converted to upper tri with Givens Rots
-        H = zeros((max_inner+1, max_inner+1), dtype=xtype)
-        V = zeros((max_inner+1, dimen), dtype=xtype)  # Krylov Space
+        H = np.zeros((max_inner+1, max_inner+1), dtype=xtype)
+        V = np.zeros((max_inner+1, dimen), dtype=xtype)  # Krylov Space
         # vs store the pointers to each column of V.
         #   This saves a considerable amount of time.
         vs = []
@@ -254,14 +253,14 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         vs.append(V[0, :])
 
         # This is the RHS vector for the problem in the Krylov Space
-        g = zeros((dimen,), dtype=xtype)
+        g = np.zeros((dimen,), dtype=xtype)
         g[0] = normr
 
         for inner in range(max_inner):
 
             # New Search Direction
             v = V[inner+1, :]
-            v[:] = ravel(M*(A*vs[-1]))
+            v[:] = np.ravel(M*(A*vs[-1]))
             vs.append(v)
             normv_old = norm(v)
 
@@ -303,12 +302,13 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             if inner != dimen-1:
                 if H[inner, inner+1] != 0:
                     [c, s, r] = lartg(H[inner, inner], H[inner, inner+1])
-                    Qblock = array([[c, s], [-conjugate(s), c]], dtype=xtype)
+                    Qblock = np.array([[c, s], [-np.conjugate(s), c]],
+                                      dtype=xtype)
                     Q.append(Qblock)
 
                     # Apply Givens Rotation to g,
                     #   the RHS for the linear system in the Krylov Subspace.
-                    g[inner:inner+2] = sp.dot(Qblock, g[inner:inner+2])
+                    g[inner:inner+2] = np.dot(Qblock, g[inner:inner+2])
 
                     # Apply effect of Givens Rotation to H
                     H[inner, inner] = dotu(Qblock[0, :],
@@ -320,7 +320,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             # Don't update normr if last inner iteration, because
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
-                normr = abs(g[inner+1])
+                normr = np.abs(g[inner+1])
                 if normr < tol:
                     break
 
@@ -334,12 +334,12 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
         y = sp.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
-        update = ravel(sp.mat(V[:inner+1, :]).T*y.reshape(-1, 1))
+        update = np.ravel(np.mat(V[:inner+1, :]).T*y.reshape(-1, 1))
         x = x + update
-        r = b - ravel(A*x)
+        r = b - np.ravel(A*x)
 
         # Apply preconditioner
-        r = ravel(M*r)
+        r = np.ravel(M*r)
         normr = norm(r)
         # Check for nan, inf
         # if isnan(r).any() or isinf(r).any():
@@ -355,7 +355,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # Has GMRES stagnated?
         indices = (x != 0)
         if indices.any():
-            change = max(abs(update[indices] / x[indices]))
+            change = np.max(np.abs(update[indices] / x[indices]))
             if change < 1e-12:
                 # No change, halt
                 return (postprocess(x), -1)
