@@ -55,7 +55,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         M need not be stationary for fgmres
     callback : function
         User-supplied function is called after each iteration as
-        callback( ||rk||_2 ), where rk is the current residual vector
+        callback(xk), where xk is the current solution vector
     residuals : list
         residuals has the residual norm history,
         including the initial residual, appended to it
@@ -176,8 +176,6 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     if normb == 0.0:
         normb = 1.0
     if normr < tol*normb:
-        if callback is not None:
-            callback(norm(r))
         return (postprocess(x), 0)
 
     # Scale tol by ||r_0||_2, we don't use the preconditioned
@@ -309,9 +307,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
                 if normr < tol:
                     break
 
-                # Allow user access to residual
+                # Allow user access to the iterates
                 if callback is not None:
-                    callback(normr)
+                    callback(x)
                 if keep_r:
                     residuals.append(normr)
 
@@ -334,9 +332,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         r = b - np.ravel(A*x)
         normr = norm(r)
 
-        # Allow user access to residual
+        # Allow user access to the iterates
         if callback is not None:
-            callback(normr)
+            callback(x)
         if keep_r:
             residuals.append(normr)
 
