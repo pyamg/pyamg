@@ -10,6 +10,8 @@ from numpy.testing import TestCase
 import warnings
 from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
+warnings.filterwarnings('ignore', category=UserWarning,
+                        message='Having less target vectors')
 
 
 class TestAdaptiveSA(TestCase):
@@ -111,7 +113,7 @@ class TestComplexAdaptiveSA(TestCase):
         for A, rratio in cases:
             [asa, work] = adaptive_sa_solver(A, num_candidates=1,
                                              symmetry='symmetric')
-            # sa  = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
+            # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
             x0 = sp.rand(A.shape[0],) + 1.0j * sp.rand(A.shape[0],)
