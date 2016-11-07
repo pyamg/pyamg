@@ -26,7 +26,7 @@ Environment :: X11 Applications
 Intended Audience :: Developers
 Intended Audience :: Education
 Intended Audience :: Science/Research
-License :: OSI Approved :: BSD License
+License :: OSI Approved :: MIT License
 Natural Language :: English
 Operating System :: OS Independent
 Programming Language :: C++
@@ -55,7 +55,7 @@ DESCRIPTION = DOCLINES[0]
 LONG_DESCRIPTION = '\n'.join(DOCLINES[2:])
 CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
-LICENSE = 'BSD'
+LICENSE = 'MIT'
 MAJOR = 3
 MINOR = 0
 MICRO = 2
