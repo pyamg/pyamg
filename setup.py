@@ -61,7 +61,7 @@ isreleased = False
 version = '%d.%d.%d' % (major, minor, micro)
 install_requires = ['nose', 'numpy', 'scipy']
 keywords = ['algebraic multigrid AMG sparse linear system preconditioning']
-packages = setuptools.find_packages(include=['pyamg'],exclude=['doc'])
+packages = setuptools.find_packages(exclude=['doc'])
 
 if os.path.exists('MANIFEST'):
     os.remove('MANIFEST')
