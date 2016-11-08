@@ -14,3 +14,4 @@ Release steps:
     * python setup.py register
     * python setup.py sdist upload
 * change ISRELEASED back to FALSE
+* add new (latest release) to github: https://github.com/blog/1547-release-your-software
