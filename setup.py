@@ -59,7 +59,7 @@ LICENSE = 'MIT'
 MAJOR = 3
 MINOR = 1
 MICRO = 0
-ISRELEASED = True
+ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
@@ -202,7 +202,7 @@ def setup_package():
             author_email=AUTHOR_EMAIL,
             platforms=PLATFORMS,
             configuration=configuration,
-            version=VERSION)
+            )
     finally:
         del sys.path[0]
         os.chdir(old_path)
