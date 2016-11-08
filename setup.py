@@ -57,9 +57,9 @@ CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 PLATFORMS = ['Windows', 'Linux', 'Solaris', 'Mac OS-X', 'Unix']
 LICENSE = 'MIT'
 MAJOR = 3
-MINOR = 0
-MICRO = 2
-ISRELEASED = False
+MINOR = 1
+MICRO = 0
+ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
