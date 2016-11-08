@@ -5,15 +5,16 @@ PyAMG is a library of Algebraic Multigrid (AMG) solvers
 with a convenient Python interface.
 """
 
+import os
 import sys
-from setuptools import setup
+import setuptools
 
-# if sys.version_info[:2] < (2, 6) or (3, 0) <= sys.version_info[0:2]:
-#     raise RuntimeError("Python version 2.6, 2.7 required.")
 if sys.version_info[0] >= 3:
     import builtins
 else:
     import __builtin__ as builtins
+
+builtins.__PYAMG_SETUP__ = True
 
 classifiers = """\
 Development Status :: 5 - Production/Stable
@@ -59,8 +60,13 @@ micro = 2
 isreleased = False
 version = '%d.%d.%d' % (major, minor, micro)
 install_requires = ['nose', 'numpy', 'scipy']
+keywords = ['algebraic multigrid AMG sparse linear system preconditioning']
+packages = setuptools.find_packages(include=['pyamg'],exclude=['doc'])
 
-setup(
+if os.path.exists('MANIFEST'):
+    os.remove('MANIFEST')
+
+setuptools.setup(
     name=name,
     version=version,
     description=description,
@@ -74,11 +80,9 @@ setup(
     keywords=keywords,  #
     packages=packages,  #
     install_requires=install_requires,  #
-    package_data=package_data,  #
     #
     maintainer=maintainer,
     maintainer_email=maintainer_email,
     download_url=download_url,
     platforms=platforms,
-    configuration=configuration,
     )
