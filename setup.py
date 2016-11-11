@@ -59,7 +59,7 @@ LICENSE = 'MIT'
 MAJOR = 3
 MINOR = 1
 MICRO = 1
-ISRELEASED = True
+ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES = ['nose', 'numpy', 'scipy']
 
