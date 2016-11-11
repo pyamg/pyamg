@@ -10,6 +10,7 @@ Release steps:
 * first github release:
     * git tag -a v2.1.0 -m "version 2.1.0"
     * git push --tags
+    * on github under release: draft new release (with the new tag)
 * now pypi:
     * python setup.py register
     * python setup.py sdist upload
