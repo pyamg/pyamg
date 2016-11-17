@@ -12,22 +12,26 @@ Utility tools
 
 """
 
-# Emit a warning if numpy is too old
+# Warn on old numpy or scipy
 import numpy as np
-majver, minver = [float(i) for i in np.version.version.split('.')[:2]]
-if majver < 1 or (majver == 1 and minver < 2):
+npreq = '1.6'
+npmin = [int(j) for j in npreq.split('.')]
+npver = [int(j) for j in np.__version__.split('.')]
+if npver[0] < npmin[0] or (npver[0] >= npmin[0] and npver[1] < npmin[1]):
     import warnings
-    warnings.warn("Numpy 1.2.0 or above is recommended for this version of\
-                  PyAMG (detected version %s)" % np.version.version,
+    warnings.warn("Numpy %s or above is recommended for this version of"
+                  "PyAMG (detected version %s)" % (npmin, npver),
                   UserWarning)
 
-# Emit a warning if scipy is too old
 import scipy as sp
-majver, minver = [float(i) for i in sp.version.version.split('.')[:2]]
-if minver < 0.7:
+spreq = '0.11'
+spmin = [int(j) for j in spreq.split('.')]
+spver = [int(j) for j in sp.__version__.split('.')]
+if spver[0] < spmin[0] or (spver[0] >= spmin[0] and spver[1] < spmin[1]):
+    print('hi')
     import warnings
-    warnings.warn("SciPy 0.7 or above is recommended for this version of\
-                  PyAMG (detected version %s)" % sp.version.version,
+    warnings.warn("SciPy %s or above is recommended for this version of"
+                  "PyAMG (detected version %s)" % (spmin, spver),
                   UserWarning)
 
 from .version import git_revision as __git_revision__
