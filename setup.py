@@ -68,6 +68,7 @@ ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
                          define_macros=[('__STDC_FORMAT_MACROS', 1)],
                          include_dirs=[np.get_include()])]
+package_data = {'pyamg': ['gallery/example_data/*.mat']}
 
 setup(
     name=name,
@@ -79,6 +80,7 @@ setup(
     url=url,
     #
     packages=packages,
+    package_data=package_data,
     include_package_data=True,
     install_requires=install_requires,
     zip_safe=False,
@@ -97,3 +99,4 @@ setup(
     #
     ext_modules=ext_modules,
     )
+
