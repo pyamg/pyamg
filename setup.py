@@ -95,8 +95,7 @@ setup(
     platforms=platforms,
     #
     test_suite='tests',
-    test_requirements=test_requirements,
+    tests_require=test_requirements,
     #
     ext_modules=ext_modules,
     )
-
