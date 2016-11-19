@@ -81,7 +81,7 @@ setup(
     #
     packages=packages,
     package_data=package_data,
-    include_package_data=True,
+    include_package_data=False,
     install_requires=install_requires,
     zip_safe=False,
     #
