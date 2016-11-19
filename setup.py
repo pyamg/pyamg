@@ -20,10 +20,21 @@ supporting C++ code for performance critical operations.
 
 import io
 import numpy as np
+import version_tools
 from setuptools import setup, find_packages, Extension
 
 version = '3.0.2'
+isreleased = False
 
+# set the version information
+fullversion, git_revision, git_branch =\
+    version_tools.set_version_info(version, isreleased)
+version_tools.write_version_py(version, fullversion,
+                               git_revision, git_branch,
+                               isreleased,
+                               filename='pyamg/version.py')
+
+# identify extension modules
 ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
                          define_macros=[('__STDC_FORMAT_MACROS', 1)],
