@@ -42,6 +42,7 @@ ext_modules = [Extension('pyamg.amg_core._amg_core',
 
 setup(
     name='pyamg',
+    version=fullversion,
     keywords=['algebraic multigrid AMG sparse matrix preconditioning'],
     author='Nathan Bell, Luke OLson, and Jacob Schroder',
     author_email='luke.olson@gmail.com',

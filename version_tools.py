@@ -53,7 +53,7 @@ def set_version_info(VERSION, ISRELEASED):
 
     FULLVERSION = VERSION
     if not ISRELEASED:
-        FULLVERSION += '.dev+' + GIT_BRANCH + '+' + GIT_REVISION[:7]
+        FULLVERSION += '.dev0' + '+' + GIT_REVISION[:7]
 
     return FULLVERSION, GIT_REVISION, GIT_BRANCH
 
