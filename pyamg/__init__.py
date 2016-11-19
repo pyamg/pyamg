@@ -28,7 +28,6 @@ spreq = '0.11'
 spmin = [int(j) for j in spreq.split('.')]
 spver = [int(j) for j in sp.__version__.split('.')]
 if spver[0] < spmin[0] or (spver[0] >= spmin[0] and spver[1] < spmin[1]):
-    print('hi')
     import warnings
     warnings.warn("SciPy %s or above is recommended for this version of"
                   "PyAMG (detected version %s)" % (spmin, spver),
