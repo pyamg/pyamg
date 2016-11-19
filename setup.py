@@ -23,7 +23,7 @@ import numpy as np
 import version_tools
 from setuptools import setup, find_packages, Extension
 
-version = '3.0.2'
+version = '3.1.1'
 isreleased = False
 
 # set the version information
