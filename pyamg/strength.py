@@ -410,9 +410,9 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
     S = sparse.csc_matrix(A.shape, dtype=A.dtype)  # empty matrix
-    I = sparse.eye(A.shape[0], A.shape[1], format='csc')
+    Id = sparse.eye(A.shape[0], A.shape[1], format='csc')
     for i in range(k + 1):
-        S = S + omega * (Dinv * (I - A * S))
+        S = S + omega * (Dinv * (Id - A * S))
 
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
@@ -441,7 +441,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     Atilde.eliminate_zeros()
 
     # Put ones on the diagonal
-    Atilde = Atilde + I.tocsr()
+    Atilde = Atilde + Id.tocsr()
     Atilde.sort_indices()
 
     # Amalgamate Atilde for the BSR case, using ones for all strong connections
@@ -593,8 +593,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     ninc = k - 2**nsquare
 
     # Calculate one time step
-    I = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
-    Atilde = (I - (1.0 / rho_DinvA) * Dinv_A)
+    Id = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
+    Atilde = (Id - (1.0 / rho_DinvA) * Dinv_A)
     Atilde = Atilde.T.tocsr()
 
     # Construct a sparsity mask for Atilde that will restrict Atilde^T to the
@@ -623,7 +623,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         for i in range(nsquare):
             Atilde = Atilde * Atilde
 
-        JacobiStep = (I - (1.0 / rho_DinvA) * Dinv_A).T.tocsr()
+        JacobiStep = (Id - (1.0 / rho_DinvA) * Dinv_A).T.tocsr()
         for i in range(ninc):
             Atilde = Atilde * JacobiStep
         del JacobiStep
@@ -787,9 +787,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde = 0.5 * (Atilde + Atilde.T)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    I = sparse.eye(dimen, dimen, format="csr")
-    I.data -= Atilde.diagonal()
-    Atilde = Atilde + I
+    Id = sparse.eye(dimen, dimen, format="csr")
+    Id.data -= Atilde.diagonal()
+    Atilde = Atilde + Id
 
     # If converted BSR to CSR, convert back and return amalgamated matrix,
     #   i.e. the sparsity structure of the blocks of Atilde
