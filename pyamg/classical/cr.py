@@ -15,9 +15,9 @@ __all__ = ['CR', 'binormalize']
 
 def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     """ Internal function called by CR. Performs habituated or concurrent
-    relaxation sweeps on target vector. Stops when either (i) very fast 
-    convergence, CF < 0.1*thetacr, are observed, or at least a given number 
-    of sweeps have been performed and the relative change in CF < 0.1. 
+    relaxation sweeps on target vector. Stops when either (i) very fast
+    convergence, CF < 0.1*thetacr, are observed, or at least a given number
+    of sweeps have been performed and the relative change in CF < 0.1.
 
     Parameters
     ----------
@@ -44,7 +44,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     n = A.shape[0]    # problem size
     numax = nu
     z = np.zeros((n,))
-    e = deepcopy(B[:,0])
+    e = deepcopy(B[:, 0])
     e[Cindex] = 0.0
     enorm = norm(e)
     rhok = 1
@@ -57,7 +57,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         elif method == 'concurrent':
             gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
         else:
-            raise NotImplementedError('method not recognized: need habituated or concurrent')
+            raise NotImplementedError('method not recognized: need habituated '
+                                      'or concurrent')
 
         enorm_old = enorm
         enorm = norm(e)
@@ -68,8 +69,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         # criteria 1 -- fast convergence
         if rhok < 0.1 * thetacr:
             break
-        # criteria 2 -- at least nu iters, relative change in CF is small (<0.1)
-        elif ( (abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
+        # criteria 2 -- at least nu iters, small relative change in CF (<0.1)
+        elif ((abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
             break
 
     return rhok, e
@@ -94,21 +95,21 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     nu : {int} : Default 3
         Number of smoothing iterations to apply each CR sweep.
     thetacr : {float} : Default [0.7]
-        Desired convergence factor of relaxations, 0 < thetacr < 1.  
+        Desired convergence factor of relaxations, 0 < thetacr < 1.
     thetacs : {list, float, 'auto'} : Default 'auto'
         Threshold value, 0 < thetacs < 1, to consider nodes from
         candidate set for coarse grid. If e[i] > thetacs for relaxed
-        error vector, e, node i is considered for the coarse grid. 
-        Can be passed in as float to be used for every iteration, 
+        error vector, e, node i is considered for the coarse grid.
+        Can be passed in as float to be used for every iteration,
         list of floats to be used on progressive iterations, or as
         string 'auto,' wherein each iteration thetacs = 1 - rho, for
-        convergence factor rho from most recent smoothing. 
+        convergence factor rho from most recent smoothing.
     maxiter : {int} : Default 20
         Maximum number of CR iterations (updating of C/F splitting)
-        to do. 
+        to do.
     verbose : {bool} : Default False
-        If true, print iteration number, convergence factor and 
-        coarsening factor after each iteration. 
+        If true, print iteration number, convergence factor and
+        coarsening factor after each iteration.
 
     Returns
     -------
@@ -121,7 +122,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     relaxation and coarsening in algebraic multigrid." SIAM Journal
     on Scientific Computing 32.3 (2010): 1393-1416.
 
-    Examples 
+    Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from cr import CR
@@ -134,14 +135,13 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     if thetacs == 'auto':
         pass
     else:
-        if isinstance(thetacs,list):
+        if isinstance(thetacs, list):
             thetacs.reverse()
-        elif isinstance(thetacs,float):
+        elif isinstance(thetacs, float):
             thetacs = list(thetacs)
 
         if (np.max(thetacs) >= 1) or (np.min(thetacs) <= 0):
             raise ValueError("Must have 0 < thetacs < 1")
-    
 
     if (thetacr >= 1) or (thetacr <= 0):
         raise ValueError("Must have 0 < thetacr < 1")
@@ -155,17 +155,17 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     # Set initial vector. If none provided, set default
     # initial vector of ones
     if B is None:
-        B = np.ones((n,1))
+        B = np.ones((n, 1))
     elif (B.ndim == 1):
-        B = B.reshape((len(B),1))
+        B = B.reshape((len(B), 1))
 
-    target = B[:,0]
+    target = B[:, 0]
 
     # 3.1a - Initialize all nodes as F points
     splitting = np.zeros((n,), dtype='intc')
     indices = np.zeros((n+1,), dtype='intc')
     indices[0] = n
-    indices[1:] = np.arange(0,n, dtype='intc')
+    indices[1:] = np.arange(0, n, dtype='intc')
     Findex = indices[1:]
     Cindex = np.empty((0,), dtype='intc')
     gamma = np.zeros((n,))
@@ -205,7 +205,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
         # Print details on current iteration
         if verbose:
-            print("CR Iteration ",it,", CF = ", rho,", Coarsening factor = ", float(n-indices[0])/n)
+            print("CR Iteration ", it, ", CF = ", rho,
+                  ", Coarsening factor = ", float(n-indices[0])/n)
 
         # If convergence factor satisfactory, break loop
         if rho < thetacr:

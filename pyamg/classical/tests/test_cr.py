@@ -5,6 +5,7 @@ from pyamg.classical.cr import binormalize, CR
 
 from numpy.testing import TestCase
 
+
 class TestCR(TestCase):
     def setUp(self):
         self.cases = []
@@ -41,35 +42,50 @@ class TestCR(TestCase):
         # 1d-tests, should be alternating aggregates
         #       (n-1)/2 < = sum <= (n+1)/2.
         # Test auto thetacs and set thetacs values
-        for i in range(3,10):
+        for i in range(3, 10):
             A = self.cases[i]
-            h_split_auto = CR(A, method='habituated', thetacr=0.7, thetacs='auto')
+            h_split_auto = CR(A, method='habituated', thetacr=0.7,
+                              thetacs='auto')
             assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
             assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/2)
-            c_split_auto = CR(A, method='concurrent', thetacr=0.7, thetacs='auto')
+
+            c_split_auto = CR(A, method='concurrent', thetacr=0.7,
+                              thetacs='auto')
             assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
             assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/2)
-            h_split = CR(A, method='habituated', thetacr=0.7, thetacs=[0.3,0.5])
+
+            h_split = CR(A, method='habituated', thetacr=0.7,
+                         thetacs=[0.3, 0.5])
             assert(h_split.sum() <= (h_split.shape[0]+1)/2)
             assert(h_split.sum() >= (h_split.shape[0]-1)/2)
-            c_split = CR(A, method='concurrent', thetacr=0.7, thetacs=[0.3,0.5])
+
+            c_split = CR(A, method='concurrent', thetacr=0.7,
+                         thetacs=[0.3, 0.5])
             assert(c_split.sum() <= (c_split.shape[0]+1)/2)
             assert(c_split.sum() >= (c_split.shape[0]-1)/2)
 
         # 2d-tests. CR is a little more picky with parameters and relaxation
-        # type in 2d. Can still bound above by (n+1)/2. Need looser lower bound,
+        # type in 2d. Can still bound above by (n+1)/2.
+        # Need looser lower bound,
         # say (n+1)/4.
-        for i in range(10,15):
+        for i in range(10, 15):
             A = self.cases[i]
-            h_split_auto = CR(A, method='habituated', thetacr=0.7, thetacs='auto')
+            h_split_auto = CR(A, method='habituated', thetacr=0.7,
+                              thetacs='auto')
             assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
             assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/4)
-            c_split_auto = CR(A, method='concurrent', thetacr=0.7, thetacs='auto')
+
+            c_split_auto = CR(A, method='concurrent', thetacr=0.7,
+                              thetacs='auto')
             assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
             assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/4)
-            h_split = CR(A, method='habituated', thetacr=0.7, thetacs=[0.3,0.5])
+
+            h_split = CR(A, method='habituated', thetacr=0.7,
+                         thetacs=[0.3, 0.5])
             assert(h_split.sum() <= (h_split.shape[0]+1)/2)
             assert(h_split.sum() >= (h_split.shape[0]-1)/4)
-            c_split = CR(A, method='concurrent', thetacr=0.7, thetacs=[0.3,0.5])
+
+            c_split = CR(A, method='concurrent', thetacr=0.7,
+                         thetacs=[0.3, 0.5])
             assert(c_split.sum() <= (c_split.shape[0]+1)/2)
             assert(c_split.sum() >= (c_split.shape[0]-1)/4)
