@@ -65,7 +65,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         rhok = enorm / enorm_old
         it += 1
 
-        # criteria 1 -- fast convergence 
+        # criteria 1 -- fast convergence
         if rhok < 0.1 * thetacr:
             break
         # criteria 2 -- at least nu iters, relative change in CF is small (<0.1)
@@ -196,7 +196,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
            tcs )
 
         # Separate F indices and C indices
-        num_F = indices[0] 
+        num_F = indices[0]
         Findex = indices[1:(num_F+1)]
         Cindex = indices[(num_F+1):]
 

@@ -284,7 +284,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                 else:
                     ml.symmetric_smoothing = False
 
-    else:  
+    else:
         mid_len = min_len
 
     # Fill in remaining levels

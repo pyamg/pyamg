@@ -9,7 +9,7 @@ class TestCR(TestCase):
     def setUp(self):
         self.cases = []
 
-        # 
+        #
 
         # Random matrices, cases 0-2
         np.random.seed(0)
@@ -38,7 +38,7 @@ class TestCR(TestCase):
         A = self.cases[6]
         splitting = CR(A)
 
-        # 1d-tests, should be alternating aggregates 
+        # 1d-tests, should be alternating aggregates
         #       (n-1)/2 < = sum <= (n+1)/2.
         # Test auto thetacs and set thetacs values
         for i in range(3,10):

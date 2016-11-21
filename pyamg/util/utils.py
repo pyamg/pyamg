@@ -2192,7 +2192,7 @@ def truncate_rows(A, nz_per_row):
     nz_per_row = int(nz_per_row)
 
     # Truncate rows of A, and then convert A back to original format
-    pyamg.amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr, 
+    pyamg.amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr,
                                      A.indices, A.data)
 
     A.eliminate_zeros()
