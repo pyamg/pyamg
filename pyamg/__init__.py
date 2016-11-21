@@ -42,6 +42,10 @@ from .aggregation import smoothed_aggregation_solver, rootnode_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
+__all__ = [__git_revision__, __version__,
+           ruge_stuben_solver, smoothed_aggregation_solver, rootnode_solver,
+           demo, solve, solver, solver_configuration]
+
 __all__ = [s for s in dir() if not s.startswith('_')]
 __all__ += ['test', '__version__']
 
