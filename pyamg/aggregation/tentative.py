@@ -1,6 +1,5 @@
 """Tentative prolongator"""
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 from scipy.sparse import isspmatrix_csr, bsr_matrix

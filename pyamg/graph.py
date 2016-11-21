@@ -1,7 +1,6 @@
 """Algorithms related to graphs"""
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 import scipy as sp

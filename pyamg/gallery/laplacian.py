@@ -1,7 +1,6 @@
 """Discretizations of the Poisson problem"""
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['poisson', 'gauge_laplacian']
 

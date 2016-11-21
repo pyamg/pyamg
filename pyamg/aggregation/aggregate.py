@@ -1,6 +1,5 @@
 """Aggregation methods"""
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr, isspmatrix_csc

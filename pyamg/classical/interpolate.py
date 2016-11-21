@@ -1,7 +1,6 @@
 """Classical AMG Interpolation methods"""
 
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr

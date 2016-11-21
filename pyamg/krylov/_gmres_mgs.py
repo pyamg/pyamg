@@ -6,7 +6,6 @@ from scipy.sparse.sputils import upcast
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from warnings import warn
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['gmres_mgs']
 

@@ -1,7 +1,6 @@
 """Classical AMG (Ruge-Stuben AMG)"""
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning

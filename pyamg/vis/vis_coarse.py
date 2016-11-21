@@ -9,7 +9,6 @@ vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 """
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
 
 import warnings
 import numpy as np

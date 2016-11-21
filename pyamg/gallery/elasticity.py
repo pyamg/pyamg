@@ -1,7 +1,6 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D
 """
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['linear_elasticity', 'linear_elasticity_p1']
 

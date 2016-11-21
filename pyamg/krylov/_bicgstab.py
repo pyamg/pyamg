@@ -2,7 +2,6 @@ import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['bicgstab']
 

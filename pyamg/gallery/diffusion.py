@@ -11,7 +11,6 @@ from __future__ import print_function
 
 import numpy as np
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['diffusion_stencil_2d']
 

@@ -7,7 +7,6 @@ from pyamg import amg_core
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['fgmres']
 

@@ -11,7 +11,6 @@ Requirements for the strength matrix C are:
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 

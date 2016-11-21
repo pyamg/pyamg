@@ -1,7 +1,6 @@
 """Construct sparse matrix from a local stencil"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 import scipy.sparse as sparse

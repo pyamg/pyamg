@@ -1,6 +1,5 @@
 """Relaxation methods for linear systems"""
 
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 

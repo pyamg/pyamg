@@ -1,6 +1,5 @@
 """Generic AMG solver"""
 
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 

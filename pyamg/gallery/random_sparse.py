@@ -4,7 +4,6 @@ import numpy as np
 import scipy as sp
 
 __all__ = ['sprand']
-__docformat__ = "restructuredtext en"
 
 # TODO add sprandn
 

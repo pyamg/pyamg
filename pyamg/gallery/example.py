@@ -1,6 +1,5 @@
 """Examples stored in files"""
 
-__docformat__ = "restructuredtext en"
 
 import os
 from glob import glob

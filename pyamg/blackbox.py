@@ -1,7 +1,6 @@
 """Solve an arbitrary system"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 import scipy as sp

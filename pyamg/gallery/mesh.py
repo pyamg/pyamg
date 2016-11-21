@@ -1,6 +1,5 @@
 """Generates simple meshes"""
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 

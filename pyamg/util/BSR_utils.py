@@ -1,7 +1,6 @@
 """Utility Functions for reading and writing individual rows
    in BSR matrices"""
 
-__docformat__ = "restructuredtext en"
 
 import numpy as np
 

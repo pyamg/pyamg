@@ -9,7 +9,6 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['write_vtu', 'write_basic_mesh']
 

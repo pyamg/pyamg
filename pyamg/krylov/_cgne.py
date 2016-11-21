@@ -6,7 +6,6 @@ from scipy.sparse.linalg.interface import aslinearoperator
 from warnings import warn
 from pyamg.util.linalg import norm
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['cgne']
 

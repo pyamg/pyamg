@@ -9,7 +9,6 @@ from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['change_smoothers']
 

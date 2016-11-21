@@ -104,7 +104,6 @@ from pyamg import amg_core
 from pyamg.util.utils import remove_diagonal
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
-__docformat__ = "restructuredtext en"
 
 
 def RS(S):

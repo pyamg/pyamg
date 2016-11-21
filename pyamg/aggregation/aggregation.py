@@ -1,7 +1,6 @@
 """Support for aggregation-based AMG"""
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
 
 from warnings import warn
 import numpy as np

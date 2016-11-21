@@ -5,7 +5,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
 
-__docformat__ = "restructuredtext en"
 
 __all__ = ['cr']
 

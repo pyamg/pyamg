@@ -2,7 +2,6 @@
 with AMG"""
 from __future__ import print_function
 
-__docformat__ = "restructuredtext en"
 __all__ = ['demo']
 
 import scipy as sp
