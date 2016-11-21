@@ -53,7 +53,7 @@ class TestLinalg(TestCase):
             expected_eig = E[largest_eig]
             expected_vec = V[:, largest_eig]
 
-            assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
+            assert_almost_equal(approximate_spectral_radius(A), expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
             minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
@@ -76,7 +76,7 @@ class TestLinalg(TestCase):
             expected_eig = E[largest_eig]
             expected_vec = V[:, largest_eig]
 
-            assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
+            assert_almost_equal(approximate_spectral_radius(A), expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
             minnorm = min(norm(expected_vec + vec), norm(expected_vec - vec))
@@ -161,7 +161,7 @@ class TestComplexLinalg(TestCase):
             expected_eig = E[largest_eig]
             # expected_vec = V[:, largest_eig]
 
-            assert_almost_equal(approximate_spectral_radius(A),   expected_eig)
+            assert_almost_equal(approximate_spectral_radius(A), expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
             Avec = A * vec

@@ -21,7 +21,7 @@ class TestMultilevel(TestCase):
         cases = []
 
         cases.append(csr_matrix(diag(arange(1, 5, dtype=float))))
-        cases.append(poisson((4,),  format='csr'))
+        cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
         from pyamg.krylov import cg
@@ -146,7 +146,7 @@ class TestComplexMultilevel(TestCase):
         cases = []
 
         cases.append(csr_matrix(diag(arange(1, 5))))
-        cases.append(poisson((4,),  format='csr'))
+        cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
         # Make cases complex

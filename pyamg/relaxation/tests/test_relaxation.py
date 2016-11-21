@@ -23,15 +23,15 @@ warnings.simplefilter('ignore', SparseEfficiencyWarning)
 class TestCommonRelaxation(TestCase):
     def setUp(self):
         self.cases = []
-        self.cases.append((gauss_seidel,              (),               {}))
-        self.cases.append((jacobi,                    (),               {}))
-        self.cases.append((block_jacobi,              (),               {}))
-        self.cases.append((block_gauss_seidel,        (),               {}))
-        self.cases.append((jacobi_ne,                 (),               {}))
-        self.cases.append((schwarz,                   (),               {}))
-        self.cases.append((sor,                       (0.5,),           {}))
-        self.cases.append((gauss_seidel_indexed,      ([1, 0],),         {}))
-        self.cases.append((polynomial,                ([0.6, 0.1],),     {}))
+        self.cases.append((gauss_seidel, (), {}))
+        self.cases.append((jacobi, (), {}))
+        self.cases.append((block_jacobi, (), {}))
+        self.cases.append((block_gauss_seidel, (), {}))
+        self.cases.append((jacobi_ne, (), {}))
+        self.cases.append((schwarz, (), {}))
+        self.cases.append((sor, (0.5,), {}))
+        self.cases.append((gauss_seidel_indexed, ([1, 0],), {}))
+        self.cases.append((polynomial, ([0.6, 0.1],), {}))
 
     def test_single_precision(self):
 
@@ -124,7 +124,7 @@ class TestRelaxation(TestCase):
         assert_almost_equal(x, x0 + 0.2*A*r - r)
 
         x = x0.copy()
-        polynomial(A, x, b, [-0.14285714,  1., -2.])
+        polynomial(A, x, b, [-0.14285714, 1., -2.])
         assert_almost_equal(x, x0 - 0.14285714*A*A*r + A*r - 2*r)
 
         # polynomial() optimizes for the case x=0
@@ -133,7 +133,7 @@ class TestRelaxation(TestCase):
         assert_almost_equal(x, 1.0/3.0*b)
 
         x = 0*x0
-        polynomial(A, x, b, [-0.14285714,  1., -2.])
+        polynomial(A, x, b, [-0.14285714, 1., -2.])
         assert_almost_equal(x, 0.14285714*A*A*b + A*b - 2*b)
 
     def test_jacobi(self):
@@ -1304,7 +1304,7 @@ class TestComplexRelaxation(TestCase):
         A = spdiags([2*ones(N), -ones(N), -ones(N)], [0, -1, 1],
                     N, N, format='csr')
         A.data = A.data + 1.0j*A.data
-        soln = array([-1./15.+0.6j,  0.6+2.6j,  7.8-6.2j])
+        soln = array([-1./15.+0.6j, 0.6+2.6j, 7.8-6.2j])
         x = arange(N).astype(A.dtype)
         x = x + 1.0j*x
         b = array([10, 20, 30]).astype(A.dtype)
@@ -1456,12 +1456,12 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 4))
-        A = array([[9.1,  9.8,  9.6,  0.,  3.6,  0.],
-                   [18.2, 19.6,  0.,  0.,  1.7,  2.8],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  4.2,  1.,  1.1],
-                   [0.,  0.,  9.1,  0.,  0.,  9.3]])
+        A = array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
+                   [18.2, 19.6, 0., 0., 1.7, 2.8],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 4.2, 1., 1.1],
+                   [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1516,12 +1516,12 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 4))
-        A = array([[9.1j,  9.8j,  9.6,  0.,  3.6,  0.],
-                   [18.2j, 19.6j,  0.,  0.,  1.7,  2.8],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  4.2, 1.0j,  1.1],
-                   [0.,  0.,  9.1,  0.,  0.,  9.3]])
+        A = array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
+                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 4.2, 1.0j, 1.1],
+                   [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1560,12 +1560,12 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 4))
-        A = array([[9.1,  9.8,  9.6,  0.,  3.6,  0.],
-                   [18.2, 19.6,  0.,  0.,  1.7,  2.8],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  4.2,  1.,  1.1],
-                   [0.,  0.,  9.1,  0.,  0.,  9.3]])
+        A = array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
+                   [18.2, 19.6, 0., 0., 1.7, 2.8],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 4.2, 1., 1.1],
+                   [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1661,12 +1661,12 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 4))
-        A = array([[9.1j,  9.8j,  9.6,  0.,  3.6,  0.],
-                   [18.2j, 19.6j,  0.,  0.,  1.7,  2.8],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  0.,  0.,  0.],
-                   [0.,  0.,  0.,  4.2, 1.0j,  1.1],
-                   [0.,  0.,  9.1,  0.,  0.,  9.3]])
+        A = array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
+                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 0., 0., 0.],
+                   [0., 0., 0., 4.2, 1.0j, 1.1],
+                   [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))

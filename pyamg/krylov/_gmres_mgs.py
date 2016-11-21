@@ -159,7 +159,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     else:
         # real type
         [axpy, dotu, dotc, scal] =\
-            get_blas_funcs(['axpy', 'dot', 'dot',  'scal'], [x])
+            get_blas_funcs(['axpy', 'dot', 'dot', 'scal'], [x])
 
     # Make full use of direct access to BLAS by defining own norm
     def norm(z):

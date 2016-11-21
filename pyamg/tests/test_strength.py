@@ -57,7 +57,7 @@ class TestStrengthOfConnection(TestCase):
                 result = symmetric_soc(A, theta)
                 expected = reference_symmetric_soc(A, theta)
 
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
     def test_distance_strength_of_connection(self):
@@ -69,7 +69,7 @@ class TestStrengthOfConnection(TestCase):
             for theta in [1.5, 2.0, 2.5]:
                 result = distance_soc(A, V, theta=theta)
                 expected = reference_distance_soc(A, V, theta=theta)
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
         for (A, V) in cases:
@@ -77,7 +77,7 @@ class TestStrengthOfConnection(TestCase):
                 result = distance_soc(A, V, theta=theta, relative_drop=False)
                 expected = reference_distance_soc(A, V, theta=theta,
                                                   relative_drop=False)
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
     def test_incomplete_mat_mult_csr(self):
@@ -125,11 +125,11 @@ class TestStrengthOfConnection(TestCase):
         cases.append((A2, B2, mask))
 
         # 5x5 tests
-        A = np.mat([[0.,  16.9,   6.4,   0.0,   5.8],
-                    [16.9,  13.8,   7.2,   0.,   9.5],
-                    [6.4,   7.2,  12.,   6.1,   5.9],
-                    [0.0,   0.,   6.1,   0.,   0.],
-                    [5.8,   9.5,   5.9,   0.,  13.]])
+        A = np.mat([[0., 16.9, 6.4, 0.0, 5.8],
+                    [16.9, 13.8, 7.2, 0., 9.5],
+                    [6.4, 7.2, 12., 6.1, 5.9],
+                    [0.0, 0., 6.1, 0., 0.],
+                    [5.8, 9.5, 5.9, 0., 13.]])
         C = A.copy()
         C[1, 0] = 3.1
         C[3, 2] = 10.1
@@ -352,7 +352,7 @@ class TestComplexStrengthOfConnection(TestCase):
                 expected = reference_symmetric_soc(A, theta)
                 result = symmetric_soc(A, theta)
 
-                assert_equal(result.nnz,       expected.nnz)
+                assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
     def test_evolution_strength_of_connection(self):

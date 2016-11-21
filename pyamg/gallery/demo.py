@@ -48,7 +48,7 @@ def demo():
         pylab.title('Convergence History')
         pylab.xlabel('Iteration')
         pylab.ylabel('Relative Residual')
-        pylab.semilogy(standalone_residuals,  label='Standalone',
+        pylab.semilogy(standalone_residuals, label='Standalone',
                        linestyle='-', marker='o')
         pylab.semilogy(accelerated_residuals, label='Accelerated',
                        linestyle='-', marker='s')

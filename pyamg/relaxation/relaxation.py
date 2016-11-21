@@ -669,7 +669,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
         x += h
 
 
-def gauss_seidel_indexed(A, x, b,  indices, iterations=1, sweep='forward'):
+def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     """Perform indexed Gauss-Seidel iteration on the linear system Ax=b
 
     In indexed Gauss-Seidel, the sequence in which unknowns are relaxed is

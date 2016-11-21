@@ -52,9 +52,9 @@ class TestUtils(TestCase):
         cases.append(diag_sparse(array([1, 2, 3, 4])))
         cases.append(diag_sparse(array([1, 0, 3, 4])))
 
-        A = array([[5.5,  3.5,  4.8],
-                   [2.,  9.9,  0.5],
-                   [6.5,  2.6,  5.7]])
+        A = array([[5.5, 3.5, 4.8],
+                   [2., 9.9, 0.5],
+                   [6.5, 2.6, 5.7]])
         A = csr_matrix(A)
         cases.append(A)
         P = diag_sparse([1, 0, 1])
@@ -88,7 +88,7 @@ class TestUtils(TestCase):
                             [0., 0., 0., -0.5, 1.]])
         DB_answer = sqrt(2*e.reshape(-1, 1))
         #           matrix   B    BH   expected matrix  expected B  expected BH
-        cases.append((A,     B,  None,   DAD_answer,      DB_answer,   None))
+        cases.append((A, B, None, DAD_answer, DB_answer, None))
 
         # case 2
         A2 = A.copy()
@@ -142,55 +142,55 @@ class TestUtils(TestCase):
         assert_array_almost_equal(ravel(block_diag), A.diagonal())
 
         block_diag = get_block_diag(A, blocksize=2, inv_flag=False)
-        answer = array([[[1.,   2.],
-                         [7.,   8.]],
-                        [[15.,  16.],
-                         [21.,  22.]],
-                        [[29.,  30.],
-                         [35.,  36.]]])
+        answer = array([[[1., 2.],
+                         [7., 8.]],
+                        [[15., 16.],
+                         [21., 22.]],
+                        [[29., 30.],
+                         [35., 36.]]])
         assert_array_almost_equal(ravel(block_diag), ravel(answer))
 
         block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
-        answer = array([[[-1.33333333,  0.33333333],
+        answer = array([[[-1.33333333, 0.33333333],
                          [1.16666667, -0.16666667]],
-                        [[-3.66666667,  2.66666667],
+                        [[-3.66666667, 2.66666667],
                          [3.5, -2.5]],
-                        [[-6.,  5.],
+                        [[-6., 5.],
                          [5.83333333, -4.83333333]]])
         assert_array_almost_equal(ravel(block_diag_inv), ravel(answer),
                                   decimal=3)
 
         # try singular (1,1) block, a zero (2,2) block and a zero (0,2) block
-        A = bsr_matrix(array([1.,  2.,  3.,  4.,  0.,  0.,
-                              5.,  6.,  7.,  8.,  0.,  0.,
+        A = bsr_matrix(array([1., 2., 3., 4., 0., 0.,
+                              5., 6., 7., 8., 0., 0.,
                               9., 10., 11., 11., 12., 13.,
                               14., 15., 16., 16., 18., 19.,
-                              20., 21., 22., 23.,  0.,  0.,
-                              26., 27., 28., 29.,  0.,  0.]).reshape(6, 6),
+                              20., 21., 22., 23., 0., 0.,
+                              26., 27., 28., 29., 0., 0.]).reshape(6, 6),
                        blocksize=(3, 3))
         block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
-        answer = array([[[-1.5,  0.5],
+        answer = array([[[-1.5, 0.5],
                          [1.25, -0.25]],
-                        [[0.01458886,  0.02122016],
-                         [0.01458886,  0.02122016]],
-                        [[0.,  0.],
-                         [0.,  0.]]])
+                        [[0.01458886, 0.02122016],
+                         [0.01458886, 0.02122016]],
+                        [[0., 0.],
+                         [0., 0.]]])
         assert_array_almost_equal(ravel(block_diag_inv), ravel(answer),
                                   decimal=3)
 
         # try with different types of zero blocks
-        A = bsr_matrix(array([0.,  0.,  3.,  4.,  0.,  0.,
-                              0.,  0.,  7.,  8.,  0.,  0.,
-                              0.,  0.,  0.,  0.,  0.,  0.,
-                              0.,  0.,  0.,  0.,  0.,  0.,
-                              0.,  0.,  0.,  0., 22., 23.,
-                              0.,  0.,  0.,  0., 28., 29.]).reshape(6, 6),
+        A = bsr_matrix(array([0., 0., 3., 4., 0., 0.,
+                              0., 0., 7., 8., 0., 0.,
+                              0., 0., 0., 0., 0., 0.,
+                              0., 0., 0., 0., 0., 0.,
+                              0., 0., 0., 0., 22., 23.,
+                              0., 0., 0., 0., 28., 29.]).reshape(6, 6),
                        blocksize=(2, 2))
         block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
-        answer = array([[[0.,  0.],
-                         [0.,  0.]],
-                        [[0.,  0.],
-                         [0.,  0.]],
+        answer = array([[[0., 0.],
+                         [0., 0.]],
+                        [[0., 0.],
+                         [0., 0.]],
                         [[22., 23.],
                          [28., 29.]]])
         assert_array_almost_equal(ravel(block_diag_inv), ravel(answer),
@@ -273,38 +273,38 @@ class TestUtils(TestCase):
 
         # 1x2
         A = csr_matrix(array([[1.2, 1.]]))
-        C = csr_matrix(array([[1.,  1.]]))
+        C = csr_matrix(array([[1., 1.]]))
         B = array([[0.5], [0.5]])
         Bf = array([[1.5]])
         A_filter = filter_operator(A, C, B, Bf).todense()
-        A_known = matrix([[1.6,  1.4]])
+        A_known = matrix([[1.6, 1.4]])
         assert_array_almost_equal(A_known, A_filter)
         # 1x2, but sparser
-        C = csr_matrix(array([[0.,  1.]]))
+        C = csr_matrix(array([[0., 1.]]))
         A_filter = filter_operator(A, C, B, Bf).todense()
         A_known = array([[0., 3.]])
         assert_array_almost_equal(A_known, A_filter)
         # 1x2, but with no entries
-        C = csr_matrix(array([[0.,  0.]]))
+        C = csr_matrix(array([[0., 0.]]))
         A_filter = filter_operator(A, C, B, Bf).todense()
         A_known = array([[0., 0.]])
         assert_array_almost_equal(A_known, A_filter)
 
         # 2x1
         A = csr_matrix(array([[1.2], [1.]]))
-        C = csr_matrix(array([[1.],  [1.]]))
+        C = csr_matrix(array([[1.], [1.]]))
         B = array([[0.5]])
         Bf = array([[1.5], [0.4]])
         A_filter = filter_operator(A, C, B, Bf).todense()
-        A_known = matrix([[3.],  [0.8]])
+        A_known = matrix([[3.], [0.8]])
         assert_array_almost_equal(A_known, A_filter)
         # 2x1, but sparser
-        C = csr_matrix(array([[0.],  [1.]]))
+        C = csr_matrix(array([[0.], [1.]]))
         A_filter = filter_operator(A, C, B, Bf).todense()
         A_known = array([[0.], [.8]])
         assert_array_almost_equal(A_known, A_filter)
         # 2x1, but with no entries
-        C = csr_matrix(array([[0.],  [0.]]))
+        C = csr_matrix(array([[0.], [0.]]))
         A_filter = filter_operator(A, C, B, Bf).todense()
         A_known = array([[0.], [0.]])
         assert_array_almost_equal(A_known, A_filter)
@@ -347,24 +347,24 @@ class TestUtils(TestCase):
         Bf = ones((6, 1))
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
-        A_known = matrix([[0.5,  0.5,  0.],
-                          [0.5,  0.5,  0.],
-                          [0.,  1.,  0.],
-                          [0.,  1.,  0.],
-                          [0.,  0.,  1.],
-                          [0.,  0.,  1.]])
+        A_known = matrix([[0.5, 0.5, 0.],
+                          [0.5, 0.5, 0.],
+                          [0., 1., 0.],
+                          [0., 1., 0.],
+                          [0., 0., 1.],
+                          [0., 0., 1.]])
         assert_array_almost_equal(A_known, A_filter)
         # test two, the constant and linears
         B = hstack((B, arange(B.shape[0]).reshape(-1, 1)))
         Bf = hstack((Bf, arange(Bf.shape[0]).reshape(-1, 1)))
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
-        A_known = matrix([[1.,  0.,  0.],
-                          [0.,  1.,  0.],
-                          [0.,  1.5,  0.],
-                          [0.,  2.,  0.],
-                          [0.,  0.,  1.8],
-                          [0.,  0.,  2.2]])
+        A_known = matrix([[1., 0., 0.],
+                          [0., 1., 0.],
+                          [0., 1.5, 0.],
+                          [0., 2., 0.],
+                          [0., 0., 1.8],
+                          [0., 0., 2.2]])
         assert_array_almost_equal(A_known, A_filter)
 
         # Run two tests based on the Laplacian
@@ -451,7 +451,7 @@ class TestUtils(TestCase):
         T = matrix([[2., 0.], [1., 1.]])
         P_I = matrix([[1., 0.], [0., 1.]])
         I_F = matrix([[0., 0.], [0., 0.]])
-        T_scaled = scale_T(bsr_matrix(T,  blocksize=(1, 1)),
+        T_scaled = scale_T(bsr_matrix(T, blocksize=(1, 1)),
                            bsr_matrix(P_I, blocksize=(1, 1)),
                            bsr_matrix(I_F, blocksize=(1, 1))).todense()
         T_answer = matrix([[1., 0.], [0., 1.]])
@@ -460,7 +460,7 @@ class TestUtils(TestCase):
         T = matrix([[2., 0.], [1., 1.]])
         P_I = matrix([[1., 0.], [0., 1.]])
         I_F = matrix([[0., 0.], [0., 0.]])
-        T_scaled = scale_T(bsr_matrix(T,  blocksize=(2, 2)),
+        T_scaled = scale_T(bsr_matrix(T, blocksize=(2, 2)),
                            bsr_matrix(P_I, blocksize=(2, 2)),
                            bsr_matrix(I_F, blocksize=(2, 2))).todense()
         T_answer = matrix([[1., 0.], [0., 1.]])
@@ -469,74 +469,74 @@ class TestUtils(TestCase):
         T = matrix([[2., 0.], [1., 1.]])
         P_I = matrix([[0., 0.], [0., 0.]])
         I_F = matrix([[1., 0.], [0., 1.]])
-        T_scaled = scale_T(bsr_matrix(T,  blocksize=(2, 2)),
+        T_scaled = scale_T(bsr_matrix(T, blocksize=(2, 2)),
                            bsr_matrix(P_I, blocksize=(2, 2)),
                            bsr_matrix(I_F, blocksize=(2, 2))).todense()
         T_answer = matrix([[2., 0.], [1., 1.]])
         assert_array_almost_equal(T_answer, T_scaled)
 
         # Test for one CSR and one BSR example
-        T = matrix([[1.0,  0.,   0.],
-                    [0.5,  0.,   0.],
-                    [0.,  1.,   0.],
-                    [0.,  0.5,  0.],
-                    [0.,  0.,   1.],
-                    [0.,  0.,   0.25]])
-        P_I = matrix([[0.,  0.,   0.],
-                      [1.,  0.,   0.],
-                      [0.,  1.,   0.],
-                      [0.,  0.,   0.],
-                      [0.,  0.,   0.],
-                      [0.,  0.,   1.]])
-        I_F = matrix([[1.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  1.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.]])
-        T_answer = matrix([[2.,  0.,  0.],
-                           [1.,  0.,  0.],
-                           [0.,  1.,  0.],
-                           [0.,  0.5,  0.],
-                           [0.,  0.,  4.],
-                           [0.,  0.,  1.]])
+        T = matrix([[1.0, 0., 0.],
+                    [0.5, 0., 0.],
+                    [0., 1., 0.],
+                    [0., 0.5, 0.],
+                    [0., 0., 1.],
+                    [0., 0., 0.25]])
+        P_I = matrix([[0., 0., 0.],
+                      [1., 0., 0.],
+                      [0., 1., 0.],
+                      [0., 0., 0.],
+                      [0., 0., 0.],
+                      [0., 0., 1.]])
+        I_F = matrix([[1., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 1., 0., 0.],
+                      [0., 0., 0., 0., 1., 0.],
+                      [0., 0., 0., 0., 0., 0.]])
+        T_answer = matrix([[2., 0., 0.],
+                           [1., 0., 0.],
+                           [0., 1., 0.],
+                           [0., 0.5, 0.],
+                           [0., 0., 4.],
+                           [0., 0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
         T_scaled = T_scaled.todense()
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test
-        T = matrix([[1.0, 1., 0.,  0.],
-                    [0.5, 1., 0.,  0.],
-                    [1., 0., 0.,  0.],
-                    [0., 1., 0.,  0.],
-                    [0., 0., 2.,  1.],
-                    [0., 0., 3.,  1.],
-                    [0., 0., 4.,  1.],
-                    [0., 0., 2.,  0.]])
-        P_I = matrix([[0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.],
-                      [1.,  0.,  0.,   0.],
-                      [0.,  1.,  0.,   0.],
-                      [0.,  0.,  1.,   0.],
-                      [0.,  0.,  0.,   1.],
-                      [0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.]])
-        I_F = matrix([[1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
-        T_answer = matrix([[1., 1.,  0.,  0.],
-                           [0.5, 1.,  0.,  0.],
-                           [1., 0.,  0.,  0.],
-                           [0., 1.,  0.,  0.],
-                           [0., 0.,  1.,  0.],
-                           [0., 0.,  0.,  1.],
-                           [0., 0., -1.,  2.],
-                           [0., 0., -2.,  2.]])
+        T = matrix([[1.0, 1., 0., 0.],
+                    [0.5, 1., 0., 0.],
+                    [1., 0., 0., 0.],
+                    [0., 1., 0., 0.],
+                    [0., 0., 2., 1.],
+                    [0., 0., 3., 1.],
+                    [0., 0., 4., 1.],
+                    [0., 0., 2., 0.]])
+        P_I = matrix([[0., 0., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [1., 0., 0., 0.],
+                      [0., 1., 0., 0.],
+                      [0., 0., 1., 0.],
+                      [0., 0., 0., 1.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 0., 0.]])
+        I_F = matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 1., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 1., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+        T_answer = matrix([[1., 1., 0., 0.],
+                           [0.5, 1., 0., 0.],
+                           [1., 0., 0., 0.],
+                           [0., 1., 0., 0.],
+                           [0., 0., 1., 0.],
+                           [0., 0., 0., 1.],
+                           [0., 0., -1., 2.],
+                           [0., 0., -2., 2.]])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         I_F = bsr_matrix(I_F, blocksize=(2, 2))
@@ -544,38 +544,38 @@ class TestUtils(TestCase):
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test
-        T = matrix([[1.0, 1., 0.,  0.],
-                    [0.5, 1., 0.,  0.],
-                    [1., 1., 0.,  0.],
-                    [1., 1., 0.,  0.],
-                    [0., 0., 2.,  1.],
-                    [0., 0., 3.,  1.],
-                    [0., 0., 4.,  1.],
-                    [0., 0., 2.,  0.]])
-        P_I = matrix([[0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.],
-                      [1.,  0.,  0.,   0.],
-                      [0.,  1.,  0.,   0.],
-                      [0.,  0.,  1.,   0.],
-                      [0.,  0.,  0.,   1.],
-                      [0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.]])
-        I_F = matrix([[1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
-        T_answer = matrix([[0.5, 0.5, 0.,  0.],
-                           [0.375, 0.375, 0.,  0.],
-                           [1., 0., 0.,  0.],
-                           [0., 1., 0.,  0.],
-                           [0., 0., 1.,  0.],
-                           [0., 0., 0.,  1.],
-                           [0., 0., -1.,  2.],
-                           [0., 0., -2.,  2.]])
+        T = matrix([[1.0, 1., 0., 0.],
+                    [0.5, 1., 0., 0.],
+                    [1., 1., 0., 0.],
+                    [1., 1., 0., 0.],
+                    [0., 0., 2., 1.],
+                    [0., 0., 3., 1.],
+                    [0., 0., 4., 1.],
+                    [0., 0., 2., 0.]])
+        P_I = matrix([[0., 0., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [1., 0., 0., 0.],
+                      [0., 1., 0., 0.],
+                      [0., 0., 1., 0.],
+                      [0., 0., 0., 1.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 0., 0.]])
+        I_F = matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 1., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 1., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+        T_answer = matrix([[0.5, 0.5, 0., 0.],
+                           [0.375, 0.375, 0., 0.],
+                           [1., 0., 0., 0.],
+                           [0., 1., 0., 0.],
+                           [0., 0., 1., 0.],
+                           [0., 0., 0., 1.],
+                           [0., 0., -1., 2.],
+                           [0., 0., -2., 2.]])
         # Cpts = array([1, 2])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
@@ -597,17 +597,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[1.]]), blocksize=(1, 1))
         I_F = bsr_matrix(array([[0.]]), blocksize=(1, 1))
         P_I = bsr_matrix(array([[1.]]), blocksize=(1, 1))
-        assert_equal(array([0]),  params['Cpts'])
-        assert_equal(array([]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([0]), params['Cpts'])
+        assert_equal(array([]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         A = csr_matrix(array([[1.2]]))
         Cpts = array([])
@@ -617,17 +617,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[0.]]), blocksize=(1, 1))
         I_F = bsr_matrix(array([[1.]]), blocksize=(1, 1))
         P_I = bsr_matrix(array([[0.]]), blocksize=(1, 1))
-        assert_equal(array([]),  params['Cpts'])
-        assert_equal(array([0]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([]), params['Cpts'])
+        assert_equal(array([0]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         # 2x2
         A = csr_matrix(array([[1., 1.], [1., 1.]]))
@@ -638,17 +638,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[1., 0.], [0., 0.]]), blocksize=(1, 1))
         I_F = bsr_matrix(array([[0., 0.], [0., 1.]]), blocksize=(1, 1))
         P_I = bsr_matrix(array([[1.], [0.]]), blocksize=(1, 1))
-        assert_equal(array([0]),  params['Cpts'])
-        assert_equal(array([1]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([0]), params['Cpts'])
+        assert_equal(array([1]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         Cpts = array([0, 1])
         AggOp = csr_matrix(array([[1., 0], [0., 1.]]))
@@ -657,17 +657,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(1, 1))
         I_F = bsr_matrix(array([[0., 0.], [0., 0.]]), blocksize=(1, 1))
         P_I = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(1, 1))
-        assert_equal(array([0, 1]),  params['Cpts'])
-        assert_equal(array([]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([0, 1]), params['Cpts'])
+        assert_equal(array([]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         Cpts = array([])
         AggOp = csr_matrix(array([[0.], [0.]]))
@@ -676,17 +676,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[0., 0.], [0., 0.]]), blocksize=(1, 1))
         I_F = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(1, 1))
         P_I = bsr_matrix(array([[0.], [0.]]), blocksize=(1, 1))
-        assert_equal(array([]),  params['Cpts'])
-        assert_equal(array([0, 1]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([]), params['Cpts'])
+        assert_equal(array([0, 1]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         A = A.tobsr(blocksize=(2, 2))
         Cpts = array([0])
@@ -696,17 +696,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(2, 2))
         I_F = bsr_matrix(array([[0., 0.], [0., 0.]]), blocksize=(2, 2))
         P_I = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(2, 2))
-        assert_equal(array([0, 1]),  params['Cpts'])
-        assert_equal(array([]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([0, 1]), params['Cpts'])
+        assert_equal(array([]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         Cpts = array([])
         AggOp = csr_matrix(array([[1.]]))
@@ -715,17 +715,17 @@ class TestUtils(TestCase):
         I_C = bsr_matrix(array([[0., 0.], [0., 0.]]), blocksize=(2, 2))
         I_F = bsr_matrix(array([[1., 0.], [0., 1.]]), blocksize=(2, 2))
         P_I = bsr_matrix(array([[0., 0.], [0., 0.]]), blocksize=(2, 2))
-        assert_equal(array([]),  params['Cpts'])
-        assert_equal(array([0, 1]),  params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(array([]), params['Cpts'])
+        assert_equal(array([0, 1]), params['Fpts'])
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         # Begin more "realistic" tests
         A = poisson((10,), format='csr')
@@ -754,29 +754,29 @@ class TestUtils(TestCase):
                           array([0, 1, 2, 4, 5, 6, 8, 9]),
                           array([0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8])),
                          shape=(10, 10))
-        P_I = matrix([[0.,  0.],
-                      [0.,  0.],
-                      [0.,  0.],
-                      [1.,  0.],
-                      [0.,  0.],
-                      [0.,  0.],
-                      [0.,  0.],
-                      [0.,  1.],
-                      [0.,  0.],
-                      [0.,  0.]])
+        P_I = matrix([[0., 0.],
+                      [0., 0.],
+                      [0., 0.],
+                      [1., 0.],
+                      [0., 0.],
+                      [0., 0.],
+                      [0., 0.],
+                      [0., 1.],
+                      [0., 0.],
+                      [0., 0.]])
         P_I = bsr_matrix(P_I, blocksize=(1, 1))
         Fpts = array([0, 1, 2, 4, 5, 6, 8, 9])
         assert_equal(Cpts, params['Cpts'])
         assert_equal(Fpts, params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
         # BSR Test
         A = A.tobsr(blocksize=(2, 2))
@@ -790,41 +790,41 @@ class TestUtils(TestCase):
         T = hstack((T.todense(), T.todense()))[:, [0, 2, 1, 3]]
         T = bsr_matrix(T, blocksize=(2, 2))
         params = get_Cpt_params(A, Cpts, AggOp, T)
-        I_C = bsr_matrix((array([[[1.,  0.], [0.,  1.]],
-                                 [[1.,  0.], [0.,  1.]]]),
+        I_C = bsr_matrix((array([[[1., 0.], [0., 1.]],
+                                 [[1., 0.], [0., 1.]]]),
                           array([1, 3]),
                           array([0, 0, 1, 1, 2, 2])),
                          shape=(10, 10))
-        I_F = bsr_matrix((array([[[1.,  0.], [0.,  1.]],
-                                 [[1.,  0.], [0.,  1.]],
-                                 [[1.,  0.], [0.,  1.]]]),
+        I_F = bsr_matrix((array([[[1., 0.], [0., 1.]],
+                                 [[1., 0.], [0., 1.]],
+                                 [[1., 0.], [0., 1.]]]),
                           array([0, 2, 4]),
                           array([0, 1, 1, 2, 2, 3])),
                          shape=(10, 10))
-        P_I = matrix([[0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.],
-                      [1.,  0.,  0.,  0.],
-                      [0.,  1.,  0.,  0.],
-                      [0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.],
-                      [0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  1.],
-                      [0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.]])
+        P_I = matrix([[0., 0., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [1., 0., 0., 0.],
+                      [0., 1., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 1., 0.],
+                      [0., 0., 0., 1.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 0., 0.]])
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         Fpts = array([0, 1, 4, 5, 8, 9])
         Cpts = array([2, 3, 6, 7])
         assert_equal(Cpts, params['Cpts'])
         assert_equal(Fpts, params['Fpts'])
-        assert_equal(I_C.indptr,  params['I_C'].indptr)
+        assert_equal(I_C.indptr, params['I_C'].indptr)
         assert_equal(I_C.indices, params['I_C'].indices)
-        assert_equal(I_C.data,    params['I_C'].data)
-        assert_equal(I_F.indptr,  params['I_F'].indptr)
+        assert_equal(I_C.data, params['I_C'].data)
+        assert_equal(I_F.indptr, params['I_F'].indptr)
         assert_equal(I_F.indices, params['I_F'].indices)
-        assert_equal(I_F.data,    params['I_F'].data)
-        assert_equal(P_I.indptr,  params['P_I'].indptr)
+        assert_equal(I_F.data, params['I_F'].data)
+        assert_equal(P_I.indptr, params['P_I'].indptr)
         assert_equal(P_I.indices, params['P_I'].indices)
-        assert_equal(P_I.data,    params['P_I'].data)
+        assert_equal(P_I.data, params['P_I'].data)
 
     def test_compute_BtBinv(self):
         # Trivially sized tests
@@ -872,8 +872,8 @@ class TestUtils(TestCase):
         answer = array([[[0.25]]])
         assert_array_almost_equal(BtBinv, answer)
 
-        T = matrix([[1.,  0.], [1.,  0.],
-                    [0.,  .5], [0.,  .25]])
+        T = matrix([[1., 0.], [1., 0.],
+                    [0., .5], [0., .25]])
         T = bsr_matrix(T, blocksize=(1, 1))
         B = array([[1.], [2.]])
         BtBinv = compute_BtBinv(B, T)
@@ -881,32 +881,32 @@ class TestUtils(TestCase):
                         [[0.25]], [[0.25]]])
         assert_array_almost_equal(BtBinv, answer)
 
-        T = matrix([[1.,  0.], [0.,  .25]])
+        T = matrix([[1., 0.], [0., .25]])
         T = bsr_matrix(T, blocksize=(1, 1))
         B = array([[1., 1.], [2., 1.]])
         BtBinv = compute_BtBinv(B, T)
-        answer = array([[[0.25,  0.25], [0.25,  0.25]],
-                        [[0.16,  0.08], [0.08,  0.04]]])
+        answer = array([[[0.25, 0.25], [0.25, 0.25]],
+                        [[0.16, 0.08], [0.08, 0.04]]])
         assert_array_almost_equal(BtBinv, answer)
 
-        T = matrix([[1.,  0.], [0.,  .25]])
+        T = matrix([[1., 0.], [0., .25]])
         T = bsr_matrix(T, blocksize=(2, 2))
         B = array([[1., 1.], [1., 1.]])
         BtBinv = compute_BtBinv(B, T)
-        answer = array([[[0.125,  0.125],
-                         [0.125,  0.125]]])
+        answer = array([[[0.125, 0.125],
+                         [0.125, 0.125]]])
         assert_array_almost_equal(BtBinv, answer)
 
         # Simple BSR test
-        T = matrix([[1.,  1.,  0.,  0.],
-                    [1.,  1.,  0.,  0.],
-                    [0.,  0.,  0.5,  0.5],
-                    [0.,  0.,  0.25,  0.25]])
+        T = matrix([[1., 1., 0., 0.],
+                    [1., 1., 0., 0.],
+                    [0., 0., 0.5, 0.5],
+                    [0., 0., 0.25, 0.25]])
         T = bsr_matrix(T, blocksize=(2, 2))
         B = array([[1., 1.], [1., 2.], [1., 1.], [1., 3.]])
         BtBinv = compute_BtBinv(B, T)
-        answer = array([[[5., -3.], [-3.,  2.]],
-                        [[2.5, -1.], [-1.,  0.5]]])
+        answer = array([[[5., -3.], [-3., 2.]],
+                        [[2.5, -1.], [-1., 0.5]]])
         assert_array_almost_equal(BtBinv, answer)
 
     def test_eliminate_diag_dom_nodes(self):
@@ -914,10 +914,10 @@ class TestUtils(TestCase):
         from pyamg.gallery import poisson
         A = poisson((4,), format='csr')
         C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
-        answer = array([[1.,  0.,  0.,  0.],
-                        [0.,  2., -1.,  0.],
-                        [0., -1.,  2.,  0.],
-                        [0.,  0.,  0.,  1.]])
+        answer = array([[1., 0., 0., 0.],
+                        [0., 2., -1., 0.],
+                        [0., -1., 2., 0.],
+                        [0., 0., 0., 1.]])
         assert_array_almost_equal(C.todense(), answer)
 
         # Simple BSR test
@@ -927,9 +927,9 @@ class TestUtils(TestCase):
         A = A.tobsr((2, 2))
         C = poisson((3,), format='csr')
         C = eliminate_diag_dom_nodes(A, C, 1.1)
-        answer = array([[1.,  0.,  0.],
-                        [0.,  2., -1.],
-                        [0., -1.,  2.]])
+        answer = array([[1., 0., 0.],
+                        [0., 2., -1.],
+                        [0., -1., 2.]])
         assert_array_almost_equal(C.todense(), answer)
 
     def test_remove_diagonal(self):
@@ -937,10 +937,10 @@ class TestUtils(TestCase):
         from pyamg.util.utils import remove_diagonal
         A = poisson((4,), format='csr')
         C = remove_diagonal(A)
-        exact = array([[0., -1.,  0.,  0.],
-                       [-1.,  0., -1.,  0.],
-                       [0., -1.,  0., -1.],
-                       [0.,  0., -1.,  0.]])
+        exact = array([[0., -1., 0., 0.],
+                       [-1., 0., -1., 0.],
+                       [0., -1., 0., -1.],
+                       [0., 0., -1., 0.]])
         assert_array_almost_equal(C.todense(), exact)
 
     def test_scale_rows_by_largest_entry(self):
@@ -950,71 +950,71 @@ class TestUtils(TestCase):
         A.data = array(A.data, dtype=complex)
         A.data[1] = 8.
         A = scale_rows_by_largest_entry(A)
-        exact = array([[0.25,  1.,  0.,  0.],
-                       [-0.5,  1., -0.5,  0.],
-                       [0., -0.5,  1., -0.5],
-                       [0.,  0., -0.5,  1.]])
+        exact = array([[0.25, 1., 0., 0.],
+                       [-0.5, 1., -0.5, 0.],
+                       [0., -0.5, 1., -0.5],
+                       [0., 0., -0.5, 1.]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_filter_matrix_rows(self):
         from pyamg.util.utils import filter_matrix_rows
-        A = csr_matrix(array([[0.24, -0.5,  0.,  0.],
-                              [1.,  1.,  0.49,  0.],
-                              [0., -0.5,  1., -0.5]]))
+        A = csr_matrix(array([[0.24, -0.5, 0., 0.],
+                              [1., 1., 0.49, 0.],
+                              [0., -0.5, 1., -0.5]]))
         A = filter_matrix_rows(A, 0.5)
-        exact = array([[0.0, -0.5,  0.,  0.],
-                       [1.,  1.,  0.,  0.],
-                       [0., -0.5,  1., -0.5]])
+        exact = array([[0.0, -0.5, 0., 0.],
+                       [1., 1., 0., 0.],
+                       [0., -0.5, 1., -0.5]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_filter_matrix_columns(self):
         from pyamg.util.utils import filter_matrix_columns
-        A = csr_matrix(array([[0.24,  1.,  0.],
-                              [-0.5,  1., -0.5],
-                              [0.,  0.49,  1.],
-                              [0.,  0., -0.5]]))
+        A = csr_matrix(array([[0.24, 1., 0.],
+                              [-0.5, 1., -0.5],
+                              [0., 0.49, 1.],
+                              [0., 0., -0.5]]))
         A = filter_matrix_columns(A, 0.5)
-        exact = array([[0.,  1.,  0.],
-                       [-0.5,  1., -0.5],
-                       [0.,  0.,  1.],
-                       [0.,  0., -0.5]])
+        exact = array([[0., 1., 0.],
+                       [-0.5, 1., -0.5],
+                       [0., 0., 1.],
+                       [0., 0., -0.5]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_truncate_rows(self):
         from pyamg.util.utils import truncate_rows
-        A = csr_matrix(array([[-0.24, -0.5,  0.,  0.],
-                              [1., -1.1,  0.49,  0.1],
-                              [0.,  0.4,  1.,  0.5]]))
+        A = csr_matrix(array([[-0.24, -0.5, 0., 0.],
+                              [1., -1.1, 0.49, 0.1],
+                              [0., 0.4, 1., 0.5]]))
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 4)
         assert_array_almost_equal(A.todense(), Acopy.todense())
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 3)
-        exact = array([[-0.24, -0.5,  0.,  0.],
-                       [1., -1.1,  0.49,  0.],
-                       [0.,  0.4,  1.,  0.5]])
+        exact = array([[-0.24, -0.5, 0., 0.],
+                       [1., -1.1, 0.49, 0.],
+                       [0., 0.4, 1., 0.5]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 2)
-        exact = array([[-0.24, -0.5,  0.,  0.],
-                       [1., -1.1,  0.,  0.],
-                       [0.,  0.,  1.,  0.5]])
+        exact = array([[-0.24, -0.5, 0., 0.],
+                       [1., -1.1, 0., 0.],
+                       [0., 0., 1., 0.5]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 1)
-        exact = array([[0., -0.5,  0.,  0.],
-                       [0., -1.1,  0.,  0.],
-                       [0.,  0.,  1.,  0.]])
+        exact = array([[0., -0.5, 0., 0.],
+                       [0., -1.1, 0., 0.],
+                       [0., 0., 1., 0.]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 0)
-        exact = array([[0.,  0.,  0.,  0.],
-                       [0.,  0.,  0.,  0.],
-                       [0.,  0.,  0.,  0.]])
+        exact = array([[0., 0., 0., 0.],
+                       [0., 0., 0., 0.],
+                       [0., 0., 0., 0.]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
 
@@ -1038,9 +1038,9 @@ class TestComplexUtils(TestCase):
 
     def test_symmetric_rescaling(self):
         cases = []
-        A = array([[5.5+1.0j,  3.5,    4.8],
-                   [2.,       9.9,  0.5-2.0j],
-                   [6.5,       2.6,  5.7+1.0j]])
+        A = array([[5.5+1.0j, 3.5, 4.8],
+                   [2., 9.9, 0.5-2.0j],
+                   [6.5, 2.6, 5.7+1.0j]])
         A = csr_matrix(A)
         cases.append(A)
         P = diag_sparse([1, 0, 1.0j])
@@ -1071,7 +1071,7 @@ class TestComplexUtils(TestCase):
                             [0., 0., 0., -0.5, 1.]])
         DB_answer = sqrt(2)*1.0j*e.reshape(-1, 1)
         #           matrix   B    BH   expected matrix  expected B  expected BH
-        cases.append((A,     B,  None,   DAD_answer,      DB_answer,   None))
+        cases.append((A, B, None, DAD_answer, DB_answer, None))
 
         for case in cases:
             [A, B, BH, DAD_answer, DB_answer, DBH_answer] = case
@@ -1175,12 +1175,12 @@ class TestComplexUtils(TestCase):
         Bf = ones((6, 1)) + 1.0j * ones((6, 1))
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
-        A_known = matrix([[0.5+0.5j,  0.5+0.5j,  0.0+0.j],
-                          [0.5+0.5j,  0.5+0.5j,  0.0+0.j],
-                          [0.0+0.j,  1.0+1.j,  0.0+0.j],
-                          [0.0+0.j,  1.0+1.j,  0.0+0.j],
-                          [0.0+0.j,  0.0+0.j,  1.0+1.j],
-                          [0.0+0.j,  0.0+0.j,  1.0+1.j]])
+        A_known = matrix([[0.5+0.5j, 0.5+0.5j, 0.0+0.j],
+                          [0.5+0.5j, 0.5+0.5j, 0.0+0.j],
+                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                          [0.0+0.j, 0.0+0.j, 1.0+1.j],
+                          [0.0+0.j, 0.0+0.j, 1.0+1.j]])
         assert_array_almost_equal(A_known, A_filter)
 
         # test two, the constant and linears
@@ -1192,12 +1192,12 @@ class TestComplexUtils(TestCase):
         Bf = hstack((Bf, ww))
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
-        A_known = matrix([[1.0+1.j,  0.0+0.j,  0.0+0.j],
-                          [0.0+0.j,  1.0+1.j,  0.0+0.j],
-                          [0.0+0.j,  1.5+1.5j,  0.0+0.j],
-                          [0.0+0.j,  2.0+2.j,  0.0+0.j],
-                          [0.0+0.j,  0.0+0.j,  1.8+1.8j],
-                          [0.0+0.j,  0.0+0.j,  2.2+2.2j]])
+        A_known = matrix([[1.0+1.j, 0.0+0.j, 0.0+0.j],
+                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                          [0.0+0.j, 1.5+1.5j, 0.0+0.j],
+                          [0.0+0.j, 2.0+2.j, 0.0+0.j],
+                          [0.0+0.j, 0.0+0.j, 1.8+1.8j],
+                          [0.0+0.j, 0.0+0.j, 2.2+2.2j]])
         assert_array_almost_equal(A_known, A_filter)
 
     def test_scale_T(self):
@@ -1205,67 +1205,67 @@ class TestComplexUtils(TestCase):
         from scipy import matrix
 
         # Test for one CSR and one BSR example
-        T = matrix([[1.0,  0.,   0.],
-                    [0.5j, 0.,   0.],
-                    [0.,  1.,   0.],
-                    [0.,  .5j,  0.],
-                    [0.,  0.,   1.j],
-                    [0.,  0.,   0.25]])
-        T_answer = matrix([[0.-2.j,  0.+0.j,  0.+0.j],
-                           [1.+0.j,  0.+0.j,  0.+0.j],
-                           [0.+0.j,  1.+0.j,  0.+0.j],
-                           [0.+0.j,  0.+0.5j,  0.+0.j],
-                           [0.+0.j,  0.+0.j,  0.+4.j],
-                           [0.+0.j,  0.+0.j,  1.+0.j]])
-        P_I = matrix([[0.,  0.,   0.],
-                      [1.,  0.,   0.],
-                      [0.,  1.,   0.],
-                      [0.,  0.,   0.],
-                      [0.,  0.,   0.],
-                      [0.,  0.,   1.]])
-        I_F = matrix([[1.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  1.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.]])
+        T = matrix([[1.0, 0., 0.],
+                    [0.5j, 0., 0.],
+                    [0., 1., 0.],
+                    [0., .5j, 0.],
+                    [0., 0., 1.j],
+                    [0., 0., 0.25]])
+        T_answer = matrix([[0.-2.j, 0.+0.j, 0.+0.j],
+                           [1.+0.j, 0.+0.j, 0.+0.j],
+                           [0.+0.j, 1.+0.j, 0.+0.j],
+                           [0.+0.j, 0.+0.5j, 0.+0.j],
+                           [0.+0.j, 0.+0.j, 0.+4.j],
+                           [0.+0.j, 0.+0.j, 1.+0.j]])
+        P_I = matrix([[0., 0., 0.],
+                      [1., 0., 0.],
+                      [0., 1., 0.],
+                      [0., 0., 0.],
+                      [0., 0., 0.],
+                      [0., 0., 1.]])
+        I_F = matrix([[1., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 1., 0., 0.],
+                      [0., 0., 0., 0., 1., 0.],
+                      [0., 0., 0., 0., 0., 0.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
         T_scaled = T_scaled.todense()
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test
-        T = matrix([[1.j, 1., 0.,  0.],
-                    [0.5, 1., 0.,  0.],
-                    [1., 0., 0.,  0.],
-                    [0., 1., 0.,  0.],
+        T = matrix([[1.j, 1., 0., 0.],
+                    [0.5, 1., 0., 0.],
+                    [1., 0., 0., 0.],
+                    [0., 1., 0., 0.],
                     [0., 0., 2.j, 0.],
-                    [0., 0., 0.,  1.],
-                    [0., 0., 1.,  1.],
-                    [0., 0., 1.,  1.]])
-        P_I = matrix([[0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.],
-                      [1.,  0.,  0.,   0.],
-                      [0.,  1.,  0.,   0.],
-                      [0.,  0.,  1.,   0.],
-                      [0.,  0.,  0.,   1.],
-                      [0.,  0.,  0.,   0.],
-                      [0.,  0.,  0.,   0.]])
-        I_F = matrix([[1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  1.,  0.],
-                      [0.,  0.,  0.,  0.,  0.,  0.,  0.,  1.]])
-        T_answer = matrix([[0.0+1.j,  1.0+0.j,  0.0+0.j,  0.0+0.j],
-                           [0.5+0.j,  1.0+0.j,  0.0+0.j,  0.0+0.j],
-                           [1.0+0.j,  0.0+0.j,  0.0+0.j,  0.0+0.j],
-                           [0.0+0.j,  1.0+0.j,  0.0+0.j,  0.0+0.j],
-                           [0.0+0.j,  0.0+0.j,  1.0+0.j,  0.0+0.j],
-                           [0.0+0.j,  0.0+0.j,  0.0+0.j,  1.0+0.j],
-                           [0.0+0.j,  0.0+0.j,  0.0-0.5j,  1.0+0.j],
-                           [0.0+0.j,  0.0+0.j,  0.0-0.5j,  1.0+0.j]])
+                    [0., 0., 0., 1.],
+                    [0., 0., 1., 1.],
+                    [0., 0., 1., 1.]])
+        P_I = matrix([[0., 0., 0., 0.],
+                      [0., 0., 0., 0.],
+                      [1., 0., 0., 0.],
+                      [0., 1., 0., 0.],
+                      [0., 0., 1., 0.],
+                      [0., 0., 0., 1.],
+                      [0., 0., 0., 0.],
+                      [0., 0., 0., 0.]])
+        I_F = matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 1., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 1., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+        T_answer = matrix([[0.0+1.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
+                           [0.5+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
+                           [1.0+0.j, 0.0+0.j, 0.0+0.j, 0.0+0.j],
+                           [0.0+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
+                           [0.0+0.j, 0.0+0.j, 1.0+0.j, 0.0+0.j],
+                           [0.0+0.j, 0.0+0.j, 0.0+0.j, 1.0+0.j],
+                           [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j],
+                           [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j]])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         I_F = bsr_matrix(I_F, blocksize=(2, 2))
@@ -1274,8 +1274,8 @@ class TestComplexUtils(TestCase):
 
     def test_compute_BtBinv(self):
         # Simple CSR test
-        T = matrix([[1.j,  0.], [1.,  0.],
-                    [0.,  .5], [0.,  .25]])
+        T = matrix([[1.j, 0.], [1., 0.],
+                    [0., .5], [0., .25]])
         T = bsr_matrix(T, blocksize=(1, 1))
         B = array([[1.+1.j], [2.j]])
         BtBinv = compute_BtBinv(B, T)
@@ -1284,15 +1284,15 @@ class TestComplexUtils(TestCase):
         assert_array_almost_equal(BtBinv, answer)
 
         # Simple BSR test
-        T = matrix([[1.,  0.,  0.,  1.],
-                    [1.,  0.,  0.,  1.],
-                    [0.,  0.,  0.5,  0.],
-                    [0.,  0.,  0.25,  0.]])
+        T = matrix([[1., 0., 0., 1.],
+                    [1., 0., 0., 1.],
+                    [0., 0., 0.5, 0.],
+                    [0., 0., 0.25, 0.]])
         T = bsr_matrix(T, blocksize=(2, 2))
         B = array([[1.j, 1.], [1.j, 3.], [1.j, 4.], [1.j, 2.]])
         BtBinv = compute_BtBinv(B, T)
-        answer = array([[[1.5+0.j,  0.0+0.5j], [0.0-0.5j,  0.2+0.j]],
-                        [[5.0+0.j,  0.0+1.5j], [0.0-1.5j,  0.5+0.j]]])
+        answer = array([[[1.5+0.j, 0.0+0.5j], [0.0-0.5j, 0.2+0.j]],
+                        [[5.0+0.j, 0.0+1.5j], [0.0-1.5j, 0.5+0.j]]])
         assert_array_almost_equal(BtBinv, answer)
 
     def test_eliminate_diag_dom_nodes(self):
@@ -1302,10 +1302,10 @@ class TestComplexUtils(TestCase):
         A.data = array(A.data, dtype=complex)
         A.data[0] = 1+5.0j
         C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
-        answer = array([[1.,  0.,  0.,  0.],
-                        [0.,  2., -1.,  0.],
-                        [0., -1.,  2.,  0.],
-                        [0.,  0.,  0.,  1.]])
+        answer = array([[1., 0., 0., 0.],
+                        [0., 2., -1., 0.],
+                        [0., -1., 2., 0.],
+                        [0., 0., 0., 1.]])
         assert_array_almost_equal(C.todense(), answer)
 
         # Simple BSR test
@@ -1316,9 +1316,9 @@ class TestComplexUtils(TestCase):
         A = A.tobsr((2, 2))
         C = poisson((3,), format='csr')
         C = eliminate_diag_dom_nodes(A, C, 1.1)
-        answer = array([[1.,  0.,  0.],
-                        [0.,  2., -1.],
-                        [0., -1.,  2.]])
+        answer = array([[1., 0., 0.],
+                        [0., 2., -1.],
+                        [0., -1., 2.]])
         assert_array_almost_equal(C.todense(), answer)
 
     def test_remove_diagonal(self):
@@ -1326,10 +1326,10 @@ class TestComplexUtils(TestCase):
         from pyamg.util.utils import remove_diagonal
         A = poisson((4,), format='csr')
         C = remove_diagonal(1.0j*A)
-        exact = array([[0., -1.,  0.,  0.],
-                       [-1.,  0., -1.,  0.],
-                       [0., -1.,  0., -1.],
-                       [0.,  0., -1.,  0.]])
+        exact = array([[0., -1., 0., 0.],
+                       [-1., 0., -1., 0.],
+                       [0., -1., 0., -1.],
+                       [0., 0., -1., 0.]])
         assert_array_almost_equal(C.todense(), 1.0j*exact)
 
     def test_scale_rows_by_largest_entry(self):
@@ -1339,10 +1339,10 @@ class TestComplexUtils(TestCase):
         A.data = array(A.data, dtype=complex)
         A.data[1] = 3. + 2.j
         A = scale_rows_by_largest_entry(A)
-        exact = array([[0.55470020+0.j,  0.83205029+0.5547002j,  0.0,   0.0],
-                       [-0.50000000+0.j,  1.00000000+0.j,   -0.5+0.j, 0.0+0.j],
-                       [0.00000000+0.j, -0.50000000+0.j,    1.0+0.j, -0.5+0.j],
-                       [0.00000000+0.j,  0.00000000+0.j,   -0.5+0.j, 1.0+0.j]])
+        exact = array([[0.55470020+0.j, 0.83205029+0.5547002j, 0.0, 0.0],
+                       [-0.50000000+0.j, 1.00000000+0.j, -0.5+0.j, 0.0+0.j],
+                       [0.00000000+0.j, -0.50000000+0.j, 1.0+0.j, -0.5+0.j],
+                       [0.00000000+0.j, 0.00000000+0.j, -0.5+0.j, 1.0+0.j]])
         assert_array_almost_equal(A.todense(), exact)
 
     # note: no explicitly complex tests necessary for get_Cpt_params

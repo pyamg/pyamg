@@ -109,7 +109,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
     # The gauge Laplacian has the same sparsity structure as a normal
     # Laplacian, so we start out with a Poisson Operator
     N = npts
-    A = poisson((N, N),  format='coo', dtype=complex)
+    A = poisson((N, N), format='coo', dtype=complex)
 
     # alpha is a random function of a point's integer position
     # on a 1-D grid along the x or y direction.  e.g. the first
