@@ -193,7 +193,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
            indices,
            splitting,
            gamma,
-           tcs )
+           tcs)
 
         # Separate F indices and C indices
         num_F = indices[0]

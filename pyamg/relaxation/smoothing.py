@@ -18,7 +18,7 @@ __all__ = ['change_smoothers']
 DEFAULT_SWEEP = 'forward'
 DEFAULT_NITER = 1
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
-                        'jacobi_ne', 'chebyshev', None ]
+                        'jacobi_ne', 'chebyshev', None]
 
 def unpack_arg(v):
     if isinstance(v, tuple):

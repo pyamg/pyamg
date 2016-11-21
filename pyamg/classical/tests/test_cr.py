@@ -44,17 +44,17 @@ class TestCR(TestCase):
         for i in range(3,10):
             A = self.cases[i]
             h_split_auto = CR(A, method='habituated', thetacr=0.7, thetacs='auto')
-            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2 )
-            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/2 )
+            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
+            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/2)
             c_split_auto = CR(A, method='concurrent', thetacr=0.7, thetacs='auto')
-            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2 )
-            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/2 )
+            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
+            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/2)
             h_split = CR(A, method='habituated', thetacr=0.7, thetacs=[0.3,0.5])
-            assert(h_split.sum() <= (h_split.shape[0]+1)/2 )
-            assert(h_split.sum() >= (h_split.shape[0]-1)/2 )
+            assert(h_split.sum() <= (h_split.shape[0]+1)/2)
+            assert(h_split.sum() >= (h_split.shape[0]-1)/2)
             c_split = CR(A, method='concurrent', thetacr=0.7, thetacs=[0.3,0.5])
-            assert(c_split.sum() <= (c_split.shape[0]+1)/2 )
-            assert(c_split.sum() >= (c_split.shape[0]-1)/2 )
+            assert(c_split.sum() <= (c_split.shape[0]+1)/2)
+            assert(c_split.sum() >= (c_split.shape[0]-1)/2)
 
         # 2d-tests. CR is a little more picky with parameters and relaxation
         # type in 2d. Can still bound above by (n+1)/2. Need looser lower bound,
@@ -62,14 +62,14 @@ class TestCR(TestCase):
         for i in range(10,15):
             A = self.cases[i]
             h_split_auto = CR(A, method='habituated', thetacr=0.7, thetacs='auto')
-            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2 )
-            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/4 )
+            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
+            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/4)
             c_split_auto = CR(A, method='concurrent', thetacr=0.7, thetacs='auto')
-            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2 )
-            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/4 )
+            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
+            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/4)
             h_split = CR(A, method='habituated', thetacr=0.7, thetacs=[0.3,0.5])
-            assert(h_split.sum() <= (h_split.shape[0]+1)/2 )
-            assert(h_split.sum() >= (h_split.shape[0]-1)/4 )
+            assert(h_split.sum() <= (h_split.shape[0]+1)/2)
+            assert(h_split.sum() >= (h_split.shape[0]-1)/4)
             c_split = CR(A, method='concurrent', thetacr=0.7, thetacs=[0.3,0.5])
-            assert(c_split.sum() <= (c_split.shape[0]+1)/2 )
-            assert(c_split.sum() >= (c_split.shape[0]-1)/4 )
+            assert(c_split.sum() <= (c_split.shape[0]+1)/2)
+            assert(c_split.sum() >= (c_split.shape[0]-1)/4)

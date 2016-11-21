@@ -41,7 +41,7 @@ methods3 = [ [[('gauss_seidel', {'sweep': 'forward'}), None],
              [[('block_gauss_seidel', {'sweep': 'backward'}), 'richardson'],
               [('block_gauss_seidel', {'sweep': 'forward'}), 'richardson']],
              [[('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})],
-              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]] ]
+              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]]]
 
 # Non-symmetric smoothing schemes
 methods4 = [ [[('gauss_seidel', {'sweep': 'forward'}), None],
@@ -55,7 +55,7 @@ methods4 = [ [[('gauss_seidel', {'sweep': 'forward'}), None],
              [[('block_gauss_seidel', {'sweep': 'backward'}), ('jacobi', {'iterations': 1})],
               [('block_gauss_seidel', {'sweep': 'forward'}), ('jacobi', {'iterations': 2})]],
              [[('jacobi_ne', {'iterations': 1}), ('block_jacobi', {'iterations': 1})],
-              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]] ]
+              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]]]
 
 class TestSmoothing(TestCase):
     def test_solver_parameters(self):
