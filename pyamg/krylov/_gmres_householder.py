@@ -8,7 +8,6 @@ from pyamg import amg_core
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
 
-
 __all__ = ['gmres_householder']
 
 
@@ -370,6 +369,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
     # end outer loop
 
     return (postprocess(x), niter)
+
 
 if __name__ == '__main__':
     # from numpy import diag

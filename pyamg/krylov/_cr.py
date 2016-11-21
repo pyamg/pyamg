@@ -5,7 +5,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 from warnings import warn
 
-
 __all__ = ['cr']
 
 
@@ -184,6 +183,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         if iter == maxiter:
             return (postprocess(x), iter)
+
 
 if __name__ == '__main__':
     # from numpy import diag

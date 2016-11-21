@@ -157,10 +157,10 @@ class TestSimpleIterations(TestCase):
                 (x, flag) = minimal_residual(A, b, x0=x0,
                                              tol=1e-16, maxiter=maxiter,
                                              callback=callback)
-                actual_factor = (norm(np.ravel(b)
-                                      - np.ravel(A * x.reshape(-1, 1))) /
-                                 norm(np.ravel(b)
-                                      - np.ravel(A * x0.reshape(-1, 1))))
+                actual_factor = (norm(np.ravel(b) -
+                                 np.ravel(A * x.reshape(-1, 1))) /
+                                 norm(np.ravel(b) -
+                                 np.ravel(A * x0.reshape(-1, 1))))
                 assert(actual_factor < reduction_factor)
                 if A.dtype != complex:
                     for i in range(len(fvals)-1):
