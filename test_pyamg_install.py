@@ -9,10 +9,9 @@ See NumPy/SciPy examples.
 """
 from __future__ import print_function
 import sys
+import pyamg
 
 sys.path.pop(0)
-
-import pyamg
 
 result = pyamg.test()
 

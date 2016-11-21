@@ -46,6 +46,7 @@ class build_ext(_build_ext):
         import numpy
         self.include_dirs.append(numpy.get_include())
 
+
 ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
                          define_macros=[('__STDC_FORMAT_MACROS', 1)])]
