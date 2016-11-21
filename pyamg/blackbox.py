@@ -307,7 +307,8 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
             iteration[0] = iteration[0] + 1
             print("    iteration %d" % iteration[0])
 
-        callback2 = lambda x: callback(x, iteration)
+        def callback2(x):
+            return callback(x, iteration)
     else:
         callback2 = None
 
