@@ -1,7 +1,6 @@
 """General utility functions for pyamg"""
 from __future__ import print_function
 
-
 from warnings import warn
 
 import numpy as np
@@ -1767,12 +1766,12 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = (diag_dom_rows == bsize)
 
     # Replace these rows/cols in # C with rows/cols of the identity.
-    I = eye(C.shape[0], C.shape[1], format='csr')
-    I.data[diag_dom_rows] = 0.0
-    C = I*C*I
-    I.data[diag_dom_rows] = 1.0
-    I.data[np.where(diag_dom_rows == 0)[0]] = 0.0
-    C = C + I
+    Id = eye(C.shape[0], C.shape[1], format='csr')
+    Id.data[diag_dom_rows] = 0.0
+    C = Id * C * Id
+    Id.data[diag_dom_rows] = 1.0
+    Id.data[np.where(diag_dom_rows == 0)[0]] = 0.0
+    C = C + Id
 
     del A_abs
     return C
