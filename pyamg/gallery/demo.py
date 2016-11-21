@@ -2,12 +2,12 @@
 with AMG"""
 from __future__ import print_function
 
-__all__ = ['demo']
-
 import scipy as sp
 import numpy as np
 from pyamg.gallery import poisson
 from pyamg.aggregation import smoothed_aggregation_solver
+
+__all__ = ['demo']
 
 
 def demo():
