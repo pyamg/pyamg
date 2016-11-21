@@ -9,11 +9,10 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 from __future__ import print_function
 
-
-__all__ = ['write_vtu', 'write_basic_mesh']
-
 import xml.dom.minidom
 import numpy as np
+
+__all__ = ['write_vtu', 'write_basic_mesh']
 
 
 def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
