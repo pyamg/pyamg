@@ -9,7 +9,6 @@ from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
 
-
 __all__ = ['change_smoothers']
 
 
@@ -19,6 +18,7 @@ DEFAULT_SWEEP = 'forward'
 DEFAULT_NITER = 1
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
                         'jacobi_ne', 'chebyshev', None]
+
 
 def unpack_arg(v):
     if isinstance(v, tuple):
@@ -67,7 +67,7 @@ def change_smoothers(ml, presmoother, postsmoother):
     ml.level[i].presmoother   <===  presmoother[i]
     ml.level[i].postsmoother  <===  postsmoother[i]
     ml.symmetric_smoothing is marked True/False depending on whether
-        the smoothing scheme is symmetric. 
+        the smoothing scheme is symmetric.
 
     Notes
     -----
@@ -193,9 +193,9 @@ def change_smoothers(ml, presmoother, postsmoother):
                 sweep2 = kwargs2['sweep']
             except:
                 sweep2 = DEFAULT_SWEEP
-            if  (sweep1 == 'forward' and sweep2 == 'backward') or \
-                (sweep1 == 'backward' and sweep2 == 'forward') or \
-                (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+            if (sweep1 == 'forward' and sweep2 == 'backward') or \
+               (sweep1 == 'backward' and sweep2 == 'forward') or \
+               (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
                 pass
             else:
                 ml.symmetric_smoothing = False
@@ -204,8 +204,9 @@ def change_smoothers(ml, presmoother, postsmoother):
         mid_len = min(len(postsmoother), len(ml.levels[:-1]))
         for i in range(min_len, mid_len):
             # Set up presmoother
-            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
-            
+            ml.levels[i].presmoother =\
+                setup_presmoother(ml.levels[i], **kwargs1)
+
             # unpack postsmoother[i]
             fn2, kwargs2 = unpack_arg(postsmoother[i])
             # get function handle
@@ -213,7 +214,8 @@ def change_smoothers(ml, presmoother, postsmoother):
                 setup_postsmoother = eval('setup_' + str(fn2))
             except NameError:
                 raise NameError("invalid postsmoother method: ", fn2)
-            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+            ml.levels[i].postsmoother =\
+                setup_postsmoother(ml.levels[i], **kwargs2)
 
             # Check if symmetric smoothing scheme
             try:
@@ -235,9 +237,9 @@ def change_smoothers(ml, presmoother, postsmoother):
                     sweep2 = kwargs2['sweep']
                 except:
                     sweep2 = DEFAULT_SWEEP
-                if  (sweep1 == 'forward' and sweep2 == 'backward') or \
-                    (sweep1 == 'backward' and sweep2 == 'forward') or \
-                    (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+                if (sweep1 == 'forward' and sweep2 == 'backward') or \
+                   (sweep1 == 'backward' and sweep2 == 'forward') or \
+                   (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
                     pass
                 else:
                     ml.symmetric_smoothing = False
@@ -252,10 +254,12 @@ def change_smoothers(ml, presmoother, postsmoother):
                 setup_presmoother = eval('setup_' + str(fn1))
             except NameError:
                 raise NameError("invalid presmoother method: ", fn1)
-            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
+            ml.levels[i].presmoother =\
+                setup_presmoother(ml.levels[i], **kwargs1)
 
             # Set up postsmoother
-            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
+            ml.levels[i].postsmoother =\
+                setup_postsmoother(ml.levels[i], **kwargs2)
 
             # Check if symmetric smoothing scheme
             try:
@@ -277,9 +281,9 @@ def change_smoothers(ml, presmoother, postsmoother):
                     sweep2 = kwargs2['sweep']
                 except:
                     sweep2 = DEFAULT_SWEEP
-                if  (sweep1 == 'forward' and sweep2 == 'backward') or \
-                    (sweep1 == 'backward' and sweep2 == 'forward') or \
-                    (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
+                if (sweep1 == 'forward' and sweep2 == 'backward') or \
+                   (sweep1 == 'backward' and sweep2 == 'forward') or \
+                   (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
                     pass
                 else:
                     ml.symmetric_smoothing = False
@@ -291,7 +295,6 @@ def change_smoothers(ml, presmoother, postsmoother):
     for i in range(mid_len, len(ml.levels[:-1])):
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
-
 
 
 def rho_D_inv_A(A):
@@ -457,8 +460,9 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     return smoother
 
 
-def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None, subdomain_ptr=None,
-                  inv_subblock=None, inv_subblock_ptr=None, sweep=DEFAULT_SWEEP):
+def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
+                  subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None,
+                  sweep=DEFAULT_SWEEP):
 
     matrix_asformat(lvl, 'A', 'csr')
     lvl.Acsr.sort_indices()
@@ -467,14 +471,16 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None, subdomain_ptr=N
                                       inv_subblock, inv_subblock_ptr)
 
     def smoother(A, x, b):
-        relaxation.schwarz(lvl.Acsr, x, b, iterations=iterations, subdomain=subdomain,
+        relaxation.schwarz(lvl.Acsr, x, b, iterations=iterations,
+                           subdomain=subdomain,
                            subdomain_ptr=subdomain_ptr,
                            inv_subblock=inv_subblock,
                            inv_subblock_ptr=inv_subblock_ptr, sweep=sweep)
     return smoother
 
 
-def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
+def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
+                                 sweep=DEFAULT_SWEEP):
     # Use the overlapping regions defined by strength of connection matrix C
     # for the overlapping Schwarz method
     if not hasattr(lvl, 'C'):
@@ -519,7 +525,8 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
         return smoother
 
 
-def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
+def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
+                             sweep=DEFAULT_SWEEP,
                              Dinv=None, blocksize=None):
     # Determine Blocksize
     if blocksize is None and Dinv is None:

@@ -30,32 +30,41 @@ methods2 = [('gauss_seidel', 'richardson'),
             (None, ['cg', 'cgnr', 'cgne'])]
 
 # Symmetric smoothing schemes
-methods3 = [ [[('gauss_seidel', {'sweep': 'forward'}), None],
-              [('gauss_seidel', {'sweep': 'backward'}), None]],
-             [[('gauss_seidel_nr', {'sweep': 'backward'}), 'jacobi'],
-              [('gauss_seidel_nr', {'sweep': 'forward'}), 'jacobi']],
-             [[('jacobi', {'iterations': 2}), ('jacobi', {'iterations': 1})],
-              [('jacobi', {'iterations': 2}), ('jacobi', {'iterations': 1})]],
-             [[('gauss_seidel_ne', {'sweep': 'forward'}), None],
-              [('gauss_seidel_ne', {'sweep': 'backward'}), None]],
-             [[('block_gauss_seidel', {'sweep': 'backward'}), 'richardson'],
-              [('block_gauss_seidel', {'sweep': 'forward'}), 'richardson']],
-             [[('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})],
-              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]]]
+methods3 = [[[('gauss_seidel', {'sweep': 'forward'}), None],
+             [('gauss_seidel', {'sweep': 'backward'}), None]],
+            [[('gauss_seidel_nr', {'sweep': 'backward'}), 'jacobi'],
+             [('gauss_seidel_nr', {'sweep': 'forward'}), 'jacobi']],
+            [[('jacobi', {'iterations': 2}), ('jacobi', {'iterations': 1})],
+             [('jacobi', {'iterations': 2}), ('jacobi', {'iterations': 1})]],
+            [[('gauss_seidel_ne', {'sweep': 'forward'}), None],
+             [('gauss_seidel_ne', {'sweep': 'backward'}), None]],
+            [[('block_gauss_seidel', {'sweep': 'backward'}), 'richardson'],
+             [('block_gauss_seidel', {'sweep': 'forward'}), 'richardson']],
+            [[('jacobi_ne', {'iterations': 2}),
+              ('block_jacobi', {'iterations': 1})],
+             [('jacobi_ne', {'iterations': 2}),
+              ('block_jacobi', {'iterations': 1})]]]
 
 # Non-symmetric smoothing schemes
-methods4 = [ [[('gauss_seidel', {'sweep': 'forward'}), None],
-              [('gauss_seidel', {'sweep': 'forward'}), None]],
-             [[('gauss_seidel_nr', {'sweep': 'symmetric'}), 'jacobi'],
-              [('gauss_seidel_nr', {'sweep': 'backward'}), 'jacobi']],
-             [[('jacobi', {'iterations': 2}), ('richardson', {'iterations': 1})],
-              [('jacobi', {'iterations': 2}), ('richardson', {'iterations': 2})]],
-             [[('gauss_seidel_ne', {'sweep': 'backward'}), None],
-              [('gauss_seidel_ne', {'sweep': 'backward'}), None]],
-             [[('block_gauss_seidel', {'sweep': 'backward'}), ('jacobi', {'iterations': 1})],
-              [('block_gauss_seidel', {'sweep': 'forward'}), ('jacobi', {'iterations': 2})]],
-             [[('jacobi_ne', {'iterations': 1}), ('block_jacobi', {'iterations': 1})],
-              [('jacobi_ne', {'iterations': 2}), ('block_jacobi', {'iterations': 1})]]]
+methods4 = [[[('gauss_seidel', {'sweep': 'forward'}), None],
+             [('gauss_seidel', {'sweep': 'forward'}), None]],
+            [[('gauss_seidel_nr', {'sweep': 'symmetric'}), 'jacobi'],
+             [('gauss_seidel_nr', {'sweep': 'backward'}), 'jacobi']],
+            [[('jacobi', {'iterations': 2}),
+              ('richardson', {'iterations': 1})],
+             [('jacobi', {'iterations': 2}),
+              ('richardson', {'iterations': 2})]],
+            [[('gauss_seidel_ne', {'sweep': 'backward'}), None],
+             [('gauss_seidel_ne', {'sweep': 'backward'}), None]],
+            [[('block_gauss_seidel', {'sweep': 'backward'}),
+              ('jacobi', {'iterations': 1})],
+             [('block_gauss_seidel', {'sweep': 'forward'}),
+              ('jacobi', {'iterations': 2})]],
+            [[('jacobi_ne', {'iterations': 1}),
+              ('block_jacobi', {'iterations': 1})],
+             [('jacobi_ne', {'iterations': 2}),
+              ('block_jacobi', {'iterations': 1})]]]
+
 
 class TestSmoothing(TestCase):
     def test_solver_parameters(self):
