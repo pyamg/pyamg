@@ -1,11 +1,12 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D
 """
 
+
+__all__ = ['linear_elasticity', 'linear_elasticity_p1']
+
 import numpy as np
 from scipy.linalg import inv, det
 from scipy.sparse import coo_matrix, bsr_matrix
-
-__all__ = ['linear_elasticity', 'linear_elasticity_p1']
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
@@ -96,21 +97,21 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
 
     nodes = np.arange((X+1)*(Y+1)).reshape(X+1, Y+1)
     LL = nodes[:-1, :-1]
-    K = (2*LL).repeat(K.size).reshape(-1, 8, 8)
-    J = K.copy()
-    K += np.tile([0, 1, 2, 3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8, 1))
+    I = (2*LL).repeat(K.size).reshape(-1, 8, 8)
+    J = I.copy()
+    I += np.tile([0, 1, 2, 3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8, 1))
     J += np.tile([0, 1, 2, 3, 2*X + 4, 2*X + 5, 2*X + 2, 2*X + 3], (8, 1)).T
     V = np.tile(K, (X*Y, 1))
 
-    K = np.ravel(K)
+    I = np.ravel(I)
     J = np.ravel(J)
     V = np.ravel(V)
 
     # sum duplicates
-    A = coo_matrix((V, (K, J)), shape=(pts.size, pts.size)).tocsr()
+    A = coo_matrix((V, (I, J)), shape=(pts.size, pts.size)).tocsr()
     A = A.tobsr(blocksize=(2, 2))
 
-    del K, J, V, LL, nodes
+    del I, J, V, LL, nodes
 
     B = np.zeros((2 * (X+1)*(Y+1), 3))
     B[0::2, 0] = 1
