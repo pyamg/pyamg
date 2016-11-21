@@ -5,8 +5,8 @@ from scipy import rand
 from scipy.sparse import csr_matrix, coo_matrix
 
 from pyamg.gallery import poisson, load_example
-from pyamg.graph import maximal_independent_set, vertex_coloring, bellman_ford,\
-    lloyd_cluster, connected_components, max_value
+from pyamg.graph import maximal_independent_set, vertex_coloring,\
+    bellman_ford, lloyd_cluster, connected_components, max_value
 from pyamg import amg_core
 
 from numpy.testing import TestCase, assert_equal

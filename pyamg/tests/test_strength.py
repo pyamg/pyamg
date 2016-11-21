@@ -706,9 +706,9 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     Atilde.data = np.array(real(Atilde.data), dtype=float)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    I = scipy.sparse.eye(dimen, dimen, format="csr")
-    I.data -= Atilde.diagonal()
-    Atilde = Atilde + I
+    Id = scipy.sparse.eye(dimen, dimen, format="csr")
+    Id.data -= Atilde.diagonal()
+    Atilde = Atilde + Id
 
     # If converted BSR to CSR we return amalgamated matrix with the minimum
     # nonzero for each block making up the nonzeros of Atilde
