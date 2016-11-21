@@ -381,15 +381,15 @@ class multilevel_solver:
         if accel is not None:
 
             # Check for symmetric smoothing scheme when using CG
-            if (accel is 'cg') and (self.symmetric_smoothing == False):
-                warn('Incompatible non-symmetric multigrid preconditioner detected, '
-                     'due to presmoother/postsmoother combination. CG requires SPD '
-                     'preconditioner, not just SPD matrix.')
+            if (accel is 'cg') and (not self.symmetric_smoothing):
+                warn('Incompatible non-symmetric multigrid preconditioner '
+                     'detected, due to presmoother/postsmoother combination. '
+                     'CG requires SPD preconditioner, not just SPD matrix.')
 
             # Check for AMLI compatability
             if (accel != 'fgmres') and (cycle == 'AMLI'):
-                raise ValueError('AMLI cycles require acceleration (accel) \
-                        to be fgmres, or no acceleration')
+                raise ValueError('AMLI cycles require acceleration (accel) '
+                                 'to be fgmres, or no acceleration')
 
             # py23 compatibility:
             try:
@@ -524,7 +524,7 @@ class multilevel_solver:
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
                 nAMLI = 2
-                Ac = self.levels[lvl+1].A
+                Ac = self.levels[lvl + 1].A
                 p = np.zeros((nAMLI, coarse_b.shape[0]), dtype=coarse_b.dtype)
                 beta = np.zeros((nAMLI, nAMLI), dtype=coarse_b.dtype)
                 for k in range(nAMLI):
@@ -537,18 +537,18 @@ class multilevel_solver:
                     for j in range(k):  # loops from j = 0...(k-1)
                         beta[k, j] = np.inner(p[j, :].conj(), Ac * p[k, :]) /\
                             np.inner(p[j, :].conj(), Ac * p[j, :])
-                        p[k, :] -= beta[k, j]*p[j, :]
+                        p[k, :] -= beta[k, j] * p[j, :]
 
                     # Compute step size
-                    Ap = Ac*p[k, :]
+                    Ap = Ac * p[k, :]
                     alpha = np.inner(p[k, :].conj(), np.ravel(coarse_b)) /\
                         np.inner(p[k, :].conj(), Ap)
 
                     # Update solution
-                    coarse_x += alpha*p[k, :].reshape(coarse_x.shape)
+                    coarse_x += alpha * p[k, :].reshape(coarse_x.shape)
 
                     # Update residual
-                    coarse_b -= alpha*Ap.reshape(coarse_b.shape)
+                    coarse_b -= alpha * Ap.reshape(coarse_b.shape)
             else:
                 raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
