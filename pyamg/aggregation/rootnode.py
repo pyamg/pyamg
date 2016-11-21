@@ -36,7 +36,7 @@ def rootnode_solver(A, B=None, BH=None,
                     improve_candidates=('block_gauss_seidel',
                                         {'sweep': 'symmetric',
                                          'iterations': 4}),
-                    max_levels = 10, max_coarse = 10,
+                    max_levels=10, max_coarse=10,
                     diagonal_dominance=False, keep=False, **kwargs):
     """
     Create a multilevel solver using root-node based Smoothed Aggregation (SA).
@@ -66,8 +66,8 @@ def rootnode_solver(A, B=None, BH=None,
         the same
         Note that this flag does not denote definiteness of the operator.
     strength : {list} : default
-        ['symmetric', 'classical', 'evolution', 'algebraic_distance', 'affinity',
-            ('predefined', {'C' : csr_matrix}), None]
+        ['symmetric', 'classical', 'evolution', 'algebraic_distance',
+            'affinity', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,

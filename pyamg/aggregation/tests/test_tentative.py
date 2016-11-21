@@ -41,10 +41,12 @@ class TestFitCandidates(TestCase):
         # two candidates, small norms
         self.cases.append((
             csr_matrix((np.ones(4), np.array([0, 0, 1, 1]), np.arange(5)),
-                       shape=(4, 2)), np.vstack((np.ones(4), 1e-20 * np.arange(4))).T))
+                       shape=(4, 2)),
+            np.vstack((np.ones(4), 1e-20 * np.arange(4))).T))
         self.cases.append((
             csr_matrix((np.ones(4), np.array([0, 0, 1, 1]), np.arange(5)),
-                       shape=(4, 2)), 1e-20 * np.vstack((np.ones(4), np.arange(4))).T))
+                       shape=(4, 2)),
+            1e-20 * np.vstack((np.ones(4), np.arange(4))).T))
 
         # block aggregates, one candidate
         self.cases.append((
@@ -66,7 +68,8 @@ class TestFitCandidates(TestCase):
                        shape=(3, 2)), np.vstack((np.ones(9), np.arange(9))).T))
         self.cases.append((
             csr_matrix((np.ones(5), np.array([2, 0, 2, 1, 1]), np.arange(6)),
-                       shape=(5, 3)), np.vstack((np.ones(10), np.arange(10))).T))
+                       shape=(5, 3)),
+            np.vstack((np.ones(10), np.arange(10))).T))
 
         # tests where AggOp excludes some dofs
         # one candidate

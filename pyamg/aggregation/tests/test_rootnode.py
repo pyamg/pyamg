@@ -219,7 +219,8 @@ class TestSolverPerformance(TestCase):
         x = sp.rand(A.shape[0])
         b = sp.rand(A.shape[0])
 
-        D = diag_sparse(1.0 / np.sqrt(10**(12 * sp.rand(A.shape[0]) - 6))).tocsr()
+        D = diag_sparse(1.0 / np.sqrt(10**(12 * sp.rand(A.shape[0]) - 6)))
+        D = D.tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
         # DAD = D * A * D
@@ -295,7 +296,7 @@ class TestSolverPerformance(TestCase):
                      'jacobi', 'block_jacobi']
         Bs = [np.ones((n, 1)),
               sp.hstack((np.ones((n, 1)),
-                      np.arange(1, n + 1, dtype='float').reshape(-1, 1)))]
+                         np.arange(1, n + 1, dtype='float').reshape(-1, 1)))]
 
         for smoother in smoothers:
             for B in Bs:

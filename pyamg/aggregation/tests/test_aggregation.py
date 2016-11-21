@@ -227,7 +227,8 @@ class TestSolverPerformance(TestCase):
         x = sp.rand(A.shape[0])
         b = sp.rand(A.shape[0])
 
-        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * sp.rand(A.shape[0]) - 6))).tocsr()
+        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * sp.rand(A.shape[0]) - 6)))
+        D = D.tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
         # DAD = D * A * D
@@ -405,8 +406,10 @@ class TestSolverPerformance(TestCase):
         for coarse1, coarse2 in coarse_solver_pairs:
             r1 = []
             r2 = []
-            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1, max_coarse=500)
-            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2, max_coarse=500)
+            sa1 = smoothed_aggregation_solver(A, coarse_solver=coarse1,
+                                              max_coarse=500)
+            sa2 = smoothed_aggregation_solver(A, coarse_solver=coarse2,
+                                              max_coarse=500)
             x1 = sa1.solve(b, residuals=r1)
             x2 = sa2.solve(b, residuals=r2)
             del x1, x2
@@ -424,7 +427,7 @@ class TestSolverPerformance(TestCase):
         for AA in cases:
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
             assert(np.abs(np.ravel(sa_old.levels[-1].A.todense() -
-                             sa_new.levels[-1].A.todense())).max() < 0.01)
+                          sa_new.levels[-1].A.todense())).max() < 0.01)
             sa_old = sa_new
 
 

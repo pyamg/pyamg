@@ -492,17 +492,17 @@ class TestEnergyMin(TestCase):
                 assert_almost_equal((P*Bc)[mask, :], Bf_H[mask, :])
 
                 # P should be the identity at Cpts
-                I = eye(T.shape[1], T.shape[1], format='csr', dtype=T.dtype)
+                I1 = eye(T.shape[1], T.shape[1], format='csr', dtype=T.dtype)
                 I2 = P[Cpts, :]
-                assert_almost_equal(I.data, I2.data)
-                assert_equal(I.indptr, I2.indptr)
-                assert_equal(I.indices, I2.indices)
+                assert_almost_equal(I1.data, I2.data)
+                assert_equal(I1.indptr, I2.indptr)
+                assert_equal(I1.indices, I2.indices)
 
                 # T should be the identity at Cpts
                 I2 = T[Cpts, :]
-                assert_almost_equal(I.data, I2.data)
-                assert_equal(I.indptr, I2.indptr)
-                assert_equal(I.indices, I2.indices)
+                assert_almost_equal(I1.data, I2.data)
+                assert_equal(I1.indptr, I2.indptr)
+                assert_equal(I1.indices, I2.indices)
 
     def test_postfilter(self):
         """Check that using postfilter reduces NNZ in P"""
