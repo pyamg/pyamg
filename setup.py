@@ -22,6 +22,7 @@ import io
 import version_tools
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.command.test import test as TestCommand
 
 version = '3.1.1'
 isreleased = False
@@ -45,6 +46,18 @@ class build_ext(_build_ext):
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
         self.include_dirs.append(numpy.get_include())
+
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        pytest.main(self.test_args)
 
 
 ext_modules = [Extension('pyamg.amg_core._amg_core',
@@ -73,11 +86,12 @@ setup(
     zip_safe=False,
     #
     ext_modules=ext_modules,
-    cmdclass={'build_ext': build_ext},
+    cmdclass={'build_ext': build_ext, 'test': PyTest},
     setup_requires=['numpy'],
     #
-    test_suite='tests',
-    tests_require=['nose'],
+    # test_suite='tests',
+    # tests_require=['nose'],
+    tests_require=['pytest'],
     #
     classifiers=[
         "Development Status :: 5 - Production/Stable",

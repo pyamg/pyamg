@@ -9,3 +9,5 @@ MANIFEST
 .coverage
 .DS_Store
 pyamg.egg-info/*
+.eggs
+.cache
