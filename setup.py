@@ -89,8 +89,6 @@ setup(
     cmdclass={'build_ext': build_ext, 'test': PyTest},
     setup_requires=['numpy'],
     #
-    # test_suite='tests',
-    # tests_require=['nose'],
     tests_require=['pytest'],
     #
     classifiers=[

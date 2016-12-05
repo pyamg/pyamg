@@ -56,10 +56,11 @@ def test(verbose=False):
     import os
     import pytest
 
-    print("Python version: %s" % sys.version)
-    print("pytest version:  %s" % pytest.__version__)
-    print("scipy  version:  %s" % sp.__version__)
-    print("numpy  version:  %s" % np.__version__)
+    print("Python version: %s" % sys.version.replace('\n', ''))
+    print("pytest version: %s" % pytest.__version__)
+    print("scipy  version: %s" % sp.__version__)
+    print("numpy  version: %s" % np.__version__)
+    print("pyamg  version: %s" % __version__)
 
     pyamgdir = __path__[0]
     args = [pyamgdir]
