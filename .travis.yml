@@ -18,14 +18,15 @@ before_install:
 install:
   - conda create -n testenv --yes python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
-  - conda install --yes pip numpy scipy nose
+  - conda install --yes pip numpy scipy
+  - pip install pytest pytest-cov
   - pip install python-coveralls
   - pip install .
 
 script:
-  - mkdir cov
-  - cd cov
-  - nosetests --with-coverage --cover-package=pyamg --logging-level=INFO pyamg
+  - pytest --cov=.
 
 after_success:
-  - coveralls
+  - if [[ $ENV == python=3.4* ]]; then
+        coveralls;
+    fi
