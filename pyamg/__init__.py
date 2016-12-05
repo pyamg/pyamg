@@ -63,6 +63,8 @@ def test(verbose=False):
 
     pyamgdir = os.path.dirname(os.path.abspath(__file__))
     args = [pyamgdir]
+    print(pyamgdir)
+    print(__path__[0])
 
     # run py.test
     try:
