@@ -12,7 +12,4 @@ from .diffusion import *
 from .random_sparse import *
 from .demo import demo
 
-from numpy.testing import Tester
-
 __all__ = [s for s in dir() if not s.startswith('_')]
-test = Tester().test
