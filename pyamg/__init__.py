@@ -15,8 +15,6 @@ from .blackbox import solve, solver, solver_configuration
 
 import warnings
 
-from numpy.testing import Tester
-
 __all__ = [__git_revision__, __version__,
            coarse_grid_solver, multilevel_solver,
            ruge_stuben_solver, smoothed_aggregation_solver, rootnode_solver,
@@ -30,8 +28,7 @@ __doc__ += """
 Utility tools
 -------------
 
-  test        --- Run pyamg unittests (requires nose unittest framework)
-  bench       --- Run pyamg benchmarks (requires nose unittest framework)
+  test        --- Run pyamg unittests (requires pytest)
   __version__ --- pyamg version string
 
 """
@@ -53,20 +50,23 @@ if spver[0] < spmin[0] or (spver[0] >= spmin[0] and spver[1] < spmin[1]):
                   "PyAMG (detected version %s)" % (spmin, spver),
                   UserWarning)
 
-# test = Tester().test
-bench = Tester().bench
-
 
 def test(verbose=False):
+    import sys
     import os
     import pytest
 
-    pyamgdir = os.path.dirname(os.path.abspath(__file__))
-    args = [pyamgdir]
-    print(pyamgdir)
-    print(__path__[0])
+    print("Python version: %s" % sys.version)
+    print("pytest version:  %s" % pytest.__version__)
+    print("scipy  version:  %s" % sp.__version__)
+    print("numpy  version:  %s" % np.__version__)
 
-    # run py.test
+    pyamgdir = __path__[0]
+    args = [pyamgdir]
+
+    if verbose:
+        args.append([--verbose])
+
     try:
         return pytest.main(args)
     except SystemExit as e:
