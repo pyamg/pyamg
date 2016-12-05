@@ -53,5 +53,19 @@ if spver[0] < spmin[0] or (spver[0] >= spmin[0] and spver[1] < spmin[1]):
                   "PyAMG (detected version %s)" % (spmin, spver),
                   UserWarning)
 
-test = Tester().test
+# test = Tester().test
 bench = Tester().bench
+
+
+def test(verbose=False):
+    import os
+    import pytest
+
+    pyamgdir = os.path.dirname(os.path.abspath(__file__))
+    args = [pyamgdir]
+
+    # run py.test
+    try:
+        return pytest.main(args)
+    except SystemExit as e:
+        return e.code
