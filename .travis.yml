@@ -21,12 +21,12 @@ install:
   - conda install --yes pip numpy scipy
   - pip install pytest pytest-cov
   - pip install python-coveralls
-  - pip install .
+  - pip install -e .
 
 script:
-  - pytest --cov=.
+  - pytest --cov=. --cov-report=term
 
 after_success:
-  - if [[ $ENV == python=3.4* ]]; then
+  - if [[ $ENV == python=3.5* ]]; then
         coveralls;
     fi
