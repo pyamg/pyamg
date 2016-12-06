@@ -12,7 +12,7 @@ from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     gauss_seidel_nr
 from pyamg.util.utils import get_block_diag
 
-from numpy.testing import TestCase, assert_raises, assert_almost_equal
+from numpy.testing import TestCase, assert_almost_equal
 
 # Ignore efficiency warnings
 import warnings
@@ -51,15 +51,17 @@ class TestCommonRelaxation(TestCase):
 
     def test_strided_x(self):
         """non-contiguous x should raise errors"""
+        import pytest
 
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b = arange(A.shape[0], dtype='float64')
             x = zeros(2*A.shape[0])[::2]
-            assert_raises(ValueError, method, A, x, b, *args, **kwargs)
+            pytest.raises(ValueError, method, A, x, b, *args, **kwargs)
 
     def test_mixed_precision(self):
         """mixed precision arguments should raise errors"""
+        import pytest
 
         for method, args, kwargs in self.cases:
             A32 = poisson((4,), format='csr').astype('float32')
@@ -70,15 +72,16 @@ class TestCommonRelaxation(TestCase):
             b64 = arange(A64.shape[0], dtype='float64')
             x64 = 0*b64
 
-            assert_raises(TypeError, method, A32, x32, b64, *args, **kwargs)
-            assert_raises(TypeError, method, A32, x64, b32, *args, **kwargs)
-            assert_raises(TypeError, method, A64, x32, b32, *args, **kwargs)
-            assert_raises(TypeError, method, A32, x64, b64, *args, **kwargs)
-            assert_raises(TypeError, method, A64, x64, b32, *args, **kwargs)
-            assert_raises(TypeError, method, A64, x32, b64, *args, **kwargs)
+            pytest.raises(TypeError, method, A32, x32, b64, *args, **kwargs)
+            pytest.raises(TypeError, method, A32, x64, b32, *args, **kwargs)
+            pytest.raises(TypeError, method, A64, x32, b32, *args, **kwargs)
+            pytest.raises(TypeError, method, A32, x64, b64, *args, **kwargs)
+            pytest.raises(TypeError, method, A64, x64, b32, *args, **kwargs)
+            pytest.raises(TypeError, method, A64, x32, b64, *args, **kwargs)
 
     def test_vector_sizes(self):
         """incorrect vector sizes should raise errors"""
+        import pytest
 
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
@@ -87,11 +90,12 @@ class TestCommonRelaxation(TestCase):
             b5 = arange(5, dtype='float64')
             x5 = 0*b5
 
-            assert_raises(ValueError, method, A, x4, b5, *args, **kwargs)
-            assert_raises(ValueError, method, A, x5, b4, *args, **kwargs)
-            assert_raises(ValueError, method, A, x5, b5, *args, **kwargs)
+            pytest.raises(ValueError, method, A, x4, b5, *args, **kwargs)
+            pytest.raises(ValueError, method, A, x5, b4, *args, **kwargs)
+            pytest.raises(ValueError, method, A, x5, b5, *args, **kwargs)
 
     def test_non_square_matrix(self):
+        import pytest
 
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
@@ -99,7 +103,7 @@ class TestCommonRelaxation(TestCase):
             b = arange(A.shape[0], dtype='float64')
             x = ones(A.shape[1], dtype='float64')
 
-            assert_raises(ValueError, method, A, x, b, *args, **kwargs)
+            pytest.raises(ValueError, method, A, x, b, *args, **kwargs)
 
 
 class TestRelaxation(TestCase):

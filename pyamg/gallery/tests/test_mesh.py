@@ -1,11 +1,12 @@
 from pyamg.gallery.mesh import regular_triangle_mesh
 
-from numpy.testing import TestCase, assert_equal, assert_raises
+from numpy.testing import TestCase, assert_equal
 
 
 class TestRegularTriangleMesh(TestCase):
     def test_1x1(self):
-        assert_raises(ValueError, regular_triangle_mesh, 1, 1)
+        import pytest
+        pytest.raises(ValueError, regular_triangle_mesh, 1, 1)
 
     def test_2x2(self):
         Vert, E2V = regular_triangle_mesh(2, 2)
