@@ -5,8 +5,12 @@ from numpy.testing import TestCase, assert_equal
 
 class TestRegularTriangleMesh(TestCase):
     def test_1x1(self):
-        import pytest
-        pytest.raises(ValueError, regular_triangle_mesh, 1, 1)
+        try:
+            regular_triangle_mesh(1, 0)
+        except ValueError:
+            pass
+        else:
+            raise Exception("regular_triangle_mesh(1,0) should throw an error")
 
     def test_2x2(self):
         Vert, E2V = regular_triangle_mesh(2, 2)
