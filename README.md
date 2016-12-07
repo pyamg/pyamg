@@ -1,5 +1,5 @@
 [![Build Status](https://img.shields.io/travis/pyamg/pyamg/master.svg?style=flat-square)](https://travis-ci.org/pyamg/pyamg)
-[![Coverage Status](https://img.shields.io/coveralls/pyamg/pyamg/master.svg?style=flat-square)](https://coveralls.io/r/pyamg/pyamg)
+[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/setuptools.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://img.shields.io/pypi/dm/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 
