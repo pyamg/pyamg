@@ -27,6 +27,4 @@ script:
   - pytest --cov=. --cov-report=term
 
 after_success:
-  - if [[ $ENV == python=3.5* ]]; then
-        coveralls;
-    fi
+  - coveralls
