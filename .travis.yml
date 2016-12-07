@@ -20,11 +20,11 @@ install:
   - source activate testenv
   - conda install --yes pip numpy scipy
   - pip install pytest pytest-cov
-  - pip install python-coveralls
+  - pip install codecov
   - pip install -e .
 
 script:
   - pytest --cov=. --cov-report=term
 
 after_success:
-  - coveralls
+  - codecov
