@@ -27,4 +27,6 @@ script:
   - pytest --cov=. --cov-report=term
 
 after_success:
-  - codecov
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then
+        codecov;
+    fi
