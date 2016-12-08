@@ -1,5 +1,5 @@
 [![Build Status](https://img.shields.io/travis/pyamg/pyamg/master.svg?style=flat-square)](https://travis-ci.org/pyamg/pyamg)
-[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/setuptools.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
+[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/master.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![Downloads](https://img.shields.io/pypi/dm/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 
@@ -15,12 +15,12 @@ or
 
 # Introduction
 
-PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.  
+PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.
 
 ![](Docs/logo/PyAMG_logo.png)
 ![](Docs/logo/CS_logo.png)
 
-PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://www.cs.uiuc.edu/homes/lukeo/)**, and **[Jacob Schroder](http://grandmaster.colorado.edu/~jacob/index.html)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
+PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://lukeo.cs.illinois.edu)**, and **[Jacob Schroder](http://people.llnl.gov/schroder2)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
 
 
 
@@ -38,7 +38,7 @@ PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, *
 
 # Getting Help
 
-Contact the [pyamg-user group](http://groups.google.com/group/pyamg-user)
+Creat an [issue](https://github.com/pyamg/pyamg/issues).
 
 Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [Examples](https://github.com/pyamg/pyamg/wiki/Examples) (for instance  the [0STARTHERE](https://github.com/pyamg/pyamg-examples/blob/master/0STARTHERE/demo.py) example)
 
@@ -65,33 +65,34 @@ The predominant portion of PyAMG is written in Python with a smaller amount of s
 PyAMG is easy to use!  The following code constructs a two-dimensional Poisson problem and solves the resulting linear system with Classical AMG.
 
 ````python
-from scipy import *
-from scipy.linalg import *
-from pyamg import *
-from pyamg.gallery import *
-A = poisson((500,500), format='csr')     # 2D Poisson problem on 500x500 grid
-ml = ruge_stuben_solver(A)               # construct the multigrid hierarchy
-print ml                                 # print hierarchy information
-b = rand(A.shape[0])                     # pick a random right hand side
-x = ml.solve(b, tol=1e-10)               # solve Ax=b to a tolerance of 1e-8
-print "residual norm is", norm(b - A*x)  # compute norm of residual vector
+import pyamg
+import numpy as np
+A = pyamg.gallery.poisson((500,500), format='csr')  # 2D Poisson problem on 500x500 grid
+ml = pyamg.ruge_stuben_solver(A)                    # construct the multigrid hierarchy
+print(ml)                                           # print hierarchy information
+b = np.random.rand(A.shape[0])                      # pick a random right hand side
+x = ml.solve(b, tol=1e-10)                          # solve Ax=b to a tolerance of 1e-8
+print("residual: ", np.linalg.norm(b-A*x))          # compute norm of residual vector
 ````
 
 Program output:
 
 <pre>
-    multilevel_solver
-    Number of Levels:     6
-    Operator Complexity:  2.198
-    Grid Complexity:      1.666
-    Coarse Solver:        'pinv2'
-      level   unknowns     nonzeros
-        0       250000      1248000 [45.50%]
-        1       125000      1121002 [40.87%]
-        2        31252       280662 [10.23%]
-        3         7825        70657 [ 2.58%]
-        4         1937        17973 [ 0.66%]
-        5          484         4728 [ 0.17%]
+multilevel_solver
+Number of Levels:     9
+Operator Complexity:  2.199
+Grid Complexity:      1.667
+Coarse Solver:        'pinv2'
+  level   unknowns     nonzeros
+    0       250000      1248000 [45.47%]
+    1       125000      1121002 [40.84%]
+    2        31252       280662 [10.23%]
+    3         7825        70657 [ 2.57%]
+    4         1937        17971 [ 0.65%]
+    5          483         4725 [ 0.17%]
+    6          124         1352 [ 0.05%]
+    7           29          293 [ 0.01%]
+    8            7           41 [ 0.00%]
 
-    residual norm is 1.86112114946e-06
+residual:  1.24748994988e-08
 </pre>
