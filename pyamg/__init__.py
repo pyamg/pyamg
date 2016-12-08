@@ -66,7 +66,9 @@ def test(verbose=False):
     args = [pyamgdir]
 
     if verbose:
-        args.append([--verbose])
+        args += ['--verbose']
+    else:
+        args += ['--quiet']
 
     try:
         return pytest.main(args)
