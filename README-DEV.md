@@ -8,7 +8,11 @@ Release Steps:
     - git tag -a v3.2.0 -m "version 3.2.0"
     - git push --tags
     - on github under release: draft new release (with the new tag): https://github.com/blog/1547-release-your-software
+    - release title: v3.2.0
+    - add summary of changes to the notes
 - now pypi:
-    - python clean --all
-    - python setup.py sdist bdist_wheel
+    - `git clean -xdf`
+    - `python2 setup.py sdist bdist_wheel`
+    - `python3 setup.py sdist bdist_wheel`
+    - `twine upload --skip-existing dist/*` (no register needed)
 - change `isreleased` to False in `setup.py`
