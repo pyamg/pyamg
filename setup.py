@@ -125,8 +125,8 @@ if not release:
 
 
 fullversion, git_revision, git_branch = set_version_info(version, isreleased)
-version_tools.write_version_py(version, fullversion, git_revision, git_branch,
-                               isreleased, filename='pyamg/version.py')
+write_version_py(version, fullversion, git_revision, git_branch, isreleased,
+                 filename='pyamg/version.py')
 
 
 # identify extension modules
