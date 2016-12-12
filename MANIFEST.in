@@ -1,0 +1,3 @@
+recursive-include pyamg *
+include *.rst *.py
+global-exclude *.pyc
