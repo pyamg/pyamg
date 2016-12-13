@@ -4,3 +4,4 @@ include LICENSE.txt
 include MANIFEST.in
 include README.md
 include requirements.txt
+include pyamg/amg_core/*.h

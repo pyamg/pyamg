@@ -66,24 +66,20 @@ def git_version():
         GIT_REVISION = 'Unknown'
         GIT_BRANCH = ''
 
-    return GIT_REVISION, GIT_BRANCH
+    return GIT_REVISION
 
 
 def set_version_info(VERSION, ISRELEASED):
-    # Adding the git rev number needs to be done inside write_version_py(),
-    # otherwise the import of numpy.version messes up the build under Python 3.
-
     if os.path.exists('.git'):
-        GIT_REVISION, GIT_BRANCH = git_version()
+        GIT_REVISION = git_version()
     elif os.path.exists('pyamg/version.py'):
-        # must be a source distribution, use existing version file
         try:
-            from pyamg.version import git_revision as GIT_REVISION
-            from pyamg.version import git_branch as GIT_BRANCH
+            import imp
+            version = imp.load_source("pyamg.version", "pyamg/version.py")
+            GIT_REVISION = version.git_revision
+            GIT_REVISION = ''
         except ImportError:
-            raise ImportError('Unable to import git_revision. Try removing '
-                              'pyamg/version.py and the build directory '
-                              'before building.')
+            raise ImportError('Unable to read version information.')
     else:
         GIT_REVISION = 'Unknown'
         GIT_BRANCH = ''
@@ -92,13 +88,12 @@ def set_version_info(VERSION, ISRELEASED):
     if not ISRELEASED:
         FULLVERSION += '.dev0' + '+' + GIT_REVISION[:7]
 
-    return FULLVERSION, GIT_REVISION, GIT_BRANCH
+    return FULLVERSION, GIT_REVISION
 
 
 def write_version_py(VERSION,
                      FULLVERSION,
                      GIT_REVISION,
-                     GIT_BRANCH,
                      ISRELEASED,
                      filename='pyamg/version.py'):
     cnt = """
@@ -107,7 +102,6 @@ short_version = '%(version)s'
 version = '%(version)s'
 full_version = '%(full_version)s'
 git_revision = '%(git_revision)s'
-git_branch = '%(git_branch)s'
 release = %(isrelease)s
 if not release:
     version = full_version
@@ -118,14 +112,13 @@ if not release:
         a.write(cnt % {'version': VERSION,
                        'full_version': FULLVERSION,
                        'git_revision': GIT_REVISION,
-                       'git_branch': GIT_BRANCH,
                        'isrelease': str(ISRELEASED)})
     finally:
         a.close()
 
 
-fullversion, git_revision, git_branch = set_version_info(version, isreleased)
-write_version_py(version, fullversion, git_revision, git_branch, isreleased,
+fullversion, git_revision = set_version_info(version, isreleased)
+write_version_py(version, fullversion, git_revision, isreleased,
                  filename='pyamg/version.py')
 
 
