@@ -77,7 +77,6 @@ def set_version_info(VERSION, ISRELEASED):
             import imp
             version = imp.load_source("pyamg.version", "pyamg/version.py")
             GIT_REVISION = version.git_revision
-            GIT_REVISION = ''
         except ImportError:
             raise ImportError('Unable to read version information.')
     else:
@@ -88,6 +87,8 @@ def set_version_info(VERSION, ISRELEASED):
     if not ISRELEASED:
         FULLVERSION += '.dev0' + '+' + GIT_REVISION[:7]
 
+    print(GIT_REVISION)
+    print(FULLVERSION)
     return FULLVERSION, GIT_REVISION
 
 
