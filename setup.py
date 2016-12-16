@@ -26,7 +26,7 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.command.test import test as TestCommand
 
-version = '3.2.0'
+version = '3.2.1'
 isreleased = False
 
 install_requires = (

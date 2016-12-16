@@ -216,7 +216,7 @@ def solver(A, config):
 
 
 def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
-          existing_solver=None, verb=True):
+          existing_solver=None, verb=True, residuals=None):
     """
     Solve the arbitrary system Ax=b with the best out-of-the box choice for a
     solver.  The matrix A can be non-Hermitian, indefinite, Hermitian
@@ -243,6 +243,10 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         to invert A, thus saving time on setup cost.
     verb : {bool}
         If True, print verbose output during runtime
+    residuals : list
+        List to contain residual norms at each iteration.
+        The preconditioned norm is used, namely
+        ||r||_M = (M r, r)^(1/2) = (r, r)^(1/2)
 
     Returns
     -------
@@ -314,14 +318,18 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     # Solve with accelerated Krylov method
     x = existing_solver.solve(b, x0=x0, accel=accel, tol=tol, maxiter=maxiter,
-                              callback=callback2)
+                              callback=callback2, residuals=residuals)
+
     if verb:
-        r0 = norm(np.ravel(b) - np.ravel(A * x0))
-        rk = norm(np.ravel(b) - np.ravel(A * x))
-        if r0 != 0.0:
-            print("  Residual reduction ||r_k||/||r_0|| = %1.2e" % (rk / r0))
-        else:
-            print("  Residuals ||r_k||, ||r_0|| = %1.2e, %1.2e" % (rk, r0))
+        r0 = b - A * x0
+        rk = b - A * x
+        M = existing_solver.aspreconditioner()
+        nr0 = np.sqrt(np.inner(np.conjugate(M*r0), r0))
+        nrk = np.sqrt(np.inner(np.conjugate(M*rk), rk))
+        print("  Residuals ||r_k||_M, ||r_0||_M = %1.2e, %1.2e" % (nrk, nr0))
+        if np.abs(nr0) > 1e-15:
+            print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"
+                  % (nrk / nr0))
 
     if return_solver:
         return (x.reshape(b.shape), existing_solver)
