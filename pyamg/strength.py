@@ -845,11 +845,6 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                        Atilde.indices, Atilde.data)
         Atilde.eliminate_zeros()
 
-    # Symmetrize
-    if symmetrize_measure:
-        Atilde = 0.5*(Atilde + Atilde.T)
-        cost[0] += Atilde.nnz / float(A.nnz)
-
     # Set diagonal to 1.0, as each point is strongly connected to itself.
     I = sparse.eye(dimen, dimen, format="csr")
     I.data -= Atilde.diagonal()
@@ -879,6 +874,11 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # Scale C by the largest magnitude entry in each row
     Atilde = scale_rows_by_largest_entry(Atilde)
     cost[0] += Atilde.nnz / float(A.nnz)
+    
+    # Symmetrize
+    if symmetrize_measure:
+        Atilde = 0.5*(Atilde + Atilde.T)
+        cost[0] += Atilde.nnz / float(A.nnz)
 
     return Atilde
 
