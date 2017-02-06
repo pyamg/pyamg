@@ -56,7 +56,6 @@ if spver[0] < spmin[0] or (spver[0] >= spmin[0] and spver[1] < spmin[1]):
 
 def test(verbose=False):
     import sys
-    import os
     import pytest
 
     print("Python version: %s" % sys.version.replace('\n', ''))
