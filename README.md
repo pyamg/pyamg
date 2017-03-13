@@ -31,8 +31,8 @@ PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, *
       author = "Bell, W. N. and Olson, L. N. and Schroder, J. B.",
       title = "{PyAMG}: Algebraic Multigrid Solvers in {Python} v3.0",
       year = "2015",
-      url = "http://www.pyamg.org",
-      note = "Release 3.0"
+      url = "https://github.com/pyamg/pyamg",
+      note = "Release 3.2"
       }
 </pre>
 
