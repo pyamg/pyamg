@@ -457,8 +457,8 @@ class multilevel_solver:
 
         A = self.levels[0].A
 
-        residuals.append(residual_norm(A, x, b))
-
+        r = b - A*x
+        residuals.append(norm(r))
         self.first_pass = True
 
         while len(residuals) <= maxiter and residuals[-1] > tol:
@@ -466,10 +466,10 @@ class multilevel_solver:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
-                self.__solve(0, x, b, cycle)
+                self.__solve(0, x, b, cycle, residual=r)
 
-            residuals.append(residual_norm(A, x, b))
-
+            r = b - A*x
+            residuals.append(norm(r))
             self.first_pass = False
 
             if callback is not None:
@@ -480,7 +480,7 @@ class multilevel_solver:
         else:
             return x
 
-    def __solve(self, lvl, x, b, cycle):
+    def __solve(self, lvl, x, b, cycle, residual=None):
         """
         Parameters
         ----------
@@ -497,13 +497,17 @@ class multilevel_solver:
             cycle = 'W',    W-cycle
             cycle = 'F',    F-cycle
             cycle = 'AMLI', AMLI-cycle
+        residual : numpy array
+            Optional residual r = b - A*x. If not passed in,
+            r is computed in the function.
         """
 
         A = self.levels[lvl].A
 
         self.levels[lvl].presmoother(A, x, b)
 
-        residual = b - A * x
+        if residual == None:
+            residual = b - A * x
 
         coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)
