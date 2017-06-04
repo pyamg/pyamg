@@ -57,25 +57,25 @@ def direct_interpolation(A, C, splitting, cost=[0]):
     C.data[:] = 1.0
     C = C.multiply(A)
 
-    Pp = np.empty_like(A.indptr)
+    P_indptr = np.empty_like(A.indptr)
 
     amg_core.rs_direct_interpolation_pass1(A.shape[0],
-                                           C.indptr, C.indices, splitting, Pp)
+                                           C.indptr, C.indices, splitting, P_indptr)
 
-    nnz = Pp[-1]
-    Pj = np.empty(nnz, dtype=Pp.dtype)
-    Px = np.empty(nnz, dtype=A.dtype)
+    nnz = P_indptr[-1]
+    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+    P_data = np.empty(nnz, dtype=A.dtype)
 
     amg_core.rs_direct_interpolation_pass2(A.shape[0],
                                            A.indptr, A.indices, A.data,
                                            C.indptr, C.indices, C.data,
                                            splitting,
-                                           Pp, Pj, Px)
+                                           P_indptr, P_colinds, P_data)
 
-    return csr_matrix((Px, Pj, Pp))
+    return csr_matrix((P_data, P_colinds, P_indptr))
 
 
-def standard_interpolation(A, C, splitting, cost=[0]):
+def standard_interpolation(A, C, splitting, theta=None, norm=None, modified=True, cost=[0]):
     """Create prolongator using standard interpolation
 
     Parameters
@@ -87,6 +87,15 @@ def standard_interpolation(A, C, splitting, cost=[0]):
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
+    theta : float in [0,1), default None
+        theta value defining strong connections in a classical AMG sense. Provide if
+        different SOC used for P than for CF-splitting; otherwise, theta = None. 
+    norm : string
+        norm used in redefining classical SOC -- TODO : list options
+    modified : bool, default True
+        Use modified classical interpolation. More robust if RS coarsening with second
+        pass is not used for CF splitting.
+    distance_two : bool, default False
 
     Returns
     -------
@@ -115,27 +124,43 @@ def standard_interpolation(A, C, splitting, cost=[0]):
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix for C')
 
+    if theta is not None:
+        if norm is None:
+            C0 = classical_strength_of_connection(A, theta=theta, block=None, norm='min', cost=cost)
+        else:
+            C0 = classical_strength_of_connection(A, theta=theta, block=None, norm=norm, cost=cost)
+    else:
+        C0 = C.copy()
+
+    # Use modified standard interpolation by ignoring strong F-connections that do
+    # not have a common C-point.
+    if modified:
+        amg_core.remove_strong_FF_connections(A.shape[0], C0.indptr, C0.indices, C0.data, splitting)
+    C0.eliminate_zeros()
+
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
     # sparsity pattern of C.
-    C = C.copy()
-    C.data[:] = 1.0
-    C = C.multiply(A)
+    C0.data[:] = 1.0
+    C0 = C0.multiply(A)
 
-    Pp = np.empty_like(A.indptr)
+    P_indptr = np.empty_like(A.indptr)
+    amg_core.rs_standard_interpolation_pass1(A.shape[0], C0.indptr,
+                                             C0.indices, splitting, P_indptr)
 
-    amg_core.rs_direct_interpolation_pass1(A.shape[0],
-                                           C.indptr, C.indices, splitting, Pp)
+    nnz = P_indptr[-1]
+    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+    P_data = np.empty(nnz, dtype=A.dtype)
 
-    nnz = Pp[-1]
-    Pj = np.empty(nnz, dtype=Pp.dtype)
-    Px = np.empty(nnz, dtype=A.dtype)
+    if modified:
+        amg_core.mod_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                                  A.data, C0.indptr, C0.indices,
+                                                  C0.data, splitting, P_indptr,
+                                                  P_colinds, P_data)
+    else:
+        amg_core.rs_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                                 A.data, C0.indptr, C0.indices,
+                                                 C0.data, splitting, P_indptr,
+                                                 P_colinds, P_data)
 
-    amg_core.rs_standard_interpolation_pass2(A.shape[0],
-                                           A.indptr, A.indices, A.data,
-                                           C.indptr, C.indices, C.data,
-                                           splitting,
-                                           Pp, Pj, Px)
-
-    return  csr_matrix((Px, Pj, Pp)) 
-
+    return  csr_matrix((P_data, P_colinds, P_indptr))
