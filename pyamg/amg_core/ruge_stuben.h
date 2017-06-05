@@ -1154,7 +1154,6 @@ void remove_strong_FF_connections(const I n_nodes,
                                         T C_data[], const int C_data_size,
                                   const I splitting[], const int splitting_size)
 {
-
     // For each F-point
     for (I row=0; row<n_nodes; row++) {
         if (splitting[row] == F_NODE) {
