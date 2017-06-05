@@ -4,7 +4,7 @@ from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -24,7 +24,8 @@ __all__ = ['ruge_stuben_solver']
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
                        CF='RS',
-                       interp='direct',
+                       interpolation='direct',
+                       restriction='galerkin',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=10, max_coarse=10, keep=False, **kwargs):
@@ -43,8 +44,11 @@ def ruge_stuben_solver(A,
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interp : {string} : default 'direct'
+    interpolation : {string} : default 'direct'
         Use direct or standard interpolation
+    restriction : {string or dict} : default 'galerkin'
+        'Galerkin' means set R := P^T for a Galerkin coarse-grid operator. Can also specify
+        an interpolation method as above, to build the restriciton operator based on A^T. 
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -118,14 +122,13 @@ def ruge_stuben_solver(A,
             mat_mat_complexity.__detailed__ = True
         del kwargs['setup_complexity']
 
-    # convert A to csr
-    if not isspmatrix_csr(A):
+    # Convert A to csr
+    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR",
-                 SparseEfficiencyWarning)
+            warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
         except:
-            raise TypeError('Argument A must have type csr_matrix, \
+            raise TypeError('Argument A must have type csr_matrix, bsr_matrix, \
                              or be convertible to csr_matrix')
     # preprocess A
     A = A.asfptype()
@@ -136,7 +139,7 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, interp, keep)
+        extend_hierarchy(levels, strength, CF, interpolation, restriction, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -144,7 +147,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, interp, keep):
+def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
     """ helper function for local methods """
 
     A = levels[-1].A
@@ -195,24 +198,56 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
-    temp_cost = [0]
-    P = direct_interpolation(A, C, splitting, temp_cost)
-
-    # Generate the interpolation matrix that maps from the coarse-grid to the
-    # fine-grid
-    temp_cost = [0]
-    fn, kwargs = unpack_arg(interp)
+    fn, kwargs = unpack_arg(interpolation)
     if fn == 'standard':
-        P = standard_interpolation(A, C, splitting, temp_cost)
+        P = standard_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'distance_two':
+        P = distance_two_interpolation(A, C, splitting, **kwargs)
     elif fn == 'direct':
-        P = direct_interpolation(A, C, splitting, temp_cost)
+        P = direct_interpolation(A, C, splitting, **kwargs)
     else:
-        raise ValueError('unknown interpolation method (%s)' % interp)
-    levels[-1].complexity['interpolate'] = temp_cost[0]
+        raise ValueError('unknown interpolation method (%s)' % interpolation)
+    levels[-1].complexity['interpolate'] = kwargs['cost'][0]
 
     # Generate the restriction matrix that maps from the fine-grid to the
-    # coarse-grid
-    R = P.T.tocsr()
+    # coarse-grid. Must make sure transpose matrices remain in CSR or BSR
+    fn, kwargs = unpack_arg(restriction)
+    if isspmatrix_csr(A):
+        if restriction == 'galerkin':
+            R = P.T.tocsr()
+        elif fn == 'standard':
+            temp_A = A.T.tocsr()
+            temp_C = C.T.tocsr()
+            P = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+        elif fn == 'distance_two':
+            temp_A = A.T.tocsr()
+            temp_C = C.T.tocsr()
+            P = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+        elif fn == 'direct':
+            temp_A = A.T.tocsr()
+            temp_C = C.T.tocsr()
+            P = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+        else:
+            raise ValueError('unknown interpolation method (%s)' % interpolation)
+    else: 
+        if restriction == 'galerkin':
+            R = P.T.tobsr()
+        elif fn == 'standard':
+            temp_A = A.T.tobsr()
+            temp_C = C.T.tocsr()
+            P = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+        elif fn == 'distance_two':
+            temp_A = A.T.tobsr()
+            temp_C = C.T.tocsr()
+            P = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+        elif fn == 'direct':
+            temp_A = A.T.tobsr()
+            temp_C = C.T.tocsr()
+            P = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+        else:
+            raise ValueError('unknown interpolation method (%s)' % interpolation)
+    
+    levels[-1].complexity['interpolate'] = kwargs['cost'][0]
 
     # Store relevant information for this level
     if keep:
@@ -227,6 +262,12 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
     RA = R * A
     levels[-1].complexity['RAP'] += mat_mat_complexity(RA,P) / float(A.nnz)
     A = RA * P      # Galerkin operator, Ac = RAP
+
+    # Make sure coarse-grid operator is in correct sparse format
+    if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):
+        A = A.tocsr()
+    elif (isspmatrix_bsr(P) and (not isspmatrix_bsr(A))):
+        A = A.tobsr()
 
     # Form next level through Galerkin product
     levels.append(multilevel_solver.level())

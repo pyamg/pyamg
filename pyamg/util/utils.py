@@ -773,7 +773,6 @@ def amalgamate(A, blocksize, norm='abs', cost=[0]):
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
     """
-
     Unamalgamate a CSR A with blocks of 1's.  This operation is equivalent to
     replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
     is equivalent to setting all of A's nonzeros to 1 and then doing a

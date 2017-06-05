@@ -149,7 +149,11 @@ def classical_strength_of_connection(A, theta=0.25, block=None, norm='abs', cost
         Square, sparse matrix in CSR or BSR format
     theta : float
         Threshold parameter in [0,1].
+<<<<<<< Updated upstream
     block : string, default None for CSR matrix and 'block' for BSR matrix
+=======
+    block : string, default None
+>>>>>>> Stashed changes
         How to treat block structure of A:
             None         : Compute SOC based on A as CSR matrix.
             'block'      : Compute SOC based on norm of blocks of A.
