@@ -53,6 +53,7 @@
     (      ctype level [], const int level_size),
     (      ctype components [], const int components_size),
     (const ctype Id [], const int Id_size),
+    (const ctype influence [], const int influence_size),
     (const ctype splitting [], const int splitting_size),
     (      ctype splitting [], const int splitting_size),
     (      ctype indices [], const int indices_size),

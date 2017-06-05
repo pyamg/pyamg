@@ -217,7 +217,7 @@ def classical_strength_of_connection(A, theta=0.25, block=None, norm='abs', cost
 
     # Block structure considered before computing SOC
     if (block == 'block') or sparse.isspmatrix_bsr(A):
-        M, N = A.shape
+        R, C = A.blocksize
         if (R != C) or (R < 1):
             raise ValueError('Matrix must have square blocks')
 

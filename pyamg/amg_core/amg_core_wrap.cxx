@@ -3006,11 +3006,10 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_char swig_types[0]
 #define SWIGTYPE_p_double swig_types[1]
 #define SWIGTYPE_p_float swig_types[2]
-#define SWIGTYPE_p_int swig_types[3]
-#define SWIGTYPE_p_std__complexT_double_t swig_types[4]
-#define SWIGTYPE_p_std__complexT_float_t swig_types[5]
-static swig_type_info *swig_types[7];
-static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__complexT_double_t swig_types[3]
+#define SWIGTYPE_p_std__complexT_float_t swig_types[4]
+static swig_type_info *swig_types[6];
+static swig_module_info swig_module = {swig_types, 5, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -24066,10 +24065,8 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
   int i6 = 1 ;
   PyArrayObject *array8 = NULL ;
   int i8 = 1 ;
-  void *argp10 = 0 ;
-  int res10 = 0 ;
-  int val11 ;
-  int ecode11 = 0 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
   PyArrayObject *array12 = NULL ;
   int i12 = 1 ;
   PyObject * obj0 = 0 ;
@@ -24079,9 +24076,8 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
   PyObject * obj4 = 0 ;
   PyObject * obj5 = 0 ;
   PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rs_cf_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:rs_cf_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_cf_splitting" "', argument " "1"" of type '" "int""'");
@@ -24119,18 +24115,16 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
     arg9 = 1;
     for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
   }
-  res10 = SWIG_ConvertPtr(obj5, &argp10,SWIGTYPE_p_int, 0 |  0 );
-  if (!SWIG_IsOK(res10)) {
-    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "rs_cf_splitting" "', argument " "10"" of type '" "int const []""'"); 
-  } 
-  arg10 = reinterpret_cast< int * >(argp10);
-  ecode11 = SWIG_AsVal_int(obj6, &val11);
-  if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "rs_cf_splitting" "', argument " "11"" of type '" "int""'");
-  } 
-  arg11 = static_cast< int >(val11);
   {
-    array12 = obj_to_array_no_conversion(obj7, NPY_INT);
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  {
+    array12 = obj_to_array_no_conversion(obj6, NPY_INT);
     if (!array12 || !require_dimensions(array12,1) || !require_contiguous(array12)
       || !require_native(array12)) SWIG_fail;
     arg12 = (int*) array_data(array12);
@@ -29876,7 +29870,7 @@ static PyMethodDef SwigMethods[] = {
 		"maximum_row_value(int const n_row, std::complex< float > [] x, int const [] A_rowptr, int const [] A_colinds, std::complex< float > const [] A_data)\n"
 		"maximum_row_value(int const n_row, std::complex< double > [] x, int const [] A_rowptr, int const [] A_colinds, std::complex< double > const [] A_data)\n"
 		""},
-	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int const [] Tp, int const [] Tj, int const [] influence, int const influence_size, int [] splitting)"},
+	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting)"},
 	 { (char *)"rs_cf_splitting_pass2", _wrap_rs_cf_splitting_pass2, METH_VARARGS, (char *)"rs_cf_splitting_pass2(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int [] splitting)"},
 	 { (char *)"cljp_naive_splitting", _wrap_cljp_naive_splitting, METH_VARARGS, (char *)"cljp_naive_splitting(int const n, int const [] C_rowptr, int const [] C_colinds, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"},
 	 { (char *)"rs_direct_interpolation_pass1", _wrap_rs_direct_interpolation_pass1, METH_VARARGS, (char *)"rs_direct_interpolation_pass1(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int const [] splitting, int [] P_rowptr)"},
@@ -29943,7 +29937,6 @@ static PyMethodDef SwigMethods[] = {
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_float = {"_p_float", "float *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__complexT_double_t = {"_p_std__complexT_double_t", "std::complex< double > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__complexT_float_t = {"_p_std__complexT_float_t", "std::complex< float > *", 0, 0, (void*)0, 0};
 
@@ -29951,7 +29944,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
   &_swigt__p_double,
   &_swigt__p_float,
-  &_swigt__p_int,
   &_swigt__p_std__complexT_double_t,
   &_swigt__p_std__complexT_float_t,
 };
@@ -29959,7 +29951,6 @@ static swig_type_info *swig_type_initial[] = {
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_float[] = {  {&_swigt__p_float, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__complexT_double_t[] = {  {&_swigt__p_std__complexT_double_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__complexT_float_t[] = {  {&_swigt__p_std__complexT_float_t, 0, 0, 0},{0, 0, 0, 0}};
 
@@ -29967,7 +29958,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
   _swigc__p_double,
   _swigc__p_float,
-  _swigc__p_int,
   _swigc__p_std__complexT_double_t,
   _swigc__p_std__complexT_float_t,
 };

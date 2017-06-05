@@ -158,7 +158,7 @@ def RS(S, second_pass=False, cost=[0]):
                              splitting)
     if second_pass:
         amg_core.rs_cf_splitting_pass2(S.shape[0], S.indptr,
-                                S.indices, splitting)
+                                       S.indices, splitting)
 
     return splitting
 

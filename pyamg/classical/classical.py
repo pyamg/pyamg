@@ -218,15 +218,18 @@ def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
         elif fn == 'standard':
             temp_A = A.T.tocsr()
             temp_C = C.T.tocsr()
-            P = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tocsr()
         elif fn == 'distance_two':
             temp_A = A.T.tocsr()
             temp_C = C.T.tocsr()
-            P = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tocsr()
         elif fn == 'direct':
             temp_A = A.T.tocsr()
             temp_C = C.T.tocsr()
-            P = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tocsr()
         else:
             raise ValueError('unknown interpolation method (%s)' % interpolation)
     else: 
@@ -235,15 +238,18 @@ def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
         elif fn == 'standard':
             temp_A = A.T.tobsr()
             temp_C = C.T.tocsr()
-            P = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = standard_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tobsr()
         elif fn == 'distance_two':
             temp_A = A.T.tobsr()
             temp_C = C.T.tocsr()
-            P = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = distance_two_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tobsr()
         elif fn == 'direct':
             temp_A = A.T.tobsr()
             temp_C = C.T.tocsr()
-            P = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
+            R = R.T.tobsr()
         else:
             raise ValueError('unknown interpolation method (%s)' % interpolation)
     

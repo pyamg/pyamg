@@ -443,9 +443,9 @@ def maximum_row_value(*args):
     """
     return _amg_core.maximum_row_value(*args)
 
-def rs_cf_splitting(n_nodes, C_rowptr, C_colinds, Tp, Tj, influence, influence_size, splitting):
-    """rs_cf_splitting(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int const [] Tp, int const [] Tj, int const [] influence, int const influence_size, int [] splitting)"""
-    return _amg_core.rs_cf_splitting(n_nodes, C_rowptr, C_colinds, Tp, Tj, influence, influence_size, splitting)
+def rs_cf_splitting(n_nodes, C_rowptr, C_colinds, Tp, Tj, influence, splitting):
+    """rs_cf_splitting(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting)"""
+    return _amg_core.rs_cf_splitting(n_nodes, C_rowptr, C_colinds, Tp, Tj, influence, splitting)
 
 def rs_cf_splitting_pass2(n_nodes, C_rowptr, C_colinds, splitting):
     """rs_cf_splitting_pass2(int const n_nodes, int const [] C_rowptr, int const [] C_colinds, int [] splitting)"""
