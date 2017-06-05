@@ -697,7 +697,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     return block_diag
 
 
-def amalgamate(A, blocksize):
+def amalgamate(A, blocksize, norm='abs', cost=[0]):
     """
     Amalgamate matrix A
 
@@ -707,13 +707,17 @@ def amalgamate(A, blocksize):
         Matrix to amalgamate
     blocksize : int
         blocksize to use while amalgamating
+    norm : string
+        Norm to amalgamate entries by
+            'abs'  : C_ij = k, where k is the maximum absolute value in block C_ij
+            'min'  : C_ij = k, where k is the hard minimum value in block C_ij
+            'fro'  : C_ij = k, where k is the Frobenius norm of block C_ij
 
     Returns
     -------
     A_amal : csr_matrix
         Amalgamated  matrix A, first, convert A to BSR with square blocksize
-        and then return a CSR matrix of ones using the resulting BSR indptr and
-        indices
+        and then return a CSR matrix  with data based on the chosen norm of blocks.
 
     Notes
     -----
@@ -737,7 +741,6 @@ def amalgamate(A, blocksize):
     matrix([[ 1.,  1.],
             [ 0.,  0.]])
 
-
     """
 
     if blocksize == 1:
@@ -747,10 +750,25 @@ def amalgamate(A, blocksize):
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
-    subI = (np.ones(A.indices.shape), A.indices, A.indptr)
+
+    # Frobenius norm of each block
+    if norm == 'fro':
+        data = (np.conjugate(A.data) * A.data).reshape(-1, blocksize**2).sum(axis=1)
+        cost[0] += 2.0
+    # Maximum of each block
+    elif norm == 'abs':
+        data = np.max(np.max(np.abs(A.data),axis=1),axis=1)
+        cost[0] += 1.0
+    # Set any connected blocks to SOC 1
+    elif norm == 'min':
+        data = np.min(np.min(A.data,axis=1),axis=1)
+        cost[0] += 1.0
+    else:
+        raise ValueError("Not a valid norm for amalgamation.")
+
     shape = (int(A.shape[0]/A.blocksize[0]),
              int(A.shape[1]/A.blocksize[1]))
-    return csr_matrix(subI, shape=shape)
+    return csr_matrix((data, A.indices, A.indptr),shape=shape)
 
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
