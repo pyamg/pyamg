@@ -94,8 +94,8 @@ def standard_interpolation(A, C, splitting, theta=None, norm=None, modified=True
         norm used in redefining classical SOC -- TODO : list options
     modified : bool, default True
         Use modified classical interpolation. More robust if RS coarsening with second
-        pass is not used for CF splitting.
-    distance_two : bool, default False
+        pass is not used for CF splitting. Ignores interpolating from strong F-connections
+        without a common C-neighbor.
 
     Returns
     -------

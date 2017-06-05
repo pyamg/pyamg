@@ -28,6 +28,15 @@
 %define I_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
     (const ctype Ap [], const int Ap_size),
+    (const ctype A_rowptr [], const int A_rowptr_size),
+    (const ctype C_rowptr [], const int C_rowptr_size),
+    (      ctype C_rowptr [], const int C_rowptr_size),
+    (const ctype P_rowptr [], const int P_rowptr_size),
+    (      ctype P_rowptr [], const int P_rowptr_size),
+    (const ctype A_colinds [], const int A_colinds_size),
+    (const ctype C_colinds [], const int C_colinds_size),
+    (      ctype C_colinds [], const int C_colinds_size),
+    (      ctype P_colinds [], const int P_colinds_size),
     (const ctype Bp [], const int Bp_size),
     (      ctype Bp [], const int Bp_size),
     (const ctype Tp [], const int Tp_size),
@@ -55,6 +64,10 @@
 
 %define T_INPLACE_ARRAY1( ctype )
 %apply (ctype* INPLACE_ARRAY1, int DIM1) {
+    (const ctype A_data [], const int A_data_size),
+    (const ctype C_data [], const int C_data_size),
+    (      ctype C_data [], const int C_data_size),
+    (      ctype P_data [], const int P_data_size),
     (const ctype  B [], const int  B_size),
     (const ctype  b [], const int  b_size),
     (      ctype  e [], const int  e_size),
@@ -209,15 +222,22 @@ INSTANTIATE_INDEXDATA_COMPLEX(truncate_rows_csr)
   ---------------------------------------------------------------------------*/
 %include "ruge_stuben.h"
 
-INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection)
-
+INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection_abs)
 INSTANTIATE_INDEXDATA_COMPLEX(maximum_row_value)
 
 INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
+INSTANTIATE_INDEX_ONLY(rs_cf_splitting_pass2)
 INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
 INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
+INSTANTIATE_INDEX_ONLY(rs_standard_interpolation_pass1)
+INSTANTIATE_INDEX_ONLY(distance_two_amg_interpolation_pass1)
+
+INSTANTIATE_INDEXDATA(classical_strength_of_connection_min)
 INSTANTIATE_INDEXDATA(rs_direct_interpolation_pass2)
 INSTANTIATE_INDEXDATA(rs_standard_interpolation_pass2)
+INSTANTIATE_INDEXDATA(mod_standard_interpolation_pass2)
+INSTANTIATE_INDEXDATA(distance_two_amg_interpolation_pass2)
+INSTANTIATE_INDEXDATA(remove_strong_FF_connections)
 INSTANTIATE_INDEXDATA(cr_helper)
 
 /*----------------------------------------------------------------------------

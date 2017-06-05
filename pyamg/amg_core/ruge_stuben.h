@@ -2,14 +2,19 @@
 #define RUGE_STUBEN_H
 
 #include <iostream>
+#include <cmath>
 #include <vector>
 #include <iterator>
 #include <cassert>
 #include <limits>
 #include <algorithm>
-
 #include "linalg.h"
 #include "graph.h"
+
+#define F_NODE 0
+#define C_NODE 1
+#define U_NODE 2
+#define PRE_F_NODE 3
 
 
 /*  Compute a strength of connection matrix using the classical strength
@@ -56,14 +61,14 @@ void classical_strength_of_connection_abs(const I n_row,
     C_rowptr[0] = 0;
 
     // Compute SOC for each row
-    for(I i = 0; i < n_row; i++) {
+    for (I i = 0; i < n_row; i++) {
         F max_offdiagonal = std::numeric_limits<F>::min();
 
         const I row_start = A_rowptr[i];
         const I row_end   = A_rowptr[i+1];
 
         // Find maximum off-diagonal in this row
-        for(I jj = row_start; jj < row_end; jj++){
+        for (I jj = row_start; jj < row_end; jj++){
             if(A_colinds[jj] != i){
                 max_offdiagonal = std::max(max_offdiagonal,mynorm(A_data[jj]));
             }
@@ -71,7 +76,7 @@ void classical_strength_of_connection_abs(const I n_row,
 
         // Set threshold for strong connections
         F threshold = theta*max_offdiagonal;
-        for(I jj = row_start; jj < row_end; jj++){
+        for (I jj = row_start; jj < row_end; jj++){
             F norm_jj = mynorm(A_data[jj]);
 
             // Add entry if it exceeds the threshold
@@ -108,14 +113,14 @@ void classical_strength_of_connection_min(const I n_row,
     I nnz = 0;
     C_rowptr[0] = 0;
 
-    for(I i = 0; i < n_row; i++){
+    for (I i = 0; i < n_row; i++){
         T max_offdiagonal = 0.0;
 
         const I row_start = A_rowptr[i];
         const I row_end   = A_rowptr[i+1];
 
         // Find maximum off-diagonal negative entry in this row
-        for(I jj = row_start; jj < row_end; jj++){
+        for (I jj = row_start; jj < row_end; jj++){
             if(A_colinds[jj] != i){
                 max_offdiagonal = std::max(max_offdiagonal, -A_data[jj]);
             }
@@ -123,7 +128,7 @@ void classical_strength_of_connection_min(const I n_row,
 
         // Set threshold for strong connections
         T threshold = theta*max_offdiagonal;
-        for(I jj = row_start; jj < row_end; jj++){
+        for (I jj = row_start; jj < row_end; jj++){
             T norm_jj = -A_data[jj];
 
             // Add entry if -A_ij exceeds the threshold
@@ -175,14 +180,14 @@ void maximum_row_value(const I n_row,
                        const T A_data[], const int A_data_size)
 {
 
-    for(I i = 0; i < n_row; i++){
+    for (I i = 0; i < n_row; i++){
         F max_entry = std::numeric_limits<F>::min();
 
         const I row_start = A_rowptr[i];
         const I row_end   = A_rowptr[i+1];
 
         // Find this row's max entry
-        for(I jj = row_start; jj < row_end; jj++){
+        for (I jj = row_start; jj < row_end; jj++){
             max_entry = std::max(max_entry, mynorm(A_data[jj]) );
         }
 
@@ -190,11 +195,6 @@ void maximum_row_value(const I n_row,
     }
 }
 
-
-
-#define F_NODE 0
-#define C_NODE 1
-#define U_NODE 2
 
 /* Compute a C/F (coarse-fine( splitting using the classical coarse grid
  * selection method of Ruge and Stuben.  The strength of connection matrix S,
@@ -228,7 +228,7 @@ void rs_cf_splitting(const I n_nodes,
 
     // Compute initial lambda based on C^T
     I lambda_max = 0;
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         lambda[i] = Tp[i+1] - Tp[i] + influence[i];
         if (lambda[i] > lambda_max) {
             lambda_max = lambda[i];
@@ -250,15 +250,15 @@ void rs_cf_splitting(const I n_nodes,
     std::vector<I> index_to_node(n_nodes);
     std::vector<I> node_to_index(n_nodes);
 
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         interval_count[lambda[i]]++;
     }
-    for(I i = 0, cumsum = 0; i < lambda_max; i++) {
+    for (I i = 0, cumsum = 0; i < lambda_max; i++) {
         interval_ptr[i] = cumsum;
         cumsum += interval_count[i];
         interval_count[i] = 0;
     }
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         I lambda_i = lambda[i];
 
         I index    = interval_ptr[lambda_i] + interval_count[lambda_i];
@@ -310,7 +310,7 @@ void rs_cf_splitting(const I n_nodes,
             splitting[i] = C_NODE;
 
             // For each j in S^T_i /\ U, mark j as tentative F-point
-            for(I jj = Tp[i]; jj < Tp[i+1]; jj++) {
+            for (I jj = Tp[i]; jj < Tp[i+1]; jj++) {
                 I j = Tj[jj];
                 if(splitting[j] == U_NODE) {
                     splitting[j] = PRE_F_NODE;
@@ -319,7 +319,7 @@ void rs_cf_splitting(const I n_nodes,
 
             // For each j in S^T_i /\ U marked as tentative F-point, modify lamdba
             // values for neighborhood of j
-            for(I jj = Tp[i]; jj < Tp[i+1]; jj++)
+            for (I jj = Tp[i]; jj < Tp[i+1]; jj++)
             {
                 I j = Tj[jj];
                 if(splitting[j] == PRE_F_NODE)
@@ -327,7 +327,7 @@ void rs_cf_splitting(const I n_nodes,
                     splitting[j] = F_NODE;
                     
                     // For each k in S_j /\ U, modify lambda value, lambda_k += 1
-                    for(I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++){
+                    for (I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++){
                         I k = C_colinds[kk];
 
                         if(splitting[k] == U_NODE){
@@ -514,19 +514,19 @@ void cljp_naive_splitting(const I n,
     //vertex_coloring_IDO(n, C_rowptr, C_colinds, &coloring[0]);
     vertex_coloring_mis(n, C_rowptr, C_rowptr_size, C_colinds, C_colinds_size, &coloring[0], n);
     ncolors = *std::max_element(coloring.begin(), coloring.end()) + 1;
-    for(I i=0; i < n; i++){
+    for (I i=0; i < n; i++){
       weight[i] = double(coloring[i])/double(ncolors);
     }
   }
   else {
     srand(2448422);
-    for(I i=0; i < n; i++){
+    for (I i=0; i < n; i++){
       weight[i] = double(rand())/RAND_MAX;
     }
   }
 
-  for(I i=0; i < n; i++){
-    for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+  for (I i=0; i < n; i++){
+    for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
       I j = C_colinds[jj];
       if(i != j) {
         weight[j]++;
@@ -543,11 +543,11 @@ void cljp_naive_splitting(const I n,
     // SELECT INDEPENDENT SET
     // find i such that w_i > w_j for all i in union(S_i,S_i^T)
     nD = 0;
-    for(I i=0; i<n; i++){
+    for (I i=0; i<n; i++){
       if(splitting[i]==U_NODE){
         D[i] = 1;
         // check row (S_i^T)
-        for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+        for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
           I j = C_colinds[jj];
           if(splitting[j]==U_NODE && weight[j]>weight[i]){
             D[i] = 0;
@@ -556,7 +556,7 @@ void cljp_naive_splitting(const I n,
         }
         // check col (S_i)
         if(D[i] == 1) {
-          for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
+          for (I jj = Tp[i]; jj < Tp[i+1]; jj++){
             I j = Tj[jj];
             if(splitting[j]==U_NODE && weight[j]>weight[i]){
               D[i] = 0;
@@ -574,7 +574,7 @@ void cljp_naive_splitting(const I n,
         D[i]=0;
       }
     } // end for
-    for(I i = 0; i < nD; i++) {
+    for (I i = 0; i < nD; i++) {
       splitting[Dlist[i]] = C_NODE;
     }
     // end SELECT INDEPENDENT SET
@@ -582,9 +582,9 @@ void cljp_naive_splitting(const I n,
     // UPDATE WEIGHTS
     // P5
     // nbrs that influence C points are not good C points
-    for(I iD=0; iD < nD; iD++){
+    for (I iD=0; iD < nD; iD++){
       I c = Dlist[iD];
-      for(I jj = C_rowptr[c]; jj < C_rowptr[c+1]; jj++){
+      for (I jj = C_rowptr[c]; jj < C_rowptr[c+1]; jj++){
         I j = C_colinds[jj];
         // c <---j
         if(splitting[j]==U_NODE && edgemark[jj] != 0){
@@ -601,17 +601,17 @@ void cljp_naive_splitting(const I n,
     // P6
     // If k and j both depend on c, a C point, and j influces k, then j is less
     // valuable as a C point.
-    for(I iD=0; iD < nD; iD++){
+    for (I iD=0; iD < nD; iD++){
       I c = Dlist[iD];
-      for(I jj = Tp[c]; jj < Tp[c+1]; jj++){
+      for (I jj = Tp[c]; jj < Tp[c+1]; jj++){
         I j = Tj[jj];
         if(splitting[j]==U_NODE)                 // j <---c
           c_dep_cache[j] = c;
       }
 
-      for(I jj = Tp[c]; jj < Tp[c+1]; jj++) {
+      for (I jj = Tp[c]; jj < Tp[c+1]; jj++) {
         I j = Tj[jj];
-        for(I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++) {
+        for (I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++) {
           I k = C_colinds[kk];
           if(splitting[k] == U_NODE && edgemark[kk] != 0) { // j <---k
             // does c ---> k ?
@@ -631,12 +631,12 @@ void cljp_naive_splitting(const I n,
   }
   // end SELECTION LOOP
 
-  for(I i = 0; i < C_rowptr[n]; i++){
+  for (I i = 0; i < C_rowptr[n]; i++){
     if(edgemark[i] == 0){
       edgemark[i] = -1;
     }
   }
-  for(I i = 0; i < n; i++){
+  for (I i = 0; i < n; i++){
     if(splitting[i] == U_NODE){
       splitting[i] = F_NODE;
     }
@@ -667,12 +667,12 @@ void rs_direct_interpolation_pass1(const I n_nodes,
 {
     I nnz = 0;
     P_rowptr[0] = 0;
-    for(I i = 0; i < n_nodes; i++){
+    for (I i = 0; i < n_nodes; i++){
         if( splitting[i] == C_NODE ){
             nnz++;
         }
         else {
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
                 if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) )
                     nnz++;
             }
@@ -696,13 +696,13 @@ void rs_direct_interpolation_pass2(const I n_nodes,
                                          T P_data[], const int P_data_size)
 {
 
-    for(I i = 0; i < n_nodes; i++){
+    for (I i = 0; i < n_nodes; i++){
         if(splitting[i] == C_NODE){
             P_colinds[P_rowptr[i]] = i;
             P_data[P_rowptr[i]] = 1;
         } else {
             T sum_strong_pos = 0, sum_strong_neg = 0;
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
                 if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) ){
                     if (C_data[jj] < 0)
                         sum_strong_neg += C_data[jj];
@@ -713,7 +713,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 
             T sum_all_pos = 0, sum_all_neg = 0;
             T diag = 0;
-            for(I jj = A_rowptr[i]; jj < A_rowptr[i+1]; jj++){
+            for (I jj = A_rowptr[i]; jj < A_rowptr[i+1]; jj++){
                 if (A_colinds[jj] == i){
                     diag += A_data[jj];
                 } else {
@@ -736,7 +736,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
             T pos_coeff = -beta/diag;
 
             I nnz = P_rowptr[i];
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
                 if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) ){
                     P_colinds[nnz] = C_colinds[jj];
                     if (C_data[jj] < 0)
@@ -751,11 +751,11 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 
 
     std::vector<I> map(n_nodes);
-    for(I i = 0, sum = 0; i < n_nodes; i++){
+    for (I i = 0, sum = 0; i < n_nodes; i++){
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < P_rowptr[n_nodes]; i++){
+    for (I i = 0; i < P_rowptr[n_nodes]; i++){
         P_colinds[i] = map[P_colinds[i]];
     }
 }
@@ -945,12 +945,12 @@ void rs_standard_interpolation_pass1(const I n_nodes,
 {
     I nnz = 0;
     P_rowptr[0] = 0;
-    for(I i = 0; i < n_nodes; i++){
+    for (I i = 0; i < n_nodes; i++){
         if( splitting[i] == C_NODE ){
             nnz++;
         }
         else {
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
                 if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) )
                     nnz++;
             }
@@ -1015,7 +1015,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                                            T P_data[], const int P_data_size)
 {
 
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
         if(splitting[i] == C_NODE) {
             P_colinds[P_rowptr[i]] = i;
@@ -1028,13 +1028,13 @@ void rs_standard_interpolation_pass2(const I n_nodes,
             T denominator = 0;
 
             // Start by summing entire row of A
-            for(I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
+            for (I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
                 denominator += A_data[mm];
             }
 
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
-            for(I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
+            for (I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
                 if ( C_colinds[mm] != i ) {
                     denominator -= C_data[mm]; // making sure to leave the diagonal entry in there
                 }
@@ -1042,12 +1042,12 @@ void rs_standard_interpolation_pass2(const I n_nodes,
 
             // Set entries in P (interpolation weights w_ij from strongly connected C-points)
             I nnz = P_rowptr[i];
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
 
-                if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) ) {
+                if (splitting[C_colinds[jj]] == C_NODE) {
 
-                    // Set temporary value for P_colinds to be mapped to appropriate coarse-grid
-                    // column index later and get column index j
+                    // Set temporary value for P_colinds as global index, j. Will be mapped to
+                    // appropriate coarse-grid column index after all data is filled in. 
                     P_colinds[nnz] = C_colinds[jj];
                     I j = C_colinds[jj];
 
@@ -1055,7 +1055,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                     T numerator = C_data[jj];
 
                     // Sum over strongly connected fine points
-                    for(I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
+                    for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
                         if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
                             
                             // Get column k and value a_ik
@@ -1064,7 +1064,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
 
                             // Get a_kj (have to search over k'th row in A for connection a_kj)
                             T a_kj = 0;
-                            for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                            for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
                                 if ( A_colinds[search_ind] == j ){
                                     a_kj = A_data[search_ind];
                                     break;
@@ -1077,14 +1077,14 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
-                                for(I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
-                                    if ( (splitting[C_colinds[ll]] == C_NODE) && (C_colinds[ll] != i) ) {
+                                for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
+                                    if (splitting[C_colinds[ll]] == C_NODE) {
                                         
                                         // Get column l
                                         I l = C_colinds[ll];
                                         
                                         // Add connection a_kl if present in matrix (search over kth row in A for connection)
-                                        for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
                                             if (A_colinds[search_ind] == l) {
                                                 inner_denominator += A_data[search_ind];
                                             }
@@ -1115,11 +1115,11 @@ void rs_standard_interpolation_pass2(const I n_nodes,
     // Column indices were initially stored as global indices. Build map to switch
     // to C-point indices.
     std::vector<I> map(n_nodes);
-    for(I i = 0, sum = 0; i < n_nodes; i++) {
+    for (I i = 0, sum = 0; i < n_nodes; i++) {
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < P_rowptr[n_nodes]; i++) {
+    for (I i = 0; i < P_rowptr[n_nodes]; i++) {
         P_colinds[i] = map[P_colinds[i]];
     }
 }
@@ -1147,7 +1147,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
  * --------
  *      Nothing, C_data[] is set to zero to eliminate connections.
  */
-template<class I>
+template<class I, class T>
 void remove_strong_FF_connections(const I n_nodes,
                                   const I C_rowptr[], const int C_rowptr_size,
                                   const I C_colinds[], const int C_colinds_size,
@@ -1158,9 +1158,6 @@ void remove_strong_FF_connections(const I n_nodes,
     // For each F-point
     for (I row=0; row<n_nodes; row++) {
         if (splitting[row] == F_NODE) {
-
-            // Tentative C-point count
-            I Cpt0 = -1;
 
             // For each j in S_row /\ F, test dependence of j on S_row /\ C
             for (I jj=C_rowptr[row]; jj<C_rowptr[row+1]; jj++) {
@@ -1261,7 +1258,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                                             I P_colinds[], const int P_colinds_size,
                                             T P_data[], const int P_data_size)
 {
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
         if(splitting[i] == C_NODE) {
             P_colinds[P_rowptr[i]] = i;
@@ -1274,13 +1271,13 @@ void mod_standard_interpolation_pass2(const I n_nodes,
             T denominator = 0;
 
             // Start by summing entire row of A
-            for(I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
+            for (I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
                 denominator += A_data[mm];
             }
 
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
-            for(I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
+            for (I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
                 if ( C_colinds[mm] != i ) {
                     denominator -= C_data[mm]; // making sure to leave the diagonal entry in there
                 }
@@ -1288,12 +1285,12 @@ void mod_standard_interpolation_pass2(const I n_nodes,
 
             // Set entries in P (interpolation weights w_ij from strongly connected C-points)
             I nnz = P_rowptr[i];
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
 
-                if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) ) {
+                if (splitting[C_colinds[jj]] == C_NODE) {
 
-                    // Set temporary value for P_colinds to be mapped to appropriate coarse-grid
-                    // column index later and get column index j
+                    // Set temporary value for P_colinds as global index, j. Will be mapped to
+                    // appropriate coarse-grid column index after all data is filled in. 
                     P_colinds[nnz] = C_colinds[jj];
                     I j = C_colinds[jj];
 
@@ -1301,7 +1298,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                     T numerator = C_data[jj];
 
                     // Sum over strongly connected fine points
-                    for(I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
+                    for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
                         if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
                             
                             // Get column k and value a_ik
@@ -1311,7 +1308,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                             // Get a_kj (have to search over k'th row in A for connection a_kj)
                             T a_kj = 0;
                             T a_kk = 0;
-                            for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                            for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
                                 if (A_colinds[search_ind] == j) {
                                     a_kj = A_data[search_ind];
                                 }
@@ -1332,18 +1329,19 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
-                                for(I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
-                                    if ( (splitting[C_colinds[ll]] == C_NODE) && (C_colinds[ll] != i) ) {
+                                for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
+                                    if (splitting[C_colinds[ll]] == C_NODE) {
                                         
                                         // Get column l
                                         I l = C_colinds[ll];
                                         
                                         // Add connection a_kl if present in matrix (search over kth row in A for connection)
                                         // Only add if sign of a_kl does not equal sign of a_kk
-                                        for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
                                             if (A_colinds[search_ind] == l) {
+                                                T a_kl = A_data[search_ind];
                                                 if (signof(a_kl) != signof(a_kk)) {
-                                                    inner_denominator += A_data[search_ind];
+                                                    inner_denominator += a_kl;
                                                 }
                                                 break;
                                             }
@@ -1374,11 +1372,11 @@ void mod_standard_interpolation_pass2(const I n_nodes,
     // Column indices were initially stored as global indices. Build map to switch
     // to C-point indices.
     std::vector<I> map(n_nodes);
-    for(I i = 0, sum = 0; i < n_nodes; i++) {
+    for (I i = 0, sum = 0; i < n_nodes; i++) {
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < P_rowptr[n_nodes]; i++) {
+    for (I i = 0; i < P_rowptr[n_nodes]; i++) {
         P_colinds[i] = map[P_colinds[i]];
     }
 }
@@ -1415,24 +1413,36 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
 {
     I nnz = 0;
     P_rowptr[0] = 0;
-    for(I i = 0; i < n_nodes; i++){
+    for (I i = 0; i < n_nodes; i++){
+        // +1 nnz for C-point rows
         if( splitting[i] == C_NODE ){
             nnz++;
         }
+        // For F-point row i: interpolate from (i) all strongly connected C-points,
+        // and (ii) for all F-points strongly connected to F-point i, say {Fj}, all
+        // C-points strongly connected to Fj
         else {
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
-                if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) )
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++){
+                I this_point = C_colinds[jj];
+                // Strong C-point connections
+                if (splitting[this_point] == C_NODE) {
                     nnz++;
+                }
+                // Strong F-point connections (excluding self)
+                else if (this_point != i) {
+                    for (I kk = C_rowptr[this_point]; kk < C_rowptr[this_point+1]; kk++){
+                        // Strong C-point connections
+                        if (splitting[C_colinds[kk]] == C_NODE) {
+                            nnz++;
+                        }
+                    }
+                }
             }
         }
+
+        // Set value in row-pointer
         P_rowptr[i+1] = nnz;
     }
-
-
-    // ----------------------------------------------
-    // TODO : Need to figure out what row-pointer is
-    // ----------------------------------------------
-
 }
 
 
@@ -1486,53 +1496,140 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                                                 T P_data[], const int P_data_size)
 {
 
-    for(I i = 0; i < n_nodes; i++) {
+    for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
         if(splitting[i] == C_NODE) {
             P_colinds[P_rowptr[i]] = i;
             P_data[P_rowptr[i]] = 1;
         } 
-        // Otherwise, use RS standard interpolation formula
+        // Otherwise, use extended+1 distance-two AMG interpolation formula
+        // (see Eqs. 4.10-4.11 in [0])
         else {
 
-            // Calculate denominator
+            // -------------------------------------------------------------------------------- //
+            // -------------------------------------------------------------------------------- //
+            // Calculate outer denominator
             T denominator = 0;
 
             // Start by summing entire row of A
-            for(I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
+            for (I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
                 denominator += A_data[mm];
             }
 
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
-            for(I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
+            for (I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
                 if ( C_colinds[mm] != i ) {
                     denominator -= C_data[mm]; // making sure to leave the diagonal entry in there
                 }
             }
 
+            // Sum over strongly connected fine points for outer denominator
+            for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
+                if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
 
-            // -----------------------------------------
-            // Need to add additional terms here (4.11).
-            // -----------------------------------------
+                    // Get column k and value a_ik
+                    I k = C_colinds[kk];
+                    T a_ik = C_data[kk];
 
+                    // Get a_ki (have to search over k'th row in A for connection a_ki)
+                    T a_ki = 0;
+                    T a_kk = 0;
+                    for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                        if (A_colinds[search_ind] == i) {
+                            a_ki = A_data[search_ind];
+                        }
+                        else if (A_colinds[search_ind] == k) {
+                            a_kk = A_data[search_ind];
+                        }
+                    }
 
+                    // If sign of a_ki matches sign of a_kk, ignore a_ki in sum
+                    // (i.e. leave as a_ki = 0)
+                    if (signof(a_ki) == signof(a_kk)) {
+                        a_ki = 0;
+                    }
+
+                    // If a_ki == 0, then we don't need to do any more work, otherwise
+                    // proceed to account for node k's contribution
+                    if (a_ki != 0) {
+                        // Calculate sum for inner denominator (loop over strongly connected C-points
+                        // and distance-two strongly connected C-points).
+                        T inner_denominator = 0;
+                        for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
+                            I this_point = C_colinds[ll];
+
+                            // Strong C-connections
+                            if (splitting[this_point] == C_NODE) {
+
+                                // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                // Only add if sign of a_kl does not equal sign of a_kk
+                                for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                    if (A_colinds[search_ind] == this_point) {
+                                        T a_kl = A_data[search_ind];
+                                        if (signof(a_kl) != signof(a_kk)) {
+                                            inner_denominator += a_kl;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            // Strong F-connections (excluding self)
+                            else if (this_point != i) {
+                                for (I ff = C_rowptr[this_point]; ff < C_rowptr[this_point+1]; ff++) {
+                                    I d2_point = C_colinds[ff];
+
+                                    // Strong C-connections to strong F-connections (distance two C connections)
+                                    if (splitting[d2_point] == C_NODE) {
+
+                                        // Add connection a_kl if present in matrix (search over kth row in A
+                                        // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                            if (A_colinds[search_ind] == d2_point) {
+                                                T a_kl = A_data[search_ind];
+                                                if (signof(a_kl) != signof(a_kk)) {
+                                                    inner_denominator += a_kl;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Add a_ki to inner denominator
+                        inner_denominator += a_ki;
+
+                        // Add a_ik * a_ki / inner_denominator to the denominator 
+                        if (std::abs(inner_denominator) < 1e-16) {
+                            printf("Inner denominator of outer denominator is zero.\n");
+                        }
+                        denominator += a_ik * a_ki / inner_denominator;
+                    }
+                }
+            }
+
+            // -------------------------------------------------------------------------------- //
+            // -------------------------------------------------------------------------------- //
             // Set entries in P (interpolation weights w_ij from strongly connected C-points)
             I nnz = P_rowptr[i];
-            for(I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
+            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
+                I neighbor = C_colinds[jj];
 
-                if ( (splitting[C_colinds[jj]] == C_NODE) && (C_colinds[jj] != i) ) {
+                // ---------------------------------------------------------------------------- //
+                // Build interpolation for strong distance-one C-points from F-point i
+                if (splitting[neighbor] == C_NODE) {
 
-                    // Set temporary value for P_colinds to be mapped to appropriate coarse-grid
-                    // column index later and get column index j
-                    P_colinds[nnz] = C_colinds[jj];
-                    I j = C_colinds[jj];
+                    // Set temporary value for P_colinds as global index. Will be mapped to
+                    // appropriate coarse-grid column index after all data is filled in. 
+                    P_colinds[nnz] = neighbor;
 
                     // Initialize numerator as a_ij
                     T numerator = C_data[jj];
 
-                    // Sum over strongly connected fine points
-                    for(I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
+                    // Sum over strongly connected F points
+                    for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
                         if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
                             
                             // Get column k and value a_ik
@@ -1542,8 +1639,8 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                             // Get a_kj (have to search over k'th row in A for connection a_kj)
                             T a_kj = 0;
                             T a_kk = 0;
-                            for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
-                                if (A_colinds[search_ind] == j) {
+                            for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                if (A_colinds[search_ind] == neighbor) {
                                     a_kj = A_data[search_ind];
                                 }
                                 else if (A_colinds[search_ind] == k) {
@@ -1561,31 +1658,63 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                             // proceed to account for node k's contribution
                             if (a_kj != 0) {
                                 
-                                // Calculate sum for inner denominator (loop over strongly connected C-points)
+                                // Calculate sum for inner denominator (loop over strongly connected C-points
+                                // and distance-two strongly connected C-points).
                                 T inner_denominator = 0;
-                                for(I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
-                                    if ( (splitting[C_colinds[ll]] == C_NODE) && (C_colinds[ll] != i) ) {
-                                        
-                                        // Get column l
-                                        I l = C_colinds[ll];
+                                for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
+                                    I this_point = C_colinds[ll];
+
+                                    // Strong C-connections
+                                    if (splitting[this_point] == C_NODE) {
                                         
                                         // Add connection a_kl if present in matrix (search over kth row in A for connection)
                                         // Only add if sign of a_kl does not equal sign of a_kk
-                                        for(I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
-                                            if (A_colinds[search_ind] == l) {
+                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                            if (A_colinds[search_ind] == this_point) {
+                                                T a_kl = A_data[search_ind];
                                                 if (signof(a_kl) != signof(a_kk)) {
-                                                    inner_denominator += A_data[search_ind];
+                                                    inner_denominator += a_kl;
                                                 }
                                                 break;
                                             }
                                         }
                                     }
+                                    // Strong F-connections (excluding self)
+                                    else if (this_point != i) {
+                                        for (I ff = C_rowptr[this_point]; ff < C_rowptr[this_point+1]; ff++) {
+                                            I d2_point = C_colinds[ff];
 
-                                    // -----------------------------------------
-                                    // Need to add additional terms here (4.10).
-                                    // -----------------------------------------
+                                            // Strong C-connections to strong F-connections (distance two C connections)
+                                            if (splitting[d2_point] == C_NODE) {
 
+                                                // Add connection a_kl if present in matrix (search over kth row in A
+                                                // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                                                for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                                    if (A_colinds[search_ind] == d2_point) {
+                                                        T a_kl = A_data[search_ind];
+                                                        if (signof(a_kl) != signof(a_kk)) {
+                                                            inner_denominator += a_kl;
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
+
+                                // Add a_ki to inner denominator
+                                T a_ki = 0;
+                                for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                    if (A_colinds[search_ind] == i) {
+                                        a_ki = A_data[search_ind];
+                                        break;
+                                    }
+                                }
+                                if (signof(a_ki) == signof(a_kk)) {
+                                    a_ki = 0;
+                                }
+                                inner_denominator += a_ki;
 
                                 // Add a_ik * a_kj / inner_denominator to the numerator 
                                 if (std::abs(inner_denominator) < 1e-16) {
@@ -1597,27 +1726,166 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                     }
 
                     // Set w_ij = -numerator/denominator
+                    // TODO : make sure we should have negative sign (missing in Eq. 4.10)
                     if (std::abs(denominator) < 1e-16) {
                         printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
                     }
                     P_data[nnz] = -numerator / denominator;
                     nnz++;
                 }
+                // ---------------------------------------------------------------------------- //
+                // Build interpolation for strong distance-two C-points from F-point i
+                else if (neighbor != i) {
+                    for (I dd = C_rowptr[neighbor]; dd < C_rowptr[neighbor+1]; dd++){
+                        I neighbor2 = C_colinds[dd];
+
+                        // Strong distance-two C-point connections
+                        if (splitting[neighbor2] == C_NODE) {
+
+                            // Set temporary value for P_colinds as global index. Will be mapped to
+                            // appropriate coarse-grid column index after all data is filled in. 
+                            P_colinds[nnz] = neighbor2;
+
+                            // Initialize numerator as a_ij (j is neighbor2, need to search in matrix for value)
+                            T a_ij = 0;
+                            for (I search_ind = A_rowptr[i]; search_ind < A_rowptr[i+1]; search_ind++) {
+                                if (A_colinds[search_ind] == neighbor2) {
+                                    a_ij = A_data[search_ind];
+                                    break;
+                                }
+                            }
+                            T numerator = a_ij;
+
+                            // Sum over strongly connected F points
+                            for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
+                                if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
+                                    
+                                    // Get column k and value a_ik
+                                    I k = C_colinds[kk];
+                                    T a_ik = C_data[kk];
+
+                                    // Get a_kj (have to search over k'th row in A for connection a_kj)
+                                    T a_kj = 0;
+                                    T a_kk = 0;
+                                    for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                        if (A_colinds[search_ind] == neighbor2) {
+                                            a_kj = A_data[search_ind];
+                                        }
+                                        else if (A_colinds[search_ind] == k) {
+                                            a_kk = A_data[search_ind];
+                                        }
+                                    }
+
+                                    // If sign of a_kj matches sign of a_kk, ignore a_kj in sum
+                                    // (i.e. leave as a_kj = 0)
+                                    if (signof(a_kj) == signof(a_kk)) {
+                                        a_kj = 0;
+                                    }
+
+                                    // If a_kj == 0, then we don't need to do any more work, otherwise
+                                    // proceed to account for node k's contribution
+                                    if (a_kj != 0) {
+                                        
+                                        // Calculate sum for inner denominator (loop over strongly connected C-points
+                                        // and distance-two strongly connected C-points).
+                                        T inner_denominator = 0;
+                                        for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
+                                            I this_point = C_colinds[ll];
+
+                                            // Strong C-connections
+                                            if (splitting[this_point] == C_NODE) {
+                                                
+                                                // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                                // Only add if sign of a_kl does not equal sign of a_kk
+                                                for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                                    if (A_colinds[search_ind] == this_point) {
+                                                        T a_kl = A_data[search_ind];
+                                                        if (signof(a_kl) != signof(a_kk)) {
+                                                            inner_denominator += a_kl;
+                                                        }
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            // Strong F-connections (excluding self)
+                                            else if (this_point != i) {
+                                                for (I ff = C_rowptr[this_point]; ff < C_rowptr[this_point+1]; ff++) {
+                                                    I d2_point = C_colinds[ff];
+
+                                                    // Strong C-connections to strong F-connections (distance two C connections)
+                                                    if (splitting[d2_point] == C_NODE) {
+
+                                                        // Add connection a_kl if present in matrix (search over kth row in A
+                                                        // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                                            if (A_colinds[search_ind] == d2_point) {
+                                                                T a_kl = A_data[search_ind];
+                                                                if (signof(a_kl) != signof(a_kk)) {
+                                                                    inner_denominator += a_kl;
+                                                                }
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Add a_ki to inner denominator
+                                        T a_ki = 0;
+                                        for (I search_ind = A_rowptr[k]; search_ind < A_rowptr[k+1]; search_ind++) {
+                                            if (A_colinds[search_ind] == i) {
+                                                a_ki = A_data[search_ind];
+                                                break;
+                                            }
+                                        }
+                                        if (signof(a_ki) == signof(a_kk)) {
+                                            a_ki = 0;
+                                        }
+                                        inner_denominator += a_ki;
+
+                                        // Add a_ik * a_kj / inner_denominator to the numerator 
+                                        if (std::abs(inner_denominator) < 1e-16) {
+                                            printf("Inner denominator was zero.\n");
+                                        }
+                                        numerator += a_ik * a_kj / inner_denominator;
+                                    }
+                                }
+                            }
+
+                            // Set w_ij = -numerator/denominator
+                            // TODO : make sure we should have negative sign (missing in Eq. 4.10)
+                            if (std::abs(denominator) < 1e-16) {
+                                printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
+                            }
+                            P_data[nnz] = -numerator / denominator;
+                            nnz++;
+                        }
+                    }
+                }
             }
         }
     }
 
+    // ---------------------------------------------------------------------------------------- //
+    // ---------------------------------------------------------------------------------------- //
     // Column indices were initially stored as global indices. Build map to switch
     // to C-point indices.
     std::vector<I> map(n_nodes);
-    for(I i = 0, sum = 0; i < n_nodes; i++) {
+    for (I i = 0, sum = 0; i < n_nodes; i++) {
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < P_rowptr[n_nodes]; i++) {
+    for (I i = 0; i < P_rowptr[n_nodes]; i++) {
         P_colinds[i] = map[P_colinds[i]];
     }
 }
+
+
+
+
+
+
 
 
 #endif
