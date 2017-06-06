@@ -131,6 +131,10 @@ def ruge_stuben_solver(A,
         except:
             raise TypeError('Argument A must have type csr_matrix, bsr_matrix, \
                              or be convertible to csr_matrix')
+    
+    # if isspmatrix_bsr(A):
+    #     warn("Classical AMG is often more effective on CSR matrices.")
+
     # preprocess A
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:

@@ -263,6 +263,11 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
 
 
 def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
+    #
+    #
+    # TODO: there is something wrong with the C-version of this
+    #
+    #
     """Create prolongator using distance-two AMG interpolation (extended+i interpolaton).
 
     Parameters
@@ -280,10 +285,6 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]
     norm : string, default 'abs'
         Norm used in redefining classical SOC. Options are 'min' and 'abs' for CSR matrices,
         and 'min', 'abs', and 'fro' for BSR matrices. See strength.py for more information.
-    modified : bool, default True
-        Use modified classical interpolation. More robust if RS coarsening with second
-        pass is not used for CF splitting. Ignores interpolating from strong F-connections
-        without a common C-neighbor.
 
     Returns
     -------
