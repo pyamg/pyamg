@@ -15,7 +15,8 @@ from pyamg.strength import classical_strength_of_connection, \
 from pyamg.util.utils import mat_mat_complexity, unpack_arg
 
 from .interpolate import direct_interpolation, standard_interpolation, \
-    distance_two_interpolation
+    distance_two_interpolation, one_point_interpolation, \
+    injection_interpolation
 from . import split
 from .cr import CR
 
@@ -46,7 +47,8 @@ def ruge_stuben_solver(A,
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interpolation : {string} : default 'direct'
-        Use direct or standard interpolation
+        Method for interpolation. Options include 'direct', 'standard', 'injection',
+        'one_point', and 'distance_two'.
     restriction : {string or dict} : default 'galerkin'
         'Galerkin' means set R := P^T for a Galerkin coarse-grid operator. Can also specify
         an interpolation method as above, to build the restriciton operator based on A^T. 
@@ -210,6 +212,10 @@ def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
         P = distance_two_interpolation(A, C, splitting, **kwargs)
     elif fn == 'direct':
         P = direct_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'one_point':
+        P = one_point_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'injection':
+        P = injection_interpolation(A, splitting, **kwargs)
     else:
         raise ValueError('unknown interpolation method (%s)' % interpolation)
     levels[-1].complexity['interpolate'] = kwargs['cost'][0]
@@ -235,6 +241,13 @@ def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
             temp_C = C.T.tocsr()
             R = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
             R = R.T.tocsr()
+        elif fn == 'one_point':         # Don't need A^T here
+            temp_C = C.T.tocsr()
+            R = one_point_interpolation(A, temp_C, splitting, **kwargs)
+            R = R.T.tocsr()
+        elif fn == 'injection':         # Don't need A^T or C^T here
+            R = injection_interpolation(A, splitting, **kwargs)
+            R = R.T.tocsr()
         else:
             raise ValueError('unknown interpolation method (%s)' % interpolation)
     else: 
@@ -255,10 +268,17 @@ def extend_hierarchy(levels, strength, CF, interpolation, restriction, keep):
             temp_C = C.T.tocsr()
             R = direct_interpolation(temp_A, temp_C, splitting, **kwargs)
             R = R.T.tobsr()
+        elif fn == 'one_point':         # Don't need A^T here
+            temp_C = C.T.tocsr()
+            R = one_point_interpolation(A, temp_C, splitting, **kwargs)
+            R = R.T.tobsr()
+        elif fn == 'injection':         # Don't need A^T or C^T here
+            R = injection_interpolation(A, splitting, **kwargs)
+            R = R.T.tobsr()
         else:
             raise ValueError('unknown interpolation method (%s)' % interpolation)
     
-    levels[-1].complexity['interpolate'] = kwargs['cost'][0]
+    levels[-1].complexity['restriction'] = kwargs['cost'][0]
 
     # Store relevant information for this level
     if keep:

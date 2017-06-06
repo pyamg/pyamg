@@ -10,7 +10,9 @@ from pyamg.util.utils import UnAmal
 from pyamg.strength import classical_strength_of_connection
 
 
-__all__ = ['direct_interpolation', 'standard_interpolation', 'distance_two_interpolation']
+__all__ = ['direct_interpolation', 'standard_interpolation',
+           'distance_two_interpolation', 'injection_interpolation',
+           'one_point_interpolation']
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
@@ -377,3 +379,91 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]
         n = A.shape[0]
         return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
+
+def injection_interpolation(A, splitting, cost=[0]):
+    """ Create interpolation operator by injection, that is C-points are
+    interpolated by value and F-points are not interpolated.
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+        NxN matrix in CSR format or BSR format
+    splitting : array
+        C/F splitting stored in an array of length N
+
+    Returns
+    -------
+    NxNc interpolation operator, P
+    """
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize[0]
+        n = A.shape[0] / blocksize
+    elif isspmatrix_csr(A):
+        n = A.shape[0]
+        blocksize = 1
+    else:
+        try:
+            A = A.tocsr()
+            warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
+            n = A.shape[0]
+            blocksize = 1
+        except:
+            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+
+    P_rowptr = np.append(np.array([0],dtype='int32'), np.cumsum(splitting,dtype='int32') )
+    nc = P_rowptr[-1]
+    P_colinds = np.arange(start=0, stop=nc, step=1, dtype='int32')
+
+    if blocksize == 1:
+        return csr_matrix((np.ones((nc,), dtype=A.dtype), P_colinds, P_rowptr), shape=[n,nc])
+    else:
+        P_data = np.array(nc*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
+        return bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize,blocksize],
+                          shape=[n*blocksize,nc*blocksize])
+
+
+def one_point_interpolation(A, C, splitting, cost=[0]):
+    """ Create one-point interpolation operator, that is C-points are
+    interpolated by value and F-points are interpolated by value from
+    their strongest-connected C-point neighbor.
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+        NxN matrix in CSR format
+    C : {csr_matrix}
+        Strength-of-Connection matrix (does not need zero diagonal)
+    splitting : array
+        C/F splitting stored in an array of length N
+
+    Returns
+    -------
+    NxNc interpolation operator, P
+    """
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize[0]
+        n = A.shape[0] / blocksize
+    elif isspmatrix_csr(A):
+        n = A.shape[0]
+        blocksize = 1
+    else:
+        try:
+            A = A.tocsr()
+            warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
+            n = A.shape[0]
+            blocksize = 1
+        except:
+            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+
+    nc = np.sum(splitting)
+    P_rowptr = np.arange(start=0, stop=(n+1), step=1, dtype='int32')
+    P_colinds = np.empty((n,),dtype='int32')
+    amg_core.one_point_interpolation(P_rowptr, P_colinds, C.indptr,
+                                     C.indices, C.data, splitting)
+    if blocksize == 1:
+        P_data = np.ones((n,), dtype=A.dtype)
+        return csr_matrix((P_data,P_colinds,P_rowptr), shape=[n,nc])
+    else:
+        P_data = np.array(n*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
+        return bsr_matrix((P_data,P_colinds,P_rowptr), blocksize=[blocksize,blocksize],
+                          shape=[blocksize*n,blocksize*nc])

@@ -912,6 +912,77 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
 }
 
 
+/* Interpolate C-points by value and each F-point by value from its strongest
+ * connected C-neighbor. 
+ * 
+ * Parameters
+ * ----------
+ *      rowptr : const array<int> 
+ *          Pre-determined row-pointer for P in CSR format
+ *      colinds : array<int>
+ *          Empty array for column indices for P in CSR format
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      C_data : const array<float>
+ *          Data array for SOC matrix, C
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *
+ * Returns
+ * -------
+ * Nothing, colinds[] modified in place.
+ *
+ */
+template<class I, class T>
+void one_point_interpolation(const I rowptr[], const int rowptr_size,
+                                   I colinds[], const int colinds_size,
+                             const I C_rowptr[], const int C_rowptr_size,
+                             const I C_colinds[], const int C_colinds_size,
+                             const T C_data[], const int C_data_size,
+                             const I splitting[], const int splitting_size )
+{
+    I n = rowptr_size-1;
+
+    // Get enumeration of C-points, where if i is the jth C-point,
+    // then pointInd[i] = j.
+    std::vector<I> pointInd(n);
+    pointInd[0] = 0;
+    for (I i=1; i<n; i++) {
+        pointInd[i] = pointInd[i-1] + splitting[i-1];
+    }
+
+    // Build interpolation operator as CSR matrix
+    I next = 0;
+    for (I row=0; row<n; row++) {
+
+        // Set C-point as identity
+        if (splitting[row] == C_NODE) {
+            colinds[next] = pointInd[row];
+            next += 1;
+        }
+        // For F-points, find strongest connection to C-point
+        // and interpolate directly from C-point. 
+        else {
+
+            T max = 0.0;
+            I ind = 0;
+            for (I i=C_rowptr[row]; i<C_rowptr[row+1]; i++) {
+                if (splitting[C_colinds[i]] == C_NODE) {
+                    if (std::abs(C_data[i]) > max) {
+                        max = C_data[i];
+                        ind = C_colinds[i];
+                    }
+                }
+            }
+            colinds[next] = pointInd[ind];
+            next += 1;
+        }
+    }
+}
+
+
 /* First pass of classical AMG interpolation to build row pointer for P based
  * on SOC matrix and CF-splitting. Same method used for standard and modified
  * AMG interpolation below. 

@@ -474,6 +474,13 @@ def classical_strength_of_connection_min(*args):
     """
     return _amg_core.classical_strength_of_connection_min(*args)
 
+def one_point_interpolation(*args):
+    """
+    one_point_interpolation(int const [] rowptr, int const rowptr_size, int [] colinds, int const colinds_size, int const [] C_rowptr, int const [] C_colinds, float const [] C_data, int const [] splitting)
+    one_point_interpolation(int const [] rowptr, int const rowptr_size, int [] colinds, int const colinds_size, int const [] C_rowptr, int const [] C_colinds, double const [] C_data, int const [] splitting)
+    """
+    return _amg_core.one_point_interpolation(*args)
+
 def rs_direct_interpolation_pass2(*args):
     """
     rs_direct_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, float const [] A_data, int const [] C_rowptr, int const [] C_colinds, float const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, float [] P_data)
