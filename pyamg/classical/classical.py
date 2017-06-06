@@ -4,8 +4,8 @@ from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, SparseEfficiencyWarning
-
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
+    SparseEfficiencyWarning
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
@@ -14,7 +14,8 @@ from pyamg.strength import classical_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.util.utils import mat_mat_complexity, unpack_arg
 
-from .interpolate import direct_interpolation, standard_interpolation
+from .interpolate import direct_interpolation, standard_interpolation, \
+    distance_two_interpolation
 from . import split
 from .cr import CR
 

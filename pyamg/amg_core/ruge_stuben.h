@@ -1073,7 +1073,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (a_kj != 0) {
+                            if (std::abs(a_kj) > 1e-16) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
@@ -1324,7 +1324,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (a_kj != 0) {
+                            if (std::abs(a_kj) > 1e-16) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
@@ -1501,7 +1501,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
             P_colinds[P_rowptr[i]] = i;
             P_data[P_rowptr[i]] = 1;
         } 
-        // Otherwise, use extended+1 distance-two AMG interpolation formula
+        // Otherwise, use extended+i distance-two AMG interpolation formula
         // (see Eqs. 4.10-4.11 in [0])
         else {
 
@@ -1551,7 +1551,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
 
                     // If a_ki == 0, then we don't need to do any more work, otherwise
                     // proceed to account for node k's contribution
-                    if (a_ki != 0) {
+                    if (std::abs(a_ki) > 1e-16) {
                         // Calculate sum for inner denominator (loop over strongly connected C-points
                         // and distance-two strongly connected C-points).
                         T inner_denominator = 0;
@@ -1602,7 +1602,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
 
                         // Add a_ik * a_ki / inner_denominator to the denominator 
                         if (std::abs(inner_denominator) < 1e-16) {
-                            printf("Inner denominator of outer denominator is zero.\n");
+                            std::cout << "Inner denominator of outer denominator is zero.\n";
                         }
                         denominator += a_ik * a_ki / inner_denominator;
                     }
@@ -1655,7 +1655,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (a_kj != 0) {
+                            if (std::abs(a_kj) > 1e-16) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points
                                 // and distance-two strongly connected C-points).
@@ -1725,9 +1725,8 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                     }
 
                     // Set w_ij = -numerator/denominator
-                    // TODO : make sure we should have negative sign (missing in Eq. 4.10)
                     if (std::abs(denominator) < 1e-16) {
-                        printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
+                        printf("Outer denominator was zero.\n");
                     }
                     P_data[nnz] = -numerator / denominator;
                     nnz++;
@@ -1783,7 +1782,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
 
                                     // If a_kj == 0, then we don't need to do any more work, otherwise
                                     // proceed to account for node k's contribution
-                                    if (a_kj != 0) {
+                                    if (std::abs(a_kj) > 1e-16) {
                                         
                                         // Calculate sum for inner denominator (loop over strongly connected C-points
                                         // and distance-two strongly connected C-points).
@@ -1853,9 +1852,8 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                             }
 
                             // Set w_ij = -numerator/denominator
-                            // TODO : make sure we should have negative sign (missing in Eq. 4.10)
                             if (std::abs(denominator) < 1e-16) {
-                                printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
+                                printf("Outer denominator was zero.\n");
                             }
                             P_data[nnz] = -numerator / denominator;
                             nnz++;

@@ -7,9 +7,10 @@ import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr
 from pyamg import amg_core
 from pyamg.util.utils import UnAmal
+from pyamg.strength import classical_strength_of_connection
 
 
-__all__ = ['direct_interpolation', 'standard_interpolation']
+__all__ = ['direct_interpolation', 'standard_interpolation', 'distance_two_interpolation']
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
@@ -55,7 +56,8 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
     if not isspmatrix_csr(C):
         raise TypeError('Expected csr_matrix SOC matrix, C.')
 
-    # Block BSR format
+    # Block BSR format. Transfer A to CSR and the splitting and SOC matrix to have
+    # DOFs corresponding to CSR A
     if isspmatrix_bsr(A):
         temp_A = A.tocsr()
         temp_A.eliminate_zeros()
@@ -86,7 +88,9 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
                                                temp_A.data, C0.indptr, C0.indices, C0.data,
                                                splitting0, P_indptr, P_colinds, P_data)
 
-        P = csr_matrix((P_data, P_colinds, P_indptr))
+        nc = np.sum(splitting0)
+        n = A.shape[0]
+        P = csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
         return P.tobsr(blocksize=A.blocksize)
 
     # CSR format
@@ -113,7 +117,9 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
                                                A.data, C0.indptr, C0.indices, C0.data,
                                                splitting, P_indptr, P_colinds, P_data)
 
-        return csr_matrix((P_data, P_colinds, P_indptr))
+        nc = np.sum(splitting)
+        n = A.shape[0]
+        return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
 
 def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=True, cost=[0]):
@@ -163,7 +169,11 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     if not isspmatrix_csr(C):
         raise TypeError('Expected csr_matrix SOC matrix, C.')
 
-    # Block BSR format
+    nc = np.sum(splitting)
+    n = A.shape[0]
+
+    # Block BSR format. Transfer A to CSR and the splitting and SOC matrix to have
+    # DOFs corresponding to CSR A
     if isspmatrix_bsr(A):
         temp_A = A.tocsr()
         splitting0 = splitting * np.ones((A.blocksize[0],1), dtype='intc')
@@ -206,7 +216,9 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
                                                      C0.data, splitting0, P_indptr,
                                                      P_colinds, P_data)
 
-        P = csr_matrix((P_data, P_colinds, P_indptr))
+        nc = np.sum(splitting0)
+        n = A.shape[0] 
+        P = csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
         return P.tobsr(blocksize=A.blocksize)
 
     # CSR format
@@ -245,14 +257,122 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
                                                      A.data, C0.indptr, C0.indices,
                                                      C0.data, splitting, P_indptr,
                                                      P_colinds, P_data)
-
-        return csr_matrix((P_data, P_colinds, P_indptr))
-
-
-
-
-# TODO : Add distance-two interp to python interface
+        nc = np.sum(splitting)
+        n = A.shape[0]
+        return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
 
+def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
+    """Create prolongator using distance-two AMG interpolation (extended+i interpolaton).
 
+    Parameters
+    ----------
+    A : {csr_matrix}
+        NxN matrix in CSR format
+    C : {csr_matrix}
+        Strength-of-Connection matrix
+        Must have zero diagonal
+    splitting : array
+        C/F splitting stored in an array of length N
+    theta : float in [0,1), default None
+        theta value defining strong connections in a classical AMG sense. Provide if
+        different SOC used for P than for CF-splitting; otherwise, theta = None. 
+    norm : string, default 'abs'
+        Norm used in redefining classical SOC. Options are 'min' and 'abs' for CSR matrices,
+        and 'min', 'abs', and 'fro' for BSR matrices. See strength.py for more information.
+    modified : bool, default True
+        Use modified classical interpolation. More robust if RS coarsening with second
+        pass is not used for CF splitting. Ignores interpolating from strong F-connections
+        without a common C-neighbor.
+
+    Returns
+    -------
+    P : {csr_matrix}
+        Prolongator using standard interpolation
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical import standard_interpolation
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> P = standard_interpolation(A, A, splitting)
+    >>> print P.todense()
+    [[ 1.   0.   0. ]
+     [ 0.5  0.5  0. ]
+     [ 0.   1.   0. ]
+     [ 0.   0.5  0.5]
+     [ 0.   0.   1. ]]
+
+    """
+    if not isspmatrix_csr(C):
+        raise TypeError('Expected csr_matrix SOC matrix, C.')
+
+    nc = np.sum(splitting)
+    n = A.shape[0]
+
+    # Block BSR format. Transfer A to CSR and the splitting and SOC matrix to have
+    # DOFs corresponding to CSR A
+    if isspmatrix_bsr(A):
+        temp_A = A.tocsr()
+        splitting0 = splitting * np.ones((A.blocksize[0],1), dtype='intc')
+        splitting0 = np.reshape(splitting0, (np.prod(splitting0.shape),), order='F')
+        if theta is not None:
+            C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
+            C0 = UnAmal(C0, A.blocksize[0], A.blocksize[1])
+        else:
+            C0 = UnAmal(C, A.blocksize[0], A.blocksize[1])
+        C0 = C0.tocsr()
+        C0.eliminate_zeros()
+
+        # Interpolation weights are computed based on entries in A, but subject to
+        # the sparsity pattern of C.  So, copy the entries of A into the
+        # sparsity pattern of C.
+        C0.data[:] = 1.0
+        C0 = C0.multiply(temp_A)
+
+        P_indptr = np.empty_like(temp_A.indptr)
+        amg_core.distance_two_amg_interpolation_pass1(temp_A.shape[0], C0.indptr,
+                                                      C0.indices, splitting0, P_indptr)
+        nnz = P_indptr[-1]
+        P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+        P_data = np.empty(nnz, dtype=temp_A.dtype)
+        amg_core.distance_two_amg_interpolation_pass2(temp_A.shape[0], temp_A.indptr, temp_A.indices,
+                                                      temp_A.data, C0.indptr, C0.indices,
+                                                      C0.data, splitting0, P_indptr,
+                                                      P_colinds, P_data)
+
+        nc = np.sum(splitting0)
+        n = A.shape[0] 
+        P = csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
+        return P.tobsr(blocksize=A.blocksize)
+
+    # CSR format
+    else:
+        if theta is not None:
+            C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
+        else:
+            C0 = C.copy()
+        C0.eliminate_zeros()
+
+        # Interpolation weights are computed based on entries in A, but subject to
+        # the sparsity pattern of C.  So, copy the entries of A into the
+        # sparsity pattern of C.
+        C0.data[:] = 1.0
+        C0 = C0.multiply(A)
+
+        P_indptr = np.empty_like(A.indptr)
+        amg_core.distance_two_amg_interpolation_pass1(A.shape[0], C0.indptr,
+                                                      C0.indices, splitting, P_indptr)
+        nnz = P_indptr[-1]
+        P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+        P_data = np.empty(nnz, dtype=A.dtype)
+        amg_core.distance_two_amg_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                                      A.data, C0.indptr, C0.indices,
+                                                      C0.data, splitting, P_indptr,
+                                                      P_colinds, P_data)
+        nc = np.sum(splitting)
+        n = A.shape[0]
+        return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
