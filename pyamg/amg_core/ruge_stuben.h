@@ -1579,7 +1579,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
             // -------------------------------------------------------------------------------- //
             // -------------------------------------------------------------------------------- //
             // Calculate outer denominator
-            T denominator = 0;
+            T denominator = 0.0;
 
             // Start by summing entire row of A
             for (I mm = A_rowptr[i]; mm < A_rowptr[i+1]; mm++) {
@@ -1624,7 +1624,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                     // proceed to account for node k's contribution
                     if (std::abs(a_ki) > 1e-16) {
                         // Calculate sum for inner denominator (loop over strongly connected C-points
-                        // and distance-two strongly connected C-points).
+                        // and distance-two strongly connected C-points from node i).
                         T inner_denominator = 0;
                         for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
                             I this_point = C_colinds[ll];
@@ -1729,7 +1729,7 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                             if (std::abs(a_kj) > 1e-16) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points
-                                // and distance-two strongly connected C-points).
+                                // and distance-two strongly connected C-points from node i).
                                 T inner_denominator = 0;
                                 for (I ll = C_rowptr[i]; ll < C_rowptr[i+1]; ll++) {
                                     I this_point = C_colinds[ll];
@@ -1826,6 +1826,9 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
                             T numerator = a_ij;
 
                             // Sum over strongly connected F points
+                            // TODO : does this seem strange looping over strong F connections to i, when
+                            //        we are looking at distance two connections? We don't look at strong
+                            //        F connections to the new C-point (neighbor2)??
                             for (I kk = C_rowptr[i]; kk < C_rowptr[i+1]; kk++) {
                                 if ( (splitting[C_colinds[kk]] == F_NODE) && (C_colinds[kk] != i) ) {
                                     
