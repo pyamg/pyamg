@@ -502,12 +502,19 @@ def mod_standard_interpolation_pass2(*args):
     """
     return _amg_core.mod_standard_interpolation_pass2(*args)
 
-def distance_two_amg_interpolation_pass2(*args):
+def extended_plusi_interpolation_pass2(*args):
     """
-    distance_two_amg_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, float const [] A_data, int const [] C_rowptr, int const [] C_colinds, float const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, float [] P_data)
-    distance_two_amg_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, double const [] A_data, int const [] C_rowptr, int const [] C_colinds, double const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, double [] P_data)
+    extended_plusi_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, float const [] A_data, int const [] C_rowptr, int const [] C_colinds, float const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, float [] P_data)
+    extended_plusi_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, double const [] A_data, int const [] C_rowptr, int const [] C_colinds, double const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, double [] P_data)
     """
-    return _amg_core.distance_two_amg_interpolation_pass2(*args)
+    return _amg_core.extended_plusi_interpolation_pass2(*args)
+
+def extended_interpolation_pass2(*args):
+    """
+    extended_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, float const [] A_data, int const [] C_rowptr, int const [] C_colinds, float const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, float [] P_data)
+    extended_interpolation_pass2(int const n_nodes, int const [] A_rowptr, int const [] A_colinds, double const [] A_data, int const [] C_rowptr, int const [] C_colinds, double const [] C_data, int const [] splitting, int const [] P_rowptr, int [] P_colinds, double [] P_data)
+    """
+    return _amg_core.extended_interpolation_pass2(*args)
 
 def remove_strong_FF_connections(*args):
     """

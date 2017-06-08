@@ -1516,9 +1516,9 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
 }
 
 
-/* Compute distance-two standard AMG interpolation. Referred to as "extended+i
- * interpolation" in [0]. Uses neighbors within distance two for interpolation
- * weights. Formula can be found in Eqs. (4.10-4.11) in [0].
+/* Compute distance-two "Extended+i" classical AMG interpolation from [0]. Uses
+ * neighbors within distance two for interpolation weights. Formula can be found
+ * in Eqs. (4.10-4.11) in [0].
  *
  * Parameters:
  * -----------
@@ -1547,21 +1547,26 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
  * --------
  * Nothing, P_colinds[] and P_data[] modified in place.
  *
+ * Notes:
+ * ------
+ * Includes connections a_ji from j to point i itself in interpolation weights
+ * to improve interpolation.
+ *
  * References:
  * -----------
  * [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
  *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
  */
 template<class I, class T>
-void distance_two_amg_interpolation_plusi_pass2(const I n_nodes,
-                                          const I A_rowptr[], const int A_rowptr_size,
-                                          const I A_colinds[], const int A_colinds_size,
-                                          const T A_data[], const int A_data_size,
-                                          const I C_rowptr[], const int C_rowptr_size,
-                                          const I C_colinds[], const int C_colinds_size,
-                                          const T C_data[], const int C_data_size,
-                                          const I splitting[], const int splitting_size,
-                                          const I P_rowptr[], const int P_rowptr_size,
+void extended_plusi_interpolation_pass2(const I n_nodes,
+                                        const I A_rowptr[], const int A_rowptr_size,
+                                        const I A_colinds[], const int A_colinds_size,
+                                        const T A_data[], const int A_data_size,
+                                        const I C_rowptr[], const int C_rowptr_size,
+                                        const I C_colinds[], const int C_colinds_size,
+                                        const T C_data[], const int C_data_size,
+                                        const I splitting[], const int splitting_size,
+                                        const I P_rowptr[], const int P_rowptr_size,
                                                 I P_colinds[], const int P_colinds_size,
                                                 T P_data[], const int P_data_size)
 {
@@ -1589,8 +1594,30 @@ void distance_two_amg_interpolation_plusi_pass2(const I n_nodes,
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
             for (I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
-                if ( C_colinds[mm] != i ) {
+                I this_point = C_colinds[mm];
+                if ( this_point != i ) {
                     denominator -= C_data[mm]; // making sure to leave the diagonal entry in there
+                }
+                // Subtract off distance-two strong C connections that are also distance-one weak
+                // connections (i.e. not yet removed from the weak connections in denominator)
+                if (splitting[this_point] == F_NODE && (this_point != i)) {
+
+                    for (I ff = C_rowptr[this_point]; ff < C_rowptr[this_point+1]; ff++) {
+                        I d2_point = C_colinds[ff];
+
+                        // Strong C-connections to strong F-connections (distance two C connections)
+                        if (splitting[d2_point] == C_NODE) {
+
+                            // Add connection a_kl if present in matrix (search over kth row in A
+                            // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                            for (I search_ind = A_rowptr[i]; search_ind < A_rowptr[i+1]; search_ind++) {
+                                if (A_colinds[search_ind] == d2_point) {
+                                    denominator -= A_data[search_ind];
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1952,20 +1979,56 @@ void distance_two_amg_interpolation_plusi_pass2(const I n_nodes,
     }
 }
 
-template<class I, class T>
-void distance_two_amg_interpolation_pass2(const I n_nodes,
-                                          const I A_rowptr[], const int A_rowptr_size,
-                                          const I A_colinds[], const int A_colinds_size,
-                                          const T A_data[], const int A_data_size,
-                                          const I C_rowptr[], const int C_rowptr_size,
-                                          const I C_colinds[], const int C_colinds_size,
-                                          const T C_data[], const int C_data_size,
-                                          const I splitting[], const int splitting_size,
-                                          const I P_rowptr[], const int P_rowptr_size,
-                                                I P_colinds[], const int P_colinds_size,
-                                                T P_data[], const int P_data_size)
-{
 
+/* Compute distance-two "Extended" classical AMG interpolation from [0]. Uses
+ * neighbors within distance two for interpolation weights. Formula can be found
+ * in Eq. (4.6) in [0].
+ *
+ * Parameters:
+ * -----------
+ *      A_rowptr : const array<int>
+ *          Row pointer for matrix A
+ *      A_colinds : const array<int>
+ *          Column indices for matrix A
+ *      A_data : const array<float>
+ *          Data array for matrix A
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      C_data : const array<float>
+ *          Data array for SOC matrix, C -- MUST HAVE VALUES OF A
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *      P_rowptr : const array<int>
+ *          Row pointer for matrix P
+ *      P_colinds : array<int>
+ *          Column indices for matrix P
+ *      P_data : array<float>
+ *          Data array for matrix P
+ *
+ * Returns:
+ * --------
+ * Nothing, P_colinds[] and P_data[] modified in place.
+ *
+ * References:
+ * -----------
+ * [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
+ */
+template<class I, class T>
+void extended_interpolation_pass2(const I n_nodes,
+                                  const I A_rowptr[], const int A_rowptr_size,
+                                  const I A_colinds[], const int A_colinds_size,
+                                  const T A_data[], const int A_data_size,
+                                  const I C_rowptr[], const int C_rowptr_size,
+                                  const I C_colinds[], const int C_colinds_size,
+                                  const T C_data[], const int C_data_size,
+                                  const I splitting[], const int splitting_size,
+                                  const I P_rowptr[], const int P_rowptr_size,
+                                        I P_colinds[], const int P_colinds_size,
+                                        T P_data[], const int P_data_size)
+{
     for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
         if(splitting[i] == C_NODE) {
@@ -1989,8 +2052,30 @@ void distance_two_amg_interpolation_pass2(const I n_nodes,
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
             for (I mm = C_rowptr[i]; mm < C_rowptr[i+1]; mm++) {
-                if ( C_colinds[mm] != i ) {
+                I this_point = C_colinds[mm];
+                if ( this_point != i ) {
                     denominator -= C_data[mm]; // making sure to leave the diagonal entry in there
+                }
+                // Subtract off distance-two strong C connections that are also distance-one weak
+                // connections (i.e. not yet removed from the weak connections in denominator)
+                if (splitting[this_point] == F_NODE && (this_point != i)) {
+
+                    for (I ff = C_rowptr[this_point]; ff < C_rowptr[this_point+1]; ff++) {
+                        I d2_point = C_colinds[ff];
+
+                        // Strong C-connections to strong F-connections (distance two C connections)
+                        if (splitting[d2_point] == C_NODE) {
+
+                            // Add connection a_kl if present in matrix (search over kth row in A
+                            // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                            for (I search_ind = A_rowptr[i]; search_ind < A_rowptr[i+1]; search_ind++) {
+                                if (A_colinds[search_ind] == d2_point) {
+                                    denominator -= A_data[search_ind];
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

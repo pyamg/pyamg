@@ -264,12 +264,7 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
         return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
 
-def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]):
-    #
-    #
-    # TODO: there is something wrong with the C-version of this
-    #
-    #
+def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=True, cost=[0]):
     """Create prolongator using distance-two AMG interpolation (extended+i interpolaton).
 
     Parameters
@@ -287,11 +282,19 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]
     norm : string, default 'abs'
         Norm used in redefining classical SOC. Options are 'min' and 'abs' for CSR matrices,
         and 'min', 'abs', and 'fro' for BSR matrices. See strength.py for more information.
+    plus_i : bool, default True
+        Use "Extended+i" interpolation from [0] as opposed to "Extended" interpolation. Typically
+        gives better interpolation with minimal added expense.
 
     Returns
     -------
     P : {csr_matrix}
         Prolongator using standard interpolation
+
+    References
+    ----------
+    [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
+       H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
 
     Examples
     --------
@@ -341,11 +344,16 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]
         nnz = P_indptr[-1]
         P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
         P_data = np.empty(nnz, dtype=temp_A.dtype)
-        amg_core.distance_two_amg_interpolation_pass2(temp_A.shape[0], temp_A.indptr, temp_A.indices,
-                                                      temp_A.data, C0.indptr, C0.indices,
-                                                      C0.data, splitting0, P_indptr,
-                                                      P_colinds, P_data)
-
+        if plus_i:
+            amg_core.extended_plusi_interpolation_pass2(temp_A.shape[0], temp_A.indptr, temp_A.indices,
+                                                        temp_A.data, C0.indptr, C0.indices,
+                                                        C0.data, splitting0, P_indptr,
+                                                        P_colinds, P_data)
+        else:
+            amg_core.extended_interpolation_pass2(temp_A.shape[0], temp_A.indptr, temp_A.indices,
+                                                  temp_A.data, C0.indptr, C0.indices,
+                                                  C0.data, splitting0, P_indptr,
+                                                  P_colinds, P_data)
         nc = np.sum(splitting0)
         n = A.shape[0] 
         P = csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
@@ -371,10 +379,16 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', cost=[0]
         nnz = P_indptr[-1]
         P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
         P_data = np.empty(nnz, dtype=A.dtype)
-        amg_core.distance_two_amg_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                      A.data, C0.indptr, C0.indices,
-                                                      C0.data, splitting, P_indptr,
-                                                      P_colinds, P_data)
+        if plus_i:
+            amg_core.extended_plusi_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                                        A.data, C0.indptr, C0.indices,
+                                                        C0.data, splitting, P_indptr,
+                                                        P_colinds, P_data)
+        else:
+            amg_core.extended_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                                  A.data, C0.indptr, C0.indices,
+                                                  C0.data, splitting, P_indptr,
+                                                  P_colinds, P_data)
         nc = np.sum(splitting)
         n = A.shape[0]
         return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
