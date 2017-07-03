@@ -55,7 +55,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'PyAMG'
 copyright = '2017, Luke Olson'
-author = 'Luke Olson'
+author = '2017, Luke Olson and Jacob Schroder'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -92,6 +92,7 @@ todo_include_todos = False
 #
 #html_theme = 'alabaster'
 html_theme = 'sphinx_rtd_theme'
+html_logo = '../logo/versions/logo_dropshadow_small.png'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -157,7 +158,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'PyAMG', 'PyAMG Documentation',
-     author, 'PyAMG', 'One line description of project.',
+     author, 'PyAMG', 'Algebraic Multigrid Solvers in Python.',
      'Miscellaneous'),
 ]
 
