@@ -1,57 +1,53 @@
-util Package
-============
+pyamg\.util package
+===================
 
-:mod:`util` Package
--------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.util
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`BSR_utils` Module
------------------------
+    pyamg.util.tests
+
+Submodules
+----------
+
+pyamg\.util\.BSR\_utils module
+------------------------------
 
 .. automodule:: pyamg.util.BSR_utils
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`info` Module
-------------------
+pyamg\.util\.info module
+------------------------
 
 .. automodule:: pyamg.util.info
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`linalg` Module
---------------------
+pyamg\.util\.linalg module
+--------------------------
 
 .. automodule:: pyamg.util.linalg
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.util.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`utils` Module
--------------------
+pyamg\.util\.utils module
+-------------------------
 
 .. automodule:: pyamg.util.utils
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.util
+    :members:
+    :undoc-members:
+    :show-inheritance:

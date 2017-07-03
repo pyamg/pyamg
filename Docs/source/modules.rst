@@ -1,12 +1,7 @@
-Project Documentation
-=====================
-
-This page contains the Project Modules documentation.
-
-Modules:
---------
+pyamg
+=====
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 4
 
    pyamg

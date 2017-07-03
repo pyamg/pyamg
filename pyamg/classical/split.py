@@ -25,14 +25,14 @@ C/F Splitting Methods
 RS : Original Ruge-Stuben method
     - Produces good C/F splittings but is inherently serial.
     - May produce AMG hierarchies with relatively high operator complexities.
-    - See References [1,4]
+    - See References [1] and [4]
 
 PMIS: Parallel Modified Independent Set
     - Very fast construction with low operator complexity.
     - Convergence can deteriorate with increasing problem
       size on structured meshes.
     - Uses method similar to Luby's Maximal Independent Set algorithm.
-    - See References [1,3]
+    - See References [1] and [3]
 
 PMISc: Parallel Modified Independent Set in Color
     - Fast construction with low operator complexity.
@@ -44,7 +44,7 @@ CLJP: Clearly-Luby-Jones-Plassmann
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Convergence can deteriorate with increasing problem
       size on structured meshes.
-    - See References [1,2]
+    - See References [1] and [2]
 
 CLJP-c: Clearly-Luby-Jones-Plassmann in Color
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
@@ -73,14 +73,14 @@ from coloring.
 References
 ----------
 
-..  [1] David M. Alber and Luke N. Olson
-    "Parallel coarse-grid selection"
-    Numerical Linear Algebra with Applications 2007; 14:611-643.
-
-..  [2] Cleary AJ, Falgout RD, Henson VE, Jones JE.
+..  [1] Cleary AJ, Falgout RD, Henson VE, Jones JE.
     "Coarse-grid selection for parallel algebraic multigrid"
     Proceedings of the 5th International Symposium on Solving Irregularly
     Structured Problems in Parallel. Springer: Berlin, 1998; 104-115.
+
+..  [2] David M. Alber and Luke N. Olson
+    "Parallel coarse-grid selection"
+    Numerical Linear Algebra with Applications 2007; 14:611-643.
 
 ..  [3] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
     "Reducing complexity in parallel algebraic multigrid preconditioners"
@@ -133,7 +133,7 @@ def RS(S):
 
     References
     ----------
-    .. [1] Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
+    .. [5] Ruge JW, Stuben K.  "Algebraic multigrid (AMG)"
        In Multigrid Methods, McCormick SF (ed.),
        Frontiers in Applied Mathematics, vol. 3.
        SIAM: Philadelphia, PA, 1987; 73-130.
@@ -182,7 +182,7 @@ def PMIS(S):
 
     References
     ----------
-    .. [1] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
+    .. [6] Hans De Sterck, Ulrike M Yang, and Jeffrey J Heys
        "Reducing complexity in parallel algebraic multigrid preconditioners"
        SIAM Journal on Matrix Analysis and Applications 2006; 27:1019-1039.
 
@@ -227,7 +227,7 @@ def PMISc(S, method='JP'):
 
     References
     ----------
-    .. [1] David M. Alber and Luke N. Olson
+    .. [7] David M. Alber and Luke N. Olson
        "Parallel coarse-grid selection"
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
@@ -266,7 +266,7 @@ def CLJP(S, color=False):
 
     References
     ----------
-    .. [1] David M. Alber and Luke N. Olson
+    .. [8] David M. Alber and Luke N. Olson
        "Parallel coarse-grid selection"
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 

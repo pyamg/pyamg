@@ -1,57 +1,53 @@
-classical Package
-=================
+pyamg\.classical package
+========================
 
-:mod:`classical` Package
-------------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.classical
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`classical` Module
------------------------
+    pyamg.classical.tests
+
+Submodules
+----------
+
+pyamg\.classical\.classical module
+----------------------------------
 
 .. automodule:: pyamg.classical.classical
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`cr` Module
-----------------
+pyamg\.classical\.cr module
+---------------------------
 
 .. automodule:: pyamg.classical.cr
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`interpolate` Module
--------------------------
+pyamg\.classical\.interpolate module
+------------------------------------
 
 .. automodule:: pyamg.classical.interpolate
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.classical.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`split` Module
--------------------
+pyamg\.classical\.split module
+------------------------------
 
 .. automodule:: pyamg.classical.split
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.classical
+    :members:
+    :undoc-members:
+    :show-inheritance:

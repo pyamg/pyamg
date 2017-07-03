@@ -1,7 +1,5 @@
-Pyamg Documentation
-===================
-
-This page contains the Pyamg Package documentation.
+pyamg package
+=============
 
 Subpackages
 -----------
@@ -14,47 +12,66 @@ Subpackages
     pyamg.gallery
     pyamg.krylov
     pyamg.relaxation
-    pyamg.testing
+    pyamg.tests
     pyamg.util
     pyamg.vis
 
-The :mod:`__config__` Module
-----------------------------
+Submodules
+----------
 
-.. automodule:: pyamg.__config__
+pyamg\.blackbox module
+----------------------
+
+.. automodule:: pyamg.blackbox
     :members:
     :undoc-members:
     :show-inheritance:
 
-The :mod:`graph` Module
------------------------
+pyamg\.graph module
+-------------------
 
 .. automodule:: pyamg.graph
     :members:
     :undoc-members:
     :show-inheritance:
 
-The :mod:`multilevel` Module
-----------------------------
+pyamg\.info module
+------------------
+
+.. automodule:: pyamg.info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyamg\.multilevel module
+------------------------
 
 .. automodule:: pyamg.multilevel
     :members:
     :undoc-members:
     :show-inheritance:
 
-The :mod:`setup` Module
------------------------
-
-.. automodule:: pyamg.setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-The :mod:`strength` Module
---------------------------
+pyamg\.strength module
+----------------------
 
 .. automodule:: pyamg.strength
     :members:
     :undoc-members:
     :show-inheritance:
 
+pyamg\.version module
+---------------------
+
+.. automodule:: pyamg.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: pyamg
+    :members:
+    :undoc-members:
+    :show-inheritance:

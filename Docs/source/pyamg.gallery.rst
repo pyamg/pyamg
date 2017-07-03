@@ -1,102 +1,93 @@
-gallery Package
-===============
+pyamg\.gallery package
+======================
 
-:mod:`gallery` Package
-----------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.gallery
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`demo` Module
-------------------
+    pyamg.gallery.tests
+
+Submodules
+----------
+
+pyamg\.gallery\.demo module
+---------------------------
 
 .. automodule:: pyamg.gallery.demo
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`diffusion` Module
------------------------
+pyamg\.gallery\.diffusion module
+--------------------------------
 
 .. automodule:: pyamg.gallery.diffusion
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`elasticity` Module
-------------------------
+pyamg\.gallery\.elasticity module
+---------------------------------
 
 .. automodule:: pyamg.gallery.elasticity
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`example` Module
----------------------
+pyamg\.gallery\.example module
+------------------------------
 
 .. automodule:: pyamg.gallery.example
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`info` Module
-------------------
+pyamg\.gallery\.info module
+---------------------------
 
 .. automodule:: pyamg.gallery.info
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`laplacian` Module
------------------------
+pyamg\.gallery\.laplacian module
+--------------------------------
 
 .. automodule:: pyamg.gallery.laplacian
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`mesh` Module
-------------------
+pyamg\.gallery\.mesh module
+---------------------------
 
 .. automodule:: pyamg.gallery.mesh
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`random_sparse` Module
----------------------------
+pyamg\.gallery\.random\_sparse module
+-------------------------------------
 
 .. automodule:: pyamg.gallery.random_sparse
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.gallery.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`stencil` Module
----------------------
+pyamg\.gallery\.stencil module
+------------------------------
 
 .. automodule:: pyamg.gallery.stencil
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.gallery
+    :members:
+    :undoc-members:
+    :show-inheritance:

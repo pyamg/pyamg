@@ -1,75 +1,69 @@
-aggregation Package
-===================
+pyamg\.aggregation package
+==========================
 
-:mod:`aggregation` Package
---------------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.aggregation
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`adaptive` Module
-----------------------
+    pyamg.aggregation.tests
+
+Submodules
+----------
+
+pyamg\.aggregation\.adaptive module
+-----------------------------------
 
 .. automodule:: pyamg.aggregation.adaptive
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`aggregate` Module
------------------------
+pyamg\.aggregation\.aggregate module
+------------------------------------
 
 .. automodule:: pyamg.aggregation.aggregate
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`aggregation` Module
--------------------------
+pyamg\.aggregation\.aggregation module
+--------------------------------------
 
 .. automodule:: pyamg.aggregation.aggregation
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`rootnode` Module
-----------------------
+pyamg\.aggregation\.rootnode module
+-----------------------------------
 
 .. automodule:: pyamg.aggregation.rootnode
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.aggregation.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`smooth` Module
---------------------
+pyamg\.aggregation\.smooth module
+---------------------------------
 
 .. automodule:: pyamg.aggregation.smooth
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`tentative` Module
------------------------
+pyamg\.aggregation\.tentative module
+------------------------------------
 
 .. automodule:: pyamg.aggregation.tentative
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.aggregation
+    :members:
+    :undoc-members:
+    :show-inheritance:

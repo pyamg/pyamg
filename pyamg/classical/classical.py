@@ -76,11 +76,12 @@ def ruge_stuben_solver(A,
     'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
     (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
     function, and args is a dictionary of arguments to be passed to fn.
+    See [2001TrOoSc]_ for additional details.
 
 
     References
     ----------
-    .. [1] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
+    .. [2001TrOoSc] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
        "Multigrid" San Diego: Academic Press, 2001.  Appendix A
 
     See Also

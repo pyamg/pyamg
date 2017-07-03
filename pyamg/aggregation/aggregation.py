@@ -45,32 +45,29 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix in CSR or BSR format
-    B : {None, array_like}
+    B : None, array_like}
         Right near-nullspace candidates stored in the columns of an NxK array.
         The default value B=None is equivalent to B=ones((N,1))
-    BH : {None, array_like}
+    BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry is 'nonsymmetric'.
         The default value B=None is equivalent to BH=B.copy()
-    symmetry : {string}
+    symmetry : string
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         Note, in the strictly real case, symmetric and hermitian are the same
         Note, this flag does not denote definiteness of the operator.
-    strength : {list} : default ['symmetric', 'classical', 'evolution',
-               'algebraic_distance', 'affinity',
-               ('predefined', {'C' : csr_matrix}), None]
+    strength : list : default ['symmetric', 'classical', 'evolution', 'algebraic_distance', 'affinity', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,
         all nonzero entries of the matrix are considered strong.
         See notes below for varying this parameter on a per level basis.  Also,
         see notes below for using a predefined strength matrix on each level.
-    aggregate : {list} : default ['standard', 'lloyd', 'naive',
-                ('predefined', {'AggOp' : csr_matrix})]
+    aggregate : {list} : default ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
         Method used to aggregate nodes.  See notes below for varying this
         parameter on a per level basis.  Also, see notes below for using a
         predefined aggregation on each level.
@@ -79,17 +76,14 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         parameters may be passed in using a tuple, e.g.  smooth=
         ('jacobi',{'filter' : True }).  See notes below for varying this
         parameter on a per level basis.
-    presmoother : {tuple, string, list} : default ('block_gauss_seidel',
-                  {'sweep':'symmetric'})
+    presmoother : {tuple, string, list} : default ('block_gauss_seidel', {'sweep':'symmetric'})
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    improve_candidates : {tuple, string, list} : default
-                        [('block_gauss_seidel',
-                         {'sweep': 'symmetric', 'iterations': 4}), None]
+    improve_candidates : {tuple, string, list} : default [('block_gauss_seidel', {'sweep': 'symmetric', 'iterations': 4}), None]
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
@@ -117,7 +111,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Structrure of multigrid cycle
     coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
         Solver used at the coarsest level of the MG hierarchy.
-            Optionally, may be a tuple (fn, args), where fn is a string such as
+        Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
 
@@ -165,8 +159,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
           smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
           presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
           aggregate=['standard', 'naive']
-          strength=[('symmetric', {'theta':0.25}), ('symmetric',
-                                                    {'theta':0.08})]
+          strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
 
         - Predefined strength of connection and aggregation schemes can be
           specified.  These options are best used together, but aggregation can
@@ -199,7 +192,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     References
     ----------
-    .. [1] Vanek, P. and Mandel, J. and Brezina, M.,
+    .. [1996VaMaBr] Vanek, P. and Mandel, J. and Brezina, M.,
        "Algebraic Multigrid by Smoothed Aggregation for
        Second and Fourth Order Elliptic Problems",
        Computing, vol. 56, no. 3, pp. 179--196, 1996.

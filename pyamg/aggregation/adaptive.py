@@ -153,12 +153,10 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Maximum number of variables permitted on the coarse grid.
     prepostsmoother : {string or dict}
         Pre- and post-smoother used in the adaptive method
-    strength : ['symmetric', 'classical', 'evolution',
-                ('predefined', {'C': csr_matrix}), None]
+    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C': csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  See smoothed_aggregation_solver(...) documentation.
-    aggregate : ['standard', 'lloyd', 'naive',
-                 ('predefined', {'AggOp': csr_matrix})]
+    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_matrix})]
         Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
         documentation.
     smooth : ['jacobi', 'richardson', 'energy', None]
@@ -166,7 +164,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         smoothed_aggregation_solver(...) documentation
     coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
         Solver used at the coarsest level of the MG hierarchy.
-            Optionally, may be a tuple (fn, args), where fn is a string such as
+        Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
     eliminate_local : {tuple}

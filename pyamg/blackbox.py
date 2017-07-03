@@ -59,27 +59,27 @@ def solver_configuration(A, B=None, verb=True):
 
     Parameters
     ----------
-    A : {array, matrix, csr_matrix, bsr_matrix}
+    A : array, matrix, csr_matrix, bsr_matrix
         (n x n) matrix to invert, CSR or BSR format preferred for efficiency
-    B : {None, array}
+    B : None, array
         Near null-space modes used to construct the smoothed aggregation solver
         If None, the constant vector is used
         If (n x m) array, then B is passed to smoothed_aggregation_solver
-    verb : {bool}
+    verb : bool
         If True, print verbose output during runtime
 
     Returns
     -------
-    config : {dict}
+    config : dict
         A dictionary of solver configuration parameters that one uses to
         generate a smoothed aggregation solver
 
     Notes
     -----
-    The config dictionary contains the following parameter entries:
-        symmetry, smooth, presmoother, postsmoother, B, strength,
-        max_levels, max_coarse, coarse_solver, aggregate, keep
-    See smoothed_aggregtion_solver for each parameter's description.
+    The config dictionary contains the following parameter entries: symmetry,
+    smooth, presmoother, postsmoother, B, strength, max_levels, max_coarse,
+    coarse_solver, aggregate, keep.  See smoothed_aggregtion_solver for each
+    parameter's description.
 
     Examples
     --------
@@ -87,6 +87,7 @@ def solver_configuration(A, B=None, verb=True):
     >>> from pyamg import solver_configuration
     >>> A = poisson((40,40),format='csr')
     >>> solver_config = solver_configuration(A,verb=False)
+
     """
 
     # Ensure acceptable format of A
@@ -178,9 +179,8 @@ def solver(A, config):
     Notes
     -----
     config must contain the following parameter entries for
-    smoothed_aggregation_solver:
-        symmetry, smooth, presmoother, postsmoother, B, strength,
-        max_levels, max_coarse, coarse_solver, aggregate, keep
+    smoothed_aggregation_solver: symmetry, smooth, presmoother, postsmoother,
+    B, strength, max_levels, max_coarse, coarse_solver, aggregate, keep
 
     Examples
     --------

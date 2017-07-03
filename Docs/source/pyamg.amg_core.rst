@@ -1,30 +1,22 @@
-amg_core Package
-================
+pyamg\.amg\_core package
+========================
 
-:mod:`amg_core` Package
------------------------
+Submodules
+----------
 
-.. automodule:: pyamg.amg_core
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`amg_core` Module
-----------------------
+pyamg\.amg\_core\.amg\_core module
+----------------------------------
 
 .. automodule:: pyamg.amg_core.amg_core
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
 
-.. automodule:: pyamg.amg_core.setup
+Module contents
+---------------
+
+.. automodule:: pyamg.amg_core
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
-

@@ -45,29 +45,28 @@ def rootnode_solver(A, B=None, BH=None,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix in CSR or BSR format
-    B : {None, array_like}
+    B : None, array_like
         Right near-nullspace candidates stored in the columns of an NxK array.
-        K must be >= the blocksize of A (see reference [2]). The default value
+        K must be >= the blocksize of A (see reference [2011OlScTu]_). The default value
         B=None is equivalent to choosing the constant over each block-variable,
         B=np.kron(np.ones((A.shape[0]/blocksize(A), 1)), np.eye(blocksize(A)))
-    BH : {None, array_like}
+    BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry is 'nonsymmetric'.  K must be >= the
-        blocksize of A (see reference [2]). The default value B=None is
+        blocksize of A (see reference [2011OlScTu]_). The default value B=None is
         equivalent to choosing the constant over each block-variable,
         B=np.kron(np.ones((A.shape[0]/blocksize(A), 1)), np.eye(blocksize(A)))
-    symmetry : {string}
+    symmetry : string
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         Note that for the strictly real case, symmetric and hermitian are
         the same
         Note that this flag does not denote definiteness of the operator.
-    strength : {list} : default
-        ['symmetric', 'classical', 'evolution', 'algebraic_distance',
-            'affinity', ('predefined', {'C' : csr_matrix}), None]
+    strength : {list} : default ['symmetric', 'classical', 'evolution', 'algebraic_distance',
+                                 'affinity', ('predefined', {'C' : csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,
@@ -93,9 +92,8 @@ def rootnode_solver(A, B=None, BH=None,
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    improve_candidates : {tuple, string, list} : default
-                         [('block_gauss_seidel',
-                          {'sweep': 'symmetric', 'iterations': 4}), None]
+    improve_candidates : {tuple, string, list} : default [('block_gauss_seidel',
+                                                           {'sweep': 'symmetric', 'iterations': 4}), None]
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
@@ -125,7 +123,7 @@ def rootnode_solver(A, B=None, BH=None,
         Structrure of multigrid cycle
     coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
         Solver used at the coarsest level of the MG hierarchy.
-            Optionally, may be a tuple (fn, args), where fn is a string such as
+        Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
 
@@ -148,7 +146,7 @@ def rootnode_solver(A, B=None, BH=None,
            injection corresponds to the identity block.
 
          - Only smooth={'energy', None} is supported for prolongation
-           smoothing.  See reference [2] below for more details on why the
+           smoothing.  See reference [2011OlScTu]_ below for more details on why the
            'energy' prolongation smoother is the natural counterpart to
            root-node style SA.
 
@@ -181,8 +179,7 @@ def rootnode_solver(A, B=None, BH=None,
           smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
           presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
           aggregate=['standard', 'naive']
-          strength=[('symmetric', {'theta':0.25}),
-                    ('symmetric', {'theta':0.08})]
+          strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
 
         - Predefined strength of connection and aggregation schemes can be
           specified.  These options are best used together, but aggregation can
@@ -219,12 +216,12 @@ def rootnode_solver(A, B=None, BH=None,
 
     References
     ----------
-    .. [1] Vanek, P. and Mandel, J. and Brezina, M.,
+    .. [1996VaMa] Vanek, P. and Mandel, J. and Brezina, M.,
        "Algebraic Multigrid by Smoothed Aggregation for
        Second and Fourth Order Elliptic Problems",
        Computing, vol. 56, no. 3, pp. 179--196, 1996.
        http://citeseer.ist.psu.edu/vanek96algebraic.html
-    .. [2] Olson, L. and Schroder, J. and Tuminaro, R.,
+    .. [2011OlScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
        "A general interpolation strategy for algebraic
        multigrid using energy minimization", SIAM Journal
        on Scientific Computing (SISC), vol. 33, pp.

@@ -1,57 +1,53 @@
-relaxation Package
-==================
+pyamg\.relaxation package
+=========================
 
-:mod:`relaxation` Package
--------------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.relaxation
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`chebyshev` Module
------------------------
+    pyamg.relaxation.tests
+
+Submodules
+----------
+
+pyamg\.relaxation\.chebyshev module
+-----------------------------------
 
 .. automodule:: pyamg.relaxation.chebyshev
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`info` Module
-------------------
+pyamg\.relaxation\.info module
+------------------------------
 
 .. automodule:: pyamg.relaxation.info
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`relaxation` Module
-------------------------
+pyamg\.relaxation\.relaxation module
+------------------------------------
 
 .. automodule:: pyamg.relaxation.relaxation
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.relaxation.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`smoothing` Module
------------------------
+pyamg\.relaxation\.smoothing module
+-----------------------------------
 
 .. automodule:: pyamg.relaxation.smoothing
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.relaxation
+    :members:
+    :undoc-members:
+    :show-inheritance:

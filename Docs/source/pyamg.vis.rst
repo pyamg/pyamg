@@ -1,48 +1,45 @@
-vis Package
-===========
+pyamg\.vis package
+==================
 
-:mod:`vis` Package
-------------------
+Subpackages
+-----------
 
-.. automodule:: pyamg.vis
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
+.. toctree::
 
-:mod:`info` Module
-------------------
+    pyamg.vis.tests
+
+Submodules
+----------
+
+pyamg\.vis\.info module
+-----------------------
 
 .. automodule:: pyamg.vis.info
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`setup` Module
--------------------
-
-.. automodule:: pyamg.vis.setup
-    :members:
-    :undoc-members:
-    :inherited-members:
-    :show-inheritance:
-
-:mod:`vis_coarse` Module
-------------------------
+pyamg\.vis\.vis\_coarse module
+------------------------------
 
 .. automodule:: pyamg.vis.vis_coarse
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
-:mod:`vtk_writer` Module
-------------------------
+pyamg\.vis\.vtk\_writer module
+------------------------------
 
 .. automodule:: pyamg.vis.vtk_writer
     :members:
     :undoc-members:
-    :inherited-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyamg.vis
+    :members:
+    :undoc-members:
+    :show-inheritance:
