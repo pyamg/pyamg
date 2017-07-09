@@ -23,10 +23,17 @@ install:
   - SET PATH=C:\Py;C:\Py\Scripts;C:\Py\Library\bin;%PATH%
   - conda config --set always_yes yes
   - conda update conda
-  - conda install cython numpy scipy pytest
-  - pip install -e . -vvv
+  - conda install cython numpy scipy wheel pip
+  - pip install pytest
+  - pip install -e .
 
 build: false
 
-cache:
-  - '%APPDATA%\pip\Cache'
+test_script:
+  - pyttest
+
+after_test:
+  - "%PYTHON%/python setup.py bdist_wheel"
+
+artifacts:
+  - path: dist\*
