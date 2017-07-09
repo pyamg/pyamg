@@ -4,6 +4,7 @@ Release Steps:
 - remove build, dist, .egg-info, etc
 - change `isreleased` to True in `setup.py`
 - change `version` in `setup.py`
+- git commit -a -m "version 3.2.0"
 - first github release:
     - git tag -a v3.2.0 -m "version 3.2.0"
     - git push --tags
@@ -16,3 +17,4 @@ Release Steps:
     - `python3 setup.py sdist bdist_wheel`
     - `twine upload --skip-existing dist/*` (no register needed)
 - change `isreleased` to False in `setup.py`
+- git commit -a -m "remove isreleased"
