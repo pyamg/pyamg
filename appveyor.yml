@@ -1,6 +1,10 @@
 skip_non_tags: true
 clone_depth: 1
 
+branches:
+  only:
+  - master
+
 os: Visual Studio 2015
 
 environment:
