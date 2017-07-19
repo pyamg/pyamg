@@ -20,10 +20,11 @@ supporting C++ code for performance critical operations.
 
 import io
 import os
+import sys
 import subprocess
 
 from setuptools import setup, find_packages, Extension
-from setuptools.command.build_ext import build_ext as _build_ext
+from setuptools.command.build_ext import build_ext
 from setuptools.command.test import test as TestCommand
 
 version = '3.3.0'
@@ -32,7 +33,8 @@ isreleased = False
 install_requires = (
     'numpy>=1.7.0',
     'scipy>=0.12.0',
-    'pytest>=2'
+    'pytest>=2',
+    'pybind11>=1.7'
 )
 
 
@@ -123,18 +125,6 @@ write_version_py(version, fullversion, git_revision, isreleased,
                  filename='pyamg/version.py')
 
 
-# identify extension modules
-# since numpy is needed (for the path), need to bootstrap the setup
-# http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
-class build_ext(_build_ext):
-    'to install numpy'
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
-
-
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
@@ -146,10 +136,91 @@ class PyTest(TestCommand):
         import pytest
         pytest.main(self.test_args)
 
+# As of Python 3.6, CCompiler has a `has_flag` method.
+# cf http://bugs.python.org/issue26689
+def has_flag(compiler, flagname):
+    """Return a boolean indicating whether a flag name is supported on
+    the specified compiler.
+    """
+    import tempfile
+    with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
+        f.write('int main (int argc, char **argv) { return 0; }')
+        try:
+            compiler.compile([f.name], extra_postargs=[flagname])
+        except setuptools.distutils.errors.CompileError:
+            return False
+    return True
+
+
+def cpp_flag(compiler):
+    """Return the -std=c++[11/14] compiler flag.
+
+    The c++14 is prefered over c++11 (when it is available).
+    """
+    if has_flag(compiler, '-std=c++14'):
+        return '-std=c++14'
+    elif has_flag(compiler, '-std=c++11'):
+        return '-std=c++11'
+    else:
+        raise RuntimeError('Unsupported compiler -- at least C++11 support '
+                           'is needed!')
+
+class BuildExt(build_ext):
+    """A custom build extension for adding compiler-specific options."""
+    c_opts = {
+        'msvc': ['/EHsc'],
+        'unix': [],
+    }
+
+    if sys.platform == 'darwin':
+        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+
+    def build_extensions(self):
+        ct = self.compiler.compiler_type
+        opts = self.c_opts.get(ct, [])
+        if ct == 'unix':
+            opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
+            opts.append(cpp_flag(self.compiler))
+            if has_flag(self.compiler, '-fvisibility=hidden'):
+                opts.append('-fvisibility=hidden')
+        elif ct == 'msvc':
+            opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
+        for ext in self.extensions:
+            ext.extra_compile_args = opts
+        build_ext.build_extensions(self)
+
+    # identify extension modules
+    # since numpy is needed (for the path), need to bootstrap the setup
+    # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
+
+class get_pybind_include(object):
+    """Helper class to determine the pybind11 include path
+
+    The purpose of this class is to postpone importing pybind11
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(self.user)
+
 
 ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
-                         define_macros=[('__STDC_FORMAT_MACROS', 1)])]
+                         define_macros=[('__STDC_FORMAT_MACROS', 1)]),
+               Extension('pyamg.amg_core.relaxation',
+                         sources=['pyamg/amg_core/relaxation_bind.cpp'],
+                         include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
+                         language='c++'),
+              ]
 
 setup(
     name='pyamg',
@@ -173,7 +244,7 @@ setup(
     zip_safe=False,
     #
     ext_modules=ext_modules,
-    cmdclass={'build_ext': build_ext, 'test': PyTest},
+    cmdclass={'build_ext': BuildExt, 'test': PyTest},
     setup_requires=['numpy'],
     #
     tests_require=['pytest'],
