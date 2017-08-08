@@ -226,7 +226,7 @@ setup(
     name='pyamg',
     version=fullversion,
     keywords=['algebraic multigrid AMG sparse matrix preconditioning'],
-    author='Nathan Bell, Luke OLson, and Jacob Schroder',
+    author='Nathan Bell, Luke Olson, and Jacob Schroder',
     author_email='luke.olson@gmail.com',
     maintainer='Luke Olson',
     maintainer_email='luke.olson@gmail.com',
