@@ -11,3 +11,5 @@ MANIFEST
 pyamg.egg-info/*
 .eggs
 .cache
+.ipynb_checkpoints
+*.so.dSYM/

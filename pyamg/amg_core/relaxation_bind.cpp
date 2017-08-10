@@ -1,61 +1,1046 @@
+// DO NOT EDIT: this file is generated
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
-#include <iostream>
+
 #include "relaxation.h"
 
 namespace py = pybind11;
 
 template<class I, class T, class F>
-void _gauss_seidel(py::array_t<I> &Ap,
-                   py::array_t<I> &Aj,
-                   py::array_t<T> &Ax,
-                   py::array_t<T>  &x,
-                   py::array_t<T>  &b,
-                   I row_start,
-                   I row_stop,
-                   I row_step)
+void _gauss_seidel(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     I row_start,
+     I row_stop,
+     I row_step)
 {
-    auto rrAp = Ap.unchecked();
-    auto rrAj = Aj.unchecked();
-    auto rrAx = Ax.unchecked();
-    auto  rrx =  x.mutable_unchecked();
-    auto  rrb =  b.unchecked();
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
 
-    const I *_Ap = rrAp.data(0);
-    const I *_Aj = rrAj.data(0);
-    const T *_Ax = rrAx.data(0);
-          T *_x  =  rrx.mutable_data(0);
-    const T *_b  =  rrb.data(0);
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
 
-    gauss_seidel<I,T,F>(_Ap, Ap.size(),
-                        _Aj, Aj.size(),
-                        _Ax, Ax.size(),
-                         _x,  x.size(),
-                         _b,  b.size(),
-                        row_start,
-                        row_stop,
-                        row_step);
+gauss_seidel<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     row_start,
+     row_stop,
+     row_step);
 }
 
-#define NC py::arg().noconvert()
-#define YC py::arg()
+
+
+
+template<class I, class T, class F>
+void _bsr_gauss_seidel(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     I row_start,
+     I row_stop,
+     I row_step,
+     I blocksize)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+
+bsr_gauss_seidel<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     row_start,
+     row_stop,
+     row_step,
+     blocksize);
+}
+
+
+
+
+template<class I, class T, class F>
+void _jacobi(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & temp,
+     I row_start,
+     I row_stop,
+     I row_step,
+     py::array_t<T> & omega)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_temp = temp.mutable_unchecked();
+auto py_omega = omega.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+      T *_temp = py_temp.mutable_data();
+const T *_omega = py_omega.mutable_data();
+
+jacobi<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _temp, temp.size(),
+     row_start,
+     row_stop,
+     row_step,
+     _omega, omega.size());
+}
+
+
+
+
+template<class I, class T, class F>
+void _bsr_jacobi(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & temp,
+     I row_start,
+     I row_stop,
+     I row_step,
+     I blocksize,
+     py::array_t<T> & omega)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_temp = temp.mutable_unchecked();
+auto py_omega = omega.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+      T *_temp = py_temp.mutable_data();
+const T *_omega = py_omega.mutable_data();
+
+bsr_jacobi<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _temp, temp.size(),
+     row_start,
+     row_stop,
+     row_step,
+     blocksize,
+     _omega, omega.size());
+}
+
+
+
+
+template<class I, class T, class F>
+void _gauss_seidel_indexed(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<I> & Id,
+     I row_start,
+     I row_stop,
+     I row_step)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Id = Id.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const I *_Id = py_Id.mutable_data();
+
+gauss_seidel_indexed<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _Id, Id.size(),
+     row_start,
+     row_stop,
+     row_step);
+}
+
+
+
+
+template<class I, class T, class F>
+void _jacobi_ne(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & Tx,
+     py::array_t<T> & temp,
+     I row_start,
+     I row_stop,
+     I row_step,
+     py::array_t<T> & omega)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+auto py_temp = temp.mutable_unchecked();
+auto py_omega = omega.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+      T *_temp = py_temp.mutable_data();
+const T *_omega = py_omega.mutable_data();
+
+jacobi_ne<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _Tx, Tx.size(),
+     _temp, temp.size(),
+     row_start,
+     row_stop,
+     row_step,
+     _omega, omega.size());
+}
+
+
+
+
+template<class I, class T, class F>
+void _gauss_seidel_ne(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     I row_start,
+     I row_stop,
+     I row_step,
+     py::array_t<T> & Tx,
+     F omega)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+
+gauss_seidel_ne<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     row_start,
+     row_stop,
+     row_step,
+     _Tx, Tx.size(),
+     omega);
+}
+
+
+
+
+template<class I, class T, class F>
+void _gauss_seidel_nr(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & z,
+     I col_start,
+     I col_stop,
+     I col_step,
+     py::array_t<T> & Tx,
+     F omega)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_z = z.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+      T *_z = py_z.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+
+gauss_seidel_nr<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _z, z.size(),
+     col_start,
+     col_stop,
+     col_step,
+     _Tx, Tx.size(),
+     omega);
+}
+
+
+
+
+template<class I, class T, class F>
+void _block_jacobi(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & Tx,
+     py::array_t<T> & temp,
+     I row_start,
+     I row_stop,
+     I row_step,
+     py::array_t<T> & omega,
+     I blocksize)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+auto py_temp = temp.mutable_unchecked();
+auto py_omega = omega.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+      T *_temp = py_temp.mutable_data();
+const T *_omega = py_omega.mutable_data();
+
+block_jacobi<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _Tx, Tx.size(),
+     _temp, temp.size(),
+     row_start,
+     row_stop,
+     row_step,
+     _omega, omega.size(),
+     blocksize);
+}
+
+
+
+
+template<class I, class T, class F>
+void _block_gauss_seidel(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & Tx,
+     I row_start,
+     I row_stop,
+     I row_step,
+     I blocksize)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+
+block_gauss_seidel<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _Tx, Tx.size(),
+     row_start,
+     row_stop,
+     row_step,
+     blocksize);
+}
+
+
+
+
+template<class I, class T, class F>
+void _extract_subblocks(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & Tx,
+     py::array_t<I> & Tp,
+     py::array_t<I> & Sj,
+     py::array_t<I> & Sp,
+     I nsdomains,
+     I nrows)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+auto py_Tp = Tp.mutable_unchecked();
+auto py_Sj = Sj.mutable_unchecked();
+auto py_Sp = Sp.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_Tx = py_Tx.mutable_data();
+const I *_Tp = py_Tp.mutable_data();
+const I *_Sj = py_Sj.mutable_data();
+const I *_Sp = py_Sp.mutable_data();
+
+extract_subblocks<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _Tx, Tx.size(),
+     _Tp, Tp.size(),
+     _Sj, Sj.size(),
+     _Sp, Sp.size(),
+     nsdomains,
+     nrows);
+}
+
+
+
+
+template<class I, class T, class F>
+void _overlapping_schwarz_csr(
+     py::array_t<I> & Ap,
+     py::array_t<I> & Aj,
+     py::array_t<T> & Ax,
+     py::array_t<T> & x,
+     py::array_t<T> & b,
+     py::array_t<T> & Tx,
+     py::array_t<I> & Tp,
+     py::array_t<I> & Sj,
+     py::array_t<I> & Sp,
+     I nsdomains,
+     I nrows,
+     I row_start,
+     I row_stop,
+     I row_step)
+{
+auto py_Ap = Ap.mutable_unchecked();
+auto py_Aj = Aj.mutable_unchecked();
+auto py_Ax = Ax.mutable_unchecked();
+auto py_x = x.mutable_unchecked();
+auto py_b = b.mutable_unchecked();
+auto py_Tx = Tx.mutable_unchecked();
+auto py_Tp = Tp.mutable_unchecked();
+auto py_Sj = Sj.mutable_unchecked();
+auto py_Sp = Sp.mutable_unchecked();
+
+const I *_Ap = py_Ap.mutable_data();
+const I *_Aj = py_Aj.mutable_data();
+const T *_Ax = py_Ax.mutable_data();
+      T *_x = py_x.mutable_data();
+const T *_b = py_b.mutable_data();
+const T *_Tx = py_Tx.mutable_data();
+const I *_Tp = py_Tp.mutable_data();
+const I *_Sj = py_Sj.mutable_data();
+const I *_Sp = py_Sp.mutable_data();
+
+overlapping_schwarz_csr<I, T, F>(
+     _Ap, Ap.size(),
+     _Aj, Aj.size(),
+     _Ax, Ax.size(),
+     _x, x.size(),
+     _b, b.size(),
+     _Tx, Tx.size(),
+     _Tp, Tp.size(),
+     _Sj, Sj.size(),
+     _Sp, Sp.size(),
+     nsdomains,
+     nrows,
+     row_start,
+     row_stop,
+     row_step);
+}
+
+
+
+
 PYBIND11_PLUGIN(relaxation) {
     py::module m("relaxation", R"pbdoc(
-    pybind11 wrappers for relxation.h
+    pybind11 bindings for relaxation.h
 
-    Relaxation Methods
-    ------------------
-    Gauss Seidel
-    Jacobi
+    Methods
+    -------
+    gauss_seidel
+    bsr_gauss_seidel
+    jacobi
+    bsr_jacobi
+    gauss_seidel_indexed
+    jacobi_ne
+    gauss_seidel_ne
+    gauss_seidel_nr
+    block_jacobi
+    block_gauss_seidel
+    extract_subblocks
+    overlapping_schwarz_csr
     )pbdoc");
 
-    m.def("gauss_seidel", &_gauss_seidel<int, std::complex<double>, double>);
-    m.def("gauss_seidel", &_gauss_seidel<int, float, float>);
-    m.def("gauss_seidel", &_gauss_seidel<int, double, double>);
-    m.def("gauss_seidel", &_gauss_seidel<int, std::complex<float>, float>);
+    m.def("gauss_seidel", &_gauss_seidel<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
+R"pbdoc(
+
+Perform one iteration of Gauss-Seidel relaxation on the linear
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.
+
+The unknowns are swept through according to the slice defined
+by row_start, row_end, and row_step.  These options are used
+to implement standard forward and backward sweeps, or sweeping
+only a subset of the unknowns.  A forward sweep is implemented
+with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the
+number of rows in matrix A.  Similarly, a backward sweep is
+implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).
+
+Parameters
+Ap[]       - CSR row pointer
+Aj[]       - CSR index array
+Ax[]       - CSR data array
+x[]        - approximate solution
+b[]        - right hand side
+row_start  - beginning of the sweep
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
+R"pbdoc(
+
+Perform one iteration of Gauss-Seidel relaxation on the linear
+system Ax = b, where A is stored in Block CSR format and x and b
+are column vectors.  This method applies point-wise relaxation
+to the BSR as opposed to \"block relaxation\".
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]       - BSR row pointer
+Aj[]       - BSR index array
+Ax[]       - BSR data array
+x[]        - approximate solution
+b[]        - right hand side
+row_start  - beginning of the sweep (block row index)
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+blocksize  - BSR blocksize (blocks must be square)
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("jacobi", &_jacobi<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
+R"pbdoc(
+
+Perform one iteration of Jacobi relaxation on the linear
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.  Damping is controlled by the omega
+parameter.
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]       - CSR row pointer
+Aj[]       - CSR index array
+Ax[]       - CSR data array
+x[]        - approximate solution
+b[]        - right hand side
+temp[]     - temporary vector the same size as x
+row_start  - beginning of the sweep
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+omega      - damping parameter
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("bsr_jacobi", &_bsr_jacobi<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert(),
+R"pbdoc(
+
+Perform one iteration of Jacobi relaxation on the linear
+system Ax = b, where A is stored in Block CSR format and x and b
+are column vectors.  This method applies point-wise relaxation
+to the BSR as opposed to \"block relaxation\".
+
+Refer to jacobi for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]       - BSR row pointer
+Aj[]       - BSR index array
+Ax[]       - BSR data array
+x[]        - approximate solution
+b[]        - right hand side
+temp[]     - temporary vector the same size as x
+row_start  - beginning of the sweep (block row index)
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+blocksize  - BSR blocksize (blocks must be square)
+omega      - damping parameter
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
+R"pbdoc(
+
+Perform one iteration of Gauss-Seidel relaxation on the linear
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.
+
+Unlike gauss_seidel, which is restricted to updating a slice
+of the unknowns (defined by row_start, row_start, and row_step),
+this method updates unknowns according to the rows listed in
+an index array.  This allows and arbitrary set of the unknowns
+to be updated in an arbitrary order, as is necessary for the
+relaxation steps in the Compatible Relaxation method.
+
+In this method the slice arguments are used to define the subset
+of the index array Id which is to be considered.
+
+Parameters
+Ap[]       - CSR row pointer
+Aj[]       - CSR index array
+Ax[]       - CSR data array
+x[]        - approximate solution
+b[]        - right hand side
+Id[]       - index array representing the
+row_start  - beginning of the sweep (in array Id)
+row_stop   - end of the sweep (in array Id)
+row_step   - stride used during the sweep (may be negative)
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("jacobi_ne", &_jacobi_ne<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
+R"pbdoc(
+
+Perform NE Jacobi on the linear system A x = b
+This effectively carries out weighted-Jacobi on A A^T x = A^T b
+(also known as Cimmino's relaxation)
+
+Parameters
+----------
+Ap : {int array}
+index pointer for CSR matrix A
+Aj : {int array}
+column indices for CSR matrix A
+Ax : {array}
+value array for CSR matrix A
+x : {array}
+current guess to the linear system
+b : {array}
+right hand side
+Tx : {array}
+scaled residual
+D_A^{-1} (b - Ax)
+temp : {array}
+work space
+row_start,stop,step : {int}
+controls which rows to iterate over
+omega : {array}
+size one array that contains the weighted-jacobi
+parameter.  An array must be used to pass in omega to
+account for the case where omega may be complex
+
+Returns
+-------
+x is modified in place in an additive, not overwriting fashion
+
+Notes
+-----
+Primary calling routine is jacobi_ne in relaxation.py
+
+)pbdoc");
+
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"),
+R"pbdoc(
+
+Perform NE Gauss-Seidel on the linear system A x = b
+This effectively carries out Gauss-Seidel on A A.H x = b
+
+Parameters
+----------
+Ap : {int array}
+index pointer for CSR matrix A
+Aj : {int array}
+column indices for CSR matrix A
+Ax : {array}
+value array for CSR matrix A
+x : {array}
+current guess to the linear system
+b : {array}
+right hand side
+Tx : {array}
+inverse(diag(A A.H))
+omega : {float}
+relaxation parameter
+(if not 1.0, then algorithm becomes SOR)
+row_start,stop,step : {int}
+controls which rows to iterate over
+
+Returns
+-------
+x is modified in place in an additive, not overwriting fashion
+
+Notes
+-----
+Primary calling routine is gass_seidel_ne in relaxation.py
+
+)pbdoc");
+
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"),
+R"pbdoc(
+
+Perform NR Gauss-Seidel on the linear system A x = b
+This effectively carries out Gauss-Seidel on A.H A x = A.H b
+
+Parameters
+----------
+Ap : {int array}
+index pointer for CSC matrix A
+Aj : {int array}
+row indices for CSC matrix A
+Ax : {array}
+value array for CSC matrix A
+x : {array}
+current guess to the linear system
+z : {array}
+initial residual
+Tx : {array}
+inverse(diag(A.H A))
+omega : {float}
+relaxation parameter
+(if not 1.0, then algorithm becomes SOR)
+col_start,stop,step : {int}
+controls which rows to iterate over
+
+Returns
+-------
+x is modified in place in an additive, not overwriting fashion
+
+Notes
+-----
+Primary calling routine is gauss_seidel_nr in relaxation.py
+
+)pbdoc");
+
+    m.def("block_jacobi", &_block_jacobi<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"),
+R"pbdoc(
+
+Perform one iteration of block Jacobi relaxation on the linear
+system Ax = b, where A is stored in BSR format and x and b
+are column vectors.  Damping is controlled by the omega
+parameter.
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]       - BSR row pointer
+Aj[]       - BSR index array
+Ax[]       - BSR data array, blocks assumed square
+x[]        - approximate solution
+b[]        - right hand side
+Tx[]       - Inverse of each diagonal block of A stored
+as a (n/blocksize, blocksize, blocksize) array
+temp[]     - temporary vector the same size as x
+row_start  - beginning of the sweep
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+omega      - damping parameter
+blocksize  - dimension of sqare blocks in BSR matrix A
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
+R"pbdoc(
+
+Perform one iteration of block Gauss-Seidel relaxation on
+the linear system Ax = b, where A is stored in BSR format
+and x and b are column vectors.
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]       - BSR row pointer
+Aj[]       - BSR index array
+Ax[]       - BSR data array, blocks assumed square
+x[]        - approximate solution
+b[]        - right hand side
+Tx[]       - Inverse of each diagonal block of A stored
+as a (n/blocksize, blocksize, blocksize) array
+row_start  - beginning of the sweep
+row_stop   - end of the sweep (i.e. one past the last unknown)
+row_step   - stride used during the sweep (may be negative)
+blocksize  - dimension of square blocks in BSR matrix A
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
+
+    m.def("extract_subblocks", &_extract_subblocks<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"),
+R"pbdoc(
+
+Extract diagonal blocks from A and insert into a linear array.
+This is a helper function for overlapping_schwarz_csr.
+
+Parameters
+Ap[]       - CSR row pointer
+Aj[]       - CSR index array
+__must be sorted for each row__
+Ax[]       - CSR data array, blocks assumed square
+Tx[]       - Inverse of each diagonal block of A, stored in
+row major
+Tp[]       - Pointer array into Tx indicating where the
+diagonal blocks start and stop
+Sj[]       - Indices of each subdomain
+__must be sorted over each subdomain__
+Sp[]       - Pointer array indicating where each subdomain
+starts and stops
+nsdomains  - Number of subdomains
+nrows      - Number of rows
+
+Returns:
+Nothing, Tx will be modified in place
+
+
+)pbdoc");
+
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
+R"pbdoc(
+
+Perform one iteration of an overlapping Schwarz relaxation on
+the linear system Ax = b, where A is stored in CSR format
+and x and b are column vectors.
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+Ap[]           - CSR row pointer
+Aj[]           - CSR index array
+Ax[]           - CSR data array, blocks assumed square
+x[]            - approximate solution
+b[]            - right hand side
+Tx[]           - Inverse of each diagonal block of A, stored in
+row major
+Tp[]           - Pointer array into Tx indicating where the
+diagonal blocks start and stop
+Sj[]           - Indices of each subdomain
+__must be sorted over each subdomain__
+Sp[]           - Pointer array indicating where each subdomain
+starts and stops
+nsdomains      - Number of subdomains
+nrows          - Number of rows
+row_start      --- The subdomains are processed in this order,
+row_stop       --- for(i = row_start, i != row_stop, i+=row_step)
+row_step       --- {...computation...}
+
+
+Returns:
+Nothing, x will be modified in place
+
+
+)pbdoc");
 
     return m.ptr();
 }
-#undef NC
-#undef YC
+

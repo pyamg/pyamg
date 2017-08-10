@@ -1,0 +1,24 @@
+- types:
+    - [int, float, float]
+    - [int, double, double]
+    - [int, "std::complex<float>", float]
+    - [int, "std::complex<double>", double]
+  functions:
+    - gauss_seidel
+    - bsr_gauss_seidel
+    - jacobi
+    - bsr_jacobi
+    - gauss_seidel_indexed
+    - jacobi_ne
+    - gauss_seidel_nr
+    - gauss_seidel_ne
+    - block_jacobi
+    - block_gauss_seidel
+    - extract_subblocks
+    - overlapping_schwarz_csr
+
+- types:
+    - [int, int]
+    - [int, float]
+  functions:
+    - bellman_ford
