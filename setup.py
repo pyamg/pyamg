@@ -213,14 +213,22 @@ class get_pybind_include(object):
         return pybind11.get_include(self.user)
 
 
+amg_core_headers = ['evolution_strength.h',
+                    'graph.h',
+                    'krylov.h',
+                    'linalg.h',
+                    'relaxation.h',
+                    'ruge_stuben.h',
+                    'smoothed_aggregation.h']
+amg_core_headers = [f.replace('.h', '') for f in amg_core_headers]
+
 ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
-                         define_macros=[('__STDC_FORMAT_MACROS', 1)]),
-               Extension('pyamg.amg_core.relaxation',
-                         sources=['pyamg/amg_core/relaxation_bind.cpp'],
-                         include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
-                         language='c++'),
-              ]
+                         define_macros=[('__STDC_FORMAT_MACROS', 1)])]
+ext_modules += [Extension('pyamg.amg_core.%s'%f,
+                          sources=['pyamg/amg_core/%s_bind.cpp'%f],
+                          include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
+                          language='c++') for f in amg_core_headers]
 
 setup(
     name='pyamg',
