@@ -25,7 +25,7 @@ def find_comments(fname):
 
     or with // style comments
     """
-    with open('relaxation.h', 'r') as inf:
+    with open(fname, 'r') as inf:
         f = inf.read()
 
     lines = f.split('\n')
@@ -34,6 +34,10 @@ def find_comments(fname):
     startcomment = 0
     endcomment = 0
     for i, l in enumerate(lines):
+        if 'template' in l:
+            # remove spaces from template argument
+            l = l.replace(' ', '')
+            l = l.lstrip()
         if l.startswith('template<'):
             endcomment = i-1
             startcomment = endcomment+1
@@ -52,7 +56,12 @@ def find_comments(fname):
 
             # grab function name
             name = lines[i+1]
-            name = re.match('\s*\w*\s*(\w*)\(', name).group(1)
+            # if it's a function...
+            if '(' in name:
+                name = re.match('.*?(\w*)\(', name).group(1)
+            # otherwise just take the last term
+            else:
+                name = name.split()[-1]
             comments[name] = comment
 
     return comments
@@ -103,26 +112,26 @@ def build_function(func):
 
     # make a list of python objects
     for a in arraylist:
-        if a[0]:
-            unchecked = '.mutable_unchecked();\n'
-        else:
+        if 'const' in a[0]:
             unchecked = '.unchecked();\n'
+        else:
+            unchecked = '.mutable_unchecked();\n'
 
         fdef += "auto py_" + a[2] + ' = ' + a[2] + unchecked
 
     # make a list of pointers to the arrays
     fdef += '\n'
     for a in arraylist:
-        if a[0]:
-            data = '.mutable_data();\n'
-        else:
+        if 'const' in a[0]:
             data = '.data();\n'
+        else:
+            data = '.mutable_data();\n'
         fdef += a[0] + a[1] + ' *_' + a[2] + ' = py_' + a[2] + data
 
     # get the template signature
     template = func['template']
     template = template.replace('template','').replace('class ','')
-    fdef += '\n' + func['name'] + template + '(\n'
+    fdef += '\n return ' + func['name'] + template + '(\n'
 
     for p in func['parameters']:
         if '_size' in p['name']:
@@ -145,6 +154,9 @@ def build_plugin(headerfile, ch, comments):
     Take a header file (headerfile) and a parse tree (ch)
     and build the pybind11 plugin
     """
+    # instantiate each function
+    inst = yaml.load(open('instantiate.yml', 'r'))
+
     headerfilename = headerfile.replace('.h', '')
 
     indent = '    '
@@ -158,16 +170,22 @@ def build_plugin(headerfile, ch, comments):
     plugin += indent + 'Methods\n'
     plugin += indent + '-------\n'
     for f in ch.functions:
-        plugin += indent + f['name'] + '\n'
+        for func in inst:
+            if f['name'] in func['functions']:
+                plugin += indent + f['name'] + '\n'
     plugin += indent + ')pbdoc");\n\n'
 
     #plugin += indent + 'py::options options;\n'
     #plugin += indent + 'options.disable_function_signatures();\n\n'
 
-    # instantiate each function
-    inst = yaml.load(open('instantiate.yml', 'r'))
-
     for f in ch.functions:
+        found = False
+        for func in inst:
+            if f['name'] in func['functions']:
+                found = True
+        if not found:
+            continue
+
         # find all parameter names and mark if array
         argnames = []
         for p in f['parameters']:
@@ -186,6 +204,9 @@ def build_plugin(headerfile, ch, comments):
         for func in inst:
             if f['name'] in func['functions']:
                 types = func['types']
+        if len(types) == 0:
+            print('Could not find %s' % f['name'])
+
         ntypes = len(types)
         for i, t in enumerate(types):
             typestr = ', '.join(t)
@@ -232,14 +253,20 @@ def main():
 
     args = parser.parse_args()
 
+    print('[Generating %s from %s]' % (args.input_file.replace('.h', '_bind.cpp'), args.input_file))
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file)
     plugin = build_plugin(args.input_file, ch, comments)
 
     flist = []
     for f in ch.functions:
-        fdef = build_function(f)
-        flist.append(fdef)
+
+        # check to see if we should instantiate
+        inst = yaml.load(open('instantiate.yml', 'r'))
+        for func in inst:
+            if f['name'] in func['functions']:
+                fdef = build_function(f)
+                flist.append(fdef)
 
     if args.output_file is not None:
         outf = args.output_file

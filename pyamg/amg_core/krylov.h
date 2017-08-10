@@ -95,7 +95,7 @@ void apply_householders(      T z[], const int z_size,
  * See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems"
  */
 template<class I, class T, class F>
-void householder_hornerscheme (      T z[], const int z_size,
+void householder_hornerscheme(      T z[], const int z_size,
                                const T B[], const int B_size,
                                const T y[], const int y_size,
                                const I n,

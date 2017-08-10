@@ -19,19 +19,19 @@ void _gauss_seidel(
      I row_stop,
      I row_step)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
+auto py_b = b.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
+const T *_b = py_b.data();
 
-gauss_seidel<I, T, F>(
+ return gauss_seidel<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -57,19 +57,19 @@ void _bsr_gauss_seidel(
      I row_step,
      I blocksize)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
+auto py_b = b.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
+const T *_b = py_b.data();
 
-bsr_gauss_seidel<I, T, F>(
+ return bsr_gauss_seidel<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -97,23 +97,23 @@ void _jacobi(
      I row_step,
      py::array_t<T> & omega)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
+auto py_b = b.unchecked();
 auto py_temp = temp.mutable_unchecked();
-auto py_omega = omega.mutable_unchecked();
+auto py_omega = omega.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
+const T *_b = py_b.data();
       T *_temp = py_temp.mutable_data();
-const T *_omega = py_omega.mutable_data();
+const T *_omega = py_omega.data();
 
-jacobi<I, T, F>(
+ return jacobi<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -143,23 +143,23 @@ void _bsr_jacobi(
      I blocksize,
      py::array_t<T> & omega)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
+auto py_b = b.unchecked();
 auto py_temp = temp.mutable_unchecked();
-auto py_omega = omega.mutable_unchecked();
+auto py_omega = omega.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
+const T *_b = py_b.data();
       T *_temp = py_temp.mutable_data();
-const T *_omega = py_omega.mutable_data();
+const T *_omega = py_omega.data();
 
-bsr_jacobi<I, T, F>(
+ return bsr_jacobi<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -188,21 +188,21 @@ void _gauss_seidel_indexed(
      I row_stop,
      I row_step)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Id = Id.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Id = Id.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const I *_Id = py_Id.mutable_data();
+const T *_b = py_b.data();
+const I *_Id = py_Id.data();
 
-gauss_seidel_indexed<I, T, F>(
+ return gauss_seidel_indexed<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -231,25 +231,25 @@ void _jacobi_ne(
      I row_step,
      py::array_t<T> & omega)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Tx = Tx.unchecked();
 auto py_temp = temp.mutable_unchecked();
-auto py_omega = omega.mutable_unchecked();
+auto py_omega = omega.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
+const T *_b = py_b.data();
+const T *_Tx = py_Tx.data();
       T *_temp = py_temp.mutable_data();
-const T *_omega = py_omega.mutable_data();
+const T *_omega = py_omega.data();
 
-jacobi_ne<I, T, F>(
+ return jacobi_ne<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -279,21 +279,21 @@ void _gauss_seidel_ne(
      py::array_t<T> & Tx,
      F omega)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Tx = Tx.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
+const T *_b = py_b.data();
+const T *_Tx = py_Tx.data();
 
-gauss_seidel_ne<I, T, F>(
+ return gauss_seidel_ne<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -322,21 +322,21 @@ void _gauss_seidel_nr(
      py::array_t<T> & Tx,
      F omega)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
 auto py_z = z.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
+auto py_Tx = Tx.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
       T *_z = py_z.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
+const T *_Tx = py_Tx.data();
 
-gauss_seidel_nr<I, T, F>(
+ return gauss_seidel_nr<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -367,25 +367,25 @@ void _block_jacobi(
      py::array_t<T> & omega,
      I blocksize)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Tx = Tx.unchecked();
 auto py_temp = temp.mutable_unchecked();
-auto py_omega = omega.mutable_unchecked();
+auto py_omega = omega.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
+const T *_b = py_b.data();
+const T *_Tx = py_Tx.data();
       T *_temp = py_temp.mutable_data();
-const T *_omega = py_omega.mutable_data();
+const T *_omega = py_omega.data();
 
-block_jacobi<I, T, F>(
+ return block_jacobi<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -416,21 +416,21 @@ void _block_gauss_seidel(
      I row_step,
      I blocksize)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Tx = Tx.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
+const T *_b = py_b.data();
+const T *_Tx = py_Tx.data();
 
-block_gauss_seidel<I, T, F>(
+ return block_gauss_seidel<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -458,23 +458,23 @@ void _extract_subblocks(
      I nsdomains,
      I nrows)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_Tx = Tx.mutable_unchecked();
-auto py_Tp = Tp.mutable_unchecked();
-auto py_Sj = Sj.mutable_unchecked();
-auto py_Sp = Sp.mutable_unchecked();
+auto py_Tp = Tp.unchecked();
+auto py_Sj = Sj.unchecked();
+auto py_Sp = Sp.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_Tx = py_Tx.mutable_data();
-const I *_Tp = py_Tp.mutable_data();
-const I *_Sj = py_Sj.mutable_data();
-const I *_Sp = py_Sp.mutable_data();
+const I *_Tp = py_Tp.data();
+const I *_Sj = py_Sj.data();
+const I *_Sp = py_Sp.data();
 
-extract_subblocks<I, T, F>(
+ return extract_subblocks<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
@@ -506,27 +506,27 @@ void _overlapping_schwarz_csr(
      I row_stop,
      I row_step)
 {
-auto py_Ap = Ap.mutable_unchecked();
-auto py_Aj = Aj.mutable_unchecked();
-auto py_Ax = Ax.mutable_unchecked();
+auto py_Ap = Ap.unchecked();
+auto py_Aj = Aj.unchecked();
+auto py_Ax = Ax.unchecked();
 auto py_x = x.mutable_unchecked();
-auto py_b = b.mutable_unchecked();
-auto py_Tx = Tx.mutable_unchecked();
-auto py_Tp = Tp.mutable_unchecked();
-auto py_Sj = Sj.mutable_unchecked();
-auto py_Sp = Sp.mutable_unchecked();
+auto py_b = b.unchecked();
+auto py_Tx = Tx.unchecked();
+auto py_Tp = Tp.unchecked();
+auto py_Sj = Sj.unchecked();
+auto py_Sp = Sp.unchecked();
 
-const I *_Ap = py_Ap.mutable_data();
-const I *_Aj = py_Aj.mutable_data();
-const T *_Ax = py_Ax.mutable_data();
+const I *_Ap = py_Ap.data();
+const I *_Aj = py_Aj.data();
+const T *_Ax = py_Ax.data();
       T *_x = py_x.mutable_data();
-const T *_b = py_b.mutable_data();
-const T *_Tx = py_Tx.mutable_data();
-const I *_Tp = py_Tp.mutable_data();
-const I *_Sj = py_Sj.mutable_data();
-const I *_Sp = py_Sp.mutable_data();
+const T *_b = py_b.data();
+const T *_Tx = py_Tx.data();
+const I *_Tp = py_Tp.data();
+const I *_Sj = py_Sj.data();
+const I *_Sp = py_Sp.data();
 
-overlapping_schwarz_csr<I, T, F>(
+ return overlapping_schwarz_csr<I, T, F>(
      _Ap, Ap.size(),
      _Aj, Aj.size(),
      _Ax, Ax.size(),
