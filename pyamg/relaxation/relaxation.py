@@ -9,7 +9,6 @@ from scipy import sparse
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
 from pyamg import amg_core
-import pyamg.amg_core.relaxation
 from scipy.linalg import lapack as la
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
@@ -350,8 +349,6 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         for iter in range(iterations):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
-            amg_core.relaxation.gauss_seidel(A.indptr, A.indices, A.data, x, b,
-                                             row_start, row_stop, row_step)
     else:
         for iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
