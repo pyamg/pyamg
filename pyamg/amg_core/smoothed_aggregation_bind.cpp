@@ -456,17 +456,17 @@ in possibly much higher complexities.
 
 )pbdoc");
 
-    m.def("fit_candidates_real", &_fit_candidates_real<int, float>,
+    m.def("fit_candidates", &_fit_candidates_real<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
-    m.def("fit_candidates_real", &_fit_candidates_real<int, double>,
+    m.def("fit_candidates", &_fit_candidates_real<int, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"),
 R"pbdoc(
 
 )pbdoc");
 
-    m.def("fit_candidates_complex", &_fit_candidates_complex<int, float, std::complex<float> >,
+    m.def("fit_candidates", &_fit_candidates_complex<int, float, std::complex<float>>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
-    m.def("fit_candidates_complex", &_fit_candidates_complex<int, double, std::complex<double> >,
+    m.def("fit_candidates", &_fit_candidates_complex<int, double, std::complex<double>>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"),
 R"pbdoc(
 

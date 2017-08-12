@@ -1,3 +1,4 @@
+instantiate:
 - types:
     - [int, float, float]
     - [int, double, double]
@@ -35,7 +36,6 @@
     - [int,double]
   functions:
     - fit_candidates_real
-    - fit_candidates_real
     - rs_direct_interpolation_pass2
     - cr_helper
     - apply_distance_filter
@@ -46,7 +46,6 @@
     - [int,float,"std::complex<float>"]
     - [int,double,"std::complex<double>"]
   functions:
-    - fit_candidates_complex
     - fit_candidates_complex
 
 - types:
@@ -81,3 +80,7 @@
     - rs_cf_splitting
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
+
+remaps:
+    - fit_candidates_real: fit_candidates
+    - fit_candidates_complex: fit_candidates

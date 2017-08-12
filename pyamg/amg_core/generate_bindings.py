@@ -149,14 +149,11 @@ def build_function(func):
     fdef += ');\n}\n'
     return fdef
 
-def build_plugin(headerfile, ch, comments):
+def build_plugin(headerfile, ch, comments, inst, remaps):
     """
     Take a header file (headerfile) and a parse tree (ch)
     and build the pybind11 plugin
     """
-    # instantiate each function
-    inst = yaml.load(open('instantiate.yml', 'r'))
-
     headerfilename = headerfile.replace('.h', '')
 
     indent = '    '
@@ -211,9 +208,15 @@ def build_plugin(headerfile, ch, comments):
         for i, t in enumerate(types):
             typestr = ', '.join(t)
 
+            # get the instantiating function name
+
             # add the function call with each template
+            instname = f['name']
+            for remap in remaps:
+                if f['name'] in remap:
+                    instname = remap[f['name']]
             plugin += indent + 'm.def("%s", &_%s<%s>,\n' %\
-                      (f['name'], f['name'], typestr)
+                      (instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -256,13 +259,16 @@ def main():
     print('[Generating %s from %s]' % (args.input_file.replace('.h', '_bind.cpp'), args.input_file))
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file)
-    plugin = build_plugin(args.input_file, ch, comments)
+
+    data = yaml.load(open('instantiate.yml', 'r'))
+    inst = data['instantiate']
+    remaps = data['remaps']
+    plugin = build_plugin(args.input_file, ch, comments, inst, remaps)
 
     flist = []
     for f in ch.functions:
 
         # check to see if we should instantiate
-        inst = yaml.load(open('instantiate.yml', 'r'))
         for func in inst:
             if f['name'] in func['functions']:
                 fdef = build_function(f)
