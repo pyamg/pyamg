@@ -6,7 +6,7 @@ import numpy as np
 import scipy as sp
 import scipy.sparse as sparse
 from scipy.linalg.lapack import get_lapack_funcs
-from scipy.linalg import calc_lwork
+from scipy.linalg.lapack import _compute_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
            'residual_norm', 'condest', 'cond', 'ishermitian',
@@ -627,10 +627,10 @@ def pinv_array(a, cond=None):
         # The block size is greater than 1
 
         # Create necessary arrays and function pointers for calculating pinv
-        gelss, = get_lapack_funcs(('gelss',),
-                                  (np.ones((1,), dtype=a.dtype)))
+        gelss, gelss_lwork = get_lapack_funcs(('gelss', 'gelss_lwork'),
+                                              (np.ones((1,), dtype=a.dtype)))
         RHS = np.eye(m, dtype=a.dtype)
-        lwork = calc_lwork.gelss(gelss.prefix, m, m, m)[1]
+        lwork = _compute_lwork(gelss_lwork, m, m, m)
 
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
