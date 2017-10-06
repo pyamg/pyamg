@@ -18,7 +18,7 @@ def prof():
     near_null_space = np.ones(A.shape[0])
     ml = pyamg.smoothed_aggregation_solver(A, near_null_space[:, np.newaxis])
 
-    for i in range(10):
+    for i in range(10000):
         print(i)
         rhs = np.random.randn(A.shape[0])
         x0 = np.random.randn(A.shape[0])
