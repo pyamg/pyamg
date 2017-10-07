@@ -74,6 +74,7 @@
     (const ctype Tx [], const int Tx_size),
     (      ctype Tx [], const int Tx_size),
     (      ctype AA [], const int AA_size),
+    (const ctype Xx [], const int Xx_size),
     (      ctype  R [], const int  R_size),
     (      ctype temp [], const int temp_size),
     (      ctype gamma [], const int gamma_size),
@@ -138,6 +139,8 @@ DECLARE_DATA_TYPE( std::complex<double> )
   ---------------------------------------------------------------------------*/
 %include "linalg.h"
 INSTANTIATE_INDEXDATA_COMPLEX(pinv_array)
+INSTANTIATE_INDEXDATA_INT(csc_scale_rows)
+INSTANTIATE_INDEXDATA_INT(csc_scale_columns)
 
 /*----------------------------------------------------------------------------
   graph.h

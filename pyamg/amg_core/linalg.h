@@ -953,5 +953,51 @@ void pinv_array(T AA[], const int AA_size,
     return;
 }
 
+/*
+ * Scale the columns of a CSC matrix *in place*
+ *
+ *   A[:,i] *= X[i]
+ *
+ * See:
+ * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
+ *
+ */
+template <class I, class T>
+void csc_scale_columns(const I n_row,
+                       const I n_col,
+                       const I Ap[], const int Ap_size,
+                       const I Aj[], const int Aj_size,
+                             T Ax[], const int Ax_size,
+                       const T Xx[], const int Xx_size)
+{
+    for(I i = 0; i < n_col; i++){
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            Ax[jj] *= Xx[i];
+        }
+    }
+}
+
+/*
+ * Scale the rows of a CSC matrix *in place*
+ *
+ *   A[i,:] *= X[i]
+ *
+ * See:
+ * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
+ *
+ */
+template <class I, class T>
+void csc_scale_rows(const I n_row,
+                    const I n_col,
+                    const I Ap[], const int Ap_size,
+                    const I Aj[], const int Aj_size,
+                          T Ax[], const int Ax_size,
+                    const T Xx[], const int Xx_size)
+{
+    const I nnz = Ap[n_col];
+    for(I i = 0; i < nnz; i++){
+        Ax[i] *= Xx[Aj[i]];
+    }
+}
 
 #endif
