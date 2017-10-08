@@ -13,9 +13,9 @@ def direct_interpolation(A, C, splitting):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         NxN matrix in CSR format
-    C : {csr_matrix}
+    C : csr_matrix
         Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
@@ -23,7 +23,7 @@ def direct_interpolation(A, C, splitting):
 
     Returns
     -------
-    P : {csr_matrix}
+    P : csr_matrix
         Prolongator using direct interpolation
 
     Examples

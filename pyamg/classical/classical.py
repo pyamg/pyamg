@@ -37,20 +37,20 @@ def ruge_stuben_solver(A,
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
-    CF : {string} : default 'RS'
+    CF : string
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    presmoother : {string or dict}
+    presmoother : string or dict
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
         presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
-    postsmoother : {string or dict}
+    postsmoother : string or dict
         Postsmoothing method with the same usage as presmoother
-    max_levels: {integer} : default 10
+    max_levels: integer
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse: {integer} : default 500
+    max_coarse: integer
         Maximum number of variables permitted on the coarse grid.
-    keep: {bool} : default False
+    keep: bool
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C) and
         tentative prolongation (T) are kept.
