@@ -23,11 +23,11 @@ def make_system(A, x, b, formats=None):
 
     Parameters
     ----------
-    A : {sparse-matrix}
+    A : sparse-matrix
         n x n system
-    x : {array}
+    x : array
         n-vector, initial guess
-    b : {array}
+    b : array
         n-vector, right-hand side
     formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
         desired sparse matrix format
@@ -109,7 +109,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -175,7 +175,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -183,16 +183,16 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         Right-hand side (length N)
     iterations : int
         Number of iterations to perform
-    subdomain : {int array}
+    subdomain : int array
         Linear array containing each subdomain's elements
-    subdomain_ptr : {int array}
+    subdomain_ptr : int array
         Pointer in subdomain, such that
         subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]]
         contains the _sorted_ indices in subdomain i
-    inv_subblock : {int_array}
+    inv_subblock : int_array
         Linear array containing each subdomain's
         inverted diagonal block of A
-    inv_subblock_ptr : {int array}
+    inv_subblock_ptr : int array
         Pointer in inv_subblock, such that
         inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
         contains the inverted diagonal block of A for the
@@ -283,7 +283,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -513,7 +513,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -603,7 +603,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
         Approximate solution (length N)
     b : ndarray
         Right-hand side (length N)
-    coefficients : {array_like}
+    coefficients : array_like
         Coefficients of the polynomial.  See Notes section for details.
     iterations : int
         Number of iterations to perform
@@ -830,18 +830,18 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     ----------
     A : csr_matrix
         Sparse NxN matrix
-    x : { ndarray }
+    x : ndarray
         Approximate solution (length N)
-    b : { ndarray }
+    b : ndarray
         Right-hand side (length N)
-    iterations : { int }
+    iterations : int
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
-    omega : { float}
+    omega : float
         Relaxation parameter typically in (0, 2)
         if omega != 1.0, then algorithm becomes SOR on A A.H
-    Dinv : { ndarray}
+    Dinv : ndarray
         Inverse of diag(A A.H),  (length N)
 
     Returns
@@ -918,18 +918,18 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     ----------
     A : csr_matrix
         Sparse NxN matrix
-    x : { ndarray }
+    x : ndarray
         Approximate solution (length N)
-    b : { ndarray }
+    b : ndarray
         Right-hand side (length N)
-    iterations : { int }
+    iterations : int
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
-    omega : { float}
+    omega : float
         Relaxation parameter typically in (0, 2)
         if omega != 1.0, then algorithm becomes SOR on A.H A
-    Dinv : { ndarray}
+    Dinv : ndarray
         Inverse of diag(A.H A),  (length N)
 
     Returns

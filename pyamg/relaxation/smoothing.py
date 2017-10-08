@@ -38,9 +38,9 @@ def change_smoothers(ml, presmoother, postsmoother):
 
     Parameters
     ----------
-    ml : {pyamg multilevel hierarchy}
+    ml : pyamg multilevel hierarchy
         Data structure that stores the multigrid hierarchy.
-    presmoother : {None, string, tuple, list}
+    presmoother : None, string, tuple, list
         presmoother can be (1) the name of a supported smoother, e.g.
         "gauss_seidel", (2) a tuple of the form ('method','opts') where
         'method' is the name of a supported smoother and 'opts' a dict of
@@ -58,7 +58,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         If len(presmoother) > len(ml.levels), then
         the remaining smoothing strategies are ignored
 
-    postsmoother : {string, tuple, list}
+    postsmoother : string, tuple, list
         Defines postsmoother in identical fashion to presmoother
 
     Returns
@@ -303,7 +303,7 @@ def rho_D_inv_A(A):
 
     Parameters
     ----------
-    A : {sparse-matrix}
+    A : sparse-matrix
 
     Returns
     -------
@@ -334,9 +334,9 @@ def rho_block_D_inv_A(A, Dinv):
 
     Parameters
     ----------
-    A : {sparse-matrix}
+    A : sparse-matrix
         size NxN
-    Dinv : {array}
+    Dinv : array
         Inverse of diagonal blocks of A
         size (N/blocksize, blocksize, blocksize)
 
@@ -427,11 +427,11 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
     Parameters
     ----------
-    lvl : {multilevel level}
+    lvl : multilevel level
         the level in the hierarchy for which to assign a smoother
-    iterations : {int}
+    iterations : int
         how many smoother iterations
-    optional_params : {}
+    optional_params : dict
         optional params specific for each method such as omega or sweep
 
     Returns

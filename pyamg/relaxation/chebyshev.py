@@ -60,9 +60,9 @@ def mls_polynomial_coefficients(rho, degree):
 
     Parameters
     ----------
-    rho : {float}
+    rho : float
         Spectral radius of the matrix in question
-    degree : {int}
+    degree : int
         Degree of polynomial coefficients to generate
 
     Returns
