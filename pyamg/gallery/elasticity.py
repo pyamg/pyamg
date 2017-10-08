@@ -27,7 +27,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
 
     Returns
     -------
-    A : {csr_matrix}
+    A : csr_matrix
         FE Q1 stiffness matrix
 
     B : array
@@ -228,7 +228,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     Returns
     -------
-    A : {csr_matrix}
+    A : csr_matrix
         FE Q1 stiffness matrix
 
     Notes
