@@ -37,7 +37,6 @@ def maximal_independent_set(G, algo='serial', k=None):
     G : sparse matrix
         Symmetric matrix, preferably in sparse CSR or CSC format
         The nonzeros of G represent the edges of an undirected graph.
-
     algo : {'serial', 'parallel'}
         Algorithm used to compute the MIS
             * serial   : greedy serial algorithm
@@ -45,7 +44,7 @@ def maximal_independent_set(G, algo='serial', k=None):
 
     Returns
     -------
-    An array S where
+    S : array
         S[i] = 1 if vertex i is in the MIS
         S[i] = 0 otherwise
 
@@ -88,7 +87,7 @@ def vertex_coloring(G, method='MIS'):
     G : sparse matrix
         Symmetric matrix, preferably in sparse CSR or CSC format
         The nonzeros of G represent the edges of an undirected graph.
-    method : {string}
+    method : string
         Algorithm used to compute the vertex coloring:
             * 'MIS' - Maximal Independent Set
             * 'JP'  - Jones-Plassmann (parallel)
@@ -96,7 +95,8 @@ def vertex_coloring(G, method='MIS'):
 
     Returns
     -------
-    An array of vertex colors (integers beginning at 0)
+    coloring : array
+        An array of vertex colors (integers beginning at 0)
 
     Notes
     -----
@@ -183,15 +183,24 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
     Parameters
     ----------
-    G : csr_matrix or csc_matrix
+    G : csr_matrix, csc_matrix
         A sparse NxN matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
-    seeds : {int, array}
+    seeds : int array
         If seeds is an integer, then its value determines the number of
         clusters.  Otherwise, seeds is an array of unique integers between 0
         and N-1 that will be used as the initial seeds for clustering.
     maxiter : int
         The maximum number of iterations to perform.
+
+    Retruns
+    -------
+    distances : array
+        final distances
+    clusters : int array
+        id of each cluster of points
+    seeds : int array
+        index of each seed
 
     Notes
     -----
@@ -240,26 +249,48 @@ def breadth_first_search(G, seed):
 
     Parameters
     ----------
+    G : csr_matrix, csc_matrix
+        A sparse NxN matrix where each nonzero entry G[i,j] is the distance
+        between nodes i and j.
+    seed : int
+        Index of the seed location
 
     Returns
     -------
-
-    Notes
-    -----
-
-    References
-    ----------
-    CLR
+    order : int array
+        Breadth first order
+    level : int array
+        Final levels
 
     Examples
     --------
+    0---2
+    |  /
+    | /
+    1---4---7---8---9
+    |  /|  /
+    | / | /
+    3/  6/
+    |
+    |
+    5
+    >>> import numpy as np
+    >>> import pyamg
+    >>> import scipy.sparse as sparse
+    >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
+                          [4,6], [4,7], [6,7], [7,8], [8,9]])
+    >>> N = np.max(edges.ravel())+1
+    >>> data = np.ones((edges.shape[0],))
+    >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
+    >>> c, l = pyamg.graph.breadth_first_search(A, 0)
+    >>> print(l)
+    >>> print(c)
+    [0 1 1 2 2 3 3 3 4 5]
+    [0 1 2 3 4 5 6 7 8 9]
     """
-    # TODO document
 
     G = asgraph(G)
     N = G.shape[0]
-
-    # Check symmetry?
 
     order = np.empty(N, G.indptr.dtype)
     level = np.empty(N, G.indptr.dtype)
@@ -308,7 +339,6 @@ def connected_components(G):
     G = asgraph(G)
     N = G.shape[0]
 
-    # Check symmetry?
     components = np.empty(N, G.indptr.dtype)
 
     fn = amg_core.connected_components
@@ -320,9 +350,20 @@ def connected_components(G):
 def symmetric_rcm(A):
     """
     Symmetric Reverse Cutthill-McKee
-    Get a pseudo-peripheral node, then call BFS
 
-    return a symmetric permuted matrix
+    Parameters
+    ----------
+    A : sparse matrix
+        Sparse matrix
+
+    Returns
+    -------
+    B : sparse matrix
+        Permuted matrix with reordering
+
+    Notes
+    -----
+    Get a pseudo-peripheral node, then call BFS
 
     Example
     -------
@@ -333,12 +374,12 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
-    >>> #import pylab
-    >>> #pylab.figure()
-    >>> #pylab.subplot(121)
-    >>> #pylab.spy(S,marker='.')
-    >>> #pylab.subplot(122)
-    >>> #pylab.spy(symmetric_rcm(S),marker='.')
+    >>> import matplotlib.pyplot as plt
+    >>> plt.figure()
+    >>> plt.subplot(121)
+    >>> plt.spy(S,marker='.')
+    >>> plt.subplot(122)
+    >>> plt.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------
@@ -357,7 +398,26 @@ def symmetric_rcm(A):
 
 def pseudo_peripheral_node(A):
     """
+    Find a pseudo peripheral node
+
+    Parameters
+    ----------
+    A : sparse matrix
+        Sparse matrix
+
+    Returns
+    -------
+    x : int
+        Locaiton of the node
+    order : array
+        BFS ordering
+    level : array
+        BFS levels
+
+    Notes
+    -----
     Algorithm in Saad
+
     """
     from pyamg.graph import breadth_first_search
     n = A.shape[0]
