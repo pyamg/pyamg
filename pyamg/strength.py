@@ -323,16 +323,16 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     Parameters
     ----------
-    A : {sparse-matrix}
+    A : sparse-matrix
         matrix from which to generate strength of connection information
-    theta : {float}
+    theta : float
         Threshold parameter in [0,1]
-    k : {int}
+    k : int
         Number of relaxation steps used to generate strength information
 
     Returns
     -------
-    S : {csr_matrix}
+    S : csr_matrix
         Matrix graph defining strong connections.  The sparsity pattern
         of S matches that of A.  For BSR matrices, S is a reduced strength
         of connection matrix that describes connections between supernodes.
@@ -479,9 +479,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Sparse NxN matrix
-    B : {string, array}
+    B : string, array
         If B=None, then the near nullspace vector used is all ones.  If B is
         an (NxK) array, then B is taken to be the near nullspace vectors.
     epsilon : scalar
@@ -490,13 +490,13 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         ODE num time steps, step size is assumed to be 1/rho(DinvA)
     proj_type : {'l2','D_A'}
         Define norm for constrained min prob, i.e. define projection
-    block_flag : {boolean}
+    block_flag : boolean
         If True, use a block D inverse as preconditioner for A during
         weighted-Jacobi
 
     Returns
     -------
-    Atilde : {csr_matrix}
+    Atilde : csr_matrix
         Sparse matrix of strength values
 
     See [2008OlScTu]_ for more details.
@@ -826,7 +826,7 @@ def relaxation_vectors(A, R, k, alpha):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -837,7 +837,7 @@ def relaxation_vectors(A, R, k, alpha):
 
     Returns
     -------
-    x : {array}
+    x : array
         Dense array N x k array of relaxation vectors
     """
     # random n x R block in column ordering
@@ -861,7 +861,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -874,7 +874,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     Returns
     -------
-    C : {csr_matrix}
+    C : csr_matrix
         Sparse matrix of strength values
 
     References
@@ -921,7 +921,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -936,7 +936,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     Returns
     -------
-    C : {csr_matrix}
+    C : csr_matrix
         Sparse matrix of strength values
 
     References
