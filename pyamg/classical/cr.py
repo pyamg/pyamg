@@ -84,19 +84,19 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     ----------
     A : csr_matrix
         sparse matrix (n x n) usually matrix A of Ax=b
-    method : {'habituated','concurrent'}, Default 'habituated'
+    method : {'habituated','concurrent'}
         Method used during relaxation:
             - concurrent: GS relaxation on F-points, leaving e_c = 0
             - habituated: full relaxation, setting e_c = 0
-    B : {array like} : Default None
+    B : array like
         Target algebraically smooth vector used in CR. If multiple
         vectors passed in, only first one is used. If B=None, the
         constant vector is used.
-    nu : {int} : Default 3
+    nu : int
         Number of smoothing iterations to apply each CR sweep.
-    thetacr : {float} : Default [0.7]
+    thetacr : float
         Desired convergence factor of relaxations, 0 < thetacr < 1.
-    thetacs : {list, float, 'auto'} : Default 'auto'
+    thetacs : list, float, 'auto'
         Threshold value, 0 < thetacs < 1, to consider nodes from
         candidate set for coarse grid. If e[i] > thetacs for relaxed
         error vector, e, node i is considered for the coarse grid.
@@ -104,10 +104,10 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
         list of floats to be used on progressive iterations, or as
         string 'auto,' wherein each iteration thetacs = 1 - rho, for
         convergence factor rho from most recent smoothing.
-    maxiter : {int} : Default 20
+    maxiter : int
         Maximum number of CR iterations (updating of C/F splitting)
         to do.
-    verbose : {bool} : Default False
+    verbose : bool
         If true, print iteration number, convergence factor and
         coarsening factor after each iteration.
 

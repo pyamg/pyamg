@@ -390,7 +390,7 @@ def preprocess(S, coloring_method=None):
     ----------
     S : csr_matrix
         Strength of connection matrix
-    method : {string}
+    method : string
         Algorithm used to compute the vertex coloring:
             * 'MIS' - Maximal Independent Set
             * 'JP'  - Jones-Plassmann (parallel)
