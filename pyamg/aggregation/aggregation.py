@@ -47,43 +47,51 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     ----------
     A : csr_matrix, bsr_matrix
         Sparse NxN matrix in CSR or BSR format
-    B : None, array_like}
+
+    B : None, array_like
         Right near-nullspace candidates stored in the columns of an NxK array.
         The default value B=None is equivalent to B=ones((N,1))
+
     BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry is 'nonsymmetric'.
         The default value B=None is equivalent to BH=B.copy()
+
     symmetry : string
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
-        Note, in the strictly real case, symmetric and hermitian are the same
+        Note, in the strictly real case, symmetric and hermitian are the same.
         Note, this flag does not denote definiteness of the operator.
-    strength : list : default ['symmetric', 'classical', 'evolution', 'algebraic_distance', 'affinity', ('predefined', {'C' : csr_matrix}), None]
+
+    strength : string or list
         Method used to determine the strength of connection between unknowns of
         the linear system.  Method-specific parameters may be passed in using a
         tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If strength=None,
         all nonzero entries of the matrix are considered strong.
-        See notes below for varying this parameter on a per level basis.  Also,
-        see notes below for using a predefined strength matrix on each level.
-    aggregate : {list} : default ['standard', 'lloyd', 'naive', ('predefined', {'AggOp' : csr_matrix})]
-        Method used to aggregate nodes.  See notes below for varying this
-        parameter on a per level basis.  Also, see notes below for using a
-        predefined aggregation on each level.
-    smooth : {list} : default ['jacobi', 'richardson', 'energy', None]
+        Choose from 'symmetric', 'classical', 'evolution', 'algebraic_distance',
+        'affinity', ('predefined', {'C' : csr_matrix}), None
+
+    aggregate : string or list
+        Method used to aggregate nodes.
+        Choose from 'standard', 'lloyd', 'naive',
+        ('predefined', {'AggOp' : csr_matrix})
+
+    smooth : list
         Method used to smooth the tentative prolongator.  Method-specific
         parameters may be passed in using a tuple, e.g.  smooth=
-        ('jacobi',{'filter' : True }).  See notes below for varying this
-        parameter on a per level basis.
-    presmoother : {tuple, string, list} : default ('block_gauss_seidel', {'sweep':'symmetric'})
+        ('jacobi',{'filter' : True }).
+        Choose from 'jacobi', 'richardson', 'energy', None
+
+    presmoother : tuple, string, list
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
-        is CSR or is a BSR matrix with blocksize of 1.  See notes below for
-        varying this parameter on a per level basis.
-    postsmoother : {tuple, string, list}
+        is CSR or is a BSR matrix with blocksize of 1.
+
+    postsmoother : tuple, string, list
         Same as presmoother, except defines the postsmoother.
-    improve_candidates : {tuple, string, list} : default [('block_gauss_seidel', {'sweep': 'symmetric', 'iterations': 4}), None]
+
+    improve_candidates : tuple, string, list
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
@@ -91,16 +99,20 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels.
         The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
-    max_levels : {integer} : default 10
+
+    max_levels : integer
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse : {integer} : default 500
+
+    max_coarse : integer
         Maximum number of variables permitted on the coarse grid.
-    diagonal_dominance : {bool, tuple} : default False
+
+    diagonal_dominance : bool, tuple
         If True (or the first tuple entry is True), then avoid coarsening
         diagonally dominant rows.  The second tuple entry requires a
         dictionary, where the key value 'theta' is used to tune the diagonal
         dominance threshold.
-    keep : {bool} : default False
+
+    keep : bool
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
@@ -109,6 +121,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     ----------------
     cycle_type : ['V','W','F']
         Structrure of multigrid cycle
+
     coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
         Solver used at the coarsest level of the MG hierarchy.
         Optionally, may be a tuple (fn, args), where fn is a string such as
