@@ -34,15 +34,15 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
 
     Parameters
     ---------
-    x : {array}
+    x : array
         n x 1 vector of new candidate
-    AggOp : {CSR or CSC sparse matrix}
+    AggOp : CSR or CSC sparse matrix
         Aggregation operator for the level that x was generated for
-    A : {sparse matrix}
+    A : sparse matrix
         Operator for the level that x was generated for
-    T : {sparse matrix}
+    T : sparse matrix
         Tentative prolongation operator for the level that x was generated for
-    Ca : {scalar}
+    Ca : scalar
         Constant threshold parameter to decide when to drop candidates
 
     Returns
@@ -124,34 +124,34 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         Square matrix in CSR or BSR format
-    initial_candidates : {None, n x m dense matrix}
+    initial_candidates : None, n x m dense matrix
         If a matrix, then this forms the basis for the first m candidates.
         Also in this case, the initial setup stage is skipped, because this
         provides the first candidate(s).  If None, then a random initial guess
         and relaxation are used to inform the initial candidate.
-    symmetry : {string}
+    symmetry : string
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
         Note that for the strictly real case, these two options are the same
         Note that this flag does not denote definiteness of the operator
-    pdef : {bool}
+    pdef : bool
         True or False, whether A is known to be positive definite.
-    num_candidates : {integer} : default 1
+    num_candidates : integer
         Number of near-nullspace candidates to generate
-    candidate_iters : {integer} : default 5
+    candidate_iters : integer
         Number of smoothing passes/multigrid cycles used at each level of
         the adaptive setup phase
-    improvement_iters : {integer} : default 0
+    improvement_iters : integer
         Number of times each candidate is improved
-    epsilon : {float} : default 0.1
+    epsilon : float
         Target convergence factor
-    max_levels : {integer} : default 10
+    max_levels : integer
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse : {integer} : default 500
+    max_coarse : integer
         Maximum number of variables permitted on the coarse grid.
-    prepostsmoother : {string or dict}
+    prepostsmoother : string or dict
         Pre- and post-smoother used in the adaptive method
     strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C': csr_matrix}), None]
         Method used to determine the strength of connection between unknowns of
@@ -167,13 +167,13 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
-    eliminate_local : {tuple}
+    eliminate_local : tuple
         Length 2 tuple.  If the first entry is True, then eliminate candidates
         where they aren't needed locally, using the second entry of the tuple
         to contain arguments to local elimination routine.  Given the rigid
         sparse data structures, this doesn't help much, if at all, with
         complexity.  Its more of a diagnostic utility.
-    keep: {bool} : default False
+    keep: bool
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
@@ -212,9 +212,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     References
     ----------
     .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       "Adaptive Smoothed Aggregation (alpha SA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
-       http://www.cs.umn.edu/~maclach/research/aSA2.pdf
 
     """
 
