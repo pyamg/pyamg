@@ -75,7 +75,7 @@ class multilevel_solver:
         ----------
         levels : level array
             Array of level objects that contain A, R, and P.
-        coarse_solver: {string, callable, tuple}
+        coarse_solver: string, callable, tuple
             The solver method is either (1) a string such as 'splu' or 'pinv'
             of a callable object which receives only parameters (A, b) and
             returns an (approximate or exact) solution to the linear system Ax
@@ -328,7 +328,7 @@ class multilevel_solver:
             Stopping criteria: maximum number of allowable iterations.
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
-        accel : {string, function}
+        accel : string, function
             Defines acceleration method.  Can be a string such as 'cg'
             or 'gmres' which is the name of an iterative solver in
             pyamg.krylov (preferred) or scipy.sparse.linalg.isolve.
@@ -561,7 +561,7 @@ def coarse_grid_solver(solver):
 
     Parameters
     ----------
-    solver : {string, callable, tuple}
+    solver : string, callable, tuple
         The solver method is either (1) a string such as 'splu' or 'pinv' of a
         callable object which receives only parameters (A, b) and returns an
         (approximate or exact) solution to the linear system Ax = b, or (2) a
