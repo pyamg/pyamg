@@ -43,16 +43,16 @@ def demo():
 
     # Plot convergence history
     try:
-        import pylab
-        pylab.figure()
-        pylab.title('Convergence History')
-        pylab.xlabel('Iteration')
-        pylab.ylabel('Relative Residual')
-        pylab.semilogy(standalone_residuals, label='Standalone',
-                       linestyle='-', marker='o')
-        pylab.semilogy(accelerated_residuals, label='Accelerated',
-                       linestyle='-', marker='s')
-        pylab.legend()
-        pylab.show()
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.title('Convergence History')
+        plt.xlabel('Iteration')
+        plt.ylabel('Relative Residual')
+        plt.semilogy(standalone_residuals, label='Standalone',
+                     linestyle='-', marker='o')
+        plt.semilogy(accelerated_residuals, label='Accelerated',
+                     linestyle='-', marker='s')
+        plt.legend()
+        plt.show()
     except ImportError:
         print("\n\nNote: pylab not available on your system.")

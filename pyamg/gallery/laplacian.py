@@ -76,19 +76,19 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
 
     Parameters
     ----------
-    npts : {int}
+    npts : int
         number of pts in x and y directions
 
-    spacing : {float}
+    spacing : float
         grid spacing between points
 
-    beta : {float}
+    beta : float
         temperature
         Note that if beta=0, then we get the typical 5pt Laplacian stencil
 
     Returns
     -------
-    A : {csr matrix}
+    A : csr matrix
         A is Hermitian positive definite for beta > 0.0
         A is Symmetric semi-definite for beta = 0.0
 
