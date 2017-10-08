@@ -15,11 +15,11 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     Parameters
     ----------
-    A : {array, matrix, sparse matrix, LinearOperator}
+    A : array, matrix, sparse matrix, LinearOperator
         n x n, linear system to solve
-    b : {array, matrix}
+    b : array, matrix
         right hand side, shape is (n,) or (n,1)
-    x0 : {array, matrix}
+    x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
         relative convergence tolerance, i.e. tol is scaled by the
@@ -28,7 +28,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         maximum number of allowed iterations
     xtype : type
         dtype for the solution, default is automatic type detection
-    M : {array, matrix, sparse matrix, LinearOperator}
+    M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
