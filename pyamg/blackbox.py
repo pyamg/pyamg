@@ -17,12 +17,12 @@ def make_csr(A):
 
     Parameters
     ----------
-    A : {array, matrix, sparse matrix}
+    A : array, matrix, sparse matrix
         (n x n) matrix to convert to CSR
 
     Returns
     -------
-    A : {csr_matrix, bsr_matrix}
+    A : csr_matrix, bsr_matrix
         If A is csr_matrix or bsr_matrix, then do nothing and return A.
         Else, convert A to CSR if possible and return.
 
@@ -165,15 +165,15 @@ def solver(A, config):
 
     Parameters
     ----------
-    A : {array, matrix, csr_matrix, bsr_matrix}
+    A : array, matrix, csr_matrix, bsr_matrix
         Matrix to invert, CSR or BSR format preferred for efficiency
-    config : {dict}
+    config : dict
         A dictionary of solver configuration parameters that is used to
         generate a smoothed aggregation solver
 
     Returns
     -------
-    ml : {smoothed_aggregation_solver}
+    ml : smoothed_aggregation_solver
         smoothed aggregation hierarchy
 
     Notes
@@ -226,22 +226,22 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     Parameters
     ----------
-    A : {array, matrix, csr_matrix, bsr_matrix}
+    A : array, matrix, csr_matrix, bsr_matrix
         Matrix to invert, CSR or BSR format preferred for efficiency
-    b : {array}
+    b : array
         Right hand side.
-    x0 : {array} : default random vector
-        Initial guess
-    tol : {float} : default 1e-5
+    x0 : array
+        Initial guess (default random vector)
+    tol : float
         Stopping criteria: relative residual r[k]/r[0] tolerance
-    maxiter : {int} : default 400
+    maxiter : int
         Stopping criteria: maximum number of allowable iterations
-    return_solver : {bool} : default False
+    return_solver : bool
         True: return the solver generated
-    existing_solver : {smoothed_aggregation_solver} : default None
+    existing_solver : smoothed_aggregation_solver
         If instance of a multilevel solver, then existing_solver is used
         to invert A, thus saving time on setup cost.
-    verb : {bool}
+    verb : bool
         If True, print verbose output during runtime
     residuals : list
         List to contain residual norms at each iteration.
@@ -250,7 +250,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     Returns
     -------
-    x : {array}
+    x : array
         Solution to Ax = b
     ml : multilevel_solver
         Optional return of the multilevel structure used for the solve
