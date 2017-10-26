@@ -103,7 +103,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
 
     '''
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
+    A, M, x, b, postprocess = make_system(A, M, x0, b)
     dimen = A.shape[0]
 
     # Ensure that warnings are always reissued from this function

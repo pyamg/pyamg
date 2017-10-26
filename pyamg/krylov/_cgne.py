@@ -89,7 +89,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AH = aslinearoperator(np.asmatrix(A).H)
 
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b, xtype)
+    A, M, x, b, postprocess = make_system(A, M, x0, b)
     dimen = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
