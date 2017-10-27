@@ -27,7 +27,7 @@ from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.command.test import test as TestCommand
 
 version = '3.3.2'
-isreleased = True
+isreleased = False
 
 install_requires = (
     'numpy>=1.7.0',
