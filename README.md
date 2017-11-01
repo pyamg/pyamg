@@ -5,11 +5,22 @@
 # Installation
 PyAMG requires `numpy` and `scipy`
 
-      pip install pyamg
+```
+pip install pyamg
+```
 
 or
 
-      python setup.py install
+```
+python setup.py install
+```
+
+or with conda (see details below)
+
+```
+conda config --add channels conda-forge
+conda install pyamg
+```
 
 
 # Introduction
