@@ -5,11 +5,22 @@
 # Installation
 PyAMG requires `numpy` and `scipy`
 
-      pip install pyamg
+```
+pip install pyamg
+```
 
 or
 
-      python setup.py install
+```
+python setup.py install
+```
+
+or with conda (see details below)
+
+```
+conda config --add channels conda-forge
+conda install pyamg
+```
 
 
 # Introduction
@@ -104,17 +115,7 @@ More information can be found at [conda-forge/pyamg-feedstock](https://github.co
 
 | Linux |  OSX  | Windows | Version | Downloads |
 | :---: | :---: | :-----: | :-----: | :-------: |
-|
-[![Circle CI](https://circleci.com/gh/conda-forge/pyamg-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyamg-feedstock)
-|
-[![TravisCI](https://travis-ci.org/conda-forge/pyamg-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyamg-feedstock)
-|
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyamg-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyamg-feedstock/branch/master)
-|
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/version.svg)](https://anaconda.org/conda-forge/pyamg)
-|
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/downloads.svg)](https://anaconda.org/conda-forge/pyamg)
-|
+| [![Circle CI](https://circleci.com/gh/conda-forge/pyamg-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyamg-feedstock) | [![TravisCI](https://travis-ci.org/conda-forge/pyamg-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyamg-feedstock) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyamg-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyamg-feedstock/branch/master) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/version.svg)](https://anaconda.org/conda-forge/pyamg) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/downloads.svg)](https://anaconda.org/conda-forge/pyamg) |
 
 Installing `pyamg` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
 
