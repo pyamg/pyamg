@@ -563,3 +563,26 @@ class TestComplexSolverPerformance(TestCase):
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
             assert_array_almost_equal(symm_lvl.A.todense(),
                                       nonsymm_lvl.A.todense())
+
+    def test_precision(self):
+        """
+        Check single precision.
+
+        Test that x_32 == x_64 up to single precision tolerance
+        """
+
+        np.random.seed(0)  # make tests repeatable
+        A = poisson((10,10), dtype=np.float64, format='csr')
+        b = np.random.rand(A.shape[0]).astype(A.dtype)
+        ml = smoothed_aggregation_solver(A)
+        x = np.random.rand(A.shape[0]).astype(A.dtype)
+        x32 = ml.solve(b, x0=x, maxiter=1)
+
+        np.random.seed(0)  # make tests repeatable
+        A = poisson((10,10), dtype=np.float32, format='csr')
+        b = np.random.rand(A.shape[0]).astype(A.dtype)
+        ml = smoothed_aggregation_solver(A)
+        x = np.random.rand(A.shape[0]).astype(A.dtype)
+        x64 = ml.solve(b, x0=x, maxiter=1)
+
+        assert_array_almost_equal(x32, x64, decimal=5)

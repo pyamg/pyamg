@@ -223,7 +223,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
         B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
-                    np.eye(blocksize(A)))
+                    np.eye(blocksize(A), dtype=A.dtype))
     else:
         B = np.asarray(B, dtype=A.dtype)
         if len(B.shape) == 1:
