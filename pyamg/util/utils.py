@@ -2067,11 +2067,11 @@ def filter_matrix_columns(A, theta):
     A.indices += A.shape[1]
     A_filter.indices += A.shape[1]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection(A.shape[1], theta,
-                                                    A.indptr, A.indices,
-                                                    A.data, A_filter.indptr,
-                                                    A_filter.indices,
-                                                    A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[1], theta,
+                                                        A.indptr, A.indices,
+                                                        A.data, A_filter.indptr,
+                                                        A_filter.indices,
+                                                        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
     A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2137,11 +2137,11 @@ def filter_matrix_rows(A, theta):
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection(A.shape[0], theta,
-                                                    A.indptr, A.indices,
-                                                    A.data, A_filter.indptr,
-                                                    A_filter.indices,
-                                                    A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
+                                                        A.indptr, A.indices,
+                                                        A.data, A_filter.indptr,
+                                                        A_filter.indices,
+                                                        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],

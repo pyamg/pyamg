@@ -440,14 +440,14 @@ F_NODE = _amg_core.F_NODE
 C_NODE = _amg_core.C_NODE
 U_NODE = _amg_core.U_NODE
 
-def classical_strength_of_connection(*args):
+def classical_strength_of_connection_abs(*args):
     """
-    classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
-    classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
-    classical_strength_of_connection(int const n_row, float const theta, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int [] Sp, int [] Sj, std::complex< float > [] Sx)
-    classical_strength_of_connection(int const n_row, double const theta, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int [] Sp, int [] Sj, std::complex< double > [] Sx)
+    classical_strength_of_connection_abs(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
+    classical_strength_of_connection_abs(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
+    classical_strength_of_connection_abs(int const n_row, float const theta, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, int [] Sp, int [] Sj, std::complex< float > [] Sx)
+    classical_strength_of_connection_abs(int const n_row, double const theta, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, int [] Sp, int [] Sj, std::complex< double > [] Sx)
     """
-    return _amg_core.classical_strength_of_connection(*args)
+    return _amg_core.classical_strength_of_connection_abs(*args)
 
 def maximum_row_value(*args):
     """
@@ -469,6 +469,13 @@ def cljp_naive_splitting(n, Sp, Sj, Tp, Tj, splitting, colorflag):
 def rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp):
     """rs_direct_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int [] Bp)"""
     return _amg_core.rs_direct_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp)
+
+def classical_strength_of_connection_min(*args):
+    """
+    classical_strength_of_connection_min(int const n_row, float const theta, int const [] Ap, int const [] Aj, float const [] Ax, int [] Sp, int [] Sj, float [] Sx)
+    classical_strength_of_connection_min(int const n_row, double const theta, int const [] Ap, int const [] Aj, double const [] Ax, int [] Sp, int [] Sj, double [] Sx)
+    """
+    return _amg_core.classical_strength_of_connection_min(*args)
 
 def rs_direct_interpolation_pass2(*args):
     """

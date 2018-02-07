@@ -43,14 +43,14 @@
  *
  */
 template<class I, class T, class F>
-void classical_strength_of_connection(const I n_row,
-                                      const F theta,
-                                      const I Ap[], const int Ap_size,
-                                      const I Aj[], const int Aj_size,
-                                      const T Ax[], const int Ax_size,
-                                            I Sp[], const int Sp_size,
-                                            I Sj[], const int Sj_size,
-                                            T Sx[], const int Sx_size)
+void classical_strength_of_connection_abs(const I n_row,
+                                          const F theta,
+                                          const I Ap[], const int Ap_size,
+                                          const I Aj[], const int Aj_size,
+                                          const T Ax[], const int Ax_size,
+                                                I Sp[], const int Sp_size,
+                                                I Sj[], const int Sj_size,
+                                                T Sx[], const int Sx_size)
 {
     I nnz = 0;
     Sp[0] = 0;
@@ -70,6 +70,56 @@ void classical_strength_of_connection(const I n_row,
         F threshold = theta*max_offdiagonal;
         for(I jj = row_start; jj < row_end; jj++){
             F norm_jj = mynorm(Ax[jj]);
+
+            // Add entry if it exceeds the threshold
+            if(norm_jj >= threshold){
+                if(Aj[jj] != i){
+                    Sj[nnz] = Aj[jj];
+                    Sx[nnz] = Ax[jj];
+                    nnz++;
+                }
+            }
+
+            // Always add the diagonal
+            if(Aj[jj] == i){
+                Sj[nnz] = Aj[jj];
+                Sx[nnz] = Ax[jj];
+                nnz++;
+            }
+        }
+
+        Sp[i+1] = nnz;
+    }
+}
+
+template<class I, class T>
+void classical_strength_of_connection_min(const I n_row,
+                                          const T theta,
+                                          const I Ap[], const int Ap_size,
+                                          const I Aj[], const int Aj_size,
+                                          const T Ax[], const int Ax_size,
+                                                I Sp[], const int Sp_size,
+                                                I Sj[], const int Sj_size,
+                                                T Sx[], const int Sx_size)
+{
+    I nnz = 0;
+    Sp[0] = 0;
+
+    for(I i = 0; i < n_row; i++){
+        T max_offdiagonal = 0.0;
+
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
+
+        for(I jj = row_start; jj < row_end; jj++){
+            if(Aj[jj] != i){
+                max_offdiagonal = std::max(max_offdiagonal, -Ax[jj]);
+            }
+        }
+
+        T threshold = theta*max_offdiagonal;
+        for(I jj = row_start; jj < row_end; jj++){
+            T norm_jj = -Ax[jj];
 
             // Add entry if it exceeds the threshold
             if(norm_jj >= threshold){

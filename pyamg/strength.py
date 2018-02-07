@@ -118,12 +118,13 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.0):
+def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     """
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
 
-            | A[i,j] | >= theta * max(| A[i,k] |), where k != i
+             A[i,j] >= theta * max(|A[i,k]|), where k != i     (norm='abs')
+            -A[i,j] >= theta * max(-A[i,k]),  where k != i     (norm='min')
 
     Parameters
     ----------
@@ -131,6 +132,9 @@ def classical_strength_of_connection(A, theta=0.0):
         Square, sparse matrix in CSR or BSR format
     theta : float
         Threshold parameter in [0,1].
+    norm: 'string'
+        'abs' : to use the absolute value,
+        'min' : to use the negative value (see above)
 
     Returns
     -------
@@ -192,9 +196,17 @@ def classical_strength_of_connection(A, theta=0.0):
     Sj = np.empty_like(A.indices)
     Sx = np.empty_like(A.data)
 
-    amg_core.classical_strength_of_connection(A.shape[0], theta,
-                                              A.indptr, A.indices, A.data,
-                                              Sp, Sj, Sx)
+    if norm == 'abs':
+        amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
+                                                      A.indptr, A.indices, A.data,
+                                                      Sp, Sj, Sx)
+    elif norm == 'min':
+        amg_core.classical_strength_of_connection_min(A.shape[0], theta,
+                                                      A.indptr, A.indices, A.data,
+                                                      Sp, Sj, Sx)
+    else:
+        raise ValueError('Unknown norm')
+
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
     if blocksize > 1:
