@@ -261,7 +261,7 @@ def check_input(Verts=None, E2V=None, Agg=None, A=None, splitting=None,
                 mesh_type=None):
     """Check input for local functions"""
     if Verts is not None:
-        if not np.issubdtype(Verts.dtype, float):
+        if not np.issubdtype(Verts.dtype, np.float):
             raise ValueError('Verts should be of type float')
 
     if E2V is not None:
