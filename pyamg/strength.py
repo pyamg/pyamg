@@ -192,8 +192,9 @@ def classical_strength_of_connection(A, theta=0.0):
     Sj = np.empty_like(A.indices)
     Sx = np.empty_like(A.data)
 
-    fn = amg_core.classical_strength_of_connection
-    fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
+    amg_core.classical_strength_of_connection(A.shape[0], theta,
+                                              A.indptr, A.indices, A.data,
+                                              Sp, Sj, Sx)
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
     if blocksize > 1:

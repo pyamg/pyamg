@@ -18,7 +18,7 @@
  *  matrices are stored in CSR format.  An off-diagonal nonzero entry
  *  A[i,j] is considered strong if:
  *
- *      -A[i,j] >= theta * max( -A[i,k] )   where k != i
+ *      |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
  *
  * Otherwise, the connection is weak.
  *
@@ -63,7 +63,7 @@ void classical_strength_of_connection(const I n_row,
 
         for(I jj = row_start; jj < row_end; jj++){
             if(Aj[jj] != i){
-                max_offdiagonal = std::max(max_offdiagonal,mynorm(Ax[jj]));
+                max_offdiagonal = std::max(max_offdiagonal, mynorm(Ax[jj]));
             }
         }
 
