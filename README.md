@@ -5,11 +5,22 @@
 # Installation
 PyAMG requires `numpy` and `scipy`
 
-      pip install pyamg
+```
+pip install pyamg
+```
 
 or
 
-      python setup.py install
+```
+python setup.py install
+```
+
+or with conda (see details below)
+
+```
+conda config --add channels conda-forge
+conda install pyamg
+```
 
 
 # Introduction
@@ -97,3 +108,29 @@ Coarse Solver:        'pinv2'
 
 residual:  1.24748994988e-08
 </pre>
+
+# Conda
+
+More information can be found at [conda-forge/pyamg-feedstock](https://github.com/conda-forge/pyamg-feedstock).
+
+| Linux |  OSX  | Windows | Version | Downloads |
+| :---: | :---: | :-----: | :-----: | :-------: |
+| [![Circle CI](https://circleci.com/gh/conda-forge/pyamg-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyamg-feedstock) | [![TravisCI](https://travis-ci.org/conda-forge/pyamg-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyamg-feedstock) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyamg-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyamg-feedstock/branch/master) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/version.svg)](https://anaconda.org/conda-forge/pyamg) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/downloads.svg)](https://anaconda.org/conda-forge/pyamg) |
+
+Installing `pyamg` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
+
+```
+conda config --add channels conda-forge
+```
+
+Once the `conda-forge` channel has been enabled, `pyamg` can be installed with:
+
+```
+conda install pyamg
+```
+
+It is possible to list all of the versions of `pyamg` available on your platform with:
+
+```
+conda search pyamg --channel conda-forge
+```

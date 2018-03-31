@@ -15,6 +15,7 @@ import pyamg.amg_core
 __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
            'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
+           'scale_rows', 'scale_columns',
            'symmetric_rescaling', 'symmetric_rescaling_sa',
            'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
@@ -173,30 +174,33 @@ def scale_rows(A, v, copy=True):
 
     v = np.ravel(v)
 
-    if isspmatrix_csr(A) or isspmatrix_bsr(A):
-        M, N = A.shape
-        if M != len(v):
-            raise ValueError('scale vector has incompatible shape')
+    M, N = A.shape
 
-        if copy:
-            A = A.copy()
-            A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
-        else:
-            v = np.asarray(v, dtype=A.dtype)
+    if not isspmatrix(A):
+        raise ValueError('scale rows needs a sparse matrix')
 
-        if isspmatrix_csr(A):
-            csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
-        else:
-            R, C = A.blocksize
-            bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
-                           np.ravel(A.data), v)
+    if M != len(v):
+        raise ValueError('scale vector has incompatible shape')
 
-        return A
-    elif isspmatrix_csc(A):
-        return scale_columns(A.T, v)
+    if copy:
+        A = A.copy()
+        A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
     else:
-        return scale_rows(csr_matrix(A), v)
+        v = np.asarray(v, dtype=A.dtype)
 
+    if isspmatrix_csr(A):
+        csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
+    elif isspmatrix_bsr(A):
+        R, C = A.blocksize
+        bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
+                       np.ravel(A.data), v)
+    elif isspmatrix_csc(A):
+        pyamg.amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
+    else:
+        fmt = A.format
+        A = scale_rows(csr_matrix(A), v).asformat(fmt)
+
+    return A
 
 def scale_columns(A, v, copy=True):
     """
@@ -249,29 +253,33 @@ def scale_columns(A, v, copy=True):
 
     v = np.ravel(v)
 
-    if isspmatrix_csr(A) or isspmatrix_bsr(A):
-        M, N = A.shape
-        if N != len(v):
-            raise ValueError('scale vector has incompatible shape')
+    M, N = A.shape
 
-        if copy:
-            A = A.copy()
-            A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
-        else:
-            v = np.asarray(v, dtype=A.dtype)
+    if not isspmatrix(A):
+        raise ValueError('scale columns needs a sparse matrix')
 
-        if isspmatrix_csr(A):
-            csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
-        else:
-            R, C = A.blocksize
-            bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
-                              np.ravel(A.data), v)
+    if N != len(v):
+        raise ValueError('scale vector has incompatible shape')
 
-        return A
-    elif isspmatrix_csc(A):
-        return scale_rows(A.T, v)
+    if copy:
+        A = A.copy()
+        A.data = np.asarray(A.data, dtype=upcast(A.dtype, v.dtype))
     else:
-        return scale_rows(csr_matrix(A), v)
+        v = np.asarray(v, dtype=A.dtype)
+
+    if isspmatrix_csr(A):
+        csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
+    elif isspmatrix_bsr(A):
+        R, C = A.blocksize
+        bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
+                          np.ravel(A.data), v)
+    elif isspmatrix_csc(A):
+         pyamg.amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
+    else:
+        fmt = A.format
+        A = scale_columns(csr_matrix(A), v).asformat(fmt)
+
+    return A
 
 
 def symmetric_rescaling(A, copy=True):
@@ -2059,11 +2067,11 @@ def filter_matrix_columns(A, theta):
     A.indices += A.shape[1]
     A_filter.indices += A.shape[1]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection(A.shape[1], theta,
-                                                    A.indptr, A.indices,
-                                                    A.data, A_filter.indptr,
-                                                    A_filter.indices,
-                                                    A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[1], theta,
+                                                        A.indptr, A.indices,
+                                                        A.data, A_filter.indptr,
+                                                        A_filter.indices,
+                                                        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
     A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2129,11 +2137,11 @@ def filter_matrix_rows(A, theta):
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection(A.shape[0], theta,
-                                                    A.indptr, A.indices,
-                                                    A.data, A_filter.indptr,
-                                                    A_filter.indices,
-                                                    A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
+                                                        A.indptr, A.indices,
+                                                        A.data, A_filter.indptr,
+                                                        A_filter.indices,
+                                                        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],

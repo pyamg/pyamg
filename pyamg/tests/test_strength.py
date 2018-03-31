@@ -51,6 +51,15 @@ class TestStrengthOfConnection(TestCase):
                 assert_equal(result.nnz, expected.nnz)
                 assert_array_almost_equal(result.todense(), expected.todense())
 
+    def test_classical_strength_of_connection_min(self):
+        for A in self.cases:
+            for theta in [0.0, 0.05, 0.25, 0.50, 0.90]:
+                result = classical_soc(A, theta, norm='min')
+                expected = reference_classical_soc(A, theta, norm='min')
+
+                assert_equal(result.nnz, expected.nnz)
+                assert_array_almost_equal(result.todense(), expected.todense())
+
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
             for theta in [0.0, 0.1, 0.5, 1.0, 10.0]:
@@ -443,14 +452,16 @@ class TestComplexStrengthOfConnection(TestCase):
 
 
 # reference implementations for unittests  #
-def reference_classical_soc(A, theta):
-    # This complex extension of the classic Ruge-Stuben
-    # strength-of-connection has some theoretical justification in
-    # "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan,
-    # Cornelis Oosterlee
+def reference_classical_soc(A, theta, norm='abs'):
+    """
+    This complex extension of the classic Ruge-Stuben
+    strength-of-connection has some theoretical justification in
+    "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan,
+    Cornelis Oosterlee
 
-    # Connection is strong if,
-    #   | a_ij| >= theta * max_{k != i} |a_ik|
+    A connection is strong if,
+      | a_ij| >= theta * max_{k != i} |a_ik|
+    """
     S = coo_matrix(A)
 
     # remove diagonals
@@ -462,11 +473,19 @@ def reference_classical_soc(A, theta):
     max_offdiag[:] = np.finfo(S.data.dtype).min
 
     # Note abs(.) takes the complex modulus
-    for i, v in zip(S.row, S.data):
-        max_offdiag[i] = max(max_offdiag[i], abs(v))
+    if norm=='abs':
+        for i, v in zip(S.row, S.data):
+            max_offdiag[i] = max(max_offdiag[i], abs(v))
+    if norm=='min':
+        for i, v in zip(S.row, S.data):
+            max_offdiag[i] = max(max_offdiag[i], -v)
 
     # strong connections
-    mask = np.abs(S.data) >= (theta * max_offdiag[S.row])
+    if norm=='abs':
+        mask = np.abs(S.data) >= (theta * max_offdiag[S.row])
+    if norm=='min':
+        mask = -S.data >= (theta * max_offdiag[S.row])
+
     S.row = S.row[mask]
     S.col = S.col[mask]
     S.data = S.data[mask]

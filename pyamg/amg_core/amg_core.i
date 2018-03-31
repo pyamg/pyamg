@@ -74,6 +74,7 @@
     (const ctype Tx [], const int Tx_size),
     (      ctype Tx [], const int Tx_size),
     (      ctype AA [], const int AA_size),
+    (const ctype Xx [], const int Xx_size),
     (      ctype  R [], const int  R_size),
     (      ctype temp [], const int temp_size),
     (      ctype gamma [], const int gamma_size),
@@ -138,6 +139,8 @@ DECLARE_DATA_TYPE( std::complex<double> )
   ---------------------------------------------------------------------------*/
 %include "linalg.h"
 INSTANTIATE_INDEXDATA_COMPLEX(pinv_array)
+INSTANTIATE_INDEXDATA_INT(csc_scale_rows)
+INSTANTIATE_INDEXDATA_INT(csc_scale_columns)
 
 /*----------------------------------------------------------------------------
   graph.h
@@ -208,13 +211,15 @@ INSTANTIATE_INDEXDATA_COMPLEX(truncate_rows_csr)
   ---------------------------------------------------------------------------*/
 %include "ruge_stuben.h"
 
-INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection)
+INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection_abs)
 
 INSTANTIATE_INDEXDATA_COMPLEX(maximum_row_value)
 
 INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
 INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
 INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
+
+INSTANTIATE_INDEXDATA(classical_strength_of_connection_min)
 INSTANTIATE_INDEXDATA(rs_direct_interpolation_pass2)
 INSTANTIATE_INDEXDATA(cr_helper)
 
