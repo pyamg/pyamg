@@ -81,6 +81,14 @@ instantiate:
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
 
+- types:
+    - [int, float]
+    - [int, double]
+    - [int, "std::complex<float>"]
+    - [int, "std::complex<double>"]
+  functions:
+    - csr_matvec
+
 remaps:
     - fit_candidates_real: fit_candidates
     - fit_candidates_complex: fit_candidates

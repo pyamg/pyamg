@@ -271,6 +271,7 @@ def main():
         # check to see if we should instantiate
         for func in inst:
             if f['name'] in func['functions']:
+                print('\t[building %s]'%f['name'])
                 fdef = build_function(f)
                 flist.append(fdef)
 
