@@ -1,6 +1,6 @@
 Release Steps:
 - with no staged commits...
-- check that `python seutp.py test` passes
+- check that `python setup.py test` passes
 - remove build, dist, .egg-info, etc
 - change `isreleased` to True in `setup.py`
 - change `version` in `setup.py`
