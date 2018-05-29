@@ -2,8 +2,7 @@
 import re
 import yaml
 
-PYBINDHEADER =\
-"""\
+PYBINDHEADER = """\
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
@@ -12,6 +11,7 @@ PYBINDHEADER =\
 
 namespace py = pybind11;
 """
+
 
 def find_comments(fname):
     """
@@ -33,14 +33,14 @@ def find_comments(fname):
     comments = {}
     startcomment = 0
     endcomment = 0
-    for i, l in enumerate(lines):
-        if 'template' in l:
+    for i, line in enumerate(lines):
+        if 'template' in line:
             # remove spaces from template argument
-            l = l.replace(' ', '')
-            l = l.lstrip()
-        if l.startswith('template<'):
-            endcomment = i-1
-            startcomment = endcomment+1
+            line = line.replace(' ', '')
+            line = line.lstrip()
+        if line.startswith('template<'):
+            endcomment = i - 1
+            startcomment = endcomment + 1
             for j in range(endcomment, 0, -1):
                 if lines[j].startswith('//') or\
                    lines[j].startswith('/*') or\
@@ -48,14 +48,14 @@ def find_comments(fname):
                     startcomment = j
                 else:
                     break
-            comment = lines[startcomment:endcomment+1]
+            comment = lines[startcomment:endcomment + 1]
             for s in ['/*', ' */', ' *', '//']:
                 comment = [c.lstrip(s) for c in comment]
             comment = [c.lstrip() for c in comment]
             comment = '\n'.join(comment)
 
             # grab function name
-            name = lines[i+1]
+            name = lines[i + 1]
             # if it's a function...
             if '(' in name:
                 name = re.match('.*?(\w*)\(', name).group(1)
@@ -65,6 +65,7 @@ def find_comments(fname):
             comments[name] = comment
 
     return comments
+
 
 def build_function(func):
     """
@@ -95,7 +96,6 @@ def build_function(func):
         if p['constant']:
             const = 'const '
 
-        ptr = ''
         paramtype = p['raw_type']
         if p['pointer'] or p['array']:
             param = 'py::array_t<%s> &' % paramtype
@@ -130,7 +130,7 @@ def build_function(func):
 
     # get the template signature
     template = func['template']
-    template = template.replace('template','').replace('class ','')
+    template = template.replace('template', '').replace('class ', '')
     fdef += '\n return ' + func['name'] + template + '(\n'
 
     for p in func['parameters']:
@@ -149,6 +149,7 @@ def build_function(func):
     fdef += ');\n}\n'
     return fdef
 
+
 def build_plugin(headerfile, ch, comments, inst, remaps):
     """
     Take a header file (headerfile) and a parse tree (ch)
@@ -159,8 +160,8 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
     indent = '    '
     plugin = ''
 
-    #plugin += '#define NC py::arg().noconvert()\n'
-    #plugin += '#define YC py::arg()\n'
+    # plugin += '#define NC py::arg().noconvert()\n'
+    # plugin += '#define YC py::arg()\n'
     plugin += 'PYBIND11_PLUGIN(%s) {\n' % headerfilename
     plugin += indent + 'py::module m("%s", R"pbdoc(\n' % headerfilename
     plugin += indent + 'pybind11 bindings for %s\n\n' % headerfile
@@ -172,8 +173,8 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 plugin += indent + f['name'] + '\n'
     plugin += indent + ')pbdoc");\n\n'
 
-    #plugin += indent + 'py::options options;\n'
-    #plugin += indent + 'options.disable_function_signatures();\n\n'
+    # plugin += indent + 'py::options options;\n'
+    # plugin += indent + 'options.disable_function_signatures();\n\n'
 
     for f in ch.functions:
         found = False
@@ -216,7 +217,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 if f['name'] in remap:
                     instname = remap[f['name']]
             plugin += indent + 'm.def("%s", &_%s<%s>,\n' %\
-                      (instname, f['name'], typestr)
+                (instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -230,7 +231,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
             plugin += indent + argstring
 
             # add the docstring to the last
-            if i == ntypes-1:
+            if i == ntypes - 1:
                 plugin += ',\nR"pbdoc(\n%s\n)pbdoc");\n' % comments[f['name']]
             else:
                 plugin += ');\n'
@@ -238,19 +239,19 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     plugin += indent + 'return m.ptr();\n'
     plugin += '}\n'
-    #plugin += '#undef NC\n'
-    #plugin += '#undef YC\n'
+    # plugin += '#undef NC\n'
+    # plugin += '#undef YC\n'
     return plugin
+
 
 def main():
     import argparse
     import CppHeaderParser
 
-    parser = argparse.ArgumentParser(
-            description='Wrap a C++ header with Pybind11')
+    parser = argparse.ArgumentParser(description='Wrap a C++ header with Pybind11')
 
     parser.add_argument("-o", "--output-file", metavar="FILE",
-            help="(default output name for header.h is header_bind.cpp)")
+                        help="(default output name for header.h is header_bind.cpp)")
 
     parser.add_argument("input_file", metavar="FILE")
 
@@ -271,7 +272,7 @@ def main():
         # check to see if we should instantiate
         for func in inst:
             if f['name'] in func['functions']:
-                print('\t[building %s]'%f['name'])
+                print('\t[building {}]'.format(f['name']))
                 fdef = build_function(f)
                 flist.append(fdef)
 
@@ -289,6 +290,7 @@ def main():
             print(f, '\n\n\n', file=outf, sep="")
 
         print(plugin, file=outf)
+
 
 if __name__ == '__main__':
     main()
