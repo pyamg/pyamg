@@ -7,15 +7,20 @@ PYBINDHEADER = """\
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
 
-#include "%s"
+#include "{}"
 
 namespace py = pybind11;
 """
 
 
-def find_comments(fname):
+def find_comments(fname, ch):
     """
-    Find the comments for a templated function.  The function must look like
+    Find the comments for a function.
+
+    fname: filename
+    ch: CppHeaderParser parse tree
+
+    The function must look like
     /*
      * comments
      * comments
@@ -23,46 +28,39 @@ def find_comments(fname):
      template<class I, ...>
      void somefunc(...){
 
-    or with // style comments
+     -or-
+
+    /*
+     * comments
+     * comments
+     */
+     void somefunc(...){
+
+     -or-
+
+    with // style comments
     """
     with open(fname, 'r') as inf:
-        f = inf.read()
-
-    lines = f.split('\n')
+        fdata = inf.readlines()
 
     comments = {}
-    startcomment = 0
-    endcomment = 0
-    for i, line in enumerate(lines):
-        if 'template' in line:
-            # remove spaces from template argument
-            line = line.replace(' ', '')
-            line = line.lstrip()
-        if line.startswith('template<'):
-            endcomment = i - 1
-            startcomment = endcomment + 1
-            for j in range(endcomment, 0, -1):
-                if lines[j].startswith('//') or\
-                   lines[j].startswith('/*') or\
-                   lines[j].startswith(' *'):
-                    startcomment = j
-                else:
-                    break
-            comment = lines[startcomment:endcomment + 1]
-            for s in ['/*', ' */', ' *', '//']:
-                comment = [c.lstrip(s) for c in comment]
-            comment = [c.lstrip() for c in comment]
-            comment = '\n'.join(comment)
+    for f in ch.functions:
+        lineno = f['line_number'] - 1  # zero based indexing
 
-            # grab function name
-            name = lines[i + 1]
-            # if it's a function...
-            if '(' in name:
-                name = re.match('.*?(\w*)\(', name).group(1)
-            # otherwise just take the last term
-            else:
-                name = name.split()[-1]
-            comments[name] = comment
+        # set starting position
+        lineptr = lineno - 1
+        if f['template']:
+            lineptr -= 1
+        start = lineptr
+
+        # find the top of the comment block
+        while fdata[lineptr].startswith('//') or\
+            fdata[lineptr].startswith('/*') or\
+                fdata[lineptr].startswith(' *'):
+            lineptr -= 1
+        lineptr += 1
+
+        comments[f['name']] = ''.join(fdata[lineptr:(start + 1)])
 
     return comments
 
@@ -79,35 +77,55 @@ def build_function(func):
         - non arrays are basic types: int, double, complex, etc
         - all functions are straight up c++
     """
-    fdef = func['template'] + '\n'
+
+    # temlpate and function name
+
+    if func['template']:
+        fdef = func['template'] + '\n'
+    else:
+        fdef = ''
     fdef += func['returns'] + ' '
-    fdef += '_' + func['name'] + '(\n'
+    fdef += '_' + func['name']
+    fdef += '(\n'
 
+    # function parameters
+
+    # for each parameter
+    # if it's an array
+    #   - replace with py::array_t
+    #   - skip the next _size argument
+    #   - save in a list of arrays
+    # else replicate
+
+    i = 0
     arraylist = []
+    while i < len(func['parameters']):
+        p = func['parameters'][i]
 
-    # find all parameters
-    for p in func['parameters']:
-
-        # skip "_size" parameters
-        if '_size' in p['name']:
-            continue
-
-        const = '      '
-        if p['constant']:
-            const = 'const '
-
-        paramtype = p['raw_type']
+        # check if pointer/array
         if p['pointer'] or p['array']:
-            param = 'py::array_t<%s> &' % paramtype
-            param += ' ' + p['name']
+            paramtype = p['raw_type']
+            const = '      '
+            if p['constant']:
+                const = 'const '
+
+            param = 'py::array_t<{}> &'.format(paramtype) + ' ' + p['name']
             arraylist.append((const, paramtype, p['name']))
+
+            # skip "_size" parameter
+            i += 1
+            p = func['parameters'][i]
+            if '_size' not in p['name']:
+                raise ValueError('Expecting a _size parameter for {}'.format(p['name']))
+        # if not a pointer, just copy it
         else:
-            param = paramtype
-            param += ' ' + p['name']
+            param = p['type'] + ' ' + p['name']
+
+        i += 1
 
         fdef += '     ' + param + ',\n'
 
-    fdef = fdef.strip()[:-1] + ')'
+    fdef = fdef.strip()[:-1] + ')'  # trim comma and newline
     fdef += '\n{\n'
 
     # make a list of python objects
@@ -129,15 +147,18 @@ def build_function(func):
         fdef += a[0] + a[1] + ' *_' + a[2] + ' = py_' + a[2] + data
 
     # get the template signature
-    template = func['template']
-    template = template.replace('template', '').replace('class ', '')
+    if func['template']:
+        template = func['template']
+        template = template.replace('template', '').replace('class ', '')   # template <class T> ----> <T>
+    else:
+        template = ''
     fdef += '\n return ' + func['name'] + template + '(\n'
 
+    # function parameters
     for p in func['parameters']:
         if '_size' in p['name']:
             fdef = fdef.strip()
-            size = p['name'].replace('_size', '.size()')
-            fdef += ' ' + size
+            fdef += ' ' + p['name'].replace('_size', '.size()')
         else:
             if p['pointer'] or p['array']:
                 name = '_' + p['name']
@@ -147,6 +168,7 @@ def build_function(func):
         fdef += ',\n'
     fdef = fdef.strip()[:-1]
     fdef += ');\n}\n'
+    print(fdef)
     return fdef
 
 
@@ -154,6 +176,16 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
     """
     Take a header file (headerfile) and a parse tree (ch)
     and build the pybind11 plugin
+
+    headerfile: somefile.h
+
+    ch: parse tree from CppHeaderParser
+
+    comments: a dictionary of comments
+
+    inst: files to instantiate
+
+    remaps: list of remaps
     """
     headerfilename = headerfile.replace('.h', '')
 
@@ -162,9 +194,9 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     # plugin += '#define NC py::arg().noconvert()\n'
     # plugin += '#define YC py::arg()\n'
-    plugin += 'PYBIND11_PLUGIN(%s) {\n' % headerfilename
-    plugin += indent + 'py::module m("%s", R"pbdoc(\n' % headerfilename
-    plugin += indent + 'pybind11 bindings for %s\n\n' % headerfile
+    plugin += 'PYBIND11_PLUGIN({}) {{\n'.format(headerfilename)
+    plugin += indent + 'py::module m("{}", R"pbdoc(\n'.format(headerfilename)
+    plugin += indent + 'pybind11 bindings for {}\n\n'.format(headerfile)
     plugin += indent + 'Methods\n'
     plugin += indent + '-------\n'
     for f in ch.functions:
@@ -203,7 +235,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
             if f['name'] in func['functions']:
                 types = func['types']
         if len(types) == 0:
-            print('Could not find %s' % f['name'])
+            print('Could not find {}'.format(f['name']))
 
         ntypes = len(types)
         for i, t in enumerate(types):
@@ -216,8 +248,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
             for remap in remaps:
                 if f['name'] in remap:
                     instname = remap[f['name']]
-            plugin += indent + 'm.def("%s", &_%s<%s>,\n' %\
-                (instname, f['name'], typestr)
+            plugin += indent + 'm.def("{}", &_{}<{}>,\n'.format(instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -225,14 +256,14 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 convert = ''
                 if array:
                     convert = '.noconvert()'
-                pyargnames.append('py::arg("%s")%s' % (p, convert))
+                pyargnames.append('py::arg("{}"){}'.format(p, convert))
 
             argstring = indent + ', '.join(pyargnames)
             plugin += indent + argstring
 
             # add the docstring to the last
             if i == ntypes - 1:
-                plugin += ',\nR"pbdoc(\n%s\n)pbdoc");\n' % comments[f['name']]
+                plugin += ',\nR"pbdoc(\n{}\n)pbdoc");\n'.format(comments[f['name']])
             else:
                 plugin += ');\n'
         plugin += '\n'
@@ -257,13 +288,21 @@ def main():
 
     args = parser.parse_args()
 
-    print('[Generating %s from %s]' % (args.input_file.replace('.h', '_bind.cpp'), args.input_file))
+    print('[Generating {} from {}]'.format(args.input_file.replace('.h', '_bind.cpp'), args.input_file))
     ch = CppHeaderParser.CppHeader(args.input_file)
-    comments = find_comments(args.input_file)
+    comments = find_comments(args.input_file, ch)
+    print(comments)
 
-    data = yaml.load(open('instantiate.yml', 'r'))
+    if args.input_file == 'test.h':
+        data = yaml.load(open('instantiate-test.yml', 'r'))
+    else:
+        data = yaml.load(open('instantiate.yml', 'r'))
+
     inst = data['instantiate']
-    remaps = data['remaps']
+    if 'remaps' in data:
+        remaps = data['remaps']
+    else:
+        remaps = []
     plugin = build_plugin(args.input_file, ch, comments, inst, remaps)
 
     flist = []
@@ -284,7 +323,7 @@ def main():
     with open(outf, 'wt') as outf:
 
         print('// DO NOT EDIT: this file is generated\n', file=outf)
-        print(PYBINDHEADER % args.input_file, file=outf)
+        print(PYBINDHEADER.format(args.input_file, file=outf))
 
         for f in flist:
             print(f, '\n\n\n', file=outf, sep="")
