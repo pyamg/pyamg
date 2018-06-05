@@ -1,0 +1,21 @@
+instantiate:
+- types:
+    - [int]
+    - [long int]
+    - [double]
+  functions:
+    - test1
+    - test2
+    - test3
+    - test4
+    - test5
+- types:
+    - null
+  functions:
+    - test6
+    - test7
+    - test8
+- types:
+    - [int, double, "std::complex<double>"]
+  functions:
+    - test9

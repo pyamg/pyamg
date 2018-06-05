@@ -49,12 +49,12 @@ int test5(const I n)
 }
 
 /* Testing a docstring */
-int test6(const I n)
+int test6(const int n)
 {
     return 1;
 }
 
-int test7(const I n)
+int test7(const int n)
 {
     return 1;
 }
@@ -72,5 +72,22 @@ int test8(const int n,
     x[0] = 7.7;
     J[0] = 7;
     val  = 7.7;
+
     return 1;
+}
+
+//
+// templated functions and types
+//
+
+// some class
+template <class I, class T, class F>
+int test9(const I J[], const int J_size,
+                T x[], const int x_size,
+                F y[], const int y_size)
+{
+    F myval (7.7, 8.8);
+    x[0] = 7.7;
+    y[0] = myval;
+    return J[0];
 }

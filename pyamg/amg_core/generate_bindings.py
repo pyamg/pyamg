@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import re
 import yaml
 
 PYBINDHEADER = """\
@@ -78,15 +77,17 @@ def build_function(func):
         - all functions are straight up c++
     """
 
+    indent = '    '
+
     # temlpate and function name
 
     if func['template']:
         fdef = func['template'] + '\n'
     else:
         fdef = ''
-    fdef += func['returns'] + ' '
-    fdef += '_' + func['name']
-    fdef += '(\n'
+
+    newcall = func['returns'] + ' _' + func['name'] + '('
+    fdef += newcall + '\n'
 
     # function parameters
 
@@ -105,7 +106,7 @@ def build_function(func):
         # check if pointer/array
         if p['pointer'] or p['array']:
             paramtype = p['raw_type']
-            const = '      '
+            const = ''
             if p['constant']:
                 const = 'const '
 
@@ -123,9 +124,10 @@ def build_function(func):
 
         i += 1
 
-        fdef += '     ' + param + ',\n'
+        fdef += '{:>25}'.format(param) + ',\n'    # set width to 25
 
-    fdef = fdef.strip()[:-1] + ')'  # trim comma and newline
+    fdef = fdef.strip()[:-1]  # trim comma and newline
+    fdef += '\n' + ' ' * len(newcall) + ')'
     fdef += '\n{\n'
 
     # make a list of python objects
@@ -135,24 +137,28 @@ def build_function(func):
         else:
             unchecked = '.mutable_unchecked();\n'
 
+        fdef += indent
         fdef += "auto py_" + a[2] + ' = ' + a[2] + unchecked
 
     # make a list of pointers to the arrays
-    fdef += '\n'
     for a in arraylist:
         if 'const' in a[0]:
             data = '.data();\n'
         else:
             data = '.mutable_data();\n'
+        fdef += indent
         fdef += a[0] + a[1] + ' *_' + a[2] + ' = py_' + a[2] + data
 
     # get the template signature
+    if len(arraylist) > 0:
+        fdef += '\n'
     if func['template']:
         template = func['template']
         template = template.replace('template', '').replace('class ', '')   # template <class T> ----> <T>
     else:
         template = ''
-    fdef += '\n return ' + func['name'] + template + '(\n'
+    newcall = '    return ' + func['name'] + template + '('
+    fdef += newcall + '\n'
 
     # function parameters
     for p in func['parameters']:
@@ -164,11 +170,10 @@ def build_function(func):
                 name = '_' + p['name']
             else:
                 name = p['name']
-            fdef += '     ' + name
+            fdef += '{:>25}'.format(name)
         fdef += ',\n'
     fdef = fdef.strip()[:-1]
-    fdef += ');\n}\n'
-    print(fdef)
+    fdef += '\n' + ' ' * len(newcall) + ');\n}'
     return fdef
 
 
@@ -209,11 +214,18 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
     # plugin += indent + 'options.disable_function_signatures();\n\n'
 
     for f in ch.functions:
+        # for each function:
+        #   - find the entry in the instantiation list
+        #   - note any array parameters to the function
+        #   - for each type, instantiate
         found = False
         for func in inst:
             if f['name'] in func['functions']:
                 found = True
+                types = func['types']
+
         if not found:
+            print('Could not find {}'.format(f['name']))
             continue
 
         # find all parameter names and mark if array
@@ -230,25 +242,25 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
             else:
                 argnames.append((p['name'], array))
 
-        types = []
-        for func in inst:
-            if f['name'] in func['functions']:
-                types = func['types']
-        if len(types) == 0:
-            print('Could not find {}'.format(f['name']))
-
         ntypes = len(types)
         for i, t in enumerate(types):
-            typestr = ', '.join(t)
-
-            # get the instantiating function name
 
             # add the function call with each template
             instname = f['name']
+
+            # check the remaps
             for remap in remaps:
                 if f['name'] in remap:
                     instname = remap[f['name']]
-            plugin += indent + 'm.def("{}", &_{}<{}>,\n'.format(instname, f['name'], typestr)
+
+            if t is not None:
+                # templated function
+                typestr = '<' + ', '.join(t) + '>'
+            else:
+                # not a templated function
+                typestr = ''
+
+            plugin += indent + 'm.def("{}", &_{}{},\n'.format(instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -263,7 +275,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
             # add the docstring to the last
             if i == ntypes - 1:
-                plugin += ',\nR"pbdoc(\n{}\n)pbdoc");\n'.format(comments[f['name']])
+                plugin += ',\nR"pbdoc(\n{})pbdoc");\n'.format(comments[f['name']])
             else:
                 plugin += ');\n'
         plugin += '\n'
@@ -291,9 +303,8 @@ def main():
     print('[Generating {} from {}]'.format(args.input_file.replace('.h', '_bind.cpp'), args.input_file))
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file, ch)
-    print(comments)
 
-    if args.input_file == 'test.h':
+    if args.input_file == 'generate_test.h':
         data = yaml.load(open('instantiate-test.yml', 'r'))
     else:
         data = yaml.load(open('instantiate.yml', 'r'))
@@ -323,10 +334,10 @@ def main():
     with open(outf, 'wt') as outf:
 
         print('// DO NOT EDIT: this file is generated\n', file=outf)
-        print(PYBINDHEADER.format(args.input_file, file=outf))
+        print(PYBINDHEADER.format(args.input_file), file=outf)
 
         for f in flist:
-            print(f, '\n\n\n', file=outf, sep="")
+            print(f, '\n', file=outf, sep="")
 
         print(plugin, file=outf)
 
