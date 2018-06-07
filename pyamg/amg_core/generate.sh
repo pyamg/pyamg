@@ -5,4 +5,3 @@
 ./generate_bindings.py relaxation.h
 ./generate_bindings.py ruge_stuben.h
 ./generate_bindings.py smoothed_aggregation.h
-./generate_bindings.py sparse.h

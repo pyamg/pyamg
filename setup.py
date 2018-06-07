@@ -18,11 +18,11 @@ PyAMG is primarily written in Python with
 supporting C++ code for performance critical operations.
 """
 
-import io
 import os
 import sys
 import subprocess
 
+import setuptools
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.test import test as TestCommand
@@ -34,7 +34,7 @@ install_requires = (
     'numpy>=1.7.0',
     'scipy>=0.12.0',
     'pytest>=2',
-    'pybind11>=1.7'
+    'pybind11>=2.2'
 )
 
 
@@ -136,6 +136,7 @@ class PyTest(TestCommand):
         import pytest
         pytest.main(self.test_args)
 
+
 # As of Python 3.6, CCompiler has a `has_flag` method.
 # cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
@@ -164,6 +165,7 @@ def cpp_flag(compiler):
     else:
         raise RuntimeError('Unsupported compiler -- at least C++11 support '
                            'is needed!')
+
 
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
@@ -198,6 +200,7 @@ class BuildExt(build_ext):
         import numpy
         self.include_dirs.append(numpy.get_include())
 
+
 class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
 
@@ -219,14 +222,15 @@ amg_core_headers = ['evolution_strength.h',
                     'linalg.h',
                     'relaxation.h',
                     'ruge_stuben.h',
-                    'smoothed_aggregation.h']
+                    'smoothed_aggregation.h',
+                    'tests/generate_test.h']
 amg_core_headers = [f.replace('.h', '') for f in amg_core_headers]
 
 ext_modules = [Extension('pyamg.amg_core._amg_core',
                          sources=['pyamg/amg_core/amg_core_wrap.cxx'],
                          define_macros=[('__STDC_FORMAT_MACROS', 1)])]
-ext_modules += [Extension('pyamg.amg_core.%s'%f,
-                          sources=['pyamg/amg_core/%s_bind.cpp'%f],
+ext_modules += [Extension('pyamg.amg_core.%s' % f,
+                          sources=['pyamg/amg_core/%s_bind.cpp' % f],
                           include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
                           language='c++') for f in amg_core_headers]
 

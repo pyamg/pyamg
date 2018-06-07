@@ -199,20 +199,22 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     # plugin += '#define NC py::arg().noconvert()\n'
     # plugin += '#define YC py::arg()\n'
-    plugin += 'PYBIND11_PLUGIN({}) {{\n'.format(headerfilename)
-    plugin += indent + 'py::module m("{}", R"pbdoc(\n'.format(headerfilename)
-    plugin += indent + 'pybind11 bindings for {}\n\n'.format(headerfile)
+    plugin += 'PYBIND11_MODULE({}, m) {{\n'.format(headerfilename)
+    plugin += indent + 'm.doc() = R"pbdoc(\n'
+    plugin += indent + 'Pybind11 bindings for {}\n\n'.format(headerfile)
     plugin += indent + 'Methods\n'
     plugin += indent + '-------\n'
     for f in ch.functions:
         for func in inst:
             if f['name'] in func['functions']:
                 plugin += indent + f['name'] + '\n'
-    plugin += indent + ')pbdoc");\n\n'
+    plugin += indent + ')pbdoc";\n\n'
 
     # plugin += indent + 'py::options options;\n'
     # plugin += indent + 'options.disable_function_signatures();\n\n'
 
+    unbound = []
+    bound = []
     for f in ch.functions:
         # for each function:
         #   - find the entry in the instantiation list
@@ -225,8 +227,11 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 types = func['types']
 
         if not found:
-            print('Could not find {}'.format(f['name']))
+            # print('Could not find {}'.format(f['name']))
+            unbound.append(f['name'])
             continue
+        else:
+            bound.append(f['name'])
 
         # find all parameter names and mark if array
         argnames = []
@@ -280,11 +285,10 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 plugin += ');\n'
         plugin += '\n'
 
-    plugin += indent + 'return m.ptr();\n'
     plugin += '}\n'
     # plugin += '#undef NC\n'
     # plugin += '#undef YC\n'
-    return plugin
+    return plugin, bound, unbound
 
 
 def main():
@@ -314,17 +318,15 @@ def main():
         remaps = data['remaps']
     else:
         remaps = []
-    plugin = build_plugin(args.input_file, ch, comments, inst, remaps)
+    plugin, bound, unbound = build_plugin(args.input_file, ch, comments, inst, remaps)
 
+    chfuncs = {f['name']: f for f in ch.functions}
+    print('\t[unbound functions: {}]'.format(' '.join(unbound)))
     flist = []
-    for f in ch.functions:
-
-        # check to see if we should instantiate
-        for func in inst:
-            if f['name'] in func['functions']:
-                print('\t[building {}]'.format(f['name']))
-                fdef = build_function(f)
-                flist.append(fdef)
+    for fname in bound:
+        print('\t[building {}]'.format(fname))
+        fdef = build_function(chfuncs[fname])
+        flist.append(fdef)
 
     if args.output_file is not None:
         outf = args.output_file

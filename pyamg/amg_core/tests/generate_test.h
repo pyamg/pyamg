@@ -5,8 +5,7 @@
 //
 //
 
-// ----------------------------------------------------------------
-// Docstring Tests
+// ---------------------------------------------------------------- // Docstring Tests
 // ----------------------------------------------------------------
 
 //
@@ -67,11 +66,9 @@ int test7(const int n)
 int test8(const int n,
                 int m,
             double* x, const int x_size,
-              int J[], const int J_size,
-          double &val) {
+              int J[], const int J_size) {
     x[0] = 7.7;
     J[0] = 7;
-    val  = 7.7;
 
     return 1;
 }

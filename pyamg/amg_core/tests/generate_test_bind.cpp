@@ -80,8 +80,7 @@ int _test8(
               const int n,
                     int m,
   py::array_t<double> & x,
-     py::array_t<int> & J,
-             double & val
+     py::array_t<int> & J
            )
 {
     auto py_x = x.mutable_unchecked();
@@ -93,8 +92,7 @@ int _test8(
                         n,
                         m,
                        _x, x.size(),
-                       _J, J.size(),
-                      val
+                       _J, J.size()
                  );
 }
 
@@ -119,9 +117,9 @@ int _test9(
                            );
 }
 
-PYBIND11_PLUGIN(generate_test) {
-    py::module m("generate_test", R"pbdoc(
-    pybind11 bindings for generate_test.h
+PYBIND11_MODULE(generate_test, m) {
+    m.doc() = R"pbdoc(
+    Pybind11 bindings for generate_test.h
 
     Methods
     -------
@@ -134,7 +132,7 @@ PYBIND11_PLUGIN(generate_test) {
     test7
     test8
     test9
-    )pbdoc");
+    )pbdoc";
 
     m.def("test1", &_test1<int>,
         py::arg("n"));
@@ -202,7 +200,7 @@ R"pbdoc(
 )pbdoc");
 
     m.def("test8", &_test8,
-        py::arg("n"), py::arg("m"), py::arg("x").noconvert(), py::arg("J").noconvert(), py::arg("val"),
+        py::arg("n"), py::arg("m"), py::arg("x").noconvert(), py::arg("J").noconvert(),
 R"pbdoc(
 // untemplated
 )pbdoc");
@@ -213,6 +211,5 @@ R"pbdoc(
 // some class
 )pbdoc");
 
-    return m.ptr();
 }
 

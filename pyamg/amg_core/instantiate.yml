@@ -26,7 +26,7 @@ instantiate:
     - calc_BtB
     - incomplete_mat_mult_bsr
     - truncate_rows_csr
-    - classical_strength_of_connection
+    - classical_strength_of_connection_abs
     - maximum_row_value
     - evolution_strength_helper
     - incomplete_mat_mult_csr
@@ -88,6 +88,7 @@ instantiate:
     - [int, "std::complex<double>"]
   functions:
     - csr_matvec
+    - classical_strength_of_connection_min
 
 remaps:
     - fit_candidates_real: fit_candidates
