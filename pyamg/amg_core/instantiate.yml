@@ -41,6 +41,7 @@ instantiate:
     - apply_distance_filter
     - apply_absolute_distance_filter
     - min_blocks
+    - classical_strength_of_connection_min
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -88,7 +89,6 @@ instantiate:
     - [int, "std::complex<double>"]
   functions:
     - csr_matvec
-    - classical_strength_of_connection_min
 
 remaps:
     - fit_candidates_real: fit_candidates
