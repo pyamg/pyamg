@@ -27,6 +27,64 @@ void _pinv_array(
                                );
 }
 
+template <class I, class T>
+void _csc_scale_columns(
+            const I n_row,
+            const I n_col,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+      py::array_t<T> & Xx
+                        )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.mutable_unchecked();
+    auto py_Xx = Xx.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    T *_Ax = py_Ax.mutable_data();
+    const T *_Xx = py_Xx.data();
+
+    return csc_scale_columns <I, T>(
+                    n_row,
+                    n_col,
+                      _Ap, Ap.size(),
+                      _Aj, Aj.size(),
+                      _Ax, Ax.size(),
+                      _Xx, Xx.size()
+                                    );
+}
+
+template <class I, class T>
+void _csc_scale_rows(
+            const I n_row,
+            const I n_col,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+      py::array_t<T> & Xx
+                     )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.mutable_unchecked();
+    auto py_Xx = Xx.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    T *_Ax = py_Ax.mutable_data();
+    const T *_Xx = py_Xx.data();
+
+    return csc_scale_rows <I, T>(
+                    n_row,
+                    n_col,
+                      _Ap, Ap.size(),
+                      _Aj, Aj.size(),
+                      _Ax, Ax.size(),
+                      _Xx, Xx.size()
+                                 );
+}
+
 PYBIND11_MODULE(linalg, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for linalg.h
@@ -34,6 +92,8 @@ PYBIND11_MODULE(linalg, m) {
     Methods
     -------
     pinv_array
+    csc_scale_columns
+    csc_scale_rows
     )pbdoc";
 
     m.def("pinv_array", &_pinv_array<int, float, float>,
@@ -87,6 +147,42 @@ R"pbdoc(
  * >>> pinv_array(A,2,2,'F')
  * >>> print "Changing flag to \'F\' results in different Inverse\n" + str(dot(A[0], Ac[0]))
  * >>> print "A holds the inverse of the transpose\n" + str(dot(A[0], Ac[0].T))
+ *
+ */
+)pbdoc");
+
+    m.def("csc_scale_columns", &_csc_scale_columns<int, int>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_columns", &_csc_scale_columns<int, float>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_columns", &_csc_scale_columns<int, double>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
+R"pbdoc(
+/*
+ * Scale the columns of a CSC matrix *in place*
+ *
+ *   A[:,i] *= X[i]
+ *
+ * See:
+ * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
+ *
+ */
+)pbdoc");
+
+    m.def("csc_scale_rows", &_csc_scale_rows<int, int>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_rows", &_csc_scale_rows<int, float>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_rows", &_csc_scale_rows<int, double>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
+R"pbdoc(
+/*
+ * Scale the rows of a CSC matrix *in place*
+ *
+ *   A[i,:] *= X[i]
+ *
+ * See:
+ * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
  *
  */
 )pbdoc");
