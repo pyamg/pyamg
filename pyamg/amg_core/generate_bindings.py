@@ -308,7 +308,7 @@ def main():
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file, ch)
 
-    if args.input_file == 'generate_test.h':
+    if args.input_file == 'generate_examples.h':
         data = yaml.load(open('instantiate-test.yml', 'r'))
     else:
         data = yaml.load(open('instantiate.yml', 'r'))
