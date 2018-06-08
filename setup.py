@@ -223,7 +223,8 @@ amg_core_headers = ['evolution_strength.h',
                     'relaxation.h',
                     'ruge_stuben.h',
                     'smoothed_aggregation.h',
-                    'tests/generate_test.h']
+                    ]
+                    #'tests/generate_test.h']
 amg_core_headers = [f.replace('.h', '') for f in amg_core_headers]
 
 ext_modules = [Extension('pyamg.amg_core._amg_core',
