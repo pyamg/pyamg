@@ -134,6 +134,9 @@ PYBIND11_MODULE(bind_examples, m) {
     test9
     )pbdoc";
 
+    py::options options;
+    options.disable_function_signatures();
+
     m.def("test1", &_test1<int>,
         py::arg("n"));
     m.def("test1", &_test1<long int>,
@@ -141,10 +144,7 @@ PYBIND11_MODULE(bind_examples, m) {
     m.def("test1", &_test1<double>,
         py::arg("n"),
 R"pbdoc(
-//
-// Testing docstring
-//
-)pbdoc");
+Testing docstring)pbdoc");
 
     m.def("test2", &_test2<int>,
         py::arg("n"));
@@ -153,8 +153,7 @@ R"pbdoc(
     m.def("test2", &_test2<double>,
         py::arg("n"),
 R"pbdoc(
-// Testing docstring
-)pbdoc");
+Testing docstring)pbdoc");
 
     m.def("test3", &_test3<int>,
         py::arg("n"));
@@ -163,11 +162,7 @@ R"pbdoc(
     m.def("test3", &_test3<double>,
         py::arg("n"),
 R"pbdoc(
-/*
- * Testing a docstring
- *
- */
-)pbdoc");
+Testing a docstring)pbdoc");
 
     m.def("test4", &_test4<int>,
         py::arg("n"));
@@ -176,8 +171,7 @@ R"pbdoc(
     m.def("test4", &_test4<double>,
         py::arg("n"),
 R"pbdoc(
-/* Testing a docstring */
-)pbdoc");
+Testing a docstring */)pbdoc");
 
     m.def("test5", &_test5<int>,
         py::arg("n"));
@@ -191,8 +185,7 @@ R"pbdoc(
     m.def("test6", &_test6,
         py::arg("n"),
 R"pbdoc(
-/* Testing a docstring */
-)pbdoc");
+Testing a docstring */)pbdoc");
 
     m.def("test7", &_test7,
         py::arg("n"),
@@ -202,14 +195,12 @@ R"pbdoc(
     m.def("test8", &_test8,
         py::arg("n"), py::arg("m"), py::arg("x").noconvert(), py::arg("J").noconvert(),
 R"pbdoc(
-// untemplated
-)pbdoc");
+untemplated)pbdoc");
 
     m.def("test9", &_test9<int, double, std::complex<double>>,
         py::arg("J").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-// some class
-)pbdoc");
+some class)pbdoc");
 
 }
 

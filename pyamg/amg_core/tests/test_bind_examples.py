@@ -1,19 +1,23 @@
-from . import bind_examples as g
+import bind_examples as g
 import numpy as np
 from numpy.testing import TestCase
 
 
 class TestDocstrings(TestCase):
     def test_1(self):
+        assert g.test1.__doc__.strip() == 'Testing docstring'
         assert g.test1(1) == 1
 
     def test_2(self):
+        assert g.test1.__doc__.strip() == 'Testing docstring'
         assert g.test2(1) == 1
 
     def test_3(self):
+        assert g.test1.__doc__.strip() == 'Testing docstring'
         assert g.test3(1) == 1
 
     def test_4(self):
+        assert g.test1.__doc__.strip() == 'Testing docstring'
         assert g.test4(1) == 1
 
 

@@ -38,6 +38,8 @@ def find_comments(fname, ch):
      -or-
 
     with // style comments
+
+    Then, take off the first three spaces
     """
     with open(fname, 'r') as inf:
         fdata = inf.readlines()
@@ -58,8 +60,9 @@ def find_comments(fname, ch):
                 fdata[lineptr].startswith(' *'):
             lineptr -= 1
         lineptr += 1
-
-        comments[f['name']] = ''.join(fdata[lineptr:(start + 1)])
+        comment = fdata[lineptr:(start + 1)]
+        comment = [c[3:] for c in comment]
+        comments[f['name']] = ''.join(comment).strip()
 
     return comments
 
@@ -210,8 +213,8 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 plugin += indent + f['name'] + '\n'
     plugin += indent + ')pbdoc";\n\n'
 
-    # plugin += indent + 'py::options options;\n'
-    # plugin += indent + 'options.disable_function_signatures();\n\n'
+    plugin += indent + 'py::options options;\n'
+    plugin += indent + 'options.disable_function_signatures();\n\n'
 
     unbound = []
     bound = []
