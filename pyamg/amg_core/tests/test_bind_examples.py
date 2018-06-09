@@ -1,4 +1,4 @@
-import generate_test as g
+from . import bind_examples as g
 import numpy as np
 from numpy.testing import TestCase
 

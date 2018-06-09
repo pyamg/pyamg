@@ -13,3 +13,4 @@ pyamg.egg-info/*
 .cache
 *.dSYM
 .ipynb_checkpoints
+./var/

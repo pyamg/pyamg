@@ -4,7 +4,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/complex.h>
 
-#include "generate_examples.h"
+#include "bind_examples.h"
 
 namespace py = pybind11;
 
@@ -117,9 +117,9 @@ int _test9(
                            );
 }
 
-PYBIND11_MODULE(generate_examples, m) {
+PYBIND11_MODULE(bind_examples, m) {
     m.doc() = R"pbdoc(
-    Pybind11 bindings for generate_examples.h
+    Pybind11 bindings for bind_examples.h
 
     Methods
     -------
