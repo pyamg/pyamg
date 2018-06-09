@@ -19,3 +19,11 @@ instantiate:
     - [int, double, "std::complex<double>"]
   functions:
     - test9
+- types:
+    - [bool, float]
+    - [int, float]
+    - [int, double]
+    - [int, "std::complex<float>"]
+    - [int, "std::complex<double>"]
+  functions:
+    - test10

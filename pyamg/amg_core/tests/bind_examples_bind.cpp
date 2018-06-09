@@ -117,6 +117,23 @@ int _test9(
                            );
 }
 
+template <class I, class T>
+int _test10(
+       py::array_t<I> & J,
+       py::array_t<T> & x
+            )
+{
+    auto py_J = J.mutable_unchecked();
+    auto py_x = x.mutable_unchecked();
+    I *_J = py_J.mutable_data();
+    T *_x = py_x.mutable_data();
+
+    return test10 <I, T>(
+                       _J, J.size(),
+                       _x, x.size()
+                         );
+}
+
 PYBIND11_MODULE(bind_examples, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for bind_examples.h
@@ -132,6 +149,7 @@ PYBIND11_MODULE(bind_examples, m) {
     test7
     test8
     test9
+    test10
     )pbdoc";
 
     py::options options;
@@ -201,6 +219,21 @@ untemplated)pbdoc");
         py::arg("J").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
 some class)pbdoc");
+
+    m.def("test10", &_test10<bool, float>,
+        py::arg("J").noconvert(), py::arg("x").noconvert());
+    m.def("test10", &_test10<int, float>,
+        py::arg("J").noconvert(), py::arg("x").noconvert());
+    m.def("test10", &_test10<int, double>,
+        py::arg("J").noconvert(), py::arg("x").noconvert());
+    m.def("test10", &_test10<int, std::complex<float>>,
+        py::arg("J").noconvert(), py::arg("x").noconvert());
+    m.def("test10", &_test10<int, std::complex<double>>,
+        py::arg("J").noconvert(), py::arg("x").noconvert(),
+R"pbdoc(
+This will test different instantiation types
+I : int32, bool
+T : float32, float64, complex32, complex64)pbdoc");
 
 }
 

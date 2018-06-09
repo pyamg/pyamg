@@ -1,6 +1,7 @@
-import bind_examples as g
+from . import bind_examples as g
 import numpy as np
 from numpy.testing import TestCase
+from pytest import raises as assert_raises
 
 
 class TestDocstrings(TestCase):
@@ -40,7 +41,7 @@ class TestVectors(TestCase):
         J = np.array([1, 2, 3], dtype=np.intc)
 
         assert g.test8(n, m, x, J) == 1
-        assert x[0] == 7.7
+        assert x[0] == 7.5
         assert J[0] == 7
 
     def test_9(self):
@@ -49,6 +50,79 @@ class TestVectors(TestCase):
         y = np.ones((3,)) + np.ones((3,)) * 1j
 
         assert g.test9(J, x, y) == 3
-        assert x[0] == 7.7
-        assert y[0].real == 7.7
-        assert y[0].imag == 8.8
+        assert x[0] == 7.5
+        assert y[0].real == 7.5
+        assert y[0].imag == 8.25
+
+    def test_10a(self):
+        # int32, float32
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+        assert g.test10(J, x) == 1
+        assert J[0] == 0
+        assert x[0] == 7.5
+
+    def test_10b(self):
+        # bool, float32
+        J = np.array([1, 1, 1], dtype=np.bool)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+        assert g.test10(J, x) == 1
+        assert J[0] == 0
+        assert x[0] == 7.5
+
+    def test_10c(self):
+        # int32, double
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+
+        assert g.test10(J, x) == 1
+        assert J[0] == 0
+        assert x[0] == 7.5
+
+    def test_10d(self):
+        # int32, complex float
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.complex64)
+
+        assert g.test10(J, x) == 1
+        assert J[0] == 0
+        assert x[0].real == 7.5
+
+    def test_10e(self):
+        # int32, complex double
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.complex128)
+
+        assert g.test10(J, x) == 1
+        assert J[0] == 0
+        assert x[0].real == 7.5
+
+    def test_10f(self):
+        # int8, float32  (should FAIL on upconvert)
+        J = np.array([1, 1, 1], dtype=np.int8)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+        assert_raises(TypeError, g.test10, J, x)
+
+    def test_10g(self):
+        # int64, float32  (should FAIL on downconvert)
+        J = np.array([1, 1, 1], dtype=np.int64)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+
+        assert_raises(TypeError, g.test10, J, x)
+
+    def test_10h(self):
+        # int32, float16  (should FAIL on upconvert)
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float16)
+
+        assert_raises(TypeError, g.test10, J, x)
+
+    def test_10i(self):
+        # int64, float32  (should FAIL on downconvert)
+        J = np.array([1, 1, 1], dtype=np.int32)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float128)
+
+        assert_raises(TypeError, g.test10, J, x)
