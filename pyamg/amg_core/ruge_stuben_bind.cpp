@@ -306,6 +306,9 @@ PYBIND11_MODULE(ruge_stuben, m) {
     cr_helper
     )pbdoc";
 
+    py::options options;
+    options.disable_function_signatures();
+
     m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int, float, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int, double, double>,
@@ -315,37 +318,33 @@ PYBIND11_MODULE(ruge_stuben, m) {
     m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
-/*
- *  Compute a strength of connection matrix using the classical strength
- *  of connection measure by Ruge and Stuben. Both the input and output
- *  matrices are stored in CSR format.  An off-diagonal nonzero entry
- *  A[i,j] is considered strong if:
- *
- *      |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
- *
- * Otherwise, the connection is weak.
- *
- *  Parameters
- *      num_rows   - number of rows in A
- *      theta      - stength of connection tolerance
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *      Sp[]       - (output) CSR row pointer
- *      Sj[]       - (output) CSR index array
- *      Sx[]       - (output) CSR data array
- *
- *
- *  Returns:
- *      Nothing, S will be stored in Sp, Sj, Sx
- *
- *  Notes:
- *      Storage for S must be preallocated.  Since S will consist of a subset
- *      of A's nonzero values, a conservative bound is to allocate the same
- *      storage for S as is used by A.
- *
- */
-)pbdoc");
+Compute a strength of connection matrix using the classical strength
+ of connection measure by Ruge and Stuben. Both the input and output
+ matrices are stored in CSR format.  An off-diagonal nonzero entry
+ A[i,j] is considered strong if:
+
+     |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
+
+Otherwise, the connection is weak.
+
+ Parameters
+     num_rows   - number of rows in A
+     theta      - stength of connection tolerance
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     Ax[]       - CSR data array
+     Sp[]       - (output) CSR row pointer
+     Sj[]       - (output) CSR index array
+     Sx[]       - (output) CSR data array
+
+
+ Returns:
+     Nothing, S will be stored in Sp, Sj, Sx
+
+ Notes:
+     Storage for S must be preallocated.  Since S will consist of a subset
+     of A's nonzero values, a conservative bound is to allocate the same
+     storage for S as is used by A.)pbdoc");
 
     m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
@@ -363,45 +362,37 @@ R"pbdoc(
     m.def("maximum_row_value", &_maximum_row_value<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(),
 R"pbdoc(
-/*
- *  Compute the maximum in magnitude row value for a CSR matrix
- *
- *  Parameters
- *      num_rows   - number of rows in A
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *       x[]       - num_rows array
- *
- *  Returns:
- *      Nothing, x[i] will hold row i's maximum magnitude entry
- *
- */
-)pbdoc");
+Compute the maximum in magnitude row value for a CSR matrix
+
+ Parameters
+     num_rows   - number of rows in A
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     Ax[]       - CSR data array
+      x[]       - num_rows array
+
+ Returns:
+     Nothing, x[i] will hold row i's maximum magnitude entry)pbdoc");
 
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
-/*
- * Compute a C/F (coarse-fine( splitting using the classical coarse grid
- * selection method of Ruge and Stuben.  The strength of connection matrix S,
- * and its transpose T, are stored in CSR format.  Upon return, the  splitting
- * array will consist of zeros and ones, where C-nodes (coarse nodes) are
- * marked with the value 1 and F-nodes (fine nodes) with the value 0.
- *
- * Parameters:
- *   n_nodes   - number of rows in A
- *   Sp[]      - CSR pointer array
- *   Sj[]      - CSR index array
- *   Tp[]      - CSR pointer array
- *   Tj[]      - CSR index array
- *   splitting - array to store the C/F splitting
- *
- * Notes:
- *   The splitting array must be preallocated
- *
- */
-)pbdoc");
+Compute a C/F (coarse-fine( splitting using the classical coarse grid
+selection method of Ruge and Stuben.  The strength of connection matrix S,
+and its transpose T, are stored in CSR format.  Upon return, the  splitting
+array will consist of zeros and ones, where C-nodes (coarse nodes) are
+marked with the value 1 and F-nodes (fine nodes) with the value 0.
+
+Parameters:
+  n_nodes   - number of rows in A
+  Sp[]      - CSR pointer array
+  Sj[]      - CSR index array
+  Tp[]      - CSR pointer array
+  Tj[]      - CSR index array
+  splitting - array to store the C/F splitting
+
+Notes:
+  The splitting array must be preallocated)pbdoc");
 
     m.def("cljp_naive_splitting", &_cljp_naive_splitting<int>,
         py::arg("n"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(), py::arg("colorflag"),
@@ -411,20 +402,16 @@ R"pbdoc(
     m.def("rs_direct_interpolation_pass1", &_rs_direct_interpolation_pass1<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Bp").noconvert(),
 R"pbdoc(
-/*
- *   Produce the Ruge-Stuben prolongator using "Direct Interpolation"
- *
- *
- *   The first pass uses the strength of connection matrix 'S'
- *   and C/F splitting to compute the row pointer for the prolongator.
- *
- *   The second pass fills in the nonzero entries of the prolongator
- *
- *   Reference:
- *      Page 479 of "Multigrid"
- *
- */
-)pbdoc");
+Produce the Ruge-Stuben prolongator using "Direct Interpolation"
+
+
+  The first pass uses the strength of connection matrix 'S'
+  and C/F splitting to compute the row pointer for the prolongator.
+
+  The second pass fills in the nonzero entries of the prolongator
+
+  Reference:
+     Page 479 of "Multigrid")pbdoc");
 
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, float>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert());
@@ -438,35 +425,33 @@ R"pbdoc(
     m.def("cr_helper", &_cr_helper<int, double>,
         py::arg("A_rowptr").noconvert(), py::arg("A_colinds").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"),
 R"pbdoc(
-/* Helper function for compatible relaxation to perform steps 3.1d - 3.1f
- * in Falgout / Brannick (2010).
- *
- * Input:
- * ------
- * A_rowptr : const {int array}
- *      Row pointer for sparse matrix in CSR format.
- * A_colinds : const {int array}
- *      Column indices for sparse matrix in CSR format.
- * B : const {float array}
- *      Target near null space vector for computing candidate set measure.
- * e : {float array}
- *      Relaxed vector for computing candidate set measure.
- * indices : {int array}
- *      Array of indices, where indices[0] = the number of F indices, nf,
- *      followed by F indices in elements 1:nf, and C indices in (nf+1):n.
- * splitting : {int array}
- *      Integer array with current C/F splitting of nodes, 0 = C-point,
- *      1 = F-point.
- * gamma : {float array}
- *      Preallocated vector to store candidate set measure.
- * thetacs : const {float}
- *      Threshold for coarse grid candidates from set measure.
- *
- * Returns:
- * --------
- * Nothing, updated C/F-splitting and corresponding indices modified in place.
- */
-)pbdoc");
+Helper function for compatible relaxation to perform steps 3.1d - 3.1f
+in Falgout / Brannick (2010).
+
+Input:
+------
+A_rowptr : const {int array}
+     Row pointer for sparse matrix in CSR format.
+A_colinds : const {int array}
+     Column indices for sparse matrix in CSR format.
+B : const {float array}
+     Target near null space vector for computing candidate set measure.
+e : {float array}
+     Relaxed vector for computing candidate set measure.
+indices : {int array}
+     Array of indices, where indices[0] = the number of F indices, nf,
+     followed by F indices in elements 1:nf, and C indices in (nf+1):n.
+splitting : {int array}
+     Integer array with current C/F splitting of nodes, 0 = C-point,
+     1 = F-point.
+gamma : {float array}
+     Preallocated vector to store candidate set measure.
+thetacs : const {float}
+     Threshold for coarse grid candidates from set measure.
+
+Returns:
+--------
+Nothing, updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
 }
 

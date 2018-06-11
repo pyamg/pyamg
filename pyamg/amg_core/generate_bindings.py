@@ -61,8 +61,8 @@ def find_comments(fname, ch):
             lineptr -= 1
         lineptr += 1
         comment = fdata[lineptr:(start + 1)]
-        comment = [c[3:] for c in comment]
-        comments[f['name']] = ''.join(comment).strip()
+        comment = [c[3:].rstrip() for c in comment]
+        comments[f['name']] = '\n'.join(comment).strip()
 
     return comments
 

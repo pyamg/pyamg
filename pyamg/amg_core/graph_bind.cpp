@@ -316,132 +316,115 @@ PYBIND11_MODULE(graph, m) {
     connected_components
     )pbdoc";
 
+    py::options options;
+    options.disable_function_signatures();
+
     m.def("maximal_independent_set_serial", &_maximal_independent_set_serial<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(),
 R"pbdoc(
-/*
- *  Compute a maximal independent set for a graph stored in CSR format
- *  using a greedy serial algorithm
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
- *
- *
- *  Returns:
- *      The number of nodes in the MIS.
- *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
- *
- */
-)pbdoc");
+Compute a maximal independent set for a graph stored in CSR format
+ using a greedy serial algorithm
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     active     - value used for active vertices        (input)
+      C         - value used to mark non-MIS vertices   (output)
+      F         - value used to mark MIS vertices       (output)
+     x[]        - state of each vertex
+
+
+ Returns:
+     The number of nodes in the MIS.
+
+ Notes:
+     Only the vertices with values with x[i] == active are considered
+     when determining the MIS.  Upon return, all active vertices will
+     be assigned the value C or F depending on whether they are in the
+     MIS or not.)pbdoc");
 
     m.def("maximal_independent_set_parallel", &_maximal_independent_set_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
 R"pbdoc(
-/*
- *  Compute a maximal independent set for a graph stored in CSR format
- *  using a variant of Luby's parallel MIS algorithm
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
- *      y[]        - random values for each vertex
- *      max_iters  - maximum number of iterations
- *                   by default max_iters=-1 and no limit
- *                   is imposed
- *
- *  Returns:
- *      The number of nodes in the MIS.
- *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
- *
- */
-)pbdoc");
+Compute a maximal independent set for a graph stored in CSR format
+ using a variant of Luby's parallel MIS algorithm
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     active     - value used for active vertices        (input)
+      C         - value used to mark non-MIS vertices   (output)
+      F         - value used to mark MIS vertices       (output)
+     x[]        - state of each vertex
+     y[]        - random values for each vertex
+     max_iters  - maximum number of iterations
+                  by default max_iters=-1 and no limit
+                  is imposed
+
+ Returns:
+     The number of nodes in the MIS.
+
+ Notes:
+     Only the vertices with values with x[i] == active are considered
+     when determining the MIS.  Upon return, all active vertices will
+     be assigned the value C or F depending on whether they are in the
+     MIS or not.)pbdoc");
 
     m.def("vertex_coloring_mis", &_vertex_coloring_mis<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(),
 R"pbdoc(
-/*
- *  Compute a vertex coloring for a graph stored in CSR format.
- *
- *  The coloring is computed by removing maximal independent sets
- *  of vertices from the graph.  Specifically, at iteration i an
- *  independent set of the remaining subgraph is constructed and
- *  assigned color i.
- *
- *  Returns the K, the number of colors used in the coloring.
- *  On return x[i] \in [0,1, ..., K - 1] will contain the color
- *  of the i-th vertex.
- *
- */
-)pbdoc");
+Compute a vertex coloring for a graph stored in CSR format.
+
+ The coloring is computed by removing maximal independent sets
+ of vertices from the graph.  Specifically, at iteration i an
+ independent set of the remaining subgraph is constructed and
+ assigned color i.
+
+ Returns the K, the number of colors used in the coloring.
+ On return x[i] \in [0,1, ..., K - 1] will contain the color
+ of the i-th vertex.)pbdoc");
 
     m.def("vertex_coloring_jones_plassmann", &_vertex_coloring_jones_plassmann<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(),
 R"pbdoc(
-/*
- * Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
- *
- *  Notes:
- *      Arrays x and y will be overwritten
- *
- *  References:
- *      Mark T. Jones and Paul E. Plassmann
- *      A Parallel Graph Coloring Heuristic
- *      SIAM Journal on Scientific Computing 14:3 (1993) 654--669
- *      http://citeseer.ist.psu.edu/jones92parallel.html
- *
- */
-)pbdoc");
+Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     x[]        - color of each vertex
+     y[]        - initial random values for each vertex
+
+ Notes:
+     Arrays x and y will be overwritten
+
+ References:
+     Mark T. Jones and Paul E. Plassmann
+     A Parallel Graph Coloring Heuristic
+     SIAM Journal on Scientific Computing 14:3 (1993) 654--669
+     http://citeseer.ist.psu.edu/jones92parallel.html)pbdoc");
 
     m.def("vertex_coloring_LDF", &_vertex_coloring_LDF<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-/*
- * Compute a vertex coloring of a graph using the parallel
- * Largest-Degree-First (LDF) algorithm
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
- *
- *   References:
- *     J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
- *     A Comparison of Parallel Graph Coloring Algorithms
- *     DRAFT SCCS-666
- *     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
- *
- */
-)pbdoc");
+Compute a vertex coloring of a graph using the parallel
+Largest-Degree-First (LDF) algorithm
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     x[]        - color of each vertex
+     y[]        - initial random values for each vertex
+
+  References:
+    J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
+    A Comparison of Parallel Graph Coloring Algorithms
+    DRAFT SCCS-666
+    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650)pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert());
@@ -450,22 +433,19 @@ R"pbdoc(
     m.def("bellman_ford", &_bellman_ford<int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(),
 R"pbdoc(
-/*
- * Apply one iteration of Bellman-Ford iteration on a distance
- * graph stored in CSR format.
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array (edge lengths)
- *      x[]        - (current) distance to nearest center
- *      y[]        - (current) index of nearest center
- *
- *  References:
- *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
- */
-)pbdoc");
+Apply one iteration of Bellman-Ford iteration on a distance
+graph stored in CSR format.
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     Ax[]       - CSR data array (edge lengths)
+     x[]        - (current) distance to nearest center
+     y[]        - (current) index of nearest center
+
+ References:
+     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("w").noconvert(), py::arg("z").noconvert());
@@ -474,86 +454,70 @@ R"pbdoc(
     m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("w").noconvert(), py::arg("z").noconvert(),
 R"pbdoc(
-/*
- * Perform Lloyd clustering on a distance graph
- *
- *  Parameters
- *      num_rows       - number of rows in A (number of vertices)
- *      Ap[]           - CSR row pointer
- *      Aj[]           - CSR index array
- *      Ax[]           - CSR data array (edge lengths)
- *      x[num_rows]    - distance to nearest seed
- *      y[num_rows]    - cluster membership
- *      z[num_centers] - cluster centers
- *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
- *
- */
-)pbdoc");
+Perform Lloyd clustering on a distance graph
+
+ Parameters
+     num_rows       - number of rows in A (number of vertices)
+     Ap[]           - CSR row pointer
+     Aj[]           - CSR index array
+     Ax[]           - CSR data array (edge lengths)
+     x[num_rows]    - distance to nearest seed
+     y[num_rows]    - cluster membership
+     z[num_centers] - cluster centers
+
+ References
+     Nathan Bell
+     Algebraic Multigrid for Discrete Differential Forms
+     PhD thesis (UIUC), August 2008)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
 R"pbdoc(
-/*
- *  Compute a distance-k maximal independent set for a graph stored
- *  in CSR format using a parallel algorithm.  An MIS-k is a set of
- *  vertices such that all vertices in the MIS-k are separated by a
- *  path of at least K+1 edges and no additional vertex can be added
- *  to the set without destroying this property.  A standard MIS
- *  is therefore a MIS-1.
- *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      k          - minimum separation between MIS vertices
- *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
- *      y[]        - random values used during parallel MIS algorithm
- *      max_iters  - maximum number of iterations to use (default, no limit)
- *
- */
-)pbdoc");
+Compute a distance-k maximal independent set for a graph stored
+ in CSR format using a parallel algorithm.  An MIS-k is a set of
+ vertices such that all vertices in the MIS-k are separated by a
+ path of at least K+1 edges and no additional vertex can be added
+ to the set without destroying this property.  A standard MIS
+ is therefore a MIS-1.
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     k          - minimum separation between MIS vertices
+     x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
+     y[]        - random values used during parallel MIS algorithm
+     max_iters  - maximum number of iterations to use (default, no limit))pbdoc");
 
     m.def("breadth_first_search", &_breadth_first_search<int>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("seed"), py::arg("order").noconvert(), py::arg("level").noconvert(),
 R"pbdoc(
-/*
- *  Compute a breadth first search of a graph in CSR format
- *  beginning at a given seed vertex.
- *
- *  Parameters
- *      num_rows         - number of rows in A (number of vertices)
- *      Ap[]             - CSR row pointer
- *      Aj[]             - CSR index array
- *      order[num_rows]  - records the order in which vertices were searched
- *      level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
- *
- *  Notes:
- *      The values of the level must be initialized to -1
- *
- */
-)pbdoc");
+Compute a breadth first search of a graph in CSR format
+ beginning at a given seed vertex.
+
+ Parameters
+     num_rows         - number of rows in A (number of vertices)
+     Ap[]             - CSR row pointer
+     Aj[]             - CSR index array
+     order[num_rows]  - records the order in which vertices were searched
+     level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
+
+ Notes:
+     The values of the level must be initialized to -1)pbdoc");
 
     m.def("connected_components", &_connected_components<int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("components").noconvert(),
 R"pbdoc(
-/*
- *  Compute the connected components of a graph stored in CSR format.
- *
- *  Vertices belonging to each component are marked with a unique integer
- *  in the range [0,K), where K is the number of components.
- *
- *  Parameters
- *      num_rows             - number of rows in A (number of vertices)
- *      Ap[]                 - CSR row pointer
- *      Aj[]                 - CSR index array
- *      components[num_rows] - component labels
- *
- */
-)pbdoc");
+Compute the connected components of a graph stored in CSR format.
+
+ Vertices belonging to each component are marked with a unique integer
+ in the range [0,K), where K is the number of components.
+
+ Parameters
+     num_rows             - number of rows in A (number of vertices)
+     Ap[]                 - CSR row pointer
+     Aj[]                 - CSR index array
+     components[num_rows] - component labels)pbdoc");
 
 }
 
