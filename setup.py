@@ -257,7 +257,7 @@ setup(
     #
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExt, 'test': PyTest},
-    setup_requires=['numpy'],
+    setup_requires=['numpy', 'pybind11'],
     #
     tests_require=['pytest'],
     #
