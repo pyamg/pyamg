@@ -688,16 +688,18 @@ void block_jacobi(const I Ap[], const int Ap_size,
         // Carry out a block dot product between block row i and x
         for(I jj = start; jj < end; jj++){
             I j = Aj[jj];
-            if (i == j)
+            if (i == j) {
                 //diagonal, do nothing
                 continue;
-            else
+            }
+            else {
                 gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
                      &(temp[j*blocksize]),   blocksize, 1,         'F',
                      &(v[0]),                blocksize, 1,         'F',
                      'T');
                 for(I k = 0; k < blocksize; k++) {
                     rsum[k] += v[k]; }
+            }
         }
 
         // x[i*blocksize:(i+1)*blocksize] = (one - omega2) * temp[i*blocksize:(i+1)*blocksize] + omega2 *
@@ -773,17 +775,18 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
         // Carry out a block dot product between block row i and x
         for(I jj = start; jj < end; jj++){
             I j = Aj[jj];
-            if (i == j)
+            if (i == j) {
                 //diagonal, do nothing
                 continue;
-            else
+            }
+            else {
                 gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
                      &(x[j*blocksize]),      blocksize, 1,         'F',
                      &(v[0]),                blocksize, 1,         'F',
                      'T');
-
                 for(I k = 0; k < blocksize; k++) {
                     rsum[k] += v[k]; }
+            }
         }
 
         // x[i*blocksize:(i+1)*blocksize] = (Dinv[i*blocksize_sq : (i+1)*blocksize_sq]*(b[i*blocksize:(i+1)*blocksize] - rsum[0:blocksize]));
