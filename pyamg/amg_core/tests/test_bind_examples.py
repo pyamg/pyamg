@@ -1,4 +1,4 @@
-from . import bind_examples as g
+import pyamg.amg_core.tests.bind_examples as g
 import numpy as np
 from numpy.testing import TestCase
 from pytest import raises as assert_raises
