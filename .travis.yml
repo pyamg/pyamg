@@ -4,6 +4,7 @@ python:
 - '2.7'
 - '3.4'
 - '3.5'
+- '3.6'
 before_install:
 - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
 - bash miniconda.sh -b -p $HOME/miniconda
@@ -19,7 +20,7 @@ install:
 script:
 - pytest --cov=. --cov-report=term
 after_success:
-- if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then codecov; fi
+- if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then codecov; fi
 deploy:
   provider: pypi
   distributions: bdist_wheel
