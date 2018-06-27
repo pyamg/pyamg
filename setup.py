@@ -229,14 +229,10 @@ amg_core_headers = ['evolution_strength.h',
                     'smoothed_aggregation.h']
 amg_core_headers = [f.replace('.h', '') for f in amg_core_headers]
 
-ext_modules = [Extension('pyamg.amg_core._amg_core',
-                         sources=['pyamg/amg_core/amg_core_wrap.cxx'],
-                         define_macros=[('__STDC_FORMAT_MACROS', 1)])]
-
-ext_modules += [Extension('pyamg.amg_core.%s' % f,
-                          sources=['pyamg/amg_core/%s_bind.cpp' % f],
-                          include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
-                          language='c++') for f in amg_core_headers]
+ext_modules = [Extension('pyamg.amg_core.%s' % f,
+                         sources=['pyamg/amg_core/%s_bind.cpp' % f],
+                         include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
+                         language='c++') for f in amg_core_headers]
 
 ext_modules += [Extension('pyamg.amg_core.tests.bind_examples',
                           sources=['pyamg/amg_core/tests/bind_examples_bind.cpp'],
