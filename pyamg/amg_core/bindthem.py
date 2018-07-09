@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 from __future__ import print_function
 import yaml
+import os
 
 PYBINDHEADER = """\
 #include <pybind11/pybind11.h>
@@ -106,6 +107,7 @@ def build_function(func):
     arraylist = []
     while i < len(func['parameters']):
         p = func['parameters'][i]
+        i += 1
 
         # check if pointer/array
         if p['pointer'] or p['array']:
@@ -116,19 +118,19 @@ def build_function(func):
 
             param = 'py::array_t<{}> &'.format(paramtype) + ' ' + p['name']
             arraylist.append((const, paramtype, p['name']))
-
-            # skip "_size" parameter
-            i += 1
-            p = func['parameters'][i]
-            if '_size' not in p['name']:
-                raise ValueError('Expecting a _size parameter for {}'.format(p['name']))
-        # if not a pointer, just copy it
+            needsize = True
+        elif '_size' not in p['name'] and needsize:
+            # not a size, but needed one
+            raise ValueError('Expecting a _size parameter for {}'.format(p['name']))
+        elif '_size' in p['name']:
+            # just size, skip it
+            needsize = False
+            continue
         else:
+            # if not a pointer, just copy it
             param = p['type'] + ' ' + p['name']
 
-        i += 1
-
-        fdef += '{:>25}'.format(param) + ',\n'    # set width to 25
+        fdef += '{:>25},\n'.format(param)    # set width to 25
 
     fdef = fdef.strip()[:-1]  # trim comma and newline
     fdef += '\n' + ' ' * len(newcall) + ')'
@@ -168,7 +170,10 @@ def build_function(func):
     for p in func['parameters']:
         if '_size' in p['name']:
             fdef = fdef.strip()
-            fdef += ' ' + p['name'].replace('_size', '.size()')
+            name, s = p['name'].split('_size')
+            if s=='':
+                s = '0'
+            fdef += " {}.shape({})".format(name, s)
         else:
             if p['pointer'] or p['array']:
                 name = '_' + p['name']
@@ -196,7 +201,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     remaps: list of remaps
     """
-    headerfilename = headerfile.replace('.h', '')
+    headerfilename = os.path.splitext(headerfile)[0]
 
     indent = '    '
     plugin = ''
@@ -308,7 +313,7 @@ def main():
 
     args = parser.parse_args()
 
-    print('[Generating {} from {}]'.format(args.input_file.replace('.h', '_bind.cpp'), args.input_file))
+    print('[Generating binding for {}]'.format(args.input_file))
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file, ch)
 
@@ -335,7 +340,8 @@ def main():
     if args.output_file is not None:
         outf = args.output_file
     else:
-        outf = args.input_file.replace('.h', '_bind.cpp')
+        basename = os.path.splitext(args.input_file)[0]
+        outf = basename + '_bind.cpp'
 
     with open(outf, 'wt') as outf:
 
