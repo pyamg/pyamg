@@ -24,8 +24,8 @@ void _apply_householders(
     const T *_B = py_B.data();
 
     return apply_householders<I, T, F>(
-                       _z, z.size(),
-                       _B, B.size(),
+                       _z, z.shape(0),
+                       _B, B.shape(0),
                         n,
                     start,
                      stop,
@@ -52,9 +52,9 @@ void _householder_hornerscheme(
     const T *_y = py_y.data();
 
     return householder_hornerscheme<I, T, F>(
-                       _z, z.size(),
-                       _B, B.size(),
-                       _y, y.size(),
+                       _z, z.shape(0),
+                       _B, B.shape(0),
+                       _y, y.shape(0),
                         n,
                     start,
                      stop,
@@ -76,8 +76,8 @@ void _apply_givens(
     T *_x = py_x.mutable_data();
 
     return apply_givens<I, T, F>(
-                       _B, B.size(),
-                       _x, x.size(),
+                       _B, B.shape(0),
+                       _x, x.shape(0),
                         n,
                      nrot
                                  );

@@ -27,9 +27,9 @@ void _apply_absolute_distance_filter(
     return apply_absolute_distance_filter<I, T>(
                     n_row,
                   epsilon,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                                 );
 }
 
@@ -52,9 +52,9 @@ void _apply_distance_filter(
     return apply_distance_filter<I, T>(
                     n_row,
                   epsilon,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                        );
 }
 
@@ -74,8 +74,8 @@ void _min_blocks(
     return min_blocks<I, T>(
                  n_blocks,
                 blocksize,
-                      _Sx, Sx.size(),
-                      _Tx, Tx.size()
+                      _Sx, Sx.shape(0),
+                      _Tx, Tx.shape(0)
                             );
 }
 
@@ -107,13 +107,13 @@ void _evolution_strength_helper(
     const T *_b = py_b.data();
 
     return evolution_strength_helper<I, T, F>(
-                      _Sx, Sx.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
+                      _Sx, Sx.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
                     nrows,
-                       _x, x.size(),
-                       _y, y.size(),
-                       _b, b.size(),
+                       _x, x.shape(0),
+                       _y, y.shape(0),
+                       _b, b.shape(0),
                   BDBCols,
                   NullDim,
                       tol
@@ -154,15 +154,15 @@ void _incomplete_mat_mult_csr(
     T *_Sx = py_Sx.mutable_data();
 
     return incomplete_mat_mult_csr<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Bp, Bp.size(),
-                      _Bj, Bj.size(),
-                      _Bx, Bx.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Bp, Bp.shape(0),
+                      _Bj, Bj.shape(0),
+                      _Bx, Bx.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0),
                  num_rows
                                             );
 }

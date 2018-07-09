@@ -32,11 +32,11 @@ void _gauss_seidel(
     const T *_b = py_b.data();
 
     return gauss_seidel<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
                 row_start,
                  row_stop,
                  row_step
@@ -68,11 +68,11 @@ void _bsr_gauss_seidel(
     const T *_b = py_b.data();
 
     return bsr_gauss_seidel<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
                 row_start,
                  row_stop,
                  row_step,
@@ -110,16 +110,16 @@ void _jacobi(
     const T *_omega = py_omega.data();
 
     return jacobi<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                    _temp, temp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                    _temp, temp.shape(0),
                 row_start,
                  row_stop,
                  row_step,
-                   _omega, omega.size()
+                   _omega, omega.shape(0)
                            );
 }
 
@@ -154,17 +154,17 @@ void _bsr_jacobi(
     const T *_omega = py_omega.data();
 
     return bsr_jacobi<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                    _temp, temp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                    _temp, temp.shape(0),
                 row_start,
                  row_stop,
                  row_step,
                 blocksize,
-                   _omega, omega.size()
+                   _omega, omega.shape(0)
                                );
 }
 
@@ -195,12 +195,12 @@ void _gauss_seidel_indexed(
     const I *_Id = py_Id.data();
 
     return gauss_seidel_indexed<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                      _Id, Id.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Id, Id.shape(0),
                 row_start,
                  row_stop,
                  row_step
@@ -240,17 +240,17 @@ void _jacobi_ne(
     const T *_omega = py_omega.data();
 
     return jacobi_ne<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                      _Tx, Tx.size(),
-                    _temp, temp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Tx, Tx.shape(0),
+                    _temp, temp.shape(0),
                 row_start,
                  row_stop,
                  row_step,
-                   _omega, omega.size()
+                   _omega, omega.shape(0)
                               );
 }
 
@@ -282,15 +282,15 @@ void _gauss_seidel_ne(
     const T *_Tx = py_Tx.data();
 
     return gauss_seidel_ne<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
                 row_start,
                  row_stop,
                  row_step,
-                      _Tx, Tx.size(),
+                      _Tx, Tx.shape(0),
                     omega
                                     );
 }
@@ -323,15 +323,15 @@ void _gauss_seidel_nr(
     const T *_Tx = py_Tx.data();
 
     return gauss_seidel_nr<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _z, z.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _z, z.shape(0),
                 col_start,
                  col_stop,
                  col_step,
-                      _Tx, Tx.size(),
+                      _Tx, Tx.shape(0),
                     omega
                                     );
 }
@@ -370,17 +370,17 @@ void _block_jacobi(
     const T *_omega = py_omega.data();
 
     return block_jacobi<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                      _Tx, Tx.size(),
-                    _temp, temp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Tx, Tx.shape(0),
+                    _temp, temp.shape(0),
                 row_start,
                  row_stop,
                  row_step,
-                   _omega, omega.size(),
+                   _omega, omega.shape(0),
                 blocksize
                                  );
 }
@@ -413,12 +413,12 @@ void _block_gauss_seidel(
     const T *_Tx = py_Tx.data();
 
     return block_gauss_seidel<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                      _Tx, Tx.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Tx, Tx.shape(0),
                 row_start,
                  row_stop,
                  row_step,
@@ -455,13 +455,13 @@ void _extract_subblocks(
     const I *_Sp = py_Sp.data();
 
     return extract_subblocks<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Tx, Tx.size(),
-                      _Tp, Tp.size(),
-                      _Sj, Sj.size(),
-                      _Sp, Sp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Tp, Tp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sp, Sp.shape(0),
                 nsdomains,
                     nrows
                                       );
@@ -505,15 +505,15 @@ void _overlapping_schwarz_csr(
     const I *_Sp = py_Sp.data();
 
     return overlapping_schwarz_csr<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _b, b.size(),
-                      _Tx, Tx.size(),
-                      _Tp, Tp.size(),
-                      _Sj, Sj.size(),
-                      _Sp, Sp.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Tp, Tp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sp, Sp.shape(0),
                 nsdomains,
                     nrows,
                 row_start,

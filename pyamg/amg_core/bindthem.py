@@ -105,6 +105,7 @@ def build_function(func):
 
     i = 0
     arraylist = []
+    needsize = False
     while i < len(func['parameters']):
         p = func['parameters'][i]
         i += 1

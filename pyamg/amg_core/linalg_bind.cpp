@@ -20,7 +20,7 @@ void _pinv_array(
     T *_AA = py_AA.mutable_data();
 
     return pinv_array<I, T, F>(
-                      _AA, AA.size(),
+                      _AA, AA.shape(0),
                         m,
                         n,
                    TransA
@@ -49,10 +49,10 @@ void _csc_scale_columns(
     return csc_scale_columns <I, T>(
                     n_row,
                     n_col,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Xx, Xx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Xx, Xx.shape(0)
                                     );
 }
 
@@ -78,10 +78,10 @@ void _csc_scale_rows(
     return csc_scale_rows <I, T>(
                     n_row,
                     n_col,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Xx, Xx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Xx, Xx.shape(0)
                                  );
 }
 

@@ -36,12 +36,12 @@ void _symmetric_strength_of_connection(
     return symmetric_strength_of_connection<I, T, F>(
                     n_row,
                     theta,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                                      );
 }
 
@@ -65,10 +65,10 @@ I _standard_aggregation(
 
     return standard_aggregation <I>(
                     n_row,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                       _x, x.size(),
-                       _y, y.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                       _x, x.shape(0),
+                       _y, y.shape(0)
                                     );
 }
 
@@ -92,10 +92,10 @@ I _naive_aggregation(
 
     return naive_aggregation <I>(
                     n_row,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                       _x, x.size(),
-                       _y, y.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                       _x, x.shape(0),
+                       _y, y.shape(0)
                                  );
 }
 
@@ -129,11 +129,11 @@ void _fit_candidates_real(
                     n_col,
                        K1,
                        K2,
-                      _Ap, Ap.size(),
-                      _Ai, Ai.size(),
-                      _Ax, Ax.size(),
-                       _B, B.size(),
-                       _R, R.size(),
+                      _Ap, Ap.shape(0),
+                      _Ai, Ai.shape(0),
+                      _Ax, Ax.shape(0),
+                       _B, B.shape(0),
+                       _R, R.shape(0),
                       tol
                                       );
 }
@@ -168,11 +168,11 @@ void _fit_candidates_complex(
                     n_col,
                        K1,
                        K2,
-                      _Ap, Ap.size(),
-                      _Ai, Ai.size(),
-                      _Ax, Ax.size(),
-                       _B, B.size(),
-                       _R, R.size(),
+                      _Ap, Ap.shape(0),
+                      _Ai, Ai.shape(0),
+                      _Ax, Ax.shape(0),
+                       _B, B.shape(0),
+                       _R, R.shape(0),
                       tol
                                             );
 }
@@ -209,12 +209,12 @@ void _satisfy_constraints_helper(
              ColsPerBlock,
            num_block_rows,
                   NullDim,
-                       _x, x.size(),
-                       _y, y.size(),
-                       _z, z.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                       _x, x.shape(0),
+                       _y, y.shape(0),
+                       _z, z.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                                );
 }
 
@@ -243,11 +243,11 @@ void _calc_BtB(
                   NullDim,
                    Nnodes,
              ColsPerBlock,
-                       _b, b.size(),
+                       _b, b.shape(0),
                   BsqCols,
-                       _x, x.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size()
+                       _x, x.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0)
                              );
 }
 
@@ -289,15 +289,15 @@ void _incomplete_mat_mult_bsr(
     T *_Sx = py_Sx.mutable_data();
 
     return incomplete_mat_mult_bsr<I, T, F>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Bp, Bp.size(),
-                      _Bj, Bj.size(),
-                      _Bx, Bx.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Bp, Bp.shape(0),
+                      _Bj, Bj.shape(0),
+                      _Bx, Bx.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0),
                    n_brow,
                    n_bcol,
                    brow_A,
@@ -325,9 +325,9 @@ void _truncate_rows_csr(
     return truncate_rows_csr<I, T, F>(
                     n_row,
                         k,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                       );
 }
 

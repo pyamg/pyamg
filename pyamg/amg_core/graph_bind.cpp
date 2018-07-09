@@ -28,12 +28,12 @@ I _maximal_independent_set_serial(
 
     return maximal_independent_set_serial<I, T>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
                    active,
                         C,
                         F,
-                       _x, x.size()
+                       _x, x.shape(0)
                                                 );
 }
 
@@ -61,13 +61,13 @@ I _maximal_independent_set_parallel(
 
     return maximal_independent_set_parallel<I, T, R>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
                    active,
                         C,
                         F,
-                       _x, x.size(),
-                       _y, y.size(),
+                       _x, x.shape(0),
+                       _y, y.shape(0),
                 max_iters
                                                      );
 }
@@ -89,9 +89,9 @@ T _vertex_coloring_mis(
 
     return vertex_coloring_mis<I, T>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                       _x, x.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                       _x, x.shape(0)
                                      );
 }
 
@@ -115,10 +115,10 @@ T _vertex_coloring_jones_plassmann(
 
     return vertex_coloring_jones_plassmann<I, T, R>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                       _x, x.size(),
-                       _z, z.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                       _x, x.shape(0),
+                       _z, z.shape(0)
                                                     );
 }
 
@@ -142,10 +142,10 @@ T _vertex_coloring_LDF(
 
     return vertex_coloring_LDF<I, T, R>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                       _x, x.size(),
-                       _y, y.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                       _x, x.shape(0),
+                       _y, y.shape(0)
                                         );
 }
 
@@ -172,11 +172,11 @@ void _bellman_ford(
 
     return bellman_ford<I, T>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                       _x, x.size(),
-                       _z, z.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _z, z.shape(0)
                               );
 }
 
@@ -207,13 +207,13 @@ void _lloyd_cluster(
 
     return lloyd_cluster<I, T>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
                 num_seeds,
-                       _x, x.size(),
-                       _w, w.size(),
-                       _z, z.size()
+                       _x, x.shape(0),
+                       _w, w.shape(0),
+                       _z, z.shape(0)
                                );
 }
 
@@ -239,11 +239,11 @@ void _maximal_independent_set_k_parallel(
 
     return maximal_independent_set_k_parallel<I, T, R>(
                  num_rows,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
                         k,
-                       _x, x.size(),
-                       _y, y.size(),
+                       _x, x.shape(0),
+                       _y, y.shape(0),
                 max_iters
                                                        );
 }
@@ -267,11 +267,11 @@ void _breadth_first_search(
     I *_level = py_level.mutable_data();
 
     return breadth_first_search <I>(
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
                      seed,
-                   _order, order.size(),
-                   _level, level.size()
+                   _order, order.shape(0),
+                   _level, level.shape(0)
                                     );
 }
 
@@ -292,9 +292,9 @@ py::array_t<I> & components
 
     return connected_components <I>(
                 num_nodes,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-              _components, components.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+              _components, components.shape(0)
                                     );
 }
 

@@ -36,12 +36,12 @@ void _classical_strength_of_connection_abs(
     return classical_strength_of_connection_abs<I, T, F>(
                     n_row,
                     theta,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                                          );
 }
 
@@ -73,12 +73,12 @@ void _classical_strength_of_connection_min(
     return classical_strength_of_connection_min<I, T>(
                     n_row,
                     theta,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0)
                                                       );
 }
 
@@ -102,10 +102,10 @@ void _maximum_row_value(
 
     return maximum_row_value<I, T, F>(
                     n_row,
-                       _x, x.size(),
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size()
+                       _x, x.shape(0),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0)
                                       );
 }
 
@@ -132,11 +132,11 @@ py::array_t<I> & splitting
 
     return rs_cf_splitting<I>(
                   n_nodes,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Tp, Tp.size(),
-                      _Tj, Tj.size(),
-               _splitting, splitting.size()
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+               _splitting, splitting.shape(0)
                               );
 }
 
@@ -164,11 +164,11 @@ py::array_t<I> & splitting,
 
     return cljp_naive_splitting<I>(
                         n,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Tp, Tp.size(),
-                      _Tj, Tj.size(),
-               _splitting, splitting.size(),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+               _splitting, splitting.shape(0),
                 colorflag
                                    );
 }
@@ -193,10 +193,10 @@ py::array_t<I> & splitting,
 
     return rs_direct_interpolation_pass1<I>(
                   n_nodes,
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-               _splitting, splitting.size(),
-                      _Bp, Bp.size()
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+               _splitting, splitting.shape(0),
+                      _Bp, Bp.shape(0)
                                             );
 }
 
@@ -238,16 +238,16 @@ py::array_t<I> & splitting,
 
     return rs_direct_interpolation_pass2<I, T>(
                   n_nodes,
-                      _Ap, Ap.size(),
-                      _Aj, Aj.size(),
-                      _Ax, Ax.size(),
-                      _Sp, Sp.size(),
-                      _Sj, Sj.size(),
-                      _Sx, Sx.size(),
-               _splitting, splitting.size(),
-                      _Bp, Bp.size(),
-                      _Bj, Bj.size(),
-                      _Bx, Bx.size()
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0),
+               _splitting, splitting.shape(0),
+                      _Bp, Bp.shape(0),
+                      _Bj, Bj.shape(0),
+                      _Bx, Bx.shape(0)
                                                );
 }
 
@@ -279,13 +279,13 @@ py::array_t<I> & splitting,
     T *_gamma = py_gamma.mutable_data();
 
     return cr_helper<I, T>(
-                _A_rowptr, A_rowptr.size(),
-               _A_colinds, A_colinds.size(),
-                       _B, B.size(),
-                       _e, e.size(),
-                 _indices, indices.size(),
-               _splitting, splitting.size(),
-                   _gamma, gamma.size(),
+                _A_rowptr, A_rowptr.shape(0),
+               _A_colinds, A_colinds.shape(0),
+                       _B, B.shape(0),
+                       _e, e.shape(0),
+                 _indices, indices.shape(0),
+               _splitting, splitting.shape(0),
+                   _gamma, gamma.shape(0),
                   thetacs
                            );
 }
