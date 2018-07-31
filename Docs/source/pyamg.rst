@@ -19,50 +19,42 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.blackbox module
-----------------------
+pyamg.blackbox module
+---------------------
 
 .. automodule:: pyamg.blackbox
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.graph module
--------------------
+pyamg.graph module
+------------------
 
 .. automodule:: pyamg.graph
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.info module
-------------------
+pyamg.info module
+-----------------
 
 .. automodule:: pyamg.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.multilevel module
-------------------------
+pyamg.multilevel module
+-----------------------
 
 .. automodule:: pyamg.multilevel
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.strength module
-----------------------
-
-.. automodule:: pyamg.strength
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyamg\.version module
+pyamg.strength module
 ---------------------
 
-.. automodule:: pyamg.version
+.. automodule:: pyamg.strength
     :members:
     :undoc-members:
     :show-inheritance:

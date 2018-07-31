@@ -1,5 +1,5 @@
-pyamg\.aggregation package
-==========================
+pyamg.aggregation package
+=========================
 
 Subpackages
 -----------
@@ -11,48 +11,48 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.aggregation\.adaptive module
------------------------------------
+pyamg.aggregation.adaptive module
+---------------------------------
 
 .. automodule:: pyamg.aggregation.adaptive
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.aggregation\.aggregate module
-------------------------------------
+pyamg.aggregation.aggregate module
+----------------------------------
 
 .. automodule:: pyamg.aggregation.aggregate
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.aggregation\.aggregation module
---------------------------------------
+pyamg.aggregation.aggregation module
+------------------------------------
 
 .. automodule:: pyamg.aggregation.aggregation
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.aggregation\.rootnode module
------------------------------------
+pyamg.aggregation.rootnode module
+---------------------------------
 
 .. automodule:: pyamg.aggregation.rootnode
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.aggregation\.smooth module
----------------------------------
+pyamg.aggregation.smooth module
+-------------------------------
 
 .. automodule:: pyamg.aggregation.smooth
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.aggregation\.tentative module
-------------------------------------
+pyamg.aggregation.tentative module
+----------------------------------
 
 .. automodule:: pyamg.aggregation.tentative
     :members:

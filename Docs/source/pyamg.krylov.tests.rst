@@ -1,19 +1,19 @@
-pyamg\.krylov\.tests package
-============================
+pyamg.krylov.tests package
+==========================
 
 Submodules
 ----------
 
-pyamg\.krylov\.tests\.test\_krylov module
------------------------------------------
+pyamg.krylov.tests.test\_krylov module
+--------------------------------------
 
 .. automodule:: pyamg.krylov.tests.test_krylov
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.krylov\.tests\.test\_simple\_iterations module
------------------------------------------------------
+pyamg.krylov.tests.test\_simple\_iterations module
+--------------------------------------------------
 
 .. automodule:: pyamg.krylov.tests.test_simple_iterations
     :members:

@@ -1,19 +1,19 @@
-pyamg\.classical\.tests package
-===============================
+pyamg.classical.tests package
+=============================
 
 Submodules
 ----------
 
-pyamg\.classical\.tests\.test\_classical module
------------------------------------------------
+pyamg.classical.tests.test\_classical module
+--------------------------------------------
 
 .. automodule:: pyamg.classical.tests.test_classical
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.classical\.tests\.test\_cr module
-----------------------------------------
+pyamg.classical.tests.test\_cr module
+-------------------------------------
 
 .. automodule:: pyamg.classical.tests.test_cr
     :members:

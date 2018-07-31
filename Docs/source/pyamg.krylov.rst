@@ -1,5 +1,5 @@
-pyamg\.krylov package
-=====================
+pyamg.krylov package
+====================
 
 Subpackages
 -----------
@@ -11,8 +11,8 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.krylov\.info module
---------------------------
+pyamg.krylov.info module
+------------------------
 
 .. automodule:: pyamg.krylov.info
     :members:

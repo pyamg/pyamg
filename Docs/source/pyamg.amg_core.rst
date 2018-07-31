@@ -1,13 +1,20 @@
-pyamg\.amg\_core package
-========================
+pyamg.amg\_core package
+=======================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    pyamg.amg_core.tests
 
 Submodules
 ----------
 
-pyamg\.amg\_core\.amg\_core module
-----------------------------------
+pyamg.amg\_core.bindthem module
+-------------------------------
 
-.. automodule:: pyamg.amg_core.amg_core
+.. automodule:: pyamg.amg_core.bindthem
     :members:
     :undoc-members:
     :show-inheritance:

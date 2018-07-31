@@ -1,5 +1,5 @@
-pyamg\.vis package
-==================
+pyamg.vis package
+=================
 
 Subpackages
 -----------
@@ -11,24 +11,24 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.vis\.info module
------------------------
+pyamg.vis.info module
+---------------------
 
 .. automodule:: pyamg.vis.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.vis\.vis\_coarse module
-------------------------------
+pyamg.vis.vis\_coarse module
+----------------------------
 
 .. automodule:: pyamg.vis.vis_coarse
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.vis\.vtk\_writer module
-------------------------------
+pyamg.vis.vtk\_writer module
+----------------------------
 
 .. automodule:: pyamg.vis.vtk_writer
     :members:

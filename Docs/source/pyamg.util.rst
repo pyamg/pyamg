@@ -1,5 +1,5 @@
-pyamg\.util package
-===================
+pyamg.util package
+==================
 
 Subpackages
 -----------
@@ -11,32 +11,32 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.util\.BSR\_utils module
-------------------------------
+pyamg.util.BSR\_utils module
+----------------------------
 
 .. automodule:: pyamg.util.BSR_utils
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.util\.info module
-------------------------
+pyamg.util.info module
+----------------------
 
 .. automodule:: pyamg.util.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.util\.linalg module
---------------------------
+pyamg.util.linalg module
+------------------------
 
 .. automodule:: pyamg.util.linalg
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.util\.utils module
--------------------------
+pyamg.util.utils module
+-----------------------
 
 .. automodule:: pyamg.util.utils
     :members:

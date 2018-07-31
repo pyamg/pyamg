@@ -1,5 +1,5 @@
-pyamg\.classical package
-========================
+pyamg.classical package
+=======================
 
 Subpackages
 -----------
@@ -11,32 +11,32 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.classical\.classical module
-----------------------------------
+pyamg.classical.classical module
+--------------------------------
 
 .. automodule:: pyamg.classical.classical
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.classical\.cr module
----------------------------
+pyamg.classical.cr module
+-------------------------
 
 .. automodule:: pyamg.classical.cr
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.classical\.interpolate module
-------------------------------------
+pyamg.classical.interpolate module
+----------------------------------
 
 .. automodule:: pyamg.classical.interpolate
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.classical\.split module
-------------------------------
+pyamg.classical.split module
+----------------------------
 
 .. automodule:: pyamg.classical.split
     :members:

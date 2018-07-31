@@ -1,5 +1,5 @@
-pyamg\.gallery package
-======================
+pyamg.gallery package
+=====================
 
 Subpackages
 -----------
@@ -11,72 +11,72 @@ Subpackages
 Submodules
 ----------
 
-pyamg\.gallery\.demo module
----------------------------
+pyamg.gallery.demo module
+-------------------------
 
 .. automodule:: pyamg.gallery.demo
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.diffusion module
---------------------------------
+pyamg.gallery.diffusion module
+------------------------------
 
 .. automodule:: pyamg.gallery.diffusion
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.elasticity module
----------------------------------
+pyamg.gallery.elasticity module
+-------------------------------
 
 .. automodule:: pyamg.gallery.elasticity
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.example module
-------------------------------
+pyamg.gallery.example module
+----------------------------
 
 .. automodule:: pyamg.gallery.example
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.info module
----------------------------
+pyamg.gallery.info module
+-------------------------
 
 .. automodule:: pyamg.gallery.info
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.laplacian module
---------------------------------
+pyamg.gallery.laplacian module
+------------------------------
 
 .. automodule:: pyamg.gallery.laplacian
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.mesh module
----------------------------
+pyamg.gallery.mesh module
+-------------------------
 
 .. automodule:: pyamg.gallery.mesh
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.random\_sparse module
--------------------------------------
+pyamg.gallery.random\_sparse module
+-----------------------------------
 
 .. automodule:: pyamg.gallery.random_sparse
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyamg\.gallery\.stencil module
-------------------------------
+pyamg.gallery.stencil module
+----------------------------
 
 .. automodule:: pyamg.gallery.stencil
     :members:
