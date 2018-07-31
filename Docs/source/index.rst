@@ -10,7 +10,7 @@ Welcome to PyAMG's documentation!
    :maxdepth: 5
    :caption: Contents:
 
-   README.md
+   README
 
 Indices and tables
 ==================
