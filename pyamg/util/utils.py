@@ -1736,7 +1736,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     Notes
     -----
     Diagonal dominance is defined as
-    :math:`|| (e_i, A) - a_ii ||_1  <  \theta a_ii`
+    :math:`\| (e_i, A) - a_{ii} \|_1  <  \\theta a_{ii}`
     that is, the 1-norm of the off diagonal elements in row i must be less than
     theta times the diagonal element.
 
