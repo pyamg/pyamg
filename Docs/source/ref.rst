@@ -37,3 +37,13 @@ Common AMG Components
 
 Helper Routings
 ---------------
+
+.. automodule:: pyamg.graph
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: pyamg.util
+    :members:
+    :undoc-members:
+    :show-inheritance:

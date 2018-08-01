@@ -1242,6 +1242,18 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     A*B = Bf.  This is useful for maintaining certain modes (e.g., the
     constant) in the span of prolongation.
 
+    This routine is primarily used in
+    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
+    generate a suitable initial guess for the energy-minimization process, when
+    root-node style SA is used.  Essentially, the tentative prolongator, T, is
+    processed by this routine to produce fine-grid nullspace vectors when
+    multiplying coarse-grid nullspace vectors, i.e., T*B = Bf.  This is
+    possible for any arbitrary vectors B and Bf, so long as the sparsity
+    structure of T is rich enough.
+
+    When generating initial guesses for root-node style prolongation operators,
+    this function is usually called before pyamg.uti.utils.scale_T
+
     Examples
     --------
     >>> from numpy import ones, array
@@ -1258,21 +1270,6 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
             [ 0. ,  1. ,  0. ],
             [ 0. ,  0. ,  1. ],
             [ 0. ,  0. ,  1. ]])
-
-    Notes
-    -----
-
-    This routine is primarily used in
-    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
-    generate a suitable initial guess for the energy-minimization process, when
-    root-node style SA is used.  Essentially, the tentative prolongator, T, is
-    processed by this routine to produce fine-grid nullspace vectors when
-    multiplying coarse-grid nullspace vectors, i.e., T*B = Bf.  This is
-    possible for any arbitrary vectors B and Bf, so long as the sparsity
-    structure of T is rich enough.
-
-    When generating initial guesses for root-node style prolongation operators,
-    this function is usually called before pyamg.uti.utils.scale_T
 
     """
 
@@ -1507,8 +1504,8 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     Fpts : {array}
         An array of all non root node dofs, corresponding to the F/C splitting
 
-    Example
-    -------
+    Examples
+    --------
     >>> from numpy import array
     >>> from pyamg.util.utils import get_Cpt_params
     >>> from pyamg.gallery import poisson
@@ -1638,8 +1635,8 @@ def compute_BtBinv(B, C):
         BtBinv[i] = inv(B_i.T B_i), where B_i is B restricted to the nonzero
         pattern of block row i in C.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
     >>> from pyamg.util.utils import compute_BtBinv
@@ -1739,13 +1736,12 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     Notes
     -----
     Diagonal dominance is defined as
-     || (e_i, A) - a_ii ||_1  <  theta a_ii
+    :math:`|| (e_i, A) - a_ii ||_1  <  \theta a_ii`
     that is, the 1-norm of the off diagonal elements in row i must be less than
     theta times the diagonal element.
 
-
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import eliminate_diag_dom_nodes
     >>> A = poisson( (4,), format='csr' )
@@ -1804,8 +1800,8 @@ def remove_diagonal(S):
     with an assumed zero diagonal
 
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import remove_diagonal
     >>> A = poisson( (4,), format='csr' )
@@ -1845,8 +1841,8 @@ def scale_rows_by_largest_entry(S):
     S : csr_matrix
         Each row has been scaled by it's largest in magnitude entry
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import scale_rows_by_largest_entry
     >>> A = poisson( (4,), format='csr' )
@@ -2031,8 +2027,8 @@ def filter_matrix_columns(A, theta):
         Each column has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_columns
     >>> from scipy import array
@@ -2104,8 +2100,8 @@ def filter_matrix_rows(A, theta):
         Each row has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
     >>> from scipy import array
@@ -2173,8 +2169,8 @@ def truncate_rows(A, nz_per_row):
     A : sparse_matrix
         Each row has been truncated to at most nz_per_row entries
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import truncate_rows
     >>> from scipy import array

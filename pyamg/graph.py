@@ -193,7 +193,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     maxiter : int
         The maximum number of iterations to perform.
 
-    Retruns
+    Returns
     -------
     distances : array
         final distances

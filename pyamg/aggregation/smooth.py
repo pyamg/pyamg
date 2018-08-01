@@ -954,7 +954,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         setup complexity. If None or an empty dictionary, then no dropping in P
         is done.  If postfilter has key 'k', then the largest 'k' entries  are
         kept in each row.  If postfilter has key 'theta', all entries such that
-        .. math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
+        :math:`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
     postfilter : dictionary
@@ -963,7 +963,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         dictionary, no dropping in P is done. If postfilter has key 'k',
         then the largest 'k' entries  are kept in each row.  If postfilter
         has key 'theta', all entries such that
-        .. math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
+        :math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
 

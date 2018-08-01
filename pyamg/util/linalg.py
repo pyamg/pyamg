@@ -286,7 +286,6 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
 
     Parameters
     ----------
-
     A : {dense or sparse matrix}
         E.g. csr_matrix, csc_matrix, ndarray, etc.
     tol : {scalar}
@@ -300,16 +299,13 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
         Arnoldi once, using the maximal eigenvector from the first Arnoldi
         process as the initial guess.
     symmetric : {boolean}
-        True  - if A is symmetric
-                Lanczos iteration is used (more efficient)
-        False - if A is non-symmetric (default
-                Arnoldi iteration is used (less efficient)
+        True  - if A is symmetric Lanczos iteration is used (more efficient)
+        False - if A is non-symmetric Arnoldi iteration is used (less efficient)
     initial_guess : {array|None}
         If n x 1 array, then use as initial guess for Arnoldi/Lanczos.
         If None, then use a random initial guess.
     return_vector : {boolean}
-        True - return an approximate dominant eigenvector, in addition to the
-               spectral radius.
+        True - return an approximate dominant eigenvector, in addition to the spectral radius.
         False - Do not return the approximate dominant eigenvector
 
     Returns
@@ -343,6 +339,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     1.0
     >>> print max([norm(x) for x in eigvals(A)])
     1.0
+
     """
 
     if not hasattr(A, 'rho') or return_vector:
@@ -588,7 +585,7 @@ def pinv_array(a, cond=None):
     a   : {dense array}
         Is of size (n, m, m)
     cond : {float}
-        Used by *gelss to filter numerically zeros singular values.
+        Used by gelss to filter numerically zeros singular values.
         If None, a suitable value is chosen for you.
 
     Returns
