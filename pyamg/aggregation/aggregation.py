@@ -1,4 +1,4 @@
-"""Support for aggregation-based AMG"""
+"""Support for aggregation-based AMG."""
 from __future__ import absolute_import
 
 
@@ -40,8 +40,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                 max_levels=10, max_coarse=10,
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
-    """
-    Create a multilevel solver using classical-style Smoothed Aggregation (SA)
+    """Create a multilevel solver using classical-style Smoothed Aggregation (SA).
 
     Parameters
     ----------
@@ -212,7 +211,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
        http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
-
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
@@ -295,11 +293,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
 def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                      diagonal_dominance=False, keep=True):
-    """Service routine to implement the strength of connection, aggregation,
+    """Extend the multigrid hierarchy.
+
+    Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
-    """
 
+    """
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]

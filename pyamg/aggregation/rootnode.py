@@ -1,4 +1,4 @@
-"""Support for aggregation-based AMG"""
+"""Support for aggregation-based AMG."""
 from __future__ import absolute_import
 
 
@@ -38,8 +38,8 @@ def rootnode_solver(A, B=None, BH=None,
                                          'iterations': 4}),
                     max_levels=10, max_coarse=10,
                     diagonal_dominance=False, keep=False, **kwargs):
-    """
-    Create a multilevel solver using root-node based Smoothed Aggregation (SA).
+    """Create a multilevel solver using root-node based Smoothed Aggregation (SA).
+
     See the notes below, for the major differences with the classical-style
     smoothed aggregation solver in aggregation.smoothed_aggregation_solver.
 
@@ -230,8 +230,8 @@ def rootnode_solver(A, B=None, BH=None,
        multigrid using energy minimization", SIAM Journal
        on Scientific Computing (SISC), vol. 33, pp.
        966--991, 2011.
-    """
 
+    """
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
@@ -312,11 +312,13 @@ def rootnode_solver(A, B=None, BH=None,
 
 def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                      diagonal_dominance=False, keep=True):
-    """Service routine to implement the strength of connection, aggregation,
+    """Extend the multigrid hierarchy.
+
+    Service routine to implement the strength of connection, aggregation,
     tentative prolongation construction, and prolongation smoothing.  Called by
     smoothed_aggregation_solver.
-    """
 
+    """
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]

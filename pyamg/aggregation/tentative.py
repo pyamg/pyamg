@@ -1,4 +1,4 @@
-"""Tentative prolongator"""
+"""Tentative prolongator."""
 
 
 import numpy as np
@@ -9,7 +9,7 @@ __all__ = ['fit_candidates']
 
 
 def fit_candidates(AggOp, B, tol=1e-10):
-    """Fit near-nullspace candidates to form the tentative prolongator
+    """Fit near-nullspace candidates to form the tentative prolongator.
 
     Parameters
     ----------

@@ -1,4 +1,4 @@
-"""Methods to smooth tentative prolongation operators"""
+"""Methods to smooth tentative prolongation operators."""
 from __future__ import print_function
 
 
@@ -18,8 +18,7 @@ __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
 
 # Satisfy_Constraints is a helper function for prolongation smoothing routines
 def Satisfy_Constraints(U, B, BtBinv):
-    """U is the prolongator update.
-       Project out components of U such that U*B = 0
+    """U is the prolongator update.  Project out components of U such that U*B = 0.
 
     Parameters
     ----------
@@ -44,7 +43,6 @@ def Satisfy_Constraints(U, B, BtBinv):
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
     """
-
     RowsPerBlock = U.blocksize[0]
     ColsPerBlock = U.blocksize[1]
     num_block_rows = int(U.shape[0]/RowsPerBlock)
@@ -65,7 +63,7 @@ def Satisfy_Constraints(U, B, BtBinv):
 
 def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
                                  filter=False, weighting='diagonal'):
-    """Jacobi prolongation smoother
+    """Jacobi prolongation smoother.
 
     Parameters
     ----------
@@ -133,7 +131,6 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             [ 0.        ,  0.64930164]])
 
     """
-
     # preprocess weighting
     if weighting == 'block':
         if sparse.isspmatrix_csr(S):
@@ -208,7 +205,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
 
 
 def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
-    """Richardson prolongation smoother
+    """Richardson prolongation smoother.
 
     Parameters
     ----------
@@ -263,7 +260,6 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
             [ 0.        ,  0.64930164]])
 
     """
-
     weight = omega/approximate_spectral_radius(S)
 
     P = T
@@ -278,18 +274,12 @@ sa_energy_min + helper functions minimize the energy of a tentative
 prolongator for use in SA
 """
 
-
 def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                               weighting='local', Cpt_params=None):
-    '''
-    Helper function for energy_prolongation_smoother(...)
-
-    Use CG to smooth T by solving A T = 0, subject to nullspace
-    and sparsity constraints.
+    """Use CG to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
     Parameters
     ----------
-
     A : csr_matrix, bsr_matrix
         SPD sparse NxN matrix
     T : bsr_matrix
@@ -334,8 +324,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     The principal calling routine,
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
-    '''
-
+    """
     # Preallocate
     AP = sparse.bsr_matrix((np.zeros(Sparsity_Pattern.data.shape,
                             dtype=T.dtype),
@@ -458,15 +447,10 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
 def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                 tol, weighting='local', Cpt_params=None):
-    '''
-    Helper function for energy_prolongation_smoother(...)
-
-    Use CGNR to smooth T by solving A T = 0, subject to nullspace
-    and sparsity constraints.
+    """Use CGNR to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
     Parameters
     ----------
-
     A : csr_matrix, bsr_matrix
         SPD sparse NxN matrix
         Should be at least nonsymmetric or indefinite
@@ -513,8 +497,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     The principal calling routine,
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
-    '''
-
+    """
     # For non-SPD system, apply CG on Normal Equations with Diagonal
     # Preconditioning (requires transpose)
     Ah = A.H
@@ -637,8 +620,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
 
 def apply_givens(Q, v, k):
-    '''
-    Apply the first k Givens rotations in Q to v
+    """Apply the first k Givens rotations in Q to v.
 
     Parameters
     ----------
@@ -658,8 +640,8 @@ def apply_givens(Q, v, k):
     This routine is specialized for GMRES.  It assumes that the first Givens
     rotation is for dofs 0 and 1, the second Givens rotation is for dofs 1 and
     2, and so on.
-    '''
 
+    """
     for j in range(k):
         Qloc = Q[j]
         v[j:j+2] = sp.dot(Qloc, v[j:j+2])
@@ -667,15 +649,10 @@ def apply_givens(Q, v, k):
 
 def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                  tol, weighting='local', Cpt_params=None):
-    '''
-    Helper function for energy_prolongation_smoother(...).
-
-    Use GMRES to smooth T by solving A T = 0, subject to nullspace
-    and sparsity constraints.
+    """Use GMRES to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
     Parameters
     ----------
-
     A : csr_matrix, bsr_matrix
         SPD sparse NxN matrix
         Should be at least nonsymmetric or indefinite
@@ -721,8 +698,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     The principal calling routine,
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
-    '''
-
+    """
     # For non-SPD system, apply GMRES with Diagonal Preconditioning
 
     # Preallocate space for new search directions
@@ -904,9 +880,10 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
                                  prefilter={}, postfilter={}):
-    """Minimize the energy of the coarse basis functions (columns of T).  Both
-    root-node and non-root-node style prolongation smoothing is available, see
-    Cpt_params description below.
+    """Minimize the energy of the coarse basis functions (columns of T).
+
+    Both root-node and non-root-node style prolongation smoothing is available,
+    see Cpt_params description below.
 
     Parameters
     ----------
@@ -1030,7 +1007,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
        966--991, 2011.
 
     """
-
     # Test Inputs
     if maxiter < 0:
         raise ValueError('maxiter must be > 0')

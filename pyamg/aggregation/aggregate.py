@@ -1,4 +1,4 @@
-"""Aggregation methods"""
+"""Aggregation methods."""
 
 
 import numpy as np
@@ -10,7 +10,7 @@ __all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation']
 
 
 def standard_aggregation(C):
-    """Compute the sparsity pattern of the tentative prolongator
+    """Compute the sparsity pattern of the tentative prolongator.
 
     Parameters
     ----------
@@ -56,7 +56,6 @@ def standard_aggregation(C):
     amg_core.standard_aggregation
 
     """
-
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix')
 
@@ -96,7 +95,7 @@ def standard_aggregation(C):
 
 
 def naive_aggregation(C):
-    """Compute the sparsity pattern of the tentative prolongator
+    """Compute the sparsity pattern of the tentative prolongator.
 
     Parameters
     ----------
@@ -147,8 +146,8 @@ def naive_aggregation(C):
     aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
     in an aggregate.  Results in possibly much higher complexities than
     standard aggregation.
-    """
 
+    """
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix')
 
@@ -179,7 +178,7 @@ def naive_aggregation(C):
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
-    """Aggregated nodes using Lloyd Clustering
+    """Aggregate nodes using Lloyd Clustering.
 
     Parameters
     ----------
@@ -233,8 +232,8 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
             [1]], dtype=int8)
     >>> # more seeding for two aggregates
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].todense()
-    """
 
+    """
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 

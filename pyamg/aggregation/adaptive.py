@@ -1,4 +1,4 @@
-"""Adaptive Smoothed Aggregation"""
+"""Adaptive Smoothed Aggregation."""
 from __future__ import absolute_import
 
 
@@ -28,7 +28,8 @@ __all__ = ['adaptive_sa_solver']
 
 
 def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
-    """
+    """Eliminate canidates locally.
+
     Helper function that determines where to eliminate candidates locally
     on a per aggregate basis.
 
@@ -48,8 +49,8 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
     Returns
     -------
     Nothing, x is modified in place
-    """
 
+    """
     if not (isspmatrix_csr(AggOp) or isspmatrix_csc(AggOp)):
         raise TypeError('AggOp must be a CSR or CSC matrix')
     else:
@@ -58,12 +59,13 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         nPDEs = int(ndof/AggOp.shape[0])
 
     def aggregate_wise_inner_product(z, AggOp, nPDEs, ndof):
-        """
+        """Inner products per aggregate.
+
         Helper function that calculates <z, z>_i, i.e., the
         inner product of z only over aggregate i
         Returns a vector of length num_aggregates where entry i is <z, z>_i
-        """
 
+        """
         z = np.ravel(z)*np.ravel(z)
         innerp = np.zeros((1, AggOp.shape[1]), dtype=z.dtype)
         for j in range(nPDEs):
@@ -72,10 +74,12 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         return innerp.reshape(-1, 1)
 
     def get_aggregate_weights(AggOp, A, z, nPDEs, ndof):
-        """
+        """Weights per aggregate.
+
         Calculate local aggregate quantities
         Return a vector of length num_aggregates where entry i is
         (card(agg_i)/A.shape[0]) ( <Az, z>/rho(A) )
+
         """
         rho = approximate_spectral_radius(A)
         zAz = np.dot(z.reshape(1, -1), A*z.reshape(-1, 1))
@@ -102,7 +106,7 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
 
 
 def unpack_arg(v):
-    """Helper function for local methods"""
+    """Use for local methods."""
     if isinstance(v, tuple):
         return v[0], v[1]
     else:
@@ -119,8 +123,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                        coarse_solver='pinv2',
                        eliminate_local=(False, {'Ca': 1.0}), keep=False,
                        **kwargs):
-    """
-    Create a multilevel solver using Adaptive Smoothed Aggregation (aSA)
+    """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA).
 
     Parameters
     ----------
@@ -185,7 +188,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     Notes
     -----
-
     - Floating point value representing the "work" required to generate
       the solver.  This value is the total cost of just relaxation, relative
       to the fine grid.  The relaxation method used is assumed to symmetric
@@ -202,12 +204,10 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     >>> from pyamg.gallery import stencil_grid
     >>> from pyamg.aggregation import adaptive_sa_solver
     >>> import numpy as np
-    >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]],\
-                       (31,31),format='csr')
+    >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
     >>> [asa,work] = adaptive_sa_solver(A,num_candidates=1)
     >>> residuals=[]
-    >>> x=asa.solve(b=np.ones((A.shape[0],)), x0=np.ones((A.shape[0],)),\
-                    residuals=residuals)
+    >>> x=asa.solve(b=np.ones((A.shape[0],)), x0=np.ones((A.shape[0],)), residuals=residuals)
 
     References
     ----------
@@ -216,7 +216,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
        SIAM Review Volume 47,  Issue 2  (2005)
 
     """
-
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
@@ -359,9 +358,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                         max_levels, max_coarse, aggregate, prepostsmoother,
                         smooth, strength, work, initial_candidate=None):
-    """
-    Computes a complete aggregation and the first near-nullspace candidate
-    following Algorithm 3 in Brezina et al.
+    """Compute aggregation and the first near-nullspace candidate following Algorithm 3 in Brezina et al.
 
     Parameters
     ----------
@@ -373,11 +370,11 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     References
     ----------
     .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-       "Adaptive Smoothed Aggregation ($\alpha$SA) Multigrid"
+       "Adaptive Smoothed Aggregation (aSA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
-    """
 
+    """
     # Define relaxation routine
     def relax(A, x):
         fn, kwargs = unpack_arg(prepostsmoother)
@@ -570,9 +567,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
 def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
                         smooth, eliminate_local, coarse_solver, work):
-    """
-    Computes additional candidates and improvements
-    following Algorithm 4 in Brezina et al.
+    """Compute additional candidates and improvements following Algorithm 4 in Brezina et al.
 
     Parameters
     ----------
@@ -587,8 +582,8 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
        "Adaptive Smoothed Aggregation (alphaSA) Multigrid"
        SIAM Review Volume 47,  Issue 2  (2005)
        http://www.cs.umn.edu/~maclach/research/aSA2.pdf
-    """
 
+    """
     def make_bridge(T):
         M, N = T.shape
         K = T.blocksize[0]
