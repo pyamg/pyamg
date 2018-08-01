@@ -1,4 +1,4 @@
-PyAMG
+PyAMG |version|
 =================================
 
 .. mdinclude:: README.md
