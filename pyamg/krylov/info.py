@@ -2,7 +2,7 @@
 
 This module contains several Krylov subspace methods, in addition to two simple
 iterations, to solve linear systems iteratively.  These methods often use
-multigrid as a preconditioner to accelerate convergence to the solution.
+multigrid as a preconditioner to accelerate convergence to the solution.  See [1]_ and [2]_.
 
 Functions
 ---------

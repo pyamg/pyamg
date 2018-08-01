@@ -87,22 +87,21 @@ class multilevel_solver:
             dictionary of arguments to be passed to the function denoted by
             string or callable.
 
-            The set of valid string arguments is:
-            - Sparse direct methods:
-                + splu         : sparse LU solver
-            - Sparse iterative methods:
-                + the name of any method in scipy.sparse.linalg.isolve or
-                  pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov
-                  take precedence.
-                + relaxation method, such as 'gauss_seidel' or 'jacobi',
+            Sparse direct methods:
 
+            * splu         : sparse LU solver
 
+            Sparse iterative methods:
 
-            - Dense methods:
-                + pinv     : pseudoinverse (QR)
-                + pinv2    : pseudoinverse (SVD)
-                + lu       : LU factorization
-                + cholesky : Cholesky factorization
+            * the name of any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
+            * relaxation method, such as 'gauss_seidel' or 'jacobi',
+
+            Dense methods:
+
+            * pinv     : pseudoinverse (QR)
+            * pinv2    : pseudoinverse (SVD)
+            * lu       : LU factorization
+            * cholesky : Cholesky factorization
 
         Notes
         -----

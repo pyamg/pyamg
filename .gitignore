@@ -16,3 +16,5 @@ pyamg.egg-info/*
 ./var/
 .pytest_cache
 build/
+var/
+generated/

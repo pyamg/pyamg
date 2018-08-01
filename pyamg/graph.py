@@ -365,8 +365,8 @@ def symmetric_rcm(A):
     -----
     Get a pseudo-peripheral node, then call BFS
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg import gallery
     >>> from pyamg.graph import symmetric_rcm
     >>> n = 200
