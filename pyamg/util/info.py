@@ -1,5 +1,4 @@
-"""
-linalg.py provides some linear algebra functionality not yet found in scipy
+"""linalg.py provides some linear algebra functionality not yet found in scipy.
 
 utils.py provides some utility functions for use with pyamg
 

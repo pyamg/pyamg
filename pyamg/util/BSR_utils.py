@@ -1,5 +1,4 @@
-"""Utility Functions for reading and writing individual rows
-   in BSR matrices"""
+"""Utility Functions for reading and writing individual rows in BSR matrices."""
 
 
 import numpy as np
@@ -8,8 +7,9 @@ __all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
 
 
 def BSR_Get_Row(A, i):
-    """
-    Return row i in BSR matrix A.  Only nonzero entries are returned
+    """Return row i in BSR matrix A.
+
+    Only nonzero entries are returned
 
     Parameters
     ----------
@@ -38,7 +38,6 @@ def BSR_Get_Row(A, i):
     [4 5]
 
     """
-
     blocksize = A.blocksize[0]
     BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]
@@ -63,8 +62,7 @@ def BSR_Get_Row(A, i):
 
 
 def BSR_Row_WriteScalar(A, i, x):
-    """
-    Write a scalar at each nonzero location in row i of BSR matrix A
+    """Write a scalar at each nonzero location in row i of BSR matrix A.
 
     Parameters
     ----------
@@ -92,8 +90,8 @@ def BSR_Row_WriteScalar(A, i, x):
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
     >>> BSR_Row_WriteScalar(B,5,22)
-    """
 
+    """
     blocksize = A.blocksize[0]
     BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]
@@ -110,9 +108,9 @@ def BSR_Row_WriteScalar(A, i, x):
 
 
 def BSR_Row_WriteVect(A, i, x):
-    """
-    Overwrite the nonzeros in row i of BSR matrix A with the vector x.
-    length(x) and nnz(A[i,:]) must be equivalent.
+    """Overwrite the nonzeros in row i of BSR matrix A with the vector x.
+
+    length(x) and nnz(A[i,:]) must be equivalent
 
     Parameters
     ----------
@@ -142,8 +140,8 @@ def BSR_Row_WriteVect(A, i, x):
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
     >>> BSR_Row_WriteVect(B,5,array([11,22,33,44,55,66]))
-    """
 
+    """
     blocksize = A.blocksize[0]
     BlockIndx = int(i/blocksize)
     rowstart = A.indptr[BlockIndx]

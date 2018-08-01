@@ -1,4 +1,4 @@
-''' Linear Algebra Helper Routines '''
+"""Linear Algebra Helper Routines."""
 from __future__ import print_function
 
 
@@ -14,8 +14,7 @@ __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
 
 
 def norm(x, pnorm='2'):
-    """
-    2-norm of a vector
+    """2-norm of a vector.
 
     Parameters
     ----------
@@ -41,8 +40,8 @@ def norm(x, pnorm='2'):
     See Also
     --------
     scipy.linalg.norm : scipy general matrix or vector norm
-    """
 
+    """
     # TODO check dimensions of x
     # TODO speedup complex case
 
@@ -57,8 +56,7 @@ def norm(x, pnorm='2'):
 
 
 def infinity_norm(A):
-    """
-    Infinity norm of a matrix (maximum absolute row sum).
+    """Infinity norm of a matrix (maximum absolute row sum).
 
     Parameters
     ----------
@@ -91,8 +89,8 @@ def infinity_norm(A):
     >>> A = spdiags(data,[-1,0,1],n,n)
     >>> print infinity_norm(A)
     4.0
-    """
 
+    """
     if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
         # avoid copying index and ptr arrays
         abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr),
@@ -106,15 +104,12 @@ def infinity_norm(A):
 
 
 def residual_norm(A, x, b):
-    """Compute ||b - A*x||"""
-
+    """Compute ||b - A*x||."""
     return norm(np.ravel(b) - A*np.ravel(x))
 
 
 def axpy(x, y, a=1.0):
-    """
-    Quick level-1 call to BLAS
-    y = a*x+y
+    """Quick level-1 call to BLAS y = a*x+y.
 
     Parameters
     ----------
@@ -134,6 +129,7 @@ def axpy(x, y, a=1.0):
     -----
     The call to get_blas_funcs automatically determines the prefix for the blas
     call.
+
     """
     from scipy.linalg import get_blas_funcs
 
@@ -171,16 +167,17 @@ def axpy(x, y, a=1.0):
 
 def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
                              initial_guess=None):
-    """Used by approximate_spectral_radius and condest
+    """Apprixmate eigenvalues.
 
-       Returns [W, E, H, V, breakdown_flag], where W and E are the eigenvectors
-       and eigenvalues of the Hessenberg matrix H, respectively, and V is the
-       Krylov space.  breakdown_flag denotes whether Lanczos/Arnoldi suffered
-       breakdown.  E is therefore the approximate eigenvalues of A.
+    Used by approximate_spectral_radius and condest.
 
-       To obtain approximate eigenvectors of A, compute V*W.
-       """
+    Returns [W, E, H, V, breakdown_flag], where W and E are the eigenvectors
+    and eigenvalues of the Hessenberg matrix H, respectively, and V is the
+    Krylov space.  breakdown_flag denotes whether Lanczos/Arnoldi suffered
+    breakdown.  E is therefore the approximate eigenvalues of A.
 
+    To obtain approximate eigenvectors of A, compute V*W.
+    """
     from scipy.sparse.linalg import aslinearoperator
 
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
@@ -281,8 +278,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
 def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
                                 symmetric=None, initial_guess=None,
                                 return_vector=False):
-    """
-    Approximate the spectral radius of a matrix
+    """Approximate the spectral radius of a matrix.
 
     Parameters
     ----------
@@ -341,7 +337,6 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     1.0
 
     """
-
     if not hasattr(A, 'rho') or return_vector:
         # somehow more restart causes a nonsymmetric case to fail...look at
         # this what about A.dtype=int?  convert somehow?
@@ -413,7 +408,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
 
 
 def condest(A, tol=0.1, maxiter=25, symmetric=False):
-    """Estimates the condition number of A
+    r"""Estimates the condition number of A.
 
     Parameters
     ----------
@@ -449,7 +444,6 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     2.0
 
     """
-
     [evect, ev, H, V, breakdown_flag] =\
         _approximate_eigenvalues(A, tol, maxiter, symmetric)
 
@@ -457,7 +451,7 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
 
 
 def cond(A):
-    """Returns condition number of A
+    """Return condition number of A.
 
     Parameters
     ----------
@@ -486,7 +480,6 @@ def cond(A):
     2.0
 
     """
-
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -501,7 +494,7 @@ def cond(A):
 
 
 def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
-    """Returns True if A is Hermitian to within tol
+    r"""Return True if A is Hermitian to within tol.
 
     Parameters
     ----------
@@ -538,6 +531,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     >>> from pyamg.gallery import poisson
     >>> ishermitian(poisson((10,10)))
     True
+
     """
     # convert to matrix type
     if not sparse.isspmatrix(A):
@@ -577,8 +571,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
 
 def pinv_array(a, cond=None):
-    """Calculate the Moore-Penrose pseudo inverse of each block of
-        the three dimensional array a.
+    """Calculate the Moore-Penrose pseudo inverse of each block of the three dimensional array a.
 
     Parameters
     ----------
@@ -608,7 +601,6 @@ def pinv_array(a, cond=None):
     >>> pinv_array(a)
 
     """
-
     n = a.shape[0]
     m = a.shape[1]
 

@@ -1,4 +1,4 @@
-"""General utility functions for pyamg"""
+"""General utility functions for pyamg."""
 from __future__ import print_function
 
 from warnings import warn
@@ -32,7 +32,7 @@ except ImportError:
 
 
 def blocksize(A):
-    # Helper Function: return the blocksize of a matrix
+    """Return the block size of a matrix."""
     if isspmatrix_bsr(A):
         return A.blocksize[0]
     else:
@@ -40,8 +40,7 @@ def blocksize(A):
 
 
 def profile_solver(ml, accel=None, **kwargs):
-    """
-    A quick solver to profile a particular multilevel object
+    """Profile a particular multilevel object.
 
     Parameters
     ----------
@@ -91,7 +90,8 @@ def profile_solver(ml, accel=None, **kwargs):
 
 
 def diag_sparse(A):
-    """
+    """Return a diagonal.
+
     If A is a sparse matrix (e.g. csr_matrix or csc_matrix)
        - return the diagonal of A as an array
 
@@ -130,8 +130,7 @@ def diag_sparse(A):
 
 
 def scale_rows(A, v, copy=True):
-    """
-    Scale the sparse rows of a matrix
+    """Scale the sparse rows of a matrix.
 
     Parameters
     ----------
@@ -170,8 +169,8 @@ def scale_rows(A, v, copy=True):
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
     >>> B = scale_rows(A,5*np.ones((A.shape[0],1)))
-    """
 
+    """
     v = np.ravel(v)
 
     M, N = A.shape
@@ -203,8 +202,7 @@ def scale_rows(A, v, copy=True):
     return A
 
 def scale_columns(A, v, copy=True):
-    """
-    Scale the sparse columns of a matrix
+    """Scale the sparse columns of a matrix.
 
     Parameters
     ----------
@@ -250,7 +248,6 @@ def scale_columns(A, v, copy=True):
      [  0.   0.   0.  -5.]]
 
     """
-
     v = np.ravel(v)
 
     M, N = A.shape
@@ -283,8 +280,7 @@ def scale_columns(A, v, copy=True):
 
 
 def symmetric_rescaling(A, copy=True):
-    """
-    Scale the matrix symmetrically::
+    """Scale the matrix symmetrically.
 
         A = D^{-1/2} A D^{-1/2}
 
@@ -360,8 +356,7 @@ def symmetric_rescaling(A, copy=True):
 
 
 def symmetric_rescaling_sa(A, B, BH=None):
-    """
-    Scale the matrix symmetrically::
+    """Scale the matrix symmetrically.
 
         A = D^{-1/2} A D^{-1/2}
 
@@ -415,8 +410,8 @@ def symmetric_rescaling_sa(A, B, BH=None):
      [ 1.41421356]
      [ 1.41421356]
      [ 1.41421356]]
-    """
 
+    """
     # rescale A
     [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
     # scale candidates
@@ -435,7 +430,8 @@ def symmetric_rescaling_sa(A, B, BH=None):
 
 
 def type_prep(upcast_type, varlist):
-    """
+    """Upcast variables to a type.
+
     Loop over all elements of varlist and convert them to upcasttype
     The only difference with pyamg.util.utils.to_type(...), is that scalars
     are wrapped into (1,0) arrays.  This is desirable when passing
@@ -479,8 +475,7 @@ def type_prep(upcast_type, varlist):
 
 
 def to_type(upcast_type, varlist):
-    """
-    Loop over all elements of varlist and convert them to upcasttype
+    """Loop over all elements of varlist and convert them to upcasttype.
 
     Parameters
     ----------
@@ -509,7 +504,6 @@ def to_type(upcast_type, varlist):
     >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
 
     """
-
     # convert_type = type(np.array([0], upcast_type)[0])
 
     for i in range(len(varlist)):
@@ -530,8 +524,7 @@ def to_type(upcast_type, varlist):
 
 
 def get_diagonal(A, norm_eq=False, inv=False):
-    """ Return the diagonal or inverse of diagonal for
-        A, (A.H A) or (A A.H)
+    """Return the diagonal or inverse of diagonal for A, (A.H A) or (A A.H).
 
     Parameters
     ----------
@@ -567,7 +560,6 @@ def get_diagonal(A, norm_eq=False, inv=False):
     [ 0.2         0.16666667  0.16666667  0.16666667  0.2       ]
 
     """
-
     # if not isspmatrix(A):
     if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
         warn('Implicit conversion to sparse matrix')
@@ -595,8 +587,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
 
 def get_block_diag(A, blocksize, inv_flag=True):
-    """
-    Return the block diagonal of A, in array form
+    """Return the block diagonal of A, in array form.
 
     Parameters
     ----------
@@ -632,7 +623,6 @@ def get_block_diag(A, blocksize, inv_flag=True):
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
 
     """
-
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
@@ -689,8 +679,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
 
 def amalgamate(A, blocksize):
-    """
-    Amalgamate matrix A
+    """Amalgamate matrix A.
 
     Parameters
     ----------
@@ -728,9 +717,7 @@ def amalgamate(A, blocksize):
     matrix([[ 1.,  1.],
             [ 0.,  0.]])
 
-
     """
-
     if blocksize == 1:
         return A
     elif sp.mod(A.shape[0], blocksize) != 0:
@@ -745,9 +732,9 @@ def amalgamate(A, blocksize):
 
 
 def UnAmal(A, RowsPerBlock, ColsPerBlock):
-    """
+    """Unamalgamate a CSR A with blocks of 1's.
 
-    Unamalgamate a CSR A with blocks of 1's.  This operation is equivalent to
+    This operation is equivalent to
     replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
     is equivalent to setting all of A's nonzeros to 1 and then doing a
     Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
@@ -797,9 +784,7 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
 
 def print_table(table, title='', delim='|', centering='center', col_padding=2,
                 header=True, headerchar='-'):
-    """
-    Print a table from a list of lists representing the rows of a table
-
+    """Print a table from a list of lists representing the rows of a table.
 
     Parameters
     ----------
@@ -841,7 +826,6 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
     >>> table4 = print_table(table, col_padding=6, centering='left')
 
     """
-
     table_str = '\n'
 
     # sometimes, the table will be passed in as (title, table)
@@ -912,8 +896,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
 
 def hierarchy_spectrum(mg, filter=True, plot=False):
-    """
-    Examine a multilevel hierarchy's spectrum
+    """Examine a multilevel hierarchy's spectrum.
 
     Parameters
     ----------
@@ -951,9 +934,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
        0      0.000        0.000            0               0         1.00e+00
     <BLANKLINE>
 
-
     """
-
     real_table = [['Level', 'min(re(eig))', 'max(re(eig))', 'num re(eig) < 0',
                    'num re(eig) > 0', 'cond_2(A)']]
     imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0',
@@ -1013,9 +994,9 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
 
 def Coord2RBM(numNodes, numPDEs, x, y, z):
-    """
-    Convert 2D or 3D coordinates into Rigid body modes for use as near
-    nullspace modes in elasticity AMG solvers
+    """Convert 2D or 3D coordinates into Rigid body modes.
+
+    For use as near nullspace modes in elasticity AMG solvers.
 
     Parameters
     ----------
@@ -1056,8 +1037,8 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
             [ 0.,  0.,  0.,  1.,  0.,  0.],
             [ 0.,  0.,  0.,  0.,  1.,  0.],
             [ 0.,  0.,  0.,  0.,  0.,  1.]])
-    """
 
+    """
     # check inputs
     if(numPDEs == 1):
         numcols = 1
@@ -1133,9 +1114,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
 
 def relaxation_as_linear_operator(method, A, b):
-    """
-    Create a linear operator that applies a relaxation method for the
-    given right-hand-side
+    """Create a linear operator that applies a relaxation method for the given right-hand-side.
 
     Parameters
     ----------
@@ -1153,7 +1132,6 @@ def relaxation_as_linear_operator(method, A, b):
 
     Notes
     -----
-
     This method is primarily used to improve B during the aggregation setup
     phase.  Here b = 0, and each relaxation call can improve the quality of B,
     especially near the boundaries.
@@ -1211,9 +1189,9 @@ def relaxation_as_linear_operator(method, A, b):
 
 
 def filter_operator(A, C, B, Bf, BtBinv=None):
-    """
-    Filter the matrix A according to the matrix graph of C,
-    while ensuring that the new, filtered A satisfies:  A_new*B = Bf.
+    """Filter the matrix A according to the matrix graph of C.
+
+    Ensure that the new, filtered A satisfies:  A_new*B = Bf.
 
     A : {csr_matrix, bsr_matrix}
         n x m matrix to filter
@@ -1272,7 +1250,6 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
             [ 0. ,  0. ,  1. ]])
 
     """
-
     # First preprocess the parameters
     Nfine = A.shape[0]
     if A.shape[0] != C.shape[0]:
@@ -1367,7 +1344,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
 
 def scale_T(T, P_I, I_F):
-    '''
+    """Scale T with a block diagonal matrix.
+
     Helper function that scales T with a right multiplication by a block
     diagonal inverse, so that T is the identity at C-node rows.
 
@@ -1434,8 +1412,7 @@ def scale_T(T, P_I, I_F):
     This function assumes that the eventual coarse-grid nullspace vectors
     equal coarse-grid injection applied to the fine-grid nullspace vectors.
 
-    '''
-
+    """
     if not isspmatrix_bsr(T):
         raise TypeError('Expected BSR matrix T')
     elif T.blocksize[0] != T.blocksize[1]:
@@ -1470,8 +1447,10 @@ def scale_T(T, P_I, I_F):
 
 
 def get_Cpt_params(A, Cnodes, AggOp, T):
-    ''' Helper function that returns a dictionary of sparse matrices and arrays
-        which allow us to easily operate on Cpts and Fpts separately.
+    """Return C and F pts.
+
+    Helper function that returns a dictionary of sparse matrices and arrays
+    which allow us to easily operate on Cpts and Fpts separately.
 
     Parameters
     ----------
@@ -1539,8 +1518,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     which uses the Cpt_param dictionary for root-node style
     prolongation smoothing
 
-    '''
-
+    """
     if not isspmatrix_bsr(A) and not isspmatrix_csr(A):
         raise TypeError('Expected BSR or CSR matrix A')
     if not isspmatrix_csr(AggOp):
@@ -1618,8 +1596,10 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
 
 
 def compute_BtBinv(B, C):
-    ''' Helper function that creates inv(B_i.T B_i) for each block row i in C,
-        where B_i is B restricted to the sparsity pattern of block row i.
+    """Create block inverses.
+
+    Helper function that creates inv(B_i.T B_i) for each block row i in C,
+    where B_i is B restricted to the sparsity pattern of block row i.
 
     Parameters
     ----------
@@ -1665,8 +1645,7 @@ def compute_BtBinv(B, C):
     into the span of prolongation with row-wise projection operators.  It is
     these projection operators that BtBinv is part of.
 
-    '''
-
+    """
     if not isspmatrix_bsr(C) and not isspmatrix_csr(C):
         raise TypeError('Expected bsr_matrix or csr_matrix for C')
     if C.shape[1] != B.shape[0]:
@@ -1711,7 +1690,9 @@ def compute_BtBinv(B, C):
 
 
 def eliminate_diag_dom_nodes(A, C, theta=1.02):
-    ''' Helper function that eliminates diagonally dominant rows and cols from A
+    r"""Eliminate diagonally dominance.
+
+    Helper function that eliminates diagonally dominant rows and cols from A
     in the separate matrix C.  This is useful because it eliminates nodes in C
     which we don't want coarsened.  These eliminated nodes in C just become
     the rows and columns of the identity.
@@ -1752,8 +1733,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
             [ 0., -1.,  2.,  0.],
             [ 0.,  0.,  0.,  1.]])
 
-    '''
-
+    """
     # Find the diagonally dominant rows in A.
     A_abs = A.copy()
     A_abs.data = np.abs(A_abs.data)
@@ -1782,7 +1762,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
 
 def remove_diagonal(S):
-    """ Removes the diagonal of the matrix S
+    """Remove the diagonal of the matrix S.
 
     Parameters
     ----------
@@ -1813,7 +1793,6 @@ def remove_diagonal(S):
             [ 0.,  0., -1.,  0.]])
 
     """
-
     if not isspmatrix_csr(S):
         raise TypeError('expected csr_matrix')
 
@@ -1830,7 +1809,7 @@ def remove_diagonal(S):
 
 
 def scale_rows_by_largest_entry(S):
-    """ Scale each row in S by it's largest in magnitude entry
+    """Scale each row in S by it's largest in magnitude entry.
 
     Parameters
     ----------
@@ -1855,7 +1834,6 @@ def scale_rows_by_largest_entry(S):
             [ 0. ,  0. , -0.5,  1. ]])
 
     """
-
     if not isspmatrix_csr(S):
         raise TypeError('expected csr_matrix')
 
@@ -1872,7 +1850,8 @@ def scale_rows_by_largest_entry(S):
 
 
 def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
-    """
+    """Turn parameter into a list per level.
+
     Helper function to preprocess the strength and aggregation parameters
     passed to smoothed_aggregation_solver and rootnode_solver.
 
@@ -1917,7 +1896,6 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
     (4, 10, ['evolution', 'classical', 'classical'])
 
     """
-
     if isinstance(to_levelize, tuple):
         if to_levelize[0] == 'predefined':
             to_levelize = [to_levelize]
@@ -1956,7 +1934,8 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
 
 
 def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
-    """
+    """Turn parameter in to a list per level.
+
     Helper function to preprocess the smooth and improve_candidates
     parameters passed to smoothed_aggregation_solver and rootnode_solver.
 
@@ -1993,8 +1972,8 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     >>> improve_candidates = ['gauss_seidel', None]
     >>> levelize_smooth_or_improve_candidates(improve_candidates, 4)
     ['gauss_seidel', None, None, None]
-    """
 
+    """
     if isinstance(to_levelize, tuple) or isinstance(to_levelize, str):
         to_levelize = [to_levelize for i in range(max_levels)]
     elif isinstance(to_levelize, list):
@@ -2009,8 +1988,9 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
 
 
 def filter_matrix_columns(A, theta):
-    """
-    Filter each column of A with tol, i.e., drop all entries in column k where
+    """Filter each column of A with tol.
+
+    i.e., drop all entries in column k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
     Parameters
@@ -2083,8 +2063,9 @@ def filter_matrix_columns(A, theta):
 
 
 def filter_matrix_rows(A, theta):
-    """
-    Filter each row of A with tol, i.e., drop all entries in row k where
+    """Filter each row of A with tol.
+
+    i.e., drop all entries in row k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
     Parameters
@@ -2153,9 +2134,7 @@ def filter_matrix_rows(A, theta):
 
 
 def truncate_rows(A, nz_per_row):
-    """
-    Truncate the rows of A by keeping only the largest in magnitude entries in
-    each row.
+    """Truncate the rows of A by keeping only the largest in magnitude entries in each row.
 
     Parameters
     ----------
