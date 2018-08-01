@@ -17,8 +17,7 @@ __all__ = ['write_vtu', 'write_basic_mesh']
 
 def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
               fname='output.vtk'):
-    """
-    Write a .vtu file in xml format
+    """Write a .vtu file in xml format.
 
     Parameters
     ----------
@@ -378,8 +377,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
 def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
                      pdata=None, pvdata=None,
                      cdata=None, cvdata=None, fname='output.vtk'):
-    """
-    Write mesh file for basic types of elements
+    """Write mesh file for basic types of elements.
 
     Parameters
     ----------
@@ -478,16 +476,12 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
 
 
 def set_attributes(d, elm):
-    """
-    helper function: Set attributes from dictionary of values
-    """
+    """Set attributes from dictionary of values."""
     for key in d:
         elm.setAttribute(key, d[key])
 
 
 def a2s(a):
-    """
-    helper function: Convert to string
-    """
+    """Convert to string."""
     str = ''
     return str.join(['%g ' % (v) for v in a.ravel()])

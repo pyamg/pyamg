@@ -1,5 +1,4 @@
-"""
-Visualization tools for coarse grids, both C/F splittings and aggregation.
+"""Visualization tools for coarse grids, both C/F splittings and aggregation.
 
 Output is either to file (VTK) or to the screen (matplotlib).
 
@@ -20,9 +19,9 @@ __all__ = ['vis_splitting', 'vis_aggregate_groups']
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
                          fname='output.vtu'):
-    """
-    Coarse grid visualization of aggregate groups.  Create .vtu files for use
-    in Paraview or display with Matplotlib
+    """Coarse grid visualization of aggregate groups.
+
+    Create .vtu files for use in Paraview or display with Matplotlib.
 
     Parameters
     ----------
@@ -149,8 +148,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
 
 
 def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
-    """
-    Coarse grid visualization for C/F splittings.
+    """Coarse grid visualization for C/F splittings.
 
     Parameters
     ----------
@@ -207,7 +205,6 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
                       fname='output.vtu')
 
     """
-
     check_input(Verts, splitting)
 
     N = Verts.shape[0]
@@ -259,7 +256,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
 
 def check_input(Verts=None, E2V=None, Agg=None, A=None, splitting=None,
                 mesh_type=None):
-    """Check input for local functions"""
+    """Check input for local functions."""
     if Verts is not None:
         if not np.issubdtype(Verts.dtype, np.floating):
             raise ValueError('Verts should be of type float')
