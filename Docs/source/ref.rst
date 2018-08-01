@@ -4,46 +4,62 @@ PyAMG Reference
 Multigrid data structure ("The Multilevel Hierarchy")
 -----------------------------------------------------
 
-.. automodule:: pyamg.multilevel
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: pyamg
+
+.. autosummary::
+    :toctree: generated/
+
+    multilevel
 
 Core AMG Methods
 ----------------
 
-.. automodule:: pyamg.aggregation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: pyamg
 
-.. automodule:: pyamg.classical
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autosummary::
+    :toctree: generated/
+
+    aggregation
+    classical
 
 Common AMG Components
 ---------------------
 
-.. automodule:: pyamg.relaxation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: pyamg
 
-.. automodule:: pyamg.strength
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autosummary::
+    :toctree: generated/
+
+    relaxation
+    strength
 
 Helper Routings
 ---------------
 
-.. automodule:: pyamg.graph
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: pyamg
 
-.. automodule:: pyamg.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autosummary::
+    :toctree: generated/
+
+    graph
+    util
+
+Krylov Methods
+--------------
+
+.. currentmodule:: pyamg
+
+.. autosummary::
+    :toctree: generated/
+
+    krylov
+
+Gallery Problems
+----------------
+
+.. currentmodule:: pyamg
+
+.. autosummary::
+    :toctree: generated/
+
+    gallery

@@ -22,7 +22,6 @@ conda config --add channels conda-forge
 conda install pyamg
 ```
 
-
 # Introduction
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.
@@ -30,9 +29,7 @@ PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Py
 ![](./Docs/logo/PyAMG_logo.png)
 ![](./Docs/logo/CS_logo.png)
 
-PyAMG is developed by **[Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/)**, **[Luke Olson](http://lukeo.cs.illinois.edu)**, and **[Jacob Schroder](http://people.llnl.gov/schroder2)**, in the **[Deparment of Computer Science](http://www.cs.uiuc.edu)** at the **[University of Illinois at Urbana-Champaign](http://www.illinois.edu)**.  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
-
-
+PyAMG is developed by [Nathan Bell](http://graphics.cs.uiuc.edu/~wnbell/), [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2), in the [Deparment of Computer Science](http://www.cs.uiuc.edu) at the [University of Illinois at Urbana-Champaign](http://www.illinois.edu).  Portions of the project were partially supported by the [NSF](http://www.nsf.gov) under award DMS-0612448.
 
 # Citing
 
@@ -113,9 +110,20 @@ residual:  1.24748994988e-08
 
 More information can be found at [conda-forge/pyamg-feedstock](https://github.com/conda-forge/pyamg-feedstock).
 
-| Linux |  OSX  | Windows | Version | Downloads |
-| :---: | :---: | :-----: | :-----: | :-------: |
-| [![Circle CI](https://circleci.com/gh/conda-forge/pyamg-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyamg-feedstock) | [![TravisCI](https://travis-ci.org/conda-forge/pyamg-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyamg-feedstock) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyamg-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyamg-feedstock/branch/master) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/version.svg)](https://anaconda.org/conda-forge/pyamg) | [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/downloads.svg)](https://anaconda.org/conda-forge/pyamg) |
+*Linux:*
+[![Circle CI](https://circleci.com/gh/conda-forge/pyamg-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/pyamg-feedstock)
+
+*OSX:*
+[![TravisCI](https://travis-ci.org/conda-forge/pyamg-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/pyamg-feedstock)
+
+*Windows:*
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/pyamg-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/pyamg-feedstock/branch/master)
+
+*Version:*
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/version.svg)](https://anaconda.org/conda-forge/pyamg)
+
+*Downloads:*
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pyamg/badges/downloads.svg)](https://anaconda.org/conda-forge/pyamg)
 
 Installing `pyamg` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
 

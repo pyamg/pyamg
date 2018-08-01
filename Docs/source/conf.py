@@ -32,22 +32,14 @@ sys.path.insert(0, os.path.abspath('.'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax',
-    'numpydoc']
+              'sphinx.ext.viewcode',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.mathjax',
+              'm2r',
+              'numpydoc']
 
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = False
-napoleon_include_private_with_doc = False
-napoleon_include_special_with_doc = True
-napoleon_use_admonition_for_examples = False
-napoleon_use_admonition_for_notes = False
-napoleon_use_admonition_for_references = False
-napoleon_use_ivar = True
-napoleon_use_param = False
-napoleon_use_rtype = True
+autodoc_default_flags = ['members', 'undoc-members', 'special-members', 'private-members']
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -56,23 +48,17 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 #source_suffix = ['.rst', '.md']
-from recommonmark.parser import CommonMarkParser
 
 # The suffix of source filenames.
 source_suffix = ['.rst', '.md']
-
-source_parsers = {
-	'.md': CommonMarkParser,
-}
-
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = 'PyAMG'
-copyright = '2017, Luke Olson'
-author = '2017, Luke Olson and Jacob Schroder'
+copyright = '2018, Luke Olson'
+author = '2018, Luke Olson and Jacob Schroder'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -93,7 +79,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**/tests']
+exclude_patterns = ['README.md']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -179,5 +165,4 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
+keep_warnings=True
