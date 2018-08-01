@@ -1,5 +1,4 @@
-"""
-Strength of Connection functions
+"""Strength of Connection functions.
 
 Requirements for the strength matrix C are:
     1) Nonzero diagonal whenever A has a nonzero diagonal
@@ -31,8 +30,7 @@ __all__ = ['classical_strength_of_connection',
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
-    """
-    Distance based strength-of-connection
+    """Distance based strength-of-connection.
 
     Parameters
     ----------
@@ -119,7 +117,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
 
 def classical_strength_of_connection(A, theta=0.0, norm='abs'):
-    """
+    """Classical Strength Measure.
+
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
 
@@ -158,7 +157,6 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
 
     References
     ----------
-
     .. [2000BrHeMc] Briggs, W. L., Henson, V. E., McCormick, S. F., "A multigrid
         tutorial", Second edition. Society for Industrial and Applied
         Mathematics (SIAM), Philadelphia, PA, 2000. xii+193 pp.
@@ -179,7 +177,6 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     >>> S = classical_strength_of_connection(A, 0.0)
 
     """
-
     if sparse.isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
     else:
@@ -222,7 +219,8 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
 
 
 def symmetric_strength_of_connection(A, theta=0):
-    """
+    """Symmetric Strength Measure.
+
     Compute strength of connection matrix using the standard symmetric measure
 
     An off-diagonal connection A[i,j] is strong iff::
@@ -281,8 +279,8 @@ def symmetric_strength_of_connection(A, theta=0):
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = symmetric_strength_of_connection(A, 0.0)
-    """
 
+    """
     if theta < 0:
         raise ValueError('expected a positive theta')
 
@@ -331,7 +329,8 @@ def symmetric_strength_of_connection(A, theta=0):
 
 
 def energy_based_strength_of_connection(A, theta=0.0, k=2):
-    """
+    """Energy Strength Measure.
+
     Compute a strength of connection matrix using an energy-based measure.
 
     Parameters
@@ -385,8 +384,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = energy_based_strength_of_connection(A, 0.0)
-    """
 
+    """
     if (theta < 0):
         raise ValueError('expected a positive theta')
     if not sparse.isspmatrix(A):
@@ -479,7 +478,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 @np.deprecate
 def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
                                block_flag=False, symmetrize_measure=True):
-    """Use evolution_strength_of_connection instead"""
+    """(deprecated) Use evolution_strength_of_connection instead."""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 
@@ -487,7 +486,8 @@ def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                      proj_type="l2", block_flag=False,
                                      symmetrize_measure=True):
-    """
+    """Evolution Strength Measure.
+
     Construct strength of connection matrix using an Evolution-based measure
 
     Parameters
@@ -531,6 +531,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     ...                        [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = evolution_strength_of_connection(A,  np.ones((A.shape[0],1)))
+
     """
     # local imports for evolution_strength_of_connection
     from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
@@ -852,6 +853,7 @@ def relaxation_vectors(A, R, k, alpha):
     -------
     x : array
         Dense array N x k array of relaxation vectors
+
     """
     # random n x R block in column ordering
     n = A.shape[0]
@@ -869,8 +871,7 @@ def relaxation_vectors(A, R, k, alpha):
 
 
 def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
-    """Construct an AMG strength of connection matrix using an affinity
-    distance measure.
+    """Affinity Distance Strength Measure.
 
     Parameters
     ----------
@@ -904,7 +905,6 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
     See [LiBr]_ for more details.
 
     """
-
     if not sparse.isspmatrix_csr(A):
         A = sparse.csr_matrix(A)
 
@@ -929,8 +929,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
 
 def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
-    """Construct an AMG strength of connection matrix using an algebraic
-    distance measure.
+    """Algebraic Distance Strength Measure.
 
     Parameters
     ----------
@@ -966,7 +965,6 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
     See [SaSaSc]_ for more details.
 
     """
-
     if not sparse.isspmatrix_csr(A):
         A = sparse.csr_matrix(A)
 
@@ -997,10 +995,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
 
 def distance_measure_common(A, func, alpha, R, k, epsilon):
-    """
-    Helper function to create strength of connection matrix
-    from a function applied to relaxation vectors.
-    """
+    """Create strength of connection matrixfrom a function applied to relaxation vectors."""
     # create test vectors
     x = relaxation_vectors(A, R, k, alpha)
 
