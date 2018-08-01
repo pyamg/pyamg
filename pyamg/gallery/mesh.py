@@ -1,4 +1,4 @@
-"""Generates simple meshes"""
+"""Generates simple meshes."""
 
 
 import numpy as np
@@ -7,7 +7,7 @@ __all__ = ['regular_triangle_mesh']
 
 
 def regular_triangle_mesh(nx, ny):
-    """Construct a regular triangular mesh in the unit square
+    """Construct a regular triangular mesh in the unit square.
 
     Parameters
     ----------

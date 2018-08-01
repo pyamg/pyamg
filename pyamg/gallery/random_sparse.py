@@ -1,4 +1,4 @@
-"""Random sparse matrices"""
+"""Random sparse matrices."""
 
 import numpy as np
 import scipy as sp
@@ -9,8 +9,7 @@ __all__ = ['sprand']
 
 
 def _rand_sparse(m, n, density, format='csr'):
-    """Helper function for sprand, sprandn"""
-
+    """Construct base function for sprand, sprandn."""
     nnz = max(min(int(m*n*density), m*n), 0)
 
     row = np.random.randint(low=0, high=m-1, size=nnz)
@@ -22,7 +21,7 @@ def _rand_sparse(m, n, density, format='csr'):
 
 
 def sprand(m, n, density, format='csr'):
-    """Returns a random sparse matrix.
+    """Return a random sparse matrix.
 
     Parameters
     ----------
@@ -33,8 +32,8 @@ def sprand(m, n, density, format='csr'):
     format : string
         sparse matrix format to return, e.g. 'csr', 'coo', etc.
 
-    Returns
-    -------
+    Return
+    ------
     A : sparse matrix
         m x n sparse matrix
 

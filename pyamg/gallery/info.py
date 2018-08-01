@@ -1,4 +1,4 @@
-"""Matrix Gallery for Multigrid Solvers
+"""Matrix Gallery for Multigrid Solvers.
 
 Functions
 =========

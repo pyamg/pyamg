@@ -1,4 +1,4 @@
-"""Generate a diffusion stencil
+"""Generate a diffusion stencil.
 
 Supports isotropic diffusion (FE,FD), anisotropic diffusion (FE, FD), and
 rotated anisotropic diffusion (FD).
@@ -16,8 +16,7 @@ __all__ = ['diffusion_stencil_2d']
 
 
 def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
-    """
-    Rotated Anisotropic diffusion in 2d of the form:
+    """Rotated Anisotropic diffusion in 2d of the form.
 
     -div Q A Q^T grad u
 
@@ -137,12 +136,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
 
 def _symbolic_rotation_helper():
-    """
-    Simple SymPy script to generate the 3D rotation matrix and products for
-    diffusion_stencil_3d.
-
-    """
-
+    """Use SymPy to generate the 3D rotation matrix and products for diffusion_stencil_3d."""
     from sympy import symbols, Matrix
 
     cpsi, spsi = symbols('cpsi, spsi')
@@ -165,11 +159,7 @@ def _symbolic_rotation_helper():
 
 
 def _symbolic_product_helper():
-    """
-    Simple SymPy script to generate the 3D products for diffusion_stencil_3d.
-
-    """
-
+    """Use SymPy to generate the 3D products for diffusion_stencil_3d."""
     from sympy import symbols, Matrix
 
     D11, D12, D13, D21, D22, D23, D31, D32, D33 =\
@@ -186,8 +176,7 @@ def _symbolic_product_helper():
 
 def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,
                          psi=0.0, type='FD'):
-    """
-    Rotated Anisotropic diffusion in 3d of the form:
+    """Rotated Anisotropic diffusion in 3d of the form.
 
     -div Q A Q^T grad u
 
@@ -270,7 +259,6 @@ def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,
      [ 0.2164847 -0.750025  -0.2164847]]
 
     """
-
     epsy = float(epsilony)  # for brevity
     epsz = float(epsilonz)  # for brevity
     theta = float(theta)

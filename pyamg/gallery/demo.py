@@ -1,5 +1,4 @@
-"""Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG
-with AMG"""
+"""Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG with AMG."""
 from __future__ import print_function
 
 import scipy as sp
@@ -11,6 +10,7 @@ __all__ = ['demo']
 
 
 def demo():
+    """Outline basic demo."""
     A = poisson((100, 100), format='csr')  # 2D FD Poisson problem
     B = None                               # no near-null spaces guesses for SA
     b = sp.rand(A.shape[0], 1)          # a random right-hand side

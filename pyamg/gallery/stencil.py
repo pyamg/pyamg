@@ -1,4 +1,4 @@
-"""Construct sparse matrix from a local stencil"""
+"""Construct sparse matrix from a local stencil."""
 from __future__ import print_function
 
 
@@ -9,7 +9,7 @@ __all__ = ['stencil_grid']
 
 
 def stencil_grid(S, grid, dtype=None, format=None):
-    """Construct a sparse matrix form a local matrix stencil
+    """Construct a sparse matrix form a local matrix stencil.
 
     Parameters
     ----------
@@ -66,7 +66,6 @@ def stencil_grid(S, grid, dtype=None, format=None):
             [ 0.,  0.,  0.,  0.,  0., -1.,  0., -1.,  4.]])
 
     """
-
     S = np.asarray(S, dtype=dtype)
     grid = tuple(grid)
 

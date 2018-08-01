@@ -1,5 +1,4 @@
-"""Constructs linear elasticity problems for first-order elements in 2D and 3D
-"""
+"""Constructs linear elasticity problems for first-order elements in 2D and 3D."""
 
 import numpy as np
 from scipy.linalg import inv, det
@@ -9,8 +8,7 @@ __all__ = ['linear_elasticity', 'linear_elasticity_p1']
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """Linear elasticity problem discretizes with Q1 finite elements
-    on a regular rectangular grid
+    """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
 
     Parameters
     ----------
@@ -62,11 +60,12 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
          format=None):
-    """Q1 elements in 2 dimensions
+    """Q1 elements in 2 dimensions.
 
     See Also
     --------
     linear_elasticity
+
     """
     X, Y = tuple(grid)
 
@@ -138,8 +137,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
 
 
 def q12d_local(vertices, lame, mu):
-    """local stiffness matrix for two dimensional elasticity
-       on a square element
+    """Local stiffness matrix for two dimensional elasticity on a square element.
 
     Parameters
     ----------
@@ -169,7 +167,6 @@ def q12d_local(vertices, lame, mu):
         [x=0,y=1]----[x=2,y=3]
 
     """
-
     M = lame + 2*mu  # P-wave modulus
 
     R_11 = np.matrix([[2, -2, -1, 1],
@@ -211,7 +208,7 @@ def q12d_local(vertices, lame, mu):
 
 
 def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
-    """P1 elements in 2 or 3 dimensions
+    """P1 elements in 2 or 3 dimensions.
 
     Parameters
     ----------
@@ -251,7 +248,6 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
        http://www.math.hu-berlin.de/~cc/
 
     """
-
     # compute local stiffness matrix
     lame = E * nu / ((1 + nu) * (1 - 2*nu))  # Lame's first parameter
     mu = E / (2 + 2*nu)                   # shear modulus
@@ -321,7 +317,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
 
 def p12d_local(vertices, lame, mu):
-    """local stiffness matrix for P1 elements in 2d"""
+    """Local stiffness matrix for P1 elements in 2d."""
     assert(vertices.shape == (3, 2))
 
     A = np.vstack((np.ones((1, 3)), vertices.T))
@@ -336,7 +332,7 @@ def p12d_local(vertices, lame, mu):
 
 
 def p13d_local(vertices, lame, mu):
-    """local stiffness matrix for P1 elements in 3d"""
+    """Local stiffness matrix for P1 elements in 3d."""
     assert(vertices.shape == (4, 3))
 
     A = np.vstack((np.ones((1, 4)), vertices.T))

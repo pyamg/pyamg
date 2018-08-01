@@ -1,4 +1,4 @@
-"""Examples stored in files"""
+"""Examples stored in files."""
 
 
 import os
@@ -17,7 +17,7 @@ example_names.sort()
 
 
 def load_example(name):
-    """Load an example problem by name
+    """Load an example problem by name.
 
     Parameters
     ----------
@@ -40,7 +40,6 @@ def load_example(name):
     >>> ex = load_example('knot')
 
     """
-
     if name not in example_names:
         raise ValueError('no example with name (%s)' % name)
     else:

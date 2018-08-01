@@ -1,4 +1,4 @@
-"""Discretizations of the Poisson problem"""
+"""Discretizations of the Poisson problem."""
 from __future__ import absolute_import
 
 import numpy as np
@@ -10,7 +10,7 @@ __all__ = ['poisson', 'gauge_laplacian']
 
 
 def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
-    """Returns a sparse matrix for the N-dimensional Poisson problem
+    """Return a sparse matrix for the N-dimensional Poisson problem.
 
     The matrix represents a finite Difference approximation to the
     Poisson problem on a regular n-dimensional grid with unit grid
@@ -68,8 +68,7 @@ def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
 
 
 def gauge_laplacian(npts, spacing=1.0, beta=0.1):
-    """Construct a Gauge Laplacian from Quantum Chromodynamics for
-    regular 2D grids
+    """Construct a Gauge Laplacian from Quantum Chromodynamics for regular 2D grids.
 
     Note that this function is not written efficiently, but should be
     fine for N x N grids where N is in the low hundreds.
@@ -104,7 +103,6 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
        Vol. 30, SIAM J. Sci. Comp, 2008
 
     """
-
     # The gauge Laplacian has the same sparsity structure as a normal
     # Laplacian, so we start out with a Poisson Operator
     N = npts
