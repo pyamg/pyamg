@@ -12,7 +12,7 @@ __all__ = ['cgne']
 
 def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
          callback=None, residuals=None):
-    '''Conjugate Gradient, Normal Error algorithm
+    """Conjugate Gradient, Normal Error algorithm.
 
     Applies CG to the normal equations, A.H A x = b. Left preconditioning
     is supported.  Note that unless A is well-conditioned, the use of
@@ -79,8 +79,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        Second Edition", SIAM, pp. 276-7, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
-
+    """
     # Store the conjugate transpose explicitly as it will be used much later on
     if isspmatrix(A):
         AH = A.H

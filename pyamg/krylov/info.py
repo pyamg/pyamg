@@ -1,4 +1,4 @@
-"""Krylov Solvers
+"""Krylov Solvers.
 
 This module contains several Krylov subspace methods, in addition to two simple
 iterations, to solve linear systems iteratively.  These methods often use

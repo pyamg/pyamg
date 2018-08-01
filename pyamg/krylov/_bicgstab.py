@@ -8,7 +8,7 @@ __all__ = ['bicgstab']
 
 def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
              callback=None, residuals=None):
-    '''Biconjugate Gradient Algorithm with Stabilization
+    """Biconjugate Gradient Algorithm with Stabilization.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
 
@@ -73,8 +73,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        Second Edition", SIAM, pp. 231-234, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
-
+    """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 

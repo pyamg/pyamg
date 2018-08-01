@@ -9,7 +9,7 @@ __all__ = ['minimal_residual']
 
 def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
                      callback=None, residuals=None):
-    '''Minimal residual (MR) algorithm
+    """Minimal residual (MR) algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
 
@@ -79,7 +79,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        Second Edition", SIAM, pp. 137--142, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
+    """
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function

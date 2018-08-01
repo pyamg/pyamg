@@ -21,11 +21,11 @@ def mysign(x):
 
 def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
                       xtype=None, M=None, callback=None, residuals=None):
-    '''
-    Generalized Minimum Residual Method (GMRES)
-        GMRES iteratively refines the initial solution guess to the
-        system Ax = b
-        Householder reflections are used for orthogonalization
+    """Generalized Minimum Residual Method (GMRES) based on Housholder.
+
+    GMRES iteratively refines the initial solution guess to the
+    system Ax = b
+    Householder reflections are used for orthogonalization
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
        Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
+    """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     dimen = A.shape[0]

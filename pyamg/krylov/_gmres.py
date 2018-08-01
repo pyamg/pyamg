@@ -9,10 +9,10 @@ __all__ = ['gmres']
 def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
           M=None, callback=None, residuals=None, orthog='householder',
           **kwargs):
-    '''
-    Generalized Minimum Residual Method (GMRES)
-        GMRES iteratively refines the initial solution guess to the
-        system Ax = b
+    """Generalized Minimum Residual Method (GMRES).
+
+    GMRES iteratively refines the initial solution guess to the
+    system Ax = b
 
     Parameters
     ----------
@@ -97,8 +97,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
        Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
-
+    """
     # pass along **kwargs
     if orthog == 'householder':
         (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,

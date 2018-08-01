@@ -11,8 +11,7 @@ __all__ = ['gmres_mgs']
 
 
 def apply_givens(Q, v, k):
-    '''
-    Apply the first k Givens rotations in Q to v
+    """Apply the first k Givens rotations in Q to v.
 
     Parameters
     ----------
@@ -32,8 +31,8 @@ def apply_givens(Q, v, k):
     This routine is specialized for GMRES.  It assumes that the first Givens
     rotation is for dofs 0 and 1, the second Givens rotation is for
     dofs 1 and 2, and so on.
-    '''
 
+    """
     for j in range(k):
         Qloc = Q[j]
         v[j:j+2] = np.dot(Qloc, v[j:j+2])
@@ -41,11 +40,11 @@ def apply_givens(Q, v, k):
 
 def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
               M=None, callback=None, residuals=None, reorth=False):
-    '''
-    Generalized Minimum Residual Method (GMRES)
-        GMRES iteratively refines the initial solution guess to the system
-        Ax = b
-        Modified Gram-Schmidt version
+    """Generalized Minimum Residual Method (GMRES) based on MGS.
+
+    GMRES iteratively refines the initial solution guess to the system
+    Ax = b
+    Modified Gram-Schmidt version
 
     Parameters
     ----------
@@ -125,7 +124,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     .. [2] C. T. Kelley, http://www4.ncsu.edu/~ctk/matlab_roots.html
-    '''
+
+    """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     dimen = A.shape[0]

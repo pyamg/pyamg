@@ -10,7 +10,7 @@ __all__ = ['cr']
 
 def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None):
-    '''Conjugate Residual algorithm
+    """Conjugate Residual algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
     The matrix A must be Hermitian symmetric (but not necessarily definite).
@@ -81,7 +81,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        Second Edition", SIAM, pp. 262-67, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
+    """
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     # n = len(b)
     # Ensure that warnings are always reissued from this function

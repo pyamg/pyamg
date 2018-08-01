@@ -21,7 +21,7 @@ def mysign(x):
 
 def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
            M=None, callback=None, residuals=None):
-    '''Flexible Generalized Minimum Residual Method (fGMRES)
+    """Flexible Generalized Minimum Residual Method (fGMRES).
 
     fGMRES iteratively refines the initial solution guess to the
     system Ax = b.  fGMRES is flexible in the sense that the right
@@ -107,8 +107,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
        Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
        http://www-users.cs.umn.edu/~saad/books.html
 
-    '''
-
+    """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     dimen = A.shape[0]
