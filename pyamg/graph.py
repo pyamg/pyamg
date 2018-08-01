@@ -1,4 +1,4 @@
-"""Algorithms related to graphs"""
+"""Algorithms related to graphs."""
 from __future__ import absolute_import
 
 
@@ -30,7 +30,7 @@ def asgraph(G):
 
 
 def maximal_independent_set(G, algo='serial', k=None):
-    """Compute a maximal independent vertex set for a graph
+    """Compute a maximal independent vertex set for a graph.
 
     Parameters
     ----------
@@ -56,7 +56,6 @@ def maximal_independent_set(G, algo='serial', k=None):
     greedy serial algorithm.
 
     """
-
     G = asgraph(G)
     N = G.shape[0]
 
@@ -80,7 +79,7 @@ def maximal_independent_set(G, algo='serial', k=None):
 
 
 def vertex_coloring(G, method='MIS'):
-    """Compute a vertex coloring of a graph
+    """Compute a vertex coloring of a graph.
 
     Parameters
     ----------
@@ -89,6 +88,7 @@ def vertex_coloring(G, method='MIS'):
         The nonzeros of G represent the edges of an undirected graph.
     method : string
         Algorithm used to compute the vertex coloring:
+
             * 'MIS' - Maximal Independent Set
             * 'JP'  - Jones-Plassmann (parallel)
             * 'LDF' - Largest-Degree-First (parallel)
@@ -103,7 +103,6 @@ def vertex_coloring(G, method='MIS'):
     Diagonal entries in the G (self loops) will be ignored.
 
     """
-
     G = asgraph(G)
     N = G.shape[0]
 
@@ -125,24 +124,21 @@ def vertex_coloring(G, method='MIS'):
 
 
 def bellman_ford(G, seeds, maxiter=None):
-    """
-    Bellman-Ford iteration
+    """Bellman-Ford iteration.
 
     Parameters
     ----------
+    G : sparse matrix
 
     Returns
     -------
-
-    Notes
-    -----
+    distances : array
+    nearest_seed : array
 
     References
     ----------
     CLR
 
-    Examples
-    --------
     """
     G = asgraph(G)
     N = G.shape[0]
@@ -179,7 +175,7 @@ def bellman_ford(G, seeds, maxiter=None):
 
 
 def lloyd_cluster(G, seeds, maxiter=10):
-    """Perform Lloyd clustering on graph with weighted edges
+    """Perform Lloyd clustering on graph with weighted edges.
 
     Parameters
     ----------
@@ -245,7 +241,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
 
 def breadth_first_search(G, seed):
-    """Breadth First search of a graph
+    """Breadth First search of a graph.
 
     Parameters
     ----------
@@ -287,8 +283,8 @@ def breadth_first_search(G, seed):
     >>> print(c)
     [0 1 1 2 2 3 3 3 4 5]
     [0 1 2 3 4 5 6 7 8 9]
-    """
 
+    """
     G = asgraph(G)
     N = G.shape[0]
 
@@ -303,7 +299,7 @@ def breadth_first_search(G, seed):
 
 
 def connected_components(G):
-    """Compute the connected components of a graph
+    """Compute the connected components of a graph.
 
     The connected components of a graph G, which is represented by a
     symmetric sparse matrix, are labeled with the integers 0,1,..(K-1) where
@@ -335,6 +331,7 @@ def connected_components(G):
     [0 1 2]
     >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
     [0 0 1 1]
+
     """
     G = asgraph(G)
     N = G.shape[0]
@@ -348,8 +345,7 @@ def connected_components(G):
 
 
 def symmetric_rcm(A):
-    """
-    Symmetric Reverse Cutthill-McKee
+    """Symmetric Reverse Cutthill-McKee.
 
     Parameters
     ----------
@@ -384,6 +380,7 @@ def symmetric_rcm(A):
     See Also
     --------
     pseudo_peripheral_node
+
     """
     n = A.shape[0]
 
@@ -397,8 +394,7 @@ def symmetric_rcm(A):
 
 
 def pseudo_peripheral_node(A):
-    """
-    Find a pseudo peripheral node
+    """Find a pseudo peripheral node.
 
     Parameters
     ----------
