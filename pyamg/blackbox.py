@@ -1,4 +1,4 @@
-"""Solve an arbitrary system"""
+"""Solve an arbitrary system."""
 from __future__ import print_function
 
 
@@ -33,8 +33,8 @@ def make_csr(A):
     >>> A = poisson((40,40),format='csc')
     >>> Acsr = make_csr(A)
     Implicit conversion of A to CSR in pyamg.blackbox.make_csr
-    """
 
+    """
     # Convert to CSR or BSR if necessary
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
@@ -53,9 +53,7 @@ def make_csr(A):
 
 
 def solver_configuration(A, B=None, verb=True):
-    """
-    Given an arbitrary matrix A, generate a dictionary of parameters with
-    which to generate a smoothed_aggregation_solver.
+    """Generate a dictionary of SA parameters for an arbitray matrix A.
 
     Parameters
     ----------
@@ -89,7 +87,6 @@ def solver_configuration(A, B=None, verb=True):
     >>> solver_config = solver_configuration(A,verb=False)
 
     """
-
     # Ensure acceptable format of A
     A = make_csr(A)
     config = {}
@@ -159,9 +156,7 @@ def solver_configuration(A, B=None, verb=True):
 
 
 def solver(A, config):
-    """
-    Given a matrix A and a solver configuration dictionary, generate a
-    smoothed_aggregation_solver
+    """Generate an SA solver given matrix A and a configuration.
 
     Parameters
     ----------
@@ -191,7 +186,6 @@ def solver(A, config):
     >>> ml = solver(A,config)
 
     """
-
     # Convert A to acceptable format
     A = make_csr(A)
 
@@ -217,7 +211,8 @@ def solver(A, config):
 
 def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
           existing_solver=None, verb=True, residuals=None):
-    """
+    """Solve Ax=b.
+
     Solve the arbitrary system Ax=b with the best out-of-the box choice for a
     solver.  The matrix A can be non-Hermitian, indefinite, Hermitian
     positive-definite, complex, etc...  Generic and robust settings for
@@ -274,8 +269,8 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     >>> x = solve(A,b,verb=False)
     >>> print "%1.2e"%(norm(b - A*x)/norm(b))
     6.28e-06
-    """
 
+    """
     # Convert A to acceptable CSR/BSR format
     A = make_csr(A)
 
