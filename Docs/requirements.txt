@@ -1,2 +1,6 @@
 numpydoc
 m2r
+numpy
+scipy
+pytest
+pybind11
