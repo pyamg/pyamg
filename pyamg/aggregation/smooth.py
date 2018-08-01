@@ -910,7 +910,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     Parameters
     ----------
-
     A : csr_matrix, bsr_matrix
         Sparse NxN matrix
     T : bsr_matrix
@@ -934,9 +933,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     krylov : string
         'cg' for SPD systems.  Solve A T = 0 in a constraint space with CG
         'cgnr' for nonsymmetric and/or indefinite systems.
-         Solve A T = 0 in a constraint space with CGNR
+        Solve A T = 0 in a constraint space with CGNR
         'gmres' for nonsymmetric and/or indefinite systems.
-         Solve A T = 0 in a constraint space with GMRES
+        Solve A T = 0 in a constraint space with GMRES
     maxiter : integer
         Number of energy minimization steps to apply to the prolongator
     tol : scalar
@@ -955,9 +954,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         setup complexity. If None or an empty dictionary, then no dropping in P
         is done.  If postfilter has key 'k', then the largest 'k' entries  are
         kept in each row.  If postfilter has key 'theta', all entries such that
-        .. math::
-            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
-
+        .. math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
     postfilter : dictionary
@@ -966,9 +963,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         dictionary, no dropping in P is done. If postfilter has key 'k',
         then the largest 'k' entries  are kept in each row.  If postfilter
         has key 'theta', all entries such that
-        .. math::
-            P[i,j] < kwargs['theta']*max(abs(P[i,:]))
-
+        .. math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
 
@@ -982,12 +977,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     Only 'diagonal' weighting is supported for the CGNR method, because
     we are working with A^* A and not A.
 
-    When Cpt_params[0] == True, root-node style prolongation smoothing
-    is used to minimize the energy of columns of T.  Essentially, an
-    identity block is maintained in T, corresponding to injection from
-    the coarse-grid to the fine-grid root-nodes.  See [2011cOlScTu]_ for more details,
-    and see util.utils.get_Cpt_params for the helper function to generate
-    Cpt_params.
+    When Cpt_params[0] == True, root-node style prolongation smoothing is used
+    to minimize the energy of columns of T.  Essentially, an identity block is
+    maintained in T, corresponding to injection from the coarse-grid to the
+    fine-grid root-nodes.  See [2011OlScTu]_ for more details, and see
+    util.utils.get_Cpt_params for the helper function to generate Cpt_params.
 
     If Cpt_params[0] == False, the energy of columns of T are still
     minimized, but without maintaining the identity block.
@@ -1029,7 +1023,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
        Computing 62, 205-228, 1999
        http://dx.doi.org/10.1007/s006070050022
 
-    .. [2011OclScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
+    .. [2011OlScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
        "A general interpolation strategy for algebraic
        multigrid using energy minimization", SIAM Journal
        on Scientific Computing (SISC), vol. 33, pp.

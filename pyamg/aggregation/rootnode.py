@@ -154,57 +154,57 @@ def rootnode_solver(A, B=None, BH=None,
            'energy' prolongation smoother is the natural counterpart to
            root-node style SA.
 
-        - The additional parameters are passed through as arguments to
-          multilevel_solver.  Refer to pyamg.multilevel_solver for additional
-          documentation.
+         - The additional parameters are passed through as arguments to
+           multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+           documentation.
 
-        - At each level, four steps are executed in order to define the coarser
-          level operator.
+         - At each level, four steps are executed in order to define the coarser
+           level operator.
 
-          1. Matrix A is given and used to derive a strength matrix, C.
+           1. Matrix A is given and used to derive a strength matrix, C.
 
-          2. Based on the strength matrix, indices are grouped or aggregated.
+           2. Based on the strength matrix, indices are grouped or aggregated.
 
-          3. The aggregates define coarse nodes and a tentative prolongation
-             operator T is defined by injection
+           3. The aggregates define coarse nodes and a tentative prolongation
+              operator T is defined by injection
 
-          4. The tentative prolongation operator is smoothed by a relaxation
-             scheme to improve the quality and extent of interpolation from the
-             aggregates to fine nodes.
+           4. The tentative prolongation operator is smoothed by a relaxation
+              scheme to improve the quality and extent of interpolation from the
+              aggregates to fine nodes.
 
-        - The parameters smooth, strength, aggregate, presmoother, postsmoother
-          can be varied on a per level basis.  For different methods on
-          different levels, use a list as input so that the i-th entry defines
-          the method at the i-th level.  If there are more levels in the
-          hierarchy than list entries, the last entry will define the method
-          for all levels lower.
+         - The parameters smooth, strength, aggregate, presmoother, postsmoother
+           can be varied on a per level basis.  For different methods on
+           different levels, use a list as input so that the i-th entry defines
+           the method at the i-th level.  If there are more levels in the
+           hierarchy than list entries, the last entry will define the method
+           for all levels lower.
 
-          Examples are:
-          smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
-          presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
-          aggregate=['standard', 'naive']
-          strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
+           Examples are:
+           smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
+           presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
+           aggregate=['standard', 'naive']
+           strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
 
-        - Predefined strength of connection and aggregation schemes can be
-          specified.  These options are best used together, but aggregation can
-          be predefined while strength of connection is not.
+         - Predefined strength of connection and aggregation schemes can be
+           specified.  These options are best used together, but aggregation can
+           be predefined while strength of connection is not.
 
-          For predefined strength of connection, use a list consisting of
-          tuples of the form ('predefined', {'C' : C0}), where C0 is a
-          csr_matrix and each degree-of-freedom in C0 represents a supernode.
-          For instance to predefine a three-level hierarchy, use
-          [('predefined', {'C' : C0}), ('predefined', {'C' : C1}) ].
+           For predefined strength of connection, use a list consisting of
+           tuples of the form ('predefined', {'C' : C0}), where C0 is a
+           csr_matrix and each degree-of-freedom in C0 represents a supernode.
+           For instance to predefine a three-level hierarchy, use
+           [('predefined', {'C' : C0}), ('predefined', {'C' : C1}) ].
 
-          Similarly for predefined aggregation, use a list of tuples.  For
-          instance to predefine a three-level hierarchy, use [('predefined',
-          {'AggOp' : Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the
-          dimensions of A, Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] ==
-          A.shape[0] and Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a
-          csr_matrix.
+           Similarly for predefined aggregation, use a list of tuples.  For
+           instance to predefine a three-level hierarchy, use [('predefined',
+           {'AggOp' : Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the
+           dimensions of A, Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] ==
+           A.shape[0] and Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a
+           csr_matrix.
 
-          Because this is a root-nodes solver, if a member of the predefined
-          aggregation list is predefined, it must be of the form
-          ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
+           Because this is a root-nodes solver, if a member of the predefined
+           aggregation list is predefined, it must be of the form
+           ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
 
     Examples
     --------
