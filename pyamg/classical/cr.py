@@ -1,4 +1,4 @@
-"""Compatible Relaxation"""
+"""Compatible Relaxation."""
 from __future__ import print_function
 
 import numpy as np
@@ -14,7 +14,9 @@ __all__ = ['CR', 'binormalize']
 
 
 def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
-    """ Internal function called by CR. Performs habituated or concurrent
+    """Perform CR sweeps on a target vector.
+
+    Internal function called by CR. Performs habituated or concurrent
     relaxation sweeps on target vector. Stops when either (i) very fast
     convergence, CF < 0.1*thetacr, are observed, or at least a given number
     of sweeps have been performed and the relative change in CF < 0.1.
@@ -39,8 +41,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         Convergence factor of last iteration
     e : array like
         Smoothed error vector
-    """
 
+    """
     n = A.shape[0]    # problem size
     numax = nu
     z = np.zeros((n,))
@@ -78,7 +80,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
 def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
         thetacs='auto', maxiter=20, verbose=False):
-    """Use Compatible Relaxation to compute a C/F splitting
+    """Use Compatible Relaxation to compute a C/F splitting.
 
     Parameters
     ----------
@@ -128,8 +130,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     >>> from cr import CR
     >>> A = poisson((20,20),format='csr')
     >>> splitting = CR(A)
-    """
 
+    """
     n = A.shape[0]    # problem size
 
     if thetacs == 'auto':
@@ -316,7 +318,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
 
 def rowsum_stdev(x, beta):
-    """Compute row sum standard deviation
+    r"""Compute row sum standard deviation.
 
     Compute for approximation x, the std dev of the row sums
     s(x) = ( 1/n \sum_k  (x_k beta_k - betabar)^2 )^(1/2)

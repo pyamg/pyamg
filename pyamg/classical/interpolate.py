@@ -1,4 +1,4 @@
-"""Classical AMG Interpolation methods"""
+"""Classical AMG Interpolation methods."""
 
 
 import numpy as np
@@ -9,7 +9,7 @@ __all__ = ['direct_interpolation']
 
 
 def direct_interpolation(A, C, splitting):
-    """Create prolongator using direct interpolation
+    """Create prolongator using direct interpolation.
 
     Parameters
     ----------

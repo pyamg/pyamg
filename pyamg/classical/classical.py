@@ -1,4 +1,4 @@
-"""Classical AMG (Ruge-Stuben AMG)"""
+"""Classical AMG (Ruge-Stuben AMG)."""
 from __future__ import absolute_import
 
 
@@ -25,7 +25,7 @@ def ruge_stuben_solver(A,
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=10, max_coarse=10, keep=False, **kwargs):
-    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
+    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG).
 
     Parameters
     ----------
@@ -68,7 +68,6 @@ def ruge_stuben_solver(A,
 
     Notes
     -----
-
     "coarse_solver" is an optional argument and is the solver used at the
     coarsest grid.  The default is a pseudo-inverse.  Most simply,
     coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
@@ -89,7 +88,6 @@ def ruge_stuben_solver(A,
     aggregation.rootnode_solver
 
     """
-
     levels = [multilevel_solver.level()]
 
     # convert A to csr
@@ -118,8 +116,7 @@ def ruge_stuben_solver(A,
 
 # internal function
 def extend_hierarchy(levels, strength, CF, keep):
-    """ helper function for local methods """
-
+    """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
