@@ -1,5 +1,4 @@
-"""Method to create pre and post-smoothers on the levels of a multilevel_solver
-"""
+"""Method to create pre and post-smoothers on the levels of a multilevel_solver."""
 from __future__ import absolute_import
 
 import scipy as sp
@@ -28,7 +27,8 @@ def unpack_arg(v):
 
 
 def change_smoothers(ml, presmoother, postsmoother):
-    '''
+    """Initialize pre and post smoothers.
+
     Initialize pre- and post- smoothers throughout a multilevel_solver, with
     the option of having different smoothers at different levels
 
@@ -129,8 +129,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    '''
 
+    """
     ml.symmetric_smoothing = True
 
     # interpret arguments into list
@@ -298,8 +298,7 @@ def change_smoothers(ml, presmoother, postsmoother):
 
 
 def rho_D_inv_A(A):
-    """
-    Return the (approx.) spectral radius of D^-1 * A
+    """Return the (approx.) spectral radius of D^-1 * A.
 
     Parameters
     ----------
@@ -318,8 +317,8 @@ def rho_D_inv_A(A):
     >>> A = csr_matrix(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
     >>> print rho_D_inv_A(A)
     1.0
-    """
 
+    """
     if not hasattr(A, 'rho_D_inv'):
         D_inv = get_diagonal(A, inv=True)
         D_inv_A = scale_rows(A, D_inv, copy=True)
@@ -329,8 +328,7 @@ def rho_D_inv_A(A):
 
 
 def rho_block_D_inv_A(A, Dinv):
-    """
-    Return the (approx.) spectral radius of block D^-1 * A
+    """Return the (approx.) spectral radius of block D^-1 * A.
 
     Parameters
     ----------
@@ -353,7 +351,6 @@ def rho_block_D_inv_A(A, Dinv):
     >>> Dinv = get_block_diag(A, blocksize=4, inv_flag=True)
 
     """
-
     if not hasattr(A, 'rho_block_D_inv'):
         from scipy.sparse.linalg import LinearOperator
 
@@ -379,7 +376,8 @@ def rho_block_D_inv_A(A, Dinv):
 
 
 def matrix_asformat(lvl, name, format, blocksize=None):
-    '''
+    """Set a matrix to a specific format.
+
     This routine looks for the matrix "name" in the specified format as a
     member of the level instance, lvl.  For example, if name='A', format='bsr'
     and blocksize=(4,4), and if lvl.Absr44 exists with the correct blocksize,
@@ -392,8 +390,8 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
     Calling this function can _dramatically_ increase your memory costs.
     Be careful with it's usage.
-    '''
 
+    """
     desired_matrix = name + format
     M = getattr(lvl, name)
 
