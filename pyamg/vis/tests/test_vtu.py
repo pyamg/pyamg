@@ -25,8 +25,8 @@ class TestWriteVtu(TestCase):
 
         # 1 triangle
         mesh.Verts = array([[0.0, 0.0],
-                           [0.0, 1.0],
-                           [1.0, 1.0]])
+                            [0.0, 1.0],
+                            [1.0, 1.0]])
         E2V = array([[0, 2, 1]], uint32)
         mesh.Cells = {5: E2V}
         mesh.pdata = None
@@ -35,9 +35,9 @@ class TestWriteVtu(TestCase):
 
         # 2 triangles
         mesh.Verts = array([[0.0, 0.0],
-                           [1.0, 0.0],
-                           [0.0, 1.0],
-                           [1.0, 1.0]])
+                            [1.0, 0.0],
+                            [0.0, 1.0],
+                            [1.0, 1.0]])
         E2V = array([[0, 3, 2],
                      [0, 1, 3]], uint32)
         mesh.Cells = {5: E2V}
@@ -47,14 +47,14 @@ class TestWriteVtu(TestCase):
 
         # 8 triangles
         mesh.Verts = array([[0.0, 0.0],
-                           [1.0, 0.0],
-                           [2.0, 0.0],
-                           [0.0, 1.0],
-                           [1.0, 1.0],
-                           [2.0, 1.0],
-                           [0.0, 2.0],
-                           [1.0, 2.0],
-                           [2.0, 2.0]])
+                            [1.0, 0.0],
+                            [2.0, 0.0],
+                            [0.0, 1.0],
+                            [1.0, 1.0],
+                            [2.0, 1.0],
+                            [0.0, 2.0],
+                            [1.0, 2.0],
+                            [2.0, 2.0]])
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
                      [1, 5, 4],

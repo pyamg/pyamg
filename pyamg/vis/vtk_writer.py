@@ -117,7 +117,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     vtk_cell_info = [-1, 1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
     # check fname
-    if type(fname) is str:
+    if isinstance(fname, str):
         try:
             fname = open(fname, 'w')
         except IOError as e:
@@ -136,7 +136,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     # keys must ve valid (integer and not "None" in vtk_cell_info)
     # Cell data can't be empty for a non empty key
     for key in Cells:
-        if ((type(key) != int) or (key not in list(range(1, 15)))):
+        if ((not isinstance(key, int)) or (key not in list(range(1, 15)))):
             raise ValueError('cell array must have positive integer keys\
                               in [1,14]')
         if (vtk_cell_info[key] is None) and (Cells[key] is not None):
@@ -225,26 +225,26 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     cvdata_all = None
     for key in Cells:
             # non-Poly data
-            sz = Cells[key].shape[0]
-            offset = Cells[key].shape[1]
+        sz = Cells[key].shape[0]
+        offset = Cells[key].shape[1]
 
-            Ncells += sz
-            uu = np.ones((sz,), dtype='uint8')
-            cell_ind = np.hstack((cell_ind, Cells[key].ravel()))
-            cell_offset = np.hstack((cell_offset, offset*uu))
-            cell_type = np.hstack((cell_type, key*uu))
+        Ncells += sz
+        uu = np.ones((sz,), dtype='uint8')
+        cell_ind = np.hstack((cell_ind, Cells[key].ravel()))
+        cell_offset = np.hstack((cell_offset, offset*uu))
+        cell_type = np.hstack((cell_type, key*uu))
 
-            if cdata is not None:
-                if cdata_all is None:
-                    cdata_all = cdata[key]
-                else:
-                    cdata_all = np.vstack((cdata_all, cdata[key]))
+        if cdata is not None:
+            if cdata_all is None:
+                cdata_all = cdata[key]
+            else:
+                cdata_all = np.vstack((cdata_all, cdata[key]))
 
-            if cvdata is not None:
-                if cvdata_all is None:
-                    cvdata_all = cvdata[key]
-                else:
-                    cvdata_all = np.vstack((cvdata_all, cvdata[key]))
+        if cvdata is not None:
+            if cvdata_all is None:
+                cvdata_all = cvdata[key]
+            else:
+                cvdata_all = np.vstack((cvdata_all, cvdata[key]))
 
     # doc element
     doc = xml.dom.minidom.Document()
