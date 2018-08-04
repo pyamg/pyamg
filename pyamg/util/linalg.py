@@ -100,7 +100,7 @@ def infinity_norm(A):
         return (abs(A) * np.ones((A.shape[1]), dtype=A.dtype)).max()
     else:
         return np.dot(np.abs(A), np.ones((A.shape[1],),
-                      dtype=A.dtype)).max()
+                                         dtype=A.dtype)).max()
 
 
 def residual_norm(A, x, b):

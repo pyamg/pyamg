@@ -47,13 +47,12 @@ class TestUtils(TestCase):
         assert_equal(diag_sparse(np.array([1.3, 5.5, -2])).todense(),
                      csr_matrix(A).todense())
 
-
     def test_scale_rows(self):
         cases = []
 
-        Aorig = np.array([[0.0,1,0],[2,0,3],[4,5,6]])
-        v = np.array([7.0,8,9])
-        Ascaled = np.array([[0.0,7,0],[16,0,24],[36,45,54]])
+        Aorig = np.array([[0.0, 1, 0], [2, 0, 3], [4, 5, 6]])
+        v = np.array([7.0, 8, 9])
+        Ascaled = np.array([[0.0, 7, 0], [16, 0, 24], [36, 45, 54]])
 
         # test CSR
         A = csr_matrix(Aorig)
@@ -64,14 +63,13 @@ class TestUtils(TestCase):
         A = csc_matrix(Aorig)
         A = scale_rows(A, v)
         assert_equal(A.todense(), Ascaled)
-
 
     def test_scale_columns(self):
         cases = []
 
-        Aorig = np.array([[0.0,1,0],[2,0,3],[4,5,6]]).T
-        v = np.array([7.0,8,9])
-        Ascaled = np.array([[0.0,7,0],[16,0,24],[36,45,54]]).T
+        Aorig = np.array([[0.0, 1, 0], [2, 0, 3], [4, 5, 6]]).T
+        v = np.array([7.0, 8, 9])
+        Ascaled = np.array([[0.0, 7, 0], [16, 0, 24], [36, 45, 54]]).T
 
         # test CSR
         A = csr_matrix(Aorig)
@@ -82,7 +80,6 @@ class TestUtils(TestCase):
         A = csc_matrix(Aorig)
         A = scale_columns(A, v)
         assert_equal(A.todense(), Ascaled)
-
 
     def test_symmetric_rescaling(self):
         cases = []
@@ -252,8 +249,22 @@ class TestUtils(TestCase):
         As.append(pyamg.gallery.elasticity.linear_elasticity((20, 20))[0])
         for A in As:
             if A.dtype == 'complex':
-                xs.append(np.random.rand(A.shape[0], 1)+1.0j*np.random.rand(A.shape[0], 1))
-                bs.append(np.random.rand(A.shape[0], 1)+1.0j*np.random.rand(A.shape[0], 1))
+                xs.append(
+                    np.random.rand(
+                        A.shape[0],
+                        1) +
+                    1.0j *
+                    np.random.rand(
+                        A.shape[0],
+                        1))
+                bs.append(
+                    np.random.rand(
+                        A.shape[0],
+                        1) +
+                    1.0j *
+                    np.random.rand(
+                        A.shape[0],
+                        1))
             else:
                 bs.append(np.random.rand(A.shape[0], 1))
                 xs.append(np.random.rand(A.shape[0], 1))
@@ -391,11 +402,11 @@ class TestUtils(TestCase):
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
         A_known = np.matrix([[0.5, 0.5, 0.],
-                          [0.5, 0.5, 0.],
-                          [0., 1., 0.],
-                          [0., 1., 0.],
-                          [0., 0., 1.],
-                          [0., 0., 1.]])
+                             [0.5, 0.5, 0.],
+                             [0., 1., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.],
+                             [0., 0., 1.]])
         assert_array_almost_equal(A_known, A_filter)
         # test two, the constant and linears
         B = np.hstack((B, np.arange(B.shape[0]).reshape(-1, 1)))
@@ -403,11 +414,11 @@ class TestUtils(TestCase):
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
         A_known = np.matrix([[1., 0., 0.],
-                          [0., 1., 0.],
-                          [0., 1.5, 0.],
-                          [0., 2., 0.],
-                          [0., 0., 1.8],
-                          [0., 0., 2.2]])
+                             [0., 1., 0.],
+                             [0., 1.5, 0.],
+                             [0., 2., 0.],
+                             [0., 0., 1.8],
+                             [0., 0., 2.2]])
         assert_array_almost_equal(A_known, A_filter)
 
         # Run two tests based on the Laplacian
@@ -519,66 +530,66 @@ class TestUtils(TestCase):
 
         # Test for one CSR and one BSR example
         T = np.matrix([[1.0, 0., 0.],
-                    [0.5, 0., 0.],
-                    [0., 1., 0.],
-                    [0., 0.5, 0.],
-                    [0., 0., 1.],
-                    [0., 0., 0.25]])
+                       [0.5, 0., 0.],
+                       [0., 1., 0.],
+                       [0., 0.5, 0.],
+                       [0., 0., 1.],
+                       [0., 0., 0.25]])
         P_I = np.matrix([[0., 0., 0.],
-                      [1., 0., 0.],
-                      [0., 1., 0.],
-                      [0., 0., 0.],
-                      [0., 0., 0.],
-                      [0., 0., 1.]])
+                         [1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 0.],
+                         [0., 0., 0.],
+                         [0., 0., 1.]])
         I_F = np.matrix([[1., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 1., 0., 0.],
-                      [0., 0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0., 0.]])
+                         [0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 1., 0., 0.],
+                         [0., 0., 0., 0., 1., 0.],
+                         [0., 0., 0., 0., 0., 0.]])
         T_answer = np.matrix([[2., 0., 0.],
-                           [1., 0., 0.],
-                           [0., 1., 0.],
-                           [0., 0.5, 0.],
-                           [0., 0., 4.],
-                           [0., 0., 1.]])
+                              [1., 0., 0.],
+                              [0., 1., 0.],
+                              [0., 0.5, 0.],
+                              [0., 0., 4.],
+                              [0., 0., 1.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
         T_scaled = T_scaled.todense()
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test
         T = np.matrix([[1.0, 1., 0., 0.],
-                    [0.5, 1., 0., 0.],
-                    [1., 0., 0., 0.],
-                    [0., 1., 0., 0.],
-                    [0., 0., 2., 1.],
-                    [0., 0., 3., 1.],
-                    [0., 0., 4., 1.],
-                    [0., 0., 2., 0.]])
+                       [0.5, 1., 0., 0.],
+                       [1., 0., 0., 0.],
+                       [0., 1., 0., 0.],
+                       [0., 0., 2., 1.],
+                       [0., 0., 3., 1.],
+                       [0., 0., 4., 1.],
+                       [0., 0., 2., 0.]])
         P_I = np.matrix([[0., 0., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [1., 0., 0., 0.],
-                      [0., 1., 0., 0.],
-                      [0., 0., 1., 0.],
-                      [0., 0., 0., 1.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 0., 0.]])
+                         [0., 0., 0., 0.],
+                         [1., 0., 0., 0.],
+                         [0., 1., 0., 0.],
+                         [0., 0., 1., 0.],
+                         [0., 0., 0., 1.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 0., 0.]])
         I_F = np.matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 1., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+                         [0., 1., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 1., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 1.]])
         T_answer = np.matrix([[1., 1., 0., 0.],
-                           [0.5, 1., 0., 0.],
-                           [1., 0., 0., 0.],
-                           [0., 1., 0., 0.],
-                           [0., 0., 1., 0.],
-                           [0., 0., 0., 1.],
-                           [0., 0., -1., 2.],
-                           [0., 0., -2., 2.]])
+                              [0.5, 1., 0., 0.],
+                              [1., 0., 0., 0.],
+                              [0., 1., 0., 0.],
+                              [0., 0., 1., 0.],
+                              [0., 0., 0., 1.],
+                              [0., 0., -1., 2.],
+                              [0., 0., -2., 2.]])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         I_F = bsr_matrix(I_F, blocksize=(2, 2))
@@ -587,37 +598,37 @@ class TestUtils(TestCase):
 
         # BSR test
         T = np.matrix([[1.0, 1., 0., 0.],
-                    [0.5, 1., 0., 0.],
-                    [1., 1., 0., 0.],
-                    [1., 1., 0., 0.],
-                    [0., 0., 2., 1.],
-                    [0., 0., 3., 1.],
-                    [0., 0., 4., 1.],
-                    [0., 0., 2., 0.]])
+                       [0.5, 1., 0., 0.],
+                       [1., 1., 0., 0.],
+                       [1., 1., 0., 0.],
+                       [0., 0., 2., 1.],
+                       [0., 0., 3., 1.],
+                       [0., 0., 4., 1.],
+                       [0., 0., 2., 0.]])
         P_I = np.matrix([[0., 0., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [1., 0., 0., 0.],
-                      [0., 1., 0., 0.],
-                      [0., 0., 1., 0.],
-                      [0., 0., 0., 1.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 0., 0.]])
+                         [0., 0., 0., 0.],
+                         [1., 0., 0., 0.],
+                         [0., 1., 0., 0.],
+                         [0., 0., 1., 0.],
+                         [0., 0., 0., 1.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 0., 0.]])
         I_F = np.matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 1., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+                         [0., 1., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 1., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 1.]])
         T_answer = np.matrix([[0.5, 0.5, 0., 0.],
-                           [0.375, 0.375, 0., 0.],
-                           [1., 0., 0., 0.],
-                           [0., 1., 0., 0.],
-                           [0., 0., 1., 0.],
-                           [0., 0., 0., 1.],
-                           [0., 0., -1., 2.],
-                           [0., 0., -2., 2.]])
+                              [0.375, 0.375, 0., 0.],
+                              [1., 0., 0., 0.],
+                              [0., 1., 0., 0.],
+                              [0., 0., 1., 0.],
+                              [0., 0., 0., 1.],
+                              [0., 0., -1., 2.],
+                              [0., 0., -2., 2.]])
         # Cpts = np.array([1, 2])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
@@ -788,8 +799,8 @@ class TestUtils(TestCase):
         # CSR Test
         params = get_Cpt_params(A, Cpts, AggOp, T)
         I_C = bsr_matrix((np.array([[[1.]], [[1.]]]),
-                         np.array([3, 7]),
-                         np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2])),
+                          np.array([3, 7]),
+                          np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2])),
                          shape=(10, 10))
         I_F = bsr_matrix((np.array([[[1.]], [[1.]], [[1.]], [[1.]],
                                     [[1.]], [[1.]], [[1.]], [[1.]]]),
@@ -797,15 +808,15 @@ class TestUtils(TestCase):
                           np.array([0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8])),
                          shape=(10, 10))
         P_I = np.matrix([[0., 0.],
-                      [0., 0.],
-                      [0., 0.],
-                      [1., 0.],
-                      [0., 0.],
-                      [0., 0.],
-                      [0., 0.],
-                      [0., 1.],
-                      [0., 0.],
-                      [0., 0.]])
+                         [0., 0.],
+                         [0., 0.],
+                         [1., 0.],
+                         [0., 0.],
+                         [0., 0.],
+                         [0., 0.],
+                         [0., 1.],
+                         [0., 0.],
+                         [0., 0.]])
         P_I = bsr_matrix(P_I, blocksize=(1, 1))
         Fpts = np.array([0, 1, 2, 4, 5, 6, 8, 9])
         assert_equal(Cpts, params['Cpts'])
@@ -844,15 +855,15 @@ class TestUtils(TestCase):
                           np.array([0, 1, 1, 2, 2, 3])),
                          shape=(10, 10))
         P_I = np.matrix([[0., 0., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [1., 0., 0., 0.],
-                      [0., 1., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 1., 0.],
-                      [0., 0., 0., 1.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 0., 0.]])
+                         [0., 0., 0., 0.],
+                         [1., 0., 0., 0.],
+                         [0., 1., 0., 0.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 1., 0.],
+                         [0., 0., 0., 1.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 0., 0.]])
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         Fpts = np.array([0, 1, 4, 5, 8, 9])
         Cpts = np.array([2, 3, 6, 7])
@@ -915,7 +926,7 @@ class TestUtils(TestCase):
         assert_array_almost_equal(BtBinv, answer)
 
         T = np.matrix([[1., 0.], [1., 0.],
-                    [0., .5], [0., .25]])
+                       [0., .5], [0., .25]])
         T = bsr_matrix(T, blocksize=(1, 1))
         B = np.array([[1.], [2.]])
         BtBinv = compute_BtBinv(B, T)
@@ -928,7 +939,7 @@ class TestUtils(TestCase):
         B = np.array([[1., 1.], [2., 1.]])
         BtBinv = compute_BtBinv(B, T)
         answer = np.array([[[0.25, 0.25], [0.25, 0.25]],
-                        [[0.16, 0.08], [0.08, 0.04]]])
+                           [[0.16, 0.08], [0.08, 0.04]]])
         assert_array_almost_equal(BtBinv, answer)
 
         T = np.matrix([[1., 0.], [0., .25]])
@@ -936,19 +947,19 @@ class TestUtils(TestCase):
         B = np.array([[1., 1.], [1., 1.]])
         BtBinv = compute_BtBinv(B, T)
         answer = np.array([[[0.125, 0.125],
-                         [0.125, 0.125]]])
+                            [0.125, 0.125]]])
         assert_array_almost_equal(BtBinv, answer)
 
         # Simple BSR test
         T = np.matrix([[1., 1., 0., 0.],
-                    [1., 1., 0., 0.],
-                    [0., 0., 0.5, 0.5],
-                    [0., 0., 0.25, 0.25]])
+                       [1., 1., 0., 0.],
+                       [0., 0., 0.5, 0.5],
+                       [0., 0., 0.25, 0.25]])
         T = bsr_matrix(T, blocksize=(2, 2))
         B = np.array([[1., 1.], [1., 2.], [1., 1.], [1., 3.]])
         BtBinv = compute_BtBinv(B, T)
         answer = np.array([[[5., -3.], [-3., 2.]],
-                        [[2.5, -1.], [-1., 0.5]]])
+                           [[2.5, -1.], [-1., 0.5]]])
         assert_array_almost_equal(BtBinv, answer)
 
     def test_eliminate_diag_dom_nodes(self):
@@ -957,9 +968,9 @@ class TestUtils(TestCase):
         A = poisson((4,), format='csr')
         C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
         answer = np.array([[1., 0., 0., 0.],
-                        [0., 2., -1., 0.],
-                        [0., -1., 2., 0.],
-                        [0., 0., 0., 1.]])
+                           [0., 2., -1., 0.],
+                           [0., -1., 2., 0.],
+                           [0., 0., 0., 1.]])
         assert_array_almost_equal(C.todense(), answer)
 
         # Simple BSR test
@@ -970,8 +981,8 @@ class TestUtils(TestCase):
         C = poisson((3,), format='csr')
         C = eliminate_diag_dom_nodes(A, C, 1.1)
         answer = np.array([[1., 0., 0.],
-                        [0., 2., -1.],
-                        [0., -1., 2.]])
+                           [0., 2., -1.],
+                           [0., -1., 2.]])
         assert_array_almost_equal(C.todense(), answer)
 
     def test_remove_diagonal(self):
@@ -980,9 +991,9 @@ class TestUtils(TestCase):
         A = poisson((4,), format='csr')
         C = remove_diagonal(A)
         exact = np.array([[0., -1., 0., 0.],
-                       [-1., 0., -1., 0.],
-                       [0., -1., 0., -1.],
-                       [0., 0., -1., 0.]])
+                          [-1., 0., -1., 0.],
+                          [0., -1., 0., -1.],
+                          [0., 0., -1., 0.]])
         assert_array_almost_equal(C.todense(), exact)
 
     def test_scale_rows_by_largest_entry(self):
@@ -993,40 +1004,40 @@ class TestUtils(TestCase):
         A.data[1] = 8.
         A = scale_rows_by_largest_entry(A)
         exact = np.array([[0.25, 1., 0., 0.],
-                       [-0.5, 1., -0.5, 0.],
-                       [0., -0.5, 1., -0.5],
-                       [0., 0., -0.5, 1.]])
+                          [-0.5, 1., -0.5, 0.],
+                          [0., -0.5, 1., -0.5],
+                          [0., 0., -0.5, 1.]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_filter_matrix_rows(self):
         from pyamg.util.utils import filter_matrix_rows
         A = csr_matrix(np.array([[0.24, -0.5, 0., 0.],
-                              [1., 1., 0.49, 0.],
-                              [0., -0.5, 1., -0.5]]))
+                                 [1., 1., 0.49, 0.],
+                                 [0., -0.5, 1., -0.5]]))
         A = filter_matrix_rows(A, 0.5)
         exact = np.array([[0.0, -0.5, 0., 0.],
-                       [1., 1., 0., 0.],
-                       [0., -0.5, 1., -0.5]])
+                          [1., 1., 0., 0.],
+                          [0., -0.5, 1., -0.5]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_filter_matrix_columns(self):
         from pyamg.util.utils import filter_matrix_columns
         A = csr_matrix(np.array([[0.24, 1., 0.],
-                              [-0.5, 1., -0.5],
-                              [0., 0.49, 1.],
-                              [0., 0., -0.5]]))
+                                 [-0.5, 1., -0.5],
+                                 [0., 0.49, 1.],
+                                 [0., 0., -0.5]]))
         A = filter_matrix_columns(A, 0.5)
         exact = np.array([[0., 1., 0.],
-                       [-0.5, 1., -0.5],
-                       [0., 0., 1.],
-                       [0., 0., -0.5]])
+                          [-0.5, 1., -0.5],
+                          [0., 0., 1.],
+                          [0., 0., -0.5]])
         assert_array_almost_equal(A.todense(), exact)
 
     def test_truncate_rows(self):
         from pyamg.util.utils import truncate_rows
         A = csr_matrix(np.array([[-0.24, -0.5, 0., 0.],
-                              [1., -1.1, 0.49, 0.1],
-                              [0., 0.4, 1., 0.5]]))
+                                 [1., -1.1, 0.49, 0.1],
+                                 [0., 0.4, 1., 0.5]]))
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 4)
         assert_array_almost_equal(A.todense(), Acopy.todense())
@@ -1034,29 +1045,29 @@ class TestUtils(TestCase):
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 3)
         exact = np.array([[-0.24, -0.5, 0., 0.],
-                       [1., -1.1, 0.49, 0.],
-                       [0., 0.4, 1., 0.5]])
+                          [1., -1.1, 0.49, 0.],
+                          [0., 0.4, 1., 0.5]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 2)
         exact = np.array([[-0.24, -0.5, 0., 0.],
-                       [1., -1.1, 0., 0.],
-                       [0., 0., 1., 0.5]])
+                          [1., -1.1, 0., 0.],
+                          [0., 0., 1., 0.5]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 1)
         exact = np.array([[0., -0.5, 0., 0.],
-                       [0., -1.1, 0., 0.],
-                       [0., 0., 1., 0.]])
+                          [0., -1.1, 0., 0.],
+                          [0., 0., 1., 0.]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
         Acopy = A.copy()
         Acopy = truncate_rows(Acopy, 0)
         exact = np.array([[0., 0., 0., 0.],
-                       [0., 0., 0., 0.],
-                       [0., 0., 0., 0.]])
+                          [0., 0., 0., 0.],
+                          [0., 0., 0., 0.]])
         assert_array_almost_equal(Acopy.todense(), exact)
 
 
@@ -1081,8 +1092,8 @@ class TestComplexUtils(TestCase):
     def test_symmetric_rescaling(self):
         cases = []
         A = np.array([[5.5+1.0j, 3.5, 4.8],
-                   [2., 9.9, 0.5-2.0j],
-                   [6.5, 2.6, 5.7+1.0j]])
+                      [2., 9.9, 0.5-2.0j],
+                      [6.5, 2.6, 5.7+1.0j]])
         A = csr_matrix(A)
         cases.append(A)
         P = diag_sparse([1, 0, 1.0j])
@@ -1107,10 +1118,10 @@ class TestComplexUtils(TestCase):
         A = 1.0j*spdiags(data, [-1, 0, 1], 5, 5).tocsr()
         B = e.copy().reshape(-1, 1)
         DAD_answer = np.array([[1., -0.5, 0., 0., 0.],
-                            [-0.5, 1., -0.5, 0., 0.],
-                            [0., -0.5, 1., -0.5, 0.],
-                            [0., 0., -0.5, 1., -0.5],
-                            [0., 0., 0., -0.5, 1.]])
+                               [-0.5, 1., -0.5, 0., 0.],
+                               [0., -0.5, 1., -0.5, 0.],
+                               [0., 0., -0.5, 1., -0.5],
+                               [0., 0., 0., -0.5, 1.]])
         DB_answer = np.sqrt(2)*1.0j*e.reshape(-1, 1)
         #           matrix   B    BH   expected matrix  expected B  expected BH
         cases.append((A, B, None, DAD_answer, DB_answer, None))
@@ -1210,19 +1221,19 @@ class TestComplexUtils(TestCase):
         # Basic tests, with easy to compute answers
         # test one, the constant
         A = np.array([[1.+0.j, 1, 1], [1, 1, 1], [0, 1, 0],
-                   [0, 1, 0], [0, 0, 1], [0, 0, 1]])
+                      [0, 1, 0], [0, 0, 1], [0, 0, 1]])
         C = np.array([[1.+0.j, 1, 0], [1, 1, 0], [0, 1, 0],
-                   [0, 1, 0], [0, 0, 1], [0, 0, 1]])
+                      [0, 1, 0], [0, 0, 1], [0, 0, 1]])
         B = np.ones((3, 1)) + 0.j
         Bf = np.ones((6, 1)) + 1.0j * np.ones((6, 1))
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
         A_known = np.matrix([[0.5+0.5j, 0.5+0.5j, 0.0+0.j],
-                          [0.5+0.5j, 0.5+0.5j, 0.0+0.j],
-                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
-                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
-                          [0.0+0.j, 0.0+0.j, 1.0+1.j],
-                          [0.0+0.j, 0.0+0.j, 1.0+1.j]])
+                             [0.5+0.5j, 0.5+0.5j, 0.0+0.j],
+                             [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                             [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                             [0.0+0.j, 0.0+0.j, 1.0+1.j],
+                             [0.0+0.j, 0.0+0.j, 1.0+1.j]])
         assert_array_almost_equal(A_known, A_filter)
 
         # test two, the constant and linears
@@ -1235,11 +1246,11 @@ class TestComplexUtils(TestCase):
         A_filter = filter_operator(csr_matrix(A), csr_matrix(C), B, Bf)
         A_filter = A_filter.todense()
         A_known = np.matrix([[1.0+1.j, 0.0+0.j, 0.0+0.j],
-                          [0.0+0.j, 1.0+1.j, 0.0+0.j],
-                          [0.0+0.j, 1.5+1.5j, 0.0+0.j],
-                          [0.0+0.j, 2.0+2.j, 0.0+0.j],
-                          [0.0+0.j, 0.0+0.j, 1.8+1.8j],
-                          [0.0+0.j, 0.0+0.j, 2.2+2.2j]])
+                             [0.0+0.j, 1.0+1.j, 0.0+0.j],
+                             [0.0+0.j, 1.5+1.5j, 0.0+0.j],
+                             [0.0+0.j, 2.0+2.j, 0.0+0.j],
+                             [0.0+0.j, 0.0+0.j, 1.8+1.8j],
+                             [0.0+0.j, 0.0+0.j, 2.2+2.2j]])
         assert_array_almost_equal(A_known, A_filter)
 
     def test_scale_T(self):
@@ -1247,66 +1258,66 @@ class TestComplexUtils(TestCase):
 
         # Test for one CSR and one BSR example
         T = np.matrix([[1.0, 0., 0.],
-                    [0.5j, 0., 0.],
-                    [0., 1., 0.],
-                    [0., .5j, 0.],
-                    [0., 0., 1.j],
-                    [0., 0., 0.25]])
+                       [0.5j, 0., 0.],
+                       [0., 1., 0.],
+                       [0., .5j, 0.],
+                       [0., 0., 1.j],
+                       [0., 0., 0.25]])
         T_answer = np.matrix([[0.-2.j, 0.+0.j, 0.+0.j],
-                           [1.+0.j, 0.+0.j, 0.+0.j],
-                           [0.+0.j, 1.+0.j, 0.+0.j],
-                           [0.+0.j, 0.+0.5j, 0.+0.j],
-                           [0.+0.j, 0.+0.j, 0.+4.j],
-                           [0.+0.j, 0.+0.j, 1.+0.j]])
+                              [1.+0.j, 0.+0.j, 0.+0.j],
+                              [0.+0.j, 1.+0.j, 0.+0.j],
+                              [0.+0.j, 0.+0.5j, 0.+0.j],
+                              [0.+0.j, 0.+0.j, 0.+4.j],
+                              [0.+0.j, 0.+0.j, 1.+0.j]])
         P_I = np.matrix([[0., 0., 0.],
-                      [1., 0., 0.],
-                      [0., 1., 0.],
-                      [0., 0., 0.],
-                      [0., 0., 0.],
-                      [0., 0., 1.]])
+                         [1., 0., 0.],
+                         [0., 1., 0.],
+                         [0., 0., 0.],
+                         [0., 0., 0.],
+                         [0., 0., 1.]])
         I_F = np.matrix([[1., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 1., 0., 0.],
-                      [0., 0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0., 0.]])
+                         [0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 1., 0., 0.],
+                         [0., 0., 0., 0., 1., 0.],
+                         [0., 0., 0., 0., 0., 0.]])
         T_scaled = scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F))
         T_scaled = T_scaled.todense()
         assert_array_almost_equal(T_answer, T_scaled)
 
         # BSR test
         T = np.matrix([[1.j, 1., 0., 0.],
-                    [0.5, 1., 0., 0.],
-                    [1., 0., 0., 0.],
-                    [0., 1., 0., 0.],
-                    [0., 0., 2.j, 0.],
-                    [0., 0., 0., 1.],
-                    [0., 0., 1., 1.],
-                    [0., 0., 1., 1.]])
+                       [0.5, 1., 0., 0.],
+                       [1., 0., 0., 0.],
+                       [0., 1., 0., 0.],
+                       [0., 0., 2.j, 0.],
+                       [0., 0., 0., 1.],
+                       [0., 0., 1., 1.],
+                       [0., 0., 1., 1.]])
         P_I = np.matrix([[0., 0., 0., 0.],
-                      [0., 0., 0., 0.],
-                      [1., 0., 0., 0.],
-                      [0., 1., 0., 0.],
-                      [0., 0., 1., 0.],
-                      [0., 0., 0., 1.],
-                      [0., 0., 0., 0.],
-                      [0., 0., 0., 0.]])
+                         [0., 0., 0., 0.],
+                         [1., 0., 0., 0.],
+                         [0., 1., 0., 0.],
+                         [0., 0., 1., 0.],
+                         [0., 0., 0., 1.],
+                         [0., 0., 0., 0.],
+                         [0., 0., 0., 0.]])
         I_F = np.matrix([[1., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 1., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 0.],
-                      [0., 0., 0., 0., 0., 0., 1., 0.],
-                      [0., 0., 0., 0., 0., 0., 0., 1.]])
+                         [0., 1., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 0.],
+                         [0., 0., 0., 0., 0., 0., 1., 0.],
+                         [0., 0., 0., 0., 0., 0., 0., 1.]])
         T_answer = np.matrix([[0.0+1.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
-                           [0.5+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
-                           [1.0+0.j, 0.0+0.j, 0.0+0.j, 0.0+0.j],
-                           [0.0+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
-                           [0.0+0.j, 0.0+0.j, 1.0+0.j, 0.0+0.j],
-                           [0.0+0.j, 0.0+0.j, 0.0+0.j, 1.0+0.j],
-                           [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j],
-                           [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j]])
+                              [0.5+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
+                              [1.0+0.j, 0.0+0.j, 0.0+0.j, 0.0+0.j],
+                              [0.0+0.j, 1.0+0.j, 0.0+0.j, 0.0+0.j],
+                              [0.0+0.j, 0.0+0.j, 1.0+0.j, 0.0+0.j],
+                              [0.0+0.j, 0.0+0.j, 0.0+0.j, 1.0+0.j],
+                              [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j],
+                              [0.0+0.j, 0.0+0.j, 0.0-0.5j, 1.0+0.j]])
         T = bsr_matrix(T, blocksize=(2, 2))
         P_I = bsr_matrix(P_I, blocksize=(2, 2))
         I_F = bsr_matrix(I_F, blocksize=(2, 2))
@@ -1316,24 +1327,24 @@ class TestComplexUtils(TestCase):
     def test_compute_BtBinv(self):
         # Simple CSR test
         T = np.matrix([[1.j, 0.], [1., 0.],
-                    [0., .5], [0., .25]])
+                       [0., .5], [0., .25]])
         T = bsr_matrix(T, blocksize=(1, 1))
         B = np.array([[1.+1.j], [2.j]])
         BtBinv = compute_BtBinv(B, T)
         answer = np.array([[[0.50+0.j]], [[0.50+0.j]],
-                        [[0.25+0.j]], [[0.25+0.j]]])
+                           [[0.25+0.j]], [[0.25+0.j]]])
         assert_array_almost_equal(BtBinv, answer)
 
         # Simple BSR test
         T = np.matrix([[1., 0., 0., 1.],
-                    [1., 0., 0., 1.],
-                    [0., 0., 0.5, 0.],
-                    [0., 0., 0.25, 0.]])
+                       [1., 0., 0., 1.],
+                       [0., 0., 0.5, 0.],
+                       [0., 0., 0.25, 0.]])
         T = bsr_matrix(T, blocksize=(2, 2))
         B = np.array([[1.j, 1.], [1.j, 3.], [1.j, 4.], [1.j, 2.]])
         BtBinv = compute_BtBinv(B, T)
         answer = np.array([[[1.5+0.j, 0.0+0.5j], [0.0-0.5j, 0.2+0.j]],
-                        [[5.0+0.j, 0.0+1.5j], [0.0-1.5j, 0.5+0.j]]])
+                           [[5.0+0.j, 0.0+1.5j], [0.0-1.5j, 0.5+0.j]]])
         assert_array_almost_equal(BtBinv, answer)
 
     def test_eliminate_diag_dom_nodes(self):
@@ -1344,9 +1355,9 @@ class TestComplexUtils(TestCase):
         A.data[0] = 1+5.0j
         C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
         answer = np.array([[1., 0., 0., 0.],
-                        [0., 2., -1., 0.],
-                        [0., -1., 2., 0.],
-                        [0., 0., 0., 1.]])
+                           [0., 2., -1., 0.],
+                           [0., -1., 2., 0.],
+                           [0., 0., 0., 1.]])
         assert_array_almost_equal(C.todense(), answer)
 
         # Simple BSR test
@@ -1358,8 +1369,8 @@ class TestComplexUtils(TestCase):
         C = poisson((3,), format='csr')
         C = eliminate_diag_dom_nodes(A, C, 1.1)
         answer = np.array([[1., 0., 0.],
-                        [0., 2., -1.],
-                        [0., -1., 2.]])
+                           [0., 2., -1.],
+                           [0., -1., 2.]])
         assert_array_almost_equal(C.todense(), answer)
 
     def test_remove_diagonal(self):
@@ -1368,9 +1379,9 @@ class TestComplexUtils(TestCase):
         A = poisson((4,), format='csr')
         C = remove_diagonal(1.0j*A)
         exact = np.array([[0., -1., 0., 0.],
-                       [-1., 0., -1., 0.],
-                       [0., -1., 0., -1.],
-                       [0., 0., -1., 0.]])
+                          [-1., 0., -1., 0.],
+                          [0., -1., 0., -1.],
+                          [0., 0., -1., 0.]])
         assert_array_almost_equal(C.todense(), 1.0j*exact)
 
     def test_scale_rows_by_largest_entry(self):
@@ -1381,9 +1392,9 @@ class TestComplexUtils(TestCase):
         A.data[1] = 3. + 2.j
         A = scale_rows_by_largest_entry(A)
         exact = np.array([[0.55470020+0.j, 0.83205029+0.5547002j, 0.0, 0.0],
-                       [-0.50000000+0.j, 1.00000000+0.j, -0.5+0.j, 0.0+0.j],
-                       [0.00000000+0.j, -0.50000000+0.j, 1.0+0.j, -0.5+0.j],
-                       [0.00000000+0.j, 0.00000000+0.j, -0.5+0.j, 1.0+0.j]])
+                          [-0.50000000+0.j, 1.00000000+0.j, -0.5+0.j, 0.0+0.j],
+                          [0.00000000+0.j, -0.50000000+0.j, 1.0+0.j, -0.5+0.j],
+                          [0.00000000+0.j, 0.00000000+0.j, -0.5+0.j, 1.0+0.j]])
         assert_array_almost_equal(A.todense(), exact)
 
     # note: no explicitly complex tests necessary for get_Cpt_params

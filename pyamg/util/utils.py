@@ -126,7 +126,7 @@ def diag_sparse(A):
         if(np.ndim(A) != 1):
             raise ValueError('input diagonal array expected to be 1d')
         return csr_matrix((np.asarray(A), np.arange(len(A)),
-                          np.arange(len(A)+1)), (len(A), len(A)))
+                           np.arange(len(A)+1)), (len(A), len(A)))
 
 
 def scale_rows(A, v, copy=True):
@@ -201,6 +201,7 @@ def scale_rows(A, v, copy=True):
 
     return A
 
+
 def scale_columns(A, v, copy=True):
     """Scale the sparse columns of a matrix.
 
@@ -271,7 +272,7 @@ def scale_columns(A, v, copy=True):
         bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                           np.ravel(A.data), v)
     elif isspmatrix_csc(A):
-         pyamg.amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
+        pyamg.amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
         A = scale_columns(csr_matrix(A), v).asformat(fmt)
@@ -964,16 +965,16 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         num_neg = max(e[sp.real(e) < 0.0].shape)
         num_pos = max(e[sp.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min),
-                          ('%1.3f' % lambda_max),
-                          str(num_neg), str(num_pos), ('%1.2e' % c)])
+                           ('%1.3f' % lambda_max),
+                           str(num_neg), str(num_pos), ('%1.2e' % c)])
 
         lambda_min = min(sp.imag(e))
         lambda_max = max(sp.imag(e))
         num_neg = max(e[sp.imag(e) < 0.0].shape)
         num_pos = max(e[sp.imag(e) > 0.0].shape)
         imag_table.append([str(i), ('%1.3f' % lambda_min),
-                          ('%1.3f' % lambda_max),
-                          str(num_neg), str(num_pos), ('%1.2e' % c)])
+                           ('%1.3f' % lambda_max),
+                           str(num_neg), str(num_pos), ('%1.2e' % c)])
 
         if plot:
             import pylab
@@ -1739,7 +1740,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     A_abs.data = np.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
     diag_dom_rows = (D_abs > (theta*(A_abs*np.ones((A_abs.shape[0],),
-                     dtype=A_abs) - D_abs)))
+                                                   dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = blocksize(A_abs)
@@ -2043,11 +2044,15 @@ def filter_matrix_columns(A, theta):
     A.indices += A.shape[1]
     A_filter.indices += A.shape[1]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[1], theta,
-                                                        A.indptr, A.indices,
-                                                        A.data, A_filter.indptr,
-                                                        A_filter.indices,
-                                                        A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(
+        A.shape[1],
+        theta,
+        A.indptr,
+        A.indices,
+        A.data,
+        A_filter.indptr,
+        A_filter.indices,
+        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
     A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2114,11 +2119,15 @@ def filter_matrix_rows(A, theta):
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
-                                                        A.indptr, A.indices,
-                                                        A.data, A_filter.indptr,
-                                                        A_filter.indices,
-                                                        A_filter.data)
+    pyamg.amg_core.classical_strength_of_connection_abs(
+        A.shape[0],
+        theta,
+        A.indptr,
+        A.indices,
+        A.data,
+        A_filter.indptr,
+        A_filter.indices,
+        A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],

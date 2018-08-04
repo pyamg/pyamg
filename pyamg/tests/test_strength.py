@@ -473,17 +473,17 @@ def reference_classical_soc(A, theta, norm='abs'):
     max_offdiag[:] = np.finfo(S.data.dtype).min
 
     # Note abs(.) takes the complex modulus
-    if norm=='abs':
+    if norm == 'abs':
         for i, v in zip(S.row, S.data):
             max_offdiag[i] = max(max_offdiag[i], abs(v))
-    if norm=='min':
+    if norm == 'min':
         for i, v in zip(S.row, S.data):
             max_offdiag[i] = max(max_offdiag[i], -v)
 
     # strong connections
-    if norm=='abs':
+    if norm == 'abs':
         mask = np.abs(S.data) >= (theta * max_offdiag[S.row])
-    if norm=='min':
+    if norm == 'min':
         mask = -S.data >= (theta * max_offdiag[S.row])
 
     S.row = S.row[mask]
