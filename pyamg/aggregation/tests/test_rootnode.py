@@ -170,23 +170,23 @@ class TestSolverPerformance(TestCase):
 
         A = poisson((5000,), format='csr')
         self.cases.append((A, None, 0.4, 'symmetric',
-                          ('energy', {'krylov': 'cg'})))
+                           ('energy', {'krylov': 'cg'})))
         self.cases.append((A, None, 0.4, 'symmetric',
-                          ('energy', {'krylov': 'gmres'})))
+                           ('energy', {'krylov': 'gmres'})))
 
         A = poisson((75, 75), format='csr')
         self.cases.append((A, None, 0.26, 'symmetric',
-                          ('energy', {'krylov': 'cg'})))
+                           ('energy', {'krylov': 'cg'})))
         self.cases.append((A, None, 0.30, 'symmetric',
-                          ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr'})))
 
         A, B = linear_elasticity((50, 50), format='bsr')
         self.cases.append((A, B, 0.3, 'symmetric',
-                          ('energy', {'krylov': 'cg'})))
+                           ('energy', {'krylov': 'cg'})))
         self.cases.append((A, B, 0.3, 'symmetric',
-                          ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr'})))
         self.cases.append((A, B, 0.3, 'symmetric',
-                          ('energy', {'krylov': 'gmres'})))
+                           ('energy', {'krylov': 'gmres'})))
         # TODO add unstructured tests
 
     def test_basic(self):
