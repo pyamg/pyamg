@@ -194,13 +194,11 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     Sx = np.empty_like(A.data)
 
     if norm == 'abs':
-        amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
-                                                      A.indptr, A.indices, A.data,
-                                                      Sp, Sj, Sx)
+        amg_core.classical_strength_of_connection_abs(
+            A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     elif norm == 'min':
-        amg_core.classical_strength_of_connection_min(A.shape[0], theta,
-                                                      A.indptr, A.indices, A.data,
-                                                      Sp, Sj, Sx)
+        amg_core.classical_strength_of_connection_min(
+            A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     else:
         raise ValueError('Unknown norm')
 
@@ -418,7 +416,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     Dinv = 1.0 / D
     Dinv[D == 0] = 0.0
     Dinv = sparse.csc_matrix((Dinv, (np.arange(A.shape[0]),
-                             np.arange(A.shape[1]))), shape=A.shape)
+                                     np.arange(A.shape[1]))), shape=A.shape)
     DinvA = Dinv * A
     omega = 1.0 / approximate_spectral_radius(DinvA)
     del DinvA
@@ -566,7 +564,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         if block_flag:
             Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
             Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
-                                     np.arange(Dinv.shape[0] + 1)),
+                                      np.arange(Dinv.shape[0] + 1)),
                                      shape=A.shape)
             Dinv_A = (Dinv * A).tocsr()
         else:

@@ -413,7 +413,7 @@ class multilevel_solver:
             try:  # try PyAMG style interface which has a residuals parameter
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                              callback=callback, residuals=residuals)[0]
-            except:
+            except BaseException:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
                 # history is desired

@@ -40,7 +40,7 @@ def make_csr(A):
         try:
             A = csr_matrix(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
-        except Exception:
+        except BaseException:
             raise TypeError('Argument A must have type csr_matrix or\
                     bsr_matrix, or be convertible to csr_matrix')
 
@@ -104,14 +104,14 @@ def solver_configuration(A, B=None, verb=True):
     # Symmetry dependent parameters
     if config['symmetry'] == 'hermitian':
         config['smooth'] = ('energy', {'krylov': 'cg', 'maxiter': 3,
-                            'degree': 2, 'weighting': 'local'})
+                                       'degree': 2, 'weighting': 'local'})
         config['presmoother'] = ('block_gauss_seidel',
                                  {'sweep': 'symmetric', 'iterations': 1})
         config['postsmoother'] = ('block_gauss_seidel',
                                   {'sweep': 'symmetric', 'iterations': 1})
     else:
         config['smooth'] = ('energy', {'krylov': 'gmres', 'maxiter': 3,
-                            'degree': 2, 'weighting': 'local'})
+                                       'degree': 2, 'weighting': 'local'})
         config['presmoother'] = ('gauss_seidel_nr',
                                  {'sweep': 'symmetric', 'iterations': 2})
         config['postsmoother'] = ('gauss_seidel_nr',
@@ -123,7 +123,7 @@ def solver_configuration(A, B=None, verb=True):
         if isspmatrix_bsr(A) and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
             config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
-                                  dtype=A.dtype), np.eye(bsize))
+                                          dtype=A.dtype), np.eye(bsize))
         else:
             config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)
     elif (isinstance(B, type(np.zeros((1,)))) or
@@ -145,7 +145,7 @@ def solver_configuration(A, B=None, verb=True):
 
     # Set non-symmetry related parameters
     config['strength'] = ('evolution', {'k': 2, 'proj_type': 'l2',
-                          'epsilon': 3.0})
+                                        'epsilon': 3.0})
     config['max_levels'] = 15
     config['max_coarse'] = 500
     config['coarse_solver'] = 'pinv'
@@ -205,7 +205,7 @@ def solver(A, config):
                                         presmoother=config['presmoother'],
                                         postsmoother=config['postsmoother'],
                                         keep=config['keep'])
-    except Exception:
+    except BaseException:
         raise TypeError('Failed generating smoothed_aggregation_solver')
 
 

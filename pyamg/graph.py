@@ -15,7 +15,7 @@ __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
 def max_value(datatype):
     try:
         return np.iinfo(datatype).max
-    except:
+    except BaseException:
         return np.finfo(datatype).max
 
 
@@ -424,7 +424,7 @@ def pseudo_peripheral_node(A):
     x = int(np.random.rand() * n)
     delta = 0
 
-    while 1:
+    while True:
         # do a level-set traversal from x
         order, level = breadth_first_search(A, x)
 
