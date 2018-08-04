@@ -110,7 +110,7 @@ class TestKrylov(TestCase):
                 (x, flag) = gmres_householder(A, b, x0=x0,
                                               maxiter=min(A.shape[0], maxiter))
                 (x2, flag2) = gmres_mgs(A, b, x0=x0, maxiter=min(A.shape[0],
-                                        maxiter))
+                                                                 maxiter))
                 err_msg = ('Householder GMRES and MGS GMRES gave '
                            'different results for small matrix')
                 assert_array_almost_equal(x/norm(x), x2/norm(x2),

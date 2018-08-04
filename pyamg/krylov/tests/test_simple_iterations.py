@@ -22,7 +22,7 @@ class TestSimpleIterations(TestCase):
 
         # 2x2
         A = np.mat([[4.5, -1.2],
-                   [3.4, 6.7]])
+                    [3.4, 6.7]])
         b = np.array([-3.2, 5.6]).reshape(-1, 1)
         x0 = np.zeros((2, 1))
         self.definite_cases.append({'A': A, 'b': b, 'x0': x0, 'maxiter': 4,
@@ -152,15 +152,15 @@ class TestSimpleIterations(TestCase):
 
                 def callback(x):
                     fvals.append(np.sqrt(np.dot(np.ravel(x),
-                                 np.ravel(A*x.reshape(-1, 1)))))
+                                                np.ravel(A*x.reshape(-1, 1)))))
                 #
                 (x, flag) = minimal_residual(A, b, x0=x0,
                                              tol=1e-16, maxiter=maxiter,
                                              callback=callback)
                 actual_factor = (norm(np.ravel(b) -
-                                 np.ravel(A * x.reshape(-1, 1))) /
+                                      np.ravel(A * x.reshape(-1, 1))) /
                                  norm(np.ravel(b) -
-                                 np.ravel(A * x0.reshape(-1, 1))))
+                                      np.ravel(A * x0.reshape(-1, 1))))
                 assert(actual_factor < reduction_factor)
                 if A.dtype != complex:
                     for i in range(len(fvals)-1):
