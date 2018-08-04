@@ -122,7 +122,9 @@ def build_function(func):
             needsize = True
         elif '_size' not in p['name'] and needsize:
             # not a size, but needed one
-            raise ValueError('Expecting a _size parameter for {}'.format(p['name']))
+            raise ValueError(
+                'Expecting a _size parameter for {}'.format(
+                    p['name']))
         elif '_size' in p['name']:
             # just size, skip it
             needsize = False
@@ -161,7 +163,8 @@ def build_function(func):
         fdef += '\n'
     if func['template']:
         template = func['template']
-        template = template.replace('template', '').replace('class ', '')   # template <class T> ----> <T>
+        template = template.replace('template', '').replace(
+            'class ', '')   # template <class T> ----> <T>
     else:
         template = ''
     newcall = '    return ' + func['name'] + template + '('
@@ -172,7 +175,7 @@ def build_function(func):
         if '_size' in p['name']:
             fdef = fdef.strip()
             name, s = p['name'].split('_size')
-            if s=='':
+            if s == '':
                 s = '0'
             fdef += " {}.shape({})".format(name, s)
         else:
@@ -275,7 +278,8 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 # not a templated function
                 typestr = ''
 
-            plugin += indent + 'm.def("{}", &_{}{},\n'.format(instname, f['name'], typestr)
+            plugin += indent + \
+                'm.def("{}", &_{}{},\n'.format(instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -290,7 +294,8 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
             # add the docstring to the last
             if i == ntypes - 1:
-                plugin += ',\nR"pbdoc(\n{})pbdoc");\n'.format(comments[f['name']])
+                plugin += ',\nR"pbdoc(\n{})pbdoc");\n'.format(
+                    comments[f['name']])
             else:
                 plugin += ');\n'
         plugin += '\n'
@@ -305,10 +310,14 @@ def main():
     import argparse
     import CppHeaderParser
 
-    parser = argparse.ArgumentParser(description='Wrap a C++ header with Pybind11')
+    parser = argparse.ArgumentParser(
+        description='Wrap a C++ header with Pybind11')
 
-    parser.add_argument("-o", "--output-file", metavar="FILE",
-                        help="(default output name for header.h is header_bind.cpp)")
+    parser.add_argument(
+        "-o",
+        "--output-file",
+        metavar="FILE",
+        help="(default output name for header.h is header_bind.cpp)")
 
     parser.add_argument("input_file", metavar="FILE")
 
@@ -328,7 +337,8 @@ def main():
         remaps = data['remaps']
     else:
         remaps = []
-    plugin, bound, unbound = build_plugin(args.input_file, ch, comments, inst, remaps)
+    plugin, bound, unbound = build_plugin(
+        args.input_file, ch, comments, inst, remaps)
 
     chfuncs = {f['name']: f for f in ch.functions}
     print('\t[unbound functions: {}]'.format(' '.join(unbound)))
