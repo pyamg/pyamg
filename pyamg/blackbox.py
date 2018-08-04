@@ -6,7 +6,7 @@ import numpy as np
 import scipy as sp
 from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
 from pyamg import smoothed_aggregation_solver
-from pyamg.util.linalg import ishermitian, norm
+from pyamg.util.linalg import ishermitian
 
 __all__ = ['solve', 'solver', 'solver_configuration']
 
@@ -40,13 +40,13 @@ def make_csr(A):
         try:
             A = csr_matrix(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
-        except:
+        except Exception:
             raise TypeError('Argument A must have type csr_matrix or\
                     bsr_matrix, or be convertible to csr_matrix')
-    #
+
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
-    #
+
     A = A.asfptype()
 
     return A
@@ -205,7 +205,7 @@ def solver(A, config):
                                         presmoother=config['presmoother'],
                                         postsmoother=config['postsmoother'],
                                         keep=config['keep'])
-    except:
+    except Exception:
         raise TypeError('Failed generating smoothed_aggregation_solver')
 
 
@@ -319,8 +319,8 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         r0 = b - A * x0
         rk = b - A * x
         M = existing_solver.aspreconditioner()
-        nr0 = np.sqrt(np.inner(np.conjugate(M*r0), r0))
-        nrk = np.sqrt(np.inner(np.conjugate(M*rk), rk))
+        nr0 = np.sqrt(np.inner(np.conjugate(M * r0), r0))
+        nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
         print("  Residuals ||r_k||_M, ||r_0||_M = %1.2e, %1.2e" % (nrk, nr0))
         if np.abs(nr0) > 1e-15:
             print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"

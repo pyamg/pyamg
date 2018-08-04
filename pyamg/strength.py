@@ -731,8 +731,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # If angle in the complex plane between z and z_tilde is
         # greater than 90 degrees, then weak.  We can just look at the
         # dot product to determine if angle is greater than 90 degrees.
-        angle = np.real(Atilde.data) * np.real(data) +\
-            np.imag(Atilde.data) * np.imag(data)
+        angle = np.multiply(np.real(Atilde.data), np.real(data)) +\
+            np.multiply(np.imag(Atilde.data), np.imag(data))
         angle = angle < 0.0
         angle = np.array(angle, dtype=bool)
 
