@@ -176,22 +176,22 @@ def change_smoothers(ml, presmoother, postsmoother):
         # Check if symmetric smoothing scheme
         try:
             it1 = kwargs1['iterations']
-        except:
+        except BaseException:
             it1 = DEFAULT_NITER
         try:
             it2 = kwargs2['iterations']
-        except:
+        except BaseException:
             it2 = DEFAULT_NITER
         if (fn1 != fn2) or (it1 != it2):
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
             try:
                 sweep1 = kwargs1['sweep']
-            except:
+            except BaseException:
                 sweep1 = DEFAULT_SWEEP
             try:
                 sweep2 = kwargs2['sweep']
-            except:
+            except BaseException:
                 sweep2 = DEFAULT_SWEEP
             if (sweep1 == 'forward' and sweep2 == 'backward') or \
                (sweep1 == 'backward' and sweep2 == 'forward') or \
@@ -220,22 +220,22 @@ def change_smoothers(ml, presmoother, postsmoother):
             # Check if symmetric smoothing scheme
             try:
                 it1 = kwargs1['iterations']
-            except:
+            except BaseException:
                 it1 = DEFAULT_NITER
             try:
                 it2 = kwargs2['iterations']
-            except:
+            except BaseException:
                 it2 = DEFAULT_NITER
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
                 try:
                     sweep1 = kwargs1['sweep']
-                except:
+                except BaseException:
                     sweep1 = DEFAULT_SWEEP
                 try:
                     sweep2 = kwargs2['sweep']
-                except:
+                except BaseException:
                     sweep2 = DEFAULT_SWEEP
                 if (sweep1 == 'forward' and sweep2 == 'backward') or \
                    (sweep1 == 'backward' and sweep2 == 'forward') or \
@@ -264,22 +264,22 @@ def change_smoothers(ml, presmoother, postsmoother):
             # Check if symmetric smoothing scheme
             try:
                 it1 = kwargs1['iterations']
-            except:
+            except BaseException:
                 it1 = DEFAULT_NITER
             try:
                 it2 = kwargs2['iterations']
-            except:
+            except BaseException:
                 it2 = DEFAULT_NITER
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
                 try:
                     sweep1 = kwargs1['sweep']
-                except:
+                except BaseException:
                     sweep1 = DEFAULT_SWEEP
                 try:
                     sweep2 = kwargs2['sweep']
-                except:
+                except BaseException:
                     sweep2 = DEFAULT_SWEEP
                 if (sweep1 == 'forward' and sweep2 == 'backward') or \
                    (sweep1 == 'backward' and sweep2 == 'forward') or \
@@ -361,8 +361,8 @@ def rho_block_D_inv_A(A, Dinv):
             raise ValueError('Dinv and A have incompatible dimensions')
 
         Dinv = sp.sparse.bsr_matrix((Dinv,
-                                    sp.arange(Dinv.shape[0]),
-                                    sp.arange(Dinv.shape[0]+1)),
+                                     sp.arange(Dinv.shape[0]),
+                                     sp.arange(Dinv.shape[0]+1)),
                                     shape=A.shape)
 
         # Don't explicitly form Dinv*A
@@ -615,31 +615,59 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
                 residuals=None):
     def smoother(A, x, b):
-        x[:] = (gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = (
+            gmres(
+                A,
+                b,
+                x0=x,
+                tol=tol,
+                maxiter=maxiter,
+                restrt=restrt,
+                M=M,
+                callback=callback,
+                residuals=residuals)[0]).reshape(
+            x.shape)
     return smoother
 
 
 def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
     def smoother(A, x, b):
         x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+                   callback=callback, residuals=residuals)[0]).reshape(x.shape)
     return smoother
 
 
 def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
     def smoother(A, x, b):
-        x[:] = (cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = (
+            cgne(
+                A,
+                b,
+                x0=x,
+                tol=tol,
+                maxiter=maxiter,
+                M=M,
+                callback=callback,
+                residuals=residuals)[0]).reshape(
+            x.shape)
     return smoother
 
 
 def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
     def smoother(A, x, b):
-        x[:] = (cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = (
+            cgnr(
+                A,
+                b,
+                x0=x,
+                tol=tol,
+                maxiter=maxiter,
+                M=M,
+                callback=callback,
+                residuals=residuals)[0]).reshape(
+            x.shape)
     return smoother
 
 

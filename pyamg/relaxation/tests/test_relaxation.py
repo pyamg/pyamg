@@ -285,17 +285,17 @@ class TestRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
     def test_gauss_seidel_csr(self):
         N = 1
@@ -515,17 +515,17 @@ class TestRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
     def test_gauss_seidel_ne_csr(self):
         N = 1
@@ -657,17 +657,17 @@ class TestRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
         # forward and backward passes should give same result with
         # x=ones(N),b=zeros(N)
@@ -747,17 +747,17 @@ class TestRelaxation(TestCase):
             x_copy = x.copy()
             schwarz(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             schwarz(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             schwarz(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
 
 # Test complex arithmetic
@@ -999,17 +999,17 @@ class TestComplexRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
             ##
             # Indexed Gauss-Seidel Tests
@@ -1017,19 +1017,19 @@ class TestComplexRelaxation(TestCase):
             gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]),
                                  iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]),
                                  iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel_indexed(A, x, b, indices=arange(A.shape[0]),
                                  iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
     def test_gauss_seidel_csr(self):
         N = 1
@@ -1243,17 +1243,17 @@ class TestComplexRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel_ne(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
     def test_gauss_seidel_ne_csr(self):
         N = 1
@@ -1404,17 +1404,17 @@ class TestComplexRelaxation(TestCase):
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='forward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='forward'))
+                                        sweep='forward'))
 
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='backward'))
+                                        sweep='backward'))
 
             x_copy = x.copy()
             gauss_seidel_nr(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
-                                sweep='symmetric'))
+                                        sweep='symmetric'))
 
         # forward and backward passes should give same result with
         # x=ones(N),b=zeros(N)

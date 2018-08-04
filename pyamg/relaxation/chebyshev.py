@@ -90,8 +90,8 @@ def mls_polynomial_coefficients(rho, degree):
     # std_roots = np.cos(np.pi * (np.arange(degree) + 0.5)/ degree)
     # print std_roots
 
-    roots = rho/2.0 * (1.0 - np.cos(2*np.pi*(np.arange(degree,
-                                    dtype='float64') + 1)/(2.0*degree+1.0)))
+    roots = rho/2.0 * \
+        (1.0 - np.cos(2*np.pi*(np.arange(degree, dtype='float64') + 1)/(2.0*degree+1.0)))
     # print roots
     roots = 1.0/roots
 
