@@ -28,7 +28,7 @@ PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Py
 
 ![](./Docs/logo/PyAMG_logo.png)
 
-PyAMG is currently developed by Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
+PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
 
 # Citing
 
