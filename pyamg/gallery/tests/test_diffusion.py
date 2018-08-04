@@ -11,21 +11,21 @@ class TestDiffusionStencil2D(TestCase):
                    [-1.0, 4.0, -1.0],
                    [0.0, -1.0, 0.0]]
         assert_equal(diffusion_stencil_2d(epsilon=1.0, theta=0.0,
-                     type='FD'), stencil)
+                                          type='FD'), stencil)
 
         # weak horizontal
         stencil = [[0.0, -1.0, 0.0],
                    [-0.5, 3.0, -0.5],
                    [0.0, -1.0, 0.0]]
         assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=0.0,
-                            type='FD'), stencil)
+                                                 type='FD'), stencil)
 
         # weak vertical
         stencil = [[0.0, -0.5, 0.0],
                    [-1.0, 3.0, -1.0],
                    [0.0, -0.5, 0.0]]
         assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=np.pi/2,
-                            type='FD'), stencil)
+                                                 type='FD'), stencil)
 
     def test_simple_finite_element(self):
         # isotropic
@@ -33,7 +33,7 @@ class TestDiffusionStencil2D(TestCase):
                             [-1.0, 8.0, -1.0],
                             [-1.0, -1.0, -1.0]]) / 3.0
         assert_almost_equal(diffusion_stencil_2d(epsilon=1.0, theta=0.0,
-                            type='FE'), stencil)
+                                                 type='FE'), stencil)
 
         # weak horizontal
         # assert_almost_equal(diffusion_stencil_2d(epsilon=0.5, theta=0.0,
