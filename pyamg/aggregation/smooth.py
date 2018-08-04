@@ -274,6 +274,7 @@ sa_energy_min + helper functions minimize the energy of a tentative
 prolongator for use in SA
 """
 
+
 def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                               weighting='local', Cpt_params=None):
     """Use CG to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
@@ -327,8 +328,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     """
     # Preallocate
     AP = sparse.bsr_matrix((np.zeros(Sparsity_Pattern.data.shape,
-                            dtype=T.dtype),
-                           Sparsity_Pattern.indices, Sparsity_Pattern.indptr),
+                                     dtype=T.dtype),
+                            Sparsity_Pattern.indices, Sparsity_Pattern.indptr),
                            shape=(Sparsity_Pattern.shape))
 
     # CG will be run with diagonal preconditioning

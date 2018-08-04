@@ -220,7 +220,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
-        except:
+        except BaseException:
             raise TypeError('Argument A must have type csr_matrix or\
                             bsr_matrix, or be convertible to csr_matrix')
 
@@ -395,7 +395,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                        coefficients=[1.0/approximate_spectral_radius(A)])
         elif fn == 'gmres':
             x[:] = (gmres(A, np.zeros_like(x), x0=x,
-                    maxiter=candidate_iters)[0]).reshape(x.shape)
+                          maxiter=candidate_iters)[0]).reshape(x.shape)
         else:
             raise TypeError('Unrecognized smoother')
 

@@ -34,8 +34,8 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
                                 improve_candidates=[('block_gauss_seidel',
-                                                    {'sweep': 'symmetric',
-                                                     'iterations': 4}),
+                                                     {'sweep': 'symmetric',
+                                                      'iterations': 4}),
                                                     None],
                                 max_levels=10, max_coarse=10,
                                 diagonal_dominance=False,
@@ -216,7 +216,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR",
                  SparseEfficiencyWarning)
-        except:
+        except BaseException:
             raise TypeError('Argument A must have type csr_matrix or\
                              bsr_matrix, or be convertible to csr_matrix')
 
