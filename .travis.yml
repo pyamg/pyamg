@@ -22,6 +22,14 @@ matrix:
     - python: 3.6
       os: osx
       language: generic
+    # cibuildwheel for osx
+    - os: osx
+      env: CIBW_SKIP="cp34-*" PIP=pip CIBW="True"
+      language: generic
+    # cibuildwheel for manylinux
+    - sudo: required
+      services: docker
+      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW="True"
 
 before_install:
   - |
@@ -43,6 +51,8 @@ install:
 
 script:
   - pytest --cov=. --cov-report=term
+  - if [[ -n $CIBW ]]; then $PIP install cibuildwheel==0.9.4 ; fi
+  - if [[ -n $CIBW ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then codecov; fi
