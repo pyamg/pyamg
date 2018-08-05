@@ -11,9 +11,9 @@ os:
 environment:
   global:
     # for pypi
-    USER:
+    TWINE_USERNAME:
         secure: tLofMqeH2HanaUxSAhgB7w==
-    PASS:
+    TWINE_PASSWORD:
         secure: KZ/QlnFM6G2pPgsK7Wv15w==
 
   matrix:
@@ -34,7 +34,7 @@ install:
   - conda config --set always_yes yes
   - conda update conda
   - conda install cython numpy scipy wheel pip
-  - conda install -c conda-forge pybind11 twine
+  - conda install -c conda-forge pybind11
   - python setup.py bdist_wheel
   - ps: "ls dist"
 
@@ -44,4 +44,11 @@ artifacts:
   - path: dist\*
 
 on_success:
-  - twine upload -u %USER% -p %PASS% dist/*
+  #- twine upload -u %USER% -p %PASS% dist/*
+  - >
+    IF "%APPVEYOR_REPO_TAG%" == "true"
+    (
+    python -m pip install twine
+    &&
+    python -m twine upload wheelhouse/*.whl
+    )
