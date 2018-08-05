@@ -38,7 +38,7 @@ install:
   - conda config --set always_yes yes
   - conda update conda
   - conda install cython numpy scipy wheel pip
-  - conda install -c conda-forge pybind11
+  - conda install -c conda-forge pybind11 twine
   - python setup.py bdist_wheel
   - ps: "ls dist"
 
