@@ -24,12 +24,12 @@ matrix:
       language: generic
     # cibuildwheel for osx
     - os: osx
-      env: CIBW_SKIP="cp34-*" PIP=pip CIBW="True"
+      env: CIBW_SKIP="cp34-*" PIP=pip CIBW="True" CIBW_BEFORE_BUILD="pip install ."
       language: generic
     # cibuildwheel for manylinux
     - sudo: required
       services: docker
-      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW="True"
+      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW="True" CIBW_BEFORE_BUILD="pip install ."
 
 before_install:
   - |
