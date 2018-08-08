@@ -54,8 +54,8 @@ script:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install cibuildwheel==0.9.4 ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
-  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; $PIP install twine ; fi
-  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; twine upload wheelhouse/*.whl ; fi
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install twine ; fi
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then twine upload wheelhouse/*.whl ; fi
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" && -z "$CIBW_BEFORE_BUILD" ]]; then codecov; fi
