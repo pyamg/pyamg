@@ -54,17 +54,8 @@ script:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install cibuildwheel==0.9.4 ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; $PIP install twine ; fi
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; twine upload wheelhouse/*.whl ; fi
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" && -z "$CIBW_BEFORE_BUILD" ]]; then codecov; fi
-
-deploy:
-  provider: pypi
-  distributions: bdist_wheel
-  on:
-    branch: master
-    tags: true
-  password:
-    secure: RAkZ5q6i9+mvlyUftuWF4M5DI85lBotjEOEUZTJGDvr2Llsdq2U/niadKzqBiO92096ge3eJ0eluHX9RRzW2myi6M7RJOTYE4tlEpebLkecm3Xn9M85hlZAorVHRNVct5dQQeKXOEYjIm8QB/2wQoi1K/iJSdxh+/mHarFBMYJQ=
-  user:
-    secure: HE7U4+hoOhgxTiCjpKqynpLLyPyAS09UEg1hpHZYwkRk79pX10xXx7cvJN9q/V+lL3DyZ8DA42QD2TLj4riLHplC03dF16+L1sb0wYfHLt9cI7Zdzvyv9WUDango/JNKqD3SkM8np7WnPNP4QNZK8K6x4oWoGNcUHrjGcAEdgSg=
