@@ -1,5 +1,6 @@
 language: python
-dist: trusty sudo: false
+dist: trusty
+sudo: false
 
 matrix:
   include:
