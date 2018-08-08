@@ -42,7 +42,7 @@ before_install:
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python2; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python3; fi
-  - if [[ -z "$CIBW_BEFORE_BUILD"]]; then $PYTHON -m pip install --upgrade pip ;
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install --upgrade pip ;
 
 install:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -r requirements.txt ;
