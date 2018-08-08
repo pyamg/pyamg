@@ -1,6 +1,5 @@
 language: python
-dist: trusty
-sudo: false
+dist: trusty sudo: false
 
 matrix:
   include:
@@ -24,12 +23,12 @@ matrix:
       language: generic
     # cibuildwheel for osx
     - os: osx
-      env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install ."
+      env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install -r requirements.txt ."
       language: generic
     # cibuildwheel for manylinux
     - sudo: required
       services: docker
-      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW_BEFORE_BUILD="pip install ."
+      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW_BEFORE_BUILD="pip install -r requirements.txt ."
 
 before_install:
   - |
