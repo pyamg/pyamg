@@ -50,7 +50,7 @@ install:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -e . ; fi
 
 script:
-  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install cibuildwheel==0.9.4 ; fi
   - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
 
