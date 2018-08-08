@@ -25,7 +25,7 @@ matrix:
     # cibuildwheel for osx
     # The scripts below check for CIBW_BEFORE_BUILD
     - os: osx
-      env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install -r requirements.txt twine"
+      env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install -r requirements.txt"
       language: generic
     # cibuildwheel for manylinux
     - sudo: required
@@ -52,9 +52,13 @@ install:
 
 script:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term ; fi
-  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install cibuildwheel==0.9.4 ; fi
-  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
-  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then twine upload wheelhouse/*.whl ; fi
+  - |
+    if [[ -n "$CIBW_BEFORE_BUILD" ]]; then
+      $PIP install cibuildwheel==0.9.4 twine
+      cibuildwheel --output-dir wheelhouse
+      ls -la wheelhouse/
+      twine upload wheelhouse/*.whl
+    fi
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" && -z "$CIBW_BEFORE_BUILD" ]]; then codecov; fi
