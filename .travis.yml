@@ -24,38 +24,38 @@ matrix:
       language: generic
     # cibuildwheel for osx
     - os: osx
-      env: CIBW_SKIP="cp34-*" PIP=pip CIBW="True" CIBW_BEFORE_BUILD="pip install ."
+      env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install ."
       language: generic
     # cibuildwheel for manylinux
     - sudo: required
       services: docker
-      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW="True" CIBW_BEFORE_BUILD="pip install ."
+      env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW_BEFORE_BUILD="pip install ."
 
 before_install:
   - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+    if [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PYTHON_VERSION" == "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then
       brew unlink python
       brew install python@2
-    elif [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
+    elif [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PYTHON_VERSION" != "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then
       brew unlink python
       brew install python@3
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then export PYTHON=python2; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then export PYTHON=python3; fi
-  - $PYTHON -m pip install --upgrade pip
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python2; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python3; fi
+  - if [[ -z "$CIBW_BEFORE_BUILD"]]; then $PYTHON -m pip install --upgrade pip ;
 
 install:
-  - $PYTHON -m pip install -r requirements.txt
-  - $PYTHON -m pip install pytest-cov codecov
-  - $PYTHON -m pip install -e .
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -r requirements.txt ;
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install pytest-cov codecov ;
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -e . ;
 
 script:
-  - pytest --cov=. --cov-report=term
-  - if [[ -n $CIBW ]]; then $PIP install cibuildwheel==0.9.4 ; fi
-  - if [[ -n $CIBW ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then $PIP install cibuildwheel==0.9.4 ; fi
+  - if [[ -n "$CIBW_BEFORE_BUILD" ]]; then cibuildwheel --output-dir wheelhouse ; ls -la wheelhouse/ ; fi
 
 after_success:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then codecov; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.6" && -z "$CIBW_BEFORE_BUILD" ]]; then codecov; fi
 
 deploy:
   provider: pypi
