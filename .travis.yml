@@ -42,12 +42,12 @@ before_install:
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python2; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then export PYTHON=python3; fi
-  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install --upgrade pip ;
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install --upgrade pip ; fi
 
 install:
-  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -r requirements.txt ;
-  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install pytest-cov codecov ;
-  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -e . ;
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -r requirements.txt ; fi
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install pytest-cov codecov ; fi
+  - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then $PYTHON -m pip install -e . ; fi
 
 script:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term
