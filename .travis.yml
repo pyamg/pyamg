@@ -22,6 +22,7 @@ matrix:
       os: osx
       language: generic
     # cibuildwheel for osx
+    # The scripts below check for CIBW_BEFORE_BUILD
     - os: osx
       env: CIBW_SKIP="cp34-*" PIP=pip CIBW_BEFORE_BUILD="pip install -r requirements.txt ."
       language: generic
