@@ -54,7 +54,8 @@ script:
   - if [[ -z "$CIBW_BEFORE_BUILD" ]]; then pytest --cov=. --cov-report=term ; fi
   - |
     if [[ -n "$CIBW_BEFORE_BUILD" ]]; then
-      $PIP install cibuildwheel==0.9.4 twine
+      $PIP install cibuildwheel==0.9.4
+      $PIP install twine --user
       cibuildwheel --output-dir wheelhouse
       ls -la wheelhouse/
       twine upload wheelhouse/*.whl
