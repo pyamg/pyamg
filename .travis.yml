@@ -55,7 +55,7 @@ script:
   - |
     if [[ -n "$CIBW_BEFORE_BUILD" ]]; then
       $PIP install cibuildwheel==0.9.4
-      $PIP install twine --user
+      sudo $PIP install twine
       cibuildwheel --output-dir wheelhouse
       ls -la wheelhouse/
       twine upload wheelhouse/*.whl
