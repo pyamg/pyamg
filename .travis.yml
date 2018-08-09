@@ -58,7 +58,7 @@ script:
       sudo $PIP install twine
       cibuildwheel --output-dir wheelhouse
       ls -la wheelhouse/
-      twine upload wheelhouse/*.whl
+      twine upload --skip-existing wheelhouse/*.whl
     fi
 
 after_success:
