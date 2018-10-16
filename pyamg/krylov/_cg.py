@@ -182,13 +182,17 @@ if __name__ == '__main__':
 
     from pyamg.gallery import stencil_grid
     from numpy.random import random
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
-                     dtype=float, format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
     import time
     from scipy.sparse.linalg.isolve import cg as icg
+    import numpy as np
+
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
+                     dtype=float, format='csr')
+    #b = random((A.shape[0],))
+    xstar = 0*random((A.shape[0],))
+    b = A * xstar
+    x0 = random((A.shape[0],))
+
 
     print('\n\nTesting CG with {} x {} 2D Laplace Matrix'.format(A.shape[0],
                                                                  A.shape[0]))
@@ -205,3 +209,34 @@ if __name__ == '__main__':
     print('\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*y)))
     print('info flag = %d' % (flag))
+
+    print('-------------')
+    criterion1 = []
+    myerr = []
+    norm = np.linalg.norm
+
+    criterion1 = []
+    criterion2 = []
+    criterion5 = []
+    backwarderror = []
+
+    def mycb(xk):
+        criterion1.append(norm(b - A * xk) / (norm(A.data)*norm(xk) + norm(b)))
+        criterion2.append(norm(b - A * xk) / norm(b))
+        criterion5.append(norm(b - A * xk) / norm(b - A * x0))
+        backwarderror.append(norm(b - A * xk) / (norm(A.data*norm(xk) * norm(xstar))))
+
+    t1 = time.time()
+    res = []
+    (x, flag) = cg(A, b, x0, tol=1e-8, maxiter=1000, callback=mycb)
+    t2 = time.time()
+
+    import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.rcParams['text.usetex'] = True
+    plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
+    plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
+    plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
+    plt.semilogy(backwarderror, label=r'$\|e_k\|$')
+    plt.legend()
+    plt.show()
