@@ -800,344 +800,568 @@ void cr_helper(const I A_rowptr[], const int A_rowptr_size,
 }
 
 
+/* Interpolate C-points by value and each F-point by value from its strongest
+ * connected C-neighbor. 
+ * 
+ * Parameters
+ * ----------
+ *      rowptr : const array<int> 
+ *          Pre-determined row-pointer for P in CSR format
+ *      colinds : array<int>
+ *          Empty array for column indices for P in CSR format
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      C_data : const array<float>
+ *          Data array for SOC matrix, C
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *
+ * Returns
+ * -------
+ * Nothing, colinds[] modified in place.
+ *
+ */
+template<class I, class T>
+void one_point_interpolation(      I rowptr[],    const int rowptr_size,
+                                   I colinds[],   const int colinds_size,
+                                   T data[],   const int data_size,
+                             const I C_rowptr[],  const int C_rowptr_size,
+                             const I C_colinds[], const int C_colinds_size,
+                             const T C_data[],    const int C_data_size,
+                             const I splitting[], const int splitting_size)
+{
+    I n = rowptr_size-1;
 
-//#define NodeType char
-// // The following function closely approximates the
-// // method described in the 1987 Ruge-Stuben paper
-//
-//template<class I, class T>
-//void rs_interpolation(const I n_nodes,
-//        const I Ap[], const I Aj[], const T Ax[],
-//        const I Sp[], const I Sj[], const T Sx[],
-//        const I Tp[], const I Tj[], const T Tx[],
-//        std::vector<I> * Bp, std::vector<I> * Bj, std::vector<T> * Bx){
-//
-//    std::vector<I> lambda(n_nodes,0);
-//
-//    //compute lambdas
-//    for(I i = 0; i < n_nodes; i++){
-//        lambda[i] = Tp[i+1] - Tp[i];
-//    }
-//
-//
-//    //for each value of lambda, create an interval of nodes with that value
-//    // ptr - is the first index of the interval
-//    // count - is the number of indices in that interval
-//    // index to node - the node located at a given index
-//    // node to index - the index of a given node
-//    std::vector<I> interval_ptr(n_nodes,0);
-//    std::vector<I> interval_count(n_nodes,0);
-//    std::vector<I> index_to_node(n_nodes);
-//    std::vector<I> node_to_index(n_nodes);
-//
-//    for(I i = 0; i < n_nodes; i++){
-//        interval_count[lambda[i]]++;
-//    }
-//    for(I i = 0, cumsum = 0; i < n_nodes; i++){
-//        interval_ptr[i] = cumsum;
-//        cumsum += interval_count[i];
-//        interval_count[i] = 0;
-//    }
-//    for(I i = 0; i < n_nodes; i++){
-//        I lambda_i = lambda[i];
-//        I index    = interval_ptr[lambda_i]+interval_count[lambda_i];
-//        index_to_node[index] = i;
-//        node_to_index[i]     = index;
-//        interval_count[lambda_i]++;
-//    }
-//
-//
-//
-//
-//
-//    std::vector<NodeType> NodeSets(n_nodes,U_NODE);
-//
-//    //Now add elements to C and F, in decending order of lambda
-//    for(I top_index = n_nodes - 1; top_index > -1; top_index--){
-//        I i        = index_to_node[top_index];
-//        I lambda_i = lambda[i];
-//#ifdef DEBUG
-//        {
-//#ifdef DEBUG_PRINT
-//            std::cout << "top_index " << top_index << std::endl;
-//            std::cout << "i         " << i << std::endl;
-//            std::cout << "lambda_i  " << lambda_i << std::endl;
-//
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "=";
-//                if(NodeSets[i] == U_NODE)
-//                    std::cout << "U";
-//                else if(NodeSets[i] == F_NODE)
-//                    std::cout << "F";
-//                else
-//                    std::cout << "C";
-//                std::cout << " ";
-//            }
-//            std::cout << std::endl;
-//
-//            std::cout << "node_to_index" << std::endl;
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "->" << node_to_index[i] << "  ";
-//            }
-//            std::cout << std::endl;
-//            std::cout << "index_to_node" << std::endl;
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "->" << index_to_node[i] << "  ";
-//            }
-//            std::cout << std::endl;
-//
-//            std::cout << "interval_count ";
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << interval_count[i] << " ";
-//            }
-//            std::cout << std::endl;
-//#endif
-//
-//            //make sure arrays are correct
-//            for(I n = 0; n < n_nodes; n++){
-//                assert(index_to_node[node_to_index[n]] == n);
-//            }
-//
-//            //make sure intervals are reasonable
-//            I sum_intervals = 0;
-//            for(I n = 0; n < n_nodes; n++){
-//                assert(interval_count[n] >= 0);
-//                if(interval_count[n] > 0){
-//                    assert(interval_ptr[n] == sum_intervals);
-//                }
-//                sum_intervals += interval_count[n];
-//            }
-//            assert(sum_intervals == top_index+1);
-//
-//
-//            if(interval_count[lambda_i] <= 0){
-//                std::cout << "top_index " << top_index << std::endl;
-//                std::cout << "lambda_i " << lambda_i << std::endl;
-//                std::cout << "interval_count[lambda_i] " << interval_count[lambda_i] << std::endl;
-//                std::cout << "top_index " << top_index << std::endl;
-//                std::cout << "i         " << i << std::endl;
-//                std::cout << "lambda_i  " << lambda_i << std::endl;
-//            }
-//
-//
-//            for(I n = 0; n <= top_index; n++){
-//                assert(NodeSets[index_to_node[n]] != C_NODE);
-//            }
-//        }
-//        assert(node_to_index[i] == top_index);
-//        assert(interval_ptr[lambda_i] + interval_count[lambda_i] - 1 == top_index);
-//        //max interval should have at least one element
-//        assert(interval_count[lambda_i] > 0);
-//#endif
-//
-//
-//        //remove i from its interval
-//        interval_count[lambda_i]--;
-//
-//
-//        if(NodeSets[i] == F_NODE){
-//            continue;
-//        } else {
-//            assert(NodeSets[i] == U_NODE);
-//
-//            NodeSets[i] = C_NODE;
-//
-//            //For each j in S^T_i /\ U
-//            for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
-//                I j = Tj[jj];
-//
-//                if(NodeSets[j] == U_NODE){
-//                    NodeSets[j] = F_NODE;
-//
-//                    //For each k in S_j /\ U
-//                    for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
-//                        I k = Sj[kk];
-//
-//                        if(NodeSets[k] == U_NODE){
-//                            //move k to the end of its current interval
-//                            assert(lambda[j] < n_nodes - 1);//this would cause problems!
-//
-//                            I lambda_k = lambda[k];
-//                            I old_pos  = node_to_index[k];
-//                            I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
-//
-//                            node_to_index[index_to_node[old_pos]] = new_pos;
-//                            node_to_index[index_to_node[new_pos]] = old_pos;
-//                            std::swap(index_to_node[old_pos],index_to_node[new_pos]);
-//
-//                            //update intervals
-//                            interval_count[lambda_k]   -= 1;
-//                            interval_count[lambda_k+1] += 1;
-//                            interval_ptr[lambda_k+1]    = new_pos;
-//
-//                            //increment lambda_k
-//                            lambda[k]++;
-//
-//#ifdef DEBUG
-//                            assert(interval_count[lambda_k]   >= 0);
-//                            assert(interval_count[lambda_k+1] >  0);
-//                            assert(interval_ptr[lambda[k]] <= node_to_index[k]);
-//                            assert(node_to_index[k] < interval_ptr[lambda[k]] + interval_count[lambda[k]]);
-//#endif
-//                        }
-//                    }
-//                }
-//            }
-//
-//            //For each j in S_i /\ U
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                if(NodeSets[j] == U_NODE){            //decrement lambda for node j
-//                    assert(lambda[j] > 0);//this would cause problems!
-//
-//                    //move j to the beginning of its current interval
-//                    I lambda_j = lambda[j];
-//                    I old_pos  = node_to_index[j];
-//                    I new_pos  = interval_ptr[lambda_j];
-//
-//                    node_to_index[index_to_node[old_pos]] = new_pos;
-//                    node_to_index[index_to_node[new_pos]] = old_pos;
-//                    std::swap(index_to_node[old_pos],index_to_node[new_pos]);
-//
-//                    //update intervals
-//                    interval_count[lambda_j]   -= 1;
-//                    interval_count[lambda_j-1] += 1;
-//                    interval_ptr[lambda_j]     += 1;
-//                    interval_ptr[lambda_j-1]    = interval_ptr[lambda_j] - interval_count[lambda_j-1];
-//
-//                    //decrement lambda_j
-//                    lambda[j]--;
-//
-//#ifdef DEBUG
-//                    assert(interval_count[lambda_j]   >= 0);
-//                    assert(interval_count[lambda_j-1] >  0);
-//                    assert(interval_ptr[lambda[j]] <= node_to_index[j]);
-//                    assert(node_to_index[j] < interval_ptr[lambda[j]] + interval_count[lambda[j]]);
-//#endif
-//                }
-//            }
-//        }
-//    }
-//
-//
-//
-//
-//#ifdef DEBUG
-//    //make sure each f-node has at least one strong c-node neighbor
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == F_NODE){
-//            I row_start = Sp[i];
-//            I row_end   = Sp[i+1];
-//            bool has_c_neighbor = false;
-//            for(I jj = row_start; jj < row_end; jj++){
-//                if(NodeSets[Sj[jj]] == C_NODE){
-//                    has_c_neighbor = true;
-//                    break;
-//                }
-//            }
-//            assert(has_c_neighbor);
-//        }
-//    }
-//#endif
-//
-//    //Now construct interpolation operator
-//    std::vector<T> d_k(n_nodes,0);
-//    std::vector<bool> C_i(n_nodes,0);
-//    Bp->push_back(0);
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == C_NODE){
-//            //interpolate directly
-//            Bj->push_back(i);
-//            Bx->push_back(1);
-//            Bp->push_back(Bj->size());
-//        } else {
-//            //F_NODE
-//
-//            //Step 4
-//            T d_i = 0; //denominator for this row
-//            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ d_i += Ax[jj]; }
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ d_i -= Sx[jj]; }
-//
-//            //Create C_i, initialize d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                if(NodeSets[j] == C_NODE){
-//                    C_i[j] = true;
-//                    d_k[j] = Sx[jj];
-//                }
-//            }
-//
-//            bool Sj_intersects_Ci = true; //in the case that i has no F-neighbors
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ //for j in D^s_i
-//                I    j = Sj[jj];
-//                T   a_ij = Sx[jj];
-//                T   a_jl = 0;
-//
-//                if(NodeSets[j] != F_NODE){continue;}
-//
-//                //Step 5
-//                Sj_intersects_Ci = false;
-//
-//                //compute sum a_jl
-//                for(I ll = Sp[j]; ll < Sp[j+1]; ll++){
-//                    if(C_i[Sj[ll]]){
-//                        Sj_intersects_Ci = true;
-//                        a_jl += Sx[ll];
-//                    }
-//                }
-//
-//                if(!Sj_intersects_Ci){ break; }
-//
-//                for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
-//                    I   k = Sj[kk];
-//                    T  a_jk = Sx[kk];
-//                    if(C_i[k]){
-//                        d_k[k] += a_ij*a_jk / a_jl;
-//                    }
-//                }
-//            }
-//
-//            //Step 6
-//            if(Sj_intersects_Ci){
-//                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                    I j = Sj[jj];
-//                    if(NodeSets[j] == C_NODE){
-//                        Bj->push_back(j);
-//                        Bx->push_back(-d_k[j]/d_i);
-//                    }
-//                }
-//                Bp->push_back(Bj->size());
-//            } else { //make i a C_NODE
-//                NodeSets[i] = C_NODE;
-//                Bj->push_back(i);
-//                Bx->push_back(1);
-//                Bp->push_back(Bj->size());
-//            }
-//
-//
-//            //Clear C_i,d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                C_i[j] = false;
-//                d_k[j] = 0;
-//            }
-//
-//        }
-//
-//    }
-//
-//    //for each c-node, determine its index in the coarser lvl
-//    std::vector<I> cnode_index(n_nodes,-1);
-//    I n_cnodes = 0;
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == C_NODE){
-//            cnode_index[i] = n_cnodes++;
-//        }
-//    }
-//    //map old C indices to coarse indices
-//    for(typename std::vector<I>::iterator iter = Bj->begin(); iter != Bj->end(); iter++){
-//        *iter = cnode_index[*iter];
-//    }
-//}
+    // Get enumeration of C-points, where if i is the jth C-point,
+    // then pointInd[i] = j.
+    std::vector<I> pointInd(n);
+    pointInd[0] = 0;
+    for (I i=1; i<n; i++) {
+        pointInd[i] = pointInd[i-1] + splitting[i-1];
+    }
+
+    rowptr[0] = 0;
+    // Build interpolation operator as CSR matrix
+    I next = 0;
+    for (I row=0; row<n; row++) {
+
+        // Set C-point as identity
+        if (splitting[row] == C_NODE) {
+            colinds[next] = pointInd[row];
+            next += 1;
+        }
+        // For F-points, find strongest connection to C-point
+        // and interpolate directly from C-point. 
+        else {
+            T max = -1.0;
+            I ind = -1;
+            T val = 0.0;
+            for (I i=C_rowptr[row]; i<C_rowptr[row+1]; i++) {
+                if (splitting[C_colinds[i]] == C_NODE) {
+                    double vv = std::abs(C_data[i]);
+                    if (vv > max) {
+                        max = vv;
+                        ind = C_colinds[i];
+                        val = C_data[i];
+                    }
+                }
+            }
+            if (ind > -1) {
+              colinds[next] = pointInd[ind];
+              data[next] = -val;
+              next += 1;
+            }
+        }
+        rowptr[row+1] = next;
+    }
+}
+
+
+
+/* Sorting function for approx_ideal_restriction_pass1, doesn't like being
+ * templated I, T for some compilers. Needs to be outside scope of function.
+ */
+bool sort_2nd(const std::pair<int,double> &left,const std::pair<int,double> &right)
+{
+       return left.second < right.second;
+}
+// bool sort_2nd(const std::pair<int,float> &left,const std::pair<int,float> &right)
+// {
+//        return left.second < right.second;
+// }
+
+
+/* Build row_pointer for approximate ideal restriction in CSR or BSR form.
+ * 
+ * Parameters
+ * ----------
+ *      rowptr : array<int> 
+ *          Empty row-pointer for R
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      Cpts : array<int>
+ *          List of global C-point indices
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *      distance : int, default 2
+ *          Distance of F-point neighborhood to consider, options are 1 and 2.
+ *
+ * Returns
+ * -------
+ * Nothing, rowptr[] modified in place.
+ */
+template<class I>
+void approx_ideal_restriction_pass1(      I rowptr[], const int rowptr_size,
+                                    const I C_rowptr[], const int C_rowptr_size,
+                                    const I C_colinds[], const int C_colinds_size,
+                                    const I Cpts[], const int Cpts_size,
+                                    const I splitting[], const int splitting_size,
+                                    const I distance = 2)
+{
+    I nnz = 0;
+    rowptr[0] = 0;
+
+    // Deterimine number of nonzeros in each row of R.
+    for (I row=0; row<Cpts_size; row++) {
+        I cpoint = Cpts[row];
+
+        // Determine number of strongly connected F-points in sparsity for R.
+        for (I i=C_rowptr[cpoint]; i<C_rowptr[cpoint+1]; i++) {
+            I this_point = C_colinds[i];
+            if (splitting[this_point] == F_NODE) {
+                nnz++;
+
+                // Strong distance-two F-to-F connections
+                if (distance == 2) {
+                    for (I kk = C_rowptr[this_point]; kk < C_rowptr[this_point+1]; kk++){
+                        if ((splitting[C_colinds[kk]] == F_NODE) && (this_point != cpoint)) {
+                            nnz++;
+                        }
+                    } 
+                }
+            }
+        }
+
+        // Set row-pointer for this row of R (including identity on C-points).
+        nnz += 1;
+        rowptr[row+1] = nnz; 
+    }
+    if ((distance != 1) && (distance != 2)) {
+        std::cout << "Can only choose distance one or two neighborhood for AIR.\n";
+    }
+}
+
+
+/* Build column indices and data array for approximate ideal restriction
+ * in CSR format.
+ * 
+ * Parameters
+ * ----------
+ *      rowptr : const array<int> 
+ *          Pre-determined row-pointer for R in CSR format
+ *      colinds : array<int>
+ *          Empty array for column indices for R in CSR format
+ *      data : array<float>
+ *          Empty array for data for R in CSR format
+ *      A_rowptr : const array<int>
+ *          Row pointer for matrix A
+ *      A_colinds : const array<int>
+ *          Column indices for matrix A
+ *      A_data : const array<float>
+ *          Data array for matrix A
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      C_data : const array<float>
+ *          Data array for SOC matrix, C
+ *      Cpts : array<int>
+ *          List of global C-point indices
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *      distance : int, default 2
+ *          Distance of F-point neighborhood to consider, options are 1 and 2.
+ *      use_gmres : bool, default 0
+ *          Use GMRES for local dense solve
+ *      maxiter : int, default 10
+ *          Maximum GMRES iterations
+ *      precondition : bool, default True
+ *          Diagonally precondition GMRES
+ *
+ * Returns
+ * -------
+ * Nothing, colinds[] and data[] modified in place.
+ *
+ * Notes
+ * -----
+ * data[] must be passed in initialized to zero.
+ */
+template<class I, class T>
+void approx_ideal_restriction_pass2(const I rowptr[], const int rowptr_size,
+                                          I colinds[], const int colinds_size,
+                                          T data[], const int data_size,
+                                    const I A_rowptr[], const int A_rowptr_size,
+                                    const I A_colinds[], const int A_colinds_size,
+                                    const T A_data[], const int A_data_size,
+                                    const I C_rowptr[], const int C_rowptr_size,
+                                    const I C_colinds[], const int C_colinds_size,
+                                    const T C_data[], const int C_data_size,
+                                    const I Cpts[], const int Cpts_size,
+                                    const I splitting[], const int splitting_size,
+                                    const I distance = 2,
+                                    const I use_gmres = 0,
+                                    const I maxiter = 10,
+                                    const I precondition = 1 )
+{
+    I is_col_major = true;
+
+    // Build column indices and data for each row of R.
+    for (I row=0; row<Cpts_size; row++) {
+
+        I cpoint = Cpts[row];
+        I ind = rowptr[row];
+
+        // Set column indices for R as strongly connected F-points.
+        for (I i=C_rowptr[cpoint]; i<C_rowptr[cpoint+1]; i++) {
+            I this_point = C_colinds[i];
+            if (splitting[this_point] == F_NODE) {
+                colinds[ind] = C_colinds[i];
+                ind +=1 ;
+
+                // Strong distance-two F-to-F connections
+                if (distance == 2) {
+                    for (I kk = C_rowptr[this_point]; kk < C_rowptr[this_point+1]; kk++){
+                        if ((splitting[C_colinds[kk]] == F_NODE) && (this_point != cpoint)) {
+                            colinds[ind] = C_colinds[kk];
+                            ind +=1 ;
+                        }
+                    } 
+                }
+            }
+        }
+
+        if (ind != (rowptr[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
+                         "ind = " << ind << ", rowptr[row] = " << rowptr[row] <<
+                         ", rowptr[row+1] = " << rowptr[row+1] << "\n";
+        }
+
+        // Build local linear system as the submatrix A restricted to the neighborhood,
+        // Nf, of strongly connected F-points to the current C-point, that is A0 =
+        // A[Nf, Nf]^T, stored in column major form. Since A in row-major = A^T in
+        // column-major, A (CSR) is iterated through and A[Nf,Nf] stored in row-major.
+        I size_N = ind - rowptr[row];
+        std::vector<T> A0(size_N*size_N);
+        I temp_A = 0;
+        for (I j=rowptr[row]; j<ind; j++) { 
+            I this_ind = colinds[j];
+            for (I i=rowptr[row]; i<ind; i++) {
+                // Search for indice in row of A
+                I found_ind = 0;
+                for (I k=A_rowptr[this_ind]; k<A_rowptr[this_ind+1]; k++) {
+                    if (colinds[i] == A_colinds[k]) {
+                        A0[temp_A] = A_data[k];
+                        found_ind = 1;
+                        temp_A += 1;
+                        break;
+                    }
+                }
+                // If indice not found, set element to zero
+                if (found_ind == 0) {
+                    A0[temp_A] = 0.0;
+                    temp_A += 1;
+                }
+            }
+        }
+
+        // Build local right hand side given by b_j = -A_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point. 
+        I temp_b = 0;
+        std::vector<T> b0(size_N, 0);
+        for (I i=rowptr[row]; i<ind; i++) {
+            // Search for indice in row of A. If indice not found, b0 has been
+            // intitialized to zero.
+            for (I k=A_rowptr[cpoint]; k<A_rowptr[cpoint+1]; k++) {
+                if (colinds[i] == A_colinds[k]) {
+                    b0[temp_b] = -A_data[k];
+                    break;
+                }
+            }
+            temp_b += 1;
+        }
+
+        // Solve linear system (least squares solves exactly when full rank)
+        // s.t. (RA)_ij = 0 for (i,j) within the sparsity pattern of R. Store
+        // solution in data vector for R.
+        if (size_N > 0) {
+            if (use_gmres) {
+                dense_GMRES(&A0[0], &b0[0], &data[rowptr[row]], size_N, is_col_major, maxiter, precondition);
+            }
+            else {
+                least_squares(&A0[0], &b0[0], &data[rowptr[row]], size_N, size_N, is_col_major);
+            }
+        }
+
+        // Add identity for C-point in this row
+        colinds[ind] = cpoint;
+        data[ind] = 1.0;
+    }
+}
+
+
+/* Build column indices and data array for approximate ideal restriction
+ * in CSR format.
+ * 
+ * Parameters
+ * ----------
+ *      rowptr : const array<int> 
+ *          Pre-determined row-pointer for R in CSR format
+ *      colinds : array<int>
+ *          Empty array for column indices for R in CSR format
+ *      data : array<float>
+ *          Empty array for data for R in CSR format
+ *      A_rowptr : const array<int>
+ *          Row pointer for matrix A
+ *      A_colinds : const array<int>
+ *          Column indices for matrix A
+ *      A_data : const array<float>
+ *          Data array for matrix A
+ *      C_rowptr : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      C_colinds : const array<int>
+ *          Column indices for SOC matrix, C
+ *      C_data : const array<float>
+ *          Data array for SOC matrix, C
+ *      Cpts : array<int>
+ *          List of global C-point indices
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *      blocksize : int
+ *          Blocksize of matrix (assume square blocks)
+ *      distance : int, default 2
+ *          Distance of F-point neighborhood to consider, options are 1 and 2.
+ *      use_gmres : bool, default 0
+ *          Use GMRES for local dense solve
+ *      maxiter : int, default 10
+ *          Maximum GMRES iterations
+ *      precondition : bool, default True
+ *          Diagonally precondition GMRES
+ *
+ * Returns
+ * -------
+ * Nothing, colinds[] and data[] modified in place.
+ *
+ * Notes
+ * -----
+ * data[] must be passed in initialized to zero.
+ */
+template<class I, class T>
+void block_approx_ideal_restriction_pass2(const I rowptr[], const int rowptr_size,
+                                                I colinds[], const int colinds_size,
+                                                T data[], const int data_size,
+                                          const I A_rowptr[], const int A_rowptr_size,
+                                          const I A_colinds[], const int A_colinds_size,
+                                          const T A_data[], const int A_data_size,
+                                          const I C_rowptr[], const int C_rowptr_size,
+                                          const I C_colinds[], const int C_colinds_size,
+                                          const T C_data[], const int C_data_size,
+                                          const I Cpts[], const int Cpts_size,
+                                          const I splitting[], const int splitting_size,
+                                          const I blocksize,
+                                          const I distance = 2,
+                                          const I use_gmres = 0,
+                                          const I maxiter = 10,
+                                          const I precondition = 1 )
+{
+    I is_col_major = true;
+
+    // Build column indices and data for each row of R.
+    for (I row=0; row<Cpts_size; row++) {
+
+        I cpoint = Cpts[row];
+        I ind = rowptr[row];
+
+        // Set column indices for R as strongly connected F-points.
+        for (I i=C_rowptr[cpoint]; i<C_rowptr[cpoint+1]; i++) {
+            I this_point = C_colinds[i];
+            if (splitting[this_point] == F_NODE) {
+                colinds[ind] = C_colinds[i];
+                ind += 1 ;
+
+                // Strong distance-two F-to-F connections
+                if (distance == 2) {
+                    for (I kk = C_rowptr[this_point]; kk < C_rowptr[this_point+1]; kk++){
+                        if ((splitting[C_colinds[kk]] == F_NODE) && (this_point != cpoint)) {
+                            colinds[ind] = C_colinds[kk];
+                            ind += 1 ;
+                        }
+                    } 
+                }
+            }
+        }
+
+        if (ind != (rowptr[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n";
+        }
+
+        // Build local linear system as the submatrix A^T restricted to the neighborhood,
+        // Nf, of strongly connected F-points to the current C-point, that is A0 =
+        // A[Nf, Nf]^T, stored in column major form. Since A in row-major = A^T in
+        // column-major, A (CSR) is iterated through and A[Nf,Nf] stored in row-major.
+        //      - Initialize A0 to zero
+        I size_N = ind - rowptr[row];
+        I num_DOFs = size_N * blocksize;
+        std::vector<T> A0(num_DOFs*num_DOFs, 0.0);
+        I this_block_row = 0;
+
+        // Add each block in strongly connected neighborhood to dense linear system.
+        // For each column indice in sparsity pattern for this row of R:
+        for (I j=rowptr[row]; j<ind; j++) { 
+            I this_ind = colinds[j];
+            I this_block_col = 0;
+
+            // For this row of A, add blocks to A0 for each entry in sparsity pattern
+            for (I i=rowptr[row]; i<ind; i++) {
+
+                // Block row/column indices to normal row/column indices
+                I this_row = this_block_row*blocksize;
+                I this_col = this_block_col*blocksize;
+
+                // Search for indice in row of A
+                for (I k=A_rowptr[this_ind]; k<A_rowptr[this_ind+1]; k++) {
+
+                    // Add block of A to dense array. If indice not found, elements
+                    // in A0 have already been initialized to zero.
+                    if (colinds[i] == A_colinds[k]) {
+                        I block_data_ind = k * blocksize * blocksize;
+
+                        // For each row in block:
+                        for (I block_row=0; block_row<blocksize; block_row++) {
+                            I row_maj_ind = (this_row + block_row) * num_DOFs + this_col;
+
+                            // For each column in block:
+                            for (I block_col=0; block_col<blocksize; block_col++) {
+
+                                // Blocks of A stored in row-major in A_data
+                                I A_data_ind = block_data_ind + block_row * blocksize + block_col;
+                                A0[row_maj_ind + block_col] = A_data[A_data_ind];
+                                if ((row_maj_ind + block_col) > num_DOFs*num_DOFs) {
+                                    std::cout << "Warning: Accessing out of bounds index building A0.\n";
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                // Increase block column count
+                this_block_col += 1;
+            }
+            // Increase block row count
+            this_block_row += 1;
+        }
+
+        // Build local right hand side given by blocks b_j = -A_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point, and c-point the global C-point index corresponding
+        // to the current row of R. RHS for each row in block, stored in b0 at indices
+        //      b0[0], b0[1*num_DOFs], ..., b0[ (blocksize-1)*num_DOFs ]
+        // Mapping between this ordering, say row_ind, and bsr ordering given by
+        //      for each block_ind:
+        //          for each row in block:    
+        //              for each col in block:
+        //                  row_ind = num_DOFs*row + block_ind*blocksize + col
+        //                  bsr_ind = block_ind*blocksize^2 + row*blocksize + col
+        std::vector<T> b0(num_DOFs * blocksize, 0);
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            I temp_ind = rowptr[row] + block_ind;
+
+            // Search for indice in row of A, store data in b0. If not found,
+            // b0 has been initialized to zero.
+            for (I k=A_rowptr[cpoint]; k<A_rowptr[cpoint+1]; k++) {
+                if (colinds[temp_ind] == A_colinds[k]) {
+                    for (I this_row=0; this_row<blocksize; this_row++) {
+                        for (I this_col=0; this_col<blocksize; this_col++) {
+                            I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                            I bsr_ind = k*blocksize*blocksize + this_row*blocksize + this_col;
+                            b0[row_ind] = -A_data[bsr_ind];
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Solve local linear system for each row in block
+        if (use_gmres) {
+                
+            // Apply GMRES to right-hand-side for each DOF in block
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Transfer rhs in b[] to rhs[] (solution to all systems will be stored in b[])
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = b0[b_ind0 + i];
+                }
+
+                // Solve system using GMRES
+                dense_GMRES(&A0[0], &rhs[0], &b0[b_ind0], num_DOFs,
+                            is_col_major, maxiter, precondition);
+            }
+        }
+        else {
+            // Take QR of local matrix for linear solves, R stored in A0
+            std::vector<T> Q = QR(&A0[0], num_DOFs, num_DOFs, is_col_major);
+            
+            // Solve each block based on QR decomposition
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Multiply right hand side, rhs := Q^T*b (assumes Q stored in row-major)
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = 0.0;
+                    for (I k=0; k<num_DOFs; k++) {
+                        rhs[i] += b0[b_ind0 + k] * Q[col_major(k,i,num_DOFs)];
+                    }
+                }
+
+                // Solve upper triangular system from QR, store solution in b0
+                upper_tri_solve(&A0[0], &rhs[0], &b0[b_ind0], num_DOFs, num_DOFs, is_col_major);
+            }
+        }
+
+        // Add solution for each block row to data array. See section on RHS for
+        // mapping between bsr data array and row-major array solution stored in
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                for (I this_col=0; this_col<blocksize; this_col++) {
+                    I bsr_ind = rowptr[row]*blocksize*blocksize + block_ind*blocksize*blocksize + 
+                                this_row*blocksize + this_col;
+                    I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                    if (std::abs(b0[row_ind]) > 1e-15) {
+                        data[bsr_ind] = b0[row_ind];                    
+                    }
+                    else {
+                        data[bsr_ind] = 0.0;                   
+                    }
+                }
+            }
+        }
+
+        // Add identity for C-point in this block row (assume data[] initialized to 0)
+        colinds[ind] = cpoint;
+        I identity_ind = ind*blocksize*blocksize;
+        for (I this_row=0; this_row<blocksize; this_row++) {
+            data[identity_ind + (blocksize+1)*this_row] = 1.0;
+        }
+    }
+}
+
 
 #endif
