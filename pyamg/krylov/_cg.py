@@ -22,8 +22,8 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the
-        preconditioner norm of r_0, or ||r_0||_M.
+        relative convergence tolerance, i.e. tol is scaled by ||b||
+        ||r_k|| < tol * ||b||
     maxiter : int
         maximum number of allowed iterations
     xtype : type
@@ -34,9 +34,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals contains the residual norm history,
-        including the initial residual.  The preconditioner norm
-        is used, instead of the Euclidean norm.
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
@@ -98,8 +96,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     p = z.copy()
     rz = np.inner(r.conjugate(), z)
 
-    # use preconditioner norm
-    normr = np.sqrt(rz)
+    normr = np.linalg.norm(r)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
@@ -112,9 +109,9 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     if normr < tol*normb:
         return (postprocess(x), 0)
 
-    # Scale tol by ||r_0||_M
+    # Scale tol by ||b||
     if normr != 0.0:
-        tol = tol*normr
+        tol = tol*normb
 
     # How often should r be recomputed
     recompute_r = 8
@@ -142,8 +139,11 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         z = M*r                                   # 6
         rz = np.inner(r.conjugate(), z)
 
-        if rz < 0.0:                              # check curvature of M
-            warn("\nIndefinite preconditioner detected in CG, aborting\n")
+        if rz <= 0.0:                              # check curvature of M
+            if rz == 0.0:
+                warn("\nSingular preconditioner detected in CG, aborting\n")
+            else
+                warn("\nIndefinite preconditioner detected in CG, aborting\n")
             return (postprocess(x), -1)
 
         beta = rz/rz_old                          # 7
@@ -152,7 +152,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         iter += 1
 
-        normr = np.sqrt(rz)                          # use preconditioner norm
+        normr = np.linalg.norm(r)
 
         if residuals is not None:
             residuals.append(normr)
@@ -162,12 +162,6 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         if normr < tol:
             return (postprocess(x), 0)
-        elif rz == 0.0:
-            # important to test after testing normr < tol. rz == 0.0 is an
-            # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CG, ceasing \
-                  iterations\n")
-            return (postprocess(x), -1)
 
         if iter == maxiter:
             return (postprocess(x), iter)
