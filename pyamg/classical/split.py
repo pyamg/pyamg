@@ -20,7 +20,7 @@ and zeros for the F-nodes.
 C/F Splitting Methods
 ---------------------
 RS : Original Ruge-Stuben method
-    - Produces good C/F splittings.
+    - Produces good C/F splittings but is inherently serial.
     - May produce AMG hierarchies with relatively high operator complexities.
     - See References [1] and [4]
 
@@ -96,11 +96,10 @@ from pyamg.graph import vertex_coloring
 from pyamg import amg_core
 from pyamg.util.utils import remove_diagonal
 
-__all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', \
-           'CLJPc', 'MIS', 'weighted_matching']
+__all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 
 
-def RS(S, second_pass=False):
+def RS(S):
     """Compute a C/F splitting using Ruge-Stuben coarsening.
 
     Parameters
@@ -108,9 +107,6 @@ def RS(S, second_pass=False):
     S : csr_matrix
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
-    second_pass : bool, default False
-        Perform second pass of classical AMG coarsening. Can be important for
-        classical AMG interpolation. Typically not done in parallel (e.g. Hypre).
 
     Returns
     -------
@@ -141,17 +137,13 @@ def RS(S, second_pass=False):
     S = remove_diagonal(S)
 
     T = S.T.tocsr()  # transpose S for efficient column access
+
     splitting = np.empty(S.shape[0], dtype='intc')
-    influence = np.zeros((S.shape[0],), dtype='intc')
 
     amg_core.rs_cf_splitting(S.shape[0],
                              S.indptr, S.indices,
                              T.indptr, T.indices,
-                             influence,
                              splitting)
-    if second_pass:
-        amg_core.rs_cf_splitting_pass2(S.shape[0], S.indptr,
-                                       S.indices, splitting)
 
     return splitting
 
