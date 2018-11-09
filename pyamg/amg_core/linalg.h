@@ -195,6 +195,11 @@ inline void norm(const T x[], const I n, F &normx)
 {
     normx = sqrt(real(dot_prod(x,x,n)));
 }
+template<class I, class T>
+inline T norm(const T x[], const I n)
+{
+    return std::sqrt(dot_prod(x,x,n));
+}
 
 
 /* axpy(x, y, alpha, n)
@@ -465,7 +470,9 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             }
         }
     }
-
+    else { 
+        std::cout << "Unsupported combination of row/column major for dense multiplication.\n";
+    }
 }
 
 
@@ -523,7 +530,6 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * Vol 10, No 2, p 359-371, March 1989.
  *
  */
-
 template<class I, class T, class F>
 I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 {
@@ -861,6 +867,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     return;
 }
 
+
 /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
  * Routine is designed to invert many small matrices at once.
  * Parameters
@@ -973,6 +980,7 @@ void pinv_array(T AA[], const int AA_size,
     return;
 }
 
+
 /*
  * Scale the columns of a CSC matrix *in place*
  *
@@ -996,6 +1004,7 @@ void csc_scale_columns(const I n_row,
         }
     }
 }
+
 
 /*
  * Scale the rows of a CSC matrix *in place*
@@ -1055,7 +1064,7 @@ std::vector<T> QR(T A[],
                   const I &n,
                   const I is_col_major)
 {
-    // Funciton poIer for row or column major matrices
+    // Funciton pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
     const I *C;
     if (is_col_major) {

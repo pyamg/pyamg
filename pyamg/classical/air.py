@@ -11,15 +11,10 @@ from copy import deepcopy
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import classical_strength_of_connection, \
-    symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection, energy_based_strength_of_connection, \
-    algebraic_distance, affinity_distance
-from pyamg.util.utils import mat_mat_complexity, unpack_arg, extract_diagonal_blocks, \
-    filter_matrix_rows
-from pyamg.classical.interpolate import direct_interpolation,
-     one_point_interpolation, injection_interpolation, local_AIR, \
-     neumann_AIR
+from pyamg.strength import *
+from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
+     filter_matrix_rows
+from pyamg.classical.interpolate import *
 from pyamg.classical.split import *
 from pyamg.classical.cr import CR
 
@@ -29,7 +24,7 @@ def AIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF='RS',
                interp='one_point',
-               restrict='neumann',
+               restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
                postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
                               'withrho': False,  'F_iterations': 2,
@@ -56,9 +51,9 @@ def AIR_solver(A,
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interp : {string} : default 'one-point'
         Options include 'direct', 'standard', 'inject' and 'one-point'.
-    restrict : {string} : default 'neumann'
-        Options include 'air' for approximate ideal
-        restriction.
+    restrict : {string} : default distance-2 AIR, with theta = 0.05.
+        Options include 'air' for local approximate ideal restriction (lAIR)
+        and 'neumann' for Neumann approximate ideal restriction (nAIR).
     presmoother : {string or dict} : default None
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -92,10 +87,6 @@ def AIR_solver(A,
             Optionally, may be a tuple (fn, args), where fn is a string such as
         ['splu', 'lu', ...] or a callable function, and args is a dictionary of
         arguments to be passed to fn.
-    setup_complexity : bool
-        For a detailed, more accurate setup complexity, pass in 
-        'setup_complexity' = True. This will slow down performance, but
-        increase accuracy of complexity count. 
 
     Notes
     -----
@@ -113,11 +104,6 @@ def AIR_solver(A,
     aggregation.rootnode_solver
 
     """
-
-    if ('setup_complexity' in kwargs):
-        if kwargs['setup_complexity'] == True:
-            mat_mat_complexity.__detailed__ = True
-        del kwargs['setup_complexity']
 
     # preprocess A
     A = A.asfptype()
@@ -202,9 +188,13 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
+    # BS - have run into cases where no C-points are designated, and it
+    # throws off the next routines. If everything is an F-point, return here
+    if np.sum(splitting) == len(splitting):
+        return 1
+
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
-    r_flag = False
     fn, kwargs = unpack_arg(interp)
     if fn == 'standard':
         P = standard_interpolation(A, C, splitting, **kwargs)
