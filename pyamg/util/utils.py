@@ -21,7 +21,7 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
            'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows']
+           'filter_matrix_rows', 'truncate_rows',  'scale_block_inverse']
 
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
@@ -2195,28 +2195,42 @@ def truncate_rows(A, nz_per_row):
     return A
 
 
-# from functools import partial, update_wrapper
-# def dispatcher(name_to_handle):
-#    def dispatcher(arg):
-#        if isinstance(arg,tuple):
-#            fn,opts = arg[0],arg[1]
-#        else:
-#            fn,opts = arg,{}
-#
-#        if fn in name_to_handle:
-#            # convert string into function handle
-#            fn = name_to_handle[fn]
-#        #elif isinstance(fn, type(numpy.ones)):
-#        #    pass
-#        elif callable(fn):
-#            # if fn is itself a function handle
-#            pass
-#        else:
-#            raise TypeError('Expected function')
-#
-#        wrapped = partial(fn, **opts)
-#        update_wrapper(wrapped, fn)
-#
-#        return wrapped
-#
-#    return dispatcher
+def scale_block_inverse(A, blocksize):
+    """
+    Get inverse of block diagonal of A and scale A, A = D^{-1}A.
+
+    Parameters
+    ----------
+    A : csr or bsr_matrix
+        Matrix to scale by block inverse. 
+    blocksize : int
+        Blocksize of matrix.
+
+    Returns
+    -------
+    A = D^{-1}*A, D^{-1} as bsr matrix
+
+    Notes
+    -----
+    This is not a symmetric scaling. 
+    """
+
+    if not isspmatrix(A):
+        raise TypeError('Expected sparse matrix')
+    if A.shape[0] != A.shape[1]:
+        raise ValueError("Expected square matrix")
+    if sp.mod(A.shape[0], blocksize) != 0:
+        raise ValueError("blocksize and A.shape must be compatible")
+
+    # Convert to BSR
+    if not isspmatrix_bsr(A):
+        A = bsr_matrix(A, blocksize=(blocksize, blocksize))
+    if A.blocksize != (blocksize, blocksize):
+        A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    # Get block diagonal inverse
+    N_block = A.shape[0] / blocksize
+    Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
+    scale = bsr_matrix((Dinv, np.arange(0,N_block), np.arange(0,N_block+1)),
+                        blocksize=[blocksize,blocksize], shape=A.shape)
+    return scale * A, scale
