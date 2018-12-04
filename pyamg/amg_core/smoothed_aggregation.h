@@ -299,6 +299,94 @@ I naive_aggregation(const I n_row,
 }
 
 
+
+/*
+ * Compute aggregates for a matrix A stored in CSR format
+ *
+ * Parameters:
+ *   n_row         - number of rows in A
+ *   Ap[n_row + 1] - CSR row pointer
+ *   Aj[nnz]       - CSR column indices
+ *   Ax[nnz]       - CSR data array
+ *    x[n_row]     - aggregate numbers for each node
+ *
+ * Returns:
+ *  The number of aggregates (== max(x[:]) + 1 )
+ *
+ * Notes:
+ * A is the strength matrix. Assume that the strength matrix is for
+ * classic strength with min norm.
+ */
+template <class I, class T>
+I pairwise_aggregation(const I n_row,
+                       const I Ap[], const int Ap_size,
+                       const I Aj[], const int Aj_size,
+                       const T Ax[], const int Ax_size,
+                             I  x[], const int  x_size)
+{
+    // x[n] == 0 means i-th node has not been aggregated
+    std::fill(x, x + n_row, 0);
+
+    std::vector<T> m(0, n_row);
+    for(I i = 0; i < n_row; i++){
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
+        for (I jj = row_start; jj < row_end; jj++) {
+            m[Aj[jj]]++;
+        }
+    }
+
+    I next_aggregate = 1; // number of aggregates + 1
+    I count = 0;
+
+    while (count < n_row) {
+        // select minimum of m_i
+        I i = std::min_element(m.begin(), m.end()) - m.begin();
+        const I row_start = Ap[i];
+        const I row_end   = Ap[i+1];
+
+        I j = 0;
+        bool found = false;
+        T min_val = std::numeric_limits<T>::max();
+
+        // select minimum of a_ij. (algorithm looks for minimum j in original matrix,
+        // and checks whether it is strongly connected. In the code we look in
+        // strength matrix only since a_ij less than a strongly connected j' implies
+        // j is also strongly connected.
+        for (I jj = row_start; jj < row_end; jj++) {
+            if (!x[Aj[jj]] && Ax[jj] < min_val) {
+                min_val = Ax[jj];
+                j = Aj[jj];
+                found = true;
+            }
+        }
+        x[i] = next_aggregate;
+        for (I jj = row_start; jj < row_end; jj++) {
+            m[Aj[jj]]--;
+        }
+        // set m[i] to be infinite so that it's not used as j in subsequent loops
+        m[i] = std::numeric_limits<T>::max();
+        if (found) {
+            x[j] = next_aggregate;
+            count += 2;
+            const I row_start2 = Ap[j];
+            const I row_end2   = Ap[j+1];
+            for (I jj = row_start2; jj < row_end2; jj++) {
+                m[Aj[jj]]--;
+            }
+            // set m[j] to be infinite so that it's not used as j in subsequent loops
+            m[j] = std::numeric_limits<T>::max();
+        } else {
+            count++;
+        }
+        next_aggregate++;
+    }
+
+    return (next_aggregate-1); //number of aggregates
+}
+
+
+
 /*
  * Given a set of near-nullspace candidates stored in the columns of B, and
  * an aggregation operator stored in A using BSR format, this method computes
