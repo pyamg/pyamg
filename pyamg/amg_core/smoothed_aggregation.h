@@ -329,12 +329,14 @@ I pairwise_aggregation(const I n_row,
     // x[n] == 0 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);
 
-    std::vector<T> m(0, n_row);
+    std::vector<T> m(n_row, 0);
     for(I i = 0; i < n_row; i++){
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
         for (I jj = row_start; jj < row_end; jj++) {
-            m[Aj[jj]]++;
+            if (Aj[jj] != i) {
+                m[Aj[jj]]++;
+            }
         }
     }
 
