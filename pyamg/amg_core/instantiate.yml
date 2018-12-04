@@ -102,6 +102,12 @@ instantiate:
   functions:
     - csr_matvec
 
+- types:
+    - [int, float]
+    - [int, double]
+  functions:
+    - pairwise_aggregation
+
 remaps:
     - fit_candidates_real: fit_candidates
     - fit_candidates_complex: fit_candidates

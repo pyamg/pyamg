@@ -100,6 +100,33 @@ I _naive_aggregation(
 }
 
 template <class I, class T>
+I _pairwise_aggregation(
+            const I n_row,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<I> & x
+                        )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    I *_x = py_x.mutable_data();
+
+    return pairwise_aggregation <I, T>(
+                    n_row,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0)
+                                       );
+}
+
+template <class I, class T>
 void _fit_candidates_real(
             const I n_row,
             const I n_col,
@@ -340,6 +367,7 @@ PYBIND11_MODULE(smoothed_aggregation, m) {
     symmetric_strength_of_connection
     standard_aggregation
     naive_aggregation
+    pairwise_aggregation
     fit_candidates_real
     fit_candidates_complex
     satisfy_constraints_helper
@@ -454,6 +482,27 @@ Differs from standard aggregation.  Each dof is considered.
 If it has been aggregated, skip over.  Otherwise, put dof
 and any unaggregated neighbors in an aggregate.  Results
 in possibly much higher complexities.)pbdoc");
+
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, float>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, double>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(),
+R"pbdoc(
+Compute aggregates for a matrix A stored in CSR format
+
+Parameters:
+  n_row         - number of rows in A
+  Ap[n_row + 1] - CSR row pointer
+  Aj[nnz]       - CSR column indices
+  Ax[nnz]       - CSR data array
+   x[n_row]     - aggregate numbers for each node
+
+Returns:
+ The number of aggregates (== max(x[:]) + 1 )
+
+Notes:
+A is the strength matrix. Assume that the strength matrix is for
+classic strength with min norm.)pbdoc");
 
     m.def("fit_candidates", &_fit_candidates_real<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
