@@ -5,6 +5,7 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
+#include <map>
 
 #include <assert.h>
 #include <cmath>
@@ -329,7 +330,7 @@ I pairwise_aggregation(const I n_row,
     // x[n] == 0 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);
 
-    std::vector<T> m(n_row, 0);
+    std::vector<I> m(n_row, 0);
     for(I i = 0; i < n_row; i++){
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
@@ -339,13 +340,22 @@ I pairwise_aggregation(const I n_row,
             }
         }
     }
+    std::multimap<I, I> mmap;
+    std::vector<decltype(mmap.begin())> mmap_iterators(n_row);
+
+    auto it = mmap.begin();
+    for(I i = 0; i < n_row; i++){
+        it = mmap.insert({m[i], i});
+        mmap_iterators[i] = it;
+    }
 
     I next_aggregate = 1; // number of aggregates + 1
-    I count = 0;
 
-    while (count < n_row) {
-        // select minimum of m_i
-        I i = std::min_element(m.begin(), m.end()) - m.begin();
+    while (!mmap.empty()) {
+        // select minimum of m_i.
+        // Since mmap is a sorted container, first element is the minimum
+        I i = mmap.begin()->second;
+
         const I row_start = Ap[i];
         const I row_end   = Ap[i+1];
 
@@ -364,26 +374,36 @@ I pairwise_aggregation(const I n_row,
                 found = true;
             }
         }
+        // x stores a list of the aggregate numbers
         x[i] = next_aggregate;
         // y stores a list of the Cpts
         y[next_aggregate] = i;
         for (I jj = row_start; jj < row_end; jj++) {
-            m[Aj[jj]]--;
+            if (x[Aj[jj]] == 0) {
+                // to change the key of a multimap, add a new entry and remove the old entry.
+                // finally update mmap_iterators with the iterator to the new entry
+                auto old_it = mmap_iterators[Aj[jj]];
+                auto new_it = mmap.insert({old_it->first-1, Aj[jj]});
+                mmap.erase(old_it);
+                mmap_iterators[Aj[jj]] = new_it;
+            }
         }
-        // set m[i] to be infinite so that it's not used as j in subsequent loops
-        m[i] = std::numeric_limits<T>::max();
+        // Remove node i from mmap
+        mmap.erase(mmap_iterators[i]);
         if (found) {
             x[j] = next_aggregate;
-            count += 2;
             const I row_start2 = Ap[j];
             const I row_end2   = Ap[j+1];
             for (I jj = row_start2; jj < row_end2; jj++) {
-                m[Aj[jj]]--;
+                if (x[Aj[jj]] == 0) {
+                    auto old_it = mmap_iterators[Aj[jj]];
+                    auto new_it = mmap.insert({old_it->first-1, Aj[jj]});
+                    mmap.erase(old_it);
+                    mmap_iterators[Aj[jj]] = new_it;
+                }
             }
-            // set m[j] to be infinite so that it's not used as j in subsequent loops
-            m[j] = std::numeric_limits<T>::max();
-        } else {
-            count++;
+            // Remove node j from mmap
+            mmap.erase(mmap_iterators[j]);
         }
         next_aggregate++;
     }
