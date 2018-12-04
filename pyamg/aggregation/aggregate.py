@@ -196,14 +196,14 @@ def pairwise_aggregation(C):
     --------
     >>> from scipy.sparse import csr_matrix
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.aggregation.aggregate import naive_aggregation
+    >>> from pyamg.aggregation.aggregate import pairwise_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.todense()
     matrix([[ 2., -1.,  0.,  0.],
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> naive_aggregation(A)[0].todense() # two aggregates
+    >>> pairwise_aggregation(A)[0].todense() # two aggregates
     matrix([[1, 0],
             [1, 0],
             [0, 1],
@@ -213,14 +213,14 @@ def pairwise_aggregation(C):
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> naive_aggregation(A)[0].todense() # two aggregates
+    >>> pairwise_aggregation(A)[0].todense() # two aggregates
     matrix([[1, 0],
             [0, 1],
             [0, 1]], dtype=int8)
 
     See Also
     --------
-    amg_core.naive_aggregation
+    amg_core.pairwise_aggregation
 
     Notes
     -----
@@ -242,9 +242,9 @@ def pairwise_aggregation(C):
     Tj = np.empty(num_rows, dtype=index_type)  # stores the aggregate #s
     Cpts = np.empty(num_rows, dtype=index_type)  # stores the Cpts
 
-    fn = amg_core.naive_aggregation
+    fn = amg_core.pairwise_aggregation
 
-    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
+    num_aggregates = fn(num_rows, C.indptr, C.indices, C.data, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
     Tj = Tj - 1
 
