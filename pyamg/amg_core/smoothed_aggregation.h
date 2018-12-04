@@ -309,6 +309,7 @@ I naive_aggregation(const I n_row,
  *   Aj[nnz]       - CSR column indices
  *   Ax[nnz]       - CSR data array
  *    x[n_row]     - aggregate numbers for each node
+ *    y[n_row]     - will hold Cpts upon return
  *
  * Returns:
  *  The number of aggregates (== max(x[:]) + 1 )
@@ -322,7 +323,8 @@ I pairwise_aggregation(const I n_row,
                        const I Ap[], const int Ap_size,
                        const I Aj[], const int Aj_size,
                        const T Ax[], const int Ax_size,
-                             I  x[], const int  x_size)
+                             I  x[], const int  x_size,
+                             I  y[], const int  y_size)
 {
     // x[n] == 0 means i-th node has not been aggregated
     std::fill(x, x + n_row, 0);
@@ -361,6 +363,8 @@ I pairwise_aggregation(const I n_row,
             }
         }
         x[i] = next_aggregate;
+        // y stores a list of the Cpts
+        y[next_aggregate] = i;
         for (I jj = row_start; jj < row_end; jj++) {
             m[Aj[jj]]--;
         }
