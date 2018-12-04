@@ -177,6 +177,89 @@ def naive_aggregation(C):
         return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
+def pairwise_aggregation(C):
+    """Compute the sparsity pattern of the tentative prolongator.
+
+    Parameters
+    ----------
+    C : csr_matrix
+        strength of connection matrix
+
+    Returns
+    -------
+    AggOp : csr_matrix
+        aggregation operator which determines the sparsity pattern
+        of the tentative prolongator
+    Cpts : array
+        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+
+    Examples
+    --------
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.aggregation.aggregate import naive_aggregation
+    >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
+    >>> A.todense()
+    matrix([[ 2., -1.,  0.,  0.],
+            [-1.,  2., -1.,  0.],
+            [ 0., -1.,  2., -1.],
+            [ 0.,  0., -1.,  2.]])
+    >>> naive_aggregation(A)[0].todense() # two aggregates
+    matrix([[1, 0],
+            [1, 0],
+            [0, 1],
+            [0, 1]], dtype=int8)
+    >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
+    >>> A.todense()                      # first vertex is isolated
+    matrix([[1, 0, 0],
+            [0, 1, 1],
+            [0, 1, 1]])
+    >>> naive_aggregation(A)[0].todense() # two aggregates
+    matrix([[1, 0],
+            [0, 1],
+            [0, 1]], dtype=int8)
+
+    See Also
+    --------
+    amg_core.naive_aggregation
+
+    Notes
+    -----
+    Differs from standard aggregation.  Each dof is considered.  If it has been
+    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
+    in an aggregate.  Results in possibly much higher complexities than
+    standard aggregation.
+
+    """
+    if not isspmatrix_csr(C):
+        raise TypeError('expected csr_matrix')
+
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('expected square matrix')
+
+    index_type = C.indptr.dtype
+    num_rows = C.shape[0]
+
+    Tj = np.empty(num_rows, dtype=index_type)  # stores the aggregate #s
+    Cpts = np.empty(num_rows, dtype=index_type)  # stores the Cpts
+
+    fn = amg_core.naive_aggregation
+
+    num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
+    Cpts = Cpts[:num_aggregates]
+    Tj = Tj - 1
+
+    if num_aggregates == 0:
+        # all zero matrix
+        return csr_matrix((num_rows, 1), dtype='int8'), Cpts
+    else:
+        shape = (num_rows, num_aggregates)
+        # all nodes aggregated
+        Tp = np.arange(num_rows+1, dtype=index_type)
+        Tx = np.ones(len(Tj), dtype='int8')
+        return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+
+
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     """Aggregate nodes using Lloyd Clustering.
 
