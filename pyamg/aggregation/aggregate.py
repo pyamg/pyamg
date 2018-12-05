@@ -222,12 +222,11 @@ def pairwise_aggregation(C):
     --------
     amg_core.pairwise_aggregation
 
-    Notes
-    -----
-    Differs from standard aggregation.  Each dof is considered.  If it has been
-    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
-    in an aggregate.  Results in possibly much higher complexities than
-    standard aggregation.
+
+    References
+    ----------
+    .. [1] Notay, Yvan. "An aggregation-based algebraic multigrid method."
+    Electronic transactions on numerical analysis 37.6 (2010): 123-146.
 
     """
     if not isspmatrix_csr(C):
