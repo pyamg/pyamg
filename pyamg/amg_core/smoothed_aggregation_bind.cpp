@@ -487,6 +487,10 @@ If it has been aggregated, skip over.  Otherwise, put dof
 and any unaggregated neighbors in an aggregate.  Results
 in possibly much higher complexities.)pbdoc");
 
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, int>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, long>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
     m.def("pairwise_aggregation", &_pairwise_aggregation<int, float>,
         py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
     m.def("pairwise_aggregation", &_pairwise_aggregation<int, double>,
