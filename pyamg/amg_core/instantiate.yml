@@ -93,6 +93,8 @@ instantiate:
     - csr_matvec
 
 - types:
+    - [int, int]
+    - [int, long]
     - [int, float]
     - [int, double]
   functions:

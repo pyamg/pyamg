@@ -67,9 +67,7 @@ class TestAggregate(TestCase):
 
     def test_pairwise_aggregation(self):
         for i, A in enumerate(self.cases):
-            print("case", i)
-            print(A)
-            S = A #symmetric_strength_of_connection(A)
+            S = symmetric_strength_of_connection(A)
 
             (expected, expected_Cpts) = reference_pairwise_aggregation(S)
             (result, Cpts) = pairwise_aggregation(S)
@@ -235,7 +233,6 @@ def reference_pairwise_aggregation(C):
     count = 0
     aggregate_count = 0
     while (count < n):
-        #print(mmap)
         for k in range(0, max_m+1):
             if mmap[k]:
                 i = list(mmap[k].keys())[0]
@@ -253,7 +250,6 @@ def reference_pairwise_aggregation(C):
                 min_aij = data[i][k]
                 min_aij_index = j
 
-        #print("min_aij_index", i, min_aij_index, row, data[i])
         if min_aij_index != -1:
             j = min_aij_index
             aggregate_set.append(j)
@@ -283,7 +279,6 @@ def reference_pairwise_aggregation(C):
     Pj = aggregates
     Pp = np.arange(n+1)
     Px = np.ones(n)
-    #print(Pj, Pp, Px, Cpts)
 
     return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
 
