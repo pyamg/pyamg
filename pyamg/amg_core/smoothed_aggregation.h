@@ -363,6 +363,9 @@ I pairwise_aggregation(const I n_row,
         bool found = false;
         T min_val = std::numeric_limits<T>::max();
 
+        // x stores a list of the aggregate numbers
+        x[i] = next_aggregate;
+
         // select minimum of a_ij. (algorithm looks for minimum j in original matrix,
         // and checks whether it is strongly connected. In the code we look in
         // strength matrix only since a_ij less than a strongly connected j' implies
@@ -374,10 +377,11 @@ I pairwise_aggregation(const I n_row,
                 found = true;
             }
         }
-        // x stores a list of the aggregate numbers
-        x[i] = next_aggregate;
+        if (found) {
+            x[j] = next_aggregate;
+        }
         // y stores a list of the Cpts
-        y[next_aggregate] = i;
+        y[next_aggregate-1] = i;
         for (I jj = row_start; jj < row_end; jj++) {
             if (x[Aj[jj]] == 0) {
                 // to change the key of a multimap, add a new entry and remove the old entry.
