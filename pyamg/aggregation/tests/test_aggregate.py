@@ -3,9 +3,11 @@ from scipy.sparse import csr_matrix, spdiags
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
-from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
+from pyamg.aggregation.aggregate import (standard_aggregation, naive_aggregation,
+    pairwise_aggregation)
 
 from numpy.testing import TestCase, assert_equal
+from collections import OrderedDict, defaultdict
 
 
 class TestAggregate(TestCase):
@@ -59,6 +61,26 @@ class TestAggregate(TestCase):
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = naive_aggregation(S)
+        expected = np.eye(4)
+        assert_equal(result.todense(), expected)
+        assert_equal(Cpts.shape[0], 4)
+
+    def test_pairwise_aggregation(self):
+        for i, A in enumerate(self.cases):
+            print("case", i)
+            print(A)
+            S = A #symmetric_strength_of_connection(A)
+
+            (expected, expected_Cpts) = reference_pairwise_aggregation(S)
+            (result, Cpts) = pairwise_aggregation(S)
+
+            assert_equal((result - expected).nnz, 0)
+            assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
+            assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
+
+        # S is diagonal - no dofs aggregated
+        S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        (result, Cpts) = pairwise_aggregation(S)
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
@@ -187,3 +209,81 @@ def reference_naive_aggregation(C):
     Px = np.ones(n)
 
     return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+
+
+def reference_pairwise_aggregation(C):
+    S = np.array_split(C.indices, C.indptr[1:-1])
+    data = np.array_split(C.data, C.indptr[1:-1])
+    n = C.shape[0]
+    aggregates = np.empty(n, dtype=C.indices.dtype)
+    aggregates[:] = -1     # aggregates[j] denotes the aggregate j is in
+    R = np.zeros((0,))     # R stores already aggregated nodes
+    aggregate_count = 0               # aggregate_count is the aggregate counter
+    Cpts = []
+    m = np.zeros(n, dtype=C.indices.dtype)
+    for i, row in enumerate(S):
+        m[row] = m[row] + 1
+
+    max_m = max(m)
+
+    # using a ordereddict here as there's no orderedset in python
+    mmap = [OrderedDict() for _ in range(0, max_m+1)]
+
+    for i in range(n):
+        mmap[m[i]][i] = True
+
+    count = 0
+    aggregate_count = 0
+    while (count < n):
+        #print(mmap)
+        for k in range(0, max_m+1):
+            if mmap[k]:
+                i = list(mmap[k].keys())[0]
+                break
+
+        row = S[i]
+        R = np.union1d(R, np.array([i]))
+        aggregate_set = [i]
+        aggregates[i] = aggregate_count
+        min_aij = np.inf
+        min_aij_index = -1
+
+        for k, j in enumerate(row):
+            if j not in R and data[i][k] < min_aij:
+                min_aij = data[i][k]
+                min_aij_index = j
+
+        #print("min_aij_index", i, min_aij_index, row, data[i])
+        if min_aij_index != -1:
+            j = min_aij_index
+            aggregate_set.append(j)
+            R = np.union1d(R, np.array([j]))
+            aggregates[j] = aggregate_count
+
+        Cpts.append(i)
+
+        # Remove the aggregated nodes from mmap
+        for j in aggregate_set:
+            del mmap[m[j]][j]
+
+        # Reduce m of the neighbors of the aggregated nodes
+        for j in aggregate_set:
+            row = S[j]
+            unaggregated_neighbors = np.setdiff1d(row, R)
+            for neighbour in unaggregated_neighbors:
+                del mmap[m[neighbour]][neighbour]
+                m[neighbour] = m[neighbour] - 1
+                mmap[m[neighbour]][neighbour] = True
+
+        count += len(aggregate_set)
+        aggregate_count += 1
+
+    assert(np.unique(R).shape[0] == n)
+
+    Pj = aggregates
+    Pp = np.arange(n+1)
+    Px = np.ones(n)
+    #print(Pj, Pp, Px, Cpts)
+
+    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+
