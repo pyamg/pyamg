@@ -361,7 +361,7 @@ I pairwise_aggregation(const I n_row,
 
         I j = 0;
         bool found = false;
-        T min_val = std::numeric_limits<T>::max();
+        T max_val = 0;
 
         // x stores a list of the aggregate numbers
         x[i] = next_aggregate;
@@ -371,8 +371,8 @@ I pairwise_aggregation(const I n_row,
         // strength matrix only since a_ij less than a strongly connected j' implies
         // j is also strongly connected.
         for (I jj = row_start; jj < row_end; jj++) {
-            if (!x[Aj[jj]] && Ax[jj] < min_val) {
-                min_val = Ax[jj];
+            if (!x[Aj[jj]] && Ax[jj] >= max_val) {
+                max_val = Ax[jj];
                 j = Aj[jj];
                 found = true;
             }
