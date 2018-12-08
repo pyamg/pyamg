@@ -337,7 +337,7 @@ I pairwise_aggregation(const I n_row,
 
         I j = 0;
         bool found = false;
-        T max_val = 0;
+        T max_val = std::numeric_limits<T>::lowest();
 
         // x stores a list of the aggregate numbers
         x[i] = next_aggregate;

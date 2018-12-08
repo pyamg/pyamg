@@ -2,7 +2,8 @@ import numpy as np
 from scipy.sparse import csr_matrix, spdiags
 
 from pyamg.gallery import poisson, load_example
-from pyamg.strength import symmetric_strength_of_connection
+from pyamg.strength import (symmetric_strength_of_connection,
+    classical_strength_of_connection)
 from pyamg.aggregation.aggregate import (standard_aggregation, naive_aggregation,
     pairwise_aggregation)
 
@@ -242,7 +243,7 @@ def reference_pairwise_aggregation(C):
         R = np.union1d(R, np.array([i]))
         aggregate_set = [i]
         aggregates[i] = aggregate_count
-        max_aij = 0
+        max_aij = -np.inf
         max_aij_index = -1
 
         for k, j in enumerate(row):
