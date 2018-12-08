@@ -67,7 +67,7 @@ class TestAggregate(TestCase):
 
     def test_pairwise_aggregation(self):
         for i, A in enumerate(self.cases):
-            S = symmetric_strength_of_connection(A)
+            S = classical_strength_of_connection(A, norm='min')
 
             (expected, expected_Cpts) = reference_pairwise_aggregation(S)
             (result, Cpts) = pairwise_aggregation(S)
@@ -242,16 +242,16 @@ def reference_pairwise_aggregation(C):
         R = np.union1d(R, np.array([i]))
         aggregate_set = [i]
         aggregates[i] = aggregate_count
-        min_aij = np.inf
-        min_aij_index = -1
+        max_aij = 0
+        max_aij_index = -1
 
         for k, j in enumerate(row):
-            if j not in R and data[i][k] < min_aij:
-                min_aij = data[i][k]
-                min_aij_index = j
+            if j not in R and data[i][k] >= max_aij:
+                max_aij = data[i][k]
+                max_aij_index = j
 
-        if min_aij_index != -1:
-            j = min_aij_index
+        if max_aij_index != -1:
+            j = max_aij_index
             aggregate_set.append(j)
             R = np.union1d(R, np.array([j]))
             aggregates[j] = aggregate_count
