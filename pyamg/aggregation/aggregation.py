@@ -17,7 +17,7 @@ from pyamg.strength import classical_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
-    lloyd_aggregation
+    lloyd_aggregation, pairwise_aggregation
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
@@ -73,7 +73,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     aggregate : string or list
         Method used to aggregate nodes.
-        Choose from 'standard', 'lloyd', 'naive',
+        Choose from 'standard', 'lloyd', 'naive', 'pairwise',
         ('predefined', {'AggOp' : csr_matrix})
 
     smooth : list
@@ -355,6 +355,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp = naive_aggregation(C, **kwargs)[0]
     elif fn == 'lloyd':
         AggOp = lloyd_aggregation(C, **kwargs)[0]
+    elif fn == 'pairwise':
+        AggOp = pairwise_aggregation(C, **kwargs)[0]
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:

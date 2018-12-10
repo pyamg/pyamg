@@ -19,7 +19,7 @@ from pyamg.strength import classical_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation, \
-    lloyd_aggregation
+    lloyd_aggregation, pairwise_aggregation
 from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
 
@@ -182,7 +182,7 @@ def rootnode_solver(A, B=None, BH=None,
            Examples are:
            smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
            presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
-           aggregate=['standard', 'naive']
+           aggregate=['standard', 'naive', 'lloyd', 'pairwise']
            strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
 
          - Predefined strength of connection and aggregation schemes can be
@@ -374,6 +374,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp, Cnodes = naive_aggregation(C, **kwargs)
     elif fn == 'lloyd':
         AggOp, Cnodes = lloyd_aggregation(C, **kwargs)
+    elif fn == 'pairwise':
+        AggOp, Cnodes = pairwise_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
