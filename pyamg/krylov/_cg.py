@@ -142,7 +142,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if rz <= 0.0:                              # check curvature of M
             if rz == 0.0:
                 warn("\nSingular preconditioner detected in CG, aborting\n")
-            else
+            else:
                 warn("\nIndefinite preconditioner detected in CG, aborting\n")
             return (postprocess(x), -1)
 
