@@ -27,10 +27,6 @@ class TestScipy(TestCase):
         A2 = pyamg.util.sparse.csr(A)
         u = np.random.rand(A.shape[0]) + 1j * np.random.rand(A.shape[0])
 
-        result = A2 * u
-
-        result = A * u
-
         assert_array_almost_equal(A * u, A2 * u)
 
         # random
