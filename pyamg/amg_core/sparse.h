@@ -54,3 +54,19 @@ void csr_matvec(const I n_row,
         Yx[i] = sum;
     }
 }
+
+
+//
+// OMP analytics
+//
+void omp_info()
+{
+    int nthreads, tid;
+
+    #pragma ommp parallel private(nthreads, tid)
+    {
+        tid = omp_get_thread_num();
+        nthreads omp_get_num_threads();
+        printff("Thread %d of %d total threads", tid, nthreads);
+    }
+}
