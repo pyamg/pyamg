@@ -12,12 +12,14 @@ from pyamg.classical.interpolate import *
 from pyamg.classical.split import *
 from pyamg.classical.cr import CR
 
+import numpy as np
+
 __all__ = ['ruge_stuben_solver']
 
 
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
-                       CF='RS',
+                       CF=('RS',{'second_pass': False}),
                        interpolation='standard',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
@@ -107,7 +109,7 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, keep)
+        extend_hierarchy(levels, strength, CF, interpolation, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -115,7 +117,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, keep):
+def extend_hierarchy(levels, strength, CF, interpolation, keep):
     """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):

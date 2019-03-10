@@ -8,7 +8,8 @@ from pyamg.strength import classical_strength_of_connection
 
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
-from pyamg.classical.interpolate import direct_interpolation
+from pyamg.classical.interpolate import direct_interpolation, \
+    standard_interpolation
 
 from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
@@ -119,9 +120,9 @@ class TestRugeStubenFunctions(TestCase):
             A = ((A.tocsr()[0:mini, :])[:,0:mini]).tocsr()
 
             S = classical_strength_of_connection(A, 0.0)
-            splitting = split.RS(S)
+            splitting = split.RS(S, second_pass=True)
 
-            result = standard_interpolation(A, S, splitting)
+            result = standard_interpolation(A, S, splitting, modified=True)
             expected = reference_standard_interpolation(A, S, splitting)
             
             # elasticity produces large entries, so normalize
@@ -145,25 +146,23 @@ class TestSolverPerformance(TestCase):
         for case in cases:
             A = poisson(case, format='csr')
 
-            np.random.seed(0)  # make tests repeatable
+            for interp in ['direct', 'standard']:
 
-            x = sp.rand(A.shape[0])
-            b = A*sp.rand(A.shape[0])  # zeros_like(x)
+                np.random.seed(0)  # make tests repeatable
 
-            ml = ruge_stuben_solver(A, max_coarse=50)
+                x = sp.rand(A.shape[0])
+                b = A*sp.rand(A.shape[0])  # zeros_like(x)
 
-            res = []
-            x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
-                             residuals=res)
-            del x_sol
+                ml = ruge_stuben_solver(A, interpolation=interp, max_coarse=50)
 
-            avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
+                res = []
+                x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
+                                 residuals=res)
+                del x_sol
 
-            assert(avg_convergence_ratio < 0.20)
+                avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
 
-    def test_interp(self):
-        for interp in ['direct', 'standard']:
-            self.run_cases({'interp': interp})
+                assert(avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
 
