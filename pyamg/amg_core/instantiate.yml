@@ -42,6 +42,14 @@ instantiate:
     - apply_absolute_distance_filter
     - min_blocks
     - classical_strength_of_connection_min
+    - rs_standard_interpolation_pass2
+    - remove_strong_FF_connections
+    - mod_standard_interpolation_pass2
+    - extended_plusi_interpolation_pass2
+    - extended_interpolation_pass2
+    - one_point_interpolation
+    - approx_ideal_restriction_pass2
+    - block_approx_ideal_restriction_pass2
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -81,8 +89,12 @@ instantiate:
     - naive_aggregation
     - standard_aggregation
     - rs_cf_splitting
+    - rs_cf_splitting_pass2
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
+    - rs_standard_interpolation_pass1
+    - distance_two_amg_interpolation_pass1
+    - approx_ideal_restriction_pass1
 
 - types:
     - [int, float]

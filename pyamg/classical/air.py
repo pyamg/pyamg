@@ -22,7 +22,7 @@ __all__ = ['AIR_solver']
 
 def AIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
-               CF='RS',
+               CF=('RS', {second_pass=True}),
                interp='one_point',
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
@@ -213,9 +213,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
     fn, kwargs = unpack_arg(restrict)
     if fn is None:
         R = P.T
-    elif fn == 'air':
+    elif fn == 'lAIR':
         R = local_AIR(A, splitting, **kwargs)
-    elif fn == 'neumann':
+    elif fn == 'nAIR':
         R = neumann_AIR(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
