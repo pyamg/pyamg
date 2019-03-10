@@ -8,4 +8,5 @@ from .krylov import *
 from .linalg import *
 from .relaxation import *
 from .ruge_stuben import *
+from .air import *
 from .smoothed_aggregation import *
