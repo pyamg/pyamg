@@ -278,13 +278,13 @@ I naive_aggregation(const I n_row,
 
 
 /*
- * Compute aggregates for a matrix A stored in CSR format
+ * Compute aggregates for a matrix S stored in CSR format
  *
  * Parameters:
- *   n_row         - number of rows in A
- *   Ap[n_row + 1] - CSR row pointer
- *   Aj[nnz]       - CSR column indices
- *   Ax[nnz]       - CSR data array
+ *   n_row         - number of rows in S
+ *   Sp[n_row + 1] - CSR row pointer
+ *   Sj[nnz]       - CSR column indices
+ *   Sx[nnz]       - CSR data array
  *    x[n_row]     - aggregate numbers for each node
  *    y[n_row]     - will hold Cpts upon return
  *
@@ -292,14 +292,14 @@ I naive_aggregation(const I n_row,
  *  The number of aggregates (== max(x[:]) + 1 )
  *
  * Notes:
- * A is the strength matrix. Assume that the strength matrix is for
+ * S is the strength matrix. Assumes that the strength matrix is for
  * classic strength with min norm.
  */
 template <class I, class T>
 I pairwise_aggregation(const I n_row,
-                       const I Ap[], const int Ap_size,
-                       const I Aj[], const int Aj_size,
-                       const T Ax[], const int Ax_size,
+                       const I Sp[], const int Sp_size,
+                       const I Sj[], const int Sj_size,
+                       const T Sx[], const int Sx_size,
                              I  x[], const int  x_size,
                              I  y[], const int  y_size)
 {
@@ -308,11 +308,11 @@ I pairwise_aggregation(const I n_row,
 
     std::vector<I> m(n_row, 0);
     for(I i = 0; i < n_row; i++){
-        const I row_start = Ap[i];
-        const I row_end   = Ap[i+1];
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
         for (I jj = row_start; jj < row_end; jj++) {
-            if (Aj[jj] != i) {
-                m[Aj[jj]]++;
+            if (Sj[jj] != i) {
+                m[Sj[jj]]++;
             }
         }
     }
@@ -332,8 +332,8 @@ I pairwise_aggregation(const I n_row,
         // Since mmap is a sorted container, first element is the minimum
         I i = mmap.begin()->second;
 
-        const I row_start = Ap[i];
-        const I row_end   = Ap[i+1];
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
 
         I j = 0;
         bool found = false;
@@ -347,9 +347,9 @@ I pairwise_aggregation(const I n_row,
         // strength matrix only since a_ij less than a strongly connected j' implies
         // j is also strongly connected.
         for (I jj = row_start; jj < row_end; jj++) {
-            if (!x[Aj[jj]] && Ax[jj] >= max_val) {
-                max_val = Ax[jj];
-                j = Aj[jj];
+            if (!x[Sj[jj]] && Sx[jj] >= max_val) {
+                max_val = Sx[jj];
+                j = Sj[jj];
                 found = true;
             }
         }
@@ -359,27 +359,27 @@ I pairwise_aggregation(const I n_row,
         // y stores a list of the Cpts
         y[next_aggregate-1] = i;
         for (I jj = row_start; jj < row_end; jj++) {
-            if (x[Aj[jj]] == 0) {
+            if (x[Sj[jj]] == 0) {
                 // to change the key of a multimap, add a new entry and remove the old entry.
                 // finally update mmap_iterators with the iterator to the new entry
-                auto old_it = mmap_iterators[Aj[jj]];
-                auto new_it = mmap.insert({old_it->first-1, Aj[jj]});
+                auto old_it = mmap_iterators[Sj[jj]];
+                auto new_it = mmap.insert({old_it->first-1, Sj[jj]});
                 mmap.erase(old_it);
-                mmap_iterators[Aj[jj]] = new_it;
+                mmap_iterators[Sj[jj]] = new_it;
             }
         }
         // Remove node i from mmap
         mmap.erase(mmap_iterators[i]);
         if (found) {
             x[j] = next_aggregate;
-            const I row_start2 = Ap[j];
-            const I row_end2   = Ap[j+1];
+            const I row_start2 = Sp[j];
+            const I row_end2   = Sp[j+1];
             for (I jj = row_start2; jj < row_end2; jj++) {
-                if (x[Aj[jj]] == 0) {
-                    auto old_it = mmap_iterators[Aj[jj]];
-                    auto new_it = mmap.insert({old_it->first-1, Aj[jj]});
+                if (x[Sj[jj]] == 0) {
+                    auto old_it = mmap_iterators[Sj[jj]];
+                    auto new_it = mmap.insert({old_it->first-1, Sj[jj]});
                     mmap.erase(old_it);
-                    mmap_iterators[Aj[jj]] = new_it;
+                    mmap_iterators[Sj[jj]] = new_it;
                 }
             }
             // Remove node j from mmap
