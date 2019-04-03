@@ -12,14 +12,14 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
-           'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
+__all__ = ['unpack_arg', 'blocksize', 'diag_sparse', 'profile_solver',
+           'to_type', 'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
            'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
            'scale_rows', 'scale_columns',
            'symmetric_rescaling', 'symmetric_rescaling_sa',
            'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
-           'levelize_strength_or_aggregation',
+           'levelize_strength_or_aggregation', 'extract_diagonal_blocks',
            'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
            'filter_matrix_rows', 'truncate_rows',  'scale_block_inverse']
 
@@ -29,6 +29,22 @@ try:
 except ImportError:
     from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
     from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+
+
+def unpack_arg(v, cost=True):
+    # Helper function for unpacking a function name and parameter
+    # dictionary tuple
+    if isinstance(v, tuple):
+        if cost:
+            (v[1])['cost'] = [0.0]
+            return v[0], v[1]
+        else:
+            return v[0], v[1]
+    else:
+        if cost:
+            return v, {'cost' : [0.0]}
+        else:
+            return v, {}
 
 
 def blocksize(A):
@@ -2234,3 +2250,17 @@ def scale_block_inverse(A, blocksize):
     scale = bsr_matrix((Dinv, np.arange(0,N_block), np.arange(0,N_block+1)),
                         blocksize=[blocksize,blocksize], shape=A.shape)
     return scale * A, scale
+
+
+# Get the square diagonal blocks of csr_matrix A
+# where the row start indices of the blocks are stored in block_starts
+def extract_diagonal_blocks(A, block_starts):
+
+    # Will return a list of csr matrices
+    A_diag = []
+
+    for block in range(len(block_starts) - 1):
+        A_diag.append( A[ block_starts[block]:block_starts[block+1] , \
+                          block_starts[block]:block_starts[block+1] ] )
+
+    return A_diag

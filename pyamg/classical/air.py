@@ -22,7 +22,7 @@ __all__ = ['AIR_solver']
 
 def AIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
-               CF=('RS', {second_pass=True}),
+               CF=('RS', {'second_pass': True}),
                interp='one_point',
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,

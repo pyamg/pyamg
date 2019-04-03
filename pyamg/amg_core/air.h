@@ -11,6 +11,7 @@
 
 #include "linalg.h"
 #include "graph.h"
+#include "krylov.h"
 
 #define F_NODE 0
 #define C_NODE 1

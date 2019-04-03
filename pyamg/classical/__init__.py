@@ -1,6 +1,7 @@
 """Classical AMG"""
 from __future__ import absolute_import
 
+from .air import *
 from .classical import *
 from .split import *
 from .interpolate import *
