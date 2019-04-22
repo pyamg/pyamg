@@ -37,13 +37,13 @@ PMISc: Parallel Modified Independent Set in Color
     - Augments random weights with a (graph) vertex coloring
     - See References [1]
 
-CLJP: Clearly-Luby-Jones-Plassmann
+CLJP: Cleary-Luby-Jones-Plassmann
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Convergence can deteriorate with increasing problem
       size on structured meshes.
     - See References [1] and [2]
 
-CLJP-c: Clearly-Luby-Jones-Plassmann in Color
+CLJP-c: Cleary-Luby-Jones-Plassmann in Color
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Better scalability than CLJP on structured meshes.
     - See References [1]
