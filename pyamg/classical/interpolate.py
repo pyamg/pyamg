@@ -1,6 +1,7 @@
 """Classical AMG Interpolation methods."""
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
+    isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
 from pyamg import amg_core
 from pyamg.util.utils import filter_matrix_rows, UnAmal
 from pyamg.strength import classical_strength_of_connection
@@ -328,7 +329,7 @@ def one_point_interpolation(A, C, splitting, by_val=False):
     """
     if isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
-        n = A.shape[0] / blocksize
+        n = int(A.shape[0] / blocksize)
     elif isspmatrix_csr(A):
         n = A.shape[0]
         blocksize = 1

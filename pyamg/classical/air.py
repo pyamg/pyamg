@@ -11,11 +11,16 @@ from copy import deepcopy
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import *
+from pyamg.strength import classical_strength_of_connection, \
+    symmetric_strength_of_connection, evolution_strength_of_connection, \
+    distance_strength_of_connection, algebraic_distance, affinity_distance, \
+    energy_based_strength_of_connection
 from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
-     filter_matrix_rows
-from pyamg.classical.interpolate import *
-from pyamg.classical.split import *
+    filter_matrix_rows
+from pyamg.classical.interpolate import direct_interpolation, \
+    standard_interpolation, distance_two_interpolation, injection_interpolation, \
+    one_point_interpolation, neumann_AIR, local_AIR
+from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
 __all__ = ['AIR_solver']
@@ -30,8 +35,6 @@ def AIR_solver(A,
                               'withrho': False,  'F_iterations': 2,
                               'C_iterations': 0} ),
                filter_operator=None,
-               coarse_grid_P=None, 
-               coarse_grid_R=None, 
                max_levels=20, max_coarse=20,
                keep=False, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
@@ -115,7 +118,7 @@ def AIR_solver(A,
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         bottom = extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
-                                  coarse_grid_P, coarse_grid_R, keep)
+                                  keep)
         if bottom:
             break
 
@@ -125,8 +128,7 @@ def AIR_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
-                     coarse_grid_P, coarse_grid_R, keep):
+def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, keep):
     """ helper function for local methods """
 
     # Filter operator. Need to keep original matrix on finest level for
@@ -228,7 +230,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
     levels[-1].R = R                  # restriction operator
     levels[-1].splitting = splitting  # C/F splitting
 
-    # RL: RAP = R*(A*P)
+    # RAP = R*(A*P)
     A = R * A * P
 
     # Make sure coarse-grid operator is in correct sparse format
