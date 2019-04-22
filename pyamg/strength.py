@@ -205,15 +205,12 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
         # SOC based on maximum absolute value element in each block
         if norm == 'abs':
             data = np.max(np.max(np.abs(A.data),axis=1),axis=1)
-            cost[0] += 1
         # SOC based on hard minimum of entry in each off-diagonal block
         elif norm == 'min':
             data = np.min(np.min(A.data,axis=1),axis=1)
-            cost[0] += 1
         # SOC based on Frobenius norms of blocks
         elif norm == 'fro':
             data = (np.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1)
-            cost[0] += 1
         else:
             raise ValueError("Invalid choice of norm.")
 
@@ -233,7 +230,6 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
     
         # One pass through nnz to find largest entry, one to filter
         S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=[N, N])
-        cost[0] += 2
         
         # Take magnitude and scale by largest entry
         S.data = np.abs(S.data)
