@@ -1,6 +1,7 @@
 """Classical AMG Interpolation methods."""
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr
+from pyamg.strength import classical_strength_of_connection
 from pyamg import amg_core
 
 __all__ = ['direct_interpolation', 'standard_interpolation',
@@ -55,7 +56,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
         raise TypeError('expected csr_matrix for C')
     
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
+        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
     else:
         # BS - had this in my code, can't remember why; presumably need C later?
         # C0 = C.copy()
@@ -139,7 +140,7 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     n = A.shape[0]
 
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
+        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
     else:
         # BS - had this in my code, can't remember why; presumably need C later?
         # C0 = C.copy()
@@ -225,7 +226,7 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=T
     n = A.shape[0]
 
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
+        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
     else:
         # BS - had this in my code, can't remember why; presumably need C later?
         # C0 = C.copy()

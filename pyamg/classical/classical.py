@@ -7,9 +7,13 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import *
-from pyamg.classical.interpolate import *
-from pyamg.classical.split import *
+from pyamg.strength import classical_strength_of_connection,\
+    symmetric_strength_of_connection, evolution_strength_of_connection, \
+    distance_strength_of_connection, algebraic_distance, affinity_distance, \
+    energy_based_strength_of_connection
+from pyamg.classical.interpolate import direct_interpolation, \
+       distance_two_interpolation, standard_interpolation
+from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
 import numpy as np
