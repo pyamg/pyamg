@@ -709,10 +709,10 @@ class multilevel_solver:
                 filename = directory + '/cf_' + str(i) + '.vtu'
                 vis_splitting(self.levels[i].verts, self.levels[i].splitting, fname=filename)
         else:
-            print 'Cannot visulize coarse grids: missing dof locations or \
+            print('Cannot visulize coarse grids: missing dof locations or \
                    splittings in multilevel instance. Pass in parameters \
                    verts = [nx2 array of dof locations] and keep = True when \
-                   creating multilevel object.'
+                   creating multilevel object.')
 
 
 def coarse_grid_solver(solver):
