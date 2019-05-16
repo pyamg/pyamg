@@ -72,7 +72,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1],
     ...      [1]]
     >>> Q, R = fit_candidates(AggOp, B)
-    >>> Q.todense()
+    >>> Q.toarray()
     matrix([[ 0.70710678,  0.        ],
             [ 0.70710678,  0.        ],
             [ 0.        ,  0.70710678],
@@ -86,7 +86,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1, 2],
     ...      [1, 3]]
     >>> Q, R = fit_candidates(AggOp, B)
-    >>> Q.todense()
+    >>> Q.toarray()
     matrix([[ 0.70710678, -0.70710678,  0.        ,  0.        ],
             [ 0.70710678,  0.70710678,  0.        ,  0.        ],
             [ 0.        ,  0.        ,  0.70710678, -0.70710678],
@@ -106,7 +106,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1],
     ...      [1]]
     >>> Q, R = fit_candidates(AggOp, B)
-    >>> Q.todense()
+    >>> Q.toarray()
     matrix([[ 0.70710678,  0.        ],
             [ 0.70710678,  0.        ],
             [ 0.        ,  0.        ],

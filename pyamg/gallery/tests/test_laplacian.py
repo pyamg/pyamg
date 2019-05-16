@@ -46,7 +46,7 @@ class TestPoisson(TestCase):
                                          [0, 0, 0, -1, 0, -1, -1, 6]])))
 
         for grid, expected in cases:
-            assert_equal(poisson(grid).todense(), expected)
+            assert_equal(poisson(grid).toarray(), expected)
 
 
 class TestGaugeLaplacian(TestCase):
@@ -80,7 +80,7 @@ class TestGaugeLaplacian(TestCase):
             assert_equal(diff.data, np.array([]))
 
             # Check for definiteness
-            e = eigvals(A.todense())
+            e = eigvals(A.toarray())
             if beta == 0.0:
                 # Here, semi-definiteness
                 assert_almost_equal(min(np.abs(e)), 0.0)

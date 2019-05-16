@@ -221,7 +221,7 @@ class TestEnergyMin(TestCase):
         A = poisson((5, 5), format='csr')
         A = A.tobsr(blocksize=(5, 5))
         Ai = 1.0j * A
-        B = A.todense()
+        B = A.toarray()
         B = csr_matrix(B[:, 0:8])
         B = B.tobsr(blocksize=(5, 8))
         Bi = 1.0j * B
@@ -622,7 +622,7 @@ class TestEnergyMin(TestCase):
 #        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
 #
 #
-#        assert_equal(U.todense(), np.array([[0,1],[1,0]]))
+#        assert_equal(U.toarray(), np.array([[0,1],[1,0]]))
 #        assert_almost_equal(U*B, 0*U*B)
 #
 #    def test_block(self):

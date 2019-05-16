@@ -110,7 +110,7 @@ class TestRugeStubenFunctions(TestCase):
             result = direct_interpolation(A, S, splitting)
             expected = reference_direct_interpolation(A, S, splitting)
 
-            assert_almost_equal(result.todense(), expected.todense())
+            assert_almost_equal(result.toarray(), expected.toarray())
 
 
 class TestSolverPerformance(TestCase):
@@ -146,13 +146,13 @@ class TestSolverPerformance(TestCase):
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
+        cases.append(A.toarray())
 
         rs_old = ruge_stuben_solver(A, max_coarse=10)
         for AA in cases:
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(rs_old.levels[-1].A.todense() -
-                                   rs_new.levels[-1].A.todense())).max() < 0.01)
+            assert(np.abs(np.ravel(rs_old.levels[-1].A.toarray() -
+                                   rs_new.levels[-1].A.toarray())).max() < 0.01)
             rs_old = rs_new
 
 

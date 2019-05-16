@@ -49,7 +49,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_classical_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_classical_strength_of_connection_min(self):
         for A in self.cases:
@@ -58,7 +58,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_classical_soc(A, theta, norm='min')
 
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
@@ -67,7 +67,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_symmetric_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_distance_strength_of_connection(self):
         data = load_example('airfoil')
@@ -79,7 +79,7 @@ class TestStrengthOfConnection(TestCase):
                 result = distance_soc(A, V, theta=theta)
                 expected = reference_distance_soc(A, V, theta=theta)
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
         for (A, V) in cases:
             for theta in [0.5, 1.0, 1.5]:
@@ -87,7 +87,7 @@ class TestStrengthOfConnection(TestCase):
                 expected = reference_distance_soc(A, V, theta=theta,
                                                   relative_drop=False)
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_incomplete_mat_mult_csr(self):
         # Test a critical helper routine for evolution_soc(...)
@@ -296,7 +296,7 @@ class TestStrengthOfConnection(TestCase):
             expected = reference_evolution_soc(ca['A'], ca['B'],
                                                epsilon=ca['epsilon'],
                                                k=ca['k'], proj_type=ca['proj'])
-            assert_array_almost_equal(result.todense(), expected.todense(),
+            assert_array_almost_equal(result.toarray(), expected.toarray(),
                                       decimal=4)
 
         # Test Scale Invariance for multiple near nullspace candidates
@@ -315,8 +315,8 @@ class TestStrengthOfConnection(TestCase):
                                       Dinv*B, epsilon=4.0, k=2,
                                       proj_type="D_A",
                                       symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(),
-                                  result_unscaled.todense(), decimal=2)
+        assert_array_almost_equal(result_scaled.toarray(),
+                                  result_unscaled.toarray(), decimal=2)
 
 
 # Define Complex tests
@@ -353,7 +353,7 @@ class TestComplexStrengthOfConnection(TestCase):
                 expected = reference_classical_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_symmetric_strength_of_connection(self):
         for A in self.cases:
@@ -362,7 +362,7 @@ class TestComplexStrengthOfConnection(TestCase):
                 result = symmetric_soc(A, theta)
 
                 assert_equal(result.nnz, expected.nnz)
-                assert_array_almost_equal(result.todense(), expected.todense())
+                assert_array_almost_equal(result.toarray(), expected.toarray())
 
     def test_evolution_strength_of_connection(self):
         cases = []
@@ -398,7 +398,7 @@ class TestComplexStrengthOfConnection(TestCase):
             expected = reference_evolution_soc(ca['A'], ca['B'],
                                                epsilon=ca['epsilon'],
                                                k=ca['k'], proj_type=ca['proj'])
-            assert_array_almost_equal(result.todense(), expected.todense())
+            assert_array_almost_equal(result.toarray(), expected.toarray())
 
         # Test Scale Invariance for a single candidate
         A = 1.0j*poisson((5, 5), format='csr')
@@ -416,8 +416,8 @@ class TestComplexStrengthOfConnection(TestCase):
         result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2,
                                       proj_type="D_A",
                                       symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(),
-                                  result_unscaled.todense(), decimal=2)
+        assert_array_almost_equal(result_scaled.toarray(),
+                                  result_unscaled.toarray(), decimal=2)
 
         # Test that the l2 and D_A are the same for the 1 candidate case
         scipy.random.seed(0)  # make results deterministic
@@ -428,7 +428,7 @@ class TestComplexStrengthOfConnection(TestCase):
         resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
                                  k=2, proj_type="l2",
                                  symmetrize_measure=False)
-        assert_array_almost_equal(resultDA.todense(), resultl2.todense())
+        assert_array_almost_equal(resultDA.toarray(), resultl2.toarray())
 
         # Test Scale Invariance for multiple candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
@@ -447,8 +447,8 @@ class TestComplexStrengthOfConnection(TestCase):
         result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B,
                                       epsilon=4.0, k=2, proj_type="D_A",
                                       symmetrize_measure=False)
-        assert_array_almost_equal(result_scaled.todense(),
-                                  result_unscaled.todense(), decimal=2)
+        assert_array_almost_equal(result_scaled.toarray(),
+                                  result_unscaled.toarray(), decimal=2)
 
 
 # reference implementations for unittests  #

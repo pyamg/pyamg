@@ -616,19 +616,19 @@ def coarse_grid_solver(solver):
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
-                self.P = getattr(sp.linalg, solver)(A.todense(), **kwargs)
+                self.P = getattr(sp.linalg, solver)(A.toarray(), **kwargs)
             return np.dot(self.P, b)
 
     elif solver == 'lu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = sp.linalg.lu_factor(A.todense(), **kwargs)
+                self.LU = sp.linalg.lu_factor(A.toarray(), **kwargs)
             return sp.linalg.lu_solve(self.LU, b)
 
     elif solver == 'cholesky':
         def solve(self, A, b):
             if not hasattr(self, 'L'):
-                self.L = sp.linalg.cho_factor(A.todense(), **kwargs)
+                self.L = sp.linalg.cho_factor(A.toarray(), **kwargs)
             return sp.linalg.cho_solve(self.L, b)
 
     elif solver == 'splu':

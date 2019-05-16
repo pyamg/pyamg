@@ -31,22 +31,22 @@ def standard_aggregation(C):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import standard_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 2., -1.,  0.,  0.],
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> standard_aggregation(A)[0].todense() # two aggregates
+    >>> standard_aggregation(A)[0].toarray() # two aggregates
     matrix([[1, 0],
             [1, 0],
             [0, 1],
             [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
-    >>> A.todense()                      # first vertex is isolated
+    >>> A.toarray()                      # first vertex is isolated
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> standard_aggregation(A)[0].todense() # one aggregate
+    >>> standard_aggregation(A)[0].toarray() # one aggregate
     matrix([[0],
             [1],
             [1]], dtype=int8)
@@ -116,22 +116,22 @@ def naive_aggregation(C):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import naive_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 2., -1.,  0.,  0.],
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> naive_aggregation(A)[0].todense() # two aggregates
+    >>> naive_aggregation(A)[0].toarray() # two aggregates
     matrix([[1, 0],
             [1, 0],
             [0, 1],
             [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
-    >>> A.todense()                      # first vertex is isolated
+    >>> A.toarray()                      # first vertex is isolated
     matrix([[1, 0, 0],
             [0, 1, 1],
             [0, 1, 1]])
-    >>> naive_aggregation(A)[0].todense() # two aggregates
+    >>> naive_aggregation(A)[0].toarray() # two aggregates
     matrix([[1, 0],
             [0, 1],
             [0, 1]], dtype=int8)
@@ -220,18 +220,18 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 2., -1.,  0.,  0.],
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
-    >>> lloyd_aggregation(A)[0].todense() # one aggregate
+    >>> lloyd_aggregation(A)[0].toarray() # one aggregate
     matrix([[1],
             [1],
             [1],
             [1]], dtype=int8)
     >>> # more seeding for two aggregates
-    >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].todense()
+    >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
     """
     if ratio <= 0 or ratio > 1:

@@ -80,7 +80,7 @@ class TestSimpleIterations(TestCase):
         self.definite_cases.append({'A': A, 'b': b, 'x0': x0, 'maxiter': 2,
                                     'reduction_factor': 0.98})
         self.spd_cases.append({'A':
-                               np.mat(pyamg.gallery.poisson((10,)).todense()),
+                               np.mat(pyamg.gallery.poisson((10,)).toarray()),
                                'b': b, 'x0': x0, 'maxiter': 2,
                                'reduction_factor': 0.5})
 

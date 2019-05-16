@@ -86,7 +86,7 @@ class TestKrylov(TestCase):
         self.symm_cases.append({'A': A + A.T, 'b': b, 'x0': x0, 'tol': 1e-16,
                                 'maxiter': 2, 'reduction_factor': 0.98})
         self.spd_cases.append({'A':
-                               mat(pyamg.gallery.poisson((10,)).todense()),
+                               mat(pyamg.gallery.poisson((10,)).toarray()),
                                'b': b, 'x0': x0, 'tol': 1e-16, 'maxiter': 2,
                                'reduction_factor': 0.98})
 

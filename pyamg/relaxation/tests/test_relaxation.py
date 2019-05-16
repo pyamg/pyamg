@@ -261,7 +261,7 @@ class TestRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = A.todense()
+            A = A.toarray()
 
             L = asmatrix(tril(A, k=-1))
             D = asmatrix(diag(diag(A)))
@@ -491,7 +491,7 @@ class TestRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = mat(A.todense())
+            A = mat(A.toarray())
             AA = A*A.T
 
             L = asmatrix(tril(AA, k=0))
@@ -633,7 +633,7 @@ class TestRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = mat(A.todense())
+            A = mat(A.toarray())
             AA = A.H*A
 
             L = asmatrix(tril(AA, k=0))
@@ -717,7 +717,7 @@ class TestRelaxation(TestCase):
             subblocks = []
             for i in range(len(subdomains)):
                 blkA = (A[subdomains[i], :]).tocsc()
-                blkA = blkA[:, subdomains[i]].todense()
+                blkA = blkA[:, subdomains[i]].toarray()
                 blkAinv = scipy.linalg.pinv2(blkA)
                 subblocks.append(blkAinv)
 
@@ -932,7 +932,7 @@ class TestComplexRelaxation(TestCase):
             subblocks = []
             for i in range(len(subdomains)):
                 blkA = (A[subdomains[i], :]).tocsc()
-                blkA = blkA[:, subdomains[i]].todense()
+                blkA = blkA[:, subdomains[i]].toarray()
                 blkAinv = scipy.linalg.pinv2(blkA)
                 subblocks.append(blkAinv)
 
@@ -972,7 +972,7 @@ class TestComplexRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = A.todense()
+            A = A.toarray()
 
             L = asmatrix(tril(A, k=-1))
             D = asmatrix(diag(diag(A)))
@@ -1217,7 +1217,7 @@ class TestComplexRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = mat(A.todense())
+            A = mat(A.toarray())
             AA = A*A.H
 
             L = asmatrix(tril(AA, k=0))
@@ -1378,20 +1378,20 @@ class TestComplexRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = mat(A.todense())
-            AA = A.H*A
+            A = A.toarray()
+            AA = np.conjugate(A.T).dot(A)
 
             L = asmatrix(tril(AA, k=0))
             U = asmatrix(triu(AA, k=0))
 
             for i in range(iterations):
                 if sweep == 'forward':
-                    x = x + (solve(L, A.H*(b - A*x)))
+                    x = x + (solve(L, AA.dot(b - A*x)))
                 elif sweep == 'backward':
-                    x = x + (solve(U, A.H*(b - A*x)))
+                    x = x + (solve(U, AA.dot(b - A*x)))
                 else:
-                    x = x + (solve(L, A.H*(b - A*x)))
-                    x = x + (solve(U, A.H*(b - A*x)))
+                    x = x + (solve(L, AA.dot(b - A*x)))
+                    x = x + (solve(U, AA.dot(b - A*x)))
             return x
 
         for A in cases:

@@ -42,7 +42,7 @@ class TestAggregate(TestCase):
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = standard_aggregation(S)
         expected = np.array([[0], [0], [0], [0]])
-        assert_equal(result.todense(), expected)
+        assert_equal(result.toarray(), expected)
         assert_equal(Cpts.shape[0], 0)
 
     def test_naive_aggregation(self):
@@ -60,7 +60,7 @@ class TestAggregate(TestCase):
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = naive_aggregation(S)
         expected = np.eye(4)
-        assert_equal(result.todense(), expected)
+        assert_equal(result.toarray(), expected)
         assert_equal(Cpts.shape[0], 4)
 
 

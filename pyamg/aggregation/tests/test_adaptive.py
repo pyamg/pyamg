@@ -71,7 +71,7 @@ class TestAdaptiveSA(TestCase):
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
+        cases.append(A.toarray())
         warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
 
         np.random.seed(0)
@@ -82,8 +82,8 @@ class TestAdaptiveSA(TestCase):
             sa_new = adaptive_sa_solver(AA,
                                         initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
-            assert(abs(np.ravel(sa_old.levels[-1].A.todense() -
-                                sa_new.levels[-1].A.todense())).max() < 0.01)
+            assert(abs(np.ravel(sa_old.levels[-1].A.toarray() -
+                                sa_new.levels[-1].A.toarray())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -189,7 +189,7 @@ class TestComplexAdaptiveSA(TestCase):
 #                   fine_candidates[:, [i]])
 #
 # compare against SA method (which is assumed to be correct)
-#                assert_almost_equal(Q_expected.todense(),Q_result.todense())
+#                assert_almost_equal(Q_expected.toarray(),Q_result.toarray())
 #                assert_almost_equal(R_expected,R_result)
 #
 # each fine level candidate should be fit exactly

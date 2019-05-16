@@ -484,7 +484,7 @@ def cond(A):
         raise ValueError('expected square matrix')
 
     if sparse.isspmatrix(A):
-        A = A.todense()
+        A = A.toarray()
 
     # 2-Norm Condition Number
     from scipy.linalg import svd

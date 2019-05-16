@@ -367,8 +367,8 @@ class TestSolverPerformance(TestCase):
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
-            assert_array_almost_equal(symm_lvl.A.todense(),
-                                      nonsymm_lvl.A.todense())
+            assert_array_almost_equal(symm_lvl.A.toarray(),
+                                      nonsymm_lvl.A.toarray())
 
     def test_coarse_solver_opts(self):
         # these tests are meant to test whether coarse solvers are correctly
@@ -402,12 +402,12 @@ class TestSolverPerformance(TestCase):
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
+        cases.append(A.toarray())
 
         sa_old = rootnode_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = rootnode_solver(AA, max_coarse=10)
-            dff = sa_old.levels[-1].A.todense() - sa_new.levels[-1].A.todense()
+            dff = sa_old.levels[-1].A.toarray() - sa_new.levels[-1].A.toarray()
             assert(np.abs(np.ravel(dff)).max() < 0.01)
             sa_old = sa_new
 
@@ -530,5 +530,5 @@ class TestComplexSolverPerformance(TestCase):
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
         for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
-            assert_array_almost_equal(symm_lvl.A.todense(),
-                                      nonsymm_lvl.A.todense())
+            assert_array_almost_equal(symm_lvl.A.toarray(),
+                                      nonsymm_lvl.A.toarray())

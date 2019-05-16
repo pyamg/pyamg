@@ -29,14 +29,14 @@ def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
     --------
     >>> from pyamg.gallery import poisson
     >>> # 4 nodes in one dimension
-    >>> poisson( (4,) ).todense()
+    >>> poisson( (4,) ).toarray()
     matrix([[ 2., -1.,  0.,  0.],
             [-1.,  2., -1.,  0.],
             [ 0., -1.,  2., -1.],
             [ 0.,  0., -1.,  2.]])
 
     >>> # rectangular two dimensional grid
-    >>> poisson( (2,3) ).todense()
+    >>> poisson( (2,3) )toarray()
     matrix([[ 4., -1.,  0., -1.,  0.,  0.],
             [-1.,  4., -1.,  0., -1.,  0.],
             [ 0., -1.,  4.,  0.,  0., -1.],

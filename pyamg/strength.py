@@ -430,7 +430,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
-        v = np.mat(S[:, i].todense())
+        v = np.mat(S[:, i].toarray())
         Av = np.mat(A * v)
         denom = np.sqrt(np.conjugate(v).T * Av)
         # replace entries in row i with strength values

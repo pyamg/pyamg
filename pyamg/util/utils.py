@@ -114,7 +114,7 @@ def diag_sparse(A):
     >>> import numpy as np
     >>> from pyamg.util.utils import diag_sparse
     >>> d = 2.0*np.ones((3,)).ravel()
-    >>> print diag_sparse(d).todense()
+    >>> print diag_sparse(d).toarray()
     [[ 2.  0.  0.]
      [ 0.  2.  0.]
      [ 0.  0.  2.]]
@@ -241,7 +241,7 @@ def scale_columns(A, v, copy=True):
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).todense()
+    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).toarray()
     [[ 10.  -5.   0.   0.]
      [ -5.  10.  -5.   0.]
      [  0.  -5.  10.  -5.]
@@ -323,7 +323,7 @@ def symmetric_rescaling(A, copy=True):
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
-    >>> print DAD.todense()
+    >>> print DAD.toarray()
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -399,7 +399,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
-    >>> print DAD.todense()
+    >>> print DAD.toarray()
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -709,12 +709,12 @@ def amalgamate(A, blocksize):
     >>> col = array([0,2,1])
     >>> data = array([1,2,3])
     >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[1, 0, 2, 0],
             [0, 3, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0]])
-    >>> amalgamate(A,2).todense()
+    >>> amalgamate(A,2).toarray()
     matrix([[ 1.,  1.],
             [ 0.,  0.]])
 
@@ -764,11 +764,11 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     >>> col = array([0,2,2,0,1,2])
     >>> data = array([1,2,3,4,5,6])
     >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[1, 0, 2],
             [0, 0, 3],
             [4, 5, 6]])
-    >>> UnAmal(A,2,2).todense()
+    >>> UnAmal(A,2,2).toarray()
     matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 0.,  0.,  0.,  0.,  1.,  1.],
@@ -953,10 +953,10 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
             nonzero_rowcols = sp.union1d(nonzero_rows, nonzero_cols)
-            A = np.mat(A.todense())
+            A = A.toarray()
             A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
-            A = np.mat(A.todense())
+            A = A.toarray()
 
         e = eigvals(A)
         c = cond(A)
@@ -1242,7 +1242,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     >>> C = array([ [1.,1,0],[1,1,0],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
     >>> B = ones((3,1))
     >>> Bf = ones((6,1))
-    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).todense()
+    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).toarray()
     matrix([[ 0.5,  0.5,  0. ],
             [ 0.5,  0.5,  0. ],
             [ 0. ,  1. ,  0. ],
@@ -1390,7 +1390,7 @@ def scale_T(T, P_I, I_F):
     ...               [ 0.,  0.,  0.,  1.,  0.,  0.],
     ...               [ 0.,  0.,  0.,  0.,  1.,  0.],
     ...               [ 0.,  0.,  0.,  0.,  0.,  0.]])
-    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).todense()
+    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).toarray()
     matrix([[ 2. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ],
             [ 0. ,  1. ,  0. ],
@@ -1500,7 +1500,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     >>> AggOp = csr_matrix(AggOp)
     >>> T = AggOp.copy().tobsr()
     >>> params = get_Cpt_params(A, Cpts, AggOp, T)
-    >>> params['P_I'].todense()
+    >>> params['P_I'].toarray()
     matrix([[ 0.,  0.],
             [ 0.,  0.],
             [ 0.,  0.],
@@ -1728,7 +1728,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     >>> from pyamg.util.utils import eliminate_diag_dom_nodes
     >>> A = poisson( (4,), format='csr' )
     >>> C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
-    >>> C.todense()
+    >>> C.toarray()
     matrix([[ 1.,  0.,  0.,  0.],
             [ 0.,  2., -1.,  0.],
             [ 0., -1.,  2.,  0.],
@@ -1787,7 +1787,7 @@ def remove_diagonal(S):
     >>> from pyamg.util.utils import remove_diagonal
     >>> A = poisson( (4,), format='csr' )
     >>> C = remove_diagonal(A)
-    >>> C.todense()
+    >>> C.toarray()
     matrix([[ 0., -1.,  0.,  0.],
             [-1.,  0., -1.,  0.],
             [ 0., -1.,  0., -1.],
@@ -1828,7 +1828,7 @@ def scale_rows_by_largest_entry(S):
     >>> A = poisson( (4,), format='csr' )
     >>> A.data[1] = 5.0
     >>> A = scale_rows_by_largest_entry(A)
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 0.4,  1. ,  0. ,  0. ],
             [-0.5,  1. , -0.5,  0. ],
             [ 0. , -0.5,  1. , -0.5],
@@ -2018,7 +2018,7 @@ def filter_matrix_columns(A, theta):
     ...                        [-0.5 ,  1.  , -0.5 ],
     ...                        [ 0.  ,  0.49,  1.  ],
     ...                        [ 0.  ,  0.  , -0.5 ]]) )
-    >>> filter_matrix_columns(A, 0.5).todense()
+    >>> filter_matrix_columns(A, 0.5).toarray()
     matrix([[ 0. ,  1. ,  0. ],
             [-0.5,  1. , -0.5],
             [ 0. ,  0. ,  1. ],
@@ -2095,7 +2095,7 @@ def filter_matrix_rows(A, theta):
     >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
     ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
-    >>> filter_matrix_rows(A, 0.5).todense()
+    >>> filter_matrix_rows(A, 0.5).toarray()
     matrix([[ 0. , -0.5,  0. ,  0. ],
             [ 1. ,  1. ,  0. ,  0. ],
             [ 0. , -0.5,  1. , -0.5]])
@@ -2166,7 +2166,7 @@ def truncate_rows(A, nz_per_row):
     >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
     ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
-    >>> truncate_rows(A, 2).todense()
+    >>> truncate_rows(A, 2).toarray()
     matrix([[-0.24, -0.5 ,  0.  ,  0.  ],
             [ 1.  , -1.1 ,  0.  ,  0.  ],
             [ 0.  ,  0.  ,  1.  ,  0.5 ]])
