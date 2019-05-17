@@ -1378,20 +1378,23 @@ class TestComplexRelaxation(TestCase):
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
-            A = A.toarray()
-            AA = np.conjugate(A.T).dot(A)
+            A = A.todense()
+            AH = np.conjugate(A).T
+            AA = AH.dot(A)
 
             L = asmatrix(tril(AA, k=0))
             U = asmatrix(triu(AA, k=0))
 
+            print(type(A))
+
             for i in range(iterations):
                 if sweep == 'forward':
-                    x = x + (solve(L, AA.dot(b - A*x)))
+                    x = x + (solve(L, AH.dot(b - A.dot(x))))
                 elif sweep == 'backward':
-                    x = x + (solve(U, AA.dot(b - A*x)))
+                    x = x + (solve(U, AH.dot(b - A.dot(x))))
                 else:
-                    x = x + (solve(L, AA.dot(b - A*x)))
-                    x = x + (solve(U, AA.dot(b - A*x)))
+                    x = x + (solve(L, AH.dot(b - A.dot(x))))
+                    x = x + (solve(U, AH.dot(b - A.dot(x))))
             return x
 
         for A in cases:
