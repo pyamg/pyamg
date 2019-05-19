@@ -167,8 +167,8 @@ class TestUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg})
-        opts.append({'accel': cg, 'tol': 1e-10})
+        opts.append({'accel': cg, 'atol': 'legacy'})
+        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 'legacy'})
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
@@ -1177,8 +1177,8 @@ class TestComplexUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg})
-        opts.append({'accel': cg, 'tol': 1e-10})
+        opts.append({'accel': cg, 'atol': 'legacy'})
+        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 'legacy'})
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
