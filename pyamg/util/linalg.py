@@ -533,9 +533,9 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     True
 
     """
-    # convert to matrix type
+    # convert to array type
     if not sparse.isspmatrix(A):
-        A = np.asmatrix(A)
+        A = np.asarray(A)
 
     if fast_check:
         x = sp.rand(A.shape[0], 1)
@@ -543,8 +543,8 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         if A.dtype == complex:
             x = x + 1.0j*sp.rand(A.shape[0], 1)
             y = y + 1.0j*sp.rand(A.shape[0], 1)
-        xAy = np.dot((A*x).conjugate().T, y)
-        xAty = np.dot(x.conjugate().T, A*y)
+        xAy = np.dot((A.dot(x)).conjugate().T, y)
+        xAty = np.dot(x.conjugate().T, A.dot(y))
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
 
     else:

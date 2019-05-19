@@ -713,7 +713,9 @@ def coarse_grid_solver(solver):
             if isinstance(b, np.ndarray):
                 x = np.asarray(x)
             elif isinstance(b, np.matrix):
-                x = np.asmatrix(x)
+                # convert to ndarray
+                b = np.asarray(b)
+                x = np.asarray(x)
             else:
                 raise ValueError('unrecognized type')
 
