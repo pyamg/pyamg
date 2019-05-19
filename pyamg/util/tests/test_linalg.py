@@ -1,4 +1,4 @@
-from numpy import matrix, array, abs, ravel, zeros_like, dot
+import numpy as np
 from scipy import rand, linalg, mat, random
 from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
@@ -31,13 +31,12 @@ class TestLinalg(TestCase):
     def test_approximate_spectral_radius(self):
         cases = []
 
-        cases.append(matrix([[-4]]))
-        cases.append(array([[-4]]))
+        cases.append(np.array([[-4]]))
 
-        cases.append(array([[2, 0], [0, 1]]))
-        cases.append(array([[-2, 0], [0, 1]]))
+        cases.append(np.array([[2, 0], [0, 1]]))
+        cases.append(np.array([[-2, 0], [0, 1]]))
 
-        cases.append(array([[100, 0, 0], [0, 101, 0], [0, 0, 99]]))
+        cases.append(np.array([[100, 0, 0], [0, 101, 0], [0, 0, 99]]))
 
         for i in range(1, 5):
             cases.append(rand(i, i))
@@ -48,7 +47,7 @@ class TestLinalg(TestCase):
             Asp = csr_matrix(A)
 
             [E, V] = linalg.eig(A)
-            E = abs(E)
+            E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
             expected_vec = V[:, largest_eig]
@@ -71,7 +70,7 @@ class TestLinalg(TestCase):
             Asp = csr_matrix(A)
 
             [E, V] = linalg.eig(A)
-            E = abs(E)
+            E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
             expected_vec = V[:, largest_eig]
@@ -122,16 +121,16 @@ class TestLinalg(TestCase):
             assert_equal(abs(ans2 - expected) < 0.1*abs(ans1 - expected), True)
 
     def test_infinity_norm(self):
-        A = matrix([[-4]])
+        A = np.array([[-4]])
         assert_equal(infinity_norm(csr_matrix(A)), 4)
 
-        A = matrix([[1, 0, -5], [-2, 5, 0]])
+        A = np.array([[1, 0, -5], [-2, 5, 0]])
         assert_equal(infinity_norm(csr_matrix(A)), 7)
 
-        A = matrix([[0, 1], [0, -5]])
+        A = np.array([[0, 1], [0, -5]])
         assert_equal(infinity_norm(csr_matrix(A)), 5)
 
-        A = matrix([[1.3, -4.7, 0], [-2.23, 5.5, 0], [9, 0, -2]])
+        A = np.array([[1.3, -4.7, 0], [-2.23, 5.5, 0], [9, 0, -2]])
         assert_equal(infinity_norm(csr_matrix(A)), 11)
 
 
@@ -139,24 +138,24 @@ class TestComplexLinalg(TestCase):
     def test_approximate_spectral_radius(self):
         cases = []
 
-        cases.append(matrix([[-4-4.0j]]))
-        cases.append(matrix([[-4+8.2j]]))
+        cases.append(np.array([[-4-4.0j]]))
+        cases.append(np.array([[-4+8.2j]]))
 
-        cases.append(matrix([[2.0-2.9j, 0], [0, 1.5]]))
-        cases.append(matrix([[-2.0-2.4j, 0], [0, 1.21]]))
+        cases.append(np.array([[2.0-2.9j, 0], [0, 1.5]]))
+        cases.append(np.array([[-2.0-2.4j, 0], [0, 1.21]]))
 
-        cases.append(matrix([[100+1.0j, 0, 0],
+        cases.append(np.array([[100+1.0j, 0, 0],
                              [0, 101-1.0j, 0],
                              [0, 0, 99+9.9j]]))
 
         for i in range(1, 6):
-            cases.append(matrix(rand(i, i)+1.0j*rand(i, i)))
+            cases.append(np.array(rand(i, i)+1.0j*rand(i, i)))
 
         # method should be almost exact for small matrices
         for A in cases:
             Asp = csr_matrix(A)
             [E, V] = linalg.eig(A)
-            E = abs(E)
+            E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
             # expected_vec = V[:, largest_eig]
@@ -164,22 +163,22 @@ class TestComplexLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(A), expected_eig)
             assert_almost_equal(approximate_spectral_radius(Asp), expected_eig)
             vec = approximate_spectral_radius(A, return_vector=True)[1]
-            Avec = A * vec
-            Avec = ravel(Avec)
-            vec = ravel(vec)
-            rayleigh = abs(dot(Avec, vec) / dot(vec, vec))
+            Avec = A.dot(vec)
+            Avec = np.ravel(Avec)
+            vec = np.ravel(vec)
+            rayleigh = abs(np.dot(Avec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
             Aspvec = Asp * vec
-            Aspvec = ravel(Aspvec)
-            vec = ravel(vec)
-            rayleigh = abs(dot(Aspvec, vec) / dot(vec, vec))
+            Aspvec = np.ravel(Aspvec)
+            vec = np.ravel(vec)
+            rayleigh = abs(np.dot(Aspvec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
-            AA = mat(A).H*mat(A)
+            AA = A.conj().T.dot(A)
             AAsp = csr_matrix(AA)
             [E, V] = linalg.eig(AA)
-            E = abs(E)
+            E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
             # expected_vec = V[:, largest_eig]
@@ -189,26 +188,26 @@ class TestComplexLinalg(TestCase):
             assert_almost_equal(approximate_spectral_radius(AAsp),
                                 expected_eig)
             vec = approximate_spectral_radius(AA, return_vector=True)[1]
-            AAvec = AA * vec
-            AAvec = ravel(AAvec)
-            vec = ravel(vec)
-            rayleigh = abs(dot(AAvec, vec) / dot(vec, vec))
+            AAvec = AA.dot(vec)
+            AAvec = np.ravel(AAvec)
+            vec = np.ravel(vec)
+            rayleigh = abs(np.dot(AAvec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(AAsp, return_vector=True)[1]
             AAspvec = AAsp * vec
-            AAspvec = ravel(AAspvec)
-            vec = ravel(vec)
-            rayleigh = abs(dot(AAspvec, vec) / dot(vec, vec))
+            AAspvec = np.ravel(AAspvec)
+            vec = np.ravel(vec)
+            rayleigh = abs(np.dot(AAspvec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
     def test_infinity_norm(self):
-        A = matrix([[-4-3.0j]])
+        A = np.array([[-4-3.0j]])
         assert_equal(infinity_norm(csr_matrix(A)), 5.0)
 
-        A = matrix([[1, 0, 4.0-3.0j], [-2, 5, 0]])
+        A = np.array([[1, 0, 4.0-3.0j], [-2, 5, 0]])
         assert_equal(infinity_norm(csr_matrix(A)), 7)
 
-        A = matrix([[0, 1], [0, -4.0+3.0j]])
+        A = np.array([[0, 1], [0, -4.0+3.0j]])
         assert_equal(infinity_norm(csr_matrix(A)), 5.0)
 
     def test_cond(self):
@@ -217,11 +216,11 @@ class TestComplexLinalg(TestCase):
 
         # Should be exact
         cases = []
-        A = mat(array([2.14]))
+        A = mat(np.array([2.14]))
         cases.append(A)
-        A = mat(array([2.14j]))
+        A = mat(np.array([2.14j]))
         cases.append(A)
-        A = mat(array([-1.2 + 2.14j]))
+        A = mat(np.array([-1.2 + 2.14j]))
         cases.append(A)
         for i in range(1, 6):
             A = mat(rand(i, i))
@@ -242,11 +241,11 @@ class TestComplexLinalg(TestCase):
 
         # Should be exact for small matrices
         cases = []
-        A = mat(array([2.14]))
+        A = mat(np.array([2.14]))
         cases.append(A)
-        A = mat(array([2.14j]))
+        A = mat(np.array([2.14j]))
         cases.append(A)
-        A = mat(array([-1.2 + 2.14j]))
+        A = mat(np.array([-1.2 + 2.14j]))
         cases.append(A)
         for i in range(1, 6):
             A = mat(rand(i, i))
@@ -257,7 +256,7 @@ class TestComplexLinalg(TestCase):
 
         for A in cases:
             eigs = eigvals(A)
-            exact = max(abs(eigs))/min(abs(eigs))
+            exact = max(np.abs(eigs))/min(np.abs(eigs))
             c = condest(A)
             assert_almost_equal(exact, c)
 
@@ -270,7 +269,7 @@ class TestComplexLinalg(TestCase):
         casesT.append(mat(rand(1, 1)))
         casesF.append(mat(1.0j*rand(1, 1)))
         # 2x2
-        A = array([[1.0, 0.0], [2.0, 1.0]])
+        A = np.array([[1.0, 0.0], [2.0, 1.0]])
         Ai = 1.0j*A
         casesF.append(A)
         casesF.append(Ai)
@@ -331,7 +330,7 @@ class TestComplexLinalg(TestCase):
         tests.append(A)
 
         for test in tests:
-            pinv_test = zeros_like(test)
+            pinv_test = np.zeros_like(test)
             for i in range(pinv_test.shape[0]):
                 pinv_test[i] = pinv2(test[i])
 
