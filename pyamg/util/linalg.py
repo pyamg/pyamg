@@ -503,14 +503,14 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
         for random vectors x and y to check for conjugate symmetry.
-        If False, compute A - A.H.
+        If False, compute A - A.conj().T.
     tol : {float}
         Symmetry tolerance
 
     verbose: {bool}
         prints
-        max( \|A - A.H\| )       if nonhermitian and fast_check=False
-        abs( <Ax, y> - <x, Ay> ) if nonhermitian and fast_check=False
+        max( \|A - A.conj().T\| ) if nonhermitian and fast_check=False..
+        abs( <Ax, y> - <x, Ay> )  if nonhermitian and fast_check=False
 
     Returns
     -------
@@ -548,11 +548,11 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
 
     else:
-        # compute the difference, A - A.H
+        # compute the difference, A - A.conj().T
         if sparse.isspmatrix(A):
-            diff = np.ravel((A - A.H).data)
+            diff = np.ravel((A - A.conj().T).data)
         else:
-            diff = np.ravel(A - A.H)
+            diff = np.ravel(A - A.conj().T)
 
         if np.max(diff.shape) == 0:
             diff = 0
