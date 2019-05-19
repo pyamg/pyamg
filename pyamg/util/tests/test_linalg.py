@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import rand, linalg, mat, random
+from scipy import linalg
 from scipy.sparse import csr_matrix
 from scipy.linalg import svd, eigvals
 
@@ -39,7 +39,7 @@ class TestLinalg(TestCase):
         cases.append(np.array([[100, 0, 0], [0, 101, 0], [0, 0, 99]]))
 
         for i in range(1, 5):
-            cases.append(rand(i, i))
+            cases.append(np.random.rand(i, i))
 
         # method should be almost exact for small matrices
         for A in cases:
@@ -149,7 +149,7 @@ class TestComplexLinalg(TestCase):
                              [0, 0, 99+9.9j]]))
 
         for i in range(1, 6):
-            cases.append(np.array(rand(i, i)+1.0j*rand(i, i)))
+            cases.append(np.array(np.random.rand(i, i)+1.0j*np.random.rand(i, i)))
 
         # method should be almost exact for small matrices
         for A in cases:
@@ -212,21 +212,24 @@ class TestComplexLinalg(TestCase):
 
     def test_cond(self):
         # make tests repeatable
-        random.seed(0)
+        np.random.seed(0)
 
         # Should be exact
         cases = []
-        A = mat(np.array([2.14]))
+        A = np.array([[2.14]])
         cases.append(A)
-        A = mat(np.array([2.14j]))
+
+        A = np.array([[2.14j]])
         cases.append(A)
-        A = mat(np.array([-1.2 + 2.14j]))
+
+        A = np.array([[-1.2 + 2.14j]])
         cases.append(A)
+
         for i in range(1, 6):
-            A = mat(rand(i, i))
+            A = np.random.rand(i, i)
             cases.append(A)
             cases.append(1.0j*A)
-            A = mat(A + 1.0j*rand(i, i))
+            A = A + 1.0j*np.random.rand(i, i)
             cases.append(A)
 
         for A in cases:
@@ -237,21 +240,21 @@ class TestComplexLinalg(TestCase):
 
     def test_condest(self):
         # make tests repeatable
-        random.seed(0)
+        np.random.seed(0)
 
         # Should be exact for small matrices
         cases = []
-        A = mat(np.array([2.14]))
+        A = np.array([[2.14]])
         cases.append(A)
-        A = mat(np.array([2.14j]))
+        A = np.array([[2.14j]])
         cases.append(A)
-        A = mat(np.array([-1.2 + 2.14j]))
+        A = np.array([[-1.2 + 2.14j]])
         cases.append(A)
         for i in range(1, 6):
-            A = mat(rand(i, i))
+            A = np.random.rand(i, i)
             cases.append(A)
             cases.append(1.0j*A)
-            A = mat(A + 1.0j*rand(i, i))
+            A = A + 1.0j*np.random.rand(i, i)
             cases.append(A)
 
         for A in cases:
@@ -262,12 +265,12 @@ class TestComplexLinalg(TestCase):
 
     def test_ishermitian(self):
         # make tests repeatable
-        random.seed(0)
+        np.random.seed(0)
         casesT = []
         casesF = []
         # 1x1
-        casesT.append(mat(rand(1, 1)))
-        casesF.append(mat(1.0j*rand(1, 1)))
+        casesT.append(np.random.rand(1, 1))
+        casesF.append(1.0j*np.random.rand(1, 1))
         # 2x2
         A = np.array([[1.0, 0.0], [2.0, 1.0]])
         Ai = 1.0j*A
@@ -277,13 +280,13 @@ class TestComplexLinalg(TestCase):
         casesF.append(A)
         casesT.append(A + A.conjugate().T)
         # 3x3
-        A = mat(rand(3, 3))
-        Ai = 1.0j*rand(3, 3)
+        A = np.random.rand(3, 3)
+        Ai = 1.0j*np.random.rand(3, 3)
         casesF.append(A)
         casesF.append(Ai)
         A = A + Ai
         casesF.append(A)
-        casesT.append(A + A.H)
+        casesT.append(A + A.conj().T)
 
         for A in casesT:
             # dense arrays
@@ -309,23 +312,23 @@ class TestComplexLinalg(TestCase):
         from scipy.linalg import pinv2
 
         tests = []
-        tests.append(rand(1, 1, 1))
-        tests.append(rand(3, 1, 1))
-        tests.append(rand(1, 2, 2))
-        tests.append(rand(3, 2, 2))
-        tests.append(rand(1, 3, 3))
-        tests.append(rand(3, 3, 3))
-        A = rand(1, 3, 3)
+        tests.append(np.random.rand(1, 1, 1))
+        tests.append(np.random.rand(3, 1, 1))
+        tests.append(np.random.rand(1, 2, 2))
+        tests.append(np.random.rand(3, 2, 2))
+        tests.append(np.random.rand(1, 3, 3))
+        tests.append(np.random.rand(3, 3, 3))
+        A = np.random.rand(1, 3, 3)
         A[0, 0, :] = A[0, 1, :]
         tests.append(A)
 
-        tests.append(rand(1, 1, 1) + 1.0j*rand(1, 1, 1))
-        tests.append(rand(3, 1, 1) + 1.0j*rand(3, 1, 1))
-        tests.append(rand(1, 2, 2) + 1.0j*rand(1, 2, 2))
-        tests.append(rand(3, 2, 2) + 1.0j*rand(3, 2, 2))
-        tests.append(rand(1, 3, 3) + 1.0j*rand(1, 3, 3))
-        tests.append(rand(3, 3, 3) + 1.0j*rand(3, 3, 3))
-        A = rand(1, 3, 3) + 1.0j*rand(1, 3, 3)
+        tests.append(np.random.rand(1, 1, 1) + 1.0j*np.random.rand(1, 1, 1))
+        tests.append(np.random.rand(3, 1, 1) + 1.0j*np.random.rand(3, 1, 1))
+        tests.append(np.random.rand(1, 2, 2) + 1.0j*np.random.rand(1, 2, 2))
+        tests.append(np.random.rand(3, 2, 2) + 1.0j*np.random.rand(3, 2, 2))
+        tests.append(np.random.rand(1, 3, 3) + 1.0j*np.random.rand(1, 3, 3))
+        tests.append(np.random.rand(3, 3, 3) + 1.0j*np.random.rand(3, 3, 3))
+        A = np.random.rand(1, 3, 3) + 1.0j*np.random.rand(1, 3, 3)
         A[0, 0, :] = A[0, 1, :]
         tests.append(A)
 
