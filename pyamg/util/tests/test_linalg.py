@@ -29,6 +29,7 @@ class TestLinalg(TestCase):
             assert_almost_equal(norm(A), linalg.norm(A))
 
     def test_approximate_spectral_radius(self):
+        np.random.seed(3456)
         cases = []
 
         cases.append(np.array([[-4]]))
