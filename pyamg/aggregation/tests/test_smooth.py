@@ -53,11 +53,11 @@ class TestEnergyMin(TestCase):
         cases = []
 
         # 1x1 tests
-        A = csr_matrix(np.mat([[1.1]])).tobsr(blocksize=(1, 1))
-        B = csr_matrix(np.mat([[1.0]])).tobsr(blocksize=(1, 1))
-        A2 = csr_matrix(np.mat([[0.]])).tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1.]])).tobsr(blocksize=(1, 1))
-        mask2 = csr_matrix(np.mat([[0.]])).tobsr(blocksize=(1, 1))
+        A = csr_matrix(np.array([[1.1]])).tobsr(blocksize=(1, 1))
+        B = csr_matrix(np.array([[1.0]])).tobsr(blocksize=(1, 1))
+        A2 = csr_matrix(np.array([[0.]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.array([[1.]])).tobsr(blocksize=(1, 1))
+        mask2 = csr_matrix(np.array([[0.]])).tobsr(blocksize=(1, 1))
         cases.append((A, A, mask))                                  # 1x1,  1x1
         cases.append((A, A, mask2))                                 # 1x1,  1x1
         cases.append((A, B, mask))                                  # 1x1,  1x1
@@ -66,22 +66,22 @@ class TestEnergyMin(TestCase):
         cases.append((A2, A2, mask))                                # 1x1,  1x1
 
         # 1x2 and 2x1 tests
-        A = csr_matrix(np.mat([[1.1]])).tobsr(blocksize=(1, 1))
-        B = csr_matrix(np.mat([[1.0, 2.3]])).tobsr(blocksize=(1, 1))
-        A2 = csr_matrix(np.mat([[0.]])).tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1., 1.]])).tobsr(blocksize=(1, 1))
-        mask2 = csr_matrix(np.mat([[0., 1.]])).tobsr(blocksize=(1, 1))
+        A = csr_matrix(np.array([[1.1]])).tobsr(blocksize=(1, 1))
+        B = csr_matrix(np.array([[1.0, 2.3]])).tobsr(blocksize=(1, 1))
+        A2 = csr_matrix(np.array([[0.]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.array([[1., 1.]])).tobsr(blocksize=(1, 1))
+        mask2 = csr_matrix(np.array([[0., 1.]])).tobsr(blocksize=(1, 1))
         cases.append((A, B, mask))                                  # 1x1,  1x2
         cases.append((A2, B, mask))                                 # 1x1,  1x2
         cases.append((A, B, mask2))                                 # 1x1,  1x2
         cases.append((A2, B, mask2))                                # 1x1,  1x2
 
-        B2 = csr_matrix(np.mat([[0.0, 2.3]])).tobsr(blocksize=(1, 1))
-        B3 = csr_matrix(np.mat([[3.0, 0.0]])).tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1., 1.],
-                                  [1., 1.]])).tobsr(blocksize=(1, 1))
-        mask3 = csr_matrix(np.mat([[0., 1.],
-                                   [1., 0.]])).tobsr(blocksize=(1, 1))
+        B2 = csr_matrix(np.array([[0.0, 2.3]])).tobsr(blocksize=(1, 1))
+        B3 = csr_matrix(np.array([[3.0, 0.0]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.array([[1., 1.],
+                                    [1., 1.]])).tobsr(blocksize=(1, 1))
+        mask3 = csr_matrix(np.array([[0., 1.],
+                                     [1., 0.]])).tobsr(blocksize=(1, 1))
         cases.append((B.T.copy(), B2, mask))                      # 2x1,  1x2
         cases.append((B.T.copy(), B2, mask3))                     # 2x1,  1x2
         cases.append((B.T.copy(), B3, mask))                      # 2x1,  1x2
@@ -90,10 +90,10 @@ class TestEnergyMin(TestCase):
         B = B.tobsr(blocksize=(1, 2))
         B2 = B2.tobsr(blocksize=(1, 2))
         B3 = B3.tobsr(blocksize=(1, 2))
-        mask = csr_matrix(np.mat([[1., 1.],
-                                  [1., 1.]])).tobsr(blocksize=(2, 2))
-        mask2 = csr_matrix(np.mat([[0., 0.],
-                                   [0., 0.]])).tobsr(blocksize=(2, 2))
+        mask = csr_matrix(np.array([[1., 1.],
+                                    [1., 1.]])).tobsr(blocksize=(2, 2))
+        mask2 = csr_matrix(np.array([[0., 0.],
+                                     [0., 0.]])).tobsr(blocksize=(2, 2))
         cases.append((B.T.copy(), B2, mask))                      # 2x1,  1x2
         cases.append((B.T.copy(), B2, mask2))                     # 2x1,  1x2
         cases.append((B.T.copy(), B3, mask))                      # 2x1,  1x2
@@ -102,8 +102,8 @@ class TestEnergyMin(TestCase):
         B = B.tobsr(blocksize=(1, 1))
         B2 = B2.tobsr(blocksize=(1, 1))
         B3 = B3.tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1.]])).tobsr(blocksize=(1, 1))
-        mask2 = csr_matrix(np.mat([[0.]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.array([[1.]])).tobsr(blocksize=(1, 1))
+        mask2 = csr_matrix(np.array([[0.]])).tobsr(blocksize=(1, 1))
         cases.append((B, B2.T.copy(), mask))                      # 1x2,  2x1
         cases.append((B, B2.T.copy(), mask2))                     # 1x2,  2x1
         cases.append((B, B3.T.copy(), mask))                      # 1x2,  2x1
@@ -118,10 +118,10 @@ class TestEnergyMin(TestCase):
         cases.append((B, B3.T.copy(), mask2))                     # 1x2,  2x1
 
         # 2x2 tests
-        A = csr_matrix(np.mat([[1., 2.], [2., 4.]])).tobsr(blocksize=(2, 2))
-        B = csr_matrix(np.mat([[1.3, 2.], [2.8, 4.]])).tobsr(blocksize=(2, 2))
-        A2 = csr_matrix(np.mat([[1.3, 0.], [0., 4.]])).tobsr(blocksize=(2, 2))
-        B2 = csr_matrix(np.mat([[1.3, 0.], [2., 4.]])).tobsr(blocksize=(2, 1))
+        A = csr_matrix(np.array([[1., 2.], [2., 4.]])).tobsr(blocksize=(2, 2))
+        B = csr_matrix(np.array([[1.3, 2.], [2.8, 4.]])).tobsr(blocksize=(2, 2))
+        A2 = csr_matrix(np.array([[1.3, 0.], [0., 4.]])).tobsr(blocksize=(2, 2))
+        B2 = csr_matrix(np.array([[1.3, 0.], [2., 4.]])).tobsr(blocksize=(2, 1))
         mask = csr_matrix((np.array([1., 1., 1., 1.]),
                            (np.array([0, 0, 1, 1]), np.array([0, 1, 0, 1]))),
                           shape=(2, 2)).tobsr(blocksize=(2, 2))
@@ -149,10 +149,10 @@ class TestEnergyMin(TestCase):
         cases.append((A, B, mask3))                                 # 2x2,  2x2
         cases.append((A2, B2, mask3))                               # 2x2,  2x2
 
-        B = csr_matrix(np.mat([[1.0], [2.3]])).tobsr(blocksize=(1, 1))
-        B2 = csr_matrix(np.mat([[1.1], [0.0]])).tobsr(blocksize=(1, 1))
-        mask = csr_matrix(np.mat([[1.], [1.1]])).tobsr(blocksize=(1, 1))
-        mask2 = csr_matrix(np.mat([[0.], [1.1]])).tobsr(blocksize=(1, 1))
+        B = csr_matrix(np.array([[1.0], [2.3]])).tobsr(blocksize=(1, 1))
+        B2 = csr_matrix(np.array([[1.1], [0.0]])).tobsr(blocksize=(1, 1))
+        mask = csr_matrix(np.array([[1.], [1.1]])).tobsr(blocksize=(1, 1))
+        mask2 = csr_matrix(np.array([[0.], [1.1]])).tobsr(blocksize=(1, 1))
         cases.append((A, B, mask))                                 # 2x2,  2x1
         cases.append((A, B2, mask2))                                # 2x2,  2x1
         cases.append((A2, B, mask))                                 # 2x2,  2x1
@@ -167,14 +167,14 @@ class TestEnergyMin(TestCase):
         cases.append((A, B, mask))                                 # 2x2,  2x1
         cases.append((A2, B2, mask2))                              # 2x2,  2x1
 
-        B = csr_matrix(np.mat([[1.3, 2., 1.0], [2.8, 4., 0.]]))
+        B = csr_matrix(np.array([[1.3, 2., 1.0], [2.8, 4., 0.]]))
         B = B.tobsr(blocksize=(1, 1))
-        B2 = csr_matrix(np.mat([[1.3, 2., 1.0], [2.8, 4., 0.]]))
+        B2 = csr_matrix(np.array([[1.3, 2., 1.0], [2.8, 4., 0.]]))
         B2 = B2.tobsr(blocksize=(2, 3))
-        mask = csr_matrix(np.mat([[1., 2., 1.], [1., 2., 0.]]))
+        mask = csr_matrix(np.array([[1., 2., 1.], [1., 2., 0.]]))
         mask = mask.tobsr(blocksize=(1, 1))
         mask2 = mask.tobsr((2, 3))
-        mask3 = csr_matrix(np.mat([[0., 0., 0.], [0., 0., 0.]]))
+        mask3 = csr_matrix(np.array([[0., 0., 0.], [0., 0., 0.]]))
         mask3 = mask3.tobsr(blocksize=(2, 3))
         cases.append((A, B, mask))                                 # 2x2,  2x3
         cases.append((A2, B2, mask2))                              # 2x2,  2x3
@@ -184,10 +184,10 @@ class TestEnergyMin(TestCase):
         cases.append((A2, B2, mask3))                              # 2x2,  2x3
 
         # 4x4 tests
-        A = np.mat([[0., 16.9, 6.4, 0.0],
-                    [16.9, 13.8, 7.2, 0.],
-                    [6.4, 7.2, 12., 6.1],
-                    [0.0, 0., 6.1, 0.]])
+        A = np.array([[0., 16.9, 6.4, 0.0],
+                      [16.9, 13.8, 7.2, 0.],
+                      [6.4, 7.2, 12., 6.1],
+                      [0.0, 0., 6.1, 0.]])
         B = A.copy()
         B = A[:, 0:2]
         B[1, 0] = 3.1
@@ -598,7 +598,7 @@ class TestEnergyMin(TestCase):
 #
 #        U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
 #        Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
-#        B = np.mat(np.array([[1],[1]]))
+#        B = np.array(np.array([[1],[1]]))
 #        BtBinv = [ np.array([[0.5]]), np.array([[0.5]]) ]
 #        colindices = [ np.array([0,1]), np.array([0,1]) ]
 #
@@ -633,8 +633,8 @@ class TestEnergyMin(TestCase):
 #        for i in range(5):
 #            colindx = colindices[i]
 #            if len(colindx) > 0:
-#                Bi = np.mat(B)[colindx,:]
-#                BtBinv[i] = pinv2(Bi.T*Bi)
+#                Bi = np.array(B)[colindx,:]
+#                BtBinv[i] = pinv2(Bi.T.dot(Bi))
 #
 #        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
 #        assert_almost_equal(U*B, 0*U*B)
