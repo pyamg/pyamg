@@ -409,13 +409,7 @@ class TestEnergyMin(TestCase):
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3, 'postfilter': {'theta': 0.05}}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3, 'prefilter': {'theta': 0.05}}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}), name))
-        # fail
-        print('-----')
-        print(B.shape)
-        print(iB.shape)
-        print('-----')
         cases.append((A.tobsr(blocksize=(2, 2)), iB, ('energy', {'krylov': 'cg'}), name))
-        #
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3, 'postfilter': {'theta': 0.05}}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3, 'prefilter': {'theta': 0.05}}), name))
@@ -426,12 +420,11 @@ class TestEnergyMin(TestCase):
         cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'local'}), name))
         cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'block'}), name))
-        # fail
-        #cases.append((A, B, ('energy', {'degree': 2}), name))
-        #cases.append((A, B, ('energy', {'degree': 3, 'postfilter': {'theta': 0.05}}), name))
-        #cases.append((A, B, ('energy', {'degree': 3, 'prefilter': {'theta': 0.05}}), name))
-        #cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
-        #cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
+        cases.append((A, B, ('energy', {'degree': 2}), name))
+        cases.append((A, B, ('energy', {'degree': 3, 'postfilter': {'theta': 0.05}}), name))
+        cases.append((A, B, ('energy', {'degree': 3, 'prefilter': {'theta': 0.05}}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         # Classic SA cases
         for A, B, smooth, name in cases:
@@ -451,7 +444,6 @@ class TestEnergyMin(TestCase):
         # Root-node cases
         counter = 0
         for A, B, smooth, name in cases:
-            print(name)
             counter += 1
 
             if isinstance(smooth, tuple):
@@ -473,6 +465,9 @@ class TestEnergyMin(TestCase):
                 Bc = ml.levels[1].B
                 P = ml.levels[0].P.tocsr()
 
+                T.eliminate_zeros()
+                P.eliminate_zeros()
+
                 # P should preserve B in its range, wherever P
                 # has enough nonzeros
                 mask = ((P.indptr[1:] - P.indptr[:-1]) >= B.shape[1])
@@ -482,9 +477,6 @@ class TestEnergyMin(TestCase):
                 # P should be the identity at Cpts
                 I1 = eye(T.shape[1], T.shape[1], format='csr', dtype=T.dtype)
                 I2 = P[Cpts, :]
-                print(Cpts)
-                print(I1.data)
-                print(I2.data)
                 assert_almost_equal(I1.data, I2.data)
                 assert_equal(I1.indptr, I2.indptr)
                 assert_equal(I1.indices, I2.indices)
