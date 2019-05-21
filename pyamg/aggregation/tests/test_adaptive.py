@@ -40,7 +40,7 @@ class TestAdaptiveSA(TestCase):
         # print "SA convergence (Poisson)",conv_sa
         assert(conv_asa < 1.2 * conv_sa)
 
-    def test_elasticity(self):
+    def check_elasticity(self):
         A, B = linear_elasticity((35, 35), format='bsr')
 
         smoother = ('gauss_seidel', {'sweep': 'symmetric', 'iterations': 2})
