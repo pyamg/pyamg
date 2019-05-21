@@ -284,7 +284,7 @@ class TestEnergyMin(TestCase):
             assert_array_almost_equal(result.indices, exact.indices)
             assert_array_almost_equal(result.indptr, exact.indptr)
 
-    def check_range(self):
+    def test_range(self):
         """Check that P*R=B"""
         np.random.seed(0)  # make tests repeatable
 

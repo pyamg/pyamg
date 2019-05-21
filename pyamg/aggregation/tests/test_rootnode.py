@@ -41,7 +41,7 @@ class TestParameters(TestCase):
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
 
-    def check_strength_of_connection(self):
+    def test_strength_of_connection(self):
         for strength in ['symmetric', 'evolution']:
             self.run_cases({'strength': strength})
 
@@ -119,7 +119,7 @@ class TestComplexParameters(TestCase):
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
 
-    def check_strength_of_connection(self):
+    def test_strength_of_connection(self):
         for strength in ['classical', 'symmetric']:
             self.run_cases({'strength': strength})
 
@@ -308,7 +308,7 @@ class TestSolverPerformance(TestCase):
                 y = sp.rand(n,)
                 assert_approx_equal(np.dot(P * x, y), np.dot(x, P * y))
 
-    def check_nonsymmetric(self):
+    def test_nonsymmetric(self):
         # problem data
         data = load_example('recirc_flow')
         A = data['A'].tocsr()
@@ -396,7 +396,7 @@ class TestSolverPerformance(TestCase):
             del x1, x2
             assert((len(r1) + 5) < len(r2))
 
-    def check_matrix_formats(self):
+    def test_matrix_formats(self):
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
@@ -476,7 +476,7 @@ class TestComplexSolverPerformance(TestCase):
             #     ml.operator_complexity())
             assert(avg_convergence_ratio < c_factor)
 
-    def check_nonhermitian(self):
+    def test_nonhermitian(self):
         # problem data
         data = load_example('helmholtz_2D')
         A = data['A'].tocsr()

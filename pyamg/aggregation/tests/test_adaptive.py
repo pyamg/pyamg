@@ -40,7 +40,7 @@ class TestAdaptiveSA(TestCase):
         # print "SA convergence (Poisson)",conv_sa
         assert(conv_asa < 1.2 * conv_sa)
 
-    def check_elasticity(self):
+    def test_elasticity(self):
         A, B = linear_elasticity((35, 35), format='bsr')
 
         smoother = ('gauss_seidel', {'sweep': 'symmetric', 'iterations': 2})
@@ -65,7 +65,7 @@ class TestAdaptiveSA(TestCase):
         # print "SA convergence (Elasticity) %1.2e" % (conv_sa)
         assert(conv_asa < 1.3 * conv_sa)
 
-    def check_matrix_formats(self):
+    def test_matrix_formats(self):
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
