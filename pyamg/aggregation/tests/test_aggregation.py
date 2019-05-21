@@ -41,7 +41,7 @@ class TestParameters(TestCase):
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
 
-    def test_strength_of_connection(self):
+    def check_strength_of_connection(self):
         for strength in ['symmetric', 'evolution']:
             self.run_cases({'strength': strength})
 
@@ -120,7 +120,7 @@ class TestComplexParameters(TestCase):
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
             assert(convergence_ratio < 0.9)
 
-    def test_strength_of_connection(self):
+    def check_strength_of_connection(self):
         for strength in ['classical', 'symmetric']:
             self.run_cases({'strength': strength})
 
@@ -322,7 +322,7 @@ class TestSolverPerformance(TestCase):
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
                 assert_approx_equal(out[0], out[1])
 
-    def test_nonsymmetric(self):
+    def check_nonsymmetric(self):
         # problem data
         data = load_example('recirc_flow')
         A = data['A'].tocsr()
@@ -415,7 +415,7 @@ class TestSolverPerformance(TestCase):
             del x1, x2
             assert((len(r1) + 5) < len(r2))
 
-    def test_matrix_formats(self):
+    def check_matrix_formats(self):
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
@@ -426,8 +426,7 @@ class TestSolverPerformance(TestCase):
         sa_old = smoothed_aggregation_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(sa_old.levels[-1].A.toarray() -
-                                   sa_new.levels[-1].A.toarray())).max() < 0.01)
+            assert(np.abs(np.ravel(sa_old.levels[-1].A.toarray() - sa_new.levels[-1].A.toarray())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -503,7 +502,7 @@ class TestComplexSolverPerformance(TestCase):
             #     len(ml.levels), ml.operator_complexity())
             assert(avg_convergence_ratio < c_factor)
 
-    def test_nonhermitian(self):
+    def check_nonhermitian(self):
         # problem data
         data = load_example('helmholtz_2D')
         A = data['A'].tocsr()

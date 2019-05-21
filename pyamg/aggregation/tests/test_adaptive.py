@@ -9,7 +9,7 @@ from numpy.testing import TestCase
 
 import warnings
 from scipy.sparse import SparseEfficiencyWarning
-warnings.simplefilter('ignore', SparseEfficiencyWarning)
+warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
 warnings.filterwarnings('ignore', category=UserWarning,
                         message='Having less target vectors')
 
@@ -65,14 +65,13 @@ class TestAdaptiveSA(TestCase):
         # print "SA convergence (Elasticity) %1.2e" % (conv_sa)
         assert(conv_asa < 1.3 * conv_sa)
 
-    def test_matrix_formats(self):
+    def check_matrix_formats(self):
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
         cases.append(A.toarray())
-        warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
 
         np.random.seed(0)
         sa_old = adaptive_sa_solver(A, initial_candidates=np.ones((49, 1)),
