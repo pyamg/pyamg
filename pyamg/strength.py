@@ -430,16 +430,16 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
-        v = np.mat(S[:, i].toarray())
-        Av = np.mat(A * v)
-        denom = np.sqrt(np.conjugate(v).T * Av)
+        v = S[:, i].toarray()
+        Av = A.dot(v)
+        denom = np.sqrt(np.dot(v.conj(), Av))
         # replace entries in row i with strength values
         for j in range(Atilde.indptr[i], Atilde.indptr[i + 1]):
             col = Atilde.indices[j]
             vj = v[col].copy()
             v[col] = 0.0
             #   =  (||v_j||_A - ||v||_A) / ||v||_A
-            val = np.sqrt(np.conjugate(v).T * A * v) / denom - 1.0
+            val = np.sqrt(np.dot(v.conj(), A.dot(v))) / denom - 1.0
 
             # Negative values generally imply a weak connection
             if val > -0.01:
@@ -550,9 +550,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # Format A and B correctly.
     # B must be in mat format, this isn't a deep copy
     if B is None:
-        Bmat = np.mat(np.ones((A.shape[0], 1), dtype=A.dtype))
+        Bmat = np.ones((A.shape[0], 1), dtype=A.dtype)
     else:
-        Bmat = np.mat(B)
+        Bmat = np.asarray(B)
 
     # Pre-process A.  We need A in CSR, to be devoid of explicit 0's and have
     # sorted indices
@@ -632,9 +632,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # a very efficient computational short-cut.  Otherwise, we support
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0:
-        warn("The most efficient time stepping for the Evolution Strength\
-             Method is done in powers of two.\nYou have chosen " + str(k) +
-             " time steps.")
+        warn("The most efficient time stepping for the Evolution Strength "
+             "Method is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
@@ -764,8 +763,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         for i in range(NullDim):
             for j in range(i, NullDim):
                 BDB[:, counter] = 2.0 *\
-                    (np.conjugate(np.ravel(np.asarray(B[:, i]))) *
-                        np.ravel(np.asarray(D_A * B[:, j])))
+                    (np.conjugate(np.ravel(Bmat[:, i])) * np.ravel(D_A * Bmat[:, j]))
                 counter = counter + 1
 
         # Choose tolerance for dropping "numerically zero" values later
@@ -781,10 +779,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                            Atilde.indptr,
                                            Atilde.indices,
                                            Atilde.shape[0],
-                                           np.ravel(np.asarray(B)),
-                                           np.ravel(np.asarray(
-                                               (D_A * np.conjugate(B)).T)),
-                                           np.ravel(np.asarray(BDB)),
+                                           np.ravel(Bmat),
+                                           np.ravel((D_A * B.conj()).T),
+                                           np.ravel(BDB),
                                            BDBCols, NullDim, tol)
 
         Atilde.eliminate_zeros()
