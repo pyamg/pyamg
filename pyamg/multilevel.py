@@ -399,20 +399,23 @@ class multilevel_solver:
                 basestring = str
 
             # Acceleration is being used
+            kwargs = {}
             if isinstance(accel, basestring):
                 from pyamg import krylov
                 from scipy.sparse.linalg import isolve
+                kwargs = {}
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
                 else:
                     accel = getattr(isolve, accel)
+                    kwargs['atol'] = 'legacy'
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
 
             try:  # try PyAMG style interface which has a residuals parameter
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback, residuals=residuals)[0]
+                             callback=callback, residuals=residuals, **kwargs)[0]
             except BaseException:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
@@ -431,7 +434,7 @@ class multilevel_solver:
                             cb(x)
 
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback)[0]
+                             callback=callback, **kwargs)[0]
 
         else:
             # Scale tol by normb

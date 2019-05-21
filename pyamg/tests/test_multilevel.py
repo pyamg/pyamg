@@ -1,5 +1,4 @@
-from numpy import diag, arange, ones, sqrt, dot, ravel
-from scipy import rand
+import numpy as np
 from pyamg.util.linalg import norm
 from scipy.sparse import csr_matrix
 
@@ -11,16 +10,16 @@ from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
 def precon_norm(v, ml):
     ''' helper function to calculate preconditioner norm of v '''
-    v = ravel(v)
+    v = np.ravel(v)
     w = ml.aspreconditioner()*v
-    return sqrt(dot(v.conjugate(), w))
+    return np.sqrt(np.dot(v.conjugate(), w))
 
 
 class TestMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(csr_matrix(diag(arange(1, 5, dtype=float))))
+        cases.append(csr_matrix(np.diag(np.arange(1, 5, dtype=float))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
@@ -35,7 +34,7 @@ class TestMultilevel(TestCase):
                            'cg', fn]:
                 s = coarse_grid_solver(solver)
 
-                b = arange(A.shape[0], dtype=A.dtype)
+                b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
                 assert_almost_equal(A*x, b)
@@ -50,13 +49,13 @@ class TestMultilevel(TestCase):
         from pyamg.krylov import fgmres
 
         A = poisson((50, 50), format='csr')
-        b = rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)
 
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)
+            x, info = cg(A, b, tol=1e-8, maxiter=30, M=M, atol='legacy')
             # cg satisfies convergence in the preconditioner norm
             assert(precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml))
 
@@ -71,7 +70,7 @@ class TestMultilevel(TestCase):
         from pyamg.krylov import cg, bicgstab
 
         A = poisson((50, 50), format='csr')
-        b = rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         ml = smoothed_aggregation_solver(A)
 
@@ -101,16 +100,16 @@ class TestMultilevel(TestCase):
         # four levels
         levels = []
         levels.append(multilevel_solver.level())
-        levels[0].A = csr_matrix(ones((10, 10)))
-        levels[0].P = csr_matrix(ones((10, 5)))
+        levels[0].A = csr_matrix(np.ones((10, 10)))
+        levels[0].P = csr_matrix(np.ones((10, 5)))
         levels.append(multilevel_solver.level())
-        levels[1].A = csr_matrix(ones((5, 5)))
-        levels[1].P = csr_matrix(ones((5, 3)))
+        levels[1].A = csr_matrix(np.ones((5, 5)))
+        levels[1].P = csr_matrix(np.ones((5, 3)))
         levels.append(multilevel_solver.level())
-        levels[2].A = csr_matrix(ones((3, 3)))
-        levels[2].P = csr_matrix(ones((3, 2)))
+        levels[2].A = csr_matrix(np.ones((3, 3)))
+        levels[2].P = csr_matrix(np.ones((3, 2)))
         levels.append(multilevel_solver.level())
-        levels[3].A = csr_matrix(ones((2, 2)))
+        levels[3].A = csr_matrix(np.ones((2, 2)))
 
         # one level hierarchy
         mg = multilevel_solver(levels[:1])
@@ -145,7 +144,7 @@ class TestComplexMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(csr_matrix(diag(arange(1, 5))))
+        cases.append(csr_matrix(np.diag(np.arange(1, 5))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
@@ -158,7 +157,7 @@ class TestComplexMultilevel(TestCase):
             for solver in ['splu', 'pinv', 'pinv2', 'lu', 'cholesky', 'cg']:
                 s = coarse_grid_solver(solver)
 
-                b = arange(A.shape[0], dtype=A.dtype)
+                b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
                 assert_almost_equal(A*x, b)
