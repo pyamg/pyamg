@@ -1,5 +1,4 @@
 import numpy as np
-import scipy as sp
 import scipy.sparse
 from scipy.sparse import csr_matrix, SparseEfficiencyWarning
 
@@ -30,8 +29,8 @@ class TestParameters(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0])
-            b = A * sp.rand(A.shape[0])
+            x = np.random.rand(A.shape[0])
+            b = A * np.random.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -109,8 +108,8 @@ class TestComplexParameters(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0]) + 1.0j * sp.rand(A.shape[0])
-            b = A * sp.rand(A.shape[0])
+            x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
+            b = A * np.random.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -205,8 +204,8 @@ class TestSolverPerformance(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0])
-            b = A * sp.rand(A.shape[0])
+            x = np.random.rand(A.shape[0])
+            b = A * np.random.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -224,10 +223,10 @@ class TestSolverPerformance(TestCase):
     def test_DAD(self):
         A = poisson((50, 50), format='csr')
 
-        x = sp.rand(A.shape[0])
-        b = sp.rand(A.shape[0])
+        x = np.random.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
-        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * sp.rand(A.shape[0]) - 6)))
+        D = diag_sparse(1.0 / np.sqrt(10 ** (12 * np.random.rand(A.shape[0]) - 6)))
         D = D.tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
@@ -270,8 +269,8 @@ class TestSolverPerformance(TestCase):
         cases.append((A_elas, B_elas, 0.9))
         for (A, B, rho_scale) in cases:
             last_rho = -1.0
-            x0 = sp.rand(A.shape[0], 1)
-            b = sp.rand(A.shape[0], 1)
+            x0 = np.random.rand(A.shape[0], 1)
+            b = np.random.rand(A.shape[0], 1)
             for ic in improve_candidates_list:
                 ml = smoothed_aggregation_solver(A, B, max_coarse=10,
                                                  improve_candidates=ic)
@@ -303,7 +302,7 @@ class TestSolverPerformance(TestCase):
                      ('block_gauss_seidel', {'sweep': 'symmetric'}),
                      'jacobi', 'block_jacobi']
         rng = np.arange(1, n + 1, dtype='float').reshape(-1, 1)
-        Bs = [np.ones((n, 1)), sp.hstack((np.ones((n, 1)), rng))]
+        Bs = [np.ones((n, 1)), np.hstack((np.ones((n, 1)), rng))]
 
         # TODO:
         # why does python 3 require significant=6 while python 2 passes
@@ -316,8 +315,8 @@ class TestSolverPerformance(TestCase):
                                                  postsmoother=smoother)
                 P = ml.aspreconditioner()
                 np.random.seed(0)
-                x = sp.rand(n,)
-                y = sp.rand(n,)
+                x = np.random.rand(n,)
+                y = np.random.rand(n,)
                 out = (np.dot(P * x, y), np.dot(x, P * y))
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
                 assert_approx_equal(out[0], out[1])
@@ -392,7 +391,7 @@ class TestSolverPerformance(TestCase):
         # passed parameters
 
         A = poisson((30, 30), format='csr')
-        b = sp.rand(A.shape[0], 1)
+        b = np.random.rand(A.shape[0], 1)
 
         # for each pair, the first entry should yield an SA solver that
         # converges in fewer iterations for a basic Poisson problem
@@ -486,8 +485,8 @@ class TestComplexSolverPerformance(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0]) + 1.0j * sp.rand(A.shape[0])
-            b = A * sp.rand(A.shape[0])
+            x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
+            b = A * np.random.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
