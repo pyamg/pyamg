@@ -1010,8 +1010,8 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
     Returns
     -------
-    rbm : matrix
-        A matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
+    rbm : array
+        An array of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
         body modes
 
     Examples
@@ -1020,24 +1020,24 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     >>> from pyamg.util.utils import Coord2RBM
     >>> a = np.array([0,1,2])
     >>> Coord2RBM(3,6,a,a,a)
-    matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
-            [ 0.,  1.,  0., -0.,  0.,  0.],
-            [ 0.,  0.,  1.,  0., -0.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  1., -1.],
-            [ 0.,  1.,  0., -1.,  0.,  1.],
-            [ 0.,  0.,  1.,  1., -1.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  2., -2.],
-            [ 0.,  1.,  0., -2.,  0.,  2.],
-            [ 0.,  0.,  1.,  2., -2.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.]])
+    array([[ 1.,  0.,  0.,  0.,  0., -0.],
+           [ 0.,  1.,  0., -0.,  0.,  0.],
+           [ 0.,  0.,  1.,  0., -0.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  1., -1.],
+           [ 0.,  1.,  0., -1.,  0.,  1.],
+           [ 0.,  0.,  1.,  1., -1.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  2., -2.],
+           [ 0.,  1.,  0., -2.,  0.,  2.],
+           [ 0.,  0.,  1.,  2., -2.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.]])
 
     """
     # check inputs
@@ -1050,9 +1050,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
                           spatial location,i.e. numPDEs = [1 | 3 | 6].\
                           You've entered " + str(numPDEs) + ".")
 
-    if((max(x.shape) != numNodes) or
-       (max(y.shape) != numNodes) or
-       (max(z.shape) != numNodes)):
+    if((max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes)):
         raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
                           length.  Length must be numNodes = " + str(numNodes))
 
@@ -1061,7 +1059,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     #    (numNodes x 1) or (1 x numNodes).")
 
     # preallocate rbm
-    rbm = np.mat(np.zeros((numNodes*numPDEs, numcols)))
+    rbm = np.array(np.zeros((numNodes*numPDEs, numcols)))
 
     for node in range(numNodes):
         dof = node*numPDEs
