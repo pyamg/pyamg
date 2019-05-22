@@ -198,7 +198,7 @@ void maximum_row_value(const I n_row,
  *   Tp[]      - CSR row pointer array for transpose of SOC matrix
  *   Tj[]      - CSR column index array for transpose of SOC matrix
  *   influence - array that influences splitting (values stored here are
-                 added to lambda for each point)
+ *               added to lambda for each point)
  *   splitting - array to store the C/F splitting
  *
  * Notes:

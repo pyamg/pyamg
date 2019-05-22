@@ -91,6 +91,37 @@ PYBIND11_MODULE(linalg, m) {
 
     Methods
     -------
+    signof
+    signof
+    signof
+    conjugate
+    conjugate
+    conjugate
+    conjugate
+    real
+    real
+    real
+    real
+    imag
+    imag
+    imag
+    imag
+    mynorm
+    mynorm
+    mynorm
+    mynorm
+    mynormsq
+    mynormsq
+    mynormsq
+    mynormsq
+    zero_real
+    zero_real
+    zero_real
+    zero_real
+    zero_imag
+    zero_imag
+    zero_imag
+    zero_imag
     pinv_array
     csc_scale_columns
     csc_scale_rows

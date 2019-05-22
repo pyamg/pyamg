@@ -405,7 +405,21 @@ Compute the maximum in magnitude row value for a CSR matrix
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
         py::arg("n_nodes"), py::arg("C_rowptr").noconvert(), py::arg("C_colinds").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
-splitting - array to store the C/F splitting
+Compute a C/F (coarse-fine( splitting using the classical coarse grid
+selection method of Ruge and Stuben.  The strength of connection matrix S,
+and its transpose T, are stored in CSR format.  Upon return, the  splitting
+array will consist of zeros and ones, where C-nodes (coarse nodes) are
+marked with the value 1 and F-nodes (fine nodes) with the value 0.
+
+Parameters:
+  n_nodes   - number of rows in A
+  C_rowptr[]      - CSR row pointer array for SOC matrix
+  C_colinds[]      - CSR column index array for SOC matrix
+  Tp[]      - CSR row pointer array for transpose of SOC matrix
+  Tj[]      - CSR column index array for transpose of SOC matrix
+  influence - array that influences splitting (values stored here are
+              added to lambda for each point)
+  splitting - array to store the C/F splitting
 
 Notes:
   The splitting array must be preallocated)pbdoc");
