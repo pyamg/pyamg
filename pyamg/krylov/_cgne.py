@@ -93,7 +93,7 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cgne')
+    warnings.filterwarnings('always', module='pyamg.krylov._cgne')
 
     # Choose type
     if not hasattr(A, 'dtype'):
@@ -123,8 +123,8 @@ def cgne(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
     elif maxiter > (1.3*dimen):
-        warn('maximum allowed inner iterations (maxiter) are the 130% times \
-              the number of dofs')
+        warn('maximum allowed inner iterations (maxiter) are the 130% times'
+             'the number of dofs')
         maxiter = int(np.ceil(1.3*dimen)) + 2
 
     # Prep for method

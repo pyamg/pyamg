@@ -86,7 +86,7 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # n = len(b)
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cr')
+    warnings.filterwarnings('always', module='pyamg.krylov._cr')
 
     # determine maxiter
     if maxiter is None:

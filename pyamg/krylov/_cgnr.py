@@ -94,7 +94,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cgnr')
+    warnings.filterwarnings('always', module='pyamg.krylov._cgnr')
 
     # Choose type
     if not hasattr(A, 'dtype'):
