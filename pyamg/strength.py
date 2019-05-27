@@ -196,7 +196,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
         raise ValueError('expected theta in [0,1]')
 
     # Block structure considered before computing SOC
-    if (block == 'block') or sparse.isspmatrix_bsr(A):
+    if (block == 'block') or (block != "amalgamate" and sparse.isspmatrix_bsr(A)):
         R, C = A.blocksize
         if (R != C) or (R < 1):
             raise ValueError('Matrix must have square blocks')
@@ -230,7 +230,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             raise ValueError("Unrecognized option for norm.")
     
         # One pass through nnz to find largest entry, one to filter
-        S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=[N, N])
+        S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=A.shape)
         
         # Take magnitude and scale by largest entry
         S.data = np.abs(S.data)

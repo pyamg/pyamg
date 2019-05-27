@@ -54,6 +54,10 @@ instantiate:
     - one_point_interpolation
     - approx_ideal_restriction_pass2
     - block_approx_ideal_restriction_pass2
+    - ACT_NcxN_pass2
+    - block_ACT_NcxN_pass2
+    - ACT_NxNc_pass2
+    - block_ACT_NxNc_pass2
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -99,6 +103,8 @@ instantiate:
     - rs_standard_interpolation_pass1
     - distance_two_amg_interpolation_pass1
     - approx_ideal_restriction_pass1
+    - ACT_NcxN_pass1
+    - ACT_NxNc_pass1
 
 - types:
     - [int, float]

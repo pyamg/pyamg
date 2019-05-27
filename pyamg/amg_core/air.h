@@ -22,10 +22,12 @@
  * 
  * Parameters
  * ----------
- *      Rp : const array<int> 
- *          Pre-determined row-pointer for P in CSR format
- *      Rj : array<int>
+ *      Pp : array<int> 
+ *          Empty array for row-pointer for P in CSR format
+ *      Pj : array<int>
  *          Empty array for column indices for P in CSR format
+ *      Px : array<float>
+ *          Empty array for data for P in CSR format
  *      Cp : const array<int>
  *          Row pointer for SOC matrix, C
  *      Cj : const array<int>
@@ -581,4 +583,741 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 }
 
 
+/* Build row_pointer for approximate compatible transfer operators, when the
+ * operator being built is Nc x N (like restriction).
+ *  - ACR-l^2, ACI-A*A
+ */
+template<class I>
+void ACT_NcxN_pass1(I Tp[], const int Tp_size,
+                   const I Cp[], const int Cp_size,
+                   const I Cj[], const int Cj_size,
+                   const I Cpts[], const int Cpts_size,
+                   const I Fpts[], const int Fpts_size,
+                   const I splitting[], const int splitting_size,
+                   const I distance = 2)
+{
+    I nnz = 0;
+    Tp[0] = 0;
+
+    // Deterimine number of nonzeros in each row of transfer operator.
+    for (I row=0; row<Cpts_size; row++) {
+        I cpoint = Cpts[row];
+
+        // Determine number of strongly connected F-points in sparsity for this row.
+        // Here, C is N x Nf, and all columns are F-points.
+        for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
+            I this_point = Fpts[Cj[i]];
+            nnz++;
+
+            // Strong distance-two F-to-F connections
+            // - As implemented here, could skip loop. Leaving loop in case use
+            //   modified SOC that is computed here.
+            if (distance == 2) {
+                for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                    nnz++;
+                } 
+            }
+        }
+
+        // Set row-pointer for this row of operator (including identity on C-points).
+        nnz += 1;
+        Tp[row+1] = nnz; 
+    }
+    if ((distance != 1) && (distance != 2)) {
+        std::cout << "Can only choose distance one or two neighborhood for AIR.\n";
+    }
+}
+
+
+template<class I, class T>
+void ACT_NcxN_pass2(const I Tp[], const int Tp_size,
+                          I Tj[], const int Tj_size,
+                          T Tx[], const int Tx_size,
+                    const I Qp[], const int Qp_size,
+                    const I Qj[], const int Qj_size,
+                    const T Qx[], const int Qx_size,
+                    const I Cp[], const int Cp_size,
+                    const I Cj[], const int Cj_size,
+                    const T Cx[], const int Cx_size,
+                    const I Cpts[], const int Cpts_size,
+                    const I Fpts[], const int Fpts_size,
+                    const I splitting[], const int splitting_size,
+                    const I distance = 2,
+                    const I use_gmres = 0,
+                    const I maxiter = 10,
+                    const I precondition = 1 )
+{
+    I is_col_major = true;
+
+    // Build column indices and data for each row of transfer operator.
+    for (I row=0; row<Cpts_size; row++) {
+
+        I cpoint = Cpts[row];
+        I ind = Tp[row];
+
+        // Set column indices for R as strongly connected F-points.
+        // Here, C is N x Nf, and all columns are F-points.
+        for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
+            I this_point = Fpts[Cj[i]];
+            Tj[ind] = this_point;
+            ind +=1 ;
+
+            // Strong distance-two F-to-F connections
+            if (distance == 2) {
+                for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                    Tj[ind] = Fpts[Cj[kk]];
+                    ind +=1 ;
+                } 
+            }
+        }
+
+        if (ind != (Tp[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
+                         "ind = " << ind << ", Tp[row] = " << Tp[row] <<
+                         ", Tp[row+1] = " << Tp[row+1] << "\n";
+        }
+
+        // Build local linear system as the submatrix Q restricted to the neighborhood,
+        // Nf, of strongly connected F-points to the current C-point, that is Q0 =
+        // Q[Nf, Nf]^T, stored in column major form. Since Q in row-major = Q^T in
+        // column-major, Q (CSR) is iterated through and Q[Nf,Nf] stored in row-major.
+        I size_N = ind - Tp[row];
+        std::vector<T> Q0(size_N*size_N);
+        I temp_Q = 0;
+        for (I j=Tp[row]; j<ind; j++) { 
+            I this_ind = Tj[j];
+            // Nested loops to find intersection of sparsity pattern for T and nnzs in Q
+            for (I i=Tp[row]; i<ind; i++) {
+                // Search for indice in row of Q. Need to map columns indices of Q from
+                // only F-points to global indices, Fpts[Qj[k]]
+                I found_ind = 0;
+                for (I k=Qp[this_ind]; k<Qp[this_ind+1]; k++) {
+                    if (Tj[i] == Fpts[Qj[k]]) {
+                        Q0[temp_Q] = Qx[k];
+                        found_ind = 1;
+                        temp_Q += 1;
+                        break;
+                    }
+                }
+                // If indice not found, set element to zero
+                if (found_ind == 0) {
+                    Q0[temp_Q] = 0.0;
+                    temp_Q += 1;
+                }
+            }
+        }
+
+        // Build local right hand side given by b_j = -Q_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point. 
+        I temp_b = 0;
+        std::vector<T> b0(size_N, 0);
+        for (I i=Tp[row]; i<ind; i++) {
+            // Search for indice in row of Q. If indice not found, b0 has been
+            // intitialized to zero.
+            for (I k=Qp[cpoint]; k<Qp[cpoint+1]; k++) {
+                if (Tj[i] == Fpts[Qj[k]]) {
+                    b0[temp_b] = -Qx[k];
+                    break;
+                }
+            }
+            temp_b += 1;
+        }
+
+        // Solve linear system (least squares solves exactly when full rank)
+        // s.t. (RQ)_ij = 0 for (i,j) within the sparsity pattern of R. Store
+        // solution in data vector for R.
+        if (size_N > 0) {
+            if (use_gmres) {
+                dense_GMRES(&Q0[0], &b0[0], &Tx[Tp[row]], size_N, is_col_major, maxiter, precondition);
+            }
+            else {
+                least_squares(&Q0[0], &b0[0], &Tx[Tp[row]], size_N, size_N, is_col_major);
+            }
+        }
+
+        // Add identity for C-point in this row
+        Tj[ind] = cpoint;
+        Tx[ind] = 1.0;
+    }
+}
+
+
+template<class I, class T>
+void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
+                                I Tj[], const int Tj_size,
+                                T Tx[], const int Tx_size,
+                          const I Qp[], const int Qp_size,
+                          const I Qj[], const int Qj_size,
+                          const T Qx[], const int Qx_size,
+                          const I Cp[], const int Cp_size,
+                          const I Cj[], const int Cj_size,
+                          const T Cx[], const int Cx_size,
+                          const I Cpts[], const int Cpts_size,
+                          const I Fpts[], const int Fpts_size,
+                          const I splitting[], const int splitting_size,
+                          const I blocksize,
+                          const I distance = 2,
+                          const I use_gmres = 0,
+                          const I maxiter = 10,
+                          const I precondition = 1 )
+{
+    I is_col_major = true;
+
+    // Build column indices and data for each row of T.
+    for (I row=0; row<Cpts_size; row++) {
+
+        I cpoint = Cpts[row];
+        I ind = Tp[row];
+
+        // Set column indices for T as strongly connected F-points.
+        for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
+            I this_point = Fpts[Cj[i]];
+            Tj[ind] = this_point;
+            ind += 1 ;
+
+            // Strong distance-two F-to-F connections
+            if (distance == 2) {
+                for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                    Tj[ind] = Fpts[Cj[kk]];
+                    ind += 1 ;
+                }
+            }
+        }
+
+        if (ind != (Tp[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n";
+        }
+
+        // Build local linear system as the submatrix Q^T restricted to the neighborhood,
+        // Nf, of strongly connected F-points to the current C-point, that is Q0 =
+        // Q[Nf, Nf]^T, stored in column major form. Since Q in row-major = Q^T in
+        // column-major, Q (CSR) is iterated through and Q[Nf,Nf] stored in row-major.
+        //      - Initialize Q0 to zero
+        I size_N = ind - Tp[row];
+        I num_DOFs = size_N * blocksize;
+        std::vector<T> Q0(num_DOFs*num_DOFs, 0.0);
+        I this_block_row = 0;
+
+        // Add each block in strongly connected neighborhood to dense linear system.
+        // For each column indice in sparsity pattern for this row of R:
+        for (I j=Tp[row]; j<ind; j++) { 
+            I this_ind = Tj[j];
+            I this_block_col = 0;
+
+            // For this row of Q, add blocks to Q0 for each entry in sparsity pattern
+            // Nested loops to find intersection of sparsity pattern for T and nnzs in Q
+            for (I i=Tp[row]; i<ind; i++) {
+
+                // Block row/column indices to normal row/column indices for local mat
+                I this_row = this_block_row*blocksize;
+                I this_col = this_block_col*blocksize;
+
+                // Search for indice in row of Q
+                for (I k=Qp[this_ind]; k<Qp[this_ind+1]; k++) {
+
+                    // Add block of Q to dense array. If indice not found, elements
+                    // in Q0 have already been initialized to zero.
+                    if (Tj[i] == Fpts[Qj[k]]) {
+                        I blockx_ind = k * blocksize * blocksize;
+
+                        // For each row in block:
+                        for (I block_row=0; block_row<blocksize; block_row++) {
+                            I row_maj_ind = (this_row + block_row) * num_DOFs + this_col;
+
+                            // For each column in block:
+                            for (I block_col=0; block_col<blocksize; block_col++) {
+
+                                // Blocks of Q stored in row-major in Qx
+                                I Qx_ind = blockx_ind + block_row * blocksize + block_col;
+                                Q0[row_maj_ind + block_col] = Qx[Qx_ind];
+                                if ((row_maj_ind + block_col) > num_DOFs*num_DOFs) {
+                                    std::cout << "Warning: Accessing out of bounds index building Q0.\n";
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                // Increase block column count
+                this_block_col += 1;
+            }
+            // Increase block row count
+            this_block_row += 1;
+        }
+
+        // Build local right hand side given by blocks b_j = -A_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point, and c-point the global C-point index corresponding
+        // to the current row of T. RHS for each row in block, stored in b0 at indices
+        //      b0[0], b0[1*num_DOFs], ..., b0[ (blocksize-1)*num_DOFs ]
+        // Mapping between this ordering, say row_ind, and bsr ordering given by
+        //      for each block_ind:
+        //          for each row in block:    
+        //              for each col in block:
+        //                  row_ind = num_DOFs*row + block_ind*blocksize + col
+        //                  bsr_ind = block_ind*blocksize^2 + row*blocksize + col
+        std::vector<T> b0(num_DOFs * blocksize, 0);
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            I temp_ind = Tp[row] + block_ind;
+
+            // Search for indice in row of Q, store data in b0. If not found,
+            // b0 has been initialized to zero.
+            for (I k=Qp[cpoint]; k<Qp[cpoint+1]; k++) {
+                if (Tj[temp_ind] == Fpts[Qj[k]]) {
+                    for (I this_row=0; this_row<blocksize; this_row++) {
+                        for (I this_col=0; this_col<blocksize; this_col++) {
+                            I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                            I bsr_ind = k*blocksize*blocksize + this_row*blocksize + this_col;
+                            b0[row_ind] = -Qx[bsr_ind];
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Solve local linear system for each row in block
+        if (use_gmres) {
+                
+            // Apply GMRES to right-hand-side for each DOF in block
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Transfer rhs in b[] to rhs[] (solution to all systems will be stored in b[])
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = b0[b_ind0 + i];
+                }
+
+                // Solve system using GMRES
+                dense_GMRES(&Q0[0], &rhs[0], &b0[b_ind0], num_DOFs,
+                            is_col_major, maxiter, precondition);
+            }
+        }
+        else {
+            // Take QR of local matrix for linear solves, T stored in Q0
+            std::vector<T> Q = QR(&Q0[0], num_DOFs, num_DOFs, is_col_major);
+            
+            // Solve each block based on QR decomposition
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Multiply right hand side, rhs := Q1^T*b (assumes Q1 stored in row-major)
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = 0.0;
+                    for (I k=0; k<num_DOFs; k++) {
+                        rhs[i] += b0[b_ind0 + k] * Q[col_major(k,i,num_DOFs)];
+                    }
+                }
+
+                // Solve upper triangular system from QR, store solution in b0
+                upper_tri_solve(&Q0[0], &rhs[0], &b0[b_ind0], num_DOFs, num_DOFs, is_col_major);
+            }
+        }
+
+        // Add solution for each block row to data array. See section on RHS for
+        // mapping between bsr data array and row-major array solution stored in
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                for (I this_col=0; this_col<blocksize; this_col++) {
+                    I bsr_ind = Tp[row]*blocksize*blocksize + block_ind*blocksize*blocksize + 
+                                this_row*blocksize + this_col;
+                    I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                    if (std::abs(b0[row_ind]) > 1e-15) {
+                        Tx[bsr_ind] = b0[row_ind];                    
+                    }
+                    else {
+                        Tx[bsr_ind] = 0.0;                   
+                    }
+                }
+            }
+        }
+
+        // Add identity for C-point in this block row (assume data[] initialized to 0)
+        Tj[ind] = cpoint;
+        I identity_ind = ind*blocksize*blocksize;
+        for (I this_row=0; this_row<blocksize; this_row++) {
+            Tx[identity_ind + (blocksize+1)*this_row] = 1.0;
+        }
+    }
+}
+
+
+/* Build row_pointer for approximate compatible transfer operators, when the
+ * operator being built is N x Nc (like interpolation).
+ *  - ACR-A*A, ACI-l^2
+ */
+template<class I>
+void ACT_NxNc_pass1(I Tp[], const int Tp_size,
+                   const I Cp[], const int Cp_size,
+                   const I Cj[], const int Cj_size,
+                   const I Cpts[], const int Cpts_size,
+                   const I splitting[], const int splitting_size,
+                   const I distance = 2)
+{
+    I nnz = 0;
+    Tp[0] = 0;
+
+    // Deterimine number of nonzeros in each row of transfer operator.
+    for (I row=0; row<splitting_size; row++) {
+
+        // If C-point row, add identity
+        if (splitting[row] == C_NODE) {
+            nnz += 1;
+            Tp[row+1] = nnz;             
+        }
+
+        // Otherwise, row is F-point. Determine number of nnzs.
+        else {
+            // Determine number of strongly connected C-points in sparsity for this row.
+            // Here, C is N x Nc, and all columns are C-points.
+            for (I i=Cp[row]; i<Cp[row+1]; i++) {
+                I this_point = Cpts[Cj[i]];
+                nnz++;
+
+                // Strong distance-two C-to-C connections
+                // - As implemented here, could skip loop. Leaving loop in case use
+                //   modified SOC that is computed here.
+                if (distance == 2) {
+                    for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                        nnz++;
+                    } 
+                }
+            }
+        }
+    }
+    if ((distance != 1) && (distance != 2)) {
+        std::cout << "Can only choose distance one or two neighborhood for AIR.\n";
+    }
+}
+
+
+
+template<class I, class T>
+void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
+                          I Tj[], const int Tj_size,
+                          T Tx[], const int Tx_size,
+                    const I Qp[], const int Qp_size,
+                    const I Qj[], const int Qj_size,
+                    const T Qx[], const int Qx_size,
+                    const I Cp[], const int Cp_size,
+                    const I Cj[], const int Cj_size,
+                    const T Cx[], const int Cx_size,
+                    const I Cpts[], const int Cpts_size,
+                    const I splitting[], const int splitting_size,
+                    const I distance = 2,
+                    const I use_gmres = 0,
+                    const I maxiter = 10,
+                    const I precondition = 1 )
+{
+    I is_col_major = true;
+    I cpoint_ind = 0;
+
+    // Build column indices and data for each row of T.
+    for (I row=0; row<splitting_size; row++) {
+
+        I ind = Tp[row];
+
+        // If C-point row, add identity and skip rest of loop.
+        if (splitting[row] == C_NODE) {
+            Tj[ind] = cpoint_ind;
+            Tx[ind] = 1.0;
+            cpoint_ind += 1;
+            continue;          
+        }
+        // --------- Rest of loop for F-point rows only
+
+        // Set column indices for T as strongly connected C-points.
+        for (I i=Cp[row]; i<Cp[row+1]; i++) {
+            I this_point = Cpts[Cj[i]];
+            Tj[ind] = this_point;
+            ind +=1 ;
+
+            // Strong distance-two C-to-C connections
+            if (distance == 2) {
+                for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                    Tj[ind] = Cpts[Cj[kk]];
+                    ind +=1 ;
+                } 
+            }
+        }
+
+        if (ind != (Tp[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
+                         "ind = " << ind << ", Tp[row] = " << Tp[row] <<
+                         ", Tp[row+1] = " << Tp[row+1] << "\n";
+        }
+
+        // Build local linear system as the submatrix Q restricted to the neighborhood,
+        // Nc, of strongly connected C-points to the current F-point, that is Q0 =
+        // Q[Nc, Nc]^T, stored in column major form. Since Q0 in row-major = Q0^T in
+        // column-major, Q (CSR) is iterated through and Q[Nc,Nc] stored in row-major.
+        I size_N = ind - Tp[row];
+        std::vector<T> Q0(size_N*size_N);
+        I temp_Q = 0;
+        for (I j=Tp[row]; j<ind; j++) { 
+            I this_ind = Tj[j];
+            // Nested loops to find intersection of sparsity pattern for T and nnzs in Q
+            for (I i=Tp[row]; i<ind; i++) {
+                // Search for indice in row of Q
+                I found_ind = 0;
+                for (I k=Qp[this_ind]; k<Qp[this_ind+1]; k++) {
+                    if (Tj[i] == Cpts[Qj[k]]) {
+                        Q0[temp_Q] = Qx[k];
+                        found_ind = 1;
+                        temp_Q += 1;
+                        break;
+                    }
+                }
+                // If indice not found, set element to zero
+                if (found_ind == 0) {
+                    Q0[temp_Q] = 0.0;
+                    temp_Q += 1;
+                }
+            }
+        }
+
+        // Build local right hand side given by b_j = -Q_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point. 
+        I temp_b = 0;
+        std::vector<T> b0(size_N, 0);
+        for (I i=Tp[row]; i<ind; i++) {
+            // Search for indice in row of Q. If indice not found, b0 has been
+            // intitialized to zero.
+            for (I k=Qp[row]; k<Qp[row+1]; k++) {
+                if (Tj[i] == Cpts[Qj[k]]) {
+                    b0[temp_b] = -Qx[k];
+                    break;
+                }
+            }
+            temp_b += 1;
+        }
+
+        // Solve linear system (least squares solves exactly when full rank)
+        // s.t. (TQ)_ij = 0 for (i,j) within the sparsity pattern of T. Store
+        // solution in data vector for T.
+        if (size_N > 0) {
+            if (use_gmres) {
+                dense_GMRES(&Q0[0], &b0[0], &Tx[Tp[row]], size_N, is_col_major, maxiter, precondition);
+            }
+            else {
+                least_squares(&Q0[0], &b0[0], &Tx[Tp[row]], size_N, size_N, is_col_major);
+            }
+        }
+    }
+}
+
+
+
+template<class I, class T>
+void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
+                                I Tj[], const int Tj_size,
+                                T Tx[], const int Tx_size,
+                          const I Qp[], const int Qp_size,
+                          const I Qj[], const int Qj_size,
+                          const T Qx[], const int Qx_size,
+                          const I Cp[], const int Cp_size,
+                          const I Cj[], const int Cj_size,
+                          const T Cx[], const int Cx_size,
+                          const I Cpts[], const int Cpts_size,
+                          const I splitting[], const int splitting_size,
+                          const I blocksize,
+                          const I distance = 2,
+                          const I use_gmres = 0,
+                          const I maxiter = 10,
+                          const I precondition = 1 )
+{
+    I is_col_major = true;
+    I cpoint_ind = 0;
+
+    // Build column indices and data for each row of T.
+    for (I row=0; row<splitting_size; row++) {
+
+        I ind = Tp[row];
+
+        // If C-point row, add identity to block row and skip rest of loop
+        // (assume data[] initialized to 0).
+        if (splitting[row] == C_NODE) {
+            Tj[ind] = cpoint_ind;
+            cpoint_ind += 1;
+
+            I identity_ind = ind*blocksize*blocksize;
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                Tx[identity_ind + (blocksize+1)*this_row] = 1.0;
+            }
+            continue;          
+        }
+        // --------- Rest of loop for F-point rows only
+
+        // Set column indices for T as strongly connected C-points.
+        for (I i=Cp[row]; i<Cp[row+1]; i++) {
+            I this_point = Cpts[Cj[i]];
+            Tj[ind] = this_point;
+            ind += 1 ;
+
+            // Strong distance-two C-to-C connections
+            if (distance == 2) {
+                for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                    Tj[ind] = Cpts[Cj[kk]];
+                    ind += 1 ;
+                }
+            }
+        }
+
+        if (ind != (Tp[row+1]-1)) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n";
+        }
+
+        // Build local linear system as the submatrix Q^T restricted to the neighborhood,
+        // Nc, of strongly connected C-points to the current F-point, that is Q0 =
+        // Q[Nc, Nc]^T, stored in column major form. Since Q0 in row-major = Q0^T in
+        // column-major, Q (CSR) is iterated through and Q[Nc,Nc] stored in row-major.
+        //      - Initialize Q0 to zero
+        I size_N = ind - Tp[row];
+        I num_DOFs = size_N * blocksize;
+        std::vector<T> Q0(num_DOFs*num_DOFs, 0.0);
+        I this_block_row = 0;
+
+        // Add each block in strongly connected neighborhood to dense linear system.
+        // For each column indice in sparsity pattern for this row of T:
+        for (I j=Tp[row]; j<ind; j++) { 
+            I this_ind = Tj[j];
+            I this_block_col = 0;
+
+            // For this row of Q, add blocks to Q0 for each entry in sparsity pattern
+            // Nested loops to find intersection of sparsity pattern for T and nnzs in Q
+            for (I i=Tp[row]; i<ind; i++) {
+
+                // Block row/column indices to normal row/column indices for local mat
+                I this_row = this_block_row*blocksize;
+                I this_col = this_block_col*blocksize;
+
+                // Search for indice in row of Q
+                for (I k=Qp[this_ind]; k<Qp[this_ind+1]; k++) {
+
+                    // Add block of Q to dense array. If indice not found, elements
+                    // in Q0 have already been initialized to zero.
+                    if (Tj[i] == Cpts[Qj[k]]) {
+                        I blockx_ind = k * blocksize * blocksize;
+
+                        // For each row in block:
+                        for (I block_row=0; block_row<blocksize; block_row++) {
+                            I row_maj_ind = (this_row + block_row) * num_DOFs + this_col;
+
+                            // For each column in block:
+                            for (I block_col=0; block_col<blocksize; block_col++) {
+
+                                // Blocks of Q stored in row-major in Qx
+                                I Qx_ind = blockx_ind + block_row * blocksize + block_col;
+                                Q0[row_maj_ind + block_col] = Qx[Qx_ind];
+                                if ((row_maj_ind + block_col) > num_DOFs*num_DOFs) {
+                                    std::cout << "Warning: Accessing out of bounds index building Q0.\n";
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                // Increase block column count
+                this_block_col += 1;
+            }
+            // Increase block row count
+            this_block_row += 1;
+        }
+
+        // Build local right hand side given by blocks b_j = -A_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point, and c-point the global C-point index corresponding
+        // to the current row of T. RHS for each row in block, stored in b0 at indices
+        //      b0[0], b0[1*num_DOFs], ..., b0[ (blocksize-1)*num_DOFs ]
+        // Mapping between this ordering, say row_ind, and bsr ordering given by
+        //      for each block_ind:
+        //          for each row in block:    
+        //              for each col in block:
+        //                  row_ind = num_DOFs*row + block_ind*blocksize + col
+        //                  bsr_ind = block_ind*blocksize^2 + row*blocksize + col
+        std::vector<T> b0(num_DOFs * blocksize, 0);
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            I temp_ind = Tp[row] + block_ind;
+
+            // Search for indice in row of Q, store data in b0. If not found,
+            // b0 has been initialized to zero.
+            for (I k=Qp[row]; k<Qp[row+1]; k++) {
+                if (Tj[temp_ind] == Cpts[Qj[k]]) {
+                    for (I this_row=0; this_row<blocksize; this_row++) {
+                        for (I this_col=0; this_col<blocksize; this_col++) {
+                            I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                            I bsr_ind = k*blocksize*blocksize + this_row*blocksize + this_col;
+                            b0[row_ind] = -Qx[bsr_ind];
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Solve local linear system for each row in block
+        if (use_gmres) {
+                
+            // Apply GMRES to right-hand-side for each DOF in block
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Transfer rhs in b[] to rhs[] (solution to all systems will be stored in b[])
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = b0[b_ind0 + i];
+                }
+
+                // Solve system using GMRES
+                dense_GMRES(&Q0[0], &rhs[0], &b0[b_ind0], num_DOFs,
+                            is_col_major, maxiter, precondition);
+            }
+        }
+        else {
+            // Take QR of local matrix for linear solves, T stored in Q0
+            std::vector<T> Q = QR(&Q0[0], num_DOFs, num_DOFs, is_col_major);
+            
+            // Solve each block based on QR decomposition
+            std::vector<T> rhs(num_DOFs);
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                I b_ind0 = num_DOFs * this_row;
+
+                // Multiply right hand side, rhs := Q1^T*b (assumes Q1 stored in row-major)
+                for (I i=0; i<num_DOFs; i++) {
+                    rhs[i] = 0.0;
+                    for (I k=0; k<num_DOFs; k++) {
+                        rhs[i] += b0[b_ind0 + k] * Q[col_major(k,i,num_DOFs)];
+                    }
+                }
+
+                // Solve upper triangular system from QR, store solution in b0
+                upper_tri_solve(&Q0[0], &rhs[0], &b0[b_ind0], num_DOFs, num_DOFs, is_col_major);
+            }
+        }
+
+        // Add solution for each block row to data array. See section on RHS for
+        // mapping between bsr data array and row-major array solution stored in
+        for (I block_ind=0; block_ind<size_N; block_ind++) {
+            for (I this_row=0; this_row<blocksize; this_row++) {
+                for (I this_col=0; this_col<blocksize; this_col++) {
+                    I bsr_ind = Tp[row]*blocksize*blocksize + block_ind*blocksize*blocksize + 
+                                this_row*blocksize + this_col;
+                    I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
+                    if (std::abs(b0[row_ind]) > 1e-15) {
+                        Tx[bsr_ind] = b0[row_ind];                    
+                    }
+                    else {
+                        Tx[bsr_ind] = 0.0;                   
+                    }
+                }
+            }
+        }
+    }
+}
+
 #endif
+

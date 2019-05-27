@@ -17,19 +17,18 @@ from pyamg.strength import classical_strength_of_connection, \
     energy_based_strength_of_connection
 from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
     filter_matrix_rows
-from pyamg.classical.interpolate import direct_interpolation, \
-    standard_interpolation, distance_two_interpolation, injection_interpolation, \
-    one_point_interpolation, neumann_AIR, local_AIR
+from pyamg.classical.interpolate import neumann_AIR, local_AIR, \
+    compatible_interpolation
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
-__all__ = ['AIR_solver']
+__all__ = ['ACI_solver']
 
-def AIR_solver(A,
+def ACI_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
-               interp='one_point',
-               restrict=('air', {'theta': 0.05, 'degree': 2}),
+               interp='compatible',
+               restrict='lAIR',
                presmoother=None,
                postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
                               'withrho': False,  'F_iterations': 2,
@@ -190,26 +189,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     else:
         raise ValueError('Unknown C/F splitting method (%s)' % CF)
 
-    # BS - have run into cases where no C-points are designated, and it
-    # throws off the next routines. If everything is an F-point, return here
+    # If everything is an F-point, return here
     if np.sum(splitting) == len(splitting):
         return 1
-
-    # Generate the interpolation matrix that maps from the coarse-grid to the
-    # fine-grid
-    fn, kwargs = unpack_arg(interp)
-    if fn == 'standard':
-        P = standard_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'distance_two':
-        P = distance_two_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'direct':
-        P = direct_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'one_point':
-        P = one_point_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'inject':
-        P = injection_interpolation(A, splitting, **kwargs)
-    else:
-        raise ValueError('Unknown interpolation method (%s)' % interp)
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
@@ -222,6 +204,13 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     else:
         raise ValueError('Unknown restriction method (%s)' % restrict)
 
+    # Build interpolation operator
+    fn, kwargs = unpack_arg(interp)
+    if fn == 'compatible':
+        P, Q, use_Q = compatible_interpolation(A, R, splitting, **kwargs)
+    else:
+        raise ValueError('Must use compatible interpolation')
+
     # Store relevant information for this level
     if keep:
         levels[-1].C = C              # strength of connection matrix
@@ -231,7 +220,10 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     levels[-1].splitting = splitting  # C/F splitting
 
     # RAP = R*(A*P)
-    A = R * A * P
+    if use_Q:
+        A = Q * P
+    else:
+        A = R * A * P
 
     # Make sure coarse-grid operator is in correct sparse format
     if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):

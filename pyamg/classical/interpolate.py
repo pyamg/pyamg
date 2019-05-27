@@ -9,7 +9,8 @@ from pyamg.strength import classical_strength_of_connection
 
 __all__ = ['direct_interpolation','standard_interpolation',
            'distance_two_interpolation','injection_interpolation',
-           'one_point_interpolation','neumann_AIR', 'local_AIR']
+           'one_point_interpolation','neumann_AIR', 'local_AIR',
+           'compatible_restriction','compatible_interpolation']
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
@@ -465,8 +466,8 @@ def neumann_AIR(A, splitting, theta=0.025, degree=1, post_theta=0):
     return R
 
 
-def local_AIR(A, splitting, theta=0.1, norm='abs', degree=1, use_gmres=False,
-                                  maxiter=10, precondition=True):
+def local_AIR(A, splitting, theta=0.1, norm='abs', degree=1,
+              use_gmres=False, maxiter=10, precondition=True):
     """ Compute approximate ideal restriction by setting RA = 0, within the
     sparsity pattern of R. Sparsity pattern of R for the ith row (i.e. ith
     C-point) is the set of all strongly connected F-points, or the max_row
@@ -551,3 +552,387 @@ def local_AIR(A, splitting, theta=0.1, norm='abs', degree=1, use_gmres=False,
 
     R.eliminate_zeros()
     return R
+
+
+
+def get_compatible_Q(A, T, norm, T_type, Cpts, Fpts):
+    """
+    Parameters
+    ----------
+    A : csr or bsr_matrix
+    T : csr or bsr_matrix
+        Transfer operator P or R to use for building Q
+    norm : string, 'l2' or 'A*A'
+    T_type : string, 'P' or 'R' (must complement type of transfer
+        operator passed in through T)
+
+
+    """
+    # Check valid parameters
+    if (T_type != 'P') or (T_type != 'R'):
+        raise ValueError("Must specify T_type = 'P' or 'R'.")
+    if (norm != 'l2') or (norm != 'A*A'):
+        raise ValueError("Must specify norm = 'l2' or 'A*A'.")
+
+    Cpts0 = copy(Cpts)
+    Fpts0 = copy(Fpts)
+    if isspmatrix_bsr(A):
+        bsize = A.blocksize[0]
+        Cpts0 *= bsize
+        Fpts0 *= bsize
+        tempC = Cpts0
+        tempF = Fpts0
+        for i in range(1,bsize):
+            Cpts0 = np.hstack([Cpts0,tempC+i])
+            Fpts0 = np.hstack([Fpts0,tempF+i])
+        Cpts0.sort()
+        Fpts0.sort()
+    
+    nc = Cpts.shape[0]
+    nf = Fpts.shape[0]
+    n = A.shape[0]
+
+    if norm == 'l2':
+        # Q = (RA)^*
+        if T_type == 'P':
+            Q = (R*A).T
+            if A.isspmatrix_bsr():
+                Q = Q.tobsr(blocksize=A.blocksize)
+            else:
+                Q = Q.tocsr()
+
+        # Q = AP^\perp
+        elif T_type == 'R':
+
+            # Form Q = P^\perp = [I; -W^*]
+            Q = csr_matrix(T, copy=True)
+            W = Q[Fpts,:]
+            Q = vstack([eye(nf, format='csr'),-W.T])
+
+            # Reorder Q to the ordering of A
+            permuteP = eye(n, format='csr')
+            permuteP.indices = np.concatenate((Fpts,Cpts))
+            Q = permuteP.T * Q
+
+            # ----- DEBUG
+            test = Q.T*P
+            if test.nnz > 0:
+                if np.max(np.abs(test.data[:])) > 1e-14:
+                    print("Error -- P^* P^perp != 0")
+            test = P.T*Q
+            if test.nnz > 0:
+                if np.max(np.abs(test.data[:])) > 1e-14:
+                    print("Error -- P^* P^perp != 0")
+
+            # Form Q = A*P^perp
+            if isspmatrix_bsr(A):
+                Q = bsr_matrix(A*Q, blocksize=A.blocksize)
+            else:
+                Q = (A*Q).tocsr()
+
+    elif norm == 'A*A':
+        # Q = (R^\perp A)^*
+        if T_type == 'P':
+
+            # Form Q = P^\perp = [I, -Z^*]
+            Q = csr_matrix(R,copy=True)
+            Z = Q[:,Fpts]
+            Q = hstack([eye(nf, format='csr'),-Z.T])
+
+            # Reorder Q to the ordering of A
+            permuteR = eye(n, format='csr')
+            permuteR.indices = np.concatenate((Fpts,Cpts))
+            Q = Q * permuteR
+
+            # ----- DEBUG
+            test = R*Q.T
+            if test.nnz > 0:
+                if np.max(np.abs(test.data[:])) > 1e-14:
+                    print("Error -- R (R^perp)^* != 0")
+            test = Q*R.T
+            if test.nnz > 0:
+                if np.max(np.abs(test.data[:])) > 1e-14:
+                    print("Error -- R^perp R^* != 0")
+
+            # Form Q = (R^\perp A)^*
+            if isspmatrix_bsr(A):
+                Q = bsr_matrix((Q*A).T, blocksize=A.blocksize)
+            else:
+                Q = ((Q*A).T).tocsr()
+
+        # Q = A*P
+        elif T_type == 'R':
+            Q = A*T
+            if A.isspmatrix_bsr():
+                Q = Q.tobsr(blocksize=A.blocksize)
+            else:
+                Q = Q.tocsr()
+
+
+def compatible_restriction(A, P, splitting, comp_norm='l2', theta=0.1, norm='abs',
+                           degree=1, use_gmres=False, maxiter=10, precondition=True):
+    """ Compute approximate compatible restriction in either the l^2- or A^*A-norm. 
+
+    Parameters
+    ----------
+    A : csr or bsr_matrix
+        NxN matrix in CSR or BSR format
+    P : csr or bsr_matrix
+        Interpolation operator 
+    splitting : array
+        C/F splitting stored in an array of length N
+    comp_norm : string, default 'l2'
+        Norm to build compatible restriction based on, either l2 or A^*A
+    theta : float, default 0.1
+        Solve local system for each row of R for all values
+            |A_ij| >= 0.1 * max_{i!=k} |A_ik|
+    degree : int, default 1
+        Expand sparsity pattern for R by considering strongly connected
+        neighbors within 'degree' of a given node. Only supports degree 1 and 2.
+    use_gmres : bool
+        Solve local linear system for each row of R using GMRES
+    maxiter : int
+        Maximum number of GMRES iterations
+    precondition : bool
+        Diagonally precondition GMRES
+
+    Returns
+    -------
+    Approximate compatible restriction, R, in same sparse format as A.
+
+    Notes
+    -----
+
+
+    """
+
+    if not isspmatrix(A):
+        raise ValueError("Sparse matrix input needed")
+    if not (isspmatrix_bsr(A) or isspmatrix_csr(A)):
+        try:
+            A = A.tocsr()
+        except:
+            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+
+    Cpts = np.array(np.where(splitting == 1)[0], dtype='int32')
+    Fpts = np.array(np.where(splitting == 0)[0], dtype='int32')
+    nc = Cpts.shape[0]
+    n = C.shape[0]
+
+    # Compute operator Q for compatible restriction
+    Q = get_compatible_Q(A, P, comp_norm, 'R', Cpts, Fpts)
+
+    # Get SOC matrix containing neighborhood to be included in local solve
+    if isspmatrix_bsr(Q):
+        C = classical_strength_of_connection(A=Q, theta=theta, block='amalgamate', norm=norm)
+        blocksize = P.blocksize[0]
+    elif isspmatrix_csr(Q):
+        blocksize = 1
+        C = classical_strength_of_connection(A=Q, theta=theta, block=None, norm=norm)
+
+    # --------------------- l^2-compatible restriction --------------------- #
+    if comp_norm == 'l2':
+
+        R_rowptr = np.empty(nc+1, dtype='int32')
+        amg_core.ACT_NcxN_pass1(R_rowptr, C.indptr, C.indices,
+                                Cpts, Fpts, splitting, degree)       
+
+        # Build restriction operator
+        nnz = R_rowptr[-1]
+        R_colinds = np.zeros(nnz, dtype='int32')
+
+        # Block matrix
+        if isspmatrix_bsr(A):
+            R_data = np.zeros(nnz*blocksize*blocksize, dtype=Q.dtype)
+            amg_core.block_ACT_NcxN_pass2(R_rowptr, R_colinds, R_data, Q.indptr,
+                                          Q.indices, Q.data.ravel(), C.indptr,
+                                          C.indices, C.data, Cpts, Fpts, splitting,
+                                          blocksize, degree, use_gmres, maxiter,
+                                          precondition)
+            R = bsr_matrix((R_data.reshape(nnz,blocksize,blocksize), R_colinds, R_rowptr),
+                            blocksize=[blocksize,blocksize], shape=[nc*blocksize,Q.shape[0]])
+        # Not block matrix
+        else:
+            R_data = np.zeros(nnz, dtype=Q.dtype)
+            amg_core.ACT_NcxN_pass2(R_rowptr, R_colinds, R_data, Q.indptr,
+                                    Q.indices, Q.data, C.indptr, C.indices,
+                                    C.data, Cpts, Fpts, splitting, degree,
+                                    use_gmres, maxiter, precondition)            
+            R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc,Q.shape[0]])
+
+    # --------------------- A^*A-compatible restriction --------------------- #
+    if comp_norm == 'A*A':
+
+        R_rowptr = np.empty(nc+1, dtype='int32')
+        amg_core.ACT_NxNc_pass1(R_rowptr, C.indptr, C.indices,
+                                Cpts, splitting, degree)       
+
+        # Build restriction operator
+        nnz = R_rowptr[-1]
+        R_colinds = np.zeros(nnz, dtype='int32')
+
+        # Block matrix
+        if isspmatrix_bsr(A):
+            R_data = np.zeros(nnz*blocksize*blocksize, dtype=Q.dtype)
+            amg_core.block_ACT_NxNc_pass2(R_rowptr, R_colinds, R_data, Q.indptr,
+                                          Q.indices, Q.data.ravel(), C.indptr,
+                                          C.indices, C.data, Cpts, splitting,
+                                          blocksize, degree, use_gmres, maxiter,
+                                          precondition)
+            R = bsr_matrix((R_data.reshape(nnz,blocksize,blocksize), R_colinds, R_rowptr),
+                            blocksize=[blocksize,blocksize], shape=[nc*blocksize,Q.shape[0]])
+        # Not block matrix
+        else:
+            R_data = np.zeros(nnz, dtype=Q.dtype)
+            amg_core.ACT_NxNc_pass2(R_rowptr, R_colinds, R_data, Q.indptr,
+                                    Q.indices, Q.data, C.indptr, C.indices,
+                                    C.data, Cpts, splitting, degree,
+                                    use_gmres, maxiter, precondition)            
+            R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc,Q.shape[0]])
+
+        # In this norm, we actually build R^T and must take its transpose
+        R = (R.T).tocsr()
+    else:
+        raise ValueError("Invalid norm to build compatible restriction in.\n")
+
+    R.eliminate_zeros()
+    if norm == 'A*A':
+        return R, Q, True
+    else:
+        return R, -1, False
+
+
+
+def compatible_interpolation(A, R, splitting, comp_norm='l2', theta=0.1, norm='abs',
+                             degree=1, use_gmres=False, maxiter=10, precondition=True):
+    """ Compute approximate compatible interpolation in either the l^2- or A^*A-norm. 
+
+    Parameters
+    ----------
+    A : csr or bsr_matrix
+        NxN matrix in CSR or BSR format
+    R : csr or bsr_matrix
+        Restriction operator 
+    splitting : array
+        C/F splitting stored in an array of length N
+    comp_norm : string, default 'l2'
+        Norm to build compatible interpolation based on, either l2 or A^*A
+    theta : float, default 0.1
+        Solve local system for each row of P for all values
+            |A_ij| >= 0.1 * max_{i!=k} |A_ik|
+    degree : int, default 1
+        Expand sparsity pattern for P by considering strongly connected
+        neighbors within 'degree' of a given node. Only supports degree 1 and 2.
+    use_gmres : bool
+        Solve local linear system for each row of P using GMRES
+    maxiter : int
+        Maximum number of GMRES iterations
+    precondition : bool
+        Diagonally precondition GMRES
+
+    Returns
+    -------
+    Approximate compatible interpolation, P, in same sparse format as A.
+
+    Notes
+    -----
+
+
+    """
+
+    if not isspmatrix(A):
+        raise ValueError("Sparse matrix input needed")
+    if not (isspmatrix_bsr(A) or isspmatrix_csr(A)):
+        try:
+            A = A.tocsr()
+        except:
+            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+
+    Cpts = np.array(np.where(splitting == 1)[0], dtype='int32')
+    Fpts = np.array(np.where(splitting == 0)[0], dtype='int32')
+    nc = Cpts.shape[0]
+    n = C.shape[0]
+
+    # Compute operator Q for compatible restriction
+    Q = get_compatible_Q(A, R, comp_norm, 'P', Cpts, Fpts)
+
+    # Get SOC matrix containing neighborhood to be included in local solve
+    if isspmatrix_bsr(Q):
+        C = classical_strength_of_connection(A=Q, theta=theta, block='amalgamate', norm=norm)
+        blocksize = P.blocksize[0]
+    elif isspmatrix_csr(A):
+        blocksize = 1
+        C = classical_strength_of_connection(A=Q, theta=theta, block=None, norm=norm)
+
+    # --------------------- l^2-compatible interpolation --------------------- #
+    if comp_norm == 'l2':
+
+        P_rowptr = np.empty(nc+1, dtype='int32')
+        amg_core.ACT_NxNc_pass1(P_rowptr, C.indptr, C.indices,
+                                Cpts, splitting, degree)       
+
+        # Build interpolation operator
+        nnz = P_rowptr[-1]
+        P_colinds = np.zeros(nnz, dtype='int32')
+
+        # Block matrix
+        if isspmatrix_bsr(A):
+            P_data = np.zeros(nnz*blocksize*blocksize, dtype=Q.dtype)
+            amg_core.block_ACT_NxNc_pass2(P_rowptr, P_colinds, P_data, Q.indptr,
+                                          Q.indices, Q.data.ravel(), C.indptr,
+                                          C.indices, C.data, Cpts, splitting,
+                                          blocksize, degree, use_gmres, maxiter,
+                                          precondition)
+            P = bsr_matrix((P_data.reshape(nnz,blocksize,blocksize), P_colinds, P_rowptr),
+                            blocksize=[blocksize,blocksize], shape=[nc*blocksize,Q.shape[0]])
+        # Not block matrix
+        else:
+            P_data = np.zeros(nnz, dtype=Q.dtype)
+            amg_core.ACT_NxNc_pass2(P_rowptr, P_colinds, P_data, Q.indptr,
+                                    Q.indices, Q.data, C.indptr, C.indices,
+                                    C.data, Cpts, splitting, degree,
+                                    use_gmres, maxiter, precondition)            
+            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[nc,Q.shape[0]])
+
+    # --------------------- A^*A-compatible interpolation --------------------- #
+    if comp_norm == 'A*A':
+
+        P_rowptr = np.empty(nc+1, dtype='int32')
+        amg_core.ACT_NcxN_pass1(P_rowptr, C.indptr, C.indices,
+                                Cpts, Fpts, splitting, degree)       
+
+        # Build interpolation operator
+        nnz = P_rowptr[-1]
+        P_colinds = np.zeros(nnz, dtype='int32')
+
+        # Block matrix
+        if isspmatrix_bsr(A):
+            P_data = np.zeros(nnz*blocksize*blocksize, dtype=Q.dtype)
+            amg_core.block_ACT_NcxN_pass2(P_rowptr, P_colinds, P_data, Q.indptr,
+                                          Q.indices, Q.data.ravel(), C.indptr,
+                                          C.indices, C.data, Cpts, Fpts, splitting,
+                                          blocksize, degree, use_gmres, maxiter,
+                                          precondition)
+            P = bsr_matrix((P_data.reshape(nnz,blocksize,blocksize), P_colinds, P_rowptr),
+                            blocksize=[blocksize,blocksize], shape=[nc*blocksize,Q.shape[0]])
+        # Not block matrix
+        else:
+            P_data = np.zeros(nnz, dtype=Q.dtype)
+            amg_core.ACT_NcxN_pass2(P_rowptr, P_colinds, P_data, Q.indptr,
+                                    Q.indices, Q.data, C.indptr, C.indices,
+                                    C.data, Cpts, Fpts, splitting, degree,
+                                    use_gmres, maxiter, precondition)            
+            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[nc,Q.shape[0]])
+
+        # In this norm, we actually build P^T and must take its transpose
+        P = (P.T).tocsr()
+    else:
+        raise ValueError("Invalid norm to build compatible restriction in.\n")
+
+    P.eliminate_zeros()
+    if norm == 'l2':
+        return P, Q.T, True
+    else:
+        return P, -1, False
+
+## ----------------- TODO : need to pass sign into pass2 to determine sign RHS

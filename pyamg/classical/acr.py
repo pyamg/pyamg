@@ -19,17 +19,17 @@ from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
     filter_matrix_rows
 from pyamg.classical.interpolate import direct_interpolation, \
     standard_interpolation, distance_two_interpolation, injection_interpolation, \
-    one_point_interpolation, neumann_AIR, local_AIR
+    one_point_interpolation, compatible_restriction
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
-__all__ = ['AIR_solver']
+__all__ = ['ACR_solver']
 
-def AIR_solver(A,
+def ACR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
-               interp='one_point',
-               restrict=('air', {'theta': 0.05, 'degree': 2}),
+               interp='standard',
+               restrict='compatible',
                presmoother=None,
                postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
                               'withrho': False,  'F_iterations': 2,
@@ -190,8 +190,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     else:
         raise ValueError('Unknown C/F splitting method (%s)' % CF)
 
-    # BS - have run into cases where no C-points are designated, and it
-    # throws off the next routines. If everything is an F-point, return here
+    # If everything is an F-point, return here
     if np.sum(splitting) == len(splitting):
         return 1
 
@@ -213,14 +212,10 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
-    if fn is None:
-        R = P.T
-    elif fn == 'lAIR':
-        R = local_AIR(A, splitting, **kwargs)
-    elif fn == 'nAIR':
-        R = neumann_AIR(A, splitting, **kwargs)
+    if fn == 'compatible':
+        R, Q, use_Q = compatible_restriction(A, P, splitting, **kwargs)
     else:
-        raise ValueError('Unknown restriction method (%s)' % restrict)
+        raise ValueError('Must use compatible restriction')
 
     # Store relevant information for this level
     if keep:
@@ -231,7 +226,10 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     levels[-1].splitting = splitting  # C/F splitting
 
     # RAP = R*(A*P)
-    A = R * A * P
+    if use_Q:
+        A = R*Q
+    else:
+        A = R * A * P
 
     # Make sure coarse-grid operator is in correct sparse format
     if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):

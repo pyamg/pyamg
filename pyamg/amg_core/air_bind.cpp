@@ -200,6 +200,328 @@ py::array_t<I> & splitting,
                                                       );
 }
 
+template<class I>
+void _ACT_NcxN_pass1(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+    py::array_t<I> & Cpts,
+    py::array_t<I> & Fpts,
+py::array_t<I> & splitting,
+         const I distance
+                     )
+{
+    auto py_Tp = Tp.mutable_unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_Fpts = Fpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    I *_Tp = py_Tp.mutable_data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_Fpts = py_Fpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return ACT_NcxN_pass1<I>(
+                      _Tp, Tp.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                    _Cpts, Cpts.shape(0),
+                    _Fpts, Fpts.shape(0),
+               _splitting, splitting.shape(0),
+                 distance
+                             );
+}
+
+template<class I, class T>
+void _ACT_NcxN_pass2(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Tj,
+      py::array_t<T> & Tx,
+      py::array_t<I> & Qp,
+      py::array_t<I> & Qj,
+      py::array_t<T> & Qx,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+      py::array_t<T> & Cx,
+    py::array_t<I> & Cpts,
+    py::array_t<I> & Fpts,
+py::array_t<I> & splitting,
+         const I distance,
+        const I use_gmres,
+          const I maxiter,
+     const I precondition
+                     )
+{
+    auto py_Tp = Tp.unchecked();
+    auto py_Tj = Tj.mutable_unchecked();
+    auto py_Tx = Tx.mutable_unchecked();
+    auto py_Qp = Qp.unchecked();
+    auto py_Qj = Qj.unchecked();
+    auto py_Qx = Qx.unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cx = Cx.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_Fpts = Fpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    const I *_Tp = py_Tp.data();
+    I *_Tj = py_Tj.mutable_data();
+    T *_Tx = py_Tx.mutable_data();
+    const I *_Qp = py_Qp.data();
+    const I *_Qj = py_Qj.data();
+    const T *_Qx = py_Qx.data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const T *_Cx = py_Cx.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_Fpts = py_Fpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return ACT_NcxN_pass2<I, T>(
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Qp, Qp.shape(0),
+                      _Qj, Qj.shape(0),
+                      _Qx, Qx.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                      _Cx, Cx.shape(0),
+                    _Cpts, Cpts.shape(0),
+                    _Fpts, Fpts.shape(0),
+               _splitting, splitting.shape(0),
+                 distance,
+                use_gmres,
+                  maxiter,
+             precondition
+                                );
+}
+
+template<class I, class T>
+void _block_ACT_NcxN_pass2(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Tj,
+      py::array_t<T> & Tx,
+      py::array_t<I> & Qp,
+      py::array_t<I> & Qj,
+      py::array_t<T> & Qx,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+      py::array_t<T> & Cx,
+    py::array_t<I> & Cpts,
+    py::array_t<I> & Fpts,
+py::array_t<I> & splitting,
+        const I blocksize,
+         const I distance,
+        const I use_gmres,
+          const I maxiter,
+     const I precondition
+                           )
+{
+    auto py_Tp = Tp.unchecked();
+    auto py_Tj = Tj.mutable_unchecked();
+    auto py_Tx = Tx.mutable_unchecked();
+    auto py_Qp = Qp.unchecked();
+    auto py_Qj = Qj.unchecked();
+    auto py_Qx = Qx.unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cx = Cx.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_Fpts = Fpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    const I *_Tp = py_Tp.data();
+    I *_Tj = py_Tj.mutable_data();
+    T *_Tx = py_Tx.mutable_data();
+    const I *_Qp = py_Qp.data();
+    const I *_Qj = py_Qj.data();
+    const T *_Qx = py_Qx.data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const T *_Cx = py_Cx.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_Fpts = py_Fpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return block_ACT_NcxN_pass2<I, T>(
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Qp, Qp.shape(0),
+                      _Qj, Qj.shape(0),
+                      _Qx, Qx.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                      _Cx, Cx.shape(0),
+                    _Cpts, Cpts.shape(0),
+                    _Fpts, Fpts.shape(0),
+               _splitting, splitting.shape(0),
+                blocksize,
+                 distance,
+                use_gmres,
+                  maxiter,
+             precondition
+                                      );
+}
+
+template<class I>
+void _ACT_NxNc_pass1(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+    py::array_t<I> & Cpts,
+py::array_t<I> & splitting,
+         const I distance
+                     )
+{
+    auto py_Tp = Tp.mutable_unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    I *_Tp = py_Tp.mutable_data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return ACT_NxNc_pass1<I>(
+                      _Tp, Tp.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                    _Cpts, Cpts.shape(0),
+               _splitting, splitting.shape(0),
+                 distance
+                             );
+}
+
+template<class I, class T>
+void _ACT_NxNc_pass2(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Tj,
+      py::array_t<T> & Tx,
+      py::array_t<I> & Qp,
+      py::array_t<I> & Qj,
+      py::array_t<T> & Qx,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+      py::array_t<T> & Cx,
+    py::array_t<I> & Cpts,
+py::array_t<I> & splitting,
+         const I distance,
+        const I use_gmres,
+          const I maxiter,
+     const I precondition
+                     )
+{
+    auto py_Tp = Tp.unchecked();
+    auto py_Tj = Tj.mutable_unchecked();
+    auto py_Tx = Tx.mutable_unchecked();
+    auto py_Qp = Qp.unchecked();
+    auto py_Qj = Qj.unchecked();
+    auto py_Qx = Qx.unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cx = Cx.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    const I *_Tp = py_Tp.data();
+    I *_Tj = py_Tj.mutable_data();
+    T *_Tx = py_Tx.mutable_data();
+    const I *_Qp = py_Qp.data();
+    const I *_Qj = py_Qj.data();
+    const T *_Qx = py_Qx.data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const T *_Cx = py_Cx.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return ACT_NxNc_pass2<I, T>(
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Qp, Qp.shape(0),
+                      _Qj, Qj.shape(0),
+                      _Qx, Qx.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                      _Cx, Cx.shape(0),
+                    _Cpts, Cpts.shape(0),
+               _splitting, splitting.shape(0),
+                 distance,
+                use_gmres,
+                  maxiter,
+             precondition
+                                );
+}
+
+template<class I, class T>
+void _block_ACT_NxNc_pass2(
+      py::array_t<I> & Tp,
+      py::array_t<I> & Tj,
+      py::array_t<T> & Tx,
+      py::array_t<I> & Qp,
+      py::array_t<I> & Qj,
+      py::array_t<T> & Qx,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+      py::array_t<T> & Cx,
+    py::array_t<I> & Cpts,
+py::array_t<I> & splitting,
+        const I blocksize,
+         const I distance,
+        const I use_gmres,
+          const I maxiter,
+     const I precondition
+                           )
+{
+    auto py_Tp = Tp.unchecked();
+    auto py_Tj = Tj.mutable_unchecked();
+    auto py_Tx = Tx.mutable_unchecked();
+    auto py_Qp = Qp.unchecked();
+    auto py_Qj = Qj.unchecked();
+    auto py_Qx = Qx.unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cx = Cx.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    const I *_Tp = py_Tp.data();
+    I *_Tj = py_Tj.mutable_data();
+    T *_Tx = py_Tx.mutable_data();
+    const I *_Qp = py_Qp.data();
+    const I *_Qj = py_Qj.data();
+    const T *_Qx = py_Qx.data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const T *_Cx = py_Cx.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return block_ACT_NxNc_pass2<I, T>(
+                      _Tp, Tp.shape(0),
+                      _Tj, Tj.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Qp, Qp.shape(0),
+                      _Qj, Qj.shape(0),
+                      _Qx, Qx.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                      _Cx, Cx.shape(0),
+                    _Cpts, Cpts.shape(0),
+               _splitting, splitting.shape(0),
+                blocksize,
+                 distance,
+                use_gmres,
+                  maxiter,
+             precondition
+                                      );
+}
+
 PYBIND11_MODULE(air, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for air.h
@@ -210,6 +532,12 @@ PYBIND11_MODULE(air, m) {
     approx_ideal_restriction_pass1
     approx_ideal_restriction_pass2
     block_approx_ideal_restriction_pass2
+    ACT_NcxN_pass1
+    ACT_NcxN_pass2
+    block_ACT_NcxN_pass2
+    ACT_NxNc_pass1
+    ACT_NxNc_pass2
+    block_ACT_NxNc_pass2
     )pbdoc";
 
     py::options options;
@@ -225,10 +553,12 @@ connected C-neighbor.
 
 Parameters
 ----------
-     Rp : const array<int>
-         Pre-determined row-pointer for P in CSR format
-     Rj : array<int>
+     Pp : array<int>
+         Empty array for row-pointer for P in CSR format
+     Pj : array<int>
          Empty array for column indices for P in CSR format
+     Px : array<float>
+         Empty array for data for P in CSR format
      Cp : const array<int>
          Row pointer for SOC matrix, C
      Cj : const array<int>
@@ -365,6 +695,48 @@ Nothing, Rj[] and Rx[] modified in place.
 Notes
 -----
 Rx[] must be passed in initialized to zero.)pbdoc");
+
+    m.def("ACT_NcxN_pass1", &_ACT_NcxN_pass1<int>,
+        py::arg("Tp").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"),
+R"pbdoc(
+Build row_pointer for approximate compatible transfer operators, when the
+operator being built is Nc x N (like restriction).
+ - ACR-l^2, ACI-A*A)pbdoc");
+
+    m.def("ACT_NcxN_pass2", &_ACT_NcxN_pass2<int, float>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("ACT_NcxN_pass2", &_ACT_NcxN_pass2<int, double>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+R"pbdoc(
+)pbdoc");
+
+    m.def("block_ACT_NcxN_pass2", &_block_ACT_NcxN_pass2<int, float>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("block_ACT_NcxN_pass2", &_block_ACT_NcxN_pass2<int, double>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+R"pbdoc(
+)pbdoc");
+
+    m.def("ACT_NxNc_pass1", &_ACT_NxNc_pass1<int>,
+        py::arg("Tp").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"),
+R"pbdoc(
+Build row_pointer for approximate compatible transfer operators, when the
+operator being built is N x Nc (like interpolation).
+ - ACR-A*A, ACI-l^2)pbdoc");
+
+    m.def("ACT_NxNc_pass2", &_ACT_NxNc_pass2<int, float>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("ACT_NxNc_pass2", &_ACT_NxNc_pass2<int, double>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+R"pbdoc(
+)pbdoc");
+
+    m.def("block_ACT_NxNc_pass2", &_block_ACT_NxNc_pass2<int, float>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("block_ACT_NxNc_pass2", &_block_ACT_NxNc_pass2<int, double>,
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+R"pbdoc(
+)pbdoc");
 
 }
 

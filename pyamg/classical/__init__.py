@@ -1,6 +1,8 @@
 """Classical AMG"""
 from __future__ import absolute_import
 
+from .acr import *
+from .aci import *
 from .air import *
 from .classical import *
 from .split import *
