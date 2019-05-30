@@ -517,7 +517,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
         // Solve local linear system for each row in block
         if (use_gmres) {
-                
+
             // Apply GMRES to right-hand-side for each DOF in block
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -536,7 +536,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         else {
             // Take QR of local matrix for linear solves, R stored in A0
             std::vector<T> Q = QR(&A0[0], num_DOFs, num_DOFs, is_col_major);
-            
+
             // Solve each block based on QR decomposition
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -564,10 +564,10 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                                 this_row*blocksize + this_col;
                     I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
                     if (std::abs(b0[row_ind]) > 1e-15) {
-                        Rx[bsr_ind] = b0[row_ind];                    
+                        Rx[bsr_ind] = b0[row_ind];
                     }
                     else {
-                        Rx[bsr_ind] = 0.0;                   
+                        Rx[bsr_ind] = 0.0;
                     }
                 }
             }
@@ -642,6 +642,7 @@ void ACT_NcxN_pass2(const I Tp[], const int Tp_size,
                     const I Cpts[], const int Cpts_size,
                     const I Fpts[], const int Fpts_size,
                     const I splitting[], const int splitting_size,
+                    const I rhs_sign,
                     const I distance = 2,
                     const I use_gmres = 0,
                     const I maxiter = 10,
@@ -717,7 +718,7 @@ void ACT_NcxN_pass2(const I Tp[], const int Tp_size,
             // intitialized to zero.
             for (I k=Qp[cpoint]; k<Qp[cpoint+1]; k++) {
                 if (Tj[i] == Fpts[Qj[k]]) {
-                    b0[temp_b] = -Qx[k];
+                    b0[temp_b] = rhs_sign*Qx[k];
                     break;
                 }
             }
@@ -757,6 +758,7 @@ void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
                           const I Fpts[], const int Fpts_size,
                           const I splitting[], const int splitting_size,
                           const I blocksize,
+                          const I rhs_sign,
                           const I distance = 2,
                           const I use_gmres = 0,
                           const I maxiter = 10,
@@ -869,7 +871,7 @@ void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
                         for (I this_col=0; this_col<blocksize; this_col++) {
                             I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
                             I bsr_ind = k*blocksize*blocksize + this_row*blocksize + this_col;
-                            b0[row_ind] = -Qx[bsr_ind];
+                            b0[row_ind] = rhs_sign*Qx[bsr_ind];
                         }
                     }
                     break;
@@ -879,7 +881,7 @@ void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
 
         // Solve local linear system for each row in block
         if (use_gmres) {
-                
+
             // Apply GMRES to right-hand-side for each DOF in block
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -898,7 +900,7 @@ void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
         else {
             // Take QR of local matrix for linear solves, T stored in Q0
             std::vector<T> Q = QR(&Q0[0], num_DOFs, num_DOFs, is_col_major);
-            
+
             // Solve each block based on QR decomposition
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -926,10 +928,10 @@ void block_ACT_NcxN_pass2(const I Tp[], const int Tp_size,
                                 this_row*blocksize + this_col;
                     I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
                     if (std::abs(b0[row_ind]) > 1e-15) {
-                        Tx[bsr_ind] = b0[row_ind];                    
+                        Tx[bsr_ind] = b0[row_ind];
                     }
                     else {
-                        Tx[bsr_ind] = 0.0;                   
+                        Tx[bsr_ind] = 0.0;
                     }
                 }
             }
@@ -966,7 +968,7 @@ void ACT_NxNc_pass1(I Tp[], const int Tp_size,
         // If C-point row, add identity
         if (splitting[row] == C_NODE) {
             nnz += 1;
-            Tp[row+1] = nnz;             
+            Tp[row+1] = nnz;
         }
 
         // Otherwise, row is F-point. Determine number of nnzs.
@@ -983,9 +985,10 @@ void ACT_NxNc_pass1(I Tp[], const int Tp_size,
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
                         nnz++;
-                    } 
+                    }
                 }
             }
+            Tp[row+1] = nnz;
         }
     }
     if ((distance != 1) && (distance != 2)) {
@@ -1007,6 +1010,7 @@ void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
                     const T Cx[], const int Cx_size,
                     const I Cpts[], const int Cpts_size,
                     const I splitting[], const int splitting_size,
+                    const I rhs_sign,
                     const I distance = 2,
                     const I use_gmres = 0,
                     const I maxiter = 10,
@@ -1025,26 +1029,27 @@ void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
             Tj[ind] = cpoint_ind;
             Tx[ind] = 1.0;
             cpoint_ind += 1;
-            continue;          
+            continue;
         }
         // --------- Rest of loop for F-point rows only
 
         // Set column indices for T as strongly connected C-points.
         for (I i=Cp[row]; i<Cp[row+1]; i++) {
-            I this_point = Cpts[Cj[i]];
-            Tj[ind] = this_point;
+            Tj[ind] = Cj[i];
             ind +=1 ;
 
             // Strong distance-two C-to-C connections
             if (distance == 2) {
+                I this_point = Cpts[Cj[i]];
                 for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
-                    Tj[ind] = Cpts[Cj[kk]];
+                    Tj[ind] = Cj[kk];
                     ind +=1 ;
-                } 
+                }
             }
         }
 
-        if (ind != (Tp[row+1]-1)) {
+        // Column ndex should now be equal to starting index of next row
+        if (ind != (Tp[row+1])) {
             std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
                          "ind = " << ind << ", Tp[row] = " << Tp[row] <<
                          ", Tp[row+1] = " << Tp[row+1] << "\n";
@@ -1057,14 +1062,14 @@ void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
         I size_N = ind - Tp[row];
         std::vector<T> Q0(size_N*size_N);
         I temp_Q = 0;
-        for (I j=Tp[row]; j<ind; j++) { 
-            I this_ind = Tj[j];
+        for (I j=Tp[row]; j<ind; j++) {
+            I this_ind = Cpts[Tj[j]];
             // Nested loops to find intersection of sparsity pattern for T and nnzs in Q
             for (I i=Tp[row]; i<ind; i++) {
                 // Search for indice in row of Q
                 I found_ind = 0;
                 for (I k=Qp[this_ind]; k<Qp[this_ind+1]; k++) {
-                    if (Tj[i] == Cpts[Qj[k]]) {
+                    if (Tj[i] == Qj[k]) {
                         Q0[temp_Q] = Qx[k];
                         found_ind = 1;
                         temp_Q += 1;
@@ -1088,8 +1093,8 @@ void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
             // Search for indice in row of Q. If indice not found, b0 has been
             // intitialized to zero.
             for (I k=Qp[row]; k<Qp[row+1]; k++) {
-                if (Tj[i] == Cpts[Qj[k]]) {
-                    b0[temp_b] = -Qx[k];
+                if (Tj[i] == Qj[k]) {
+                    b0[temp_b] = rhs_sign*Qx[k];
                     break;
                 }
             }
@@ -1125,6 +1130,7 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
                           const I Cpts[], const int Cpts_size,
                           const I splitting[], const int splitting_size,
                           const I blocksize,
+                          const I rhs_sign,
                           const I distance = 2,
                           const I use_gmres = 0,
                           const I maxiter = 10,
@@ -1148,27 +1154,30 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
             for (I this_row=0; this_row<blocksize; this_row++) {
                 Tx[identity_ind + (blocksize+1)*this_row] = 1.0;
             }
-            continue;          
+            continue;
         }
         // --------- Rest of loop for F-point rows only
 
         // Set column indices for T as strongly connected C-points.
         for (I i=Cp[row]; i<Cp[row+1]; i++) {
-            I this_point = Cpts[Cj[i]];
-            Tj[ind] = this_point;
+            Tj[ind] = Cj[i];
             ind += 1 ;
 
             // Strong distance-two C-to-C connections
             if (distance == 2) {
+                I this_point = Cpts[Cj[i]];
                 for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
-                    Tj[ind] = Cpts[Cj[kk]];
-                    ind += 1 ;
+                    Tj[ind] = Cj[kk];
+                    ind +=1 ;
                 }
             }
         }
 
-        if (ind != (Tp[row+1]-1)) {
-            std::cout << "Error: Row pointer does not agree with neighborhood size.\n";
+        // Column index should now be equal to starting index of next row
+        if (ind != (Tp[row+1])) {
+            std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
+                         "ind = " << ind << ", Tp[row] = " << Tp[row] <<
+                         ", Tp[row+1] = " << Tp[row+1] << "\n";
         }
 
         // Build local linear system as the submatrix Q^T restricted to the neighborhood,
@@ -1184,7 +1193,7 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
         // Add each block in strongly connected neighborhood to dense linear system.
         // For each column indice in sparsity pattern for this row of T:
         for (I j=Tp[row]; j<ind; j++) { 
-            I this_ind = Tj[j];
+            I this_ind = Cpts[Tj[j]];
             I this_block_col = 0;
 
             // For this row of Q, add blocks to Q0 for each entry in sparsity pattern
@@ -1200,7 +1209,7 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
 
                     // Add block of Q to dense array. If indice not found, elements
                     // in Q0 have already been initialized to zero.
-                    if (Tj[i] == Cpts[Qj[k]]) {
+                    if (Tj[i] == Qj[k]) {
                         I blockx_ind = k * blocksize * blocksize;
 
                         // For each row in block:
@@ -1246,12 +1255,12 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
             // Search for indice in row of Q, store data in b0. If not found,
             // b0 has been initialized to zero.
             for (I k=Qp[row]; k<Qp[row+1]; k++) {
-                if (Tj[temp_ind] == Cpts[Qj[k]]) {
+                if (Tj[temp_ind] == Qj[k]) {
                     for (I this_row=0; this_row<blocksize; this_row++) {
                         for (I this_col=0; this_col<blocksize; this_col++) {
                             I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
                             I bsr_ind = k*blocksize*blocksize + this_row*blocksize + this_col;
-                            b0[row_ind] = -Qx[bsr_ind];
+                            b0[row_ind] = rhs_sign*Qx[bsr_ind];
                         }
                     }
                     break;
@@ -1261,7 +1270,7 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
 
         // Solve local linear system for each row in block
         if (use_gmres) {
-                
+
             // Apply GMRES to right-hand-side for each DOF in block
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -1280,7 +1289,7 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
         else {
             // Take QR of local matrix for linear solves, T stored in Q0
             std::vector<T> Q = QR(&Q0[0], num_DOFs, num_DOFs, is_col_major);
-            
+
             // Solve each block based on QR decomposition
             std::vector<T> rhs(num_DOFs);
             for (I this_row=0; this_row<blocksize; this_row++) {
@@ -1308,10 +1317,10 @@ void block_ACT_NxNc_pass2(const I Tp[], const int Tp_size,
                                 this_row*blocksize + this_col;
                     I row_ind = num_DOFs*this_row + block_ind*blocksize + this_col;
                     if (std::abs(b0[row_ind]) > 1e-15) {
-                        Tx[bsr_ind] = b0[row_ind];                    
+                        Tx[bsr_ind] = b0[row_ind];
                     }
                     else {
-                        Tx[bsr_ind] = 0.0;                   
+                        Tx[bsr_ind] = 0.0;
                     }
                 }
             }

@@ -249,6 +249,7 @@ void _ACT_NcxN_pass2(
     py::array_t<I> & Cpts,
     py::array_t<I> & Fpts,
 py::array_t<I> & splitting,
+         const I rhs_sign,
          const I distance,
         const I use_gmres,
           const I maxiter,
@@ -293,6 +294,7 @@ py::array_t<I> & splitting,
                     _Cpts, Cpts.shape(0),
                     _Fpts, Fpts.shape(0),
                _splitting, splitting.shape(0),
+                 rhs_sign,
                  distance,
                 use_gmres,
                   maxiter,
@@ -315,6 +317,7 @@ void _block_ACT_NcxN_pass2(
     py::array_t<I> & Fpts,
 py::array_t<I> & splitting,
         const I blocksize,
+         const I rhs_sign,
          const I distance,
         const I use_gmres,
           const I maxiter,
@@ -360,6 +363,7 @@ py::array_t<I> & splitting,
                     _Fpts, Fpts.shape(0),
                _splitting, splitting.shape(0),
                 blocksize,
+                 rhs_sign,
                  distance,
                 use_gmres,
                   maxiter,
@@ -411,6 +415,7 @@ void _ACT_NxNc_pass2(
       py::array_t<T> & Cx,
     py::array_t<I> & Cpts,
 py::array_t<I> & splitting,
+         const I rhs_sign,
          const I distance,
         const I use_gmres,
           const I maxiter,
@@ -452,6 +457,7 @@ py::array_t<I> & splitting,
                       _Cx, Cx.shape(0),
                     _Cpts, Cpts.shape(0),
                _splitting, splitting.shape(0),
+                 rhs_sign,
                  distance,
                 use_gmres,
                   maxiter,
@@ -473,6 +479,7 @@ void _block_ACT_NxNc_pass2(
     py::array_t<I> & Cpts,
 py::array_t<I> & splitting,
         const I blocksize,
+         const I rhs_sign,
          const I distance,
         const I use_gmres,
           const I maxiter,
@@ -515,6 +522,7 @@ py::array_t<I> & splitting,
                     _Cpts, Cpts.shape(0),
                _splitting, splitting.shape(0),
                 blocksize,
+                 rhs_sign,
                  distance,
                 use_gmres,
                   maxiter,
@@ -704,16 +712,16 @@ operator being built is Nc x N (like restriction).
  - ACR-l^2, ACI-A*A)pbdoc");
 
     m.def("ACT_NcxN_pass2", &_ACT_NcxN_pass2<int, float>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("ACT_NcxN_pass2", &_ACT_NcxN_pass2<int, double>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 )pbdoc");
 
     m.def("block_ACT_NcxN_pass2", &_block_ACT_NcxN_pass2<int, float>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("block_ACT_NcxN_pass2", &_block_ACT_NcxN_pass2<int, double>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("Fpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 )pbdoc");
 
@@ -725,16 +733,16 @@ operator being built is N x Nc (like interpolation).
  - ACR-A*A, ACI-l^2)pbdoc");
 
     m.def("ACT_NxNc_pass2", &_ACT_NxNc_pass2<int, float>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("ACT_NxNc_pass2", &_ACT_NxNc_pass2<int, double>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 )pbdoc");
 
     m.def("block_ACT_NxNc_pass2", &_block_ACT_NxNc_pass2<int, float>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("block_ACT_NxNc_pass2", &_block_ACT_NxNc_pass2<int, double>,
-        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
+        py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("Tx").noconvert(), py::arg("Qp").noconvert(), py::arg("Qj").noconvert(), py::arg("Qx").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("rhs_sign"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 )pbdoc");
 
