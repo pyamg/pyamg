@@ -713,6 +713,8 @@ def get_compatible_Q(A, T, norm, T_type, Cpts, Fpts):
                 Q = Q.tocsr()
     return Q
 
+    return Q
+
 
 def compatible_restriction(A, P, splitting, comp_norm='l2', theta=0.1, norm='abs',
                            degree=1, use_gmres=False, maxiter=10, precondition=True):
@@ -796,6 +798,7 @@ def compatible_restriction(A, P, splitting, comp_norm='l2', theta=0.1, norm='abs
                                           maxiter, precondition)
             R = bsr_matrix((R_data.reshape(nnz,blocksize,blocksize), R_colinds, R_rowptr),
                             blocksize=[blocksize,blocksize], shape=[nc*blocksize,n])
+
         # Not block matrix
         else:
             R_data = np.zeros(nnz, dtype=Q.dtype)
@@ -827,6 +830,7 @@ def compatible_restriction(A, P, splitting, comp_norm='l2', theta=0.1, norm='abs
                                           precondition)
             R = bsr_matrix((R_data.reshape(nnz,blocksize,blocksize), R_colinds, R_rowptr),
                             blocksize=[blocksize,blocksize], shape=[n,nc*blocksize])
+
         # Not block matrix
         else:
             R_data = np.zeros(nnz, dtype=Q.dtype)
@@ -978,7 +982,7 @@ def compatible_interpolation(A, R, splitting, comp_norm='l2', theta=0.1, norm='a
         raise ValueError("Invalid norm to build compatible restriction in.\n")
 
     # DEBUG
-    if False:
+    if True:
         Pperp = get_P_perp(P,Cpts,Fpts)
         RAPperp = R*A*Pperp
         RAPperp.data[np.abs(RAPperp.data) < 1e-14] = 0
@@ -992,4 +996,3 @@ def compatible_interpolation(A, R, splitting, comp_norm='l2', theta=0.1, norm='a
     else:
         return P, -1, False
 
-## ----------------- TODO : need to pass sign into pass2 to determine sign RHS

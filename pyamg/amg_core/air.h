@@ -1048,7 +1048,7 @@ void ACT_NxNc_pass2(const I Tp[], const int Tp_size,
             }
         }
 
-        // Column ndex should now be equal to starting index of next row
+        // Column index should now be equal to starting index of next row
         if (ind != (Tp[row+1])) {
             std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
                          "ind = " << ind << ", Tp[row] = " << Tp[row] <<
