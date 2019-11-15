@@ -33,6 +33,7 @@ matrix:
     #  env: CIBW_SKIP="cp34-*" PIP=pip2 CIBW_BEFORE_BUILD="pip install -r requirements.txt"
 
 before_install:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew update; fi
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PYTHON_VERSION" == "2.7" && -z "$CIBW_BEFORE_BUILD" ]]; then
       brew unlink python
