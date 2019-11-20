@@ -34,7 +34,6 @@ install_requires = (
     'numpy>=1.7.0',
     'scipy>=0.12.0',
     'pytest>=2',
-    'pybind11>=2.2'
 )
 
 
@@ -217,7 +216,41 @@ class get_pybind_include(object):
 
     def __str__(self):
         import pybind11
-        return pybind11.get_include(self.user)
+        # The issue:
+        # https://github.com/pybind/pybind11/issues/1067
+        #
+        # pybind11 will install files to
+        # TMP/pybind11-version.egg/*.h
+        # TMP/pybind11-version.egg/detail/*.h
+        #
+        # We need this to look like
+        # TMP/pybind11/*.h
+        # TMP/pybind11/detail/*.h
+
+        # TMPDIR/pybind11-2.2.4-py3.7.egg/pybind11/__init__.py
+        f = pybind11.__file__
+
+        # TMPDIR/pybind11-2.2.4-py3.7.egg/pybind11/
+        d = os.path.dirname(f)
+
+        # TMPDIR/pybind11-2.2.4-py3.7.egg
+        dd = os.path.dirname(d)
+
+        # TMPDIR
+        tmpdir = os.path.dirname(dd)
+
+        # check if not a half-install
+        if not os.path.exists(os.path.join(dd, 'pybind11.h')):
+            return pybind11.get_include(self.user)
+
+        # if it *is* a half-install
+        # Then copy all files to
+        # TMPDIR/pybind11
+        if not os.path.isdir(os.path.join(tmpdir, 'pybind11')):
+            import shutil
+            shutil.copytree(dd, os.path.join(tmpdir, 'pybind11'))
+
+        return tmpdir
 
 
 amg_core_headers = ['evolution_strength.h',
