@@ -56,7 +56,7 @@ def rootnode_solver(A, B=None, BH=None,
 
     BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
-        BH is only used if symmetry is 'nonsymmetric'.  K must be >= the
+        BH is only used if symmetry='nonsymmetric'.  K must be >= the
         blocksize of A (see reference [2011OlScTu]_). The default value B=None is
         equivalent to choosing the constant over each block-variable,
         B=np.kron(np.ones((A.shape[0]/blocksize(A), 1)), np.eye(blocksize(A)))

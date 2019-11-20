@@ -246,9 +246,9 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
         data = abs(C.data)
     elif distance == 'inv':
         data = 1.0/abs(C.data)
-    elif distance is 'same':
+    elif distance == 'same':
         data = C.data
-    elif distance is 'min':
+    elif distance == 'min':
         data = C.data - C.data.min()
     else:
         raise ValueError('unrecognized value distance=%s' % distance)

@@ -53,7 +53,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
-        BH is only used if symmetry is 'nonsymmetric'.
+        BH is only used if symmetry='nonsymmetric'.
         The default value B=None is equivalent to BH=B.copy()
 
     symmetry : string

@@ -382,7 +382,7 @@ class multilevel_solver:
         if accel is not None:
 
             # Check for symmetric smoothing scheme when using CG
-            if (accel is 'cg') and (not self.symmetric_smoothing):
+            if (accel == 'cg') and (not self.symmetric_smoothing):
                 warn('Incompatible non-symmetric multigrid preconditioner '
                      'detected, due to presmoother/postsmoother combination. '
                      'CG requires SPD preconditioner, not just SPD matrix.')
