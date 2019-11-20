@@ -193,12 +193,12 @@ class BuildExt(build_ext):
             c_opts.append(cpp_flag(self.compiler))
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 c_opts.append('-fvisibility=hidden')
-                
+
         for ext in self.extensions:
             ext.extra_compile_args = c_opts
             ext.extra_link_args = l_opts
             ext.define_macros = [('VERSION_INFO', '"{}"'.format(self.distribution.get_version()))]
-            
+
         build_ext.build_extensions(self)
 
     # identify extension modules
