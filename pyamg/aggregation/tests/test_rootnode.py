@@ -13,7 +13,6 @@ from numpy.testing import TestCase, assert_approx_equal,\
     assert_array_almost_equal
 
 import warnings
-warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 
 class TestParameters(TestCase):
@@ -120,6 +119,7 @@ class TestComplexParameters(TestCase):
             assert(convergence_ratio < 0.9)
 
     def test_strength_of_connection(self):
+        warnings.simplefilter('ignore', SparseEfficiencyWarning)
         for strength in ['classical', 'symmetric']:
             self.run_cases({'strength': strength})
 
@@ -397,6 +397,7 @@ class TestSolverPerformance(TestCase):
             assert((len(r1) + 5) < len(r2))
 
     def test_matrix_formats(self):
+        warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')

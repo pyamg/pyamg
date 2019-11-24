@@ -2,9 +2,7 @@ import warnings
 from numpy.testing import TestCase
 
 
-warnings.filterwarnings("ignore", message="another")
-
-
 class TestWarn(TestCase):
     def test_f(self):
+        warnings.filterwarnings("ignore", message="another warning")
         warnings.warn("another warning!")

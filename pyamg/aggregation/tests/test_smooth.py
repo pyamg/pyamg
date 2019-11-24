@@ -12,7 +12,6 @@ from numpy.testing import TestCase, assert_array_almost_equal,\
     assert_equal, assert_almost_equal
 
 import warnings
-warnings.filterwarnings('ignore', category=UserWarning, message='Having less')
 
 
 class TestEnergyMin(TestCase):
@@ -285,6 +284,8 @@ class TestEnergyMin(TestCase):
             assert_array_almost_equal(result.indptr, exact.indptr)
 
     def test_range(self):
+        warnings.filterwarnings('ignore', category=UserWarning,
+                                message='Having less target vectors')
         """Check that P*R=B"""
         np.random.seed(0)  # make tests repeatable
 

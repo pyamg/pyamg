@@ -9,9 +9,6 @@ from numpy.testing import TestCase
 
 import warnings
 from scipy.sparse import SparseEfficiencyWarning
-warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
-warnings.filterwarnings('ignore', category=UserWarning,
-                        message='Having less target vectors')
 
 
 class TestAdaptiveSA(TestCase):
@@ -41,6 +38,8 @@ class TestAdaptiveSA(TestCase):
         assert(conv_asa < 1.2 * conv_sa)
 
     def test_elasticity(self):
+        warnings.filterwarnings('ignore', category=UserWarning,
+                                message='Having less target vectors')
         A, B = linear_elasticity((35, 35), format='bsr')
 
         smoother = ('gauss_seidel', {'sweep': 'symmetric', 'iterations': 2})
@@ -66,6 +65,7 @@ class TestAdaptiveSA(TestCase):
         assert(conv_asa < 1.3 * conv_sa)
 
     def test_matrix_formats(self):
+        warnings.filterwarnings('ignore', category=SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')

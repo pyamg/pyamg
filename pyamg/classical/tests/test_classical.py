@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 
-from scipy.sparse import csr_matrix, coo_matrix
+from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
@@ -11,6 +11,8 @@ from pyamg.classical.classical import ruge_stuben_solver
 from pyamg.classical.interpolate import direct_interpolation
 
 from numpy.testing import TestCase, assert_equal, assert_almost_equal
+
+import warnings
 
 
 class TestRugeStubenFunctions(TestCase):
@@ -141,6 +143,7 @@ class TestSolverPerformance(TestCase):
             assert(avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
+        warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
