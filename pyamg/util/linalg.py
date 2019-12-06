@@ -760,7 +760,7 @@ def split_residual(v, t):
     pp. 744-773, 2016.
     """
     n = v.shape[0]
-    partition = n/t
+    partition = int(n/t)
     start = 0
     stop = partition
 
