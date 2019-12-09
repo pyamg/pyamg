@@ -682,7 +682,9 @@ def BCGS(A, P_list, P):
 
     for i in range(t):
         # P[:,i] = P[:,i] / ||P[:,i]||_A
-        scal(1.0/np.sqrt(dotc(P[:,i], W[:,i])), P[:,i]) 
+        inner_prod = np.inner(P[:,i].conjugate(), W[:,i])
+        norm = np.sqrt(inner_prod)
+        P[:,i] = P[:,i] / norm
 
     return P
 
@@ -725,14 +727,13 @@ def CGS(P, A):
 
     for i in range(t):
         APi = AP[:,i]
-        Pi = P[:,i]
 
         for j in range(i):
-            Pj = P[:,j]
-            Pi = Pi - scal(dotc(Pj, APi), Pj)
+            P[:,i] = P[:,i] - np.inner(P[:,j].conjugate(), APi) * P[:,j] 
 
         # P[:,i] = P[:,i] / ||P[:,i]||_A
-        scal(1.0/np.sqrt(dotc(Pi, A * Pi)), Pi) 
+        PAP_inner = np.inner(P[:,i].conjugate(), A * P[:,i])
+        P[:,i] *= 1./np.sqrt(PAP_inner) 
 
 def split_residual(v, t):
     """
@@ -760,6 +761,7 @@ def split_residual(v, t):
     pp. 744-773, 2016.
     """
     n = v.shape[0]
+    print(n, t)
     partition = int(n/t)
     start = 0
     stop = partition
