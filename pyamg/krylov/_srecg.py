@@ -7,7 +7,7 @@ from warnings import warn
 __all__ = ['srecg']
 
 
-def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
@@ -98,11 +98,17 @@ def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # setup method
     r = b - A * x
 
+    # precondition residual
+    z = M * r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        residuals.append(res_norm)
+        z = M * r
+        precond_norm = np.inner(r.conjugate(), z)
+        precond_norm = np.sqrt(precond_norm)
+        residuals.append(precond_norm)
+        #residuals.append(res_norm)
 
     # Adjust tolerance
     # Check initial guess ( scaling by b, if b != 0,
@@ -112,7 +118,12 @@ def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         normb = 1.0
     if res_norm < tol*normb:
         return (postprocess(x), 0)
+
+    # Scale tol by ||r_0||_M
     if res_norm != 0.0:
+        #precond_norm = np.inner(r.conjugate(), z)
+        #precond_norm = np.sqrt(precond_norm)
+        #tol = tol * precond_norm
         tol = tol * res_norm
 
     # Initialize list for previous search directions
@@ -125,12 +136,15 @@ def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         # A-ortho the search directions for first iteration
         if k == 0:
             # W_0 = T(r_0)
-            W = split_residual(r, t)
+            W = split_residual(z, t)
             # W_0 = A_orth(W_0)
             CGS(W, A)
         else:
             # W_k = A * W_{k-1}
             W = A * W
+            #W = A.dot(W)
+            # preconditioning step
+            W = M * W
             W = BCGS(A, W_list, W)
             CGS(W, A)
 
@@ -148,6 +162,7 @@ def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         x += W_alpha
 
         #AW = A.dot(W_alpha)
+        #r -= AW
         r -= A * W_alpha
 
         res_norm = norm(r)
@@ -155,7 +170,11 @@ def srecg(A, b, t=1, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         # Append residual to list
         if residuals is not None:
-            residuals.append(res_norm)
+            z = M * r
+            precond_norm = np.inner(r.conjugate(), z)
+            precond_norm = np.sqrt(precond_norm)
+            residuals.append(precond_norm)
+            #residuals.append(res_norm)
 
         if callback is not None:
             callback(x)
