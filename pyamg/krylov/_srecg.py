@@ -142,9 +142,13 @@ def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         else:
             # W_k = A * W_{k-1}
             W = A * W
-            #W = A.dot(W)
             # preconditioning step
-            W = M * W
+            #W = M * W
+            for i in range(t):
+                W_temp = np.copy(W[:,i])
+                np.ascontiguousarray(W_temp, dtype=W.dtype)
+                W_temp = M * W_temp
+                W[:,i] = W_temp
             W = BCGS(A, W_list, W)
             CGS(W, A)
 
@@ -161,8 +165,7 @@ def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        #AW = A.dot(W_alpha)
-        #r -= AW
+        #r = r - A * W_k * alpha_k
         r -= A * W_alpha
 
         res_norm = norm(r)
