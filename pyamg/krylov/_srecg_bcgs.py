@@ -2,15 +2,14 @@ import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm, BCGS, CGS, split_residual
 from ._srecg_orthodir import srecg_orthodir 
-from ._srecg_bcgs import srecg_bcgs 
 from warnings import warn
 
 
-__all__ = ['srecg']
+__all__ = ['srecg_bcgs']
 
 
-def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, orthog='orthodir', **kwargs):
+def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
+       callback=None, residuals=None, **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
     Solves the linear system Ax = b. Left preconditioning is supported.
@@ -85,16 +84,113 @@ def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
        pp. 744-773, 2016.
     
     '''
-    # pass along **kwargs
-    if orthog == 'orthodir':
-        (x, flag) = srecg_orthodir(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
-                                    xtype=xtype, M=M, callback=callback,
-                                    residuals=residuals, **kwargs)
-    elif orthog == 'bcgs':
-        (x, flag) = srecg_bcgs(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
-                                    xtype=xtype, M=M, callback=callback,
-                                    residuals=residuals, **kwargs)
-    return (x, flag)
+    A, M, x, b, postprocess = make_system(A, M, x0, b)
+
+    # Ensure that warnings are always reissued from this function
+    import warnings
+    warnings.filterwarnings('always', module='pyamg.krylov._srecg')
+
+    # determine maxiter
+    if maxiter is None:
+        maxiter = int(1.3*len(b)) + 2
+    elif maxiter < 1:
+        raise ValueError('Number of iterations must be positive')
+    
+    # setup method
+    r = b - A * x
+
+    # precondition residual
+    z = M * r
+    res_norm = norm(r)
+
+    # Append residual to list
+    if residuals is not None:
+        #z = M * r
+        #precond_norm = np.inner(r.conjugate(), z)
+        #precond_norm = np.sqrt(precond_norm)
+        #residuals.append(precond_norm)
+        residuals.append(res_norm)
+
+    # Adjust tolerance
+    # Check initial guess ( scaling by b, if b != 0,
+    #   must account for case when norm(b) is very small)
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0
+    if res_norm < tol*normb:
+        return (postprocess(x), 0)
+
+    # Scale tol by ||r_0||_M
+    if res_norm != 0.0:
+        #precond_norm = np.inner(r.conjugate(), z)
+        #precond_norm = np.sqrt(precond_norm)
+        #tol = tol * precond_norm
+        tol = tol * res_norm
+
+    # Initialize list for previous search directions
+    W_list = []
+
+    # k = 0
+    k = 0
+    #while (res_norm > tol) and (k < maxiter):
+    while True:
+        # A-ortho the search directions for first iteration
+        if k == 0:
+            # W_0 = T(r_0)
+            W = split_residual(z, t)
+            # W_0 = A_orth(W_0)
+            CGS(W, A)
+        else:
+            # W_k = A * W_{k-1}
+            W = A * W
+            # preconditioning step
+            #W = M * W
+            for i in range(t):
+                W_temp = np.copy(W[:,i])
+                np.ascontiguousarray(W_temp, dtype=W.dtype)
+                W_temp = M * W_temp
+                W[:,i] = W_temp
+            W = BCGS(A, W_list, W)
+            CGS(W, A)
+
+        print W
+
+        W_list.append(W)
+        if len(W_list) > 2:
+            del W_list[0]
+
+        # alpha_k = W_k^T r_k
+        alpha = W.conjugate().T.dot(r)
+
+        # W * alpha
+        W_alpha = W.dot(alpha)
+
+        # x_k = X_k + W_k alpha_k
+        x += W_alpha
+
+        #r = r - A * W_k * alpha_k
+        r -= A * W_alpha
+
+        res_norm = norm(r)
+        k += 1
+
+        # Append residual to list
+        if residuals is not None:
+            #z = M * r
+            #precond_norm = np.inner(r.conjugate(), z)
+            #precond_norm = np.sqrt(precond_norm)
+            #residuals.append(precond_norm)
+            residuals.append(res_norm)
+
+        if callback is not None:
+            callback(x)
+
+        # Check for convergence
+        if res_norm < tol:
+            return (postprocess(x), 0)
+
+        if k == maxiter:
+            return (postprocess(x), k)
 
 # if __name__ == '__main__':
 #    # from numpy import diag
