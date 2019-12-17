@@ -249,6 +249,8 @@ class TestKrylov(TestCase):
                                       maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
                 soln = solve(A, b)
+                print xNew
+                print soln
                 assert_equal((norm(soln - xNew)/norm(soln - x0)) <
                              case['reduction_factor'], True,
                              err_msg='Enlarged Krylov Method Failed Test')
