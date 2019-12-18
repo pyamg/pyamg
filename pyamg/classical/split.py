@@ -435,10 +435,11 @@ def preprocess(S, coloring_method=None):
     # weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
-        weights = weights + sp.rand(len(weights))
+        weights = weights + np.random.rand(len(weights))
     else:
         coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
-        weights = weights + (sp.rand(len(weights)) + coloring)/num_colors
+        weights = (weights + (np.random.rand(len(weights)) + coloring)
+                   / num_colors)
 
     return (weights, G, S, T)
