@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm, BCGS, CGS, split_residual
 from ._srecg_orthodir import srecg_orthodir 
+from ._srecg_orthodir_new import srecg_orthodir_new 
 from ._srecg_bcgs import srecg_bcgs 
 from warnings import warn
 
@@ -10,7 +11,7 @@ __all__ = ['srecg']
 
 
 def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, orthog='orthodir', **kwargs):
+       callback=None, residuals=None, orthog='orthodir_new', **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
     Solves the linear system Ax = b. Left preconditioning is supported.
@@ -88,6 +89,10 @@ def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
     # pass along **kwargs
     if orthog == 'orthodir':
         (x, flag) = srecg_orthodir(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
+                                    xtype=xtype, M=M, callback=callback,
+                                    residuals=residuals, **kwargs)
+    if orthog == 'orthodir_new':
+        (x, flag) = srecg_orthodir_new(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
                                     xtype=xtype, M=M, callback=callback,
                                     residuals=residuals, **kwargs)
     elif orthog == 'bcgs':

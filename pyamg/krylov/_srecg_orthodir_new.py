@@ -1,14 +1,15 @@
 import numpy as np
+from scipy.linalg import get_blas_funcs
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import fractional_matrix_power
 from pyamg.util.linalg import norm, BCGS, CGS, split_residual
 from warnings import warn
 
 
-__all__ = ['srecg_orthodir']
+__all__ = ['srecg_orthodir_new']
 
 
-def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
+def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None, **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
@@ -140,11 +141,20 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
     W_list.append(np.zeros(W.shape))
     CGS(W, A)
 
+    # grab blas function to be used later for search directions solve
+    L = np.zeros((t, t), dtype=W.dtype) 
+    dtrsm = get_blas_funcs(['trsm'], [W, L])[0]
+
+    AW = A * W
+    AW_list = []
+    AW_list.append(np.zeros(AW.shape))
     while True:
         # Append W to previous search directions
         W_list.append(W)
+        AW_list.append(AW)
         if len(W_list) > 2:
             del W_list[0]
+            del AW_list[0]
             
         # alpha_k = W_k^T r_k
         alpha = W.conjugate().T.dot(r)
@@ -156,7 +166,7 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
         x += W_alpha
 
         #r = r - A * W_k * alpha_k
-        r -= A * W_alpha
+        r -= AW.dot(alpha)
 
         res_norm = norm(r)
         k += 1
@@ -176,17 +186,16 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
             return (postprocess(x), k)
 
         # Update search directions
-        AW1 = A * W_list[1]
-        AW2 = A * W_list[0]
+        AW1 = AW_list[1]
+        AW2 = AW_list[0]
 
         gamma = AW1.conjugate().T.dot(AW1)
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
-        Z = P.conjugate().T.dot(A * P)
-        Z_half = fractional_matrix_power(Z, 0.5)
-        Z_half_inv = np.linalg.inv(Z_half)
-        W = P.dot(Z_half_inv) 
-
-        print "iter ", k, " ---------------"
-        print W
+        # Do Cholesky of P^T A P
+        Z = np.linalg.cholesky(P.conjugate().T.dot(A * P))
+        # Solve upper triangular system for W 
+        W = dtrsm(1.0, Z.T, P, side=1, lower=1, diag=0)
+        # Solve upper triangular system for AW
+        AW = dtrsm(1.0, Z.T, A*P, side=1, lower=1, diag=0)
