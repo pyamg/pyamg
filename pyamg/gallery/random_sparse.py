@@ -49,7 +49,7 @@ def sprand(m, n, density, format='csr'):
     A = _rand_sparse(m, n, density, format='csr')
 
     # replace data with random values
-    A.data = sp.rand(A.nnz)
+    A.data = np.random.rand(A.nnz)
 
     return A.asformat(format)
 
@@ -85,7 +85,7 @@ def sprand(m, n, density, format='csr'):
 #    # get sparsity pattern
 #    A = _rand_sparse(n, n, density, format='csr')
 #
-#    A.data = sp.rand(A.nnz)
+#    A.data = np.random.rand(A.nnz)
 #
 #    A = sp.sparse.tril(A, -1)
 #

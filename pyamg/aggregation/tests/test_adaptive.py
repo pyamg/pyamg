@@ -21,7 +21,7 @@ class TestAdaptiveSA(TestCase):
         [asa, work] = adaptive_sa_solver(A, num_candidates=1)
         sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)))
 
-        b = sp.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -48,7 +48,7 @@ class TestAdaptiveSA(TestCase):
                                          prepostsmoother=smoother)
         sa = smoothed_aggregation_solver(A, B=B)
 
-        b = sp.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -96,7 +96,7 @@ class TestComplexAdaptiveSA(TestCase):
         # perturbed Laplacian
         A = poisson((50, 50), format='csr')
         Ai = A.copy()
-        Ai.data = Ai.data + 1e-5j * sp.rand(Ai.nnz)
+        Ai.data = Ai.data + 1e-5j * np.random.rand(Ai.nnz)
         cases.append((Ai, 0.25))
 
         # imaginary Laplacian
@@ -114,7 +114,8 @@ class TestComplexAdaptiveSA(TestCase):
             # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
-            x0 = sp.rand(A.shape[0],) + 1.0j * sp.rand(A.shape[0],)
+            x0 = (np.random.rand(A.shape[0],)
+                  + 1.0j * np.random.rand(A.shape[0],))
 
             residuals0 = []
 

@@ -287,11 +287,11 @@ class TestStrengthOfConnection(TestCase):
                       'proj': 'l2'})
 
         for ca in cases:
-            scipy.random.seed(0)  # make results deterministic
+            np.random.seed(0)  # make results deterministic
             result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
                                    k=ca['k'], proj_type=ca['proj'],
                                    symmetrize_measure=False)
-            scipy.random.seed(0)  # make results deterministic
+            np.random.seed(0)  # make results deterministic
             expected = reference_evolution_soc(ca['A'], ca['B'],
                                                epsilon=ca['epsilon'],
                                                k=ca['k'], proj_type=ca['proj'])
@@ -300,7 +300,7 @@ class TestStrengthOfConnection(TestCase):
 
         # Test Scale Invariance for multiple near nullspace candidates
         (A, B) = linear_elasticity((5, 5), format='bsr')
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0,
                                         k=2, proj_type="D_A",
                                         symmetrize_measure=False)
@@ -309,7 +309,7 @@ class TestStrengthOfConnection(TestCase):
                     [0], A.shape[0], A.shape[0], format='csr')
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
                        [0], A.shape[0], A.shape[0], format='csr')
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)),
                                       Dinv*B, epsilon=4.0, k=2,
                                       proj_type="D_A",
@@ -389,11 +389,11 @@ class TestComplexStrengthOfConnection(TestCase):
                       'proj': 'l2'})
 
         for ca in cases:
-            scipy.random.seed(0)  # make results deterministic
+            np.random.seed(0)  # make results deterministic
             result = evolution_soc(ca['A'], ca['B'], epsilon=ca['epsilon'],
                                    k=ca['k'], proj_type=ca['proj'],
                                    symmetrize_measure=False)
-            scipy.random.seed(0)  # make results deterministic
+            np.random.seed(0)  # make results deterministic
             expected = reference_evolution_soc(ca['A'], ca['B'],
                                                epsilon=ca['epsilon'],
                                                k=ca['k'], proj_type=ca['proj'])
@@ -402,7 +402,7 @@ class TestComplexStrengthOfConnection(TestCase):
         # Test Scale Invariance for a single candidate
         A = 1.0j*poisson((5, 5), format='csr')
         B = 1.0j*arange(1, A.shape[0]+1, dtype=float).reshape(-1, 1)
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
                                         proj_type="D_A",
                                         symmetrize_measure=False)
@@ -411,7 +411,7 @@ class TestComplexStrengthOfConnection(TestCase):
                     [0], A.shape[0], A.shape[0], format='csr')
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
                        [0], A.shape[0], A.shape[0], format='csr')
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2,
                                       proj_type="D_A",
                                       symmetrize_measure=False)
@@ -419,11 +419,11 @@ class TestComplexStrengthOfConnection(TestCase):
                                   result_unscaled.toarray(), decimal=2)
 
         # Test that the l2 and D_A are the same for the 1 candidate case
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
                                  k=2, proj_type="D_A",
                                  symmetrize_measure=False)
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
                                  k=2, proj_type="l2",
                                  symmetrize_measure=False)
@@ -433,7 +433,7 @@ class TestComplexStrengthOfConnection(TestCase):
         (A, B) = linear_elasticity((5, 5), format='bsr')
         A = 1.0j*A
         B = 1.0j*B
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
                                         proj_type="D_A",
                                         symmetrize_measure=False)
@@ -442,7 +442,7 @@ class TestComplexStrengthOfConnection(TestCase):
                     [0], A.shape[0], A.shape[0], format='csr')
         Dinv = spdiags([1.0/arange(A.shape[0], 2*A.shape[0], dtype=float)],
                        [0], A.shape[0], A.shape[0], format='csr')
-        scipy.random.seed(0)  # make results deterministic
+        np.random.seed(0)  # make results deterministic
         result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B,
                                       epsilon=4.0, k=2, proj_type="D_A",
                                       symmetrize_measure=False)

@@ -299,7 +299,7 @@ class multilevel_solver:
         >>> from scipy.sparse.linalg import cg
         >>> import scipy as sp
         >>> A = poisson((100, 100), format='csr')          # matrix
-        >>> b = sp.rand(A.shape[0])                        # random RHS
+        >>> b = np.random.rand(A.shape[0])                 # random RHS
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG

@@ -197,9 +197,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     maxiter = min(A.shape[0], maxiter)
 
     if initial_guess is None:
-        v0 = sp.rand(A.shape[1], 1)
+        v0 = np.random.rand(A.shape[1], 1)
         if A.dtype == complex:
-            v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
+            v0 = v0 + 1.0j * np.random.rand(A.shape[1], 1)
     else:
         v0 = initial_guess
 
@@ -355,9 +355,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             raise ValueError('expected square A')
 
         if initial_guess is None:
-            v0 = sp.rand(A.shape[1], 1)
+            v0 = np.random.rand(A.shape[1], 1)
             if A.dtype == complex:
-                v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
+                v0 = v0 + 1.0j * np.random.rand(A.shape[1], 1)
         else:
             if initial_guess.shape[0] != A.shape[0]:
                 raise ValueError('initial_guess and A must have same shape')
@@ -538,11 +538,11 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         A = np.asarray(A)
 
     if fast_check:
-        x = sp.rand(A.shape[0], 1)
-        y = sp.rand(A.shape[0], 1)
+        x = np.random.rand(A.shape[0], 1)
+        y = np.random.rand(A.shape[0], 1)
         if A.dtype == complex:
-            x = x + 1.0j*sp.rand(A.shape[0], 1)
-            y = y + 1.0j*sp.rand(A.shape[0], 1)
+            x = x + 1.0j*np.random.rand(A.shape[0], 1)
+            y = y + 1.0j*np.random.rand(A.shape[0], 1)
         xAy = np.dot((A.dot(x)).conjugate().T, y)
         xAty = np.dot(x.conjugate().T, A.dot(y))
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))

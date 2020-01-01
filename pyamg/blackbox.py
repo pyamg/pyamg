@@ -295,7 +295,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     # Initial guess
     if x0 is None:
-        x0 = np.array(sp.rand(A.shape[0],), dtype=A.dtype)
+        x0 = np.array(np.random.rand(A.shape[0],), dtype=A.dtype)
 
     # Callback function to print iteration number
     if verb:
