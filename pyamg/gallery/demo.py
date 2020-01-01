@@ -13,7 +13,7 @@ def demo():
     """Outline basic demo."""
     A = poisson((100, 100), format='csr')  # 2D FD Poisson problem
     B = None                               # no near-null spaces guesses for SA
-    b = sp.rand(A.shape[0], 1)          # a random right-hand side
+    b = np.random.rand(A.shape[0], 1)      # a random right-hand side
 
     # use AMG based on Smoothed Aggregation (SA) and display info
     mls = smoothed_aggregation_solver(A, B=B)

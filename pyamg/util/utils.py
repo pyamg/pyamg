@@ -75,7 +75,7 @@ def profile_solver(ml, accel=None, **kwargs):
 
     """
     A = ml.levels[0].A
-    b = A * sp.rand(A.shape[0], 1)
+    b = A * np.random.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:

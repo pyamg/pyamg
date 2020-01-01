@@ -22,7 +22,7 @@ class TestRugeStubenFunctions(TestCase):
         # random matrices
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(sp.rand(N, N)))
+            self.cases.append(csr_matrix(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -128,8 +128,8 @@ class TestSolverPerformance(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0])
-            b = A*sp.rand(A.shape[0])  # zeros_like(x)
+            x = np.random.rand(A.shape[0])
+            b = A*np.random.rand(A.shape[0])  # zeros_like(x)
 
             ml = ruge_stuben_solver(A, max_coarse=50)
 

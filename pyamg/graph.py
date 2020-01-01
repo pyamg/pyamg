@@ -68,12 +68,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = amg_core.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N), -1)
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
         fn = amg_core.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, sp.rand(N), -1)
+        fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
 
     return mis
 
@@ -113,10 +113,10 @@ def vertex_coloring(G, method='MIS'):
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = amg_core.vertex_coloring_jones_plassmann
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     elif method == 'LDF':
         fn = amg_core.vertex_coloring_LDF
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
         raise ValueError('unknown method (%s)' % method)
 
