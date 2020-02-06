@@ -255,7 +255,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                     types = func['types']
 
             if not found:
-                print('Could not find an instantiation for {}'.format(f['name']))
+                # print('Could not find an instantiation for {}'.format(f['name']))
                 unbound.append(f['name'])
                 continue
             else:
@@ -355,10 +355,10 @@ def main():
     # load the instantiate file
     #
     if args.input_file == 'bind_examples.h':
-        data = yaml.load(open('instantiate-test.yml', 'r'))
+        data = yaml.safe_load(open('instantiate-test.yml', 'r'))
     else:
         try:
-            data = yaml.load(open('instantiate.yml', 'r'))
+            data = yaml.safe_load(open('instantiate.yml', 'r'))
         except:
             data = {'instantiate': None}
     inst = data['instantiate']
