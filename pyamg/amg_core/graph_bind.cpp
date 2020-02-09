@@ -181,6 +181,41 @@ void _bellman_ford(
 }
 
 template<class I, class T>
+void _tiebreaking_bellman_ford(
+         const I num_rows,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+       py::array_t<I> & z,
+       py::array_t<I> & c
+                               )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_z = z.mutable_unchecked();
+    auto py_c = c.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    I *_z = py_z.mutable_data();
+    I *_c = py_c.mutable_data();
+
+    return tiebreaking_bellman_ford<I, T>(
+                 num_rows,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _z, z.shape(0),
+                       _c, c.shape(0)
+                                          );
+}
+
+template<class I, class T>
 void _lloyd_cluster(
          const I num_rows,
       py::array_t<I> & Ap,
@@ -310,6 +345,7 @@ PYBIND11_MODULE(graph, m) {
     vertex_coloring_jones_plassmann
     vertex_coloring_LDF
     bellman_ford
+    tiebreaking_bellman_ford
     lloyd_cluster
     maximal_independent_set_k_parallel
     breadth_first_search
@@ -443,6 +479,31 @@ graph stored in CSR format.
      Ax[]       - CSR data array (edge lengths)
      x[]        - (current) distance to nearest center
      y[]        - (current) index of nearest center
+
+ References:
+     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
+
+    m.def("tiebreaking_bellman_ford", &_tiebreaking_bellman_ford<int, int>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("c").noconvert());
+    m.def("tiebreaking_bellman_ford", &_tiebreaking_bellman_ford<int, float>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("c").noconvert());
+    m.def("tiebreaking_bellman_ford", &_tiebreaking_bellman_ford<int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("c").noconvert(),
+R"pbdoc(
+Apply one iteration of Bellman-Ford iteration on a distance
+graph stored in CSR format.
+
+This version is modified to break ties by assigning to center
+with fewest points in its cluster.
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     Ax[]       - CSR data array (edge lengths)
+     x[]        - (current) distance to nearest center
+     z[]        - (current) index of nearest center
+     c[]        - list of centers
 
  References:
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");

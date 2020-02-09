@@ -366,6 +366,58 @@ void bellman_ford(const I num_rows,
     }
 }
 
+/*
+ * Apply one iteration of Bellman-Ford iteration on a distance
+ * graph stored in CSR format.
+ *
+ * This version is modified to break ties by assigning to center
+ * with fewest points in its cluster.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array (edge lengths)
+ *      x[]        - (current) distance to nearest center
+ *      z[]        - (current) index of nearest center
+ *      c[]        - list of centers
+ *
+ *  References:
+ *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ */
+template<class I, class T>
+void tiebreaking_bellman_ford(const I num_rows,
+			      const I Ap[], const int Ap_size,
+			      const I Aj[], const int Aj_size,
+			      const T Ax[], const int Ax_size,
+			            T  x[], const int  x_size,
+			            I  z[], const int  z_size,
+			            I  c[], const int  c_size)
+{
+
+    std::vector<I> num_closest(c_size);
+    for(I i=0; i < num_rows; i++){
+        num_closest[z[i]]++;
+    }
+
+    for(I i = 0; i < num_rows; i++){
+        T xi = x[i];
+        I zi = z[i];
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            const T d = Ax[jj] + x[j];
+            if((d < xi)||((d == xi)&&(num_closest[z[j]]<num_closest[z[i]]))){
+		num_closest[zi]--;
+		num_closest[z[j]]++;
+                xi = d;
+                zi = z[j];
+            }
+        }
+        x[i] = xi;
+        z[i] = zi;
+    }
+}
+
 
 /*
  * Perform Lloyd clustering on a distance graph
@@ -411,7 +463,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances outward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
+        tiebreaking_bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size, z, z_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
     //find boundaries
@@ -431,7 +483,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances inward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
+        tiebreaking_bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size, z, z_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
