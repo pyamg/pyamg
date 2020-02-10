@@ -431,7 +431,7 @@ void bellman_ford_adv(const I num_rows,
  *      Aj[]           - CSR index array
  *      Ax[]           - CSR data array (edge lengths)
  *      x[num_rows]    - distance to nearest seed
- *      y[num_rows]    - cluster membership
+ *     cm[num_rows]    - cluster membership
  *      c[num_centers] - cluster centers
  *
  *  References
@@ -447,18 +447,18 @@ void lloyd_cluster(const I num_rows,
                    const T Ax[], const int Ax_size,
                    const I num_seeds,
                          T  x[], const int  x_size,
-                         I  w[], const int  w_size,
+                         I cm[], const int cm_size,
                          I  c[], const int  c_size)
 {
     for(I i = 0; i < num_rows; i++){
         x[i] = std::numeric_limits<T>::max();
-        w[i] = -1;
+       cm[i] = -1;
     }
     for(I i = 0; i < num_seeds; i++){
         I seed = c[i];
         assert(seed >= 0 && seed < num_rows);
         x[seed] = 0;
-        w[seed] = i;
+       cm[seed] = i;
     }
 
     std::vector<T> old_distances(num_rows);
@@ -466,7 +466,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances outward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford_adv(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size, c, c_size);
+        bellman_ford_adv(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
     //find boundaries
@@ -476,7 +476,7 @@ void lloyd_cluster(const I num_rows,
     for(I i = 0; i < num_rows; i++){
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             I j = Aj[jj];
-            if( w[i] != w[j] ){
+            if( cm[i] != cm[j] ){
                 x[i] = 0;
                 break;
             }
@@ -486,13 +486,13 @@ void lloyd_cluster(const I num_rows,
     // propagate distances inward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        tiebreaking_bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size, c, c_size);
+        tiebreaking_bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
     // compute new seeds
     for(I i = 0; i < num_rows; i++){
-        const I seed = w[i];
+        const I seed = cm[i];
 
         if (seed == -1) //node belongs to no cluster
             continue;
