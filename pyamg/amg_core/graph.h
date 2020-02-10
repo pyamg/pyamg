@@ -394,10 +394,11 @@ void tiebreaking_bellman_ford(const I num_rows,
 			            I  z[], const int  z_size,
 			            I  c[], const int  c_size)
 {
-
-    std::vector<I> num_closest(c_size);
+    std::vector<I> num_closest(c_size,0);
     for(I i=0; i < num_rows; i++){
-        num_closest[z[i]]++;
+        if(z[i] > -1){
+            num_closest[z[i]]++;
+        }
     }
 
     for(I i = 0; i < num_rows; i++){
@@ -406,9 +407,11 @@ void tiebreaking_bellman_ford(const I num_rows,
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
-            if((d < xi)||((d == xi)&&(num_closest[z[j]]<num_closest[z[i]]))){
-		num_closest[zi]--;
-		num_closest[z[j]]++;
+            if((d < xi)||((zi>-1)&&(d == xi)&&(num_closest[z[j]]<num_closest[zi]))){
+	        if (zi > -1){
+		    num_closest[zi]--;
+	        }
+	        num_closest[z[j]]++;
                 xi = d;
                 zi = z[j];
             }
