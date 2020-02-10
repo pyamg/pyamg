@@ -55,7 +55,7 @@ instantiate:
     - [int, double]
   functions:
     - bellman_ford
-    - tiebreaking_bellman_ford
+    - bellman_ford_adv
     - lloyd_cluster
     - csc_scale_rows
     - csc_scale_columns

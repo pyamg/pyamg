@@ -486,7 +486,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances inward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        tiebreaking_bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
+        bellman_ford_adv(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
