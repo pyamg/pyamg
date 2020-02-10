@@ -337,7 +337,7 @@ T vertex_coloring_LDF(const I num_rows,
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array (edge lengths)
  *      x[]        - (current) distance to nearest center
- *      y[]        - (current) index of nearest center
+ *      z[]        - (current) index of nearest center
  *
  *  References:
  *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
@@ -387,14 +387,14 @@ void bellman_ford(const I num_rows,
  */
 template<class I, class T>
 void tiebreaking_bellman_ford(const I num_rows,
-			      const I Ap[], const int Ap_size,
-			      const I Aj[], const int Aj_size,
-			      const T Ax[], const int Ax_size,
-			            T  x[], const int  x_size,
-			            I  z[], const int  z_size,
-			            I  c[], const int  c_size)
+                              const I Ap[], const int Ap_size,
+                              const I Aj[], const int Aj_size,
+                              const T Ax[], const int Ax_size,
+                                    T  x[], const int  x_size,
+                                    I  z[], const int  z_size,
+                                    I  c[], const int  c_size)
 {
-    std::vector<I> num_closest(c_size,0);
+    std::vector<I> num_closest(c_size, 0);
     for(I i=0; i < num_rows; i++){
         if(z[i] > -1){
             num_closest[z[i]]++;
@@ -407,11 +407,11 @@ void tiebreaking_bellman_ford(const I num_rows,
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
-            if((d < xi)||((zi>-1)&&(d == xi)&&(num_closest[z[j]]<num_closest[zi]))){
-	        if (zi > -1){
-		    num_closest[zi]--;
-	        }
-	        num_closest[z[j]]++;
+            if((d < xi) || ((zi>-1) && (d == xi) && (num_closest[z[j]]<num_closest[zi]))){
+                if (zi > -1){
+                    num_closest[zi]--;
+                }
+                num_closest[z[j]]++;
                 xi = d;
                 zi = z[j];
             }
