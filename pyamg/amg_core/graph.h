@@ -337,7 +337,7 @@ T vertex_coloring_LDF(const I num_rows,
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array (edge lengths)
  *      x[]        - (current) distance to nearest center
- *      z[]        - (current) index of nearest center
+ *     nc[]        - (current) index of nearest center
  *
  *  References:
  *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
@@ -348,21 +348,21 @@ void bellman_ford(const I num_rows,
                   const I Aj[], const int Aj_size,
                   const T Ax[], const int Ax_size,
                         T  x[], const int  x_size,
-                        I  z[], const int  z_size)
+                        I nc[], const int nc_size)
 {
     for(I i = 0; i < num_rows; i++){
         T xi = x[i];
-        I zi = z[i];
+        I nci = nc[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
             if(d < xi){
                 xi = d;
-                zi = z[j];
+                nci = nc[j];
             }
         }
         x[i] = xi;
-        z[i] = zi;
+        nc[i] = nci;
     }
 }
 
@@ -379,7 +379,7 @@ void bellman_ford(const I num_rows,
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array (edge lengths)
  *      x[]        - (current) distance to nearest center
- *      z[]        - (current) index of nearest center
+ *     nc[]        - (current) index of nearest center
  *      c[]        - list of centers
  *
  *  References:
@@ -391,33 +391,33 @@ void bellman_ford_adv(const I num_rows,
                       const I Aj[], const int Aj_size,
                       const T Ax[], const int Ax_size,
                             T  x[], const int  x_size,
-                            I  z[], const int  z_size,
+                            I nc[], const int nc_size,
                             I  c[], const int  c_size)
 {
     std::vector<I> num_closest(c_size, 0);
     for(I i=0; i < num_rows; i++){
-        if(z[i] > -1){
-            num_closest[z[i]]++;
+        if(nc[i] > -1){
+            num_closest[nc[i]]++;
         }
     }
 
     for(I i = 0; i < num_rows; i++){
         T xi = x[i];
-        I zi = z[i];
+        I nci = nc[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
-            if((d < xi) || ((zi>-1) && (d == xi) && (num_closest[z[j]]<num_closest[zi]))){
-                if (zi > -1){
-                    num_closest[zi]--;
+            if((d < xi) || ((nci>-1) && (d == xi) && (num_closest[nc[j]]<num_closest[nci]))){
+                if (nci > -1){
+                    num_closest[nci]--;
                 }
-                num_closest[z[j]]++;
+                num_closest[nc[j]]++;
                 xi = d;
-                zi = z[j];
+                nci = nc[j];
             }
         }
         x[i] = xi;
-        z[i] = zi;
+        nc[i] = nci;
     }
 }
 
