@@ -18,3 +18,8 @@ Release Steps:
     - `twine upload --skip-existing dist/*` (no register needed)
 - change `isreleased` to False in `setup.py`
 - git commit -a -m "remove isreleased"
+
+Testing notes:
+- do not use seeds such as 0, 1, 42, 100
+- for each needed seed, generate a "random" int
+- `python3 -c "import numpy as np; np.random.seed(); seeds = np.random.randint(0, 2**32 - 1, 5); print(seeds)"`

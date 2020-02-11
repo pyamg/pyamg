@@ -1,6 +1,5 @@
 import numpy as np
-from pyamg.util.linalg import norm
-from scipy.sparse import csr_matrix
+import scipy.sparse as sparse
 
 from pyamg.gallery import poisson
 from pyamg.multilevel import multilevel_solver, coarse_grid_solver
@@ -19,7 +18,7 @@ class TestMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(csr_matrix(np.diag(np.arange(1, 5, dtype=float))))
+        cases.append(sparse.csr_matrix(np.diag(np.arange(1, 5, dtype=float))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
@@ -47,6 +46,7 @@ class TestMultilevel(TestCase):
         from pyamg import smoothed_aggregation_solver
         from scipy.sparse.linalg import cg
         from pyamg.krylov import fgmres
+        np.random.seed(1331277597)
 
         A = poisson((50, 50), format='csr')
         b = np.random.rand(A.shape[0])
@@ -63,11 +63,12 @@ class TestMultilevel(TestCase):
             M = ml.aspreconditioner(cycle=cycle)
             x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M)
             # fgmres satisfies convergence in the 2-norm
-            assert(norm(b - A*x) < 1e-8*norm(b))
+            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
         from pyamg.krylov import cg, bicgstab
+        np.random.seed(30459128)
 
         A = poisson((50, 50), format='csr')
         b = np.random.rand(A.shape[0])
@@ -88,28 +89,28 @@ class TestMultilevel(TestCase):
         # cgs and bicgstab use the Euclidean norm
         for accel in ['bicgstab', 'cgs', bicgstab]:
             x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert(norm(b - A*x) < 1e-8*norm(b))
+            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
                          accel=accel)
-            assert(norm(b - A*x) < 1e-8*norm(b))
+            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
             # print residuals
-            assert_almost_equal(norm(b - A*x), residuals[-1])
+            assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
 
     def test_cycle_complexity(self):
         # four levels
         levels = []
         levels.append(multilevel_solver.level())
-        levels[0].A = csr_matrix(np.ones((10, 10)))
-        levels[0].P = csr_matrix(np.ones((10, 5)))
+        levels[0].A = sparse.csr_matrix(np.ones((10, 10)))
+        levels[0].P = sparse.csr_matrix(np.ones((10, 5)))
         levels.append(multilevel_solver.level())
-        levels[1].A = csr_matrix(np.ones((5, 5)))
-        levels[1].P = csr_matrix(np.ones((5, 3)))
+        levels[1].A = sparse.csr_matrix(np.ones((5, 5)))
+        levels[1].P = sparse.csr_matrix(np.ones((5, 3)))
         levels.append(multilevel_solver.level())
-        levels[2].A = csr_matrix(np.ones((3, 3)))
-        levels[2].P = csr_matrix(np.ones((3, 2)))
+        levels[2].A = sparse.csr_matrix(np.ones((3, 3)))
+        levels[2].P = sparse.csr_matrix(np.ones((3, 2)))
         levels.append(multilevel_solver.level())
-        levels[3].A = csr_matrix(np.ones((2, 2)))
+        levels[3].A = sparse.csr_matrix(np.ones((2, 2)))
 
         # one level hierarchy
         mg = multilevel_solver(levels[:1])
@@ -144,7 +145,7 @@ class TestComplexMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(csr_matrix(np.diag(np.arange(1, 5))))
+        cases.append(sparse.csr_matrix(np.diag(np.arange(1, 5))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 

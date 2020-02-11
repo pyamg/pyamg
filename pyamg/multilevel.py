@@ -426,7 +426,7 @@ class multilevel_solver:
                     residuals[:] = [residual_norm(A, x, b)]
 
                     def callback(x):
-                        if sp.isscalar(x):
+                        if np.isscalar(x):
                             residuals.append(x)
                         else:
                             residuals.append(residual_norm(A, x, b))
