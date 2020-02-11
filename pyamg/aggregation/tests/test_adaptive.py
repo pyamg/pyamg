@@ -1,5 +1,4 @@
 import numpy as np
-import scipy as sp
 
 from pyamg.gallery import poisson, linear_elasticity
 from pyamg.aggregation import smoothed_aggregation_solver
@@ -13,7 +12,7 @@ from scipy.sparse import SparseEfficiencyWarning
 
 class TestAdaptiveSA(TestCase):
     def setUp(self):
-        np.random.seed(0)
+        np.random.seed(3485190434)
 
     def test_poisson(self):
         A = poisson((50, 50), format='csr')
@@ -73,11 +72,11 @@ class TestAdaptiveSA(TestCase):
         cases.append(A.tocsc())
         cases.append(A.toarray())
 
-        np.random.seed(0)
+        np.random.seed(111908910)
         sa_old = adaptive_sa_solver(A, initial_candidates=np.ones((49, 1)),
                                     max_coarse=10)[0]
         for AA in cases:
-            np.random.seed(0)
+            np.random.seed(111908910)
             sa_new = adaptive_sa_solver(AA,
                                         initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
@@ -88,7 +87,7 @@ class TestAdaptiveSA(TestCase):
 
 class TestComplexAdaptiveSA(TestCase):
     def setUp(self):
-        np.random.seed(0)
+        np.random.seed(1985581638)
 
     def test_poisson(self):
         cases = []
@@ -105,7 +104,7 @@ class TestComplexAdaptiveSA(TestCase):
 
         # JBS:  Not sure if this is a valid test case
         # imaginary shift
-        # Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
+        # Ai = A + 1.1j*sparse.eye(A.shape[0], A.shape[1])
         # cases.append((Ai,0.8))
 
         for A, rratio in cases:

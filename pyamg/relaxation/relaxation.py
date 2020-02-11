@@ -4,7 +4,6 @@
 from warnings import warn
 
 import numpy as np
-import scipy as sp
 from scipy import sparse
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
@@ -1076,7 +1075,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                                        (np.ones((1,), dtype=A.dtype)))
         for i in range(subdomain_ptr.shape[0]-1):
             m = blocksize[i]
-            rhs = sp.eye(m, m, dtype=A.dtype)
+            rhs = np.eye(m, m, dtype=A.dtype)
             j0 = inv_subblock_ptr[i]
             j1 = inv_subblock_ptr[i+1]
             gelssoutput = my_pinv(inv_subblock[j0:j1].reshape(m, m),

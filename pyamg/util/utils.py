@@ -4,7 +4,6 @@ from __future__ import print_function
 from warnings import warn
 
 import numpy as np
-import scipy as sp
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
@@ -628,7 +627,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
         raise ValueError("Expected square matrix")
-    if sp.mod(A.shape[0], blocksize) != 0:
+    if np.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
 
     # If the block diagonal of A already exists, return that
@@ -652,10 +651,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = sp.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
+    block_diag = np.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
-    AAIJ = (sp.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
+    AAIJ = (np.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
@@ -721,7 +720,7 @@ def amalgamate(A, blocksize):
     """
     if blocksize == 1:
         return A
-    elif sp.mod(A.shape[0], blocksize) != 0:
+    elif np.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
@@ -881,7 +880,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         if len(headerchar) == 0:
             headerchar = ' '
         table_str += headerchar *\
-            int(sp.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+            int(np.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
 
         table = table[1:]
 
@@ -952,7 +951,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             A = A.tocsc()
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
-            nonzero_rowcols = sp.union1d(nonzero_rows, nonzero_cols)
+            nonzero_rowcols = np.union1d(nonzero_rows, nonzero_cols)
             A = A.toarray()
             A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
@@ -960,18 +959,18 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
         e = eigvals(A)
         c = cond(A)
-        lambda_min = min(sp.real(e))
-        lambda_max = max(sp.real(e))
-        num_neg = max(e[sp.real(e) < 0.0].shape)
-        num_pos = max(e[sp.real(e) > 0.0].shape)
+        lambda_min = min(np.real(e))
+        lambda_max = max(np.real(e))
+        num_neg = max(e[np.real(e) < 0.0].shape)
+        num_pos = max(e[np.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min),
                            ('%1.3f' % lambda_max),
                            str(num_neg), str(num_pos), ('%1.2e' % c)])
 
-        lambda_min = min(sp.imag(e))
-        lambda_max = max(sp.imag(e))
-        num_neg = max(e[sp.imag(e) < 0.0].shape)
-        num_pos = max(e[sp.imag(e) > 0.0].shape)
+        lambda_min = min(np.imag(e))
+        lambda_max = max(np.imag(e))
+        num_neg = max(e[np.imag(e) < 0.0].shape)
+        num_pos = max(e[np.imag(e) > 0.0].shape)
         imag_table.append([str(i), ('%1.3f' % lambda_min),
                            ('%1.3f' % lambda_max),
                            str(num_neg), str(num_pos), ('%1.2e' % c)])
@@ -979,7 +978,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         if plot:
             import pylab
             pylab.figure(i+1)
-            pylab.plot(sp.real(e), sp.imag(e), 'kx')
+            pylab.plot(np.real(e), np.imag(e), 'kx')
             handle = pylab.title('Level %d Spectrum' % i)
             handle.set_fontsize(19)
             handle = pylab.xlabel('real(eig)')

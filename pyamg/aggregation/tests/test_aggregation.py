@@ -1,6 +1,6 @@
 import numpy as np
-import scipy.sparse
-from scipy.sparse import csr_matrix, SparseEfficiencyWarning
+import scipy.sparse as sparse
+from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity,\
@@ -26,7 +26,7 @@ class TestParameters(TestCase):
         for A, B in self.cases:
             ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
 
-            np.random.seed(0)  # make tests repeatable
+            np.random.seed(1883275855)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
             b = A * np.random.rand(A.shape[0])
@@ -95,17 +95,17 @@ class TestComplexParameters(TestCase):
         # There are better near nullspace vectors than the default,
         #   but a constant should give a convergent solver, nonetheless.
         A = poisson((100,), format='csr')
-        A = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((A, None))
         A = poisson((10, 10), format='csr')
-        A = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((A, None))
 
     def run_cases(self, opts):
         for A, B in self.cases:
             ml = smoothed_aggregation_solver(A, B, max_coarse=5, **opts)
 
-            np.random.seed(0)  # make tests repeatable
+            np.random.seed(776825606)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
             b = A * np.random.rand(A.shape[0])
@@ -202,7 +202,7 @@ class TestSolverPerformance(TestCase):
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
 
-            np.random.seed(0)  # make tests repeatable
+            np.random.seed(3009521727)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
             b = A * np.random.rand(A.shape[0])
@@ -259,7 +259,7 @@ class TestSolverPerformance(TestCase):
         improve_candidates_list = [
             None, [('block_gauss_seidel', {'iterations': 4, 'sweep': 'symmetric'})]]
         # make tests repeatable
-        np.random.seed(0)
+        np.random.seed(3296288469)
 
         cases = []
         A_elas, B_elas = linear_elasticity((60, 60), format='bsr')
@@ -314,7 +314,7 @@ class TestSolverPerformance(TestCase):
                                                  presmoother=smoother,
                                                  postsmoother=smoother)
                 P = ml.aspreconditioner()
-                np.random.seed(0)
+                np.random.seed(3849986793)
                 x = np.random.rand(n,)
                 y = np.random.rand(n,)
                 out = (np.dot(P * x, y), np.dot(x, P * y))
@@ -326,9 +326,9 @@ class TestSolverPerformance(TestCase):
         data = load_example('recirc_flow')
         A = data['A'].tocsr()
         B = data['B']
-        np.random.seed(625)
-        x0 = scipy.rand(A.shape[0])
-        b = A * scipy.rand(A.shape[0])
+        np.random.seed(355704255)
+        x0 = np.random.rand(A.shape[0])
+        b = A * np.random.rand(A.shape[0])
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv2',
@@ -442,7 +442,7 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 1
         A = poisson((5000,), format='csr')
-        Ai = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 0.12, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 0.12, 'symmetric',
@@ -450,7 +450,7 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 2
         A = poisson((71, 71), format='csr')
-        Ai = A + (0.625 / 0.01) * 1j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + (0.625 / 0.01) * 1j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 1e-3, 'symmetric',
@@ -479,12 +479,12 @@ class TestComplexSolverPerformance(TestCase):
         """check that method converges at a reasonable rate"""
 
         for A, B, c_factor, symmetry, smooth in self.cases:
-            A = csr_matrix(A)
+            A = sparse.csr_matrix(A)
 
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
 
-            np.random.seed(0)  # make tests repeatable
+            np.random.seed(2113979713)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
             b = A * np.random.rand(A.shape[0])
@@ -507,9 +507,9 @@ class TestComplexSolverPerformance(TestCase):
         data = load_example('helmholtz_2D')
         A = data['A'].tocsr()
         B = data['B']
-        np.random.seed(625)
-        x0 = scipy.rand(A.shape[0]) + 1.0j * scipy.rand(A.shape[0])
-        b = A * scipy.rand(A.shape[0]) + 1.0j * (A * scipy.rand(A.shape[0]))
+        np.random.seed(28082572)
+        x0 = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
+        b = A * np.random.rand(A.shape[0]) + 1.0j * (A * np.random.rand(A.shape[0]))
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv2',
@@ -570,14 +570,14 @@ class TestComplexSolverPerformance(TestCase):
         Test that x_32 == x_64 up to single precision tolerance
         """
 
-        np.random.seed(0)  # make tests repeatable
+        np.random.seed(3158637515)  # make tests repeatable
         A = poisson((10, 10), dtype=np.float64, format='csr')
         b = np.random.rand(A.shape[0]).astype(A.dtype)
         ml = smoothed_aggregation_solver(A)
         x = np.random.rand(A.shape[0]).astype(A.dtype)
         x32 = ml.solve(b, x0=x, maxiter=1)
 
-        np.random.seed(0)  # make tests repeatable
+        np.random.seed(3158637515)  # make tests repeatable
         A = poisson((10, 10), dtype=np.float32, format='csr')
         b = np.random.rand(A.shape[0]).astype(A.dtype)
         ml = smoothed_aggregation_solver(A)

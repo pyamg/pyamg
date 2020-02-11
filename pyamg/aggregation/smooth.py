@@ -3,7 +3,6 @@ from __future__ import print_function
 
 
 import numpy as np
-import scipy as sp
 import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
@@ -645,7 +644,7 @@ def apply_givens(Q, v, k):
     """
     for j in range(k):
         Qloc = Q[j]
-        v[j:j+2] = sp.dot(Qloc, v[j:j+2])
+        v[j:j+2] = np.dot(Qloc, v[j:j+2])
 
 
 def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
@@ -850,10 +849,10 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
             # Apply Givens Rotation to g,
             #   the RHS for the linear system in the Krylov Subspace.
-            g[i:i+2] = sp.dot(Qblock, g[i:i+2])
+            g[i:i+2] = np.dot(Qblock, g[i:i+2])
 
             # Apply effect of Givens Rotation to H
-            H[i, i] = sp.dot(Qblock[0, :], H[i:i+2, i])
+            H[i, i] = np.dot(Qblock[0, :], H[i:i+2, i])
             H[i+1, i] = 0.0
 
         normr = np.abs(g[i+1])

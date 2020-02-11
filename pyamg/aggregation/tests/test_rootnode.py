@@ -1,7 +1,5 @@
 import numpy as np
-import scipy as sp
-import scipy.sparse
-from scipy.sparse import csr_matrix, SparseEfficiencyWarning
+import scipy.sparse as sparse
 
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian,\
@@ -13,6 +11,7 @@ from numpy.testing import TestCase, assert_approx_equal,\
     assert_array_almost_equal
 
 import warnings
+from scipy.sparse import SparseEfficiencyWarning
 
 
 class TestParameters(TestCase):
@@ -95,10 +94,10 @@ class TestComplexParameters(TestCase):
         # well.  There are better near nullspace vectors than the default, but
         # a constant should give a convergent solver, nonetheless.
         A = poisson((100,), format='csr')
-        A = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((A, None))
         A = poisson((10, 10), format='csr')
-        A = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((A, None))
 
     def run_cases(self, opts):
@@ -297,7 +296,7 @@ class TestSolverPerformance(TestCase):
                      ('block_gauss_seidel', {'sweep': 'symmetric'}),
                      'jacobi', 'block_jacobi']
         Bs = [np.ones((n, 1)),
-              sp.hstack((np.ones((n, 1)),
+              np.hstack((np.ones((n, 1)),
                          np.arange(1, n + 1, dtype='float').reshape(-1, 1)))]
 
         for smoother in smoothers:
@@ -427,14 +426,14 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 1
         A = poisson((5000,), format='csr')
-        Ai = A + 1.0j * scipy.sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 0.12, 'symmetric',
                            ('energy', {'krylov': 'gmres'})))
 
         # Test 2
         A = poisson((71, 71), format='csr')
         Ai = A + (0.625 / 0.01) * 1.0j *\
-            scipy.sparse.eye(A.shape[0], A.shape[1])
+            sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('energy', {'krylov': 'cgnr'})))
 
@@ -456,7 +455,7 @@ class TestComplexSolverPerformance(TestCase):
         """check that method converges at a reasonable rate"""
 
         for A, B, c_factor, symmetry, smooth in self.cases:
-            A = csr_matrix(A)
+            A = sparse.csr_matrix(A)
 
             ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth,
                                  max_coarse=10)
