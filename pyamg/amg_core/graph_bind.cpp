@@ -156,19 +156,19 @@ void _bellman_ford(
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
        py::array_t<T> & x,
-       py::array_t<I> & z
+      py::array_t<I> & nc
                    )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
     auto py_x = x.mutable_unchecked();
-    auto py_z = z.mutable_unchecked();
+    auto py_nc = nc.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
     T *_x = py_x.mutable_data();
-    I *_z = py_z.mutable_data();
+    I *_nc = py_nc.mutable_data();
 
     return bellman_ford<I, T>(
                  num_rows,
@@ -176,8 +176,43 @@ void _bellman_ford(
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
                        _x, x.shape(0),
-                       _z, z.shape(0)
+                      _nc, nc.shape(0)
                               );
+}
+
+template<class I, class T>
+void _bellman_ford_adv(
+         const I num_rows,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+      py::array_t<I> & nc,
+       py::array_t<I> & c
+                       )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_nc = nc.mutable_unchecked();
+    auto py_c = c.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    I *_nc = py_nc.mutable_data();
+    I *_c = py_c.mutable_data();
+
+    return bellman_ford_adv<I, T>(
+                 num_rows,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                      _nc, nc.shape(0),
+                       _c, c.shape(0)
+                                  );
 }
 
 template<class I, class T>
@@ -188,22 +223,22 @@ void _lloyd_cluster(
       py::array_t<T> & Ax,
         const I num_seeds,
        py::array_t<T> & x,
-       py::array_t<I> & w,
-       py::array_t<I> & z
+      py::array_t<I> & cm,
+       py::array_t<I> & c
                     )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
     auto py_x = x.mutable_unchecked();
-    auto py_w = w.mutable_unchecked();
-    auto py_z = z.mutable_unchecked();
+    auto py_cm = cm.mutable_unchecked();
+    auto py_c = c.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
     T *_x = py_x.mutable_data();
-    I *_w = py_w.mutable_data();
-    I *_z = py_z.mutable_data();
+    I *_cm = py_cm.mutable_data();
+    I *_c = py_c.mutable_data();
 
     return lloyd_cluster<I, T>(
                  num_rows,
@@ -212,8 +247,8 @@ void _lloyd_cluster(
                       _Ax, Ax.shape(0),
                 num_seeds,
                        _x, x.shape(0),
-                       _w, w.shape(0),
-                       _z, z.shape(0)
+                      _cm, cm.shape(0),
+                       _c, c.shape(0)
                                );
 }
 
@@ -310,6 +345,7 @@ PYBIND11_MODULE(graph, m) {
     vertex_coloring_jones_plassmann
     vertex_coloring_LDF
     bellman_ford
+    bellman_ford_adv
     lloyd_cluster
     maximal_independent_set_k_parallel
     breadth_first_search
@@ -427,11 +463,11 @@ Largest-Degree-First (LDF) algorithm
     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650)pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert());
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, float>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert());
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, double>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(),
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert(),
 R"pbdoc(
 Apply one iteration of Bellman-Ford iteration on a distance
 graph stored in CSR format.
@@ -442,17 +478,42 @@ graph stored in CSR format.
      Aj[]       - CSR index array
      Ax[]       - CSR data array (edge lengths)
      x[]        - (current) distance to nearest center
-     y[]        - (current) index of nearest center
+    nc[]        - (current) index of nearest center
+
+ References:
+     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
+
+    m.def("bellman_ford_adv", &_bellman_ford_adv<int, int>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert(), py::arg("c").noconvert());
+    m.def("bellman_ford_adv", &_bellman_ford_adv<int, float>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert(), py::arg("c").noconvert());
+    m.def("bellman_ford_adv", &_bellman_ford_adv<int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("nc").noconvert(), py::arg("c").noconvert(),
+R"pbdoc(
+Apply one iteration of Bellman-Ford iteration on a distance
+graph stored in CSR format.
+
+This version is modified to break ties by assigning to center
+with fewest points in its cluster.
+
+ Parameters
+     num_rows   - number of rows in A (number of vertices)
+     Ap[]       - CSR row pointer
+     Aj[]       - CSR index array
+     Ax[]       - CSR data array (edge lengths)
+     x[]        - (current) distance to nearest center
+    nc[]        - (current) index of nearest center
+     c[]        - list of centers
 
  References:
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("w").noconvert(), py::arg("z").noconvert());
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
     m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("w").noconvert(), py::arg("z").noconvert());
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
     m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
-        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("w").noconvert(), py::arg("z").noconvert(),
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_seeds"), py::arg("x").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(
 Perform Lloyd clustering on a distance graph
 
@@ -462,8 +523,8 @@ Perform Lloyd clustering on a distance graph
      Aj[]           - CSR index array
      Ax[]           - CSR data array (edge lengths)
      x[num_rows]    - distance to nearest seed
-     y[num_rows]    - cluster membership
-     z[num_centers] - cluster centers
+    cm[num_rows]    - cluster membership
+     c[num_centers] - cluster centers
 
  References
      Nathan Bell

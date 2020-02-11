@@ -337,7 +337,7 @@ T vertex_coloring_LDF(const I num_rows,
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array (edge lengths)
  *      x[]        - (current) distance to nearest center
- *      y[]        - (current) index of nearest center
+ *     nc[]        - (current) index of nearest center
  *
  *  References:
  *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
@@ -348,21 +348,76 @@ void bellman_ford(const I num_rows,
                   const I Aj[], const int Aj_size,
                   const T Ax[], const int Ax_size,
                         T  x[], const int  x_size,
-                        I  z[], const int  z_size)
+                        I nc[], const int nc_size)
 {
     for(I i = 0; i < num_rows; i++){
         T xi = x[i];
-        I zi = z[i];
+        I nci = nc[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
             if(d < xi){
                 xi = d;
-                zi = z[j];
+                nci = nc[j];
             }
         }
         x[i] = xi;
-        z[i] = zi;
+        nc[i] = nci;
+    }
+}
+
+/*
+ * Apply one iteration of Bellman-Ford iteration on a distance
+ * graph stored in CSR format.
+ *
+ * This version is modified to break ties by assigning to center
+ * with fewest points in its cluster.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array (edge lengths)
+ *      x[]        - (current) distance to nearest center
+ *     nc[]        - (current) index of nearest center
+ *      c[]        - list of centers
+ *
+ *  References:
+ *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ */
+template<class I, class T>
+void bellman_ford_adv(const I num_rows,
+                      const I Ap[], const int Ap_size,
+                      const I Aj[], const int Aj_size,
+                      const T Ax[], const int Ax_size,
+                            T  x[], const int  x_size,
+                            I nc[], const int nc_size,
+                            I  c[], const int  c_size)
+{
+    std::vector<I> num_closest(c_size, 0);
+    for(I i=0; i < num_rows; i++){
+        if(nc[i] > -1){
+            num_closest[nc[i]]++;
+        }
+    }
+
+    for(I i = 0; i < num_rows; i++){
+        T xi = x[i];
+        I nci = nc[i];
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            const T d = Ax[jj] + x[j];
+            if((d < xi) || ((nci > -1) && (d == xi) && (num_closest[nc[j]] < num_closest[nci]))){
+                if (nci > -1){
+                    num_closest[nci]--;
+                }
+                num_closest[nc[j]]++;
+                xi = d;
+                nci = nc[j];
+            }
+        }
+        x[i] = xi;
+        nc[i] = nci;
     }
 }
 
@@ -376,8 +431,8 @@ void bellman_ford(const I num_rows,
  *      Aj[]           - CSR index array
  *      Ax[]           - CSR data array (edge lengths)
  *      x[num_rows]    - distance to nearest seed
- *      y[num_rows]    - cluster membership
- *      z[num_centers] - cluster centers
+ *     cm[num_rows]    - cluster membership
+ *      c[num_centers] - cluster centers
  *
  *  References
  *      Nathan Bell
@@ -392,18 +447,18 @@ void lloyd_cluster(const I num_rows,
                    const T Ax[], const int Ax_size,
                    const I num_seeds,
                          T  x[], const int  x_size,
-                         I  w[], const int  w_size,
-                         I  z[], const int  z_size)
+                         I cm[], const int cm_size,
+                         I  c[], const int  c_size)
 {
     for(I i = 0; i < num_rows; i++){
         x[i] = std::numeric_limits<T>::max();
-        w[i] = -1;
+       cm[i] = -1;
     }
     for(I i = 0; i < num_seeds; i++){
-        I seed = z[i];
+        I seed = c[i];
         assert(seed >= 0 && seed < num_rows);
         x[seed] = 0;
-        w[seed] = i;
+       cm[seed] = i;
     }
 
     std::vector<T> old_distances(num_rows);
@@ -411,7 +466,7 @@ void lloyd_cluster(const I num_rows,
     // propagate distances outward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
+        bellman_ford_adv(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
     //find boundaries
@@ -421,7 +476,7 @@ void lloyd_cluster(const I num_rows,
     for(I i = 0; i < num_rows; i++){
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             I j = Aj[jj];
-            if( w[i] != w[j] ){
+            if( cm[i] != cm[j] ){
                 x[i] = 0;
                 break;
             }
@@ -431,21 +486,21 @@ void lloyd_cluster(const I num_rows,
     // propagate distances inward
     do{
         std::copy(x, x+num_rows, old_distances.begin());
-        bellman_ford(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, w, w_size);
+        bellman_ford_adv(num_rows, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, x, x_size, cm, cm_size, c, c_size);
     } while ( !std::equal( x, x+num_rows, old_distances.begin() ) );
 
 
     // compute new seeds
     for(I i = 0; i < num_rows; i++){
-        const I seed = w[i];
+        const I seed = cm[i];
 
         if (seed == -1) //node belongs to no cluster
             continue;
 
         assert(seed >= 0 && seed < num_seeds);
 
-        if( x[z[seed]] < x[i] )
-            z[seed] = i;
+        if( x[c[seed]] < x[i] )
+            c[seed] = i;
     }
 }
 
