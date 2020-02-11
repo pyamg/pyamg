@@ -407,7 +407,7 @@ void bellman_ford_adv(const I num_rows,
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T d = Ax[jj] + x[j];
-            if((d < xi) || ((nci>-1) && (d == xi) && (num_closest[nc[j]]<num_closest[nci]))){
+            if((d < xi) || ((nci > -1) && (d == xi) && (num_closest[nc[j]] < num_closest[nci]))){
                 if (nci > -1){
                     num_closest[nci]--;
                 }
