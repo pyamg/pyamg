@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.linalg import get_blas_funcs
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.linalg import fractional_matrix_power
+from scipy.linalg import fractional_matrix_power, cholesky
 from scipy.linalg.lapack import dpotrf, cpotrf
 from scipy.linalg.blas import ctrsm, dtrsm 
 from pyamg.util.linalg import norm, split_residual
@@ -149,7 +149,11 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
     while True:
         # P_k = Z_k (Z_k^T A Z_k)^1/2
         AZ = A * Z
-        L = dpotrf(Z.conjugate().T.dot(AZ))[0]
+        ZAZ = Z.conjugate().T.dot(AZ)
+        #L = dpotrf(ZAZ, lower=1)[0]
+        L = cholesky(ZAZ)
+        print L
+        print "----------"
         # Solve upper triangular system for P 
         P = dtrsm(1.0, L, Z, side=1, lower=1, diag=0)
         # Solve upper triangular system for AP
