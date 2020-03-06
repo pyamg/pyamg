@@ -364,13 +364,13 @@ T vertex_coloring_LDF(const I num_rows,
  *    ICi[num_nodes]      - (OUT) CSC column indexes for I
  *      L[num_nodes]      - (OUT) Local index mapping
  */
-template<class I, class T>
+template<class I>
 void cluster_node_incidence(const I num_nodes,
                             const I num_clusters,
                             const I  cm[], const int  cm_size,
-                            const I ICp[], const int ICp_size,
-                            const I ICi[], const int ICi_size,
-                            const I   L[], const int L_size)
+                                  I ICp[], const int ICp_size,
+                                  I ICi[], const int ICi_size,
+                                  I   L[], const int L_size)
 {
     // Construct the ICi index array. It will have one entry per node,
     // giving the global node number, ordered so that all of the
@@ -378,17 +378,20 @@ void cluster_node_incidence(const I num_nodes,
     for(I i = 0; i < num_nodes; i++){
         ICi[i] = i;
     }
-    std::sort(ICi.begin(), ICi.end(), [](const I& i, const I& j)
-    {
-        // sort first by cluster number, then by global node number
-        // within a cluster
-        return (cm[i] > cm[j]) || (cm[i] == cm[j] && i > j);
-    });
+
+    std::sort(ICi, ICi + ICi_size,
+              [&](const I& i, const I& j)
+              {
+                  // sort first by cluster number, then by global node number
+                  // within a cluster
+                  return (cm[i] > cm[j]) || (cm[i] == cm[j] && i > j);
+              }
+             );
 
     // Construct the ICp pointer array. This code assumes that every
     // cluster contains at least one node (the cluster center).
     ICp[0] = 0;
-    a = 0; // current cluster
+    I a = 0; // current cluster
     for(I i = 0; i < num_nodes; i++){
         if(cm[ICi[i]] != a){
             a++;
@@ -401,7 +404,7 @@ void cluster_node_incidence(const I num_nodes,
     ICp[a] = num_nodes;
 
     // Construct the local mapping vector L
-    i = 0; // global node number
+    I i = 0; // global node number
     for(I a = 0; a < num_clusters; a++){
         const I N = ICp[a+1] - ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
@@ -416,6 +419,7 @@ void cluster_node_incidence(const I num_nodes,
     // asserts below for testing, could be deleted
 
     // check that global -> local has a correct inverse
+    I m;
     for(I i = 0; i < num_nodes; i++){
         a = cm[i];
         m = L[a];
@@ -425,13 +429,14 @@ void cluster_node_incidence(const I num_nodes,
     }
 
     // check that local -> global has a correct inverse
+    I j;
     for(I a = 0; a < num_clusters; a++){
-        const I N = ICp[a]; // cluster size
+        I N = ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
-            const i = ICi[ICp[a] + m];
-            assert(i >= 0 && i < num_nodes);
-            assert(a == cm[i]);
-            assert(m == L[i]);
+            j = ICi[ICp[a] + m];
+            assert(j >= 0 && j < num_nodes);
+            assert(a == cm[j]);
+            assert(m == L[j]);
         }
     }
 }
@@ -448,6 +453,7 @@ void cluster_node_incidence(const I num_nodes,
  *      Ap[]               - (IN) CSR row pointer
  *      Aj[]               - (IN) CSR index array
  *      Ax[]               - (IN) CSR data array (edge lengths)
+ *      cm[num_nodes]      - (IN) cluster index for each node
  *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
  *     ICi[num_nodes]      - (IN) CSC column indexes for I
  *       L[num_nodes]      - (IN) Local index mapping
@@ -467,6 +473,7 @@ I cluster_center(const I a,
                  const I  Ap[], const int  Ap_size,
                  const I  Aj[], const int  Aj_size,
                  const T  Ax[], const int  Ax_size,
+                 const I  cm[], const int  cm_size,
                  const I ICp[], const int ICp_size,
                  const I ICi[], const int ICi_size,
                  const I   L[], const int   L_size)
@@ -478,29 +485,29 @@ I cluster_center(const I a,
 
     // Floyd-Warshall initialization
     for(I m = 0; m < N; m++){
-        i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
+        I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of i
             const I j = Aj[jj]; // neighbor global node index
             const T w = Ax[jj]; // edge weight
 
             if (cm[j] == a) { // only use neighbors in the same cluster
-                const n = L[j]; // global node index j -> local (a,n)
+                const I n = L[j]; // global node index j -> local (a,n)
                 assert(n >= 0 && n < N);
-                mn = m*N + n; // row-major index of (m,n)
+                const I mn = m*N + n; // row-major index of (m,n)
                 dist[mn] = w;
             }
         }
-        dist[m,m] = 0;
+        dist[m*N+m] = 0;
     }
 
     // main Floyd-Warshall iteration - O(N^3)
     for(I l = 0; l < N; l++){
         for(I m = 0; m < N; m++){
             for(I n = 0; n < N; n++){
-                const mn = m*N + n; // row-major index of (m,n)
-                const ml = m*N + l; // row-major index of (m,l)
-                const ln = l*N + n; // row-major index of (l,n)
-                dist[mn] = min(dist[mn], dist[ml] + dist[ln]);
+                const I mn = m*N + n; // row-major index of (m,n)
+                const I ml = m*N + l; // row-major index of (m,l)
+                const I ln = l*N + n; // row-major index of (l,n)
+                dist[mn] = std::min(dist[mn], dist[ml] + dist[ln]);
             }
         }
     }
@@ -514,14 +521,14 @@ I cluster_center(const I a,
     std::vector<T> ecc(N, 0);
     for(I m = 0; m < N; m++){
         for(I n = 0; n < N; n++){
-            const mn = m*N + n; // row-major index of (m,n)
-            ecc[m] = max(ecc[m], dist[mn]);
+            const I mn = m*N + n; // row-major index of (m,n)
+            ecc[m] = std::max(ecc[m], dist[mn]);
         }
     }
 
     // graph center is the node with minimum eccentricity
-    m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
-    i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
+    const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
+    const I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
     return i;
 }
 
@@ -554,9 +561,9 @@ void bellman_ford(const I num_nodes,
         I nci = cm[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
-            const T d = Ax[jj] + d[j];
-            if(d < xi){
-                xi = d;
+            const T dd = Ax[jj] + d[j];
+            if(dd < xi){
+                xi = dd;
                 nci = cm[j];
             }
         }
@@ -698,7 +705,7 @@ void lloyd_cluster(const I num_nodes,
     // propagate distances outward
     do{
         std::copy(d, d+num_nodes, old_distances.begin());
-        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
     } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
 
     //find boundaries
@@ -718,7 +725,7 @@ void lloyd_cluster(const I num_nodes,
     // propagate distances inward
     do{
         std::copy(d, d+num_nodes, old_distances.begin());
-        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
     } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
 
 
@@ -778,7 +785,8 @@ void lloyd_cluster_exact(const I num_nodes,
         d[i] = std::numeric_limits<T>::max();
         cm[i] = -1;
     }
-    for(I a = 0; a < num_clusters; i++){
+
+    for(I a = 0; a < num_clusters; a++){
         I i = c[a];
         assert(i >= 0 && i < num_nodes);
         d[i] = 0;
@@ -786,17 +794,25 @@ void lloyd_cluster_exact(const I num_nodes,
     }
 
     // assign nodes to the nearest cluster center
-    bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+    bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
 
     // construct node-cluster incidence arrays
-    std::vector<I> ICp(num_nodes);
-    std::vector<I> ICi(num_nodes);
-    std::vector<I> L(num_nodes);
-    cluster_node_incidence(num_nodes, num_clusters, cm, cm_size, ICp, ICp_size, ICi, ICi_size, L, L_size);
+    const I ICp_size = num_nodes;
+    I ICp[ICp_size];
+    const I ICi_size = num_nodes;
+    I ICi[ICi_size];
+    const I L_size = num_nodes;
+    I L[L_size];
+    cluster_node_incidence(num_nodes,
+                           num_clusters,
+                           cm, cm_size,
+                           ICp, ICp_size,
+                           ICi, ICi_size,
+                           L, L_size);
 
     // update cluster centers
     for(I a = 0; a < num_clusters; a++){
-        c[a] = cluster_center(a, num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, ICp, ICp_size, ICi, ICi_size, L, L_size);
+        c[a] = cluster_center(a, num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, cm, cm_size, ICp, ICp_size, ICi, ICi_size, L, L_size);
         assert(cm[c[a]] == a); // check new center is in cluster
     }
 }

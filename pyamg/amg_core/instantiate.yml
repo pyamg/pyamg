@@ -54,11 +54,13 @@ instantiate:
     - [int, float]
     - [int, double]
   functions:
-    - bellman_ford
-    - bellman_ford_adv
-    - lloyd_cluster
     - csc_scale_rows
     - csc_scale_columns
+    - cluster_center
+    - bellman_ford
+    - bellman_ford_balanced
+    - lloyd_cluster
+    - lloyd_cluster_exact
 
 - types:
     - [int, int]
@@ -85,6 +87,7 @@ instantiate:
     - rs_cf_splitting_pass2
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
+    - cluster_node_incidence
 
 - types:
     - [int, float]
