@@ -409,12 +409,11 @@ void cluster_node_incidence(const I num_nodes,
     for(I a = 0; a < num_clusters; a++){
         const I N = ICp[a+1] - ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
+            i = ICi[ICp[a] + m];
+            assert(i >= 0 && i < num_nodes);
             L[i] = m;
-            i++;
-            assert(i <= num_nodes);
         }
     }
-    assert(i == num_nodes); // all nodes were assigned
 
     ////////////////////////////////////////////////////////////
     // asserts below for testing, could be deleted
@@ -423,7 +422,7 @@ void cluster_node_incidence(const I num_nodes,
     I m;
     for(I i = 0; i < num_nodes; i++){
         a = cm[i];
-        m = L[a];
+        m = L[i];
         assert(a >= 0 && a < num_clusters);
         assert(m >= 0 && m < ICp[a+1] - ICp[a]);
         assert(i == ICi[ICp[a] + m]);
@@ -432,7 +431,7 @@ void cluster_node_incidence(const I num_nodes,
     // check that local -> global has a correct inverse
     I j;
     for(I a = 0; a < num_clusters; a++){
-        I N = ICp[a]; // cluster size
+        I N = ICp[a+1] - ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
             j = ICi[ICp[a] + m];
             assert(j >= 0 && j < num_nodes);
