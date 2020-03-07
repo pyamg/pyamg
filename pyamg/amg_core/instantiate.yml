@@ -88,6 +88,7 @@ instantiate:
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
     - cluster_node_incidence
+    - print_it
 
 - types:
     - [int, float]

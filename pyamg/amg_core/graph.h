@@ -6,6 +6,7 @@
 #include <cassert>
 #include <limits>
 #include <vector>
+#include <iostream>
 
 /*
  *  Compute a maximal independent set for a graph stored in CSR format
@@ -384,7 +385,7 @@ void cluster_node_incidence(const I num_nodes,
               {
                   // sort first by cluster number, then by global node number
                   // within a cluster
-                  return (cm[i] > cm[j]) || (cm[i] == cm[j] && i > j);
+                  return (cm[i] < cm[j]) || (cm[i] == cm[j] && i < j);
               }
              );
 
@@ -519,6 +520,19 @@ I cluster_center(const I a,
 
     // compute eccentricity of each node in cluster (max distance to other nodes)
     std::vector<T> ecc(N, 0);
+    std::cout << "ecc -----------" << std::endl;
+    for (auto item : ecc)
+        std::cout << item << " ";
+    std::endl(std::cout);
+    std::cout << "dist -----------" << std::endl;
+    for(I m = 0; m < N; m++){
+        for(I n = 0; n < N; n++){
+            const I mn = m*N + n; // row-major index of (m,n)
+            std::cout << "(" << m << "," << n << ")=" << dist[mn] << " ";
+        }
+        std::endl(std::cout);
+    }
+    std::endl(std::cout);
     for(I m = 0; m < N; m++){
         for(I n = 0; n < N; n++){
             const I mn = m*N + n; // row-major index of (m,n)
@@ -527,11 +541,14 @@ I cluster_center(const I a,
     }
 
     // graph center is the node with minimum eccentricity
+    std::cout << "ecc -----------" << std::endl;
+    for (auto item : ecc)
+        std::cout << item << " ";
+    std::endl(std::cout);
     const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
     const I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
     return i;
 }
-
 
 /*
  * Apply one iteration of Bellman-Ford iteration on a distance
