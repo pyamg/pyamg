@@ -3,7 +3,6 @@ from graph import cluster_node_incidence, \
     cluster_center, bellman_ford_balanced, lloyd_cluster_exact, \
     bellman_ford, lloyd_cluster
 import scipy.sparse as sparse
-import matplotlib.pyplot as plt
 
 xy = np.array([[0,2],
                [1,3],
@@ -33,17 +32,23 @@ G[11,[9,10]] = 1
 G[np.arange(12),np.arange(12)]=[2,3,4,2,2,4,4,2,2,4,3,2]
 G = sparse.csr_matrix(G)
 
-num_nodes = 6
+num_nodes = 12
 num_clusters = 2
 
 cm = np.array([0,0,0,0,1,1,0,0,1,1,1,1], dtype=np.int32)
-num_nodes = 12
-num_clusters = 2
+
+
+
+
 Iindptr = -1*np.ones(3,dtype=np.int32)
 Iindices = -1*np.ones(num_nodes,dtype=np.int32)
 L = -1*np.ones(num_nodes,dtype=np.int32)
-cluster_node_incidence(num_nodes, num_clusters, cm, Iindptr, Iindices, L)
-#L = np.array([0,1,2,3,0,1,4,5,2,3,4,5], dtype=np.int32)
+cluster_node_incidence(num_nodes, num_clusters,
+                       cm, Iindptr, Iindices, L)
+
+
+
+
 Idata = np.ones(num_nodes)
 I = sparse.csc_matrix((Idata, Iindices, Iindptr))
 
@@ -52,7 +57,7 @@ print("cm=",cm)
 print("I.indptr=",I.indptr)
 print("I.indices=",I.indices)
 print("L=",L)
-center = cluster_center(0,
+center = cluster_center(1,
                num_nodes,
                num_clusters,
                G.indptr,
