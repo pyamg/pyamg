@@ -260,8 +260,7 @@ void _bellman_ford_balanced(
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
        py::array_t<T> & d,
-      py::array_t<I> & cm,
-       py::array_t<I> & c
+      py::array_t<I> & cm
                             )
 {
     auto py_Ap = Ap.unchecked();
@@ -269,13 +268,11 @@ void _bellman_ford_balanced(
     auto py_Ax = Ax.unchecked();
     auto py_d = d.mutable_unchecked();
     auto py_cm = cm.mutable_unchecked();
-    auto py_c = c.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
     T *_d = py_d.mutable_data();
     I *_cm = py_cm.mutable_data();
-    I *_c = py_c.mutable_data();
 
     return bellman_ford_balanced<I, T>(
                 num_nodes,
@@ -284,8 +281,7 @@ void _bellman_ford_balanced(
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
                        _d, d.shape(0),
-                      _cm, cm.shape(0),
-                       _c, c.shape(0)
+                      _cm, cm.shape(0)
                                        );
 }
 
@@ -667,11 +663,11 @@ graph stored in CSR format.
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
+        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
+        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
+        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(),
 R"pbdoc(
 Apply Bellman-Ford with a heuristic to balance cluster sizes
 
@@ -688,7 +684,6 @@ sizes.
     Ax[]         - (IN)    CSR data array (edge lengths)
      d[]         - (INOUT) distance to nearest center
     cm[]         - (INOUT) cluster index for each node
-     c[]         - (IN)    global node indexes of cluster centers
 
  References:
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
@@ -710,7 +705,7 @@ Perform one iteration of Lloyd clustering on a distance graph
      num_clusters    - (IN)  number of clusters (seeds)
      d[num_nodes]    - (OUT) distance to nearest seed
     cm[num_nodes]    - (OUT) cluster index for each node
-     c[num_clusters] - (IN)  cluster centers
+     c[num_clusters] - (INOUT)  cluster centers
 
  References
      Nathan Bell

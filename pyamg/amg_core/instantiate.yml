@@ -60,6 +60,7 @@ instantiate:
     - bellman_ford
     - bellman_ford_balanced
     - lloyd_cluster
+    - lloyd_cluster_orig
     - lloyd_cluster_exact
 
 - types:

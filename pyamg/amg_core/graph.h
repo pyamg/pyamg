@@ -517,34 +517,56 @@ I cluster_center(const I a,
         assert(dist[i] < std::numeric_limits<T>::max());
     }
 
-    // compute eccentricity of each node in cluster (max distance to other nodes)
-    std::vector<T> ecc(N, 0);
-    std::cout << "ecc -----------" << std::endl;
-    for (auto item : ecc)
-        std::cout << item << " ";
-    std::endl(std::cout);
-    std::cout << "dist -----------" << std::endl;
+    std::cout << "dist = ";
     for(I m = 0; m < N; m++){
         for(I n = 0; n < N; n++){
             const I mn = m*N + n; // row-major index of (m,n)
-            std::cout << "(" << m << "," << n << ")=" << dist[mn] << " ";
+            std::cout << dist[mn] << " ";
         }
-        std::endl(std::cout);
     }
     std::endl(std::cout);
+
+    // compute eccentricity of each node in cluster (max distance to other nodes)
+    std::vector<T> ecc(N, 0);
+    std::vector<T> totaldistance(N, 0);
+    std::cout << "ecc = ";
+    for (I i=0; i < N; i++){
+        std::cout << ecc[i] << " ";
+    }
+    std::endl(std::cout);
+    std::cout << "totaldistance = ";
+    for (I i=0; i < N; i++){
+        std::cout << totaldistance[i] << " ";
+    }
+    std::endl(std::cout);
+
     for(I m = 0; m < N; m++){
         for(I n = 0; n < N; n++){
             const I mn = m*N + n; // row-major index of (m,n)
             ecc[m] = std::max(ecc[m], dist[mn]);
+            totaldistance[m] += dist[mn];
         }
     }
 
-    // graph center is the node with minimum eccentricity
-    std::cout << "ecc -----------" << std::endl;
-    for (auto item : ecc)
-        std::cout << item << " ";
+    std::cout << "ecc = ";
+    for (I i=0; i < N; i++){
+        std::cout << ecc[i] << " ";
+    }
     std::endl(std::cout);
-    const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
+    std::cout << "totaldistance = ";
+    for (I i=0; i < N; i++){
+        std::cout << totaldistance[i] << " ";
+    }
+    std::endl(std::cout);
+
+    // graph center is the node with minimum eccentricity
+    // const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
+    I m = 0;
+    for (I n = 1; n < N; n++) {
+        if ((ecc[n] < ecc[m]) || (ecc[n] == ecc[m] && totaldistance[n] < totaldistance[m])) {
+            m = n;
+        }
+    }
     const I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
     return i;
 }
@@ -573,18 +595,18 @@ void bellman_ford(const I num_nodes,
                         I cm[], const int cm_size)
 {
     for(I i = 0; i < num_nodes; i++){
-        T xi = d[i];
-        I nci = cm[i];
+        T di = d[i];
+        I cmi = cm[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
             const T dd = Ax[jj] + d[j];
-            if(dd < xi){
-                xi = dd;
-                nci = cm[j];
+            if(dd < di){
+                di = dd;
+                cmi = cm[j];
             }
         }
-        d[i] = xi;
-        cm[i] = nci;
+        d[i] = di;
+        cm[i] = cmi;
     }
 }
 
@@ -605,7 +627,6 @@ void bellman_ford(const I num_nodes,
  *     Ax[]         - (IN)    CSR data array (edge lengths)
  *      d[]         - (INOUT) distance to nearest center
  *     cm[]         - (INOUT) cluster index for each node
- *      c[]         - (IN)    global node indexes of cluster centers
  *
  *  References:
  *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
@@ -617,8 +638,7 @@ void bellman_ford_balanced(const I num_nodes,
                            const I Aj[], const int Aj_size,
                            const T Ax[], const int Ax_size,
                                  T  d[], const int  d_size,
-                                 I cm[], const int cm_size,
-                                 I  c[], const int  c_size)
+                                 I cm[], const int cm_size)
 {
     assert(d_size == num_nodes);
     assert(cm_size == num_nodes);
@@ -638,12 +658,17 @@ void bellman_ford_balanced(const I num_nodes,
     I iteration = 0; // iteration count for safety check
 
     do{
+        std::cout << "begin ------" << std::endl;
         change = false;
         for(I i = 0; i < num_nodes; i++){
             for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of node i
                 const I j = Aj[jj];
                 const T new_d = Ax[jj] + d[j];
-                if((new_d < d[i]) || ((cm[i] > -1) && (new_d == d[i]) && (cs[cm[j]] < cs[cm[i]]) && (pred_count[i] == 0))){
+                if((new_d < d[i]) ||
+                   ((cm[i] > -1) &&
+                    (new_d == d[i]) &&
+                    (cs[cm[j]] < cs[cm[i]]-1) &&
+                    (pred_count[i] == 0))){
                     // switch distance/predecessor if the new distance
                     // is strictly shorter, or if (distance is equal, the new
                     // cluster is smaller, and we are not the
@@ -671,7 +696,11 @@ void bellman_ford_balanced(const I num_nodes,
                 }
             }
         }
-        assert(++iteration < num_nodes*num_nodes*num_nodes); // safety check, regular unweighted BF is actually O(|V|.|E|)
+        std::cout << "iterations: " << iteration << std::endl;
+        // safety check, regular unweighted BF is actually O(|V|.|E|)
+        if (++iteration > num_nodes*num_nodes){
+            throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
+        }
     } while(change);
 }
 
@@ -687,7 +716,7 @@ void bellman_ford_balanced(const I num_nodes,
  *      num_clusters    - (IN)  number of clusters (seeds)
  *      d[num_nodes]    - (OUT) distance to nearest seed
  *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (IN)  cluster centers
+ *      c[num_clusters] - (INOUT)  cluster centers
  *
  *  References
  *      Nathan Bell
@@ -810,7 +839,7 @@ void lloyd_cluster_exact(const I num_nodes,
     }
 
     // assign nodes to the nearest cluster center
-    bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+    bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
 
     // construct node-cluster incidence arrays
     const I ICp_size = num_nodes;
