@@ -272,6 +272,7 @@ amg_core_headers = [f.replace('.h', '') for f in amg_core_headers]
 ext_modules = [Extension('pyamg.amg_core.%s' % f,
                          sources=['pyamg/amg_core/%s_bind.cpp' % f],
                          include_dirs=[get_pybind_include(), get_pybind_include(user=True)],
+                         undef_macros=['NDEBUG'],
                          language='c++') for f in amg_core_headers]
 
 ext_modules += [Extension('pyamg.amg_core.tests.bind_examples',

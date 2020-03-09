@@ -304,7 +304,7 @@ class TestClustering(TestCase):
                 d = mv * np.ones(num_nodes, dtype=A.dtype)
                 d[seeds] = 0
 
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
+                cm = 0 * np.ones(num_nodes, dtype=np.int32)
                 cm[seeds] = seeds
 
                 amg_core.bellman_ford_balanced(num_nodes, num_clusters,

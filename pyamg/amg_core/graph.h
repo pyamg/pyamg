@@ -642,17 +642,19 @@ void bellman_ford_balanced(const I num_nodes,
 {
     assert(d_size == num_nodes);
     assert(cm_size == num_nodes);
-    assert(c_size == num_clusters);
 
     std::vector<I> predecessor(num_nodes, -1); // index of predecessor node
     std::vector<I> pred_count(num_nodes, 0); // number of other nodes that we are the predecessor for
 
     std::vector<I> cs(num_clusters, 0); // cluster sizes (number of nodes in each cluster)
+    std::cout << "cm = ";
     for(I i = 0; i < num_nodes; i++){
         if(cm[i] > -1){
             cs[cm[i]]++;
         }
+        std::cout << cm[i] << " ";
     }
+    std::endl(std::cout);
 
     bool change; // did we make any changes during this iteration?
     I iteration = 0; // iteration count for safety check
