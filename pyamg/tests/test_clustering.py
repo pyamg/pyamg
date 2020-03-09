@@ -86,11 +86,11 @@ class TestClustering(TestCase):
         cluster_center_output[0] = [0, 1]
 
         bellman_ford_input[0] = {'seeds': [0, 5]}
-        bellman_ford_output[0] = {'cm': np.array([0, 0, 5, 0, 0, 5], dtype=np.int32),
+        bellman_ford_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
         bellman_ford_balanced_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
-        bellman_ford_balanced_output[0] = {'cm': np.array([0, 0, 5, 0, 5, 5], dtype=np.int32),
+        bellman_ford_balanced_output[0] = {'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
                                            'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
         lloyd_cluster_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
@@ -268,7 +268,7 @@ class TestClustering(TestCase):
                 d[seeds] = 0
 
                 cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
+                cm[seeds] = np.arange(len(seeds))
 
                 old_d = np.empty_like(d)
 
@@ -305,7 +305,7 @@ class TestClustering(TestCase):
                 d[seeds] = 0
 
                 cm = 0 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
+                cm[seeds] = np.arange(len(seeds))
 
                 amg_core.bellman_ford_balanced(num_nodes, num_clusters,
                                                A.indptr, A.indices, A.data,
