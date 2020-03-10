@@ -8,6 +8,12 @@
 #include <vector>
 #include <iostream>
 
+inline void coreassert(const bool istrue, const std::string &errormsg){
+    if (!istrue){
+        throw std::runtime_error("pyamg-error (amg_core) -- " + errormsg);
+    }
+}
+
 /*
  *  Compute a maximal independent set for a graph stored in CSR format
  *  using a greedy serial algorithm
@@ -150,8 +156,6 @@ I maximal_independent_set_parallel(const I num_rows,
             }
         }
     } // end while
-
-    //std::cout << std::endl << "Luby's finished in " << num_iters << " iterations " << std::endl;
 
     return N;
 }
@@ -396,12 +400,12 @@ void cluster_node_incidence(const I num_nodes,
     for(I i = 0; i < num_nodes; i++){
         if(cm[ICi[i]] != a){
             a++;
-            assert(a < num_clusters);
+            coreassert(a < num_clusters, "");
             ICp[a] = i;
         }
     }
     a++;
-    assert(a == num_clusters); // all clusters were found
+    coreassert(a == num_clusters, ""); // all clusters were found
     ICp[a] = num_nodes;
 
     // Construct the local mapping vector L
@@ -410,7 +414,7 @@ void cluster_node_incidence(const I num_nodes,
         const I N = ICp[a+1] - ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
             i = ICi[ICp[a] + m];
-            assert(i >= 0 && i < num_nodes);
+            coreassert(i >= 0 && i < num_nodes, "");
             L[i] = m;
         }
     }
@@ -423,9 +427,9 @@ void cluster_node_incidence(const I num_nodes,
     for(I i = 0; i < num_nodes; i++){
         a = cm[i];
         m = L[i];
-        assert(a >= 0 && a < num_clusters);
-        assert(m >= 0 && m < ICp[a+1] - ICp[a]);
-        assert(i == ICi[ICp[a] + m]);
+        coreassert(a >= 0 && a < num_clusters, "");
+        coreassert(m >= 0 && m < ICp[a+1] - ICp[a], "");
+        coreassert(i == ICi[ICp[a] + m], "");
     }
 
     // check that local -> global has a correct inverse
@@ -434,9 +438,9 @@ void cluster_node_incidence(const I num_nodes,
         I N = ICp[a+1] - ICp[a]; // cluster size
         for(I m = 0; m < N; m++){
             j = ICi[ICp[a] + m];
-            assert(j >= 0 && j < num_nodes);
-            assert(a == cm[j]);
-            assert(m == L[j]);
+            coreassert(j >= 0 && j < num_nodes, "");
+            coreassert(a == cm[j], "");
+            coreassert(m == L[j], "");
         }
     }
 }
@@ -492,7 +496,7 @@ I cluster_center(const I a,
 
             if (cm[j] == a) { // only use neighbors in the same cluster
                 const I n = L[j]; // global node index j -> local (a,n)
-                assert(n >= 0 && n < N);
+                coreassert(n >= 0 && n < N, "");
                 const I mn = m*N + n; // row-major index of (m,n)
                 dist[mn] = w;
             }
@@ -514,31 +518,12 @@ I cluster_center(const I a,
 
     // check that the cluster is connected
     for(I i = 0; i < N*N; i++){
-        assert(dist[i] < std::numeric_limits<T>::max());
+        coreassert(dist[i] < std::numeric_limits<T>::max(), "");
     }
-
-    std::cout << "dist = ";
-    for(I m = 0; m < N; m++){
-        for(I n = 0; n < N; n++){
-            const I mn = m*N + n; // row-major index of (m,n)
-            std::cout << dist[mn] << " ";
-        }
-    }
-    std::endl(std::cout);
 
     // compute eccentricity of each node in cluster (max distance to other nodes)
     std::vector<T> ecc(N, 0);
     std::vector<T> totaldistance(N, 0);
-    std::cout << "ecc = ";
-    for (I i=0; i < N; i++){
-        std::cout << ecc[i] << " ";
-    }
-    std::endl(std::cout);
-    std::cout << "totaldistance = ";
-    for (I i=0; i < N; i++){
-        std::cout << totaldistance[i] << " ";
-    }
-    std::endl(std::cout);
 
     for(I m = 0; m < N; m++){
         for(I n = 0; n < N; n++){
@@ -547,17 +532,6 @@ I cluster_center(const I a,
             totaldistance[m] += dist[mn];
         }
     }
-
-    std::cout << "ecc = ";
-    for (I i=0; i < N; i++){
-        std::cout << ecc[i] << " ";
-    }
-    std::endl(std::cout);
-    std::cout << "totaldistance = ";
-    for (I i=0; i < N; i++){
-        std::cout << totaldistance[i] << " ";
-    }
-    std::endl(std::cout);
 
     // graph center is the node with minimum eccentricity
     // const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
@@ -640,27 +614,23 @@ void bellman_ford_balanced(const I num_nodes,
                                  T  d[], const int  d_size,
                                  I cm[], const int cm_size)
 {
-    assert(d_size == num_nodes);
-    assert(cm_size == num_nodes);
+    coreassert(d_size == num_nodes, "");
+    coreassert(cm_size == num_nodes, "");
 
     std::vector<I> predecessor(num_nodes, -1); // index of predecessor node
     std::vector<I> pred_count(num_nodes, 0); // number of other nodes that we are the predecessor for
 
     std::vector<I> cs(num_clusters, 0); // cluster sizes (number of nodes in each cluster)
-    std::cout << "cm = ";
     for(I i = 0; i < num_nodes; i++){
         if(cm[i] > -1){
             cs[cm[i]]++;
         }
-        std::cout << cm[i] << " ";
     }
-    std::endl(std::cout);
 
     bool change; // did we make any changes during this iteration?
     I iteration = 0; // iteration count for safety check
 
     do{
-        std::cout << "begin ------" << std::endl;
         change = false;
         for(I i = 0; i < num_nodes; i++){
             for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of node i
@@ -679,14 +649,14 @@ void bellman_ford_balanced(const I num_nodes,
                     // update cluster sizes
                     if(cm[i] > -1){
                         cs[cm[i]]--;
-                        assert(cs[cm[i]] >= 0);
+                        coreassert(cs[cm[i]] >= 0, "");
                     }
                     cs[cm[j]]++;
 
                     // update predecessor assignments and counts
                     if(predecessor[i] > -1){
                         pred_count[predecessor[i]]--;
-                        assert(pred_count[predecessor[i]] >= 0);
+                        coreassert(pred_count[predecessor[i]] >= 0, "");
                     }
                     predecessor[i] = j;
                     pred_count[predecessor[i]]++;
@@ -698,7 +668,6 @@ void bellman_ford_balanced(const I num_nodes,
                 }
             }
         }
-        std::cout << "iterations: " << iteration << std::endl;
         // safety check, regular unweighted BF is actually O(|V|.|E|)
         if (++iteration > num_nodes*num_nodes){
             throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
@@ -742,7 +711,7 @@ void lloyd_cluster(const I num_nodes,
     }
     for(I a = 0; a < num_clusters; a++){
         I i = c[a];
-        assert(i >= 0 && i < num_nodes);
+        coreassert(i >= 0 && i < num_nodes, "");
         d[i] = 0;
         cm[i] = a;
     }
@@ -783,7 +752,7 @@ void lloyd_cluster(const I num_nodes,
         if (a == -1) //node belongs to no cluster
             continue;
 
-        assert(a >= 0 && a < num_clusters);
+        coreassert(a >= 0 && a < num_clusters, "");
 
         if( d[c[a]] < d[i] )
             c[a] = i;
@@ -824,9 +793,9 @@ void lloyd_cluster_exact(const I num_nodes,
                                I cm[], const int cm_size,
                                I  c[], const int  c_size)
 {
-    assert(d_size == num_nodes);
-    assert(cm_size == num_nodes);
-    assert(c_size == num_clusters);
+    coreassert(d_size == num_nodes, "");
+    coreassert(cm_size == num_nodes, "");
+    coreassert(c_size == num_clusters, "");
 
     for(I i = 0; i < num_nodes; i++){
         d[i] = std::numeric_limits<T>::max();
@@ -835,7 +804,7 @@ void lloyd_cluster_exact(const I num_nodes,
 
     for(I a = 0; a < num_clusters; a++){
         I i = c[a];
-        assert(i >= 0 && i < num_nodes);
+        coreassert(i >= 0 && i < num_nodes, "");
         d[i] = 0;
         cm[i] = a;
     }
@@ -860,7 +829,7 @@ void lloyd_cluster_exact(const I num_nodes,
     // update cluster centers
     for(I a = 0; a < num_clusters; a++){
         c[a] = cluster_center(a, num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, cm, cm_size, ICp, ICp_size, ICi, ICi_size, L, L_size);
-        assert(cm[c[a]] == a); // check new center is in cluster
+        coreassert(cm[c[a]] == a, ""); // check new center is in cluster
     }
 }
 

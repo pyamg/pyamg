@@ -149,6 +149,13 @@ class TestClustering(TestCase):
         cluster_node_incidence_output.append({'ICp': np.array([0, 6, 12], dtype=np.int32),
                                               'ICi': np.array([0, 1, 2, 3, 6, 7, 4, 5, 8, 9, 10, 11], dtype=np.int32),
                                               'L': np.array([0, 1, 2, 3, 0, 1, 4, 5, 2, 3, 4, 5], dtype=np.int32)})
+        cluster_center_input[0] = {'a': [0, 1],
+                                   'num_clusters': 2,
+                                   'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
+                                   'ICp': np.array([0, 3, 6], dtype=np.int32),
+                                   'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
+                                   'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
+        cluster_center_output[0] = [0, 1]
         # (2) 16 node undirected, random length (0,2)
         np.random.seed(2244369509)
         G.data[:] = np.random.rand(len(G.data)) * 2
@@ -217,9 +224,7 @@ class TestClustering(TestCase):
                                     self.cluster_node_incidence_input,
                                     self.cluster_node_incidence_output):
 
-            print(argin)
             if argin is not None:
-                print(A.shape)
                 num_nodes = A.shape[0]
                 num_clusters = argin['num_clusters']
                 cm = argin['cm']
@@ -295,7 +300,6 @@ class TestClustering(TestCase):
                                     self.bellman_ford_balanced_output):
 
             if argin is not None:
-                print('yep here')
                 seeds = argin['seeds']
                 num_nodes = A.shape[0]
                 num_clusters = len(seeds)
