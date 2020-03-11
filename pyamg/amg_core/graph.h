@@ -816,6 +816,92 @@ void lloyd_cluster(const I num_nodes,
 
 
 /*
+ * Perform one iteration of Lloyd clustering on a distance graph
+ *
+ * This adds the tie breaking for bellman_ford_adv
+ *
+ *  Parameters
+ *      num_nodes       - (IN)  number of nodes (number of rows in A)
+ *      Ap[]            - (IN)  CSR row pointer for adjacency matrix A
+ *      Aj[]            - (IN)  CSR index array
+ *      Ax[]            - (IN)  CSR data array (edge lengths)
+ *      num_clusters    - (IN)  number of clusters (seeds)
+ *      d[num_nodes]    - (OUT) distance to nearest seed
+ *     cm[num_nodes]    - (OUT) cluster index for each node
+ *      c[num_clusters] - (INOUT)  cluster centers
+ *
+ *  References
+ *      Nathan Bell
+ *      Algebraic Multigrid for Discrete Differential Forms
+ *      PhD thesis (UIUC), August 2008
+ *
+ */
+template<class I, class T>
+void lloyd_cluster_adv(const I num_nodes,
+                       const I Ap[], const int Ap_size,
+                       const I Aj[], const int Aj_size,
+                       const T Ax[], const int Ax_size,
+                       const I num_clusters,
+                             T  d[], const int  d_size,
+                             I cm[], const int cm_size,
+                             I  c[], const int  c_size)
+{
+    for(I i = 0; i < num_nodes; i++){
+        d[i] = std::numeric_limits<T>::max();
+        cm[i] = -1;
+    }
+    for(I a = 0; a < num_clusters; a++){
+        I i = c[a];
+        coreassert(i >= 0 && i < num_nodes, "");
+        d[i] = 0;
+        cm[i] = a;
+    }
+
+    std::vector<T> old_distances(num_nodes);
+
+    // propagate distances outward
+    do{
+        std::copy(d, d+num_nodes, old_distances.begin());
+        bellman_ford_adv(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+    } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
+
+    //find boundaries
+    for(I i = 0; i < num_nodes; i++){
+        d[i] = std::numeric_limits<T>::max();
+    }
+    for(I i = 0; i < num_nodes; i++){
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            I j = Aj[jj];
+            if( cm[i] != cm[j] ){
+                d[i] = 0;
+                break;
+            }
+        }
+    }
+
+    // propagate distances inward
+    do{
+        std::copy(d, d+num_nodes, old_distances.begin());
+        bellman_ford_adv(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size, c, c_size);
+    } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
+
+
+    // compute new seeds
+    for(I i = 0; i < num_nodes; i++){
+        const I a = cm[i];
+
+        if (a == -1) //node belongs to no cluster
+            continue;
+
+        coreassert(a >= 0 && a < num_clusters, "");
+
+        if( d[c[a]] < d[i] )
+            c[a] = i;
+    }
+}
+
+
+/*
  * Perform one iteration of Lloyd clustering on a distance graph using
  * exact centers
  *
