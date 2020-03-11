@@ -314,7 +314,7 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     if num_clusters < 1 or num_clusters > C.shape[0]:
         raise ValueError('num_clusters must be between 1 and n')
 
-    if not (isspmatrix_csr(C) or isspmatrix_csc(C)):
+    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if C.data.min() <= 0:
@@ -344,7 +344,7 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
 
     col = cm
     row = np.arange(len(cm))
-    data = np.ones(len(row), dtype='int8')
-    AggOp = coo_matrix((data, (row, col)),
-                       shape=(G.shape[0], num_clusters)).tocsr()
+    data = np.ones(len(row), dtype=np.int32)
+    AggOp = sparse.coo_matrix((data, (row, col)),
+                              shape=(G.shape[0], num_clusters)).tocsr()
     return AggOp, seeds
