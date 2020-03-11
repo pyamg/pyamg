@@ -584,6 +584,61 @@ void bellman_ford(const I num_nodes,
     }
 }
 
+/*
+ * Apply one iteration of Bellman-Ford iteration on a distance
+ * graph stored in CSR format.
+ *
+ * This version is modified to break ties by assigning to center
+ * with fewest points in its cluster.
+ *
+ *  Parameters
+ *      num_rows   - number of rows in A (number of vertices)
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array (edge lengths)
+ *      x[]        - (current) distance to nearest center
+ *     nc[]        - (current) index of nearest center
+ *      c[]        - list of centers
+ *
+ *  References:
+ *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ */
+template<class I, class T>
+void bellman_ford_adv(const I num_rows,
+                      const I Ap[], const int Ap_size,
+                      const I Aj[], const int Aj_size,
+                      const T Ax[], const int Ax_size,
+                            T  x[], const int  x_size,
+                            I nc[], const int nc_size,
+                            I  c[], const int  c_size)
+{
+    std::vector<I> num_closest(c_size, 0);
+    for(I i=0; i < num_rows; i++){
+        if(nc[i] > -1){
+            num_closest[nc[i]]++;
+        }
+    }
+
+    for(I i = 0; i < num_rows; i++){
+        T xi = x[i];
+        I nci = nc[i];
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+            const I j = Aj[jj];
+            const T d = Ax[jj] + x[j];
+            if((d < xi) || ((nci > -1) && (d == xi) && (num_closest[nc[j]] < num_closest[nci]))){
+                if (nci > -1){
+                    num_closest[nci]--;
+                }
+                num_closest[nc[j]]++;
+                xi = d;
+                nci = nc[j];
+            }
+        }
+        x[i] = xi;
+        nc[i] = nci;
+    }
+}
+
 
 /*
  * Apply Bellman-Ford with a heuristic to balance cluster sizes
