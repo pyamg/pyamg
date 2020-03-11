@@ -592,50 +592,50 @@ void bellman_ford(const I num_nodes,
  * with fewest points in its cluster.
  *
  *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
+ *      num_nodes  - number of nodes (number of rows in A)
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
  *      Ax[]       - CSR data array (edge lengths)
- *      x[]        - (current) distance to nearest center
- *     nc[]        - (current) index of nearest center
+ *      d[]        - distance to nearest center
+ *     cm[]        - cluster index for each node
  *      c[]        - list of centers
  *
  *  References:
  *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
  */
 template<class I, class T>
-void bellman_ford_adv(const I num_rows,
+void bellman_ford_adv(const I num_nodes,
                       const I Ap[], const int Ap_size,
                       const I Aj[], const int Aj_size,
                       const T Ax[], const int Ax_size,
-                            T  x[], const int  x_size,
-                            I nc[], const int nc_size,
+                            T  d[], const int  d_size,
+                            I cm[], const int cm_size,
                             I  c[], const int  c_size)
 {
     std::vector<I> num_closest(c_size, 0);
-    for(I i=0; i < num_rows; i++){
-        if(nc[i] > -1){
-            num_closest[nc[i]]++;
+    for(I i=0; i < num_nodes; i++){
+        if(cm[i] > -1){
+            num_closest[cm[i]]++;
         }
     }
 
-    for(I i = 0; i < num_rows; i++){
-        T xi = x[i];
-        I nci = nc[i];
+    for(I i = 0; i < num_nodes; i++){
+        T di = d[i];
+        I cmi = cm[i];
         for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
             const I j = Aj[jj];
-            const T d = Ax[jj] + x[j];
-            if((d < xi) || ((nci > -1) && (d == xi) && (num_closest[nc[j]] < num_closest[nci]))){
-                if (nci > -1){
-                    num_closest[nci]--;
+            const T dd = Ax[jj] + d[j];
+            if((dd < di) || ((cmi > -1) && (dd == di) && (num_closest[cm[j]] < num_closest[cmi]))){
+                if (cmi > -1){
+                    num_closest[cmi]--;
                 }
-                num_closest[nc[j]]++;
-                xi = d;
-                nci = nc[j];
+                num_closest[cm[j]]++;
+                di = dd;
+                cmi = cm[j];
             }
         }
-        x[i] = xi;
-        nc[i] = nci;
+        d[i] = di;
+        cm[i] = cmi;
     }
 }
 
