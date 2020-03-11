@@ -2,11 +2,11 @@
 
 
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix, isspmatrix_csr, isspmatrix_csc
+import scipy.sparse as sparse
 from pyamg import amg_core
 from pyamg.graph import lloyd_cluster
 
-__all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation']
+__all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation', 'balanced_lloyd_aggregation']
 
 
 def standard_aggregation(C):
@@ -56,7 +56,7 @@ def standard_aggregation(C):
     amg_core.standard_aggregation
 
     """
-    if not isspmatrix_csr(C):
+    if not sparse.isspmatrix_csr(C):
         raise TypeError('expected csr_matrix')
 
     if C.shape[0] != C.shape[1]:
@@ -75,7 +75,7 @@ def standard_aggregation(C):
 
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
-        return csr_matrix((num_rows, 1), dtype='int8'),\
+        return sparse.csr_matrix((num_rows, 1), dtype='int8'),\
             np.array([], dtype=index_type)
     else:
 
@@ -86,12 +86,12 @@ def standard_aggregation(C):
             row = np.arange(num_rows, dtype=index_type)[mask]
             col = Tj[mask]
             data = np.ones(len(col), dtype='int8')
-            return coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
+            return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
         else:
             # all nodes aggregated
             Tp = np.arange(num_rows+1, dtype=index_type)
             Tx = np.ones(len(Tj), dtype='int8')
-            return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+            return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def naive_aggregation(C):
@@ -148,7 +148,7 @@ def naive_aggregation(C):
     standard aggregation.
 
     """
-    if not isspmatrix_csr(C):
+    if not sparse.isspmatrix_csr(C):
         raise TypeError('expected csr_matrix')
 
     if C.shape[0] != C.shape[1]:
@@ -168,13 +168,13 @@ def naive_aggregation(C):
 
     if num_aggregates == 0:
         # all zero matrix
-        return csr_matrix((num_rows, 1), dtype='int8'), Cpts
+        return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
     else:
         shape = (num_rows, num_aggregates)
         # all nodes aggregated
         Tp = np.arange(num_rows+1, dtype=index_type)
         Tx = np.ones(len(Tj), dtype='int8')
-        return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+        return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
@@ -237,7 +237,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 
-    if not (isspmatrix_csr(C) or isspmatrix_csc(C)):
+    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if distance == 'unit':
@@ -267,6 +267,84 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
     data = np.ones(len(row), dtype='int8')
+    AggOp = sparse.coo_matrix((data, (row, col)),
+                              shape=(G.shape[0], num_seeds)).tocsr()
+    return AggOp, seeds
+
+
+def balanced_lloyd_aggregation(C, num_clusters=None):
+    """Aggregate nodes using Balanced Lloyd Clustering.
+
+    Parameters
+    ----------
+    C : csr_matrix
+        strength of connection matrix with positive weights
+    num_clusters : int
+        Number of seeds or clusters expected (default: C.shape[0] / 10)
+
+    Returns
+    -------
+    AggOp : csr_matrix
+        aggregation operator which determines the sparsity pattern
+        of the tentative prolongator
+    seeds : array
+        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+
+    See Also
+    --------
+    amg_core.standard_aggregation
+
+    Examples
+    --------
+    >>> import pyamg
+    >>> from pyamg.aggregation.aggregate import balanced_lloyd_aggregation
+    >>> data = pyamg.gallery.load_example('unit_square')
+    >>> G = data['A']
+    >>> xy = data['vertices'][:,:2]
+    >>> G.data[:] = np.ones(len(G.data))
+
+    >>> np.random.seed(787888)
+    >>> AggOp, seeds = balanced_lloyd_aggregation(G)
+
+    """
+
+    if num_clusters is None:
+        num_clusters = int(C.shape[0] / 10)
+
+    if num_clusters < 1 or num_clusters > C.shape[0]:
+        raise ValueError('num_clusters must be between 1 and n')
+
+    if not (isspmatrix_csr(C) or isspmatrix_csc(C)):
+        raise TypeError('expected csr_matrix or csc_matrix')
+
+    if C.data.min() <= 0:
+        raise ValueError('positive edge weights required')
+
+    if C.dtype == complex:
+        data = np.real(C.data)
+    else:
+        data = C.data
+
+    G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
+    num_nodes = G.shape[0]
+
+    seeds = np.random.permutation(num_nodes)[:num_clusters]
+    seeds = seeds.astype(np.int32)
+    mv = np.finfo(G.dtype).max
+    d = mv * np.ones(num_nodes, dtype=G.dtype)
+    d[seeds] = 0
+
+    cm = -1 * np.ones(num_nodes, dtype=np.int32)
+    cm[seeds] = seeds
+
+    amg_core.lloyd_cluster_exact(num_nodes,
+                                 G.indptr, G.indices, G.data,
+                                 num_clusters,
+                                 d, cm, seeds)
+
+    col = cm
+    row = np.arange(len(cm))
+    data = np.ones(len(row), dtype='int8')
     AggOp = coo_matrix((data, (row, col)),
-                       shape=(G.shape[0], num_seeds)).tocsr()
+                       shape=(G.shape[0], num_clusters)).tocsr()
     return AggOp, seeds
