@@ -179,7 +179,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         R -= AP.dot(alpha)
 
         # Sum columns of R
-        r = np.sum(R, axis=0)
+        r = np.sum(R, axis=1)
         res_norm = norm(r)
 
         # Append residual to list
