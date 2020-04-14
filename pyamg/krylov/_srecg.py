@@ -11,7 +11,7 @@ __all__ = ['srecg']
 
 
 def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, orthog='orthodir_new', **kwargs):
+       callback=None, residuals=None, orthog='bcgs', **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
     Solves the linear system Ax = b. Left preconditioning is supported.
