@@ -162,7 +162,8 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         AZ = A * Z
         ZAZ = Z.conjugate().T.dot(AZ)
 
-        u, s, vh = np.linalg.svd(ZAZ, full_matrices=True, hermitian=False)
+        #u, s, vh = np.linalg.svd(ZAZ, full_matrices=True, hermitian=False)
+        u, s, vh = np.linalg.svd(ZAZ, full_matrices=True)
         P = Z.dot(vh.T @ np.diag(s**(-1/2)) @ u.T)
         AP = A * P 
             
