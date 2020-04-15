@@ -127,7 +127,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
     X = np.zeros_like(R)
     for i in range(t):
         X[:,i] = x
-    
+
     # First check for callback functions    
     if callback is not None:
         #x = np.sum(X, axis=1)
@@ -143,7 +143,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         r = np.copy(R[:,i])
         Z[:,i] = M * r
     #Z = M * R
-    
+   
     # Initialize P and P_{k-1}
     P = np.zeros_like(Z, A.dtype)
     P_1 = np.zeros_like(Z, A.dtype)
@@ -156,16 +156,18 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
     dtrsm = get_blas_funcs(['trsm'], [P, AP])[0]
 
     # Iterations variable
-    k = 0
+    k = 1
     while True:
         # P_k = Z_k (Z_k^T A Z_k)^1/2
         AZ = A * Z
         ZAZ = Z.conjugate().T.dot(AZ)
 
         u, s, vh = np.linalg.svd(ZAZ, full_matrices=True)
-        P = Z.dot(vh.T.dot(np.diag(s**(-1/2)).dot(u.T)))
+        uh = u.conjugate().T
+        s_diag = np.diag(1.0/np.sqrt(s))
+        P = Z.dot(vh.T.dot(s_diag.dot(uh)))
         AP = A * P 
-            
+           
         # alpha_k = P_k^T R_{k-1}
         alpha = P.conjugate().T.dot(R)
 
