@@ -851,3 +851,4 @@ def model(num=0):
     Notes
     -----
     """
+    pass
