@@ -451,6 +451,53 @@ class mesh:
         if self.degree == 2:
             self.generate_quadratic()
 
+    def smooth(self, maxit=10, tol=0.01):
+        """Constrained Laplacian Smoothing.
+
+        Parameters
+        ----------
+        maxit : int
+            Iterations
+        tol : float
+            Convergence toleratnce measured in the maximum
+            absolute distance the mesh moves (in one iteration).
+
+        """
+        nv = self.nv
+
+        # graph Laplacian (only the adjacency)
+        edge0 = self.E[:, [0, 0, 1, 1, 2, 2]].ravel()
+        edge1 = self.E[:, [1, 2, 0, 2, 0, 1]].ravel()
+        data = np.ones((edge0.shape[0],), dtype=int)
+        G = sparse.coo_matrix((data, (edge0, edge1)), shape=(nv, nv))
+        G.sum_duplicates()
+        G.eliminate_zeros()
+
+        # boundary IDs
+        bid = np.where(G.data == 1)[0]
+        bid = np.unique(G.row[bid])
+
+        # set constant (alternative: edgelength)
+        G.data[:] = 1
+        W = np.array(G.sum(axis=1)).flatten()
+
+        Vnew = self.V.copy()
+        edgelength = (Vnew[edge0, 0] - Vnew[edge1, 0])**2 + (Vnew[edge0, 1] - Vnew[edge1, 1])**2
+
+        maxit = 100
+        for it in range(maxit):
+            Vnew = G @ Vnew
+            Vnew /= W[:, None] # scale the columns by 1/W
+            Vnew[bid,:] = self.V[bid, :]
+            newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2 +
+                                    (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
+            move = np.max(np.abs(newedgelength - edgelength) / newedgelength)
+            edgelength = newedgelength
+            if move < tol:
+                break
+
+        self.V = Vnew
+        return it
 
 def gradgradform(mesh, kappa=None, f=None, degree=1):
     """Finite element discretization of a Poisson problem.
