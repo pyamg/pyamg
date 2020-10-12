@@ -108,7 +108,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg.krylov._gmres_householder')
+    warnings.filterwarnings('always',
+                            module='pyamg\.krylov\._gmres_householder')
 
     # Choose type
     if not hasattr(A, 'dtype'):
@@ -312,7 +313,11 @@ def gmres_householder(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
 
                 # Allow user access to the iterates
                 if callback is not None:
-                    callback(x)
+                    y      = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.zeros(x.shape, dtype=xtype)
+                    amg_core.householder_hornerscheme(update, np.ravel(W), np.ravel(y),
+                                                      dimen, inner, -1, -1)
+                    callback(x+update)
                 if keep_r:
                     residuals.append(normr)
 

@@ -114,7 +114,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg.krylov._fgmres')
+    warnings.filterwarnings('always', module='pyamg\.krylov\._fgmres')
 
     # Choose type
     if not hasattr(A, 'dtype'):
@@ -307,7 +307,9 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
                 # Allow user access to the iterates
                 if callback is not None:
-                    callback(x)
+                    y      = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.dot(Z[:, 0:inner+1], y)
+                    callback(x+update)
                 if keep_r:
                     residuals.append(normr)
 
