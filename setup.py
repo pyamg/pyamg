@@ -296,7 +296,7 @@ setup(
     long_description=__doc__,
     #
     packages=find_packages(exclude=['doc']),
-    package_data={'pyamg': ['gallery/example_data/*.mat']},
+    package_data={'pyamg': ['gallery/example_data/*.mat', 'gallery/mesh_data/*.npz']},
     include_package_data=False,
     install_requires=install_requires,
     zip_safe=False,

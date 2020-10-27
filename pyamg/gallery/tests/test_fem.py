@@ -6,6 +6,10 @@ import scipy.sparse.linalg as sla
 
 import os
 
+test_dir = os.path.split(__file__)[0]
+base_dir = os.path.split(test_dir)[0]
+mesh_dir = os.path.join(base_dir, 'mesh_data')
+
 
 class TestDiameter(np.testing.TestCase):
     """
@@ -74,9 +78,11 @@ class TestL2Norm(np.testing.TestCase):
           x, y = symbols("x y")
     """
     def test_l2norm(self):
+        data = np.load(os.path.join(mesh_dir, 'square_mesh.npz'))
         # import square mesh of vertices, elements
-        V = np.loadtxt('mesh.v')
-        E = np.loadtxt('mesh.e', dtype=int)
+        V = data['vertices']
+        E = data['elements']
+        print(V, E)
         mesh = fem.mesh(V, E)
         X, Y = V[:, 0], V[:, 1]
 
@@ -104,8 +110,8 @@ class TestL2Norm(np.testing.TestCase):
         np.testing.assert_almost_equal(fem.l2norm(X, mesh), 0.2886, decimal=4)
 
         # 0.545351286587159 = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
-        V = np.loadtxt('mesh.v')
-        E = np.loadtxt('mesh.e', dtype=int)
+        V = data['vertices']
+        E = data['elements']
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
         V2, E2 = mesh.V2, mesh.E2
