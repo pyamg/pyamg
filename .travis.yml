@@ -2,11 +2,6 @@ language: python
 
 matrix:
   include:
-    - name: "Xenial Linux, Python 2.7"
-      python: 2.7
-      os: linux
-      dist: trusty
-      sudo: false
     - name: "Xenial Linux, Python 3.5"
       python: 3.5
       os: linux
@@ -27,6 +22,11 @@ matrix:
       os: linux
       dist: xenial
       sudo: false
+    - name: "Xenial Linux, Python 3.9"
+      python: 3.9
+      os: linux
+      dist: xenial
+      sudo: false
     - name: "MacOS with Homebrew Python 3"
       os: osx
       language: generic
@@ -38,8 +38,7 @@ before_install:
       brew unlink python@2
       brew upgrade python@3
     fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then export PYTHON=python2; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then export PYTHON=python3; fi
+  - export PYTHON=python3
   - $PYTHON --version
   - $PYTHON -m pip install --upgrade pip
   - $PYTHON -m pip install -r requirements.txt
@@ -52,4 +51,4 @@ script:
   - pytest --cov=. --cov-report=term
 
 after_success:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then codecov; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then codecov; fi
