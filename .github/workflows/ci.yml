@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Python package
+name: pyamg
 
 on:
   push:
@@ -10,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  Test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -28,7 +25,7 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install
-      run: pip install .
+      run: pip install -e .
     - name: Test
       run: |
         pytest .
