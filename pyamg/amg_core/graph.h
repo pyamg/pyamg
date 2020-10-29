@@ -957,7 +957,7 @@ void lloyd_cluster_exact(const I num_nodes,
     const I ICp_size = num_nodes;
     const I ICi_size = num_nodes;
     const I L_size = num_nodes;
-    I* ICp = new I[ICP_size];
+    I* ICp = new I[ICp_size];
     I* ICi = new I[ICi_size];
     I* L = new I[L_size];
     cluster_node_incidence(num_nodes,
