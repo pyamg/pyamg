@@ -48,8 +48,8 @@ install:
   - conda update conda
   - conda install cython numpy scipy wheel pip
   - conda install -c conda-forge pybind11
-  - python3 -m pip install
-  - python3 -m cibuildwheel --output-dir wheelhouse
+  - python -m pip install cibuildwheel==1.6.3
+  - python -m cibuildwheel --output-dir wheelhouse
   - ps: "ls wheelhouse"
 
 build: false
@@ -58,6 +58,19 @@ artifacts:
   - path: wheelhouse\*
 
 on_success:
+  - IF "%APPVEYOR_REPO_TAG%" == "false"
+    (
+    echo "false"
+    )
+  - IF "%APPVEYOR_REPO_TAG%" == "true"
+    (
+    echo "true"
+    )
+  #   (
+  #   python -m pip install twine
+  #   &&
+  #   python -m twine upload wheelhouse/*.whl
+  #   )
   #- twine upload -u %USER% -p %PASS% dist/*
   # - >
   #   IF "%APPVEYOR_REPO_TAG%" == "true"
