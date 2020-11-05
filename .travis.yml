@@ -32,13 +32,14 @@ matrix:
       language: generic
 
 before_install:
+  - export PYTHON=python3
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update
       brew unlink python@2
       brew upgrade python@3
+      export PYTHON=python3.8
     fi
-  - export PYTHON=python3
   - $PYTHON --version
   - $PYTHON -m pip install --upgrade pip
   - $PYTHON -m pip install -r requirements.txt
