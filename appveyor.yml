@@ -47,7 +47,7 @@ install:
   - conda install cython numpy scipy wheel pip
   - conda install -c conda-forge pybind11
   - ps: "python --version"
-  - python -m pip install cibuildwheel==1.6.3
+  - python -m pip install cibuildwheel==1.6.4
   - python -m cibuildwheel --output-dir wheelhouse
   - ps: "ls wheelhouse"
 
