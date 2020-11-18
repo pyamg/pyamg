@@ -253,74 +253,6 @@ void _bellman_ford(
 }
 
 template<class I, class T>
-void _bellman_ford_adv(
-        const I num_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-       py::array_t<T> & d,
-      py::array_t<I> & cm,
-       py::array_t<I> & c
-                       )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
-    auto py_c = c.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
-    I *_c = py_c.mutable_data();
-
-    return bellman_ford_adv<I, T>(
-                num_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                       _d, d.shape(0),
-                      _cm, cm.shape(0),
-                       _c, c.shape(0)
-                                  );
-}
-
-template<class I, class T>
-void _bellman_ford_balanced(
-        const I num_nodes,
-     const I num_clusters,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-       py::array_t<T> & d,
-      py::array_t<I> & cm
-                            )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
-
-    return bellman_ford_balanced<I, T>(
-                num_nodes,
-             num_clusters,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                       _d, d.shape(0),
-                      _cm, cm.shape(0)
-                                       );
-}
-
-template<class I, class T>
 void _lloyd_cluster(
         const I num_nodes,
       py::array_t<I> & Ap,
@@ -355,43 +287,6 @@ void _lloyd_cluster(
                       _cm, cm.shape(0),
                        _c, c.shape(0)
                                );
-}
-
-template<class I, class T>
-void _lloyd_cluster_adv(
-        const I num_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-     const I num_clusters,
-       py::array_t<T> & d,
-      py::array_t<I> & cm,
-       py::array_t<I> & c
-                        )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
-    auto py_c = c.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
-    I *_c = py_c.mutable_data();
-
-    return lloyd_cluster_adv<I, T>(
-                num_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-             num_clusters,
-                       _d, d.shape(0),
-                      _cm, cm.shape(0),
-                       _c, c.shape(0)
-                                   );
 }
 
 template<class I, class T>
@@ -527,10 +422,7 @@ PYBIND11_MODULE(graph, m) {
     cluster_node_incidence
     cluster_center
     bellman_ford
-    bellman_ford_adv
-    bellman_ford_balanced
     lloyd_cluster
-    lloyd_cluster_adv
     lloyd_cluster_exact
     maximal_independent_set_k_parallel
     breadth_first_search
@@ -737,57 +629,6 @@ graph stored in CSR format.
  References:
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
-    m.def("bellman_ford_adv", &_bellman_ford_adv<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("bellman_ford_adv", &_bellman_ford_adv<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("bellman_ford_adv", &_bellman_ford_adv<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
-R"pbdoc(
-Apply one iteration of Bellman-Ford iteration on a distance
-graph stored in CSR format.
-
-This version is modified to break ties by assigning to center
-with fewest points in its cluster.
-
- Parameters
-     num_nodes  - number of nodes (number of rows in A)
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array (edge lengths)
-     d[]        - distance to nearest center
-    cm[]        - cluster index for each node
-     c[]        - list of centers
-
- References:
-     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
-
-    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
-    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
-    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(),
-R"pbdoc(
-Apply Bellman-Ford with a heuristic to balance cluster sizes
-
-This version is modified to break distance ties by assigning nodes
-to the cluster with the fewest points, while preserving cluster
-connectivity. This will hopefully result in more balanced cluster
-sizes.
-
- Parameters
-    num_nodes    - (IN)    number of nodes (vertices)
-    num_clusters - (IN)    number of clusters
-    Ap[]         - (IN)    CSR row pointer for adjacency matrix A
-    Aj[]         - (IN)    CSR index array
-    Ax[]         - (IN)    CSR data array (edge lengths)
-     d[]         - (INOUT) distance to nearest center
-    cm[]         - (INOUT) cluster index for each node
-
- References:
-     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
-
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
     m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
@@ -796,32 +637,6 @@ sizes.
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph
-
- Parameters
-     num_nodes       - (IN)  number of nodes (number of rows in A)
-     Ap[]            - (IN)  CSR row pointer for adjacency matrix A
-     Aj[]            - (IN)  CSR index array
-     Ax[]            - (IN)  CSR data array (edge lengths)
-     num_clusters    - (IN)  number of clusters (seeds)
-     d[num_nodes]    - (OUT) distance to nearest seed
-    cm[num_nodes]    - (OUT) cluster index for each node
-     c[num_clusters] - (INOUT)  cluster centers
-
- References
-     Nathan Bell
-     Algebraic Multigrid for Discrete Differential Forms
-     PhD thesis (UIUC), August 2008)pbdoc");
-
-    m.def("lloyd_cluster_adv", &_lloyd_cluster_adv<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster_adv", &_lloyd_cluster_adv<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster_adv", &_lloyd_cluster_adv<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
-R"pbdoc(
-Perform one iteration of Lloyd clustering on a distance graph
-
-This adds the tie breaking for bellman_ford_adv
 
  Parameters
      num_nodes       - (IN)  number of nodes (number of rows in A)
