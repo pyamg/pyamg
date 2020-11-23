@@ -33,8 +33,8 @@ class TestClustering(TestCase):
         bellman_ford_input = [None for i in range(5)]
         bellman_ford_output = [None for i in range(5)]
 
-        bellman_ford_balanced_input = [None for i in range(5)]
-        bellman_ford_balanced_output = [None for i in range(5)]
+        #bellman_ford_balanced_input = [None for i in range(5)]
+        #bellman_ford_balanced_output = [None for i in range(5)]
 
         lloyd_cluster_input = [None for i in range(5)]
         lloyd_cluster_output = [None for i in range(5)]
@@ -89,9 +89,9 @@ class TestClustering(TestCase):
         bellman_ford_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
-        bellman_ford_balanced_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
-        bellman_ford_balanced_output[0] = {'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-                                           'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
+        #bellman_ford_balanced_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
+        #bellman_ford_balanced_output[0] = {'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
+        #                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
         lloyd_cluster_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
         lloyd_cluster_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
@@ -212,8 +212,8 @@ class TestClustering(TestCase):
         self.cluster_center_output = cluster_center_output
         self.bellman_ford_input = bellman_ford_input
         self.bellman_ford_output = bellman_ford_output
-        self.bellman_ford_balanced_input = bellman_ford_balanced_input
-        self.bellman_ford_balanced_output = bellman_ford_balanced_output
+        #self.bellman_ford_balanced_input = bellman_ford_balanced_input
+        #self.bellman_ford_balanced_output = bellman_ford_balanced_output
         self.lloyd_cluster_input = lloyd_cluster_input
         self.lloyd_cluster_output = lloyd_cluster_output
         self.lloyd_cluster_exact_input = lloyd_cluster_exact_input
@@ -294,29 +294,29 @@ class TestClustering(TestCase):
                 assert_array_equal(d, argout['d'])
                 assert_array_equal(cm, argout['cm'])
 
-    def test_bellman_ford_balanced(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.bellman_ford_balanced_input,
-                                    self.bellman_ford_balanced_output):
+    # def test_bellman_ford_balanced(self):
+    #     for A, argin, argout in zip(self.cases,
+    #                                 self.bellman_ford_balanced_input,
+    #                                 self.bellman_ford_balanced_output):
 
-            if argin is not None:
-                seeds = argin['seeds']
-                num_nodes = A.shape[0]
-                num_clusters = len(seeds)
+    #         if argin is not None:
+    #             seeds = argin['seeds']
+    #             num_nodes = A.shape[0]
+    #             num_clusters = len(seeds)
 
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
+    #             mv = np.finfo(A.dtype).max
+    #             d = mv * np.ones(num_nodes, dtype=A.dtype)
+    #             d[seeds] = 0
 
-                cm = 0 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = np.arange(len(seeds))
+    #             cm = 0 * np.ones(num_nodes, dtype=np.int32)
+    #             cm[seeds] = np.arange(len(seeds))
 
-                amg_core.bellman_ford_balanced(num_nodes, num_clusters,
-                                               A.indptr, A.indices, A.data,
-                                               d, cm)
+    #             amg_core.bellman_ford_balanced(num_nodes, num_clusters,
+    #                                            A.indptr, A.indices, A.data,
+    #                                            d, cm)
 
-                assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
+    #             assert_array_equal(d, argout['d'])
+    #             assert_array_equal(cm, argout['cm'])
 
     def test_lloyd_cluster(self):
         for A, argin, argout in zip(self.cases,
