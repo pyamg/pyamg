@@ -11,12 +11,9 @@ from . import amg_core
 __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
            'lloyd_cluster', 'connected_components']
 
+from pyamg.graph_ref import bellman_ford_reference
 
-def max_value(datatype):
-    try:
-        return np.iinfo(datatype).max
-    except BaseException:
-        return np.finfo(datatype).max
+__all__ += ['bellman_ford_reference']
 
 
 def asgraph(G):
@@ -123,53 +120,41 @@ def vertex_coloring(G, method='MIS'):
     return coloring
 
 
-def bellman_ford(G, seeds, maxiter=None):
+def bellman_ford(G, seeds):
     """Bellman-Ford iteration.
 
     Parameters
     ----------
     G : sparse matrix
+        Directed graph with positive weights.
+    seeds : list
+        Starting seeds
 
     Returns
     -------
     distances : array
+        Distance of each point to the nearest seed
     nearest_seed : array
-
-    References
-    ----------
-    CLR
-
+        Index of the nearest seed
     """
     G = asgraph(G)
     N = G.shape[0]
 
-    if maxiter is not None and maxiter < 0:
-        raise ValueError('maxiter must be positive')
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('Bellman-Ford is defined only for positive weights.')
     if G.dtype == complex:
-        raise ValueError('Bellman-Ford algorithm only defined for real\
-                          weights')
+        raise ValueError('Bellman-Ford is defined only for real weights.')
 
     seeds = np.asarray(seeds, dtype='intc')
 
-    distances = np.empty(N, dtype=G.dtype)
-    distances[:] = max_value(G.dtype)
+    distances = np.full(N, np.inf, dtype=G.dtype)
     distances[seeds] = 0
 
-    nearest_seed = np.empty(N, dtype='intc')
-    nearest_seed[:] = -1
+    nearest_seed = np.full(N, -1, dtype='intc')
     nearest_seed[seeds] = seeds
 
-    old_distances = np.empty_like(distances)
-
-    iter = 0
-    while maxiter is None or iter < maxiter:
-        old_distances[:] = distances
-
-        amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances,
-                              nearest_seed)
-
-        if (old_distances == distances).all():
-            break
+    amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances, nearest_seed)
 
     return (distances, nearest_seed)
 
