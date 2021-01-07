@@ -2,7 +2,6 @@ name: pyamg
 
 on:
   push:
-    branches: [ master, ci-testing ]
   pull_request:
     branches: [ master ]
 
