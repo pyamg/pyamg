@@ -3,7 +3,8 @@ import scipy.sparse as sparse
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import maximal_independent_set, vertex_coloring,\
-    bellman_ford, lloyd_cluster, connected_components, max_value
+    bellman_ford, lloyd_cluster, connected_components,\
+    bellman_ford_reference
 from pyamg import amg_core
 
 from numpy.testing import TestCase, assert_equal
@@ -95,6 +96,8 @@ class TestGraph(TestCase):
                 assert_is_vertex_coloring(G, c)
 
     def test_bellman_ford(self):
+        """Test pile of cases against reference implementation."""
+
         np.random.seed(1643502758)
 
         for G in self.cases:
@@ -106,8 +109,9 @@ class TestGraph(TestCase):
                     continue
 
                 seeds = np.random.permutation(N)[:n_seeds]
-                D_expected, S_expected = reference_bellman_ford(G, seeds)
+
                 D_result, S_result = bellman_ford(G, seeds)
+                D_expected, S_expected = bellman_ford_reference(G, seeds)
 
                 assert_equal(D_result, D_expected)
                 assert_equal(S_result, S_expected)
@@ -121,40 +125,21 @@ class TestGraph(TestCase):
                           [3, 2],
                           [1, 2],
                           [4, 3]])
-        w = np.array([2, 1, 2, -1, 4, 5, 3, -3], dtype=float)
+        w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
         G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-        #             distance
-        # seed  0 :  [ 0. -1.  2. -2.  1.]
-        # seed  1 :  [inf  0.  3. -1.  2.]
-        # seed  2 :  [inf inf  0. inf inf]
-        # seed  3 :  [inf  1.  4.  0.  3.]
-        # seed  4 :  [inf -2.  1. -3.  0.]
-        distances_FROM_seed = np.array([[    0.,    -1., 2.,    -2., 1.],
-                                        [np.inf,     0., 3.,    -1., 2.],
+        distances_FROM_seed = np.array([[0.,     1.,     4., 3.,     3.],
+                                        [np.inf, 0.,     3., 2.,     2.],
                                         [np.inf, np.inf, 0., np.inf, np.inf],
-                                        [np.inf,     1., 4.,     0., 3.],
-                                        [np.inf,    -2., 1.,    -3., 0.]])
-        distances_FROM_seed[np.where(distances_FROM_seed == np.inf)] = max_value(G.dtype)
+                                        [np.inf, 1.,     4., 0.,     3.],
+                                        [np.inf, 2.,     5., 1.,     0.]])
+
         for seed in range(5):
-            distance, nearest = reference_bellman_ford(G.T, [seed])
+            distance, nearest = bellman_ford_reference(G, [seed])
             assert_equal(distance, distances_FROM_seed[seed])
 
-            distance, nearest = bellman_ford(G.T, [seed])
+            distance, nearest = bellman_ford(G, [seed])
             assert_equal(distance, distances_FROM_seed[seed])
 
-        # seeds [0,1,2,3,4]
-        # distance to closest: [-2. -1.  0.  0. -3.]
-        #             closest: [3 3 2 3 3]
-        distance_TO_closest = np.array([-2., -1., 0., 0., -3.])
-        ref_closest = np.array([3, 3, 2, 3, 3])
-
-        distance, closest = reference_bellman_ford(G, [0, 1, 2, 3, 4])
-        assert_equal(distance, distance_TO_closest)
-        assert_equal(closest, ref_closest)
-
-        distance, closest = bellman_ford(G, [0, 1, 2, 3, 4])
-        assert_equal(distance, distance_TO_closest)
-        assert_equal(closest, ref_closest)
 
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
@@ -466,37 +451,3 @@ def reference_connected_components(G):
             components.add(frozenset(component))
 
     return components
-
-
-def reference_bellman_ford(G, seeds):
-    """
-    G : sparse matrix
-    seeds : array
-    """
-    G = G.tocoo()
-    N = G.shape[0]
-
-    seeds = np.asarray(seeds, dtype='intc')
-
-    distances = np.inf * np.ones(N, dtype=G.dtype)
-    distances[seeds] = 0
-
-    nearest_seed = -1 * np.ones(N, dtype='intc')
-    nearest_seed[seeds] = seeds
-
-    while True:
-        update = False
-
-        for (i, j, w) in zip(G.row, G.col, G.data):
-
-            if distances[j] + w < distances[i]:
-                update = True
-                distances[i] = distances[j] + w
-                nearest_seed[i] = nearest_seed[j]
-
-        if not update:
-            break
-
-    # temporary: swap infs for max_value()
-    distances[np.where(distances == np.inf)[0]] = max_value(G.dtype)
-    return (distances, nearest_seed)

@@ -568,20 +568,21 @@ void bellman_ford(const I num_nodes,
                         T  d[], const int  d_size,
                         I cm[], const int cm_size)
 {
+  bool done = false;
+
+  while (!done) {
+    done = true;
     for(I i = 0; i < num_nodes; i++){
-        T di = d[i];
-        I cmi = cm[i];
-        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
-            const I j = Aj[jj];
-            const T dd = Ax[jj] + d[j];
-            if(dd < di){
-                di = dd;
-                cmi = cm[j];
-            }
+      for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+        I j = Aj[jj];
+        if(d[i] + Ax[jj] < d[j]){
+          d[j] = d[i] + Ax[jj];
+          cm[j] = cm[i];
+          done = false; // found a change, keep going
         }
-        d[i] = di;
-        cm[i] = cmi;
+      }
     }
+  }
 }
 
 
