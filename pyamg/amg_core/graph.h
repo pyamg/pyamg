@@ -25,7 +25,7 @@ void printv(T *v, int n, char* name)
 
 inline void coreassert(const bool istrue, const std::string &errormsg){
     if (!istrue){
-        throw std::runtime_error("pyamg-error (amg_core) -- " + errormsg);
+        throw std::runtime_error("Hey! pyamg error in amg_core -- " + errormsg);
     }
 }
 
@@ -798,7 +798,7 @@ void lloyd_cluster(const I num_nodes,
             if (a == -1) // node belongs to no cluster
                 continue;
 
-            coreassert(a >= 0 && a < num_clusters, "");
+            coreassert(a >= 0 && a < num_clusters, "centers may be indexed incorrectly");
 
             if( d[c[a]] < d[i] ) {
                 c[a] = i;
