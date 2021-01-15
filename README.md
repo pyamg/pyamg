@@ -1,4 +1,4 @@
-[![CI](https://github.com/pyamg/pyamg/workflows/pyamg/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3Apyamg+branch%3Amaster)
+[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amaster)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 
 # Installation
