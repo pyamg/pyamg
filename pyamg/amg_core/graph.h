@@ -8,6 +8,21 @@
 #include <vector>
 #include <iostream>
 
+// Usage
+// printv(d, d_size, "d");
+template<class T>
+void printv(T *v, int n, char* name)
+{
+  std::cout << name << " = [";
+  for(int i=0; i<n; i++){
+    std::cout << v[i];
+    if(i < (n-1)){
+      std::cout << ", ";
+    }
+  }
+  std::cout << "]" << std::endl;
+}
+
 inline void coreassert(const bool istrue, const std::string &errormsg){
     if (!istrue){
         throw std::runtime_error("pyamg-error (amg_core) -- " + errormsg);
@@ -19,6 +34,7 @@ inline void coreassert(const bool istrue, const std::string &errormsg){
  *  using a greedy serial algorithm
  *
  *  Parameters
+ *  ----------
  *      num_rows   - number of rows in A (number of vertices)
  *      Ap[]       - CSR row pointer
  *      Aj[]       - CSR index array
@@ -28,10 +44,11 @@ inline void coreassert(const bool istrue, const std::string &errormsg){
  *      x[]        - state of each vertex
  *
  *
- *  Returns:
+ *  Returns
  *      The number of nodes in the MIS.
  *
- *  Notes:
+ *  Notes
+ *  -----
  *      Only the vertices with values with x[i] == active are considered
  *      when determining the MIS.  Upon return, all active vertices will
  *      be assigned the value C or F depending on whether they are in the
@@ -546,27 +563,44 @@ I cluster_center(const I a,
 }
 
 /*
- * Apply one iteration of Bellman-Ford iteration on a distance
- * graph stored in CSR format.
- *
- *  Parameters
- *      num_nodes - (IN)    number of nodes (number of rows in A)
- *      Ap[]      - (IN)    CSR row pointer
- *      Aj[]      - (IN)    CSR index array
- *      Ax[]      - (IN)    CSR data array (edge lengths)
- *      d[]       - (INOUT) distance to nearest center
- *     cm[]       - (INOUT) cluster index for each node
- *
- *  References:
- *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+  Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
+
+  Parameters
+  ----------
+  num_nodes : (IN) number of nodes (number of rows in A)
+  Ap        : (IN) CSR row pointer
+  Aj        : (IN) CSR index array
+  Ax        : (IN) CSR data array (edge lengths)
+  d         : (INOUT) distance to nearest center
+  m         : (INOUT) cluster index for each node
+  p         : (INOUT) predecessor in the graph traversal
+
+  Notes
+  -----
+  There are no checks within this kernel.
+
+  Assumptions:
+    d is initialized to inf or 0
+    m is initialized to -1 or cluster id/index
+    p is initialized to -1
+    Ax > 0
+
+  See Also
+  --------
+  pyamg.graph.bellman_ford
+
+  References
+  ----------
+  http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
  */
 template<class I, class T>
 void bellman_ford(const I num_nodes,
                   const I Ap[], const int Ap_size,
                   const I Aj[], const int Aj_size,
                   const T Ax[], const int Ax_size,
-                        T  d[], const int  d_size,
-                        I cm[], const int cm_size)
+                        T d[],  const int d_size,
+                        I m[],  const int m_size,
+                        I p[],  const int p_size)
 {
   bool done = false;
 
@@ -575,9 +609,11 @@ void bellman_ford(const I num_nodes,
     for(I i = 0; i < num_nodes; i++){
       for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
         I j = Aj[jj];
-        if(d[i] + Ax[jj] < d[j]){
-          d[j] = d[i] + Ax[jj];
-          cm[j] = cm[i];
+        T Aij = Ax[jj];
+        if(d[i] + Aij < d[j]){
+          d[j] = d[i] + Aij;
+          m[j] = m[i];
+          p[j] = i;
           done = false; // found a change, keep going
         }
       }
@@ -678,85 +714,97 @@ void bellman_ford_balanced(const I num_nodes,
 
 
 /*
- * Perform one iteration of Lloyd clustering on a distance graph
- *
- *  Parameters
- *      num_nodes       - (IN)  number of nodes (number of rows in A)
- *      Ap[]            - (IN)  CSR row pointer for adjacency matrix A
- *      Aj[]            - (IN)  CSR index array
- *      Ax[]            - (IN)  CSR data array (edge lengths)
- *      num_clusters    - (IN)  number of clusters (seeds)
- *      d[num_nodes]    - (OUT) distance to nearest seed
- *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (INOUT)  cluster centers
- *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
- *
- */
+  Perform Lloyd clustering on a distance graph
+
+  Parameters
+  ----------
+  num_nodes : (IN)  number of nodes (number of rows in A)
+  Ap[]      : (IN)  CSR row pointer for adjacency matrix A
+  Aj[]      : (IN)  CSR index array
+  Ax[]      : (IN)  CSR data array (edge lengths)
+   d[]      : (INOUT) distance to nearest seed
+  od[]      : (INOUT) distance to nearest seed
+   m[]      : (INOUT) cluster index for each node
+   c[]      : (INOUT) cluster centers
+   p[]      : (INOUT) predecessors in the graph traversal
+
+  Notes
+  -----
+  There are no check within this kernel.
+
+  Assumptions:
+    d is initialized to inf or 0
+    m is initialized to -1 or cluster id/index
+    m is ordered 1, ... , number of clusters
+    p is initialized to -1
+    Ax > 0
+
+  References
+  ----------
+  Nathan Bell
+  Algebraic Multigrid for Discrete Differential Forms
+  PhD thesis (UIUC), August 2008
+
+*/
 template<class I, class T>
 void lloyd_cluster(const I num_nodes,
                    const I Ap[], const int Ap_size,
                    const I Aj[], const int Aj_size,
                    const T Ax[], const int Ax_size,
-                   const I num_clusters,
                          T  d[], const int  d_size,
-                         I cm[], const int cm_size,
-                         I  c[], const int  c_size)
+                         T od[], const int od_size,
+                         I  m[], const int  m_size,
+                         I  c[], const int  c_size,
+                         I  p[], const int  p_size)
 {
-    for(I i = 0; i < num_nodes; i++){
-        d[i] = std::numeric_limits<T>::max();
-        cm[i] = -1;
-    }
-    for(I a = 0; a < num_clusters; a++){
-        I i = c[a];
-        coreassert(i >= 0 && i < num_nodes, "");
-        d[i] = 0;
-        cm[i] = a;
-    }
+    int num_clusters = c_size;
+    bool done = false;
 
-    std::vector<T> old_distances(num_nodes);
+    while (!done) {
+        done = true;
 
-    // propagate distances outward
-    do{
-        std::copy(d, d+num_nodes, old_distances.begin());
-        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
-    } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
+        // propagate distances outward
+        do{
+            std::copy(d, d+num_nodes, od);
+            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                         d, d_size, m, m_size, p, p_size);
+        } while (!std::equal(d, d+num_nodes, od));
 
-    //find boundaries
-    for(I i = 0; i < num_nodes; i++){
-        d[i] = std::numeric_limits<T>::max();
-    }
-    for(I i = 0; i < num_nodes; i++){
-        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
-            I j = Aj[jj];
-            if( cm[i] != cm[j] ){
-                d[i] = 0;
-                break;
+        //find boundaries
+        for(I i = 0; i < num_nodes; i++){
+            d[i] = std::numeric_limits<T>::infinity();
+        }
+        for(I i = 0; i < num_nodes; i++){
+            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
+                I j = Aj[jj];
+                if( m[i] != m[j] ){
+                    d[i] = 0;
+                    break;
+                }
             }
         }
-    }
 
-    // propagate distances inward
-    do{
-        std::copy(d, d+num_nodes, old_distances.begin());
-        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
-    } while ( !std::equal( d, d+num_nodes, old_distances.begin() ) );
+        // propagate distances inward
+        do{
+            std::copy(d, d+num_nodes, od);
+            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                         d, d_size, m, m_size, p, p_size);
+        } while (!std::equal(d, d+num_nodes, od));
 
+        // compute new seeds
+        for(I i = 0; i < num_nodes; i++){
+            const I a = m[i];
 
-    // compute new seeds
-    for(I i = 0; i < num_nodes; i++){
-        const I a = cm[i];
+            if (a == -1) // node belongs to no cluster
+                continue;
 
-        if (a == -1) //node belongs to no cluster
-            continue;
+            coreassert(a >= 0 && a < num_clusters, "");
 
-        coreassert(a >= 0 && a < num_clusters, "");
-
-        if( d[c[a]] < d[i] )
-            c[a] = i;
+            if( d[c[a]] < d[i] ) {
+                c[a] = i;
+                done = false;
+            }
+        }
     }
 }
 

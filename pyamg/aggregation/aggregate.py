@@ -4,7 +4,8 @@
 import numpy as np
 import scipy.sparse as sparse
 from pyamg import amg_core
-from pyamg.graph import lloyd_cluster
+from pyamg.graph import lloyd_cluster, asgraph
+import warnings
 
 __all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation', 'balanced_lloyd_aggregation']
 
@@ -177,28 +178,26 @@ def naive_aggregation(C):
         return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
+def lloyd_aggregation(C, naggs=None, measure=None, maxiter=10):
     """Aggregate nodes using Lloyd Clustering.
 
     Parameters
     ----------
     C : csr_matrix
         strength of connection matrix
-    ratio : scalar
-        Fraction of the nodes which will be seeds.
-    distance : ['unit','abs','inv',None]
-        Distance assigned to each edge of the graph G used in Lloyd clustering
+    naggs : int
+        number of aggregates or clusters
+    measure : ['unit','abs','inv',None]
+        Distance measure to use and assigned to each edge graph.
 
         For each nonzero value C[i,j]:
-
         =======  ===========================
-        'unit'   G[i,j] = 1
+        None     G[i,j] = C[i,j]
         'abs'    G[i,j] = abs(C[i,j])
         'inv'    G[i,j] = 1.0/abs(C[i,j])
-        'same'   G[i,j] = C[i,j]
+        'unit'   G[i,j] = 1
         'sub'    G[i,j] = C[i,j] - min(C)
         =======  ===========================
-
     maxiter : int
         Maximum number of iterations to perform
 
@@ -206,9 +205,9 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     -------
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
+        of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
     seeds : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+        array of seeds or Cpts, i.e., Cpts[i] = root node of aggregate i
 
     See Also
     --------
@@ -234,41 +233,47 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
     """
-    if ratio <= 0 or ratio > 1:
-        raise ValueError('ratio must be > 0.0 and <= 1.0')
+    C = asgraph(C)
+    n = C.shape[0]
 
-    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
-        raise TypeError('expected csr_matrix or csc_matrix')
+    if naggs is None:
+        naggs = int(n / 10)
 
-    if distance == 'unit':
-        data = np.ones_like(C.data).astype(float)
-    elif distance == 'abs':
-        data = abs(C.data)
-    elif distance == 'inv':
-        data = 1.0/abs(C.data)
-    elif distance == 'same':
+    if naggs <= 0 or naggs > n:
+        raise ValueError('number of aggregates must be >=1 and <=n)')
+
+    if measure is None:
         data = C.data
-    elif distance == 'min':
+    elif measure == 'abs':
+        data = np.abs(C.data)
+    elif measure == 'inv':
+        data = 1.0 / abs(C.data)
+    elif measure == 'unit':
+        data = np.ones_like(C.data).astype(float)
+    elif measure == 'min':
         data = C.data - C.data.min()
     else:
-        raise ValueError('unrecognized value distance=%s' % distance)
+        raise ValueError('unrecognized value measure=%s' % measure)
 
     if C.dtype == complex:
         data = np.real(data)
 
-    assert(data.min() >= 0)
+    if len(data) > 0:
+        if data.min() < 0:
+            raise ValueError('Lloyd aggregation requires a positive measure.')
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
 
-    num_seeds = int(min(max(ratio * G.shape[0], 1), G.shape[0]))
+    distances, clusters, seeds = lloyd_cluster(G, naggs)
 
-    distances, clusters, seeds = lloyd_cluster(G, num_seeds, maxiter=maxiter)
+    if clusters.min() < 0:
+        warnings.warn('Lloyd clustering did not cluster every point')
 
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
-    data = np.ones(len(row), dtype='int8')
-    AggOp = sparse.coo_matrix((data, (row, col)),
-                              shape=(G.shape[0], num_seeds)).tocsr()
+    data = np.ones(len(row), dtype=np.int32)
+    AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
+
     return AggOp, seeds
 
 

@@ -85,20 +85,20 @@ class TestClustering(TestCase):
                                    'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
         cluster_center_output[0] = [0, 1]
 
-        bellman_ford_input[0] = {'seeds': [0, 5]}
-        bellman_ford_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
+        bellman_ford_input[0] = {'centers': [0, 5]}
+        bellman_ford_output[0] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
-        #bellman_ford_balanced_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
+        #bellman_ford_balanced_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
         #bellman_ford_balanced_output[0] = {'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
         #                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
 
-        lloyd_cluster_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
-        lloyd_cluster_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
+        lloyd_cluster_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
+        lloyd_cluster_output[0] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
                                    'd': np.array([1., 0., 0., 1., 0., 0.], dtype=G.dtype),
                                    'c': np.array([0, 5], dtype=np.int32)}
 
-        lloyd_cluster_exact_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
+        lloyd_cluster_exact_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
         lloyd_cluster_exact_output[0] = {'cm': np.array([0, 0, 1, 0, 1, 1], dtype=np.int32),
                                          'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype),
                                          'c': np.array([0, 2], dtype=np.int32)}
@@ -265,34 +265,23 @@ class TestClustering(TestCase):
                                     self.bellman_ford_output):
 
             if argin is not None:
-                seeds = argin['seeds']
+                centers = argin['centers']
                 num_nodes = A.shape[0]
 
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
+                d = np.full(num_nodes, np.inf, dtype=A.dtype)
+                d[centers] = 0
 
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = np.arange(len(seeds))
+                m = np.full(num_nodes, -1, dtype=np.int32)
+                m[centers] = np.arange(len(centers))
 
-                old_d = np.empty_like(d)
+                p = np.full(num_nodes, -1, dtype=np.int32)
 
-                iter = 0
-                maxiter = 10
-                while maxiter is None or iter < maxiter:
-                    old_d[:] = d
-
-                    amg_core.bellman_ford(num_nodes,
-                                          A.indptr, A.indices, A.data,
-                                          d, cm)
-
-                    if (old_d == d).all():
-                        break
-
-                    iter += 1
+                amg_core.bellman_ford(num_nodes,
+                                      A.indptr, A.indices, A.data,
+                                      d, m, p)
 
                 assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
+                assert_array_equal(m, argout['m'])
 
     # def test_bellman_ford_balanced(self):
     #     for A, argin, argout in zip(self.cases,
@@ -300,16 +289,16 @@ class TestClustering(TestCase):
     #                                 self.bellman_ford_balanced_output):
 
     #         if argin is not None:
-    #             seeds = argin['seeds']
+    #             centers = argin['centers']
     #             num_nodes = A.shape[0]
-    #             num_clusters = len(seeds)
+    #             num_clusters = len(centers)
 
     #             mv = np.finfo(A.dtype).max
     #             d = mv * np.ones(num_nodes, dtype=A.dtype)
-    #             d[seeds] = 0
+    #             d[centers] = 0
 
     #             cm = 0 * np.ones(num_nodes, dtype=np.int32)
-    #             cm[seeds] = np.arange(len(seeds))
+    #             cm[centers] = np.arange(len(centers))
 
     #             amg_core.bellman_ford_balanced(num_nodes, num_clusters,
     #                                            A.indptr, A.indices, A.data,
@@ -324,25 +313,26 @@ class TestClustering(TestCase):
                                     self.lloyd_cluster_output):
 
             if argin is not None:
-                seeds = argin['seeds']
+                centers = argin['centers']
                 num_nodes = A.shape[0]
-                c = seeds.copy()
-                num_clusters = len(seeds)
+                c = centers.copy()
 
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
+                d = np.full(num_nodes, np.inf, dtype=A.dtype)
+                od = np.full(num_nodes, np.inf, dtype=A.dtype)
+                d[centers] = 0
+                od[centers] = 0
 
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
+                m = np.full(num_nodes, -1, dtype=np.int32)
+                m[c] = np.arange(len(c))
+
+                p = np.full(num_nodes, -1, dtype=np.int32)
 
                 amg_core.lloyd_cluster(num_nodes,
                                        A.indptr, A.indices, A.data,
-                                       num_clusters,
-                                       d, cm, c)
+                                       d, od, m, c, p)
 
                 assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
+                assert_array_equal(m, argout['m'])
                 assert_array_equal(c, argout['c'])
 
     def test_lloyd_cluster_exact(self):
@@ -351,17 +341,17 @@ class TestClustering(TestCase):
                                     self.lloyd_cluster_exact_output):
 
             if argin is not None:
-                seeds = argin['seeds']
+                centers = argin['centers']
                 num_nodes = A.shape[0]
-                c = seeds.copy()
-                num_clusters = len(seeds)
+                c = centers.copy()
+                num_clusters = len(centers)
 
                 mv = np.finfo(A.dtype).max
                 d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
+                d[centers] = 0
 
                 cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
+                cm[centers] = centers
 
                 amg_core.lloyd_cluster_exact(num_nodes,
                                              A.indptr, A.indices, A.data,

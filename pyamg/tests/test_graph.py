@@ -104,17 +104,18 @@ class TestGraph(TestCase):
             G.data = np.random.rand(G.nnz)
             N = G.shape[0]
 
-            for n_seeds in [int(N/20), int(N/10), N-2, N]:
-                if n_seeds > G.shape[0] or n_seeds < 1:
+            for n_clusters in [int(N/20), int(N/10), N-2, N]:
+                if n_clusters > G.shape[0] or n_clusters < 1:
                     continue
 
-                seeds = np.random.permutation(N)[:n_seeds]
+                centers = np.random.permutation(N)[:n_clusters]
 
-                D_result, S_result = bellman_ford(G, seeds)
-                D_expected, S_expected = bellman_ford_reference(G, seeds)
+                d_result, m_result, p_result = bellman_ford(G, centers)
+                d_expected, m_expected, p_expected = bellman_ford_reference(G, centers)
 
-                assert_equal(D_result, D_expected)
-                assert_equal(S_result, S_expected)
+                assert_equal(d_result, d_expected)
+                assert_equal(m_result, m_expected)
+                assert_equal(p_result, p_expected)
 
     def test_bellman_ford_reference(self):
         Edges = np.array([[1, 4],
@@ -127,18 +128,18 @@ class TestGraph(TestCase):
                           [4, 3]])
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
         G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-        distances_FROM_seed = np.array([[0.,     1.,     4., 3.,     3.],
-                                        [np.inf, 0.,     3., 2.,     2.],
-                                        [np.inf, np.inf, 0., np.inf, np.inf],
-                                        [np.inf, 1.,     4., 0.,     3.],
-                                        [np.inf, 2.,     5., 1.,     0.]])
+        distances_FROM_center = np.array([[0.,     1.,     4., 3.,     3.],
+                                          [np.inf, 0.,     3., 2.,     2.],
+                                          [np.inf, np.inf, 0., np.inf, np.inf],
+                                          [np.inf, 1.,     4., 0.,     3.],
+                                          [np.inf, 2.,     5., 1.,     0.]])
 
-        for seed in range(5):
-            distance, nearest = bellman_ford_reference(G, [seed])
-            assert_equal(distance, distances_FROM_seed[seed])
+        for center in range(5):
+            distance, nearest, predecessor = bellman_ford_reference(G, [center])
+            assert_equal(distance, distances_FROM_center[center])
 
-            distance, nearest = bellman_ford(G, [seed])
-            assert_equal(distance, distances_FROM_seed[seed])
+            distance, nearest, predecessor = bellman_ford(G, [center])
+            assert_equal(distance, distances_FROM_center[center])
 
 
     def test_lloyd_cluster(self):
@@ -147,11 +148,11 @@ class TestGraph(TestCase):
         for G in self.cases:
             G.data = np.random.rand(G.nnz)
 
-            for n_seeds in [5]:
-                if n_seeds > G.shape[0]:
+            for n_clusters in [5]:
+                if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_seeds)
+                distances, clusters, centers = lloyd_cluster(G, n_clusters)
 
 
 class TestComplexGraph(TestCase):
@@ -188,11 +189,11 @@ class TestComplexGraph(TestCase):
         for G in self.cases:
             G.data = np.random.rand(G.nnz) + 1.0j*np.random.rand(G.nnz)
 
-            for n_seeds in [5]:
-                if n_seeds > G.shape[0]:
+            for n_clusters in [5]:
+                if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_seeds)
+                distances, clusters, centers = lloyd_cluster(G, n_clusters)
 
 
 class TestVertexColorings(TestCase):

@@ -8,7 +8,8 @@ from scipy import sparse
 
 from . import amg_core
 
-__all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
+__all__ = ['maximal_independent_set', 'vertex_coloring',
+           'bellman_ford',
            'lloyd_cluster', 'connected_components']
 
 from pyamg.graph_ref import bellman_ford_reference
@@ -120,25 +121,28 @@ def vertex_coloring(G, method='MIS'):
     return coloring
 
 
-def bellman_ford(G, seeds):
+def bellman_ford(G, centers, method='standard'):
     """Bellman-Ford iteration.
 
     Parameters
     ----------
     G : sparse matrix
         Directed graph with positive weights.
-    seeds : list
-        Starting seeds
+    centers : list
+        Starting centers or source nodes
+    method : string
+        'standard': base implementation of Bellman-Ford
+        'balanced': a balanced version of Bellman-Ford
 
     Returns
     -------
     distances : array
-        Distance of each point to the nearest seed
-    nearest_seed : array
-        Index of the nearest seed
+        Distance of each point to the nearest center
+    nearest : array
+        Index of the nearest center
     """
     G = asgraph(G)
-    N = G.shape[0]
+    n = G.shape[0]
 
     if G.nnz > 0:
         if G.data.min() < 0:
@@ -146,33 +150,38 @@ def bellman_ford(G, seeds):
     if G.dtype == complex:
         raise ValueError('Bellman-Ford is defined only for real weights.')
 
-    seeds = np.asarray(seeds, dtype='intc')
+    centers = np.asarray(centers, dtype=np.int32)
 
-    distances = np.full(N, np.inf, dtype=G.dtype)
-    distances[seeds] = 0
+    distances = np.full(n, np.inf, dtype=G.dtype)
+    distances[centers] = 0
 
-    nearest_seed = np.full(N, -1, dtype='intc')
-    nearest_seed[seeds] = seeds
+    nearest = np.full(n, -1, dtype=np.int32)
+    nearest[centers] = centers
 
-    amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances, nearest_seed)
+    predecessors = np.full(n, -1, dtype=np.int32)
 
-    return (distances, nearest_seed)
+    if method == 'standard':
+        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, distances, nearest, predecessors)
+    elif method == 'balanced':
+        pass
+    else:
+        raise ValueError(f'method {method} is not supported in Bellman-Ford')
+
+    return distances, nearest, predecessors
 
 
-def lloyd_cluster(G, seeds, maxiter=10):
+def lloyd_cluster(G, centers):
     """Perform Lloyd clustering on graph with weighted edges.
 
     Parameters
     ----------
     G : csr_matrix, csc_matrix
-        A sparse NxN matrix where each nonzero entry G[i,j] is the distance
+        A sparse nxn matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
-    seeds : int array
-        If seeds is an integer, then its value determines the number of
-        clusters.  Otherwise, seeds is an array of unique integers between 0
-        and N-1 that will be used as the initial seeds for clustering.
-    maxiter : int
-        The maximum number of iterations to perform.
+    centers : int array
+        If centers is an integer, then its value determines the number of
+        clusters.  Otherwise, centers is an array of unique integers between 0
+        and n-1 that will be used as the initial centers for clustering.
 
     Returns
     -------
@@ -180,8 +189,8 @@ def lloyd_cluster(G, seeds, maxiter=10):
         final distances
     clusters : int array
         id of each cluster of points
-    seeds : int array
-        index of each seed
+    centers : int array
+        index of each center
 
     Notes
     -----
@@ -189,40 +198,45 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
     """
     G = asgraph(G)
-    N = G.shape[0]
+    n = G.shape[0]
 
+    # complex dtype
     if G.dtype.kind == 'c':
-        # complex dtype
         G = np.abs(G)
 
-    # interpret seeds argument
-    if np.isscalar(seeds):
-        seeds = np.random.permutation(N)[:seeds]
-        seeds = seeds.astype('intc')
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('Lloyd Clustering is defined only for positive weights.')
+
+    if np.isscalar(centers):
+        centers = np.random.permutation(n)[:centers]
+        centers = centers.astype('intc')
     else:
-        seeds = np.array(seeds, dtype='intc')
+        centers = np.asarray(centers, dtype=np.int32)
 
-    if len(seeds) < 1:
-        raise ValueError('at least one seed is required')
+    if len(centers) < 1:
+        raise ValueError('at least one center is required')
 
-    if seeds.min() < 0:
-        raise ValueError('invalid seed index (%d)' % seeds.min())
-    if seeds.max() >= N:
-        raise ValueError('invalid seed index (%d)' % seeds.max())
+    if centers.min() < 0:
+        raise ValueError(f'invalid center index {centers.min()}')
+    if centers.max() >= n:
+        raise ValueError(f'invalid center index {centers.max()}')
 
-    clusters = np.empty(N, dtype='intc')
-    distances = np.empty(N, dtype=G.dtype)
+    centers = np.asarray(centers, dtype=np.int32)
 
-    for i in range(maxiter):
-        last_seeds = seeds.copy()
+    distances= np.full(n, np.inf, dtype=G.dtype)
+    olddistances= np.full(n, np.inf, dtype=G.dtype)
+    distances[centers] = 0
 
-        amg_core.lloyd_cluster(N, G.indptr, G.indices, G.data,
-                               len(seeds), distances, clusters, seeds)
+    clusters = np.full(n, -1, dtype=np.int32)
+    clusters[centers] = np.arange(len(centers))
 
-        if (seeds == last_seeds).all():
-            break
+    predecessors = np.full(n, -1, dtype=np.int32)
 
-    return (distances, clusters, seeds)
+    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,
+                           distances, olddistances, clusters, centers, predecessors)
+
+    return distances, clusters, centers
 
 
 def breadth_first_search(G, seed):
