@@ -1,5 +1,4 @@
-[![Build Status](https://img.shields.io/travis/pyamg/pyamg/master.svg?style=flat-square)](https://travis-ci.org/pyamg/pyamg)
-[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/master.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
+[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amaster)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 
 # Installation
