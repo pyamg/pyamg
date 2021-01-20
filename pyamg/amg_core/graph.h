@@ -810,8 +810,6 @@ void bellman_ford_balanced(const I num_nodes,
         if(swap){
           if(m[j] >= 0){     // if part of a cluster
             s[m[j]]--;       // update cluster size (removing j)
-          }
-          if(p[j] >= 1){     // if there's a predecessor
             pc[p[j]]--;      // update predecessor count (removing j)
           }
 
