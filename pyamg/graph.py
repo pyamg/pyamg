@@ -172,10 +172,10 @@ def bellman_ford(G, centers, method='standard'):
                               distances, nearest, predecessors,        # OUT
                               True)
     elif method == 'balanced':
-        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers, # IN
-                              distances, nearest, predecessors,        # OUT
-                              predecessors_count, cluster_size,        # OUT
-                              True)
+        amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers, # IN
+                                       distances, nearest, predecessors,        # OUT
+                                       predecessors_count, cluster_size,        # OUT
+                                       True)
     else:
         raise ValueError(f'method {method} is not supported in Bellman-Ford')
 

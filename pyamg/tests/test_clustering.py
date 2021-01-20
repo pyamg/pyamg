@@ -25,6 +25,7 @@ def canonical_graph(G):
 class TestClustering(TestCase):
     def setUp(self):
         cases_bellman_ford = []
+        cases_bellman_ford_balanced = []
 
         # (0) 6 node undirected, unit length
         # (1) 12 node undirected, unit length
@@ -65,6 +66,10 @@ class TestClustering(TestCase):
         case['output'] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
                           'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
         cases_bellman_ford.append(case)
+
+        case = dict(case)
+        del case['output']
+        cases_bellman_ford_balanced.append(case)
 
         #cluster_node_incidence_input[0] = {'num_clusters': 2,
         #                                   'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32)}
@@ -141,6 +146,7 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         #cluster_node_incidence_input.append({'num_clusters': 2,
         #                                     'cm': np.array([0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1], dtype=np.int32)})
@@ -166,6 +172,7 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         ############################################################
         # (3) 16 node directed, random length
@@ -214,6 +221,7 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': np.array([0, 5], np.int32)}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         ############################################################
         # (4) 191 node unstructured finite element matrix
@@ -226,6 +234,7 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': np.array([0, 10, 20, 30], dtype=np.int32)}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         ############################################################
         # (5) 5 nodes case in a line
@@ -246,6 +255,7 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': c}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         ############################################################
         # (6) 5 node graph
@@ -268,8 +278,10 @@ class TestClustering(TestCase):
         case['G'] = G
         case['input'] = {'centers': c}
         cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
         self.cases_bellman_ford = cases_bellman_ford
+        self.cases_bellman_ford_balanced = cases_bellman_ford_balanced
 
     def test_cluster_node_incidence(self):
         if 0:
@@ -305,7 +317,6 @@ class TestClustering(TestCase):
 
     def test_bellman_ford(self):
         for case in self.cases_bellman_ford:
-            print(case['id'])
             G = case['G']
 
             if 'input' in case:
@@ -328,29 +339,31 @@ class TestClustering(TestCase):
             assert_array_equal(d, d_ref)
             assert_array_equal(m, m_ref)
 
-    # def test_bellman_ford_balanced(self):
-    #     for A, argin, argout in zip(self.cases,
-    #                                 self.bellman_ford_balanced_input,
-    #                                 self.bellman_ford_balanced_output):
+    def test_bellman_ford_balanced(self):
+        for case in self.cases_bellman_ford_balanced:
+            G = case['G']
 
-    #         if argin is not None:
-    #             centers = argin['centers']
-    #             num_nodes = A.shape[0]
-    #             num_clusters = len(centers)
+            if 'input' in case:
+                centers = case['input']['centers']
+                n = G.shape[0]
 
-    #             mv = np.finfo(A.dtype).max
-    #             d = mv * np.ones(num_nodes, dtype=A.dtype)
-    #             d[centers] = 0
+                d = np.empty(n, dtype=G.dtype)
+                m = np.empty(n, dtype=np.int32)
+                p = np.empty(n, dtype=np.int32)
+                pc = np.empty(n, dtype=np.int32)
+                s = np.empty(len(centers), dtype=np.int32)
 
-    #             cm = 0 * np.ones(num_nodes, dtype=np.int32)
-    #             cm[centers] = np.arange(len(centers))
+                amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,
+                                               d, m, p, pc, s, True)
 
-    #             amg_core.bellman_ford_balanced(num_nodes, num_clusters,
-    #                                            A.indptr, A.indices, A.data,
-    #                                            d, cm)
+            if 'output' in case:
+                d_ref = case['output']['d']
+                m_ref = case['output']['m']
+            else:
+                d_ref, m_ref, _ = bellman_ford_balanced_reference(G, centers)
 
-    #             assert_array_equal(d, argout['d'])
-    #             assert_array_equal(cm, argout['cm'])
+            assert_array_equal(d, d_ref)
+            assert_array_equal(m, m_ref)
 
     def test_lloyd_cluster(self):
         if 0:
