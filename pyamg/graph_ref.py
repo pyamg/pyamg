@@ -107,7 +107,6 @@ def bellman_ford_balanced_reference(A, c):
                 if abs(d[i] + Aij - d[j]) < 1e-14:
                     if sj > (si + 1):
                         if pc[j] == 0:
-                            print(f'yep, {j} for {i}')
                             swap = True
 
             if swap:
@@ -127,7 +126,6 @@ def bellman_ford_balanced_reference(A, c):
 
         cnt += 1
 
-    print(f'TOTAL iterations: {cnt}')
     return (d, m, p)
 
 

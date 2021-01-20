@@ -618,9 +618,9 @@ void bellman_ford(const I num_nodes,
     std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
     std::fill(m, m+m_size, -1);
     std::fill(p, p+p_size, -1);
-    for(I i=0; i<c_size; i++){
-      d[c[i]] = 0;  // distance is zero
-      m[c[i]] = i;  // clusters is 0, ..., nclusters
+    for(I a=0; a<c_size; a++){
+      d[c[a]] = 0;  // distance is zero
+      m[c[a]] = a;  // clusters is 0, ..., nclusters
     }
   }
 
@@ -768,9 +768,9 @@ void bellman_ford_balanced(const I num_nodes,
     std::fill(p, p+p_size, -1);
     std::fill(pc, pc+pc_size, 0); // predecessor count is 0
     std::fill(s, s+s_size, 1);    // cluster size 1
-    for(I i=0; i<c_size; i++){
-      d[c[i]] = 0;                // distance is 0
-      m[c[i]] = i;                // clusters is 0, ..., nclusters
+    for(I a=0; a<c_size; a++){
+      d[c[a]] = 0;                // distance is 0
+      m[c[a]] = a;                // clusters is 0, ..., nclusters
     }
   }
 
@@ -801,7 +801,6 @@ void bellman_ford_balanced(const I num_nodes,
           if(std::abs(d[i] + Aij - d[j]) < tol){  // if both are finite and close
             if(s[m[j]] > (s[m[i]] + 1)){          // if the size of cluster j is larger
               if(pc[j] == 0){                     // if the predecessor count is zero
-                std::cout << "yep, " << j << " for " << i << std::endl;
                 swap = true;
               }
             }
@@ -833,7 +832,6 @@ void bellman_ford_balanced(const I num_nodes,
       throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
     }
   } while(!done);
-  std::cout << "TOTAL iterations: " << iteration << std::endl;
 }
 
 
