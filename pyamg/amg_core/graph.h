@@ -565,7 +565,7 @@ I cluster_center(const I a,
 }
 
 /*
-  Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
+  Bellman-Ford on a distance graph stored in CSR format.
 
   Parameters
   ----------
@@ -645,109 +645,47 @@ void bellman_ford(const I num_nodes,
 
 
 /*
-  Apply Bellman-Ford with a heuristic to balance cluster sizes
+  Bellman-Ford with a heuristic to balance cluster sizes
 
   This version is modified to break distance ties by assigning nodes
   to the cluster with the fewest points, while preserving cluster
-  connectivity. This will hopefully result in more balanced cluster
-  sizes.
+  connectivity. This results in more balanced cluster sizes.
 
   Parameters
   ----------
-    num_nodes    : (IN)    number of nodes (vertices)
-    num_clusters : (IN)    number of clusters
-    Ap[]         : (IN)    CSR row pointer for adjacency matrix A
-    Aj[]         : (IN)    CSR index array
-    Ax[]         : (IN)    CSR data array (edge lengths)
-     d[]         : (INOUT) distance to nearest center
-     m[]         : (INOUT) cluster index for each node
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap         : (IN) CSR row pointer
+  Aj         : (IN) CSR index array
+  Ax         : (IN) CSR data array (edge lengths)
+  c          : (IN) centers
+  d          : (OUT) distance to nearest center
+  m          : (OUT) cluster index for each node
+  p          : (OUT) predecessor in the graph traversal
+  pc         : (OUT) predecessor count
+  s          : (OUT) running clusters size
+  initialize : (IN) flag whether the data should be (re)-initialized
 
   Notes
   -----
-  There are no internal checks in this kernel.
+  There are no checks within this kernel.
 
-  Assumptions:
-    d is initialized to inf or 0
-    m is initialized to -1 or cluster id/index
-    p is initialized to -1
-    Ax > 0
+  Initializations
+  ---------------
+  d = inf if not a center
+    = 0   if a center
+  m = -1  if not a center
+    = 0, ..., nclusters if a center
+  p = -1
+  pc = 0
+  s = 1
+
+  Assumptions
+  -----------
+  Ax > 0
 
   See Also
   --------
-  pyamg.amg_core.bellman_ford
- */
-template<class I, class T>
-void bellman_ford_balanced_v1(const I num_nodes,
-                           const I num_clusters,
-                           const I Ap[], const int Ap_size,
-                           const I Aj[], const int Aj_size,
-                           const T Ax[], const int Ax_size,
-                                 T  d[], const int  d_size,
-                                 I  m[], const int  m_size)
-{
-    coreassert(d_size == num_nodes, "");
-    coreassert(m_size == num_nodes, "");
-
-    std::vector<I> predecessor(num_nodes, -1); // index of predecessor node
-    std::vector<I> pred_count(num_nodes, 0); // number of other nodes that we are the predecessor for
-    std::vector<I> cs(num_clusters, 0); // cluster sizes (number of nodes in each cluster)
-
-    for(I i = 0; i < num_nodes; i++){
-        if(m[i] > -1){
-            cs[m[i]]++;
-        }
-    }
-
-    bool change; // did we make any changes during this iteration?
-    I iteration = 0; // iteration count for safety check
-
-    do{
-        change = false;
-        for(I i = 0; i < num_nodes; i++){
-            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of node i
-                const I j = Aj[jj];
-                const T new_d = Ax[jj] + d[j];
-                if((new_d < d[i]) ||
-                   ((m[i] > -1) &&
-                    (new_d == d[i]) &&
-                    (cs[m[j]] < cs[m[i]]-1) &&
-                    (pred_count[i] == 0))){
-                    // switch distance/predecessor if the new distance
-                    // is strictly shorter, or if (distance is equal, the new
-                    // cluster is smaller, and we are not the
-                    // predecessor for anyone else)
-
-                    // update cluster sizes
-                    if(m[i] > -1){
-                        cs[m[i]]--;
-                        coreassert(cs[m[i]] >= 0, "");
-                    }
-                    cs[m[j]]++;
-
-                    // update predecessor assignments and counts
-                    if(predecessor[i] > -1){
-                        pred_count[predecessor[i]]--;
-                        coreassert(pred_count[predecessor[i]] >= 0, "");
-                    }
-                    predecessor[i] = j;
-                    pred_count[predecessor[i]]++;
-
-                    // switch to the new cluster
-                    d[i] = new_d;
-                    m[i] = m[j];
-                    change = true;
-                }
-            }
-        }
-        // safety check, regular unweighted BF is actually O(|V|.|E|)
-        if (++iteration > num_nodes*num_nodes){
-            throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
-        }
-    } while(change);
-}
-
-/*
- * balanced v2
+  pyamg.graph.bellman_ford
  */
 template<class I, class T>
 void bellman_ford_balanced(const I num_nodes,

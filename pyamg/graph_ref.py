@@ -27,6 +27,7 @@ def bellman_ford_reference(A, c):
     amg_core.graph.bellman_ford
 
     """
+    A = A.tocoo()
     nnodes = A.shape[0]
     nclusters = len(c)
     d = np.full(nnodes, np.inf)
@@ -75,6 +76,7 @@ def bellman_ford_balanced_reference(A, c):
     amg_core.graph.bellman_ford
 
     """
+    A = A.tocoo()
     nnodes = A.shape[0]
     nclusters = len(c)
     d = np.full(nnodes, np.inf)
@@ -157,33 +159,30 @@ if __name__  == '__main__':
     print(A.toarray())
 
     print('\nreference--')
-    print(type(A))
     for cc in c:
         d, m, p = bellman_ford_reference(A, [cc])
         print(d, m, p)
 
-    if 0:
-        print('\nreference balanced--')
-        for cc in c:
-            d, m, p = bellman_ford_balanced_reference(A, [cc])
-            print(d, m, p)
+    print('\nreference balanced--')
+    for cc in c:
+        d, m, p = bellman_ford_balanced_reference(A, [cc])
+        print(d, m, p)
 
-    if 0:
-        print('\npyamg--')
-        from pyamg.graph import bellman_ford
-        from pyamg import amg_core
-        A = A.tocsr()
-        for cc in c:
-            #d, m, p = bellman_ford(A, [cc])
-            cc = np.asarray(cc, dtype=np.int32)
-            n = A.shape[0]
-            d = np.full(n, np.inf, dtype=A.dtype)
-            d[cc] = 0
-            m = np.full(n, -1, dtype=np.int32)
-            m[cc] = cc
-            p = np.full(n, -1, dtype=np.int32)
-            amg_core.bellman_ford(n, A.indptr, A.indices, A.data, d, m, p)
-            print(d, m, p)
+    print('\npyamg--')
+    from pyamg.graph import bellman_ford
+    from pyamg import amg_core
+    A = A.tocsr()
+    for cc in c:
+        #d, m, p = bellman_ford(A, [cc])
+        cc = np.asarray(cc, dtype=np.int32)
+        n = A.shape[0]
+        d = np.full(n, np.inf, dtype=A.dtype)
+        d[cc] = 0
+        m = np.full(n, -1, dtype=np.int32)
+        m[cc] = cc
+        p = np.full(n, -1, dtype=np.int32)
+        amg_core.bellman_ford(n, A.indptr, A.indices, A.data, d, m, p)
+        print(d, m, p)
 
     print('\ncsgraph.bellman_ford')
     from scipy.sparse import csgraph

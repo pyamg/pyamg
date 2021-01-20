@@ -14,7 +14,7 @@ __all__ = ['maximal_independent_set', 'vertex_coloring',
 
 from pyamg.graph_ref import bellman_ford_reference
 
-__all__ += ['bellman_ford_reference']
+__all__ += ['bellman_ford_reference', 'bellman_ford_balanced_reference']
 
 
 def asgraph(G):
@@ -140,6 +140,13 @@ def bellman_ford(G, centers, method='standard'):
         Distance of each point to the nearest center
     nearest : array
         Index of the nearest center
+    predecessors : array
+        Predecessors in the array
+
+    See Also
+    --------
+    pyamg.amg_core.bellman_ford
+    scipy.sparse.csgraph.bellman_ford
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -152,16 +159,23 @@ def bellman_ford(G, centers, method='standard'):
 
     centers = np.asarray(centers, dtype=np.int32)
 
+    # allocate space for returns and working arrays
     distances = np.empty(n, dtype=G.dtype)
     nearest = np.empty(n, dtype=np.int32)
-    predecessors = np.full(n, -1, dtype=np.int32)
+    predecessors = np.empty(n, dtype=np.int32)
+    if method == 'balanced':
+        predecessors_count = np.empty(n, dtype=np.int32)
+        cluster_size = np.empty(len(centers), dtype=np.int32)
 
     if method == 'standard':
         amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers, # IN
                               distances, nearest, predecessors,        # OUT
                               True)
     elif method == 'balanced':
-        pass
+        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers, # IN
+                              distances, nearest, predecessors,        # OUT
+                              predecessors_count, cluster_size,        # OUT
+                              True)
     else:
         raise ValueError(f'method {method} is not supported in Bellman-Ford')
 
