@@ -23,6 +23,8 @@ void printv(T *v, int n, char* name)
   std::cout << "]" << std::endl;
 }
 
+
+// Internal assert
 inline void coreassert(const bool istrue, const std::string &errormsg){
     if (!istrue){
         throw std::runtime_error("Hey! pyamg error in amg_core -- " + errormsg);
@@ -567,23 +569,31 @@ I cluster_center(const I a,
 
   Parameters
   ----------
-  num_nodes : (IN) number of nodes (number of rows in A)
-  Ap        : (IN) CSR row pointer
-  Aj        : (IN) CSR index array
-  Ax        : (IN) CSR data array (edge lengths)
-  d         : (INOUT) distance to nearest center
-  m         : (INOUT) cluster index for each node
-  p         : (INOUT) predecessor in the graph traversal
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap         : (IN) CSR row pointer
+  Aj         : (IN) CSR index array
+  Ax         : (IN) CSR data array (edge lengths)
+  c          : (IN) centers
+  d          : (OUT) distance to nearest center
+  m          : (OUT) cluster index for each node
+  p          : (OUT) predecessor in the graph traversal
+  initialize : (IN) flag whether the data should be (re)-initialized
 
   Notes
   -----
   There are no checks within this kernel.
 
-  Assumptions:
-    d is initialized to inf or 0
-    m is initialized to -1 or cluster id/index
-    p is initialized to -1
-    Ax > 0
+  Initializations
+  ---------------
+  d = inf if not a center
+    = 0   if a center
+  m = -1  if not a center
+    = 0, ..., nclusters if a center
+  p = -1
+
+  Assumptions
+  -----------
+  Ax > 0
 
   See Also
   --------
@@ -598,18 +608,30 @@ void bellman_ford(const I num_nodes,
                   const I Ap[], const int Ap_size,
                   const I Aj[], const int Aj_size,
                   const T Ax[], const int Ax_size,
+                  const I c[],  const int c_size,
                         T d[],  const int d_size,
                         I m[],  const int m_size,
-                        I p[],  const int p_size)
+                        I p[],  const int p_size,
+                  const bool initialize)
 {
+  if(initialize){
+    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
+    std::fill(m, m+m_size, -1);
+    std::fill(p, p+p_size, -1);
+    for(I i=0; i<c_size; i++){
+      d[c[i]] = 0;  // distance is zero
+      m[c[i]] = i;  // clusters is 0, ..., nclusters
+    }
+  }
+
   bool done = false;
 
   while (!done) {
     done = true;
     for(I i = 0; i < num_nodes; i++){
       for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
-        I j = Aj[jj];
-        T Aij = Ax[jj];
+        const I j = Aj[jj];
+        const T Aij = Ax[jj];
         if(d[i] + Aij < d[j]){
           d[j] = d[i] + Aij;
           m[j] = m[i];
@@ -623,44 +645,56 @@ void bellman_ford(const I num_nodes,
 
 
 /*
- * Apply Bellman-Ford with a heuristic to balance cluster sizes
- *
- * This version is modified to break distance ties by assigning nodes
- * to the cluster with the fewest points, while preserving cluster
- * connectivity. This will hopefully result in more balanced cluster
- * sizes.
- *
- *  Parameters
- *     num_nodes    - (IN)    number of nodes (vertices)
- *     num_clusters - (IN)    number of clusters
- *     Ap[]         - (IN)    CSR row pointer for adjacency matrix A
- *     Aj[]         - (IN)    CSR index array
- *     Ax[]         - (IN)    CSR data array (edge lengths)
- *      d[]         - (INOUT) distance to nearest center
- *     cm[]         - (INOUT) cluster index for each node
- *
- *  References:
- *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+  Apply Bellman-Ford with a heuristic to balance cluster sizes
+
+  This version is modified to break distance ties by assigning nodes
+  to the cluster with the fewest points, while preserving cluster
+  connectivity. This will hopefully result in more balanced cluster
+  sizes.
+
+  Parameters
+  ----------
+    num_nodes    : (IN)    number of nodes (vertices)
+    num_clusters : (IN)    number of clusters
+    Ap[]         : (IN)    CSR row pointer for adjacency matrix A
+    Aj[]         : (IN)    CSR index array
+    Ax[]         : (IN)    CSR data array (edge lengths)
+     d[]         : (INOUT) distance to nearest center
+     m[]         : (INOUT) cluster index for each node
+
+  Notes
+  -----
+  There are no internal checks in this kernel.
+
+  Assumptions:
+    d is initialized to inf or 0
+    m is initialized to -1 or cluster id/index
+    p is initialized to -1
+    Ax > 0
+
+  See Also
+  --------
+  pyamg.amg_core.bellman_ford
  */
 template<class I, class T>
-void bellman_ford_balanced(const I num_nodes,
+void bellman_ford_balanced_v1(const I num_nodes,
                            const I num_clusters,
                            const I Ap[], const int Ap_size,
                            const I Aj[], const int Aj_size,
                            const T Ax[], const int Ax_size,
                                  T  d[], const int  d_size,
-                                 I cm[], const int cm_size)
+                                 I  m[], const int  m_size)
 {
     coreassert(d_size == num_nodes, "");
-    coreassert(cm_size == num_nodes, "");
+    coreassert(m_size == num_nodes, "");
 
     std::vector<I> predecessor(num_nodes, -1); // index of predecessor node
     std::vector<I> pred_count(num_nodes, 0); // number of other nodes that we are the predecessor for
-
     std::vector<I> cs(num_clusters, 0); // cluster sizes (number of nodes in each cluster)
+
     for(I i = 0; i < num_nodes; i++){
-        if(cm[i] > -1){
-            cs[cm[i]]++;
+        if(m[i] > -1){
+            cs[m[i]]++;
         }
     }
 
@@ -674,9 +708,9 @@ void bellman_ford_balanced(const I num_nodes,
                 const I j = Aj[jj];
                 const T new_d = Ax[jj] + d[j];
                 if((new_d < d[i]) ||
-                   ((cm[i] > -1) &&
+                   ((m[i] > -1) &&
                     (new_d == d[i]) &&
-                    (cs[cm[j]] < cs[cm[i]]-1) &&
+                    (cs[m[j]] < cs[m[i]]-1) &&
                     (pred_count[i] == 0))){
                     // switch distance/predecessor if the new distance
                     // is strictly shorter, or if (distance is equal, the new
@@ -684,11 +718,11 @@ void bellman_ford_balanced(const I num_nodes,
                     // predecessor for anyone else)
 
                     // update cluster sizes
-                    if(cm[i] > -1){
-                        cs[cm[i]]--;
-                        coreassert(cs[cm[i]] >= 0, "");
+                    if(m[i] > -1){
+                        cs[m[i]]--;
+                        coreassert(cs[m[i]] >= 0, "");
                     }
-                    cs[cm[j]]++;
+                    cs[m[j]]++;
 
                     // update predecessor assignments and counts
                     if(predecessor[i] > -1){
@@ -700,7 +734,7 @@ void bellman_ford_balanced(const I num_nodes,
 
                     // switch to the new cluster
                     d[i] = new_d;
-                    cm[i] = cm[j];
+                    m[i] = m[j];
                     change = true;
                 }
             }
@@ -710,6 +744,96 @@ void bellman_ford_balanced(const I num_nodes,
             throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
         }
     } while(change);
+}
+
+/*
+ * balanced v2
+ */
+template<class I, class T>
+void bellman_ford_balanced(const I num_nodes,
+                           const I Ap[], const int Ap_size,
+                           const I Aj[], const int Aj_size,
+                           const T Ax[], const int Ax_size,
+                           const I  c[],  const int c_size,
+                                 T  d[], const int  d_size,
+                                 I  m[], const int  m_size,
+                                 I  p[], const int  p_size,
+                                 I pc[], const int pc_size,
+                                 I  s[], const int  s_size,
+                           const bool initialize)
+{
+  if(initialize){
+    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
+    std::fill(m, m+m_size, -1);
+    std::fill(p, p+p_size, -1);
+    std::fill(pc, pc+pc_size, 0); // predecessor count is 0
+    std::fill(s, s+s_size, 1);    // cluster size 1
+    for(I i=0; i<c_size; i++){
+      d[c[i]] = 0;                // distance is 0
+      m[c[i]] = i;                // clusters is 0, ..., nclusters
+    }
+  }
+
+  I num_clusters = c_size;
+  bool done; // did we make any changes during this iteration?
+  bool swap; // should we swap node i to the same clusters as node j?
+  I iteration = 0; // iteration count for safety check
+  const T tol = 1e-14; // precision tolerance
+
+  do{
+    done = true;
+    for(I i = 0; i < num_nodes; i++){
+      for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of node i
+
+        if(m[i] < 0){ // if i is unassigned, continue
+          continue;
+        }
+
+        const I j = Aj[jj];
+        const T Aij = Ax[jj];
+        swap = false;
+
+        if(d[i] + Aij < d[j]){  // standard Bellman-Ford
+          swap = true;
+        }
+
+        if(m[j] > -1){                            // if j is unassigned, do not consider the tie
+          if(std::abs(d[i] + Aij - d[j]) < tol){  // if both are finite and close
+            if(s[m[j]] > (s[m[i]] + 1)){          // if the size of cluster j is larger
+              if(pc[j] == 0){                     // if the predecessor count is zero
+                std::cout << "yep, " << j << " for " << i << std::endl;
+                swap = true;
+              }
+            }
+          }
+        }
+
+        if(swap){
+          if(m[j] >= 0){     // if part of a cluster
+            s[m[j]]--;       // update cluster size (removing j)
+          }
+          if(p[j] >= 1){     // if there's a predecessor
+            pc[p[j]]--;      // update predecessor count (removing j)
+          }
+
+          m[j] = m[i];       // swap node i to the cluster of node j
+          d[j] = d[i] + Aij; // use the distance through node j
+          p[j] = i;          // mark the predecessor
+
+          s[m[j]]++;         // update cluster size (adding j)
+          pc[p[j]]++;        // update predecessor count (adding j)
+
+          done = false;
+        }
+      }
+    }
+
+    // safety check, regular unweighted BF is actually O(|V|.|E|)
+    if (++iteration > num_nodes*num_nodes){
+      throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
+    }
+  } while(!done);
+  std::cout << "TOTAL iterations: " << iteration << std::endl;
 }
 
 
@@ -722,22 +846,28 @@ void bellman_ford_balanced(const I num_nodes,
   Ap[]      : (IN)  CSR row pointer for adjacency matrix A
   Aj[]      : (IN)  CSR index array
   Ax[]      : (IN)  CSR data array (edge lengths)
-   d[]      : (INOUT) distance to nearest seed
-  od[]      : (INOUT) distance to nearest seed
-   m[]      : (INOUT) cluster index for each node
    c[]      : (INOUT) cluster centers
-   p[]      : (INOUT) predecessors in the graph traversal
+   d[]      : (OUT) distance to nearest seed
+  od[]      : (OUT) distance to nearest seed
+   m[]      : (OUT) cluster index for each node
+   p[]      : (OUT) predecessors in the graph traversal
 
   Notes
   -----
   There are no check within this kernel.
 
-  Assumptions:
-    d is initialized to inf or 0
-    m is initialized to -1 or cluster id/index
-    m is ordered 1, ... , number of clusters
-    p is initialized to -1
-    Ax > 0
+  Initializations
+  ---------------
+  d = inf if not a center
+    = 0   if a center
+  od = inf
+  m = -1  if not a center
+    = 0, ..., nclusters if a center
+  p = -1
+
+  Assumptions
+  -----------
+  Ax > 0
 
   References
   ----------
@@ -751,12 +881,23 @@ void lloyd_cluster(const I num_nodes,
                    const I Ap[], const int Ap_size,
                    const I Aj[], const int Aj_size,
                    const T Ax[], const int Ax_size,
+                         I  c[], const int  c_size,
                          T  d[], const int  d_size,
                          T od[], const int od_size,
                          I  m[], const int  m_size,
-                         I  c[], const int  c_size,
-                         I  p[], const int  p_size)
+                         I  p[], const int  p_size,
+                   const bool initialize)
 {
+    if(initialize){
+      std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
+      std::fill(m, m+m_size, -1);
+      std::fill(p, p+p_size, -1);
+      for(I i=0; i<c_size; i++){
+        d[c[i]] = 0;   // distance is zero
+        od[c[i]] = 0;  // old distance is zero
+        m[c[i]] = i;   // clusters is 0, ..., nclusters
+      }
+    }
     int num_clusters = c_size;
     bool done = false;
 
@@ -766,8 +907,8 @@ void lloyd_cluster(const I num_nodes,
         // propagate distances outward
         do{
             std::copy(d, d+num_nodes, od);
-            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                         d, d_size, m, m_size, p, p_size);
+            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
+                         d, d_size, m, m_size, p, p_size, false);
         } while (!std::equal(d, d+num_nodes, od));
 
         //find boundaries
@@ -787,8 +928,8 @@ void lloyd_cluster(const I num_nodes,
         // propagate distances inward
         do{
             std::copy(d, d+num_nodes, od);
-            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                         d, d_size, m, m_size, p, p_size);
+            bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
+                         d, d_size, m, m_size, p, p_size, false);
         } while (!std::equal(d, d+num_nodes, od));
 
         // compute new seeds
@@ -859,7 +1000,7 @@ void lloyd_cluster_exact(const I num_nodes,
     }
 
     // assign nodes to the nearest cluster center
-    bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
+    //bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
 
     // construct node-cluster incidence arrays
     const I ICp_size = num_nodes;

@@ -152,16 +152,14 @@ def bellman_ford(G, centers, method='standard'):
 
     centers = np.asarray(centers, dtype=np.int32)
 
-    distances = np.full(n, np.inf, dtype=G.dtype)
-    distances[centers] = 0
-
-    nearest = np.full(n, -1, dtype=np.int32)
-    nearest[centers] = centers
-
+    distances = np.empty(n, dtype=G.dtype)
+    nearest = np.empty(n, dtype=np.int32)
     predecessors = np.full(n, -1, dtype=np.int32)
 
     if method == 'standard':
-        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, distances, nearest, predecessors)
+        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers, # IN
+                              distances, nearest, predecessors,        # OUT
+                              True)
     elif method == 'balanced':
         pass
     else:
@@ -224,17 +222,15 @@ def lloyd_cluster(G, centers):
 
     centers = np.asarray(centers, dtype=np.int32)
 
-    distances= np.full(n, np.inf, dtype=G.dtype)
-    olddistances= np.full(n, np.inf, dtype=G.dtype)
-    distances[centers] = 0
-
-    clusters = np.full(n, -1, dtype=np.int32)
-    clusters[centers] = np.arange(len(centers))
-
+    distances = np.empty(n, dtype=G.dtype)
+    olddistances = np.empty(n, dtype=G.dtype)
+    clusters = np.empty(n, dtype=np.int32)
     predecessors = np.full(n, -1, dtype=np.int32)
 
-    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,
-                           distances, olddistances, clusters, centers, predecessors)
+    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,                  # IN
+                           centers,                                         # INOUT
+                           distances, olddistances, clusters, predecessors, # OUT
+                           True)
 
     return distances, clusters, centers
 
