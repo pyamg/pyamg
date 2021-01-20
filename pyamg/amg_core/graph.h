@@ -799,7 +799,7 @@ void bellman_ford_balanced(const I num_nodes,
 
         if(m[j] > -1){                            // if j is unassigned, do not consider the tie
           if(std::abs(d[i] + Aij - d[j]) < tol){  // if both are finite and close
-            if(s[m[j]] > (s[m[i]] + 1)){          // if the size of cluster j is larger
+            if((s[m[i]] + 1) < s[m[j]]){          // if the size of cluster j is larger
               if(pc[j] == 0){                     // if the predecessor count is zero
                 swap = true;
               }
