@@ -1,7 +1,8 @@
+"""Test clustering routines in amg_core."""
 import numpy as np
 import pyamg.amg_core as amg_core
 from pyamg.gallery import load_example
-from pyamg.graph import bellman_ford_reference, bellmand_ford_balanced_reference
+from pyamg.graph import bellman_ford_reference, bellman_ford_balanced_reference
 import scipy.sparse as sparse
 
 from numpy.testing import TestCase, assert_equal, assert_array_equal
@@ -24,21 +25,6 @@ def canonical_graph(G):
 class TestClustering(TestCase):
     def setUp(self):
         cases_bellman_ford = []
-
-        cluster_node_incidence_input = {}
-        cluster_node_incidence_output = {}
-
-        cluster_center_input = {}
-        cluster_center_output = {}
-
-        bellman_ford_balanced_input = {}
-        bellman_ford_balanced_output = {}
-
-        lloyd_cluster_input = {}
-        lloyd_cluster_output = {}
-
-        lloyd_cluster_exact_input = [None for i in range(5)]
-        lloyd_cluster_exact_output = [None for i in range(5)]
 
         # (0) 6 node undirected, unit length
         # (1) 12 node undirected, unit length
@@ -72,6 +58,8 @@ class TestClustering(TestCase):
         G[[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]] = [3, 5, 3, 3, 5, 3]
         G = sparse.csr_matrix(G)
 
+        case = {}
+        case['id'] = 0
         case['G'] = G
         case['input'] = {'centers': np.array([0, 5], dtype=np.int32)}
         case['output'] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
@@ -148,6 +136,8 @@ class TestClustering(TestCase):
         G[np.arange(12), np.arange(12)] = [2, 3, 4, 2, 2, 4, 4, 2, 2, 4, 3, 2]
         G = sparse.csr_matrix(G)
 
+        case = {}
+        case['id'] = 1
         case['G'] = G
         case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
         cases_bellman_ford.append(case)
@@ -170,6 +160,9 @@ class TestClustering(TestCase):
         ############################################################
         np.random.seed(2244369509)
         G.data[:] = np.random.rand(len(G.data)) * 2
+
+        case = {}
+        case['id'] = 2
         case['G'] = G
         case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
         cases_bellman_ford.append(case)
@@ -216,6 +209,8 @@ class TestClustering(TestCase):
         np.random.seed(1664236979)
         G.data[:] = np.random.rand(len(G.data)) * 2
 
+        case = {}
+        case['id'] = 3
         case['G'] = G
         case['input'] = {'centers': np.array([0, 5], np.int32)}
         cases_bellman_ford.append(case)
@@ -223,8 +218,11 @@ class TestClustering(TestCase):
         ############################################################
         # (4) 191 node unstructured finite element matrix
         ############################################################
-        cases.append(load_example('unit_square')['A'])
+        G = load_example('unit_square')['A'].tocsr()
+        G.data[:] = 1.0
 
+        case = {}
+        case['id'] = 4
         case['G'] = G
         case['input'] = {'centers': np.array([0, 10, 20, 30], dtype=np.int32)}
         cases_bellman_ford.append(case)
@@ -239,16 +237,18 @@ class TestClustering(TestCase):
                           [2, 1],
                           [1, 0]])
         w = np.array([1, 1, 1, 1, 1, 1], dtype=float)
-        A = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-        A = A.tocsr()
+        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
+        G = G.tocsr()
         c = np.array([1,3], dtype=np.int32)
 
+        case = {}
+        case['id'] = 5
         case['G'] = G
         case['input'] = {'centers': c}
         cases_bellman_ford.append(case)
 
         ############################################################
-        # (5) 5 node graph
+        # (6) 5 node graph
         ############################################################
         Edges = np.array([[1, 4],
                           [3, 1],
@@ -259,13 +259,17 @@ class TestClustering(TestCase):
                           [1, 2],
                           [4, 3]])
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
-        A = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-        A = A.tocsr()
+        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
+        G = G.tocsr()
         c = np.array([0,1,2], dtype=np.int32)
 
+        case = {}
+        case['id'] = 6
         case['G'] = G
         case['input'] = {'centers': c}
         cases_bellman_ford.append(case)
+
+        self.cases_bellman_ford = cases_bellman_ford
 
     def test_cluster_node_incidence(self):
         if 0:
@@ -300,21 +304,26 @@ class TestClustering(TestCase):
                 assert_equal(c, ccorrect)
 
     def test_bellman_ford(self):
-        for case in cases_bellman_ford:
-            A = case['A']
+        for case in self.cases_bellman_ford:
+            print(case['id'])
+            G = case['G']
 
-            if case['input'] is not None:
-                centers = argin['centers']
-                num_nodes = A.shape[0]
+            if 'input' in case:
+                centers = case['input']['centers']
+                n = G.shape[0]
 
-                amg_core.bellman_ford(num_nodes, A.indptr, A.indices, A.data, centers,
+                d = np.empty(n, dtype=G.dtype)
+                m = np.empty(n, dtype=np.int32)
+                p = np.empty(n, dtype=np.int32)
+
+                amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,
                                       d, m, p, True)
 
-            if case['output'] is not None:
-                d_ref = argout['d']
-                m_ref = argout['m']
+            if 'output' in case:
+                d_ref = case['output']['d']
+                m_ref = case['output']['m']
             else:
-                d_ref, m_ref, _ = bellman_ford_reference(A, centers)
+                d_ref, m_ref, _ = bellman_ford_reference(G, centers)
 
             assert_array_equal(d, d_ref)
             assert_array_equal(m, m_ref)

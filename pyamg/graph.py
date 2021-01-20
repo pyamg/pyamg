@@ -12,7 +12,7 @@ __all__ = ['maximal_independent_set', 'vertex_coloring',
            'bellman_ford',
            'lloyd_cluster', 'connected_components']
 
-from pyamg.graph_ref import bellman_ford_reference
+from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
 
 __all__ += ['bellman_ford_reference', 'bellman_ford_balanced_reference']
 
