@@ -312,7 +312,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 improve_candidates=None,
                                                 keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0,
-                                  tol=float(np.finfo(np.float).tiny),
+                                  tol=float(np.finfo(float).tiny),
                                   maxiter=candidate_iters, cycle='V')
                 work[:] += 2 * sa_temp.operator_complexity() *\
                     sa_temp.levels[0].A.nnz * candidate_iters
@@ -611,7 +611,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         x = x + 1.0j*np.random.rand(levels[0].A.shape[0], 1)
     b = np.zeros_like(x)
 
-    x = ml.solve(b, x0=x, tol=float(np.finfo(np.float).tiny),
+    x = ml.solve(b, x0=x, tol=float(np.finfo(float).tiny),
                  maxiter=candidate_iters)
     work[:] += ml.operator_complexity()*ml.levels[0].A.nnz*candidate_iters*2
 
@@ -703,7 +703,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         change_smoothers(solver, presmoother=prepostsmoother,
                          postsmoother=prepostsmoother)
         x = solver.solve(np.zeros_like(x), x0=x,
-                         tol=float(np.finfo(np.float).tiny),
+                         tol=float(np.finfo(float).tiny),
                          maxiter=candidate_iters)
         work[:] += 2 * solver.operator_complexity() * solver.levels[0].A.nnz *\
             candidate_iters*2

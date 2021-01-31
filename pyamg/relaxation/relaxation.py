@@ -1064,7 +1064,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                                    int(subdomain_ptr.shape[0]-1), A.shape[0])
         # Choose tolerance for which singular values are zero in *gelss below
         t = A.dtype.char
-        eps = np.finfo(np.float).eps
+        eps = np.finfo(float).eps
         feps = np.finfo(np.single).eps
         geps = np.finfo(np.longfloat).eps
         _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}

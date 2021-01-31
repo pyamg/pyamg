@@ -660,7 +660,7 @@ def coarse_grid_solver(solver):
 
         def solve(self, A, b):
             if 'tol' not in kwargs:
-                eps = np.finfo(np.float).eps
+                eps = np.finfo(float).eps
                 feps = np.finfo(np.single).eps
                 geps = np.finfo(np.longfloat).eps
                 _array_precision = {'f': 0, 'd': 1, 'g': 2,

@@ -633,7 +633,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
     # Choose tolerance for dropping "numerically zero" values later
     t = Atilde.dtype.char
-    eps = np.finfo(np.float).eps
+    eps = np.finfo(float).eps
     feps = np.finfo(np.single).eps
     geps = np.finfo(np.longfloat).eps
     _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
@@ -789,7 +789,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
         for j in range(rowstart, rowend):
             if C.indices[j] == i:
                 # ignore the diagonal entry by making it large
-                C.data[j] = np.finfo(np.float).max
+                C.data[j] = np.finfo(float).max
             else:
                 # distance between entry j and i
                 pt_j = V[C.indices[j], :]
