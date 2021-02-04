@@ -122,8 +122,8 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
 
-             A[i,j] >= theta * max(|A[i,k]|), where k != i     (norm='abs')
-            -A[i,j] >= theta * max(-A[i,k]),  where k != i     (norm='min')
+             |A[i,j]| >= theta * max(|A[i,k]|), where k != i     (norm='abs')
+             -A[i,j]  >= theta * max(-A[i,k]),  where k != i     (norm='min')
 
     Parameters
     ----------
