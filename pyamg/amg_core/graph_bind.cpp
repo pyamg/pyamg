@@ -312,6 +312,45 @@ void _bellman_ford_balanced(
 }
 
 template<class I, class T>
+void _most_interior_nodes(
+        const I num_nodes,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<I> & c,
+       py::array_t<T> & d,
+       py::array_t<I> & m,
+       py::array_t<I> & p
+                          )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_c = c.mutable_unchecked();
+    auto py_d = d.mutable_unchecked();
+    auto py_m = m.mutable_unchecked();
+    auto py_p = p.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    I *_c = py_c.mutable_data();
+    T *_d = py_d.mutable_data();
+    I *_m = py_m.mutable_data();
+    I *_p = py_p.mutable_data();
+
+    return most_interior_nodes<I, T>(
+                num_nodes,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _c, c.shape(0),
+                       _d, d.shape(0),
+                       _m, m.shape(0),
+                       _p, p.shape(0)
+                                     );
+}
+
+template<class I, class T>
 void _lloyd_cluster(
         const I num_nodes,
       py::array_t<I> & Ap,
@@ -319,7 +358,6 @@ void _lloyd_cluster(
       py::array_t<T> & Ax,
        py::array_t<I> & c,
        py::array_t<T> & d,
-      py::array_t<T> & od,
        py::array_t<I> & m,
        py::array_t<I> & p,
     const bool initialize
@@ -330,7 +368,6 @@ void _lloyd_cluster(
     auto py_Ax = Ax.unchecked();
     auto py_c = c.mutable_unchecked();
     auto py_d = d.mutable_unchecked();
-    auto py_od = od.mutable_unchecked();
     auto py_m = m.mutable_unchecked();
     auto py_p = p.mutable_unchecked();
     const I *_Ap = py_Ap.data();
@@ -338,7 +375,6 @@ void _lloyd_cluster(
     const T *_Ax = py_Ax.data();
     I *_c = py_c.mutable_data();
     T *_d = py_d.mutable_data();
-    T *_od = py_od.mutable_data();
     I *_m = py_m.mutable_data();
     I *_p = py_p.mutable_data();
 
@@ -349,7 +385,6 @@ void _lloyd_cluster(
                       _Ax, Ax.shape(0),
                        _c, c.shape(0),
                        _d, d.shape(0),
-                      _od, od.shape(0),
                        _m, m.shape(0),
                        _p, p.shape(0),
                initialize
@@ -490,6 +525,7 @@ PYBIND11_MODULE(graph, m) {
     cluster_center
     bellman_ford
     bellman_ford_balanced
+    most_interior_nodes
     lloyd_cluster
     lloyd_cluster_exact
     maximal_independent_set_k_parallel
@@ -648,10 +684,6 @@ L is an additional vector (length num_rows) to store local indexes.
    ICi[num_nodes]      - (OUT) CSC column indexes for I
      L[num_nodes]      - (OUT) Local index mapping)pbdoc");
 
-    m.def("cluster_center", &_cluster_center<int, int>,
-        py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert());
-    m.def("cluster_center", &_cluster_center<int, float>,
-        py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert());
     m.def("cluster_center", &_cluster_center<int, double>,
         py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
 R"pbdoc(
@@ -678,37 +710,137 @@ cluster center
      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
      https://en.wikipedia.org/wiki/Distance_(graph_theory))pbdoc");
 
-    m.def("bellman_ford", &_bellman_ford<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
-    m.def("bellman_ford", &_bellman_ford<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
     m.def("bellman_ford", &_bellman_ford<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"),
 R"pbdoc(
-)pbdoc");
+Bellman-Ford on a distance graph stored in CSR format.
 
-    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
-    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
+Parameters
+----------
+num_nodes  : (IN) number of nodes (number of rows in A)
+Ap         : (IN) CSR row pointer
+Aj         : (IN) CSR index array
+Ax         : (IN) CSR data array (edge lengths)
+c          : (IN) centers
+d          : (OUT) distance to nearest center
+m          : (OUT) cluster index for each node
+p          : (OUT) predecessor in the graph traversal
+initialize : (IN) flag whether the data should be (re)-initialized
+
+Notes
+-----
+There are no checks within this kernel.
+
+Initializations
+---------------
+d = inf if not a center
+  = 0   if a center
+m = -1  if not a center
+  = 0, ..., nclusters if a center
+p = -1
+
+Assumptions
+-----------
+Ax > 0
+
+See Also
+--------
+pyamg.graph.bellman_ford
+
+References
+----------
+http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
+
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"),
 R"pbdoc(
-balanced v2)pbdoc");
+Bellman-Ford with a heuristic to balance cluster sizes
 
-    m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("od").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
-    m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("od").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
-    m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("od").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"),
+ This version is modified to break distance ties by assigning nodes
+ to the cluster with the fewest points, while preserving cluster
+ connectivity. This results in more balanced cluster sizes.
+
+ Parameters
+ ----------
+ num_nodes  : (IN) number of nodes (number of rows in A)
+ Ap         : (IN) CSR row pointer
+ Aj         : (IN) CSR index array
+ Ax         : (IN) CSR data array (edge lengths)
+ c          : (IN) centers
+ d          : (OUT) distance to nearest center
+ m          : (OUT) cluster index for each node
+ p          : (OUT) predecessor in the graph traversal
+ pc         : (OUT) predecessor count
+ s          : (OUT) running clusters size
+ initialize : (IN) flag whether the data should be (re)-initialized
+
+ Notes
+ -----
+ There are no checks within this kernel.
+
+ Initializations
+ ---------------
+ d = inf if not a center
+   = 0   if a center
+ m = -1  if not a center
+   = 0, ..., nclusters if a center
+ p = -1
+ pc = 0
+ s = 1
+
+ Assumptions
+ -----------
+ Ax > 0
+
+ See Also
+ --------
+ pyamg.graph.bellman_ford)pbdoc");
+
+    m.def("most_interior_nodes", &_most_interior_nodes<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
-)pbdoc");
+Find the most interior nodes)pbdoc");
 
-    m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
+    m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"),
+R"pbdoc(
+Perform Lloyd clustering on a distance graph
+
+ Parameters
+ ----------
+ num_nodes : (IN)  number of nodes (number of rows in A)
+ Ap[]      : (IN)  CSR row pointer for adjacency matrix A
+ Aj[]      : (IN)  CSR index array
+ Ax[]      : (IN)  CSR data array (edge lengths)
+  c[]      : (INOUT) cluster centers
+  d[]      : (OUT) distance to nearest seed
+ od[]      : (OUT) distance to nearest seed
+  m[]      : (OUT) cluster index for each node
+  p[]      : (OUT) predecessors in the graph traversal
+
+ Notes
+ -----
+ There are no check within this kernel.
+
+ Initializations
+ ---------------
+ d = inf if not a center
+   = 0   if a center
+ od = inf
+ m = -1  if not a center
+   = 0, ..., nclusters if a center
+ p = -1
+
+ Assumptions
+ -----------
+ Ax > 0
+
+ References
+ ----------
+ Nathan Bell
+ Algebraic Multigrid for Discrete Differential Forms
+ PhD thesis (UIUC), August 2008)pbdoc");
+
     m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(

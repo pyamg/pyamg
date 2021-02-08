@@ -62,6 +62,7 @@ instantiate:
     - lloyd_cluster
     - lloyd_cluster_adv
     - lloyd_cluster_exact
+    - most_interior_nodes
 
 - types:
     - [int, int]
