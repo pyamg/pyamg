@@ -884,6 +884,31 @@ void lloyd_cluster(const I num_nodes,
     }
 }
 
+//
+// balanced lloyd
+template<class I, class T>
+void lloyd_cluster_balanced(const I num_nodes,
+                            const I Ap[], const int Ap_size,
+                            const I Aj[], const int Aj_size,
+                            const T Ax[], const int Ax_size,
+                                  I  c[], const int  c_size,
+                                  T  d[], const int  d_size,
+                                  I  m[], const int  m_size,
+                                  I  p[], const int  p_size,
+                            const bool initialize)
+{
+  bool done = false;
+
+  // initializiation
+
+  while (!done) {
+    bellman_ford_balanced_v2();
+    center_nodes();
+
+    c, m, d, p, n, s
+  }
+}
+
 /*
  * Perform one iteration of Lloyd clustering on a distance graph using
  * exact centers
