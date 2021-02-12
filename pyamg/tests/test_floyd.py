@@ -19,14 +19,14 @@ class TestAllPairs(TestCase):
         A = sparse.csr_matrix(A)
 
         inf = np.inf
-        D_ref = np.array([[inf,  5.,  8.,  9.],
-                          [inf, inf,  3.,  4.],
-                          [inf, inf, inf,  1.],
-                          [inf, inf, inf, inf]])
+        D_ref = np.array([[0,  5.,  8.,  9.],
+                          [inf, 0,  3.,  4.],
+                          [inf, inf, 0,  1.],
+                          [inf, inf, inf, 0]])
         P_ref = np.array([[0, 0, 1, 2],
-                          [0, 0, 1, 2],
-                          [0, 0, 0, 2],
-                          [0, 0, 0, 0]], dtype=np.int32)
+                          [0, 1, 1, 2],
+                          [0, 0, 2, 2],
+                          [0, 0, 0, 3]], dtype=np.int32)
         cases.append([A, D_ref, P_ref])
 
         # https://github.com/epomp447/Floyd-Warshall-Algorithm-Java-
@@ -38,16 +38,16 @@ class TestAllPairs(TestCase):
         A[4,3] = 6
         A = sparse.csr_matrix(A)
 
-        D_ref = np.array([[ 4.,  1., -3.,  2., -4.],
+        D_ref = np.array([[ 0.,  1., -3.,  2., -4.],
                           [ 3.,  0., -4.,  1., -1.],
                           [ 7.,  4.,  0.,  5.,  3.],
                           [ 2., -1., -5.,  0., -2.],
-                          [ 8.,  5.,  1.,  6.,  4.]])
-        P_ref = np.array([[4, 4, 4, 4, 4],
-                          [3, 3, 3, 3, 3],
-                          [1, 1, 1, 1, 1],
-                          [0, 2, 2, 2, 0],
-                          [3, 3, 3, 3, 3]], dtype=np.int32)
+                          [ 8.,  5.,  1.,  6.,  0.]])
+        P_ref = np.array([[0, 2, 3, 4, 0],
+                          [3, 1, 3, 1, 0],
+                          [3, 2, 2, 1, 0],
+                          [3, 2, 3, 3, 0],
+                          [3, 2, 3, 4, 4]], dtype=np.int32)
         cases.append([A, D_ref, P_ref])
 
         # https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
@@ -59,14 +59,14 @@ class TestAllPairs(TestCase):
         A[1,2] = 3
         A = sparse.csr_matrix(A)
 
-        D_ref = np.array([[3.,-1,-2,0],
-                          [4,3,2,4],
-                          [5,1,3,2],
-                          [3,-1,1,3]])
+        D_ref = np.array([[0.,-1,-2,0],
+                          [ 4, 0, 2,4],
+                          [ 5, 1, 0,2],
+                          [ 3,-1, 1,0]])
         P_ref = np.array([[0,3,0,2],
-                          [1,0,0,2],
-                          [1,3,0,2],
-                          [1,3,0,0]], dtype=np.int32)
+                          [1,1,0,2],
+                          [1,3,2,2],
+                          [1,3,0,3]], dtype=np.int32)
         cases.append([A, D_ref, P_ref])
 
         self.cases = cases
@@ -86,8 +86,5 @@ class TestAllPairs(TestCase):
             amg_core.floyd_warshall(num_nodes, A.indptr, A.indices, A.data,
                                     D.ravel(), P.ravel(), C, L, m, a, N)
 
-            print('-------')
-            print('    P: \n', P)
-            print('P_ref: \n', P_ref)
             np.testing.assert_array_equal(D, D_ref)
             np.testing.assert_array_equal(P, P_ref)

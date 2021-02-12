@@ -505,14 +505,15 @@ void floyd_warshall(const I num_nodes,
       if(m[j] == a){                        // check to see if neighber is in cluster a
         I _ij = _i * N + _j;                // row major indexing into D, P
         D[_ij] = Ax[jj];                    // edge weight
-        P[_ij] = j;                         // predecessor
-        if(_i == _j){
-          I _ii = _i * N + _i;              // row major indexing into D, P
-          D[_ii] = 0;
-          P[_ii] = i;
-        }
+        P[_ij] = i;                         // predecessor
       }
     }
+  }
+  for(I _i = 0; _i < N; _i++){              // each node in the cluster, local index
+    I i = C[_i];                            // global index
+    I _ii = _i * N + _i;                    // row major indexing into D, P
+    D[_ii] = 0;
+    P[_ii] = i;
   }
 
   for(I k = 0; k < N; k++){
