@@ -60,8 +60,10 @@ instantiate:
     - bellman_ford
     - bellman_ford_balanced
     - lloyd_cluster
+    - floyd_warshall
     - lloyd_cluster_adv
     - lloyd_cluster_exact
+    - lloyd_cluster_balanced
     - most_interior_nodes
 
 - types:

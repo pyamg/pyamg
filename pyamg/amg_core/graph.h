@@ -464,6 +464,109 @@ void cluster_node_incidence(const I num_nodes,
     }
 }
 
+//
+// Floyd-Warshall
+//
+// D is pre-allocated
+// D_size = max_N * max_N
+// P is pre-allocated
+// P_size = max_N * max_N
+// C is pre-allocated
+// C_size = max_N
+// C[i] = global index of i for i=0, ..., N
+// L = local indices, 0, ...., n (-1 if not in the cluster)
+// m = cluster ids, 0, ..., n
+// a = this cluster id
+// assumes a fully connected (directed) graph
+template<class I, class T>
+void floyd_warshall(const I num_nodes,
+                    const I Ap[], const int Ap_size,
+                    const I Aj[], const int Aj_size,
+                    const T Ax[], const int Ax_size,
+                          T D[],  const int D_size,
+                          I P[],  const int P_size,
+                    const I C[],  const int C_size,
+                    const I L[],  const int L_size,
+                    const I m[], const int m_size,
+                    const I a,
+                    const I N
+                    )
+{
+  // initialize distance
+  std::fill(D, D+D_size, std::numeric_limits<T>::infinity());
+
+  // initialize D and P
+  for(I _i = 0; _i < N; _i++){              // each node in the cluster, local index
+    I i = C[_i];                            // global index
+    for(I jj = Ap[i]; jj < Ap[i+1]; jj++){  // each neighbor
+      I j = Aj[jj];                         // global index
+      I _j = L[j];                          // local index
+
+      if(m[j] == a){                        // check to see if neighber is in cluster a
+        I _ij = _i * N + _j;                // row major indexing into D, P
+        D[_ij] = Ax[jj];                    // edge weight
+        P[_ij] = j;                         // predecessor
+        if(_i == _j){
+          I _ii = _i * N + _i;              // row major indexing into D, P
+          D[_ii] = 0;
+          P[_ii] = i;
+        }
+      }
+    }
+  }
+
+  for(I k = 0; k < N; k++){
+    for(I i = 0; i < N; i++){
+      for(I j = 0; j < N; j++){
+        I ij = i * N + j;
+        I ik = i * N + k;
+        I kj = k * N + j;
+        if(D[ij] > (D[ik] + D[kj])){
+          D[ij] = D[ik] + D[kj];
+          P[ij] = P[kj];
+        }
+      }
+    }
+  }
+}
+
+/*
+ * Apply Floyd–Warshall to cluster "a" and use the result to find the
+ * cluster center
+ *
+ *  Parameters
+ *      a                  - (IN) cluster index to find the center of
+ *      num_nodes          - (IN) number of nodes
+ *      num_clusters       - (IN) number of clusters
+ *      Ap[]               - (IN) CSR row pointer
+ *      Aj[]               - (IN) CSR index array
+ *      Ax[]               - (IN) CSR data array (edge lengths)
+ *      cm[num_nodes]      - (IN) cluster index for each node
+ *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
+ *     ICi[num_nodes]      - (IN) CSC column indexes for I
+ *       L[num_nodes]      - (IN) Local index mapping
+ *
+ *  Returns
+ *      i                  - global node index of center of cluster a
+ *
+ *  References:
+ *      https://en.wikipedia.org/wiki/Graph_center
+ *      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
+ *      https://en.wikipedia.org/wiki/Distance_(graph_theory)
+ */
+template<class I, class T>
+I center_nodes(const I num_nodes,
+               const I Ap[], const int Ap_size,
+               const I Aj[], const int Aj_size,
+               const T Ax[], const int Ax_size,
+               const I c[],  const int c_size,
+                     T d[],  const int d_size,
+                     I m[],  const int m_size,
+                     I p[],  const int p_size)
+{
+  return 0;
+}
+
 
 /*
  * Apply Floyd–Warshall to cluster "a" and use the result to find the
@@ -895,17 +998,30 @@ void lloyd_cluster_balanced(const I num_nodes,
                                   T  d[], const int  d_size,
                                   I  m[], const int  m_size,
                                   I  p[], const int  p_size,
+                                  I  pc[], const int pc_size,
+                                  I  s[], const int s_size,
                             const bool initialize)
 {
   bool done = false;
 
-  // initializiation
+  // initialize m, d, p, n, s
+  if(initialize){
+    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
+    std::fill(m, m+m_size, -1);
+    std::fill(p, p+p_size, -1);
+    std::fill(pc, pc+pc_size, 0); // predecessor count is 0
+    std::fill(s, s+s_size, 1);    // cluster size 1
+    for(I a=0; a<c_size; a++){
+      d[c[a]] = 0;                // distance is 0
+      m[c[a]] = a;                // clusters is 0, ..., nclusters
+    }
+  }
 
   while (!done) {
-    bellman_ford_balanced_v2();
-    center_nodes();
-
-    c, m, d, p, n, s
+    bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                          c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
+                          pc, pc_size, s,  s_size,
+                          false);
   }
 }
 
