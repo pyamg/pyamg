@@ -350,120 +350,6 @@ T vertex_coloring_LDF(const I num_rows,
     return *std::max_element(x, x + num_rows);
 }
 
-
-/*
- * Compute the incidence matrix for a clustering
- *
- *      I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
- * I[i,a] = 1 if node i is in cluster a, otherwise 0
- *
- *     Cluster indexes: a,b,c in 1..num_clusters
- * Global node indexes: i,j,k in 1..num_rows
- *  Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
- *
- * We store I in both CSC and CSR formats because we want to be able
- * to map global <-> local node indexes. However, I in CSR format is
- * simply the cm array, so we only need to compute CSC format.
- *
- * IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's
- *                     always 1).
- *
- * IR = (IRa) = (cm) = I in CSR format (don't store IRp because we
- *                     have exactly one nonzero entry per row, and
- *                     don't store IRx because it's always 1). This is
- *                     just the cm array.
- *
- * Converting local (a,m) -> global i:   i = ICi[ICp[a] + m]
- *
- * Converting global i -> local (a,m):   a = cm[i]
- *                                       m = L[i]
- *
- * L is an additional vector (length num_rows) to store local indexes.
- *
- *  Parameters
- *      num_nodes         - (IN)  number of nodes
- *      num_clusters      - (IN)  number of clusters
- *     cm[num_nodes]      - (IN)  cluster index for each node
- *    ICp[num_clusters+1] - (OUT) CSC column pointer array for I
- *    ICi[num_nodes]      - (OUT) CSC column indexes for I
- *      L[num_nodes]      - (OUT) Local index mapping
- */
-template<class I>
-void cluster_node_incidence(const I num_nodes,
-                            const I num_clusters,
-                            const I  cm[], const int  cm_size,
-                                  I ICp[], const int ICp_size,
-                                  I ICi[], const int ICi_size,
-                                  I   L[], const int L_size)
-{
-    // Construct the ICi index array. It will have one entry per node,
-    // giving the global node number, ordered so that all of the
-    // cluster-0 nodes are first, then all the cluster-1 nodes, etc.
-    for(I i = 0; i < num_nodes; i++){
-        ICi[i] = i;
-    }
-
-    std::sort(ICi, ICi + ICi_size,
-              [&](const I& i, const I& j)
-              {
-                  // sort first by cluster number, then by global node number
-                  // within a cluster
-                  return (cm[i] < cm[j]) || (cm[i] == cm[j] && i < j);
-              }
-             );
-
-    // Construct the ICp pointer array. This code assumes that every
-    // cluster contains at least one node (the cluster center).
-    ICp[0] = 0;
-    I a = 0; // current cluster
-    for(I i = 0; i < num_nodes; i++){
-        if(cm[ICi[i]] != a){
-            a++;
-            coreassert(a < num_clusters, "");
-            ICp[a] = i;
-        }
-    }
-    a++;
-    coreassert(a == num_clusters, ""); // all clusters were found
-    ICp[a] = num_nodes;
-
-    // Construct the local mapping vector L
-    I i = 0; // global node number
-    for(I a = 0; a < num_clusters; a++){
-        const I N = ICp[a+1] - ICp[a]; // cluster size
-        for(I m = 0; m < N; m++){
-            i = ICi[ICp[a] + m];
-            coreassert(i >= 0 && i < num_nodes, "");
-            L[i] = m;
-        }
-    }
-
-    ////////////////////////////////////////////////////////////
-    // asserts below for testing, could be deleted
-
-    // check that global -> local has a correct inverse
-    I m;
-    for(I i = 0; i < num_nodes; i++){
-        a = cm[i];
-        m = L[i];
-        coreassert(a >= 0 && a < num_clusters, "");
-        coreassert(m >= 0 && m < ICp[a+1] - ICp[a], "");
-        coreassert(i == ICi[ICp[a] + m], "");
-    }
-
-    // check that local -> global has a correct inverse
-    I j;
-    for(I a = 0; a < num_clusters; a++){
-        I N = ICp[a+1] - ICp[a]; // cluster size
-        for(I m = 0; m < N; m++){
-            j = ICi[ICp[a] + m];
-            coreassert(j >= 0 && j < num_nodes, "");
-            coreassert(a == cm[j], "");
-            coreassert(m == L[j], "");
-        }
-    }
-}
-
 //
 // Floyd-Warshall
 //
@@ -474,6 +360,7 @@ void cluster_node_incidence(const I num_nodes,
 // C is pre-allocated
 // C_size = max_N
 // C[i] = global index of i for i=0, ..., N
+// N = |C|
 // L = local indices, 0, ...., n (-1 if not in the cluster)
 // m = cluster ids, 0, ..., n
 // a = this cluster id
@@ -532,40 +419,68 @@ void floyd_warshall(const I num_nodes,
 }
 
 /*
- * Apply Floyd–Warshall to cluster "a" and use the result to find the
- * cluster center
- *
- *  Parameters
- *      a                  - (IN) cluster index to find the center of
- *      num_nodes          - (IN) number of nodes
- *      num_clusters       - (IN) number of clusters
- *      Ap[]               - (IN) CSR row pointer
- *      Aj[]               - (IN) CSR index array
- *      Ax[]               - (IN) CSR data array (edge lengths)
- *      cm[num_nodes]      - (IN) cluster index for each node
- *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
- *     ICi[num_nodes]      - (IN) CSC column indexes for I
- *       L[num_nodes]      - (IN) Local index mapping
- *
- *  Returns
- *      i                  - global node index of center of cluster a
- *
- *  References:
- *      https://en.wikipedia.org/wiki/Graph_center
- *      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
- *      https://en.wikipedia.org/wiki/Distance_(graph_theory)
+ * Update center nodes for a cluster
  */
 template<class I, class T>
-I center_nodes(const I num_nodes,
-               const I Ap[], const int Ap_size,
-               const I Aj[], const int Aj_size,
-               const T Ax[], const int Ax_size,
-               const I c[],  const int c_size,
-                     T d[],  const int d_size,
-                     I m[],  const int m_size,
-                     I p[],  const int p_size)
+bool center_nodes(const I num_nodes,
+                  const I Ap[], const int Ap_size,
+                  const I Aj[], const int Aj_size,
+                  const T Ax[], const int Ax_size,
+                         T D[],  const int D_size,  // for FW
+                         I P[],  const int P_size,  // for FW
+                         I C[],  const int C_size,  // for FW
+                         I L[],  const int L_size,  // for FW
+                         I q[],  const int q_size,
+                   const I c[],  const int c_size,
+                         T d[],  const int d_size,
+                   const I m[],  const int m_size,
+                         I p[],  const int p_size)
 {
-  return 0;
+  bool changed = false; // return a change on d or p
+  // for each cluster a
+  for(I a=0; a<c_size; a++){
+
+    // set nodes in this cluster
+    I N = 0;
+    L = std::fill(L, L+L_size, -1.0);
+    for(I i=0; i<m_size; i++){
+      if(m[i] == a){
+        C[N] = i;
+        L[i] = N;
+        N++;
+      }
+    }
+
+    // call Floyd–Warshall for cluster a
+    floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                   D,  D_size, P,  P_size, C,  C_size, L,  L_size,
+                   m,  m_size, a, N);
+
+    // sum of square distances to the other nodes
+    for(I i=0; i<N; i++){
+      for(I j=0; j<N; j++){
+        q[i] += D[i,j]*D[i,j];
+      }
+    }
+    I i = c[a];         // global index of the cluster center
+    for(I _j=0; _j<N; _j++){
+      j = C[_j];        // global index of every node in the cluster
+      if(q[j] < q[i]) { // is j (strictly) better?
+        i = j;          // new center
+      }
+    }
+    if(i != c[a]){      // if we've found a new center, then...
+      c[a] = i;
+      I _i = L[i];
+      for(I _j=0; _j<N; _j++){
+        j = C[_j];        // global index of every node in the cluster
+        d[j] = D[_i,_j];
+        p[j] = P[_i,_j];
+        changed = true;
+      }
+    }
+  }
+  return changed;
 }
 
 
@@ -788,7 +703,7 @@ void bellman_ford(const I num_nodes,
 //  --------
 //  pyamg.graph.bellman_ford
 template<class I, class T>
-void bellman_ford_balanced(const I num_nodes,
+bool bellman_ford_balanced(const I num_nodes,
                            const I Ap[], const int Ap_size,
                            const I Aj[], const int Aj_size,
                            const T Ax[], const int Ax_size,
@@ -813,6 +728,7 @@ void bellman_ford_balanced(const I num_nodes,
   }
 
   bool done; // did we make any changes during this iteration?
+  bool changed; // indicate a change for the return
   bool swap; // should we swap node i to the same clusters as node j?
   I iteration = 0; // iteration count for safety check
   const double tol = 1e-14; // precision tolerance
@@ -858,6 +774,7 @@ void bellman_ford_balanced(const I num_nodes,
           pc[p[j]]++;        // update predecessor count (adding j)
 
           done = false;
+          changed = true;
         }
       }
     }
@@ -867,6 +784,7 @@ void bellman_ford_balanced(const I num_nodes,
       throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
     }
   } while(!done);
+  return changed;
 }
 
 //
@@ -989,6 +907,12 @@ void lloyd_cluster(const I num_nodes,
 }
 
 //
+// Perform one iteration of Lloyd clustering on a distance graph using
+// balanced centers
+//
+// This version computes improved cluster centers with Floyd-Warshall and
+// also uses a balanced version of Bellman-Ford to try and find
+// nearly-equal-sized clusters.
 // balanced lloyd
 template<class I, class T>
 void lloyd_cluster_balanced(const I num_nodes,
@@ -1003,7 +927,7 @@ void lloyd_cluster_balanced(const I num_nodes,
                                   I  s[], const int s_size,
                             const bool initialize)
 {
-  bool done = false;
+  bool changed = true;
 
   // initialize m, d, p, n, s
   if(initialize){
@@ -1018,87 +942,16 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while (!done) {
-    bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                          c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
-                          pc, pc_size, s,  s_size,
-                          false);
+  while (changed) {
+    changed = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                                    c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
+                                    pc, pc_size, s,  s_size,
+                                    false);
+    changed = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                           D, D_size, P, P_size, C, C_size, L, L_size,
+                           q, q_size, c, c_size, d, d_size, m, m_size, p, p_size);
   }
 }
-
-/*
- * Perform one iteration of Lloyd clustering on a distance graph using
- * exact centers
- *
- * This version computes exact cluster centers with Floyd-Warshall and
- * also uses a balanced version of Bellman-Ford to try and find
- * nearly-equal-sized clusters.
- *
- *  Parameters
- *      num_nodes       - (IN)  number of rows in A (number of vertices)
- *      Ap[]            - (IN)  CSR row pointer
- *      Aj[]            - (IN)  CSR index array
- *      Ax[]            - (IN)  CSR data array (edge lengths)
- *      num_clusters    - (IN)  number of clusters = number of seeds
- *      d[num_nodes]    - (OUT) distance to nearest seed
- *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (IN)  cluster centers
- *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
- */
-template<class I, class T>
-void lloyd_cluster_exact(const I num_nodes,
-                         const I Ap[], const int Ap_size,
-                         const I Aj[], const int Aj_size,
-                         const T Ax[], const int Ax_size,
-                         const I num_clusters,
-                               T  d[], const int  d_size,
-                               I cm[], const int cm_size,
-                               I  c[], const int  c_size)
-{
-    coreassert(d_size == num_nodes, "");
-    coreassert(cm_size == num_nodes, "");
-    coreassert(c_size == num_clusters, "");
-
-    for(I i = 0; i < num_nodes; i++){
-        d[i] = std::numeric_limits<T>::max();
-        cm[i] = -1;
-    }
-
-    for(I a = 0; a < num_clusters; a++){
-        I i = c[a];
-        coreassert(i >= 0 && i < num_nodes, "");
-        d[i] = 0;
-        cm[i] = a;
-    }
-
-    // assign nodes to the nearest cluster center
-    //bellman_ford_balanced(num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, d, d_size, cm, cm_size);
-
-    // construct node-cluster incidence arrays
-    const I ICp_size = num_nodes;
-    const I ICi_size = num_nodes;
-    const I L_size = num_nodes;
-    I* ICp = new I[ICp_size];
-    I* ICi = new I[ICi_size];
-    I* L = new I[L_size];
-    cluster_node_incidence(num_nodes,
-                           num_clusters,
-                           cm, cm_size,
-                           ICp, ICp_size,
-                           ICi, ICi_size,
-                           L, L_size);
-
-    // update cluster centers
-    for(I a = 0; a < num_clusters; a++){
-        c[a] = cluster_center(a, num_nodes, num_clusters, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, cm, cm_size, ICp, ICp_size, ICi, ICi_size, L, L_size);
-        coreassert(cm[c[a]] == a, ""); // check new center is in cluster
-    }
-}
-
 
 /*
  * Propagate (key,value) pairs across a graph in CSR format.
