@@ -431,7 +431,7 @@ bool center_nodes(const I num_nodes,
                          I C[],  const int C_size,  // for FW
                          I L[],  const int L_size,  // for FW
                          I q[],  const int q_size,
-                   const I c[],  const int c_size,
+                         I c[],  const int c_size,
                          T d[],  const int d_size,
                    const I m[],  const int m_size,
                          I p[],  const int p_size)
@@ -441,8 +441,22 @@ bool center_nodes(const I num_nodes,
   for(I a=0; a<c_size; a++){
 
     // set nodes in this cluster
+    // CSR-like
+    //  3 x n array:
+    //    previous me next
+    //  1 x n array:
+    //    to keep track
+    //  [0  0  0  0  1  1  2  2  2  2  3  3  3  4  4  4  4  4  4]
+    //  [87 99 4  6  82 13 15 9  12 55 66 77 ...]
+    //
+    //
+    // Consensus idea:
+    //  modified CSR:
+    //  Number of clusters x max cluster size
+    //
+    //  n / 10   x 10 * 3 (for initial padding)
     I N = 0;
-    L = std::fill(L, L+L_size, -1.0);
+    std::fill(L, L+L_size, -1);
     for(I i=0; i<m_size; i++){
       if(m[i] == a){
         C[N] = i;
@@ -459,12 +473,13 @@ bool center_nodes(const I num_nodes,
     // sum of square distances to the other nodes
     for(I i=0; i<N; i++){
       for(I j=0; j<N; j++){
-        q[i] += D[i,j]*D[i,j];
+        I ij = i * N + j;
+        q[i] += D[ij]*D[ij];
       }
     }
     I i = c[a];         // global index of the cluster center
     for(I _j=0; _j<N; _j++){
-      j = C[_j];        // global index of every node in the cluster
+      I j = C[_j];      // global index of every node in the cluster
       if(q[j] < q[i]) { // is j (strictly) better?
         i = j;          // new center
       }
@@ -473,114 +488,15 @@ bool center_nodes(const I num_nodes,
       c[a] = i;
       I _i = L[i];
       for(I _j=0; _j<N; _j++){
-        j = C[_j];        // global index of every node in the cluster
-        d[j] = D[_i,_j];
-        p[j] = P[_i,_j];
+        I j = C[_j];    // global index of every node in the cluster
+        I _ij = _i * N + _j;
+        d[j] = D[_ij];
+        p[j] = P[_ij];
         changed = true;
       }
     }
   }
   return changed;
-}
-
-
-/*
- * Apply Floyd–Warshall to cluster "a" and use the result to find the
- * cluster center
- *
- *  Parameters
- *      a                  - (IN) cluster index to find the center of
- *      num_nodes          - (IN) number of nodes
- *      num_clusters       - (IN) number of clusters
- *      Ap[]               - (IN) CSR row pointer
- *      Aj[]               - (IN) CSR index array
- *      Ax[]               - (IN) CSR data array (edge lengths)
- *      cm[num_nodes]      - (IN) cluster index for each node
- *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
- *     ICi[num_nodes]      - (IN) CSC column indexes for I
- *       L[num_nodes]      - (IN) Local index mapping
- *
- *  Returns
- *      i                  - global node index of center of cluster a
- *
- *  References:
- *      https://en.wikipedia.org/wiki/Graph_center
- *      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
- *      https://en.wikipedia.org/wiki/Distance_(graph_theory)
- */
-template<class I, class T>
-I cluster_center(const I a,
-                 const I num_nodes,
-                 const I num_clusters,
-                 const I  Ap[], const int  Ap_size,
-                 const I  Aj[], const int  Aj_size,
-                 const T  Ax[], const int  Ax_size,
-                 const I  cm[], const int  cm_size,
-                 const I ICp[], const int ICp_size,
-                 const I ICi[], const int ICi_size,
-                 const I   L[], const int   L_size)
-{
-    I N = ICp[a+1] - ICp[a]; // size of the cluster
-
-    // pairwise distances between all nodes in the cluster, in row-major order
-    std::vector<T> dist(N*N, std::numeric_limits<T>::max());
-
-    // Floyd-Warshall initialization
-    for(I m = 0; m < N; m++){
-        I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
-        for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ // all neighbors of i
-            const I j = Aj[jj]; // neighbor global node index
-            const T w = Ax[jj]; // edge weight
-
-            if (cm[j] == a) { // only use neighbors in the same cluster
-                const I n = L[j]; // global node index j -> local (a,n)
-                coreassert(n >= 0 && n < N, "");
-                const I mn = m*N + n; // row-major index of (m,n)
-                dist[mn] = w;
-            }
-        }
-        dist[m*N+m] = 0;
-    }
-
-    // main Floyd-Warshall iteration - O(N^3)
-    for(I l = 0; l < N; l++){
-        for(I m = 0; m < N; m++){
-            for(I n = 0; n < N; n++){
-                const I mn = m*N + n; // row-major index of (m,n)
-                const I ml = m*N + l; // row-major index of (m,l)
-                const I ln = l*N + n; // row-major index of (l,n)
-                dist[mn] = std::min(dist[mn], dist[ml] + dist[ln]);
-            }
-        }
-    }
-
-    // check that the cluster is connected
-    for(I i = 0; i < N*N; i++){
-        coreassert(dist[i] < std::numeric_limits<T>::max(), "");
-    }
-
-    // compute eccentricity of each node in cluster (max distance to other nodes)
-    std::vector<T> ecc(N, 0);
-    std::vector<T> totaldistance(N, 0);
-
-    for(I m = 0; m < N; m++){
-        for(I n = 0; n < N; n++){
-            const I mn = m*N + n; // row-major index of (m,n)
-            ecc[m] = std::max(ecc[m], dist[mn]);
-            totaldistance[m] += dist[mn];
-        }
-    }
-
-    // graph center is the node with minimum eccentricity
-    // const I m = std::min_element(ecc.begin(), ecc.end()) - ecc.begin();
-    I m = 0;
-    for (I n = 1; n < N; n++) {
-        if ((ecc[n] < ecc[m]) || (ecc[n] == ecc[m] && totaldistance[n] < totaldistance[m])) {
-            m = n;
-        }
-    }
-    const I i = ICi[ICp[a] + m]; // local node index (a,m) -> global i
-    return i;
 }
 
 // Bellman-Ford on a distance graph stored in CSR format.
@@ -919,13 +835,18 @@ void lloyd_cluster_balanced(const I num_nodes,
                             const I Ap[], const int Ap_size,
                             const I Aj[], const int Aj_size,
                             const T Ax[], const int Ax_size,
-                                  I  c[], const int  c_size,
-                                  T  d[], const int  d_size,
-                                  I  m[], const int  m_size,
-                                  I  p[], const int  p_size,
-                                  I  pc[], const int pc_size,
-                                  I  s[], const int s_size,
-                            const bool initialize)
+                                   T D[],  const int D_size,
+                                   I P[],  const int P_size,
+                                   I C[],  const int C_size,
+                                   I L[],  const int L_size,
+                                   I q[],  const int q_size,
+                                   I c[], const int  c_size,
+                                   T d[], const int  d_size,
+                                   I m[], const int  m_size,
+                                   I p[], const int  p_size,
+                                   I pc[], const int pc_size,
+                                   I s[], const int s_size,
+                           const bool initialize)
 {
   bool changed = true;
 
