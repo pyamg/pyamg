@@ -184,9 +184,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
 
     # Choose tolerance for deciding if break-down has occurred
     t = A.dtype.char
-    eps = np.finfo(np.float).eps
-    feps = np.finfo(np.single).eps
-    geps = np.finfo(np.longfloat).eps
+    eps = np.finfo(np.float64).eps
+    feps = np.finfo(np.float32).eps
+    geps = np.finfo(np.float128).eps
     _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
     breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
     breakdown_flag = False
@@ -624,9 +624,9 @@ def pinv_array(a, cond=None):
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
             t = a.dtype.char
-            eps = np.finfo(np.float).eps
-            feps = np.finfo(np.single).eps
-            geps = np.finfo(np.longfloat).eps
+            eps = np.finfo(np.float64).eps
+            feps = np.finfo(np.float32).eps
+            geps = np.finfo(np.float128).eps
             _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
             cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
 

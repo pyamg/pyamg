@@ -94,7 +94,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # choose tolerance for numerically zero values
     # t = A.dtype.char
-    # eps = np.finfo(np.float).eps
+    # eps = np.finfo(np.float64).eps
     # feps = np.finfo(np.single).eps
     # geps = np.finfo(np.longfloat).eps
     # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}

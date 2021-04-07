@@ -768,9 +768,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
         # Choose tolerance for dropping "numerically zero" values later
         t = Atilde.dtype.char
-        eps = np.finfo(np.float).eps
-        feps = np.finfo(np.single).eps
-        geps = np.finfo(np.longfloat).eps
+        eps = np.finfo(np.float64).eps
+        feps = np.finfo(np.float32).eps
+        geps = np.finfo(np.float128).eps
         _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
         tol = {0: feps * 1e3, 1: eps * 1e6, 2: geps * 1e6}[_array_precision[t]]
 
