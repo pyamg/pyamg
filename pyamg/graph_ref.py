@@ -30,7 +30,7 @@ def bellman_ford_reference(A, c):
     Nnode = A.shape[0]
     Ncluster = len(c)
     d = np.full((Nnode,), np.inf)
-    m = np.full((Nnode,), -1.0, dtype=np.int)
+    m = np.full((Nnode,), -1.0, dtype=np.int32)
 
     d[c] = 0  # distance
     m[c] = c  # index

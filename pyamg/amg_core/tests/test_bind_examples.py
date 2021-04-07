@@ -65,7 +65,7 @@ class TestVectors(TestCase):
 
     def test_10b(self):
         # bool, float32
-        J = np.array([1, 1, 1], dtype=np.bool)
+        J = np.array([1, 1, 1], dtype=bool)
         x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
 
         assert g.test10(J, x) == 1
