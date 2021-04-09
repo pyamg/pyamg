@@ -2,7 +2,7 @@ name: wheels
 
 on:
   workflow_dispatch:
-    branches: [ main ]
+    branches: [ main, ci-wheels ]
 
 jobs:
   build_wheels:
