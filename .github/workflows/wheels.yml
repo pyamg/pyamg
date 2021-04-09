@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.8]
         os: [ubuntu-latest, macos-latest]
 
     steps:
@@ -23,10 +23,13 @@ jobs:
         repository: pyamg/pyamg
       id: pyamg_version
 
+    - name: Check the tag
+      run: echo "The tag found is ${{ steps.pyamg_version.outputs.tag }}"
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
-        ref: ${{ steps.pyamg_version.output.tag }}
+        ref: ${{ steps.pyamg_version.outputs.tag }}
 
     - name: Check the checkout
       run: git log
