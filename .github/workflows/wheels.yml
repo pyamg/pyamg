@@ -1,0 +1,32 @@
+name: wheels
+
+on:
+  workflow_dispatch:
+    branches: [ main ]
+
+jobs:
+  build_wheels:
+
+    name: Build wheel cp${{ matrix.python }}-${{ matrix.platform_id }}
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Find the latest tagged version
+      uses: oprypin/find-latest-tag@v1
+      with:
+        repository: pyamg/pyamg
+      id: pyamg_version
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ steps.pyamg_version.output.tag }}
+
+    - name: Check the checkout
+      run: git log
