@@ -1,6 +1,7 @@
 name: wheels
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
