@@ -1,5 +1,4 @@
 """General utility functions for pyamg."""
-from __future__ import print_function
 
 from warnings import warn
 
@@ -1795,7 +1794,7 @@ def remove_diagonal(S):
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
+        raise ValueError(f'expected square matrix, shape={S.shape}')
 
     S = coo_matrix(S)
     mask = S.row != S.col

@@ -421,7 +421,7 @@ def preprocess(S, coloring_method=None):
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
+        raise ValueError(f'expected square matrix, shape={S.shape}')
 
     N = S.shape[0]
     S = csr_matrix((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),

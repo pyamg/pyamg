@@ -7,7 +7,6 @@ The stencils include redundancy to maintain readability for simple cases (e.g.
 isotropic diffusion).
 
 """
-from __future__ import print_function
 
 import numpy as np
 

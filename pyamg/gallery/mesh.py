@@ -32,7 +32,7 @@ def regular_triangle_mesh(nx, ny):
     nx, ny = int(nx), int(ny)
 
     if nx < 2 or ny < 2:
-        raise ValueError('minimum mesh dimension is 2: %s' % ((nx, ny),))
+        raise ValueError(f'minimum mesh dimension is 2: {(nx, ny)}')
 
     Vert1 = np.tile(np.arange(0, nx-1), ny - 1) +\
         np.repeat(np.arange(0, nx * (ny - 1), nx), nx - 1)

@@ -1,5 +1,4 @@
 """Construct sparse matrix from a local stencil."""
-from __future__ import print_function
 
 
 import numpy as np
