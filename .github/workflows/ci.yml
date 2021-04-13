@@ -23,7 +23,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install
-      run: pip install .
+      run: pip install . -v
     - name: Test
       # decend into pyamg to make sure that the *installation* is tested, not the local
       # pyamg folder
