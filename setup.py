@@ -206,7 +206,6 @@ class BuildExt(build_ext):
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
     def finalize_options(self):
         build_ext.finalize_options(self)
-        __builtins__.__NUMPY_SETUP__ = False
         import numpy
         self.include_dirs.append(numpy.get_include())
 

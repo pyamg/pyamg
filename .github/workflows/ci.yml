@@ -22,11 +22,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install
-      run: pip install . -v
-    - name: Test
-      # decend into pyamg to make sure that the *installation* is tested, not the local
-      # pyamg folder
-      run: |
-        cd pyamg/
-        pytest
+    - name: Test with tox
+      run:
+        pip install tox
+        tox
