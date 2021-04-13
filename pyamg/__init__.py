@@ -16,7 +16,7 @@ from .blackbox import solve, solver, solver_configuration
 
 import warnings
 
-__all__ = [__git_revision__, __version__,
+__all__ = [__version_tuple__, __version__,
            coarse_grid_solver, multilevel_solver,
            ruge_stuben_solver, smoothed_aggregation_solver, rootnode_solver,
            demo, solve, solver, solver_configuration]
