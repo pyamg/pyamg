@@ -192,7 +192,7 @@ ext_modules += [Extension('pyamg.amg_core.tests.bind_examples',
 setup(
     name='pyamg',
     use_scm_version={
-        "version_scheme": lambda _: "4.1.0",
+        # "version_scheme": lambda scm_version: "4.1.0dev0",
         "write_to": "pyamg/version.py"
     },
     keywords=['algebraic multigrid AMG sparse matrix preconditioning'],
