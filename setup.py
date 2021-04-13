@@ -26,9 +26,6 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.test import test as TestCommand
 
-version = '4.1.0'
-isreleased = False
-
 install_requires = (
     'numpy>=1.7.0',
     'scipy>=0.12.0',
@@ -195,6 +192,7 @@ ext_modules += [Extension('pyamg.amg_core.tests.bind_examples',
 setup(
     name='pyamg',
     use_scm_version={
+        "version_scheme": lambda _: "4.1.0",
         "write_to": "pyamg/version.py"
     },
     keywords=['algebraic multigrid AMG sparse matrix preconditioning'],
