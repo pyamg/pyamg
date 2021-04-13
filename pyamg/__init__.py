@@ -5,7 +5,7 @@ import numpy as np
 import re
 import scipy as sp
 
-from .version import git_revision as __git_revision__
+from .version import version_tuple as __version_tuple__
 from .version import version as __version__
 
 from .multilevel import coarse_grid_solver, multilevel_solver
@@ -15,6 +15,8 @@ from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
 import warnings
+
+__git_revision__ = __version_tuple__[3].split("+")[0]
 
 __all__ = [__git_revision__, __version__,
            coarse_grid_solver, multilevel_solver,
