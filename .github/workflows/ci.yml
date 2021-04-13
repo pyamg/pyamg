@@ -22,12 +22,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install
-      run: pip install -e .
+      run: pip install .
     - name: Test
+      # decend into pyamg to make sure that the *installation* is tested, not the local
+      # pyamg folder
       run: |
-        pytest .
+        cd pyamg/
+        pytest
