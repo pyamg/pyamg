@@ -8,6 +8,8 @@ import scipy.sparse as sparse
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
+from pyamg.util.utils import set_tol
+
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
            'residual_norm', 'condest', 'cond', 'ishermitian',
            'pinv_array']
@@ -183,12 +185,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
     # Choose tolerance for deciding if break-down has occurred
-    t = A.dtype.char
-    eps = np.finfo(np.float64).eps
-    feps = np.finfo(np.float32).eps
-    geps = np.finfo(np.float128).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    breakdown = set_tol(A.dtype)
     breakdown_flag = False
 
     if A.shape[0] != A.shape[1]:
@@ -601,6 +598,7 @@ def pinv_array(a, cond=None):
     >>> pinv_array(a)
 
     """
+
     n = a.shape[0]
     m = a.shape[1]
 
@@ -623,12 +621,7 @@ def pinv_array(a, cond=None):
 
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
-            t = a.dtype.char
-            eps = np.finfo(np.float64).eps
-            feps = np.finfo(np.float32).eps
-            geps = np.finfo(np.float128).eps
-            _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-            cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+            cond = set_tol(a.dtype)
 
         # Invert each block of a
         for kk in range(n):

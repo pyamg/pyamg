@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 
-from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
+from pyamg.util.utils import type_prep, get_diagonal, get_block_diag, set_tol
 from pyamg import amg_core
 from scipy.linalg import lapack as la
 
@@ -1063,12 +1063,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                                    inv_subblock_ptr, subdomain, subdomain_ptr,
                                    int(subdomain_ptr.shape[0]-1), A.shape[0])
         # Choose tolerance for which singular values are zero in *gelss below
-        t = A.dtype.char
-        eps = np.finfo(np.float64).eps
-        feps = np.finfo(np.float32).eps
-        geps = np.finfo(np.float128).eps
-        _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-        cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+        cond = set_tol(A.dtype)
 
         # Invert each block column
         my_pinv, = la.get_lapack_funcs(['gelss'],
