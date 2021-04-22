@@ -23,7 +23,10 @@ jobs:
       env:
         CC: clang
         CXX: clang++
-      run: pip install . --verbose
+      run: |
+        clang --version
+        clang++ --version
+        pip install . --verbose
     - name: Test
       run: |
         pytest .
