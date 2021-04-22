@@ -13,7 +13,6 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
         os: [ubuntu-latest, macos-latest]
-        compiler: [gcc, clang]
 
     steps:
     - name: Checkout code
@@ -23,7 +22,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install
       env:
-        CC: ${{ matrix.compiler }}
+        CC: clang
+        CXX: clang++
       run: pip install .
     - name: Test
       run: |
