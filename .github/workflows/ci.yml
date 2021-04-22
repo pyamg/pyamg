@@ -15,8 +15,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
@@ -24,7 +23,7 @@ jobs:
       env:
         CC: clang
         CXX: clang++
-      run: pip install .
+      run: pip install . --verbose
     - name: Test
       run: |
         pytest .
