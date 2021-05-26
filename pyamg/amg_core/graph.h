@@ -353,6 +353,7 @@ T vertex_coloring_LDF(const I num_rows,
 //
 // Floyd-Warshall
 //
+// n = num_nodes
 // D is pre-allocated
 // D_size = max_N * max_N
 // P is pre-allocated
@@ -361,8 +362,8 @@ T vertex_coloring_LDF(const I num_rows,
 // C_size = max_N
 // C[i] = global index of i for i=0, ..., N
 // N = |C|
-// L = local indices, 0, ...., n (-1 if not in the cluster)
-// m = cluster ids, 0, ..., n
+// L = local indices, nx1 (-1 if not in the cluster)
+// m = cluster ids, nx1
 // a = this cluster id
 // assumes a fully connected (directed) graph
 template<class I, class T>
@@ -426,48 +427,78 @@ bool center_nodes(const I num_nodes,
                   const I Ap[], const int Ap_size,
                   const I Aj[], const int Aj_size,
                   const T Ax[], const int Ax_size,
+                      I Cptr[], const int Cptr_size,// to set up FW
                          T D[],  const int D_size,  // for FW
                          I P[],  const int P_size,  // for FW
                          I C[],  const int C_size,  // for FW
                          I L[],  const int L_size,  // for FW
-                         I q[],  const int q_size,
-                         I c[],  const int c_size,
-                         T d[],  const int d_size,
-                   const I m[],  const int m_size,
-                         I p[],  const int p_size)
+                         T q[],  const int q_size,  // to hold D**2
+                         I c[],  const int c_size,  // from BF
+                         T d[],  const int d_size,  // from BF
+                         I m[],  const int m_size,  // from BF
+                         I p[],  const int p_size,  // from BF
+                         I s[],  const int s_size)  // from BF
 {
+  I num_clusters = c_size;
   bool changed = false; // return a change on d or p
-  // for each cluster a
-  for(I a=0; a<c_size; a++){
+  // sort into clusters first O(n)
+  //     s: [4           2     4               ....
+  //  Cptr: [0           4     6              11 ...
+  //         |           |     |              |
+  //         v           v     v              v
+  //     C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
+  //     L: [0  1  2  3  0  1  0  1  2  3  4  0
+  // max_N: maximum cluster size
+  // num_clusters = # of clusters
+  // num_nodes = # of nodes
+  //     cluster_size (s): (num_clusters,)
+  // cluster_start (Cptr): (num_clusters,)
+  //      local_index (L): (num_nodes,) values are 0, ...., max_N
+  //     global_index (C): (num_nodes,) values are 0, ...., num_nodes
+  // then for each cluster a:
+  //      N = cluster size
+  //      pass pointer to start of each C[start,...., start+N]
 
-    // set nodes in this cluster
-    // CSR-like
-    //  3 x n array:
-    //    previous me next
-    //  1 x n array:
-    //    to keep track
-    //  [0  0  0  0  1  1  2  2  2  2  3  3  3  4  4  4  4  4  4]
-    //  [87 99 4  6  82 13 15 9  12 55 66 77 ...]
-    //
-    //
-    // Consensus idea:
-    //  modified CSR:
-    //  Number of clusters x max cluster size
-    //
-    //  n / 10   x 10 * 3 (for initial padding)
-    I N = 0;
-    std::fill(L, L+L_size, -1);
-    for(I i=0; i<m_size; i++){
-      if(m[i] == a){
-        C[N] = i;
-        L[i] = N;
-        N++;
-      }
+  std::cout << "made it here 0" << std::endl;
+
+  // point the first empty slot in cluster block of C
+  Cptr[0] = s[0];
+  for(I a=1; a<num_clusters; a++){
+    Cptr[a] = Cptr[a-1] + s[a];
+    for(I j=0; j<s[a]; j++){
+      L[Cptr[a]+j] = j;  // set the local index for this cluster
     }
+  }
+  std::cout << "made it here 1" << std::endl;
+  for(I a=0; a<num_nodes; a++){
+    I cindex = m[a];           // get the cluster id
+    I nextspot = Cptr[cindex]; // get the next spot
+    C[nextspot] = a;           // set the global index
+    Cptr[cindex]++;            // update the next spot
+  }
+  std::cout << "made it here 2" << std::endl;
+  // reset pointer the first empty slot in cluster block of C
+  Cptr[0] = s[0];
+  for(I a=1; a<num_clusters; a++){
+    Cptr[a] = Cptr[a-1] + s[a];
+  }
+  std::cout << "made it here 3" << std::endl;
+  printv(Cptr, Cptr_size, "Cptr");
+  printv(C, C_size, "C");
+  printv(L, L_size, "L);
+
+  // for each cluster a
+  for(I a=0; a<num_clusters; a++){
+    I N = 0;
 
     // call Floyd–Warshall for cluster a
+    // D: (max_N, max_N)
+    // P: (max_N, max_N)
+    // C: (max_N,)
+    // L: (num_nodes,)
+    N = s[a];
     floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                   D,  D_size, P,  P_size, C,  C_size, L,  L_size,
+                   D,  D_size, P,  P_size, C+Cptr[a], s[a], L,  L_size,
                    m,  m_size, a, N);
 
     // sum of square distances to the other nodes
@@ -835,11 +866,12 @@ void lloyd_cluster_balanced(const I num_nodes,
                             const I Ap[], const int Ap_size,
                             const I Aj[], const int Aj_size,
                             const T Ax[], const int Ax_size,
+                                I Cptr[],  const int Cptr_size,
                                    T D[],  const int D_size,
                                    I P[],  const int P_size,
                                    I C[],  const int C_size,
                                    I L[],  const int L_size,
-                                   I q[],  const int q_size,
+                                   T q[],  const int q_size,
                                    I c[], const int  c_size,
                                    T d[], const int  d_size,
                                    I m[], const int  m_size,
@@ -869,8 +901,10 @@ void lloyd_cluster_balanced(const I num_nodes,
                                     pc, pc_size, s,  s_size,
                                     false);
     changed = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+                           Cptr, Cptr_size,
                            D, D_size, P, P_size, C, C_size, L, L_size,
-                           q, q_size, c, c_size, d, d_size, m, m_size, p, p_size);
+                           q, q_size, c, c_size, d, d_size, m, m_size, p, p_size,
+                           s, s_size);
   }
 }
 

@@ -202,20 +202,23 @@ bool _center_nodes(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
+    py::array_t<I> & Cptr,
        py::array_t<T> & D,
        py::array_t<I> & P,
        py::array_t<I> & C,
        py::array_t<I> & L,
-       py::array_t<I> & q,
+       py::array_t<T> & q,
        py::array_t<I> & c,
        py::array_t<T> & d,
        py::array_t<I> & m,
-       py::array_t<I> & p
+       py::array_t<I> & p,
+       py::array_t<I> & s
                    )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
+    auto py_Cptr = Cptr.mutable_unchecked();
     auto py_D = D.mutable_unchecked();
     auto py_P = P.mutable_unchecked();
     auto py_C = C.mutable_unchecked();
@@ -223,26 +226,30 @@ bool _center_nodes(
     auto py_q = q.mutable_unchecked();
     auto py_c = c.mutable_unchecked();
     auto py_d = d.mutable_unchecked();
-    auto py_m = m.unchecked();
+    auto py_m = m.mutable_unchecked();
     auto py_p = p.mutable_unchecked();
+    auto py_s = s.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
+    I *_Cptr = py_Cptr.mutable_data();
     T *_D = py_D.mutable_data();
     I *_P = py_P.mutable_data();
     I *_C = py_C.mutable_data();
     I *_L = py_L.mutable_data();
-    I *_q = py_q.mutable_data();
+    T *_q = py_q.mutable_data();
     I *_c = py_c.mutable_data();
     T *_d = py_d.mutable_data();
-    const I *_m = py_m.data();
+    I *_m = py_m.mutable_data();
     I *_p = py_p.mutable_data();
+    I *_s = py_s.mutable_data();
 
     return center_nodes<I, T>(
                 num_nodes,
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
+                    _Cptr, Cptr.shape(0),
                        _D, D.shape(0),
                        _P, P.shape(0),
                        _C, C.shape(0),
@@ -251,7 +258,8 @@ bool _center_nodes(
                        _c, c.shape(0),
                        _d, d.shape(0),
                        _m, m.shape(0),
-                       _p, p.shape(0)
+                       _p, p.shape(0),
+                       _s, s.shape(0)
                               );
 }
 
@@ -431,11 +439,12 @@ void _lloyd_cluster_balanced(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
+    py::array_t<I> & Cptr,
        py::array_t<T> & D,
        py::array_t<I> & P,
        py::array_t<I> & C,
        py::array_t<I> & L,
-       py::array_t<I> & q,
+       py::array_t<T> & q,
        py::array_t<I> & c,
        py::array_t<T> & d,
        py::array_t<I> & m,
@@ -448,6 +457,7 @@ void _lloyd_cluster_balanced(
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
+    auto py_Cptr = Cptr.mutable_unchecked();
     auto py_D = D.mutable_unchecked();
     auto py_P = P.mutable_unchecked();
     auto py_C = C.mutable_unchecked();
@@ -462,11 +472,12 @@ void _lloyd_cluster_balanced(
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
+    I *_Cptr = py_Cptr.mutable_data();
     T *_D = py_D.mutable_data();
     I *_P = py_P.mutable_data();
     I *_C = py_C.mutable_data();
     I *_L = py_L.mutable_data();
-    I *_q = py_q.mutable_data();
+    T *_q = py_q.mutable_data();
     I *_c = py_c.mutable_data();
     T *_d = py_d.mutable_data();
     I *_m = py_m.mutable_data();
@@ -479,6 +490,7 @@ void _lloyd_cluster_balanced(
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
+                    _Cptr, Cptr.shape(0),
                        _D, D.shape(0),
                        _P, P.shape(0),
                        _C, C.shape(0),
@@ -720,6 +732,7 @@ Largest-Degree-First (LDF) algorithm
 R"pbdoc(
 Floyd-Warshall
 
+n = num_nodes
 D is pre-allocated
 D_size = max_N * max_N
 P is pre-allocated
@@ -728,17 +741,17 @@ C is pre-allocated
 C_size = max_N
 C[i] = global index of i for i=0, ..., N
 N = |C|
-L = local indices, 0, ...., n (-1 if not in the cluster)
-m = cluster ids, 0, ..., n
+L = local indices, nx1 (-1 if not in the cluster)
+m = cluster ids, nx1
 a = this cluster id
 assumes a fully connected (directed) graph)pbdoc");
 
     m.def("center_nodes", &_center_nodes<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert());
     m.def("center_nodes", &_center_nodes<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert());
     m.def("center_nodes", &_center_nodes<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert(),
 R"pbdoc(
 Update center nodes for a cluster)pbdoc");
 
@@ -890,11 +903,11 @@ Perform Lloyd clustering on a distance graph
  PhD thesis (UIUC), August 2008)pbdoc");
 
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"),
 R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph using
 balanced centers
