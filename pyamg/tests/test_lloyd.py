@@ -71,13 +71,6 @@ changed = amg_core.bellman_ford_balanced(num_nodes,
                                 pc, s,
                                 True)
 
-print(changed)
-print(c)
-print(d)
-print(m)
-print(p)
-print(pc)
-print("s:", s)
 changed = amg_core.center_nodes(num_nodes,
                       A.indptr, A.indices, A.data,
                       Cptr,
@@ -85,4 +78,3 @@ changed = amg_core.center_nodes(num_nodes,
                       q.ravel(),
                       c, d, m, p,
                       s)
-print(changed)
