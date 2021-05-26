@@ -6,7 +6,6 @@ import scipy.sparse as sparse
 
 from numpy.testing import TestCase, assert_equal, assert_array_equal
 
-
 A = load_example('unit_square')['A'].tocsr()
 A.data[:] = 1.0
 c = np.array([0, 10, 20, 30], dtype=np.int32)
@@ -14,7 +13,7 @@ c = np.array([0, 10, 20, 30], dtype=np.int32)
 n = A.shape[0]
 num_nodes = A.shape[0]
 
-Cptr = np.array([0, 1], dtype=np.int32)
+Cptr = np.empty(len(c), dtype=np.int32)
 D = np.zeros((n, n), dtype=A.dtype)
 P = np.zeros((n, n), dtype=np.int32)
 C  = np.arange(0, n, dtype=np.int32)
@@ -33,6 +32,12 @@ changed = amg_core.bellman_ford_balanced(num_nodes,
                                 pc, s,
                                 True)
 
+print(f'c = {np.array2string(c)}')
+print(f'd = {np.array2string(d)}')
+print(f'm = {np.array2string(m)}')
+print(f'p = {np.array2string(p)}')
+print(f'pc = {np.array2string(pc)}')
+print(f's = {np.array2string(s)}')
 changed = amg_core.center_nodes(num_nodes,
                       A.indptr, A.indices, A.data,
                       Cptr,

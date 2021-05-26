@@ -462,13 +462,16 @@ bool center_nodes(const I num_nodes,
   std::cout << "made it here 0" << std::endl;
 
   // point the first empty slot in cluster block of C
-  Cptr[0] = s[0]-1;
+  Cptr[0] = 0;
   for(I a=1; a<num_clusters; a++){
     Cptr[a] = Cptr[a-1] + s[a-1];
     for(I j=0; j<s[a]; j++){
       L[Cptr[a]+j] = j;  // set the local index for this cluster
     }
   }
+  printv(s, s_size, "s");
+  printv(Cptr, Cptr_size, "Cptr");
+  printv(L, L_size, "L");
   std::cout << "made it here 1" << std::endl;
   for(I a=0; a<num_nodes; a++){
     I cindex = m[a];           // get the cluster id
@@ -478,7 +481,7 @@ bool center_nodes(const I num_nodes,
   }
   std::cout << "made it here 2" << std::endl;
   // reset pointer the first empty slot in cluster block of C
-  Cptr[0] = s[0]-1;
+  Cptr[0] = 0;
   for(I a=1; a<num_clusters; a++){
     Cptr[a] = Cptr[a-1] + s[a-1];
   }
