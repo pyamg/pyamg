@@ -77,7 +77,7 @@ print(d)
 print(m)
 print(p)
 print(pc)
-print(s)
+print("s:", s)
 changed = amg_core.center_nodes(num_nodes,
                       A.indptr, A.indices, A.data,
                       Cptr,
