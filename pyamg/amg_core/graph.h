@@ -485,7 +485,7 @@ bool center_nodes(const I num_nodes,
   std::cout << "made it here 3" << std::endl;
   printv(Cptr, Cptr_size, "Cptr");
   printv(C, C_size, "C");
-  printv(L, L_size, "L);
+  printv(L, L_size, "L");
 
   // for each cluster a
   for(I a=0; a<num_clusters; a++){
