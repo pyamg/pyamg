@@ -350,22 +350,32 @@ T vertex_coloring_LDF(const I num_rows,
     return *std::max_element(x, x + num_rows);
 }
 
+// Floyd-Warshall on a subgraph or cluster of nodes in A
 //
-// Floyd-Warshall
+// Parameters
+// ----------
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+//    D[]       : (INOUT) FW distance array                               (max_size x max_size)
+//    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+//    C[]       : (IN) FW global index for current cluster                (N x 1)
+//    L[]       : (IN) FW local index for current cluster                 (num_nodes x 1)
+//    m         : (IN) cluster index                                      (num_nodes x 1)
+//    a         : center of current cluster
+//    N         : size of current cluster
 //
-// n = num_nodes
-// D is pre-allocated
-// D_size = max_N * max_N
-// P is pre-allocated
-// P_size = max_N * max_N
-// C is pre-allocated
-// C_size = max_N
-// C[i] = global index of i for i=0, ..., N
-// N = |C|
-// L = local indices, nx1 (-1 if not in the cluster)
-// m = cluster ids, nx1
-// a = this cluster id
-// assumes a fully connected (directed) graph
+// Notes
+// -----
+// - There are no checks within this kernel
+// - Ax > 0 is assumed
+// - TODO: should P be initialized?
+// - Only a slice of C is passed to Floyd–Warshall.  See lloyd_cluster_balanced.
+// - C[i] is the global index of i for i=0, ..., N in the current cluster
+// - N = |C|
+// - L = local indices, nx1 (-1 if not in the cluster)
+// - assumes a fully connected (directed) graph
 template<class I, class T>
 void floyd_warshall(const I num_nodes,
                     const I Ap[], const int Ap_size,
@@ -419,9 +429,41 @@ void floyd_warshall(const I num_nodes,
   }
 }
 
-/*
- * Update center nodes for a cluster
- */
+// Update center nodes for a cluster
+//
+// Parameters
+// ----------
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+// Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
+//    D[]       : (INOUT) FW distance array                               (max_size x max_size)
+//    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+//    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
+//    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
+//    q         : (INOUT) FW work array for D**2                          (max_size x max_size)
+//    c         : (INOUT) cluster center                                  (num_clusters x 1)
+//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+//    m         : (INOUT) cluster index                                   (num_nodes x 1)
+//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+//    s         : (INOUT) cluster size                                    (num_clusters x 1)
+//
+// Returns
+// -------
+// changed : flag to indicate a change in arrays D or P
+//
+// Notes
+// -----
+// - sort into clusters first O(n)
+//     s: [4           2     4               ....
+//  Cptr: [0           4     6              11 ...
+//         |           |     |              |
+//         v           v     v              v
+//     C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
+//     L: [0  1  2  3  0  1  0  1  2  3  4  0
+// - pass pointer to start of each C[start,...., start+N]
+// - N is the cluster size
 template<class I, class T>
 bool center_nodes(const I num_nodes,
                   const I Ap[], const int Ap_size,
@@ -441,25 +483,6 @@ bool center_nodes(const I num_nodes,
 {
   I num_clusters = c_size;
   bool changed = false; // return a change on d or p
-  // sort into clusters first O(n)
-  //     s: [4           2     4               ....
-  //  Cptr: [0           4     6              11 ...
-  //         |           |     |              |
-  //         v           v     v              v
-  //     C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
-  //     L: [0  1  2  3  0  1  0  1  2  3  4  0
-  // max_N: maximum cluster size
-  // num_clusters = # of clusters
-  // num_nodes = # of nodes
-  //     cluster_size (s): (num_clusters,)
-  // cluster_start (Cptr): (num_clusters,)
-  //      local_index (L): (num_nodes,) values are 0, ...., max_N
-  //     global_index (C): (num_nodes,) values are 0, ...., num_nodes
-  // then for each cluster a:
-  //      N = cluster size
-  //      pass pointer to start of each C[start,...., start+N]
-
-  std::cout << "made it here 0" << std::endl;
 
   // point the first empty slot in cluster block of C
   Cptr[0] = 0;
@@ -469,23 +492,17 @@ bool center_nodes(const I num_nodes,
       L[Cptr[a]+j] = j;  // set the local index for this cluster
     }
   }
-  printv(s, s_size, "s");
-  printv(Cptr, Cptr_size, "Cptr");
-  printv(L, L_size, "L");
-  std::cout << "made it here 1" << std::endl;
   for(I a=0; a<num_nodes; a++){
     I cindex = m[a];           // get the cluster id
     I nextspot = Cptr[cindex]; // get the next spot
     C[nextspot] = a;           // set the global index
     Cptr[cindex]++;            // update the next spot
   }
-  std::cout << "made it here 2" << std::endl;
   // reset pointer the first empty slot in cluster block of C
   Cptr[0] = 0;
   for(I a=1; a<num_clusters; a++){
     Cptr[a] = Cptr[a-1] + s[a-1];
   }
-  std::cout << "made it here 3" << std::endl;
 
   // for each cluster a
   for(I a=0; a<num_clusters; a++){
@@ -534,31 +551,26 @@ bool center_nodes(const I num_nodes,
 //
 // Parameters
 // ----------
-// num_nodes  : (IN) number of nodes (number of rows in A)
-// Ap         : (IN) CSR row pointer
-// Aj         : (IN) CSR index array
-// Ax         : (IN) CSR data array (edge lengths)
-// c          : (IN) centers
-// d          : (OUT) distance to nearest center
-// m          : (OUT) cluster index for each node
-// p          : (OUT) predecessor in the graph traversal
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+//    c         : (INOUT) cluster center                                  (num_clusters x 1)
+//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+//    m         : (INOUT) cluster index                                   (num_nodes x 1)
+//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
 // initialize : (IN) flag whether the data should be (re)-initialized
 //
 // Notes
 // -----
-// There are no checks within this kernel.
+// - There are no checks within this kernel.
+// - Ax is assumed to be positive
 //
 // Initializations
 // ---------------
-// d = inf if not a center
-//   = 0   if a center
-// m = -1  if not a center
-//   = 0, ..., nclusters if a center
-// p = -1
-//
-// Assumptions
-// -----------
-// Ax > 0
+//  d[i] = 0 if i is a center, else inf
+//  m[i] = 0 .. num_clusters if in a cluster, else -1
+//  p[i] = -1
 //
 // See Also
 // --------
@@ -616,35 +628,30 @@ void bellman_ford(const I num_nodes,
 //
 //  Parameters
 //  ----------
-//  num_nodes  : (IN) number of nodes (number of rows in A)
-//  Ap         : (IN) CSR row pointer
-//  Aj         : (IN) CSR index array
-//  Ax         : (IN) CSR data array (edge lengths)
-//  c          : (IN) centers
-//  d          : (OUT) distance to nearest center
-//  m          : (OUT) cluster index for each node
-//  p          : (OUT) predecessor in the graph traversal
-//  pc         : (OUT) predecessor count
-//  s          : (OUT) running clusters size
-//  initialize : (IN) flag whether the data should be (re)-initialized
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+//    c         : (INOUT) cluster center                                  (num_clusters x 1)
+//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+//    m         : (INOUT) cluster index                                   (num_nodes x 1)
+//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+//    pc        : (INOUT) number of predecessors                          (num_nodes x 1)
+//    s         : (INOUT) cluster size                                    (num_clusters x 1)
+//  initialize  : (IN) flag whether the data should be (re)-initialized
 //
 //  Notes
 //  -----
-//  There are no checks within this kernel.
+//  - There are no checks within this kernel.
+//  - Ax > 0 is assumed
 //
 //  Initializations
 //  ---------------
-//  d = inf if not a center
-//    = 0   if a center
-//  m = -1  if not a center
-//    = 0, ..., nclusters if a center
+//  d[i] = 0 if i is a center, else 0
+//  m[i] = 0, ..., nclusters if i is in a cluster, else -1
 //  p = -1
 //  pc = 0
 //  s = 1
-//
-//  Assumptions
-//  -----------
-//  Ax > 0
 //
 //  See Also
 //  --------
@@ -737,6 +744,21 @@ bool bellman_ford_balanced(const I num_nodes,
 //
 // Find the most interior nodes
 //
+// Parameters
+// ----------
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+//    c         : (INOUT) cluster center                                  (num_clusters x 1)
+//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+//    m         : (INOUT) cluster index                                   (num_nodes x 1)
+//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+//
+// Notes
+// -----
+// - There are no checks within this kernel.
+// - Ax is assumed to be positive
 template<class I, class T>
 void most_interior_nodes(const I num_nodes,
                    const I Ap[], const int Ap_size,
@@ -799,26 +821,18 @@ void most_interior_nodes(const I num_nodes,
 //
 //  Notes
 //  -----
-//  There are no check within this kernel.
+// - There are no checks within this kernel.
+// - Ax is assumed to be positive
 //
 //  Initializations
 //  ---------------
-//  d = inf if not a center
-//    = 0   if a center
-//  od = inf
-//  m = -1  if not a center
-//    = 0, ..., nclusters if a center
-//  p = -1
-//
-//  Assumptions
-//  -----------
-//  Ax > 0
+//  d[i] = 0 if i is a center, else inf
+//  m[i] = 0 .. num_clusters if in a cluster, else -1
+//  p[i] = -1
 //
 //  References
 //  ----------
-//  Nathan Bell
-//  Algebraic Multigrid for Discrete Differential Forms
-//  PhD thesis (UIUC), August 2008
+//  Nathan Bell, Algebraic Multigrid for Discrete Differential Forms, PhD thesis (Illinois), August 2008
 template<class I, class T>
 void lloyd_cluster(const I num_nodes,
                    const I Ap[], const int Ap_size,
@@ -857,10 +871,46 @@ void lloyd_cluster(const I num_nodes,
 // Perform one iteration of Lloyd clustering on a distance graph using
 // balanced centers
 //
-// This version computes improved cluster centers with Floyd-Warshall and
-// also uses a balanced version of Bellman-Ford to try and find
-// nearly-equal-sized clusters.
-// balanced lloyd
+// Parameters
+// ----------
+//   num_nodes  : (IN) number of nodes (number of rows in A)
+//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+// Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
+//    D[]       : (INOUT) FW distance array                               (max_size x max_size)
+//    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+//    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
+//    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
+//    q         : (OUT) FW work array for D**2                            (max_size x max_size)
+//    c         : (INOUT) cluster center                                  (num_clusters x 1)
+//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+//    m         : (INOUT) cluster index                                   (num_nodes x 1)
+//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+//    pc        : (INOUT) number of predecessors                          (num_nodes x 1)
+//    s         : (INOUT) cluster size                                    (num_clusters x 1)
+//   initialize : bool, flag to initialize
+//
+// Notes
+// -----
+// - This version computes improved cluster centers with Floyd-Warshall and
+//   also uses a balanced version of Bellman-Ford to try and find
+//   nearly-equal-sized clusters.
+//   balanced lloyd
+// - There are no checks within this kernel.
+// - Ax is assumed to be positive
+//
+// Initializations
+// ---------------
+//  d[i] = 0 if i is a center, else inf
+//  m[i] = 0 .. num_clusters if in a cluster, else -1
+//  p[i] = -1
+// pc[i] = 0
+//  s[i] = 1
+//
+// See Also
+// --------
+// pyamg.amg_core.graph.lloyd_cluster
 template<class I, class T>
 void lloyd_cluster_balanced(const I num_nodes,
                             const I Ap[], const int Ap_size,
@@ -878,7 +928,7 @@ void lloyd_cluster_balanced(const I num_nodes,
                                    I p[], const int  p_size,
                                    I pc[], const int pc_size,
                                    I s[], const int s_size,
-                           const bool initialize)
+                          const bool initialize)
 {
   bool changed = true;
 
