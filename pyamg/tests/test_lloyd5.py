@@ -41,35 +41,31 @@ amg_core.lloyd_cluster_balanced(num_nodes,
                                 c, d, m, p,
                                 pc, s,
                                 True)
-
-AggOp0 = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
-
-ID = np.kron(np.arange(0, E.shape[0]), np.ones((3,), dtype=np.int32))
-V2E = sparse.coo_matrix((np.ones((E.shape[0]*3,), dtype=int), (E.ravel(), ID,)))
-G = V2E @ V2E.T
-
-data = pyamg.gallery.load_example('unit_square')
-A = data['A'].tocsr()
-E = data['elements']
-V = data['vertices']
-ml = pyamg.smoothed_aggregation_solver(A, keep=True)
-AggOp = ml.levels[0].AggOp
+print(m)
 print(c)
+
+AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
 
 fig, ax = plt.subplots(figsize=(10,10))
 ax.triplot(V[:,0], V[:,1], E, color='0.5', lw=1.0)
 ax.plot(V[:,0],V[:,1], 's', ms=5, markeredgecolor='w', color='tab:gray')
 
-ax.plot(V[c,0],V[c,1], '*', ms=20, markeredgecolor='w', color='tab:green')
-#kwargs = {'color': 'tab:blue', 'alpha': 0.4}
-#plotaggs(AggOp, V, E, G=A, ax=ax, **kwargs)
+ax.plot(V[c,0],V[c,1], '*', ms=30, markeredgecolor='w', color='tab:green')
 
-kwargs = {'color': 'tab:red', 'alpha': 0.4}
-#plotaggs(AggOp0, V, E, G=A, ax=ax, **kwargs)
-
-for agg in AggOp0.T:                                    # for each aggregate
-    aggids = agg.indices                               # get the indices
+for k, agg in enumerate(AggOp.T):                                    # for each aggregate
+    #aggids = agg.indices                               # get the indices
+    aggids = np.where(m == k)[0]
+    print(k, aggids, c[k])
+    for i in aggids:
+        for j in aggids:
+            if A[i,j]:
+                plt.plot([V[i,0], V[j,0]], [V[i,1], V[j,1]], 'k-', lw=3)
     plt.plot(V[aggids,0], V[aggids,1], 'o', ms=8)
 
-#plt.savefig('aggviz.png')
+for i in range(n):
+    plt.text(V[i,0], V[i,1], f'{m[i]}')
+
+for j in range(len(c)):
+    i = c[j]
+    plt.text(V[i,0], V[i,1], f'{i}', color='m')
 plt.show()

@@ -930,7 +930,9 @@ void lloyd_cluster_balanced(const I num_nodes,
                                    I s[], const int s_size,
                           const bool initialize)
 {
-  bool changed = true;
+  bool changed1 = true;
+  bool changed2 = true;
+  int iters = 0;
 
   // initialize m, d, p, n, s
   if(initialize){
@@ -945,16 +947,18 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while (changed) {
-    changed = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+  while ((changed1 || changed2) && (iters < 100)) {
+    changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                                     c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
                                     pc, pc_size, s,  s_size,
                                     false);
-    changed = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
+    changed2 = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                            Cptr, Cptr_size,
                            D, D_size, P, P_size, C, C_size, L, L_size,
                            q, q_size, c, c_size, d, d_size, m, m_size, p, p_size,
                            s, s_size);
+    std::cout << "changed: " << changed1 << "   " << changed2 << std::endl;
+    iters++;
   }
 }
 
