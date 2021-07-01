@@ -461,7 +461,14 @@ void floyd_warshall(const I num_nodes,
 //         |           |     |              |
 //         v           v     v              v
 //     C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
-//     L: [0  1  2  3  0  1  0  1  2  3  4  0
+//               ^  ^           ^
+//               |  |________   |_____
+//               |_____      |        |
+//                     |     |        |
+//     L: [            2     3        1
+//         ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^
+//         |  |  |  |  |  |  |  |  |  |  |  ...
+//         0  1  2  3  4  5  6  7  8  9  10 ...
 // - pass pointer to start of each C[start,...., start+N]
 // - N is the cluster size
 template<class I, class T>
@@ -485,58 +492,63 @@ bool center_nodes(const I num_nodes,
   bool changed = false; // return a change on d or p
 
   // point the first empty slot in cluster block of C
-  Cptr[0] = 0;
-  for(I a=1; a<num_clusters; a++){
-    Cptr[a] = Cptr[a-1] + s[a-1];
-    for(I j=0; j<s[a]; j++){
-      L[Cptr[a]+j] = j;  // set the local index for this cluster
+  I Clast = 0;
+  for(I a=0; a<num_clusters; a++){
+    Cptr[a] = Clast;
+    Clast += s[a];
+  }
+  // fill in the global index into the next spot in the cluster
+  for(I i=0; i<num_nodes; i++){
+    I a = m[i];                      // get the cluster id
+    I nextspot = Cptr[a];            // get the next spot
+    C[nextspot] = i;                 // set the global index
+    Cptr[a]++;                       // update the next spot
+  }
+  // reset pointer to the first empty slot in cluster block of C
+  Clast = 0;
+  for(I a=0; a<num_clusters; a++){
+    Cptr[a] = Clast;
+    Clast += s[a];
+  }
+  // set L, local indices for each global C
+  for(I a=0; a<num_clusters; a++){
+    for(I _j=0; _j<s[a]; _j++){
+      L[C[Cptr[a]+_j]] = _j;            // set the local index for the node
     }
-  }
-  for(I a=0; a<num_nodes; a++){
-    I cindex = m[a];           // get the cluster id
-    I nextspot = Cptr[cindex]; // get the next spot
-    C[nextspot] = a;           // set the global index
-    Cptr[cindex]++;            // update the next spot
-  }
-  // reset pointer the first empty slot in cluster block of C
-  Cptr[0] = 0;
-  for(I a=1; a<num_clusters; a++){
-    Cptr[a] = Cptr[a-1] + s[a-1];
   }
 
   // for each cluster a
   for(I a=0; a<num_clusters; a++){
-    I N = 0;
-
     // call Floyd–Warshall for cluster a
     // D: (max_N, max_N)
     // P: (max_N, max_N)
     // C: (max_N,)
     // L: (num_nodes,)
-    N = s[a];
+    I N = s[a];
     floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                    D,  D_size, P,  P_size, C+Cptr[a], s[a], L,  L_size,
                    m,  m_size, a, N);
 
     // sum of square distances to the other nodes
-    for(I i=0; i<N; i++){
-      for(I j=0; j<N; j++){
-        I ij = i * N + j;
-        q[i] += D[ij]*D[ij];
+    for(I _i=0; _i<N; _i++){
+      q[_i] = 0;
+      for(I _j=0; _j<N; _j++){
+        I _ij = _i * N + _j;
+        q[_i] += D[_ij]*D[_ij];
       }
     }
-    I i = c[a];         // global index of the cluster center
+
+    I i = c[a];                   // global index of the cluster center
     for(I _j=0; _j<N; _j++){
-      I j = C[_j];      // global index of every node in the cluster
-      if(q[j] < q[i]) { // is j (strictly) better?
-        i = j;          // new center
+      if(q[_j] < q[L[i]]) {       // is j (strictly) better?
+        i = C[Cptr[a] + _j];      // global index of every node in the cluster
       }
     }
-    if(i != c[a]){      // if we've found a new center, then...
+    if(i != c[a]){                // if we've found a new center, then...
       c[a] = i;
       I _i = L[i];
       for(I _j=0; _j<N; _j++){
-        I j = C[_j];    // global index of every node in the cluster
+        I j = C[Cptr[a] + _j];    // global index of every node in the cluster
         I _ij = _i * N + _j;
         d[j] = D[_ij];
         p[j] = P[_ij];
@@ -882,7 +894,7 @@ void lloyd_cluster(const I num_nodes,
 //    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
 //    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
 //    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
-//    q         : (OUT) FW work array for D**2                            (max_size x max_size)
+//    q         : (OUT) FW work array for D**2                            (max_size x 1)
 //    c         : (INOUT) cluster center                                  (num_clusters x 1)
 //    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
 //    m         : (INOUT) cluster index                                   (num_nodes x 1)
@@ -947,7 +959,7 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while ((changed1 || changed2) && (iters < 100)) {
+  while ((changed1 || changed2) && (iters < 2)) {
     changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                                     c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
                                     pc, pc_size, s,  s_size,
