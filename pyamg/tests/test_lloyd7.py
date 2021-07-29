@@ -14,21 +14,28 @@ E = data['elements']
 V = data['vertices']
 
 A.data[:] = 1.0
-#np.random.seed(625)
-#np.random.seed(3478) # skinny aggs
-#np.random.seed(444) # lined up aggs
-#np.random.seed(204) # seed 57 jumps
-#np.random.seed(293485) # seed 57 jumps
-#np.random.seed(23434)
+ID = np.kron(np.arange(0, E.shape[0]), np.ones((3,), dtype=np.int32))
+V2E = sparse.coo_matrix((np.ones((E.shape[0]*3,), dtype=A.dtype), (E.ravel(), ID,)))
+G = V2E @ V2E.T
+G = G.tocoo()
+
+for k, i, j in zip(np.arange(len(G.data)),G.row,G.col):
+    d = np.sqrt((V[i,0]-V[j,0])**2 + (V[i,1]-V[j,1])**2)
+    G.data[k] = d
+A = G.tocsr()
+
 seed = np.random.randint(1,32768)
-print('seed = {seed}')
+#seed = 6238  # too many iterations
+#seed = 29253 # hotdog aggregate
+seed = 8368 # nice plot
+np.random.seed(seed)
+print(f'seed = {seed}')
 c = np.int32(np.random.permutation(A.shape[0]-1)[:20])
-print(c)
 
 n = A.shape[0]
 num_nodes = A.shape[0]
 
-maxsize = int(3*np.ceil((n / len(c))))
+maxsize = int(4*np.ceil((n / len(c))))
 
 Cptr = np.empty(len(c), dtype=np.int32)
 D = np.zeros((maxsize, maxsize), dtype=A.dtype)
@@ -50,8 +57,6 @@ amg_core.lloyd_cluster_balanced(num_nodes,
                                 c, d, m, p,
                                 pc, s,
                                 True)
-print(m)
-print(c)
 
 AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
 

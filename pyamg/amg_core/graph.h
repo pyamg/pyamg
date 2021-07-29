@@ -712,8 +712,27 @@ bool bellman_ford_balanced(const I num_nodes,
         const T Aij = Ax[jj];
         swap = false;
 
-        if(d[i] + Aij < d[j]){  // standard Bellman-Ford
+        //if(d[i] + Aij < d[j]){  // standard Bellman-Ford
+        if(d[j] - (d[i] + Aij) > 2*tol){  // if both are finite and close
           swap = true;
+                //std::cout << "1st: "
+                //  << iteration << " "
+                //  << i << " "
+                //  << j << " "
+                //  << m[i] << " "
+                //  << m[j] << " "
+                //  << c[m[i]] << " "
+                //  << c[m[j]] << " | "
+                //  << d[i] << " "
+                //  << d[j] << " "
+                //  << Aij << " | "
+                //  << s[m[i]] << " "
+                //  << s[m[j]] << " | "
+                //  << p[i] << " "
+                //  << p[j] << " "
+                //  << pc[p[i]] << " "
+                //  << pc[p[j]] << " "
+                //  <<std::endl;
         }
 
         if(m[j] > -1){                            // if j is unassigned, do not consider the tie
@@ -721,6 +740,24 @@ bool bellman_ford_balanced(const I num_nodes,
             if((s[m[i]] + 1) < s[m[j]]){          // if the size of cluster j is larger
               if(pc[j] == 0){                     // if the predecessor count is zero
                 swap = true;
+                //std::cout << "2nd: "
+                //  << iteration << " "
+                //  << i << " "
+                //  << j << " "
+                //  << m[i] << " "
+                //  << m[j] << " "
+                //  << c[m[i]] << " "
+                //  << c[m[j]] << " | "
+                //  << d[i] << " "
+                //  << d[j] << " "
+                //  << Aij << " | "
+                //  << s[m[i]] << " "
+                //  << s[m[j]] << " | "
+                //  << p[i] << " "
+                //  << p[j] << " "
+                //  << pc[p[i]] << " "
+                //  << pc[p[j]] << " "
+                //  <<std::endl;
               }
             }
           }
@@ -945,6 +982,9 @@ void lloyd_cluster_balanced(const I num_nodes,
   bool changed1 = true;
   bool changed2 = true;
   int iters = 0;
+  int maxiters = 10;
+  I maxsize = q_size;
+  I clustermax = 0;
 
   // initialize m, d, p, n, s
   if(initialize){
@@ -959,17 +999,19 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while ((changed1 || changed2) && (iters < 2)) {
+  while ((changed1 || changed2) && (iters < maxiters)) {
     changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                                     c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
                                     pc, pc_size, s,  s_size,
                                     false);
+
+    clustermax = *std::max_element(s, s+s_size);
+    coreassert((clustermax < maxsize), "maxsize (maximum cluster size) is too small");
     changed2 = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                            Cptr, Cptr_size,
                            D, D_size, P, P_size, C, C_size, L, L_size,
                            q, q_size, c, c_size, d, d_size, m, m_size, p, p_size,
                            s, s_size);
-    std::cout << "changed: " << changed1 << "   " << changed2 << std::endl;
     iters++;
   }
 }
