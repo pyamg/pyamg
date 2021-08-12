@@ -3,6 +3,7 @@
 
 import numpy as np
 import scipy.sparse as sparse
+import scipy.sparse.csgraph
 from pyamg import amg_core
 from pyamg.graph import lloyd_cluster, asgraph
 import warnings
@@ -353,3 +354,64 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     AggOp = sparse.coo_matrix((data, (row, col)),
                               shape=(G.shape[0], num_clusters)).tocsr()
     return AggOp, seeds
+
+def _choice(p):
+    """
+    Parameters
+    ----------
+    p : array
+        probabilities [0,1], with sum(p) == 1
+
+    Return
+    ------
+    i : int
+        index to a selected integer based on the distribution of p
+
+    Notes
+    -----
+    For efficiency, there are no checks.
+
+    TODO - needs testing
+    """
+    a = p / np.max(p)
+    i = -1
+    while True:
+        i = np.random.randint(len(a))
+        if np.random.rand() < a[i]:
+            break
+    return i
+
+def kmeanspp_seed(G, nseeds):
+    """
+    Parameters
+    ----------
+    G : sparse matrix
+        sparse graph on which to seed
+
+    nseeds : int
+        number of seeds
+
+    Return
+    ------
+    C : array
+        list of seeds
+
+    Notes
+    -----
+    This is a reference algorithms, at O(n^3)
+
+    TODO - needs testing
+    """
+    warnings.warn("kmeanspp_seed is O(n^3) -- use only for testing")
+
+    n = G.shape[0]
+    C = np.random.choice(n, 1, replace=False)
+    for i in range(nseeds-1):
+        d = scipy.sparse.csgraph.bellman_ford(G, directed=False, indices=C)
+        d = d.min(axis=0)   # shortest path from a seed
+        d = d**2            # distance squared
+        p = d / np.sum(d)   # probability
+        # newC = np.random.choice(n, 1, p=p, replace=False) # <- does not work properly
+        newC = _choice(p)
+        C = np.append(C, newC)
+    return C
