@@ -510,7 +510,8 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     verbose: {bool}
         prints
         max( \|A - A.conj().T\| ) if nonhermitian and fast_check=False..
-        abs( <Ax, y> - <x, Ay> )  if nonhermitian and fast_check=False
+        \| <Ax, y> - <x, Ay> ) \| / sqrt( \| <Ax, y> * <x, Ay> \| )
+        if nonhermitian and fast_check=True
 
     Returns
     -------
