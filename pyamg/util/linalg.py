@@ -3,12 +3,9 @@ from __future__ import print_function
 
 
 import numpy as np
-import scipy as sp
 import scipy.sparse as sparse
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
-
-from pyamg.util.utils import set_tol
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
            'residual_norm', 'condest', 'cond', 'ishermitian',
@@ -181,6 +178,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     To obtain approximate eigenvectors of A, compute V*W.
     """
     from scipy.sparse.linalg import aslinearoperator
+    from pyamg.util.utils import set_tol
 
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
@@ -598,6 +596,7 @@ def pinv_array(a, cond=None):
     >>> pinv_array(a)
 
     """
+    from pyamg.util.utils import set_tol
 
     n = a.shape[0]
     m = a.shape[1]
