@@ -334,26 +334,40 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
     num_nodes = G.shape[0]
 
-    seeds = np.random.permutation(num_nodes)[:num_clusters]
-    seeds = seeds.astype(np.int32)
-    mv = np.finfo(G.dtype).max
-    d = mv * np.ones(num_nodes, dtype=G.dtype)
-    d[seeds] = 0
+    seed = np.random.randint(1,32768)
+    np.random.seed(seed)
 
-    cm = -1 * np.ones(num_nodes, dtype=np.int32)
-    cm[seeds] = seeds
+    n = G.shape[0]
+    num_nodes = G.shape[0]
 
-    amg_core.lloyd_cluster_exact(num_nodes,
-                                 G.indptr, G.indices, G.data,
-                                 num_clusters,
-                                 d, cm, seeds)
+    c = np.int32(np.random.choice(n, num_clusters, replace=False))
 
-    col = cm
-    row = np.arange(len(cm))
-    data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_matrix((data, (row, col)),
-                              shape=(G.shape[0], num_clusters)).tocsr()
-    return AggOp, seeds
+    maxsize = int(4*np.ceil((n / len(c))))
+
+    Cptr = np.empty(len(c), dtype=np.int32)
+    D = np.zeros((maxsize, maxsize), dtype=G.dtype)
+    P = np.zeros((maxsize, maxsize), dtype=np.int32)
+    C  = np.arange(0, n, dtype=np.int32)
+    L  = np.arange(0, n, dtype=np.int32)
+
+    q = np.zeros(maxsize, dtype=G.dtype)
+    d = np.empty(n, dtype=G.dtype)
+    m = np.empty(n, dtype=np.int32)
+    p = np.empty(n, dtype=np.int32)
+    pc = np.empty(n, dtype=np.int32)
+    s = np.empty(len(c), dtype=np.int32)
+
+    amg_core.lloyd_cluster_balanced(num_nodes,
+                                    G.indptr, G.indices, G.data,
+                                    Cptr, D.ravel(), P.ravel(), C, L,
+                                    q.ravel(),
+                                    c, d, m, p,
+                                    pc, s,
+                                    True)
+
+    AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
+
+    return AggOp, c
 
 def _choice(p):
     """
