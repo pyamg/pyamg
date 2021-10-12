@@ -222,7 +222,7 @@ def lloyd_cluster(G, centers):
 
     if np.isscalar(centers):
         centers = np.random.permutation(n)[:centers]
-        centers = centers.astype('intc')
+        centers = np.int32(centers)
     else:
         centers = np.asarray(centers, dtype=np.int32)
 
@@ -235,6 +235,7 @@ def lloyd_cluster(G, centers):
         raise ValueError(f'invalid center index {centers.max()}')
 
     centers = np.asarray(centers, dtype=np.int32)
+    print('initial:', repr(centers))
 
     distances = np.empty(n, dtype=G.dtype)
     olddistances = np.empty(n, dtype=G.dtype)
@@ -243,8 +244,9 @@ def lloyd_cluster(G, centers):
 
     amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,                  # IN
                            centers,                                         # INOUT
-                           distances, olddistances, clusters, predecessors, # OUT
+                           distances, clusters, predecessors, # OUT
                            True)
+    print('final:', repr(centers))
 
     return distances, clusters, centers
 

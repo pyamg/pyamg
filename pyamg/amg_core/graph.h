@@ -864,7 +864,6 @@ void most_interior_nodes(const I num_nodes,
 //  Ax[]      : (IN)  CSR data array (edge lengths)
 //   c[]      : (INOUT) cluster centers
 //   d[]      : (OUT) distance to nearest seed
-//  od[]      : (OUT) distance to nearest seed
 //   m[]      : (OUT) cluster index for each node
 //   p[]      : (OUT) predecessors in the graph traversal
 //

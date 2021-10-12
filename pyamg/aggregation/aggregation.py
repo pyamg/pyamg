@@ -17,7 +17,7 @@ from pyamg.strength import classical_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
-    lloyd_aggregation
+    lloyd_aggregation, balanced_lloyd_aggregation
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
@@ -342,12 +342,16 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
+    using_balanced_lloyd = False
     if fn == 'standard':
         AggOp = standard_aggregation(C, **kwargs)[0]
     elif fn == 'naive':
         AggOp = naive_aggregation(C, **kwargs)[0]
     elif fn == 'lloyd':
         AggOp = lloyd_aggregation(C, **kwargs)[0]
+    elif fn == 'balanced lloyd':
+        using_balanced_lloyd = True
+        AggOp, Cnodes, extras = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:
@@ -414,6 +418,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         levels[-1].C = C  # strength of connection matrix
         levels[-1].AggOp = AggOp  # aggregation operator
         levels[-1].T = T  # tentative prolongator
+
+        if using_balanced_lloyd:
+            levels[-1].Cnodes = Cnodes
+            levels[-1].extras = extras
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator

@@ -278,7 +278,7 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=10):
     return AggOp, seeds
 
 
-def balanced_lloyd_aggregation(C, num_clusters=None):
+def balanced_lloyd_aggregation(C, num_clusters=None, c=None, rebalance_iters=5):
     """Aggregate nodes using Balanced Lloyd Clustering.
 
     Parameters
@@ -329,25 +329,22 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     if C.dtype == complex:
         data = np.real(C.data)
     else:
-        data = C.data
+        data = np.ones_like(C.data)
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
-    num_nodes = G.shape[0]
-
-    seed = np.random.randint(1,32768)
-    np.random.seed(seed)
-
     n = G.shape[0]
-    num_nodes = G.shape[0]
 
-    c = np.int32(np.random.choice(n, num_clusters, replace=False))
+    if c is None:
+        c = np.int32(np.random.choice(n, num_clusters, replace=False))
+    else:
+        num_clusters = len(c)
 
     maxsize = int(4*np.ceil((n / len(c))))
 
     Cptr = np.empty(len(c), dtype=np.int32)
     D = np.zeros((maxsize, maxsize), dtype=G.dtype)
     P = np.zeros((maxsize, maxsize), dtype=np.int32)
-    C  = np.arange(0, n, dtype=np.int32)
+    CC  = np.arange(0, n, dtype=np.int32)
     L  = np.arange(0, n, dtype=np.int32)
 
     q = np.zeros(maxsize, dtype=G.dtype)
@@ -357,17 +354,180 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     pc = np.empty(n, dtype=np.int32)
     s = np.empty(len(c), dtype=np.int32)
 
-    amg_core.lloyd_cluster_balanced(num_nodes,
-                                    G.indptr, G.indices, G.data,
-                                    Cptr, D.ravel(), P.ravel(), C, L,
-                                    q.ravel(),
-                                    c, d, m, p,
-                                    pc, s,
-                                    True)
+    energy = []
+    AggOps = []
+    EPs = []
+    SIs = []
+    centers = []
+    for r in range(rebalance_iters):
+        amg_core.lloyd_cluster_balanced(n,
+                                        G.indptr, G.indices, G.data,
+                                        Cptr, D.ravel(), P.ravel(), CC, L,
+                                        q.ravel(),
+                                        c, d, m, p,
+                                        pc, s,
+                                        True)
+        AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
+        oldc = c.copy()
+
+        AggOps.append(AggOp)
+        centers.append(c)
+
+        ee = np.sum(d**2)
+        print('Total energy: ', ee)
+        energy.append(ee)
+
+        EP, SI, newc = _rebalance(G, c, m, d, num_clusters, Cptr, CC, L)
+        c =  newc.copy()
+        EPs.append(EP)
+        SIs.append(SI)
+
+    return AggOp, oldc, (EP, SI, energy, AggOps, EPs, SIs, centers)
+
+def floyd_warshall(A, m, Cptr, C, L, a):
+    """Call Floyd-Warshall on a subset of the graph
+    """
+    Va = np.int32(np.where(m==a)[0])
+    N = len(Va)
+
+    D = np.zeros((N, N))
+    P = np.zeros((N, N), dtype=np.int32)
+    _N = Cptr[a]+N
+    if _N >= A.shape[0]:
+        _N = None
+    amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                  D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                  m, a, N)
+    return D, P
+
+def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
+    """
+    A sparse matrix
+    D[]       : (INOUT) FW distance array                               (max_size x max_size)
+    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+    m         : (INOUT) cluster index                                   (num_nodes x 1)
+    """
+    newc = c.copy()
 
     AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
+    Agg2Agg = AggOp.T @ G @ AggOp
+    Agg2Agg = Agg2Agg.tocsr()
 
-    return AggOp, c
+    E       = _elimination_penalty(G, m, d, num_clusters, Cptr, C, L)
+    S, I, J = _split_improvement(G, m, d, num_clusters, Cptr, C, L)
+    M = np.ones(num_clusters, dtype=bool)
+    Elist = np.argsort(E)
+    Slist = np.argsort(S)
+    i_e = 0  # elimination index
+    i_s = 0  # splitting index
+    a_e = Elist[i_e]
+    a_s = Slist[-1-i_s]
+    if a_e == a_s:
+        i_s += 1
+        a_s = Slist[-1-i_s]
+    #print(f"E:     {E}")
+    #print(f"S:     {S}")
+    #print(f"E srt: {E[Elist]}")
+    #print(f"S srt: {S[Slist]}")
+    #print(f"Elist: {Elist}")
+    #print(f"Slist: {Slist}")
+    #print(f"a_e: {a_e}   E[a_e]: {E[a_e]}")
+    #print(f"a_s: {a_s}   S[a_s]: {S[a_s]}")
+    # show eliminated and split aggregates
+    # run one bellman_ford to get new clusters
+    gamma = 1.0
+    stopsplitting = False
+    while E[a_e] < gamma * S[a_s] or stopsplitting:
+        newc[a_e] = I[a_s]   # redefine centers
+        newc[a_s] = J[a_s]   # redefine centers
+        M[Agg2Agg.getrow(a_e).indices] = False  # cannot eliminate neighbors agg
+        M[Agg2Agg.getrow(a_s).indices] = False  # cannot split neighbors agg
+        if len(np.where(M==False)[0]) == num_clusters:
+            break
+        findanother = True                          # should we find another aggregate pair?
+        stopsplitting = False                       # should we stop?
+        pushtie = False                             # tie breaker
+        while findanother:
+            if not M[Elist[i_e]]:                   # if we have an invalid aggregate
+                while i_e < num_clusters-1:         # increment elimination counter
+                    i_e += 1
+                    if M[Elist[i_e]]:               # if a valid aggregate is encountered
+                        break
+            if not M[Slist[-1-i_s]] or pushtie:     # if we have an invalid aggregate or we need a new one
+                if pushtie:
+                    pustie = False
+                while i_s < num_clusters-1:         # increment elimination counter
+                    i_s += 1
+                    if M[Slist[-1-i_s]]:            # if a valid aggregate is encountered
+                        break
+            if i_s == num_clusters-1 or i_e == num_clusters-1:
+                stopsplitting = True                # if we've looped through, stop
+                break
+            a_e = Elist[i_e]
+            a_s = Slist[-1-i_s]
+            if a_e != a_s:                          # if we found a new pair, then we're done
+                findanother = False
+            else:
+                pushtie = True                      # otherwise push the tie breaker, and move on
+    return E, S, newc
+
+def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
+    E = np.inf * np.ones(num_clusters)
+    for a in range(num_clusters):
+        E[a] = 0
+        Va = np.int32(np.where(m==a)[0])
+
+        N = len(Va)
+        D = np.zeros((N, N))
+        P = np.zeros((N, N), dtype=np.int32)
+        _N = Cptr[a]+N
+        if _N >= A.shape[0]:
+            _N = None
+        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                      m, a, N)
+        for _i, i in enumerate(Va):
+            dmin = np.inf
+            for _j, j in enumerate(Va):
+                for k in A.getrow(j).indices:
+                    if m[k] != m[j]:
+                        if (d[k] + D[_i,_j] + A[j,k]) < dmin:
+                            dmin = d[k] + D[_i,_j] + A[j,k]
+            E[a] += dmin**2
+        E[a] -= np.sum(d[Va]**2)
+    return E
+
+def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
+    S = np.inf * np.ones(num_clusters)
+    I = -1 * np.ones(num_clusters)  # better cluster centers if split
+    J = -1 * np.ones(num_clusters)  # better cluster centers if split
+    for a in range(num_clusters):
+        S[a] = np.inf
+        Va = np.int32(np.where(m==a)[0])
+
+        N = len(Va)
+        D = np.zeros((N, N))
+        P = np.zeros((N, N), dtype=np.int32)
+        _N = Cptr[a]+N
+        if _N >= A.shape[0]:
+            _N = None
+        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                      m, a, N)
+        for _i, i in enumerate(Va):
+            for _j, j in enumerate(Va):
+                Snew = 0
+                for _k, k in enumerate(Va):
+                    if D[_k,_i] < D[_k,_j]:
+                        Snew = Snew + D[_k,_i]**2
+                    else:
+                        Snew = Snew + D[_k,_j]**2
+                if Snew < S[a]:
+                    S[a] = Snew
+                    I[a] = i
+                    J[a] = j
+        S[a] = np.sum(d[Va]**2) - S[a]
+    return S, I, J
 
 def _choice(p):
     """
