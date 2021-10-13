@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg
 from scipy.sparse import csr_matrix
-from scipy.linalg import svd, eigvals
+from scipy.linalg import svd, eigvals, pinv
 
 from pyamg.util.linalg import approximate_spectral_radius,\
     infinity_norm, norm, condest, cond,\
@@ -310,7 +310,6 @@ class TestComplexLinalg(TestCase):
             assert_equal(ishermitian(A, fast_check=True), False)
 
     def test_pinv_array(self):
-        from scipy.linalg import pinv2
 
         tests = []
         tests.append(np.random.rand(1, 1, 1))
@@ -336,7 +335,7 @@ class TestComplexLinalg(TestCase):
         for test in tests:
             pinv_test = np.zeros_like(test)
             for i in range(pinv_test.shape[0]):
-                pinv_test[i] = pinv2(test[i])
+                pinv_test[i] = pinv(test[i])
 
             pinv_array(test)
             assert_array_almost_equal(test, pinv_test, decimal=4)

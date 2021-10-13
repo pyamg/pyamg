@@ -147,7 +147,7 @@ class TestComplexParameters(TestCase):
         solvers.append('splu')
         solvers.append('lu')
         solvers.append('cg')
-        solvers.append('pinv2')
+        solvers.append('pinv')
 
         for solver in solvers:
             self.run_cases({'coarse_solver': solver})
@@ -319,7 +319,7 @@ class TestSolverPerformance(TestCase):
         b = A * np.random.rand(A.shape[0])
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
-        SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv2',
+        SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',
                          'symmetry': 'nonsymmetric'}
         SA_solve_args = {'cycle': 'V', 'maxiter': 20, 'tol': 1e-8}
         strength = [('evolution', {'k': 2, 'epsilon': 8.0})]
@@ -385,7 +385,7 @@ class TestSolverPerformance(TestCase):
                                      {'iterations': 30}), 'gauss_seidel'))
         coarse_solver_pairs.append(('gauss_seidel', 'jacobi'))
         coarse_solver_pairs.append(('cg', ('cg', {'tol': 10.0})))
-        coarse_solver_pairs.append(('pinv2', ('pinv2', {'cond': 1.0})))
+        coarse_solver_pairs.append(('pinv', ('pinv', {'cond': 1.0})))
 
         for coarse1, coarse2 in coarse_solver_pairs:
             r1 = []
@@ -489,7 +489,7 @@ class TestComplexSolverPerformance(TestCase):
              + 1.0j * (A * np.random.rand(A.shape[0])))
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
-        SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv2',
+        SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',
                          'symmetry': 'symmetric'}
         SA_solve_args = {'cycle': 'V', 'maxiter': 20, 'tol': 1e-8}
         strength = [('evolution', {'k': 2, 'epsilon': 2.0})]

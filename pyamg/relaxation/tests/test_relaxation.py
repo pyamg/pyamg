@@ -720,7 +720,7 @@ class TestRelaxation(TestCase):
             for i in range(len(subdomains)):
                 blkA = (A[subdomains[i], :]).tocsc()
                 blkA = blkA[:, subdomains[i]].toarray()
-                blkAinv = scipy.linalg.pinv2(blkA)
+                blkAinv = scipy.linalg.pinv(blkA)
                 subblocks.append(blkAinv)
 
             if sweep == 'forward':
@@ -936,7 +936,7 @@ class TestComplexRelaxation(TestCase):
             for i in range(len(subdomains)):
                 blkA = (A[subdomains[i], :]).tocsc()
                 blkA = blkA[:, subdomains[i]].toarray()
-                blkAinv = scipy.linalg.pinv2(blkA)
+                blkAinv = scipy.linalg.pinv(blkA)
                 subblocks.append(blkAinv)
 
             # Multiplicative Schwarz iterations

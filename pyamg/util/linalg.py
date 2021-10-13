@@ -584,7 +584,7 @@ def pinv_array(a, cond=None):
     Notes
     -----
     By using lapack wrappers, this can be much faster for large n, than
-    directly calling pinv2
+    directly calling a pseudoinverse (SVD)
 
     Examples
     --------

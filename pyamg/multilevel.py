@@ -4,8 +4,15 @@
 from warnings import warn
 
 import scipy as sp
+import scipy.linalg
 import numpy as np
 
+from pkg_resources import parse_version  # included with setuptools
+
+if parse_version(sp.__version__) >= parse_version('1.7'):
+    from scipy.linalg import pinv
+else:
+    from scipy.linalg import pinv2 as pinv
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -70,7 +77,7 @@ class multilevel_solver:
             """Level construct (empty)."""
             pass
 
-    def __init__(self, levels, coarse_solver='pinv2'):
+    def __init__(self, levels, coarse_solver='pinv'):
         """Class constructor responsible for initializing the cycle and ensuring the list of levels is complete.
 
         Parameters
@@ -98,8 +105,7 @@ class multilevel_solver:
 
             Dense methods:
 
-            * pinv     : pseudoinverse (QR)
-            * pinv2    : pseudoinverse (SVD)
+            * pinv     : pseudoinverse (SVD)
             * lu       : LU factorization
             * cholesky : Cholesky factorization
 
@@ -586,8 +592,7 @@ def coarse_grid_solver(solver):
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
                   present in pyamg.relaxation
             - Dense methods:
-                + pinv     : pseudoinverse (QR)
-                + pinv2    : pseudoinverse (SVD)
+                + pinv     : pseudoinverse (SVD)
                 + lu       : LU factorization
                 + cholesky : Cholesky factorization
 
@@ -608,18 +613,18 @@ def coarse_grid_solver(solver):
     >>> x = cgs(A, b)
 
     """
+
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     solver, kwargs = unpack_arg(solver)
 
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
-                self.P = getattr(sp.linalg, solver)(A.toarray(), **kwargs)
+                self.P = pinv(A.toarray(), **kwargs)
             return np.dot(self.P, b)
 
     elif solver == 'lu':

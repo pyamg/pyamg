@@ -145,7 +145,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}),
     ...         postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
     >>> x0 = np.zeros((A.shape[0],1))
@@ -230,7 +230,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother='schwarz',
     ...         postsmoother='schwarz')
     >>> x0=np.zeros((A.shape[0],1))
@@ -313,7 +313,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('gauss_seidel', {'sweep':'symmetric'}),
     ...         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -391,7 +391,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}),
     ...         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -471,7 +471,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'omega': 4.0/3.0, 'iterations' : 2, 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...        coarse_solver='pinv2', max_coarse=50,
+    ...        coarse_solver='pinv', max_coarse=50,
     ...        presmoother=('block_jacobi', opts),
     ...        postsmoother=('block_jacobi', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -553,7 +553,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'sweep':'symmetric', 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...        coarse_solver='pinv2', max_coarse=50,
+    ...        coarse_solver='pinv', max_coarse=50,
     ...        presmoother=('block_gauss_seidel', opts),
     ...        postsmoother=('block_gauss_seidel', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -644,7 +644,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     >>> A = poisson((10,10), format='csr')
     >>> b = np.ones((A.shape[0],1))
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('chebyshev', {'degree':3, 'iterations':1}),
     ...         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -796,7 +796,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'iterations' : 2, 'omega' : 4.0/3.0}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('jacobi_ne', opts),
     ...         postsmoother=('jacobi_ne', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -879,7 +879,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}),
     ...         postsmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -964,7 +964,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...      coarse_solver='pinv2', max_coarse=50,
+    ...      coarse_solver='pinv', max_coarse=50,
     ...      presmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}),
     ...      postsmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))

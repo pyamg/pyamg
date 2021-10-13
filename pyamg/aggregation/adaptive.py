@@ -120,7 +120,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                        prepostsmoother=('gauss_seidel',
                                         {'sweep': 'symmetric'}),
                        smooth=('jacobi', {}), strength='symmetric',
-                       coarse_solver='pinv2',
+                       coarse_solver='pinv',
                        eliminate_local=(False, {'Ca': 1.0}), keep=False,
                        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA).
