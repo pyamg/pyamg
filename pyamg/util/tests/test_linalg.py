@@ -253,15 +253,30 @@ class TestComplexLinalg(TestCase):
         cases.append(A)
         for i in range(1, 6):
             A = np.random.rand(i, i)
+            A = 0.5 * (A.conj().T + A)
+            cases.append(A)
+            A = A + 1.0j*np.random.rand(i, i)
+            A = 0.5 * (A.conj().T + A)
+            cases.append(A)
+
+        for A in cases:
+            U, Sigma, Vh = svd(A)
+            exact = max(Sigma)/min(Sigma)
+            c = condest(A, symmetric=True)
+            assert_almost_equal(exact, c)
+
+        cases = []
+        for i in range(1, 6):
+            A = np.random.rand(i, i)
             cases.append(A)
             cases.append(1.0j*A)
             A = A + 1.0j*np.random.rand(i, i)
             cases.append(A)
 
         for A in cases:
-            eigs = eigvals(A)
-            exact = max(np.abs(eigs))/min(np.abs(eigs))
-            c = condest(A)
+            U, Sigma, Vh = svd(A)
+            exact = max(Sigma)/min(Sigma)
+            c = condest(A, symmetric=False)
             assert_almost_equal(exact, c)
 
     def test_ishermitian(self):

@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sparse
+from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
@@ -415,11 +416,13 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
         If symmetric use the far more efficient Lanczos algorithm,
-        Else use Arnoldi
+        Else use Arnoldi.
+        If hermitian, use symmetric=True.
+        If complex symmetric, use symmetric=False.
 
     Returns
     -------
-    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\|
+    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\| or simga_max / sigma_min
     through the use of Arnoldi or Lanczos iterations, depending on
     the symmetric flag
 
@@ -439,10 +442,18 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     2.0
 
     """
-    [evect, ev, H, V, breakdown_flag] =\
-        _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    C = aslinearoperator(A)
+    power = 1
+    if not symmetric:
+        def matvec(v):
+            return C.rmatvec((C.A @ v))
+        C.matvec = matvec
+        power = 0.5
 
-    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])
+    [evect, ev, H, V, breakdown_flag] =\
+        _approximate_eigenvalues(C, tol, maxiter, symmetric)
+
+    return (np.max([norm(x) for x in ev])/min([norm(x) for x in ev]))**power
 
 
 def cond(A):
