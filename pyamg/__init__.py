@@ -37,7 +37,7 @@ Utility tools
 # Warn on old numpy or scipy.  Two digits.
 npreq = '1.6'
 npmin = [int(j) for j in npreq.split('.')]
-m = re.match('(\d+)\.(\d+).*', np.__version__)
+m = re.match(r'(\d+)\.(\d+).*', np.__version__)
 npver = [int(m.group(1)), int(m.group(2))]
 if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
     warnings.warn("Numpy %s or above is recommended for this version of"
@@ -46,7 +46,7 @@ if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
 
 spreq = '0.11'
 spmin = [int(j) for j in spreq.split('.')]
-m = re.match('(\d+)\.(\d+).*', sp.__version__)
+m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
 spver = [int(m.group(1)), int(m.group(2))]
 if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
     warnings.warn("SciPy %s or above is recommended for this version of"

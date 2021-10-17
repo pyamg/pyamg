@@ -58,7 +58,7 @@ def BSR_Get_Row(A, i):
         colindx[0, counter:(counter+increment)] = coloffset + indys
         counter += increment
 
-    return np.mat(z).T, colindx[0, :]
+    return z.reshape(-1,1), colindx[0, :]
 
 
 def BSR_Row_WriteScalar(A, i, x):

@@ -3,7 +3,6 @@ from __future__ import print_function
 
 
 import numpy as np
-import scipy as sp
 import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
@@ -113,7 +112,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> T.todense()
+    >>> T.toarray()
     matrix([[ 1.,  0.],
             [ 1.,  0.],
             [ 1.,  0.],
@@ -122,7 +121,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             [ 0.,  1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = jacobi_prolongation_smoother(A,T,A,np.ones((2,1)))
-    >>> P.todense()
+    >>> P.toarray()
     matrix([[ 0.64930164,  0.        ],
             [ 1.        ,  0.        ],
             [ 0.64930164,  0.35069836],
@@ -242,7 +241,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> T.todense()
+    >>> T.toarray()
     matrix([[ 1.,  0.],
             [ 1.,  0.],
             [ 1.,  0.],
@@ -251,7 +250,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
             [ 0.,  1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = richardson_prolongation_smoother(A,T)
-    >>> P.todense()
+    >>> P.toarray()
     matrix([[ 0.64930164,  0.        ],
             [ 1.        ,  0.        ],
             [ 0.64930164,  0.35069836],
@@ -645,7 +644,7 @@ def apply_givens(Q, v, k):
     """
     for j in range(k):
         Qloc = Q[j]
-        v[j:j+2] = sp.dot(Qloc, v[j:j+2])
+        v[j:j+2] = np.dot(Qloc, v[j:j+2])
 
 
 def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
@@ -850,10 +849,10 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
 
             # Apply Givens Rotation to g,
             #   the RHS for the linear system in the Krylov Subspace.
-            g[i:i+2] = sp.dot(Qblock, g[i:i+2])
+            g[i:i+2] = np.dot(Qblock, g[i:i+2])
 
             # Apply effect of Givens Rotation to H
-            H[i, i] = sp.dot(Qblock[0, :], H[i:i+2, i])
+            H[i, i] = np.dot(Qblock[0, :], H[i:i+2, i])
             H[i+1, i] = 0.0
 
         normr = np.abs(g[i+1])
@@ -976,7 +975,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> print T.todense()
+    >>> print T.toarray()
     [[ 1.  0.]
      [ 1.  0.]
      [ 1.  0.]
@@ -986,7 +985,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> A = poisson((6,),format='csr')
     >>> B = np.ones((2,1),dtype=float)
     >>> P = energy_prolongation_smoother(A,T,A,B, None, (False,{}))
-    >>> print P.todense()
+    >>> print P.toarray()
     [[ 1.          0.        ]
      [ 1.          0.        ]
      [ 0.66666667  0.33333333]

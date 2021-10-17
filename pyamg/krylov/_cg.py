@@ -82,7 +82,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cg')
+    warnings.filterwarnings('always', module='pyamg.krylov._cg')
 
     # determine maxiter
     if maxiter is None:

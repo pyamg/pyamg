@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 
-from scipy.sparse import csr_matrix, coo_matrix
+from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
@@ -12,6 +12,8 @@ from pyamg.classical.interpolate import direct_interpolation
 
 from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
+import warnings
+
 
 class TestRugeStubenFunctions(TestCase):
     def setUp(self):
@@ -20,7 +22,7 @@ class TestRugeStubenFunctions(TestCase):
         # random matrices
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(sp.rand(N, N)))
+            self.cases.append(csr_matrix(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -110,7 +112,7 @@ class TestRugeStubenFunctions(TestCase):
             result = direct_interpolation(A, S, splitting)
             expected = reference_direct_interpolation(A, S, splitting)
 
-            assert_almost_equal(result.todense(), expected.todense())
+            assert_almost_equal(result.toarray(), expected.toarray())
 
 
 class TestSolverPerformance(TestCase):
@@ -126,8 +128,8 @@ class TestSolverPerformance(TestCase):
 
             np.random.seed(0)  # make tests repeatable
 
-            x = sp.rand(A.shape[0])
-            b = A*sp.rand(A.shape[0])  # zeros_like(x)
+            x = np.random.rand(A.shape[0])
+            b = A*np.random.rand(A.shape[0])  # zeros_like(x)
 
             ml = ruge_stuben_solver(A, max_coarse=50)
 
@@ -141,18 +143,18 @@ class TestSolverPerformance(TestCase):
             assert(avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
+        warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
+        cases.append(A.toarray())
 
         rs_old = ruge_stuben_solver(A, max_coarse=10)
         for AA in cases:
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(rs_old.levels[-1].A.todense() -
-                                   rs_new.levels[-1].A.todense())).max() < 0.01)
+            assert(np.abs(np.ravel(rs_old.levels[-1].A.toarray() - rs_new.levels[-1].A.toarray())).max() < 0.01)
             rs_old = rs_new
 
 

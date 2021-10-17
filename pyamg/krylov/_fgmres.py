@@ -114,7 +114,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._fgmres')
+    warnings.filterwarnings('always', module='pyamg.krylov._fgmres')
 
     # Choose type
     if not hasattr(A, 'dtype'):

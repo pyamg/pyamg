@@ -1,7 +1,8 @@
 """Method to create pre and post-smoothers on the levels of a multilevel_solver."""
 from __future__ import absolute_import
 
-import scipy as sp
+import numpy as np
+import scipy.sparse as sparse
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
@@ -360,10 +361,10 @@ def rho_block_D_inv_A(A, Dinv):
         elif Dinv.shape[0] != int(A.shape[0]/blocksize):
             raise ValueError('Dinv and A have incompatible dimensions')
 
-        Dinv = sp.sparse.bsr_matrix((Dinv,
-                                     sp.arange(Dinv.shape[0]),
-                                     sp.arange(Dinv.shape[0]+1)),
-                                    shape=A.shape)
+        Dinv = sparse.bsr_matrix((Dinv,
+                                  np.arange(Dinv.shape[0]),
+                                  np.arange(Dinv.shape[0]+1)),
+                                 shape=A.shape)
 
         # Don't explicitly form Dinv*A
         def matvec(x):
@@ -498,9 +499,9 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
                        blocksize=None, withrho=True):
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sp.sparse.isspmatrix_csr(lvl.A):
+        if sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
-        elif sp.sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -528,9 +529,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
                              Dinv=None, blocksize=None):
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sp.sparse.isspmatrix_csr(lvl.A):
+        if sparse.isspmatrix_csr(lvl.A):
             blocksize = 1
-        elif sp.sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.isspmatrix_bsr(lvl.A):
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]

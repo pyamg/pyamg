@@ -3,8 +3,8 @@ from __future__ import print_function
 
 
 import numpy as np
-import scipy as sp
 import scipy.sparse as sparse
+from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
@@ -179,16 +179,12 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     To obtain approximate eigenvectors of A, compute V*W.
     """
     from scipy.sparse.linalg import aslinearoperator
+    from pyamg.util.utils import set_tol
 
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
     # Choose tolerance for deciding if break-down has occurred
-    t = A.dtype.char
-    eps = np.finfo(np.float).eps
-    feps = np.finfo(np.single).eps
-    geps = np.finfo(np.longfloat).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    breakdown = set_tol(A.dtype)
     breakdown_flag = False
 
     if A.shape[0] != A.shape[1]:
@@ -197,9 +193,9 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     maxiter = min(A.shape[0], maxiter)
 
     if initial_guess is None:
-        v0 = sp.rand(A.shape[1], 1)
+        v0 = np.random.rand(A.shape[1], 1)
         if A.dtype == complex:
-            v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
+            v0 = v0 + 1.0j * np.random.rand(A.shape[1], 1)
     else:
         v0 = initial_guess
 
@@ -355,9 +351,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             raise ValueError('expected square A')
 
         if initial_guess is None:
-            v0 = sp.rand(A.shape[1], 1)
+            v0 = np.random.rand(A.shape[1], 1)
             if A.dtype == complex:
-                v0 = v0 + 1.0j * sp.rand(A.shape[1], 1)
+                v0 = v0 + 1.0j * np.random.rand(A.shape[1], 1)
         else:
             if initial_guess.shape[0] != A.shape[0]:
                 raise ValueError('initial_guess and A must have same shape')
@@ -420,11 +416,13 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
         If symmetric use the far more efficient Lanczos algorithm,
-        Else use Arnoldi
+        Else use Arnoldi.
+        If hermitian, use symmetric=True.
+        If complex symmetric, use symmetric=False.
 
     Returns
     -------
-    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\|
+    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\| or simga_max / sigma_min
     through the use of Arnoldi or Lanczos iterations, depending on
     the symmetric flag
 
@@ -444,10 +442,18 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     2.0
 
     """
-    [evect, ev, H, V, breakdown_flag] =\
-        _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    C = aslinearoperator(A)
+    power = 1
+    if not symmetric:
+        def matvec(v):
+            return C.rmatvec((C.A @ v))
+        C.matvec = matvec
+        power = 0.5
 
-    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])
+    [evect, ev, H, V, breakdown_flag] =\
+        _approximate_eigenvalues(C, tol, maxiter, symmetric)
+
+    return (np.max([norm(x) for x in ev])/min([norm(x) for x in ev]))**power
 
 
 def cond(A):
@@ -484,7 +490,7 @@ def cond(A):
         raise ValueError('expected square matrix')
 
     if sparse.isspmatrix(A):
-        A = A.todense()
+        A = A.toarray()
 
     # 2-Norm Condition Number
     from scipy.linalg import svd
@@ -503,14 +509,14 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
         for random vectors x and y to check for conjugate symmetry.
-        If False, compute A - A.H.
+        If False, compute A - A.conj().T.
     tol : {float}
         Symmetry tolerance
 
     verbose: {bool}
         prints
-        max( \|A - A.H\| )       if nonhermitian and fast_check=False
-        abs( <Ax, y> - <x, Ay> ) if nonhermitian and fast_check=False
+        max( \|A - A.conj().T\| ) if nonhermitian and fast_check=False..
+        abs( <Ax, y> - <x, Ay> )  if nonhermitian and fast_check=False
 
     Returns
     -------
@@ -533,26 +539,26 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     True
 
     """
-    # convert to matrix type
+    # convert to array type
     if not sparse.isspmatrix(A):
-        A = np.asmatrix(A)
+        A = np.asarray(A)
 
     if fast_check:
-        x = sp.rand(A.shape[0], 1)
-        y = sp.rand(A.shape[0], 1)
+        x = np.random.rand(A.shape[0], 1)
+        y = np.random.rand(A.shape[0], 1)
         if A.dtype == complex:
-            x = x + 1.0j*sp.rand(A.shape[0], 1)
-            y = y + 1.0j*sp.rand(A.shape[0], 1)
-        xAy = np.dot((A*x).conjugate().T, y)
-        xAty = np.dot(x.conjugate().T, A*y)
+            x = x + 1.0j*np.random.rand(A.shape[0], 1)
+            y = y + 1.0j*np.random.rand(A.shape[0], 1)
+        xAy = np.dot((A.dot(x)).conjugate().T, y)
+        xAty = np.dot(x.conjugate().T, A.dot(y))
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
 
     else:
-        # compute the difference, A - A.H
+        # compute the difference, A - A.conj().T
         if sparse.isspmatrix(A):
-            diff = np.ravel((A - A.H).data)
+            diff = np.ravel((A - A.conj().T).data)
         else:
-            diff = np.ravel(A - A.H)
+            diff = np.ravel(A - A.conj().T)
 
         if np.max(diff.shape) == 0:
             diff = 0
@@ -589,7 +595,7 @@ def pinv_array(a, cond=None):
     Notes
     -----
     By using lapack wrappers, this can be much faster for large n, than
-    directly calling pinv2
+    directly calling a pseudoinverse (SVD)
 
     Examples
     --------
@@ -601,6 +607,8 @@ def pinv_array(a, cond=None):
     >>> pinv_array(a)
 
     """
+    from pyamg.util.utils import set_tol
+
     n = a.shape[0]
     m = a.shape[1]
 
@@ -623,12 +631,7 @@ def pinv_array(a, cond=None):
 
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
-            t = a.dtype.char
-            eps = np.finfo(np.float).eps
-            feps = np.finfo(np.single).eps
-            geps = np.finfo(np.longfloat).eps
-            _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-            cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+            cond = set_tol(a.dtype)
 
         # Invert each block of a
         for kk in range(n):

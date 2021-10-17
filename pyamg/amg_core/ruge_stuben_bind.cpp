@@ -112,32 +112,59 @@ void _maximum_row_value(
 template<class I>
 void _rs_cf_splitting(
           const I n_nodes,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
+py::array_t<I> & C_rowptr,
+py::array_t<I> & C_colinds,
       py::array_t<I> & Tp,
       py::array_t<I> & Tj,
+py::array_t<I> & influence,
 py::array_t<I> & splitting
                       )
 {
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
+    auto py_C_rowptr = C_rowptr.unchecked();
+    auto py_C_colinds = C_colinds.unchecked();
     auto py_Tp = Tp.unchecked();
     auto py_Tj = Tj.unchecked();
+    auto py_influence = influence.unchecked();
     auto py_splitting = splitting.mutable_unchecked();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
+    const I *_C_rowptr = py_C_rowptr.data();
+    const I *_C_colinds = py_C_colinds.data();
     const I *_Tp = py_Tp.data();
     const I *_Tj = py_Tj.data();
+    const I *_influence = py_influence.data();
     I *_splitting = py_splitting.mutable_data();
 
     return rs_cf_splitting<I>(
                   n_nodes,
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
+                _C_rowptr, C_rowptr.shape(0),
+               _C_colinds, C_colinds.shape(0),
                       _Tp, Tp.shape(0),
                       _Tj, Tj.shape(0),
+               _influence, influence.shape(0),
                _splitting, splitting.shape(0)
                               );
+}
+
+template<class I>
+void _rs_cf_splitting_pass2(
+          const I n_nodes,
+py::array_t<I> & C_rowptr,
+py::array_t<I> & C_colinds,
+py::array_t<I> & splitting
+                            )
+{
+    auto py_C_rowptr = C_rowptr.unchecked();
+    auto py_C_colinds = C_colinds.unchecked();
+    auto py_splitting = splitting.mutable_unchecked();
+    const I *_C_rowptr = py_C_rowptr.data();
+    const I *_C_colinds = py_C_colinds.data();
+    I *_splitting = py_splitting.mutable_data();
+
+    return rs_cf_splitting_pass2<I>(
+                  n_nodes,
+                _C_rowptr, C_rowptr.shape(0),
+               _C_colinds, C_colinds.shape(0),
+               _splitting, splitting.shape(0)
+                                    );
 }
 
 template<class I>
@@ -300,6 +327,7 @@ PYBIND11_MODULE(ruge_stuben, m) {
     classical_strength_of_connection_min
     maximum_row_value
     rs_cf_splitting
+    rs_cf_splitting_pass2
     cljp_naive_splitting
     rs_direct_interpolation_pass1
     rs_direct_interpolation_pass2
@@ -375,7 +403,7 @@ Compute the maximum in magnitude row value for a CSR matrix
      Nothing, x[i] will hold row i's maximum magnitude entry)pbdoc");
 
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
-        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(),
+        py::arg("n_nodes"), py::arg("C_rowptr").noconvert(), py::arg("C_colinds").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
 Compute a C/F (coarse-fine( splitting using the classical coarse grid
 selection method of Ruge and Stuben.  The strength of connection matrix S,
@@ -385,14 +413,21 @@ marked with the value 1 and F-nodes (fine nodes) with the value 0.
 
 Parameters:
   n_nodes   - number of rows in A
-  Sp[]      - CSR pointer array
-  Sj[]      - CSR index array
-  Tp[]      - CSR pointer array
-  Tj[]      - CSR index array
+  C_rowptr[]      - CSR row pointer array for SOC matrix
+  C_colinds[]      - CSR column index array for SOC matrix
+  Tp[]      - CSR row pointer array for transpose of SOC matrix
+  Tj[]      - CSR column index array for transpose of SOC matrix
+  influence - array that influences splitting (values stored here are
+              added to lambda for each point)
   splitting - array to store the C/F splitting
 
 Notes:
   The splitting array must be preallocated)pbdoc");
+
+    m.def("rs_cf_splitting_pass2", &_rs_cf_splitting_pass2<int>,
+        py::arg("n_nodes"), py::arg("C_rowptr").noconvert(), py::arg("C_colinds").noconvert(), py::arg("splitting").noconvert(),
+R"pbdoc(
+)pbdoc");
 
     m.def("cljp_naive_splitting", &_cljp_naive_splitting<int>,
         py::arg("n"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(), py::arg("colorflag"),

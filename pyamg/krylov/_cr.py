@@ -86,22 +86,13 @@ def cr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     # n = len(b)
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cr')
+    warnings.filterwarnings('always', module='pyamg.krylov._cr')
 
     # determine maxiter
     if maxiter is None:
         maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-
-    # choose tolerance for numerically zero values
-    # t = A.dtype.char
-    # eps = np.finfo(np.float).eps
-    # feps = np.finfo(np.single).eps
-    # geps = np.finfo(np.longfloat).eps
-    # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    # numerically_zero = {0: feps*1e3, 1: eps*1e6,
-    #                     2: geps*1e6}[_array_precision[t]]
 
     # setup method
     r = b - A*x

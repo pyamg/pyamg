@@ -44,7 +44,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
     >>> stencil = [-1,2,-1]  # 1D Poisson stencil
     >>> grid = (5,)          # 1D grid with 5 vertices
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 2., -1.,  0.,  0.,  0.],
             [-1.,  2., -1.,  0.,  0.],
             [ 0., -1.,  2., -1.,  0.],
@@ -54,7 +54,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
     >>> stencil = [[0,-1,0],[-1,4,-1],[0,-1,0]] # 2D Poisson stencil
     >>> grid = (3,3)                            # 2D grid with shape 3x3
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 4., -1.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
             [-1.,  4., -1.,  0., -1.,  0.,  0.,  0.,  0.],
             [ 0., -1.,  4.,  0.,  0., -1.,  0.,  0.,  0.],
@@ -170,4 +170,4 @@ if __name__ == '__main__':
 
     A = stencil_grid(S, grid)
 
-    print(A.todense())
+    print(A.toarray())

@@ -4,7 +4,6 @@ from __future__ import print_function
 from warnings import warn
 
 import numpy as np
-import scipy as sp
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
@@ -21,7 +20,7 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
            'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows']
+           'filter_matrix_rows', 'truncate_rows', 'set_tol']
 
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
@@ -75,7 +74,7 @@ def profile_solver(ml, accel=None, **kwargs):
 
     """
     A = ml.levels[0].A
-    b = A * sp.rand(A.shape[0], 1)
+    b = A * np.random.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:
@@ -114,7 +113,7 @@ def diag_sparse(A):
     >>> import numpy as np
     >>> from pyamg.util.utils import diag_sparse
     >>> d = 2.0*np.ones((3,)).ravel()
-    >>> print diag_sparse(d).todense()
+    >>> print diag_sparse(d).toarray()
     [[ 2.  0.  0.]
      [ 0.  2.  0.]
      [ 0.  0.  2.]]
@@ -241,7 +240,7 @@ def scale_columns(A, v, copy=True):
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).todense()
+    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).toarray()
     [[ 10.  -5.   0.   0.]
      [ -5.  10.  -5.   0.]
      [  0.  -5.  10.  -5.]
@@ -323,7 +322,7 @@ def symmetric_rescaling(A, copy=True):
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
-    >>> print DAD.todense()
+    >>> print DAD.toarray()
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -399,7 +398,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
-    >>> print DAD.todense()
+    >>> print DAD.toarray()
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -628,7 +627,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
         raise ValueError("Expected square matrix")
-    if sp.mod(A.shape[0], blocksize) != 0:
+    if np.mod(A.shape[0], blocksize) != 0:
         raise ValueError("blocksize and A.shape must be compatible")
 
     # If the block diagonal of A already exists, return that
@@ -652,10 +651,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = sp.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
+    block_diag = np.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
-    AAIJ = (sp.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
+    AAIJ = (np.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
@@ -709,19 +708,19 @@ def amalgamate(A, blocksize):
     >>> col = array([0,2,1])
     >>> data = array([1,2,3])
     >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[1, 0, 2, 0],
             [0, 3, 0, 0],
             [0, 0, 0, 0],
             [0, 0, 0, 0]])
-    >>> amalgamate(A,2).todense()
+    >>> amalgamate(A,2).toarray()
     matrix([[ 1.,  1.],
             [ 0.,  0.]])
 
     """
     if blocksize == 1:
         return A
-    elif sp.mod(A.shape[0], blocksize) != 0:
+    elif np.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
@@ -764,11 +763,11 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
     >>> col = array([0,2,2,0,1,2])
     >>> data = array([1,2,3,4,5,6])
     >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[1, 0, 2],
             [0, 0, 3],
             [4, 5, 6]])
-    >>> UnAmal(A,2,2).todense()
+    >>> UnAmal(A,2,2).toarray()
     matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 0.,  0.,  0.,  0.,  1.,  1.],
@@ -881,7 +880,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         if len(headerchar) == 0:
             headerchar = ' '
         table_str += headerchar *\
-            int(sp.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+            int(np.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
 
         table = table[1:]
 
@@ -952,26 +951,26 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             A = A.tocsc()
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
-            nonzero_rowcols = sp.union1d(nonzero_rows, nonzero_cols)
-            A = np.mat(A.todense())
+            nonzero_rowcols = np.union1d(nonzero_rows, nonzero_cols)
+            A = A.toarray()
             A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
-            A = np.mat(A.todense())
+            A = A.toarray()
 
         e = eigvals(A)
         c = cond(A)
-        lambda_min = min(sp.real(e))
-        lambda_max = max(sp.real(e))
-        num_neg = max(e[sp.real(e) < 0.0].shape)
-        num_pos = max(e[sp.real(e) > 0.0].shape)
+        lambda_min = min(np.real(e))
+        lambda_max = max(np.real(e))
+        num_neg = max(e[np.real(e) < 0.0].shape)
+        num_pos = max(e[np.real(e) > 0.0].shape)
         real_table.append([str(i), ('%1.3f' % lambda_min),
                            ('%1.3f' % lambda_max),
                            str(num_neg), str(num_pos), ('%1.2e' % c)])
 
-        lambda_min = min(sp.imag(e))
-        lambda_max = max(sp.imag(e))
-        num_neg = max(e[sp.imag(e) < 0.0].shape)
-        num_pos = max(e[sp.imag(e) > 0.0].shape)
+        lambda_min = min(np.imag(e))
+        lambda_max = max(np.imag(e))
+        num_neg = max(e[np.imag(e) < 0.0].shape)
+        num_pos = max(e[np.imag(e) > 0.0].shape)
         imag_table.append([str(i), ('%1.3f' % lambda_min),
                            ('%1.3f' % lambda_max),
                            str(num_neg), str(num_pos), ('%1.2e' % c)])
@@ -979,7 +978,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         if plot:
             import pylab
             pylab.figure(i+1)
-            pylab.plot(sp.real(e), sp.imag(e), 'kx')
+            pylab.plot(np.real(e), np.imag(e), 'kx')
             handle = pylab.title('Level %d Spectrum' % i)
             handle.set_fontsize(19)
             handle = pylab.xlabel('real(eig)')
@@ -1010,8 +1009,8 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
     Returns
     -------
-    rbm : matrix
-        A matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
+    rbm : array
+        An array of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
         body modes
 
     Examples
@@ -1020,24 +1019,24 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     >>> from pyamg.util.utils import Coord2RBM
     >>> a = np.array([0,1,2])
     >>> Coord2RBM(3,6,a,a,a)
-    matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
-            [ 0.,  1.,  0., -0.,  0.,  0.],
-            [ 0.,  0.,  1.,  0., -0.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  1., -1.],
-            [ 0.,  1.,  0., -1.,  0.,  1.],
-            [ 0.,  0.,  1.,  1., -1.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  2., -2.],
-            [ 0.,  1.,  0., -2.,  0.,  2.],
-            [ 0.,  0.,  1.,  2., -2.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.]])
+    array([[ 1.,  0.,  0.,  0.,  0., -0.],
+           [ 0.,  1.,  0., -0.,  0.,  0.],
+           [ 0.,  0.,  1.,  0., -0.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  1., -1.],
+           [ 0.,  1.,  0., -1.,  0.,  1.],
+           [ 0.,  0.,  1.,  1., -1.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  2., -2.],
+           [ 0.,  1.,  0., -2.,  0.,  2.],
+           [ 0.,  0.,  1.,  2., -2.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.]])
 
     """
     # check inputs
@@ -1050,9 +1049,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
                           spatial location,i.e. numPDEs = [1 | 3 | 6].\
                           You've entered " + str(numPDEs) + ".")
 
-    if((max(x.shape) != numNodes) or
-       (max(y.shape) != numNodes) or
-       (max(z.shape) != numNodes)):
+    if((max(x.shape) != numNodes) or (max(y.shape) != numNodes) or (max(z.shape) != numNodes)):
         raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
                           length.  Length must be numNodes = " + str(numNodes))
 
@@ -1061,7 +1058,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     #    (numNodes x 1) or (1 x numNodes).")
 
     # preallocate rbm
-    rbm = np.mat(np.zeros((numNodes*numPDEs, numcols)))
+    rbm = np.array(np.zeros((numNodes*numPDEs, numcols)))
 
     for node in range(numNodes):
         dof = node*numPDEs
@@ -1242,7 +1239,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     >>> C = array([ [1.,1,0],[1,1,0],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
     >>> B = ones((3,1))
     >>> Bf = ones((6,1))
-    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).todense()
+    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).toarray()
     matrix([[ 0.5,  0.5,  0. ],
             [ 0.5,  0.5,  0. ],
             [ 0. ,  1. ,  0. ],
@@ -1390,7 +1387,7 @@ def scale_T(T, P_I, I_F):
     ...               [ 0.,  0.,  0.,  1.,  0.,  0.],
     ...               [ 0.,  0.,  0.,  0.,  1.,  0.],
     ...               [ 0.,  0.,  0.,  0.,  0.,  0.]])
-    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).todense()
+    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).toarray()
     matrix([[ 2. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ],
             [ 0. ,  1. ,  0. ],
@@ -1500,7 +1497,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     >>> AggOp = csr_matrix(AggOp)
     >>> T = AggOp.copy().tobsr()
     >>> params = get_Cpt_params(A, Cpts, AggOp, T)
-    >>> params['P_I'].todense()
+    >>> params['P_I'].toarray()
     matrix([[ 0.,  0.],
             [ 0.,  0.],
             [ 0.,  0.],
@@ -1728,7 +1725,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     >>> from pyamg.util.utils import eliminate_diag_dom_nodes
     >>> A = poisson( (4,), format='csr' )
     >>> C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
-    >>> C.todense()
+    >>> C.toarray()
     matrix([[ 1.,  0.,  0.,  0.],
             [ 0.,  2., -1.,  0.],
             [ 0., -1.,  2.,  0.],
@@ -1787,7 +1784,7 @@ def remove_diagonal(S):
     >>> from pyamg.util.utils import remove_diagonal
     >>> A = poisson( (4,), format='csr' )
     >>> C = remove_diagonal(A)
-    >>> C.todense()
+    >>> C.toarray()
     matrix([[ 0., -1.,  0.,  0.],
             [-1.,  0., -1.,  0.],
             [ 0., -1.,  0., -1.],
@@ -1828,7 +1825,7 @@ def scale_rows_by_largest_entry(S):
     >>> A = poisson( (4,), format='csr' )
     >>> A.data[1] = 5.0
     >>> A = scale_rows_by_largest_entry(A)
-    >>> A.todense()
+    >>> A.toarray()
     matrix([[ 0.4,  1. ,  0. ,  0. ],
             [-0.5,  1. , -0.5,  0. ],
             [ 0. , -0.5,  1. , -0.5],
@@ -2018,7 +2015,7 @@ def filter_matrix_columns(A, theta):
     ...                        [-0.5 ,  1.  , -0.5 ],
     ...                        [ 0.  ,  0.49,  1.  ],
     ...                        [ 0.  ,  0.  , -0.5 ]]) )
-    >>> filter_matrix_columns(A, 0.5).todense()
+    >>> filter_matrix_columns(A, 0.5).toarray()
     matrix([[ 0. ,  1. ,  0. ],
             [-0.5,  1. , -0.5],
             [ 0. ,  0. ,  1. ],
@@ -2095,7 +2092,7 @@ def filter_matrix_rows(A, theta):
     >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
     ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
-    >>> filter_matrix_rows(A, 0.5).todense()
+    >>> filter_matrix_rows(A, 0.5).toarray()
     matrix([[ 0. , -0.5,  0. ,  0. ],
             [ 1. ,  1. ,  0. ,  0. ],
             [ 0. , -0.5,  1. , -0.5]])
@@ -2166,7 +2163,7 @@ def truncate_rows(A, nz_per_row):
     >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
     ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
-    >>> truncate_rows(A, 2).todense()
+    >>> truncate_rows(A, 2).toarray()
     matrix([[-0.24, -0.5 ,  0.  ,  0.  ],
             [ 1.  , -1.1 ,  0.  ,  0.  ],
             [ 0.  ,  0.  ,  1.  ,  0.5 ]])
@@ -2193,6 +2190,38 @@ def truncate_rows(A, nz_per_row):
         A = A.asformat(Aformat)
 
     return A
+
+def set_tol(dtype):
+    """Set a tolerance based on a numpy dtype char.
+
+    Parameters
+    ----------
+    dtype : np.dtype
+        numpy dtype
+
+    Returns
+    -------
+    tol : float
+        A smallish value based on precision
+
+    Notes
+    -----
+    Handles both real and complex (through the .lower() case)
+
+    See Also
+    --------
+    numpy.typecodes, numpy.sctypes
+    """
+    if dtype.char.lower() == 'f':
+        tol = 1e3 * np.finfo(np.single).eps
+    elif dtype.char.lower() == 'd':
+        tol = 1e6 * np.finfo(np.double).eps
+    elif dtype.char.lower() == 'g':
+        tol = 1e6 * np.finfo(np.longdouble).eps
+    else:
+        raise ValueError('Attempting to set a tolerance for an unsupported precision.')
+
+    return tol
 
 
 # from functools import partial, update_wrapper

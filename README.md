@@ -1,5 +1,4 @@
-[![Build Status](https://img.shields.io/travis/pyamg/pyamg/master.svg?style=flat-square)](https://travis-ci.org/pyamg/pyamg)
-[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/master.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
+[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 
 # Installation
@@ -26,7 +25,7 @@ conda install pyamg
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.
 
-![](./Docs/logo/PyAMG_logo.png)
+![](./Docs/logo/pyamg_logo_withtext.png)
 
 PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
 

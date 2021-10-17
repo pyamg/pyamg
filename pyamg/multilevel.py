@@ -4,8 +4,15 @@
 from warnings import warn
 
 import scipy as sp
+import scipy.linalg
 import numpy as np
 
+from pkg_resources import parse_version  # included with setuptools
+
+if parse_version(sp.__version__) >= parse_version('1.7'):
+    from scipy.linalg import pinv
+else:
+    from scipy.linalg import pinv2 as pinv
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
 
@@ -70,7 +77,7 @@ class multilevel_solver:
             """Level construct (empty)."""
             pass
 
-    def __init__(self, levels, coarse_solver='pinv2'):
+    def __init__(self, levels, coarse_solver='pinv'):
         """Class constructor responsible for initializing the cycle and ensuring the list of levels is complete.
 
         Parameters
@@ -98,8 +105,7 @@ class multilevel_solver:
 
             Dense methods:
 
-            * pinv     : pseudoinverse (QR)
-            * pinv2    : pseudoinverse (SVD)
+            * pinv     : pseudoinverse (SVD)
             * lu       : LU factorization
             * cholesky : Cholesky factorization
 
@@ -299,7 +305,7 @@ class multilevel_solver:
         >>> from scipy.sparse.linalg import cg
         >>> import scipy as sp
         >>> A = poisson((100, 100), format='csr')          # matrix
-        >>> b = sp.rand(A.shape[0])                        # random RHS
+        >>> b = np.random.rand(A.shape[0])                 # random RHS
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
@@ -382,7 +388,7 @@ class multilevel_solver:
         if accel is not None:
 
             # Check for symmetric smoothing scheme when using CG
-            if (accel is 'cg') and (not self.symmetric_smoothing):
+            if (accel == 'cg') and (not self.symmetric_smoothing):
                 warn('Incompatible non-symmetric multigrid preconditioner '
                      'detected, due to presmoother/postsmoother combination. '
                      'CG requires SPD preconditioner, not just SPD matrix.')
@@ -399,20 +405,23 @@ class multilevel_solver:
                 basestring = str
 
             # Acceleration is being used
+            kwargs = {}
             if isinstance(accel, basestring):
                 from pyamg import krylov
                 from scipy.sparse.linalg import isolve
+                kwargs = {}
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
                 else:
                     accel = getattr(isolve, accel)
+                    kwargs['atol'] = 'legacy'
 
             A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
 
             try:  # try PyAMG style interface which has a residuals parameter
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback, residuals=residuals)[0]
+                             callback=callback, residuals=residuals, **kwargs)[0]
             except BaseException:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
@@ -423,7 +432,7 @@ class multilevel_solver:
                     residuals[:] = [residual_norm(A, x, b)]
 
                     def callback(x):
-                        if sp.isscalar(x):
+                        if np.isscalar(x):
                             residuals.append(x)
                         else:
                             residuals.append(residual_norm(A, x, b))
@@ -431,7 +440,7 @@ class multilevel_solver:
                             cb(x)
 
                 return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback)[0]
+                             callback=callback, **kwargs)[0]
 
         else:
             # Scale tol by normb
@@ -583,8 +592,7 @@ def coarse_grid_solver(solver):
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
                   present in pyamg.relaxation
             - Dense methods:
-                + pinv     : pseudoinverse (QR)
-                + pinv2    : pseudoinverse (SVD)
+                + pinv     : pseudoinverse (SVD)
                 + lu       : LU factorization
                 + cholesky : Cholesky factorization
 
@@ -605,30 +613,30 @@ def coarse_grid_solver(solver):
     >>> x = cgs(A, b)
 
     """
+
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     solver, kwargs = unpack_arg(solver)
 
     if solver in ['pinv', 'pinv2']:
         def solve(self, A, b):
             if not hasattr(self, 'P'):
-                self.P = getattr(sp.linalg, solver)(A.todense(), **kwargs)
+                self.P = pinv(A.toarray(), **kwargs)
             return np.dot(self.P, b)
 
     elif solver == 'lu':
         def solve(self, A, b):
             if not hasattr(self, 'LU'):
-                self.LU = sp.linalg.lu_factor(A.todense(), **kwargs)
+                self.LU = sp.linalg.lu_factor(A.toarray(), **kwargs)
             return sp.linalg.lu_solve(self.LU, b)
 
     elif solver == 'cholesky':
         def solve(self, A, b):
             if not hasattr(self, 'L'):
-                self.L = sp.linalg.cho_factor(A.todense(), **kwargs)
+                self.L = sp.linalg.cho_factor(A.toarray(), **kwargs)
             return sp.linalg.cho_solve(self.L, b)
 
     elif solver == 'splu':
@@ -650,6 +658,7 @@ def coarse_grid_solver(solver):
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
         from pyamg import krylov
+        from pyamg.util.utils import set_tol
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
@@ -657,13 +666,7 @@ def coarse_grid_solver(solver):
 
         def solve(self, A, b):
             if 'tol' not in kwargs:
-                eps = np.finfo(np.float).eps
-                feps = np.finfo(np.single).eps
-                geps = np.finfo(np.longfloat).eps
-                _array_precision = {'f': 0, 'd': 1, 'g': 2,
-                                    'F': 0, 'D': 1, 'G': 2}
-                kwargs['tol'] = {0: feps * 1e3, 1: eps * 1e6,
-                                 2: geps * 1e6}[_array_precision[A.dtype.char]]
+                kwargs['tol'] = set_tol(A.dtype)
 
             return fn(A, b, **kwargs)[0]
 
@@ -713,7 +716,9 @@ def coarse_grid_solver(solver):
             if isinstance(b, np.ndarray):
                 x = np.asarray(x)
             elif isinstance(b, np.matrix):
-                x = np.asmatrix(x)
+                # convert to ndarray
+                b = np.asarray(b)
+                x = np.asarray(x)
             else:
                 raise ValueError('unrecognized type')
 

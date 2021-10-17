@@ -86,7 +86,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         AH = A.H
     else:
         # TODO avoid doing this since A may be a different sparse type
-        AH = aslinearoperator(np.asmatrix(A).H)
+        AH = aslinearoperator(np.asarray(A).conj().T)
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
@@ -94,7 +94,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cgnr')
+    warnings.filterwarnings('always', module='pyamg.krylov._cgnr')
 
     # Choose type
     if not hasattr(A, 'dtype'):

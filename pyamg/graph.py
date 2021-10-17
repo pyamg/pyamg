@@ -11,12 +11,9 @@ from . import amg_core
 __all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
            'lloyd_cluster', 'connected_components']
 
+from pyamg.graph_ref import bellman_ford_reference
 
-def max_value(datatype):
-    try:
-        return np.iinfo(datatype).max
-    except BaseException:
-        return np.finfo(datatype).max
+__all__ += ['bellman_ford_reference']
 
 
 def asgraph(G):
@@ -68,12 +65,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = amg_core.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N), -1)
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
             raise ValueError('unknown algorithm (%s)' % algo)
     else:
         fn = amg_core.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, sp.rand(N), -1)
+        fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
 
     return mis
 
@@ -113,63 +110,51 @@ def vertex_coloring(G, method='MIS'):
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = amg_core.vertex_coloring_jones_plassmann
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     elif method == 'LDF':
         fn = amg_core.vertex_coloring_LDF
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
         raise ValueError('unknown method (%s)' % method)
 
     return coloring
 
 
-def bellman_ford(G, seeds, maxiter=None):
+def bellman_ford(G, seeds):
     """Bellman-Ford iteration.
 
     Parameters
     ----------
     G : sparse matrix
+        Directed graph with positive weights.
+    seeds : list
+        Starting seeds
 
     Returns
     -------
     distances : array
+        Distance of each point to the nearest seed
     nearest_seed : array
-
-    References
-    ----------
-    CLR
-
+        Index of the nearest seed
     """
     G = asgraph(G)
     N = G.shape[0]
 
-    if maxiter is not None and maxiter < 0:
-        raise ValueError('maxiter must be positive')
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('Bellman-Ford is defined only for positive weights.')
     if G.dtype == complex:
-        raise ValueError('Bellman-Ford algorithm only defined for real\
-                          weights')
+        raise ValueError('Bellman-Ford is defined only for real weights.')
 
     seeds = np.asarray(seeds, dtype='intc')
 
-    distances = np.empty(N, dtype=G.dtype)
-    distances[:] = max_value(G.dtype)
+    distances = np.full(N, np.inf, dtype=G.dtype)
     distances[seeds] = 0
 
-    nearest_seed = np.empty(N, dtype='intc')
-    nearest_seed[:] = -1
+    nearest_seed = np.full(N, -1, dtype='intc')
     nearest_seed[seeds] = seeds
 
-    old_distances = np.empty_like(distances)
-
-    iter = 0
-    while maxiter is None or iter < maxiter:
-        old_distances[:] = distances
-
-        amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances,
-                              nearest_seed)
-
-        if (old_distances == distances).all():
-            break
+    amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances, nearest_seed)
 
     return (distances, nearest_seed)
 

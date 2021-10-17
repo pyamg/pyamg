@@ -120,7 +120,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                        prepostsmoother=('gauss_seidel',
                                         {'sweep': 'symmetric'}),
                        smooth=('jacobi', {}), strength='symmetric',
-                       coarse_solver='pinv2',
+                       coarse_solver='pinv',
                        eliminate_local=(False, {'Ca': 1.0}), keep=False,
                        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA).
@@ -312,7 +312,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 improve_candidates=None,
                                                 keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0,
-                                  tol=float(np.finfo(np.float).tiny),
+                                  tol=float(np.finfo(np.float64).tiny),
                                   maxiter=candidate_iters, cycle='V')
                 work[:] += 2 * sa_temp.operator_complexity() *\
                     sa_temp.levels[0].A.nnz * candidate_iters
@@ -405,12 +405,12 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     # step 1
     A_l = A
     if initial_candidate is None:
-        x = sp.rand(A_l.shape[0], 1).astype(A_l.dtype)
+        x = np.random.rand(A_l.shape[0], 1).astype(A_l.dtype)
         # The following type check matches the usual 'complex' type,
         # but also numpy data types such as 'complex64', 'complex128'
         # and 'complex256'.
         if A_l.dtype.name.startswith('complex'):
-            x = x + 1.0j*sp.rand(A_l.shape[0], 1)
+            x = x + 1.0j*np.random.rand(A_l.shape[0], 1)
     else:
         x = np.array(initial_candidate, dtype=A_l.dtype)
 
@@ -606,12 +606,12 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
 
     levels = ml.levels
 
-    x = sp.rand(levels[0].A.shape[0], 1)
+    x = np.random.rand(levels[0].A.shape[0], 1)
     if levels[0].A.dtype.name.startswith('complex'):
-        x = x + 1.0j*sp.rand(levels[0].A.shape[0], 1)
+        x = x + 1.0j*np.random.rand(levels[0].A.shape[0], 1)
     b = np.zeros_like(x)
 
-    x = ml.solve(b, x0=x, tol=float(np.finfo(np.float).tiny),
+    x = ml.solve(b, x0=x, tol=float(np.finfo(np.float64).tiny),
                  maxiter=candidate_iters)
     work[:] += ml.operator_complexity()*ml.levels[0].A.nnz*candidate_iters*2
 
@@ -703,7 +703,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         change_smoothers(solver, presmoother=prepostsmoother,
                          postsmoother=prepostsmoother)
         x = solver.solve(np.zeros_like(x), x0=x,
-                         tol=float(np.finfo(np.float).tiny),
+                         tol=float(np.finfo(np.float64).tiny),
                          maxiter=candidate_iters)
         work[:] += 2 * solver.operator_complexity() * solver.levels[0].A.nnz *\
             candidate_iters*2
