@@ -143,11 +143,8 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
         z = M @ r                                 # 6
         rz = np.inner(r.conjugate(), z)
 
-        if rz <= 0.0:                             # check curvature of M
-            if rz == 0.0:
-                warn("\nSingular preconditioner detected in CG, aborting\n")
-            else:
-                warn("\nIndefinite preconditioner detected in CG, aborting\n")
+        if rz < 0.0:                             # check curvature of M
+            warn("\nIndefinite preconditioner detected in CG, aborting\n")
             return (postprocess(x), -1)
 
         beta = rz/rz_old                          # 7
