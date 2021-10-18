@@ -1,13 +1,15 @@
+import warnings
+from warnings import warn
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
-from warnings import warn
 
 
 __all__ = ['cg']
 
 
-def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def cg(A, b, x0=None, tol=1e-5, normA=None,
+       maxiter=None, M=None,
        callback=None, residuals=None):
     """Conjugate Gradient algorithm.
 
@@ -22,12 +24,13 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||b||
-        ||r_k|| < tol * ||b||
+        stopping criteria (see normA)
+        ||r_k|| < tol * ||b||, 2-norms
+    normA : float
+        if provided, then the stopping criteria becomes
+        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
@@ -38,8 +41,8 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
     info : halting status of cg
 
             ==  =======================================
@@ -68,7 +71,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     10.9370700187
 
     References
@@ -81,7 +84,6 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._cg')
 
     # determine maxiter
@@ -91,39 +93,40 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A*x
-    z = M*r
+    r = b - A @ x
+    z = M @ r
     p = z.copy()
     rz = np.inner(r.conjugate(), z)
 
     normr = np.linalg.norm(r)
+    if normA is not None:
+        normx = np.linalg.norm(x)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess if b != 0,
+    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0:
+    if normb == 0.0 and normA:
         normb = 1.0
-    if normr < tol*normb:
+    if normA is not None:
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    else:
+        rtol = tol * normb
+    if normr < rtol:
         return (postprocess(x), 0)
-
-    # Scale tol by ||b||
-    if normr != 0.0:
-        tol = tol*normb
 
     # How often should r be recomputed
     recompute_r = 8
 
-    iter = 0
+    it = 0
 
-    while True:
-        Ap = A*p
+    while True:                                   # Step number in Saad's pseudocode
+        Ap = A @ p
 
         rz_old = rz
-        # Step number in Saad's pseudocode
-        pAp = np.inner(Ap.conjugate(), p)            # check curvature of A
+        pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
             warn("\nIndefinite matrix detected in CG, aborting\n")
             return (postprocess(x), -1)
@@ -131,15 +134,15 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         alpha = rz/pAp                            # 3
         x += alpha * p                            # 4
 
-        if np.mod(iter, recompute_r) and iter > 0:   # 5
+        if np.mod(it, recompute_r) and it > 0:    # 5
             r -= alpha * Ap
         else:
-            r = b - A*x
+            r = b - A @ x
 
-        z = M*r                                   # 6
+        z = M @ r                                 # 6
         rz = np.inner(r.conjugate(), z)
 
-        if rz <= 0.0:                              # check curvature of M
+        if rz <= 0.0:                             # check curvature of M
             if rz == 0.0:
                 warn("\nSingular preconditioner detected in CG, aborting\n")
             else:
@@ -150,7 +153,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         p *= beta                                 # 8
         p += z
 
-        iter += 1
+        it += 1
 
         normr = np.linalg.norm(r)
 
@@ -160,20 +163,19 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if callback is not None:
             callback(x)
 
-        if normr < tol:
+        if normA is not None:
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        else:
+            rtol = tol * normb
+
+        if normr < rtol:
             return (postprocess(x), 0)
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
+        if it == maxiter:
+            return (postprocess(x), it)
 
 
 if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
     from pyamg.gallery import stencil_grid
     from numpy.random import random
     import time
@@ -183,46 +185,54 @@ if __name__ == '__main__':
     A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
                      dtype=float, format='csr')
     #b = random((A.shape[0],))
-    xstar = 0*random((A.shape[0],))
-    b = A * xstar
+    xstar = random((A.shape[0],))
+    b = A @ xstar
     x0 = random((A.shape[0],))
+    print('initial residual: ', norm(b - A @ x0))
+    print('initial criteria 1: ', norm(b - A @ x0) / ((norm(A.data)*norm(x0) + norm(b))))
+    print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
 
-
-    print('\n\nTesting CG with {} x {} 2D Laplace Matrix'.format(A.shape[0],
-                                                                 A.shape[0]))
+    print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')
+    x = x0.copy()
     t1 = time.time()
-    (x, flag) = cg(A, b, x0, tol=1e-8, maxiter=100)
+    res = []
+    (x, flag) = cg(A, b, x, tol=1e-8, normA=norm(A.data), maxiter=10, residuals=res)
     t2 = time.time()
-    print('%s took %0.3f ms' % ('cg', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
+    #print('res1: ', res)
+    print(f'cg took {(t2-t1)*1000.0} ms')
+    print(f'norm = {norm(b - A @ x)}')
+    print(f'info flag = {flag}')
 
+    res = []
+    def mycb(xk):
+        res.append(norm(b - A @ xk))
+
+    x = x0.copy()
     t1 = time.time()
-    (y, flag) = icg(A, b, x0, tol=1e-8, maxiter=100)
+    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=10, callback=mycb)
     t2 = time.time()
-    print('\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*y)))
-    print('info flag = %d' % (flag))
+    #print('res2: ', res)
+    print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
+    print(f'norm = {norm(b - A @ y)}')
+    print(f'info flag = {flag}')
 
     print('-------------')
-    criterion1 = []
-    myerr = []
     norm = np.linalg.norm
-
     criterion1 = []
     criterion2 = []
     criterion5 = []
-    backwarderror = []
+    error = []
 
     def mycb(xk):
-        criterion1.append(norm(b - A * xk) / (norm(A.data)*norm(xk) + norm(b)))
-        criterion2.append(norm(b - A * xk) / norm(b))
-        criterion5.append(norm(b - A * xk) / norm(b - A * x0))
-        backwarderror.append(norm(b - A * xk) / (norm(A.data*norm(xk) * norm(xstar))))
+        criterion1.append(norm(b - A @ xk) / (norm(A.data)*norm(xk) + norm(b)))
+        criterion2.append(norm(b - A @ xk) / norm(b))
+        criterion5.append(norm(b - A @ xk) / norm(b - A @ x0))
+        error.append(norm(xstar - xk))
 
+    x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x0, tol=1e-8, maxiter=1000, callback=mycb)
+    (x, flag) = cg(A, b, x, tol=1e-8, maxiter=1000, callback=mycb)
     t2 = time.time()
 
     import matplotlib.pyplot as plt
@@ -231,6 +241,6 @@ if __name__ == '__main__':
     plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
     plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
     plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
-    plt.semilogy(backwarderror, label=r'$\|e_k\|$')
+    plt.semilogy(error, label=r'$\|e_k\|$')
     plt.legend()
     plt.show()
