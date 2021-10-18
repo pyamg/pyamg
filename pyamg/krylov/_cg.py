@@ -81,6 +81,7 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     """
+    # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function

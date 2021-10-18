@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
@@ -6,7 +7,7 @@ from pyamg.util.linalg import norm
 __all__ = ['bicgstab']
 
 
-def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def bicgstab(A, b, x0=None, tol=1e-5, normA=None, maxiter=None, M=None,
              callback=None, residuals=None):
     """Biconjugate Gradient Algorithm with Stabilization.
 
@@ -21,24 +22,25 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        stopping criteria (see normA)
+        ||r_k|| < tol * ||b||, 2-norms
+    normA : float
+        if provided, then the stopping criteria becomes
+        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A A.H x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
     info : halting status of bicgstab
 
             ==  ======================================
@@ -64,7 +66,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = bicgstab(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     4.68163045309
 
     References
@@ -78,7 +80,6 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._bicgstab')
 
     # Check iteration numbers
@@ -88,27 +89,28 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # Prep for method
-    r = b - A*x
+    r = b - A @ x
     normr = norm(r)
 
     if residuals is not None:
         residuals[:] = [normr]
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess, if b != 0,
+    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0:
+    if normb == 0.0 and normA:
         normb = 1.0
-    if normr < tol*normb:
+    if normA is not None:
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    else:
+        rtol = tol * normb
+    if normr < rtol:
         return (postprocess(x), 0)
 
-    # Scale tol by ||r_0||_2
-    if normr != 0.0:
-        tol = tol*normr
-
-    # Is this a one dimensional matrix?
+    # Is thisAa one dimensional matrix?
+    # Use a matvec to access A[0,0]
     if A.shape[0] == 1:
-        entry = np.ravel(A*np.array([1.0], dtype=xtype))
+        entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
         return (postprocess(b/entry), 0)
 
     rstar = r.copy()
@@ -116,29 +118,29 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     rrstarOld = np.inner(rstar.conjugate(), r)
 
-    iter = 0
+    it = 0
 
     # Begin BiCGStab
     while True:
-        Mp = M*p
-        AMp = A*Mp
+        Mp = M @ p
+        AMp = A @ Mp
 
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
         alpha = rrstarOld/np.inner(rstar.conjugate(), AMp)
 
         # s_j = r_j - alpha*A*M*p_j
-        s = r - alpha*AMp
-        Ms = M*s
-        AMs = A*Ms
+        s = r - alpha * AMp
+        Ms = M @ s
+        AMs = A @ Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
         omega = np.inner(AMs.conjugate(), s)/np.inner(AMs.conjugate(), AMs)
 
         # x_{j+1} = x_j +  alpha*M*p_j + omega*M*s_j
-        x = x + alpha*Mp + omega*Ms
+        x = x + alpha * Mp + omega * Ms
 
         # r_{j+1} = s_j - omega*A*M*s
-        r = s - omega*AMs
+        r = s - omega * AMs
 
         # beta_j = (r_{j+1}, rstar)/(r_j, rstar) * (alpha/omega)
         rrstarNew = np.inner(rstar.conjugate(), r)
@@ -146,9 +148,9 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         rrstarOld = rrstarNew
 
         # p_{j+1} = r_{j+1} + beta*(p_j - omega*A*M*p)
-        p = r + beta*(p - omega*AMp)
+        p = r + beta * (p - omega * AMp)
 
-        iter += 1
+        it += 1
 
         normr = norm(r)
 
@@ -158,11 +160,13 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if callback is not None:
             callback(x)
 
-        if normr < tol:
-            return (postprocess(x), 0)
+        if normA is not None:
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        else:
+            rtol = tol * normb
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
+        if it == maxiter:
+            return (postprocess(x), it)
 
 # if __name__ == '__main__':
 #    # from numpy import diag
