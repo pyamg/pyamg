@@ -3,8 +3,8 @@ from warnings import warn
 import numpy as np
 import scipy as sp
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
+from pyamg.util.linalg import norm
 
 
 __all__ = ['gmres_mgs']
@@ -145,10 +145,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         # real type
         [axpy, dotu, dotc, scal] =\
             get_blas_funcs(['axpy', 'dot', 'dot', 'scal'], [x])
-
-    # Make full use of direct access to BLAS by defining own norm
-    def norm(z):
-        return np.sqrt(np.real(dotc(z, z)))
 
     # Set number of outer and inner iterations
     if restrt is None:

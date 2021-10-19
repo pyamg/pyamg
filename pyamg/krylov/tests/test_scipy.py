@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse.linalg as sla
 from pyamg.krylov._gmres_mgs import gmres_mgs
-import pyamg
+from pyamg.krylov._gmres_householder import gmres_householder
 
 from numpy.testing import TestCase, assert_array_almost_equal, assert_equal
 
@@ -30,9 +30,13 @@ class TestScipy(TestCase):
             tol = case['tol']
             n = A.shape[0]
 
-            res = []
-            _ = gmres_mgs(A, b, x0, residuals=res,
+            mgsres = []
+            _ = gmres_mgs(A, b, x0, residuals=mgsres,
                           tol=tol, restrt=3, maxiter=2)
+
+            hhres = []
+            _ = gmres_householder(A, b, x0, residuals=hhres,
+                                  tol=tol, restrt=3, maxiter=2)
 
             scipyres = []
             normb = np.linalg.norm(b)
@@ -41,6 +45,5 @@ class TestScipy(TestCase):
             _ = sla.iterative.gmres(A, b,  x0, callback=cb, callback_type='pr_norm',
                                     tol=tol, atol=0, restrt=3, maxiter=2)
 
-            print(res)
-            print(scipyres)
-            assert_array_almost_equal(res[1:], scipyres)
+            assert_array_almost_equal(mgsres[1:], scipyres)
+            assert_array_almost_equal(hhres[1:], scipyres)
