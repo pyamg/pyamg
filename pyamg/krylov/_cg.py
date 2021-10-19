@@ -43,7 +43,7 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
     -------
     (xk, info)
     xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status of cg
+    info : halting status
 
             ==  =======================================
             0   successful exit

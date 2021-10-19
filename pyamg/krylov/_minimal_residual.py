@@ -1,13 +1,15 @@
+import warnings
+from warnings import warn
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
-from warnings import warn
 
 
 __all__ = ['minimal_residual']
 
 
-def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def minimal_residual(A, b, x0=None, tol=1e-5, normA=None,
+                     maxiter=None, M=None,
                      callback=None, residuals=None):
     """Minimal residual (MR) algorithm.
 
@@ -22,27 +24,26 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the
-        preconditioner norm of r_0, or ||r_0||_M.
+        stopping criteria (see normA)
+        ||r_k|| < tol * ||b||, 2-norms
+    normA : float
+        if provided, then the stopping criteria becomes
+        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals contains the residual norm history,
-        including the initial residual.  The preconditioner norm
-        is used, instead of the Euclidean norm.
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of cg
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
             ==  =======================================
             0   successful exit
@@ -55,11 +56,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
-
-    The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
@@ -70,7 +67,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = minimal_residual(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     7.26369350856
 
     References
@@ -83,44 +80,42 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._minimal_residual')
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(len(b))
+        maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = M*(b - A*x)
+    r = b - A @ x
     normr = norm(r)
+    r = M @ r
 
     # store initial residual
     if residuals is not None:
         residuals[:] = [normr]
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess if b != 0,
+    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0:
+    if normb == 0.0 and normA:
         normb = 1.0
-    if normr < tol*normb:
+    if normA is not None:
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    else:
+        rtol = tol * normb
+    if normr < rtol:
         return (postprocess(x), 0)
-
-    # Scale tol by ||r_0||_M
-    if normr != 0.0:
-        tol = tol*normr
 
     # How often should r be recomputed
     recompute_r = 50
 
-    iter = 0
+    it = 0
 
     while True:
-        iter = iter+1
-
-        p = M*(A*r)
+        p = M @ (A @ r)
 
         rMAr = np.inner(p.conjugate(), r)  # check curvature of M^-1 A
         if rMAr < 0.0:
@@ -129,14 +124,15 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             return (postprocess(x), -1)
 
         alpha = rMAr / np.inner(p.conjugate(), p)
-        x = x + alpha*r
+        x = x + alpha * r
 
-        if np.mod(iter, recompute_r) and iter > 0:
-            r = M*(b - A*x)
+        it += 1
+        if np.mod(it, recompute_r) and it > 0:
+            r = M @ (b - A @ x)
         else:
-            r = r - alpha*p
+            r = r - alpha * p
 
-        normr = norm(r)
+        normr = norm(b - A @ x)
         if residuals is not None:
             residuals.append(normr)
 
@@ -146,8 +142,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if normr < tol:
             return (postprocess(x), 0)
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
+        if it == maxiter:
+            return (postprocess(x), it)
 
 
 # if __name__ == '__main__':
