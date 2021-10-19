@@ -7,7 +7,8 @@ from pyamg.util.linalg import norm
 __all__ = ['bicgstab']
 
 
-def bicgstab(A, b, x0=None, tol=1e-5, normA=None, maxiter=None, M=None,
+def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
+             maxiter=None, M=None,
              callback=None, residuals=None):
     """Biconjugate Gradient Algorithm with Stabilization.
 
@@ -30,7 +31,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None, maxiter=None, M=None,
     maxiter : int
         maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A A.H x = M b.
+        n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
@@ -41,21 +42,20 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None, maxiter=None, M=None,
     -------
     (xk, info)
     xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status of bicgstab
+    info : halting status of cg
 
-            ==  ======================================
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
                 return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  ======================================
+            ==  =======================================
 
     Notes
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------

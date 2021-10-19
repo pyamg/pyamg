@@ -32,7 +32,7 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
     maxiter : int
         maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
+        n x n, inverse preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
@@ -56,11 +56,7 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
-
-    The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
@@ -180,8 +176,9 @@ if __name__ == '__main__':
     from scipy.sparse.linalg.isolve import cg as icg
     import numpy as np
 
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
-                     dtype=float, format='csr')
+    nx = 1000
+    ny = nx
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
     #b = random((A.shape[0],))
     xstar = random((A.shape[0],))
     b = A @ xstar
@@ -194,7 +191,7 @@ if __name__ == '__main__':
     x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, normA=norm(A.data), maxiter=10, residuals=res)
+    (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
     t2 = time.time()
     #print('res1: ', res)
     print(f'cg took {(t2-t1)*1000.0} ms')
@@ -207,7 +204,7 @@ if __name__ == '__main__':
 
     x = x0.copy()
     t1 = time.time()
-    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=10, callback=mycb)
+    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
     t2 = time.time()
     #print('res2: ', res)
     print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
@@ -230,7 +227,7 @@ if __name__ == '__main__':
     x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, maxiter=1000, callback=mycb)
+    (x, flag) = cg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
     t2 = time.time()
 
     import matplotlib.pyplot as plt
@@ -240,5 +237,7 @@ if __name__ == '__main__':
     plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
     plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
     plt.semilogy(error, label=r'$\|e_k\|$')
+    plt.xlabel('iterations')
     plt.legend()
+    plt.savefig('cg.png')
     plt.show()

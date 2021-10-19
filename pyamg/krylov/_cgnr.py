@@ -1,20 +1,21 @@
+import warnings
+from warnings import warn
 import numpy as np
 from scipy.sparse import isspmatrix
-from scipy.sparse.sputils import upcast
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.linalg.interface import aslinearoperator
-from warnings import warn
 from pyamg.util.linalg import norm
 
 
 __all__ = ['cgnr']
 
 
-def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def cgnr(A, b, x0=None, tol=1e-5, normA=None,
+         maxiter=None, M=None,
          callback=None, residuals=None):
     """Conjugate Gradient, Normal Residual algorithm.
 
-    Applies CG to the normal equations, A.H A x = b. Left preconditioning
+    Applies CG to the normal equations, A.H A x = A.H b. Left preconditioning
     is supported.  Note that unless A is well-conditioned, the use of
     CGNR is inadvisable
 
@@ -27,25 +28,26 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        stopping criteria (see normA)
+        ||r_k|| < tol * ||b||, 2-norms
+    normA : float
+        if provided, then the stopping criteria becomes
+        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A.H A x = b.
+        n x n, inverted preconditioner, i.e. solve M A.H A x = M A.H b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of cgnr
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status of cg
 
             ==  =======================================
             0   successful exit
@@ -54,13 +56,11 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             <0  numerical breakdown, or illegal input
             ==  =======================================
 
-
     Notes
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
@@ -71,7 +71,7 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cgnr(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     9.3910201849
 
     References
@@ -90,94 +90,75 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
-    dimen = A.shape[0]
+    n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._cgnr')
-
-    # Choose type
-    if not hasattr(A, 'dtype'):
-        Atype = upcast(x.dtype, b.dtype)
-    else:
-        Atype = A.dtype
-    if not hasattr(M, 'dtype'):
-        Mtype = upcast(x.dtype, b.dtype)
-    else:
-        Mtype = M.dtype
-    xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
-
-    # Should norm(r) be kept
-    if residuals == []:
-        keep_r = True
-    else:
-        keep_r = False
 
     # How often should r be recomputed
     recompute_r = 8
 
     # Check iteration numbers. CGNR suffers from loss of orthogonality quite
     # easily, so we arbitrarily let the method go up to 130% over the
-    # theoretically necessary limit of maxiter=dimen
+    # theoretically necessary limit of maxiter=n
     if maxiter is None:
-        maxiter = int(np.ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*n)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    elif maxiter > (1.3*dimen):
+    elif maxiter > (1.3*n):
         warn('maximum allowed inner iterations (maxiter) are the 130% times \
               the number of dofs')
-        maxiter = int(np.ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*n)) + 2
 
     # Prep for method
-    r = b - A*x
-    rhat = AH*r
+    r = b - A @ x
+    rhat = AH @ r
     normr = norm(r)
-    if keep_r:
-        residuals.append(normr)
+    if residuals is not None:
+        residuals[:] = [normr]  # initial residual
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess if b != 0,
+    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0:
+    if normb == 0.0 and normA:
         normb = 1.0
-    if normr < tol*normb:
-        if callback is not None:
-            callback(x)
+    if normA is not None:
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    else:
+        rtol = tol * normb
+    if normr < rtol:
         return (postprocess(x), 0)
-
-    # Scale tol by ||r_0||_2
-    if normr != 0.0:
-        tol = tol*normr
 
     # Begin CGNR
 
     # Apply preconditioner and calculate initial search direction
-    z = M*rhat
+    z = M @ rhat
     p = z.copy()
     old_zr = np.inner(z.conjugate(), rhat)
 
-    for iter in range(maxiter):
+    it = 0
 
+    while True:
         # w_j = A p_j
-        w = A*p
+        w = A @ p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
         alpha = old_zr / np.inner(w.conjugate(), w)
 
         # x_{j+1} = x_j + alpha*p_j
-        x += alpha*p
+        x += alpha * p
 
         # r_{j+1} = r_j - alpha*w_j
-        if np.mod(iter, recompute_r) and iter > 0:
-            r -= alpha*w
+        if np.mod(it, recompute_r) and it > 0:
+            r -= alpha * w
         else:
-            r = b - A*x
+            r = b - A @ x
 
         # rhat_{j+1} = A.H*r_{j+1}
-        rhat = AH*r
+        rhat = AH @ r
 
         # z_{j+1} = M*r_{j+1}
-        z = M*rhat
+        z = M @ rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
         new_zr = np.inner(z.conjugate(), rhat)
@@ -188,20 +169,25 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         p *= beta
         p += z
 
-        # Allow user access to residual
+        it += 1
+        normr = np.linalg.norm(r)
+
+        if residuals is not None:
+            residuals.append(normr)
+
         if callback is not None:
             callback(x)
 
-        # test for convergence
-        normr = norm(r)
-        if keep_r:
-            residuals.append(normr)
-        if normr < tol:
+        if normA is not None:
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        else:
+            rtol = tol * normb
+
+        if normr < rtol:
             return (postprocess(x), 0)
 
-    # end loop
-
-    return (postprocess(x), iter+1)
+        if it == maxiter:
+            return (postprocess(x), it)
 
 # if __name__ == '__main__':
 #    # from numpy import diag
