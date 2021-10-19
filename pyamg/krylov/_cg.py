@@ -96,8 +96,6 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
     rz = np.inner(r.conjugate(), z)
 
     normr = np.linalg.norm(r)
-    if normA is not None:
-        normx = np.linalg.norm(x)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
