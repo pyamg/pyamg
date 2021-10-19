@@ -113,7 +113,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
     """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
-    dimen = A.shape[0]
+    n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._fgmres')
@@ -137,7 +137,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
     max_outer = maxiter
 
     # Is this a one dimensional matrix?
-    if dimen == 1:
+    if n == 1:
         entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
         return (postprocess(b/entry), 0)
 
@@ -178,20 +178,20 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
 
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg
         # matrix
-        # Space required is O(dimen*max_inner)
+        # Space required is O(n*max_inner)
         # Givens Rotations
         Q = np.zeros((4 * max_inner,), dtype=x.dtype)
         # upper Hessenberg matrix (made upper tri with Givens Rotations)
         H = np.zeros((max_inner, max_inner), dtype=x.dtype)
-        W = np.zeros((max_inner, dimen), dtype=x.dtype)  # Householder reflectors
+        W = np.zeros((max_inner, n), dtype=x.dtype)  # Householder reflectors
         # For fGMRES, preconditioned vectors must be stored
         # No Horner-like scheme exists that allow us to avoid this
-        Z = np.zeros((dimen, max_inner), dtype=x.dtype)
+        Z = np.zeros((n, max_inner), dtype=x.dtype)
         W[0, :] = w
 
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
         # This is the RHS vector for the problem in the Krylov Space
-        g = np.zeros((dimen,), dtype=x.dtype)
+        g = np.zeros((n,), dtype=x.dtype)
         g[0] = -beta
 
         for inner in range(max_inner):
@@ -202,7 +202,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             # for j in range(inner-1,-1,-1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), dimen, inner-1, -1, -1)
+            amg_core.apply_householders(v, np.ravel(W), n, inner-1, -1, -1)
 
             # Apply preconditioner
             v = M @ v
@@ -219,16 +219,16 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
             # direction
             # for j in range(inner+1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), dimen, 0, inner+1, 1)
+            amg_core.apply_householders(v, np.ravel(W), n, 0, inner+1, 1)
 
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
-            #  Note that if max_inner = dimen, then this is unnecessary for
-            #  the last inner iteration, when inner = dimen-1.  Here we do
+            #  Note that if max_inner = n, then this is unnecessary for
+            #  the last inner iteration, when inner = n-1.  Here we do
             #  not need to calculate a Householder reflector or Givens
             #  rotation because nnz(v) is already the desired length,
             #  i.e. we do not need to zero anything out.
-            if inner != dimen-1:
+            if inner != n-1:
                 if inner < (max_inner-1):
                     w = W[inner+1, :]
                 vslice = v[inner+1:]
@@ -248,15 +248,15 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
 
             if inner > 0:
                 # Apply all previous Givens Rotations to v
-                amg_core.apply_givens(Q, v, dimen, inner)
+                amg_core.apply_givens(Q, v, n, inner)
 
             # Calculate the next Givens rotation, where j = inner Note that if
-            # max_inner = dimen, then this is unnecessary for the last inner
-            # iteration, when inner = dimen-1.  Here we do not need to
+            # max_inner = n, then this is unnecessary for the last inner
+            # iteration, when inner = n-1.  Here we do not need to
             # calculate a Householder reflector or Givens rotation because
             # nnz(v) is already the desired length, i.e. we do not need to zero
             # anything out.
-            if inner != dimen-1:
+            if inner != n-1:
                 if v[inner+1] != 0:
                     [c, s, r] = lartg(v[inner], v[inner+1])
                     Qblock = np.array([[c, s], [-np.conjugate(s), c]],
