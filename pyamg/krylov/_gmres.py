@@ -12,7 +12,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     """Generalized Minimum Residual Method (GMRES).
 
     GMRES iteratively refines the initial solution guess to the
-    system Ax = b
+    system Ax = b.  Left preconditioned.  Residuals are preconditioned residuals.
 
     Parameters
     ----------
@@ -23,8 +23,9 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the norm
-        of the initial preconditioned residual
+        stopping criteria
+        ||r_k|| < tol * ||b|| or
+        ||M r_k || < tol * ||M b||, 2-norms
     restrt : None, int
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -35,17 +36,15 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
           and GMRES does not restart
         - if restrt is int, maxiter is the max number of outer iterations,
           and restrt is the max number of inner iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+    maxiter : int
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
-        callback( ||rk||_2 ), where rk is the current preconditioned residual
-        vector
+        callback(xk), where xk is the current solution vector
     residuals : list
-        residuals contains the preconditioned residual norm history,
-        including the initial residual.
+        preconditioned residual history in the 2-norm, including the initial residual
     orthog : string
         'householder' calls _gmres_householder which uses Householder
         reflections to find the orthogonal basis for the Krylov space.
@@ -54,29 +53,32 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of gmres
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
-            ==  =============================================
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  This value
-                is precisely the order of the Krylov space.
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  =============================================
+            ==  =======================================
 
     Notes
     -----
-        - The LinearOperator class is in scipy.sparse.linalg.interface.
-          Use this class if you prefer to define A or M as a mat-vec routine
-          as opposed to explicitly constructing the matrix.  A.psolve(..) is
-          still supported as a legacy.
-        - The orthogonalization method, orthog='householder', is more robust
-          than orthog='mgs', however for the majority of problems your
-          problem will converge before 'mgs' loses orthogonality in your basis.
-        - orthog='householder' has been more rigorously tested, and is
-          therefore currently the default
+    The LinearOperator class is in scipy.sparse.linalg.interface.
+    Use this class if you prefer to define A or M as a mat-vec routine
+    as opposed to explicitly constructing the matrix.
+
+    The orthogonalization method, orthog='householder', is more robust
+    than orthog='mgs', however for the majority of problems your
+    problem will converge before 'mgs' loses orthogonality in your basis.
+
+    orthog='householder' has been more rigorously tested, and is
+    therefore currently the default
+
+    The residual is the *preconditioned* residual.
+    
 
 
     Examples
@@ -101,12 +103,12 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     # pass along **kwargs
     if orthog == 'householder':
         (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
-                                      maxiter=maxiter, xtype=xtype, M=M,
+                                      maxiter=maxiter, M=M,
                                       callback=callback, residuals=residuals,
                                       **kwargs)
     elif orthog == 'mgs':
         (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restrt=restrt,
-                              maxiter=maxiter, xtype=xtype, M=M,
+                              maxiter=maxiter, M=M,
                               callback=callback, residuals=residuals, **kwargs)
 
     return (x, flag)
