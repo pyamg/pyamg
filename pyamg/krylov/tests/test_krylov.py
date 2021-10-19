@@ -123,7 +123,8 @@ class TestKrylov(TestCase):
                 if A_symm.shape[0] > 1:
                     residuals2 = []
                     (x2, flag2) = gmres_mgs(A_symm, b_symm, x0=x0_symm,
-                                            maxiter=min(A.shape[0], maxiter),
+                                            maxiter=1,
+                                            restrt=maxiter,
                                             residuals=residuals2)
                     residuals3 = []
                     (x3, flag2) = cr(A_symm, b_symm, x0=x0_symm,

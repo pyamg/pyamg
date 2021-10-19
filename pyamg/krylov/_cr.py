@@ -150,8 +150,6 @@ def cr(A, b, x0=None, tol=1e-5, normA=None,
 
         zz = np.inner(z.conjugate(), z)
 
-        it += 1
-
         normr = np.linalg.norm(r)
 
         if residuals is not None:
