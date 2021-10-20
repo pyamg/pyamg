@@ -165,6 +165,9 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
         else:
             rtol = tol * normb
 
+        if normr < rtol:
+            return (postprocess(x), 0)
+
         if it == maxiter:
             return (postprocess(x), it)
 
