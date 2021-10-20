@@ -153,7 +153,7 @@ def cg(A, b, x0=None, tol=1e-5, normA=None,
             residuals.append(normr)
 
         if callback is not None:
-            callback(x)
+            callback(x, M=M)
 
         if normA is not None:
             rtol = tol * (normA * np.linalg.norm(x) + normb)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     from scipy.sparse.linalg.isolve import cg as icg
     import numpy as np
 
-    nx = 1000
+    nx = 100
     ny = nx
     A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
     #b = random((A.shape[0],))
@@ -215,17 +215,32 @@ if __name__ == '__main__':
     criterion2 = []
     criterion5 = []
     error = []
+    errorA = []
+    rz = []
+    zz = []
 
-    def mycb(xk):
-        criterion1.append(norm(b - A @ xk) / (norm(A.data)*norm(xk) + norm(b)))
-        criterion2.append(norm(b - A @ xk) / norm(b))
-        criterion5.append(norm(b - A @ xk) / norm(b - A @ x0))
-        error.append(norm(xstar - xk))
+    def mycb2(xk, M):
+        r = b - A @ xk
+        z = M @ r
+        e = xstar - xk
+        normr = norm(r)
+        norme = norm(e)
+        criterion1.append(normr / (norm(A.data)*norm(xk) + norm(b)))
+        criterion2.append(normr / norm(b))
+        criterion5.append(normr / norm(b - A @ x0))
+        error.append(norme)
+        rz.append(np.sqrt(np.inner(r, z)))
+        zz.append(norm(z) / norm(M @ b))
+        errorA.append(np.sqrt(np.inner(A @ e, e)))
 
+    import pyamg
+    res = []
+    ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
+    M =  ml.aspreconditioner()
     x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
+    (x, flag) = cg(A, b, x, M=M, tol=1e-16, maxiter=100, callback=mycb2, residuals=res)
     t2 = time.time()
 
     import matplotlib.pyplot as plt
@@ -235,7 +250,12 @@ if __name__ == '__main__':
     plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
     plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
     plt.semilogy(error, label=r'$\|e_k\|$')
+    plt.semilogy(errorA, label=r'$\|e_k\|_A$')
+    plt.semilogy(rz, label=r'$\sqrt{<r, z>}$')
+    plt.semilogy(zz, label=r'$\|Mr\| / \|M b\|$')
+    plt.hlines(1e-8, 1, len(res), color='tab:gray', linestyle='dashed')
     plt.xlabel('iterations')
+    plt.grid(True)
     plt.legend()
-    plt.savefig('cg.png')
+    plt.savefig('cg.png', dpi=300)
     plt.show()

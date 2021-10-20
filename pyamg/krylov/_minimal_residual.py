@@ -139,6 +139,11 @@ def minimal_residual(A, b, x0=None, tol=1e-5, normA=None,
         if callback is not None:
             callback(x)
 
+        if normA is not None:
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        else:
+            rtol = tol * normb
+
         if normr < tol:
             return (postprocess(x), 0)
 
