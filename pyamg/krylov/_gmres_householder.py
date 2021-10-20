@@ -49,8 +49,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
           and GMRES does not restart
         - if restrt is int, maxiter is the max number of outer iterations,
           and restrt is the max number of inner iterations
-    maxiter : int
-        maximum number of iterations allowed
+        - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
@@ -117,19 +116,27 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     [lartg] = get_lapack_funcs(['lartg'], [x])
 
     # Set number of outer and inner iterations
-    if restrt is None:
-        restrt = n
-    elif restrt > n:
-        warn('Setting restrt to maximum allowed, n.')
-        restrt = n
-    if maxiter is None:
-        maxiter = int(n*1.3) + 2
-    elif maxiter > n:
-        warn('Setting maxiter to maximum allowed, n.')
-        maxiter = n
-
-    max_inner = restrt
-    max_outer = maxiter
+    # If no restarts,
+    #     then set max_inner=maxiter and max_outer=n
+    # If restarts are set,
+    #     then set max_inner=restart and max_outer=maxiter
+    if restrt:
+        if maxiter:
+            max_outer = maxiter
+        else:
+            max_outer = 1
+        if restrt > n:
+            warn('Setting restrt to maximum allowed, n.')
+            restrt = n
+        max_inner = restrt
+    else:
+        max_outer = 1
+        if maxiter > n:
+            warn('Setting maxiter to maximum allowed, n.')
+            maxiter = n
+        elif maxiter is None:
+            maxiter = min(n, 40)
+        max_inner = maxiter
 
     # Is this a one dimensional matrix?
     if n == 1:

@@ -6,7 +6,7 @@ from ._gmres_householder import gmres_householder
 __all__ = ['gmres']
 
 
-def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
+def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
           M=None, callback=None, residuals=None, orthog='householder',
           **kwargs):
     """Generalized Minimum Residual Method (GMRES).
@@ -36,8 +36,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
           and GMRES does not restart
         - if restrt is int, maxiter is the max number of outer iterations,
           and restrt is the max number of inner iterations
-    maxiter : int
-        maximum number of iterations allowed
+        - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
@@ -78,7 +77,6 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     therefore currently the default
 
     The residual is the *preconditioned* residual.
-    
 
 
     Examples
