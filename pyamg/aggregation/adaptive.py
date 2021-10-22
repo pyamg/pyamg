@@ -504,6 +504,8 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             A_l = P_l.T.asformat(P_l.format) * A_l * P_l
         elif symmetry == 'hermitian':
             A_l = P_l.H.asformat(P_l.format) * A_l * P_l
+        else:
+            raise ValueError(f'aSA not implemented for symmetry={symmetry}.')
 
         StrengthOps.append(C_l)
         AggOps.append(AggOp)
