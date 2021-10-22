@@ -23,9 +23,9 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        stopping criteria
-        ||r_k|| < tol * ||b|| or
-        ||M r_k || < tol * ||M b||, 2-norms
+        Tolerance for stopping criteria, let r=r_k
+           ||M r||     < tol ||M b||
+        if ||b||=0, then set ||M b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations

@@ -18,7 +18,7 @@ def mysign(x):
     return x/np.abs(x)
 
 
-def fgmres(A, b, x0=None, tol=1e-5, normA=None,
+def fgmres(A, b, x0=None, tol=1e-5,
            restrt=None, maxiter=None,
            M=None, callback=None, residuals=None):
     """Flexible Generalized Minimum Residual Method (fGMRES).

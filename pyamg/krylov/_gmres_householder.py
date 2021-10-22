@@ -13,9 +13,8 @@ __all__ = ['gmres_householder']
 def mysign(x):
     if x == 0.0:
         return 1.0
-    else:
-        # return the complex "sign"
-        return x / np.abs(x)
+    # return the complex "sign"
+    return x / np.abs(x)
 
 
 def gmres_householder(A, b, x0=None, tol=1e-5,
