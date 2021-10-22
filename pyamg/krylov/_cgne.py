@@ -1,7 +1,7 @@
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse import isspmatrix
+import scipy.sparse as sparse
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.linalg.interface import aslinearoperator
 from pyamg.util.linalg import norm
@@ -10,7 +10,7 @@ from pyamg.util.linalg import norm
 __all__ = ['cgne']
 
 
-def cgne(A, b, x0=None, tol=1e-5, normA=None,
+def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
          maxiter=None, M=None,
          callback=None, residuals=None):
     """Conjugate Gradient, Normal Error algorithm.
@@ -28,11 +28,14 @@ def cgne(A, b, x0=None, tol=1e-5, normA=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        stopping criteria (see normA)
-        ||r_k|| < tol * ||b||, 2-norms
-    normA : float
-        if provided, then the stopping criteria becomes
-        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        'MrMr':      ||M r||     < tol ||M b||
+        'rMr':       <r, Mr>^1/2 < tol
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
         maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
@@ -82,10 +85,10 @@ def cgne(A, b, x0=None, tol=1e-5, normA=None,
 
     """
     # Store the conjugate transpose explicitly as it will be used much later on
-    if isspmatrix(A):
+    if sparse.isspmatrix(A):
         AH = A.H
     else:
-        # TODO avoid doing this since A may be a different sparse type
+        # avoid doing this since A may be a different sparse type
         AH = aslinearoperator(np.asarray(A).conj().T)
 
     # Convert inputs to linear system, with error checking
@@ -113,27 +116,45 @@ def cgne(A, b, x0=None, tol=1e-5, normA=None,
     # Prep for method
     r = b - A @ x
     normr = norm(r)
-    if residuals is not None:
-        residuals[:] = [normr]  # initial residual
-
-    # Check initial guess if b != 0,
-    # must account for case when norm(b) is very small)
-    normb = norm(b)
-    if normb == 0.0 and normA:
-        normb = 1.0
-    if normA is not None:
-        rtol = tol * (normA * np.linalg.norm(x) + normb)
-    else:
-        rtol = tol * normb
-    if normr < rtol:
-        return (postprocess(x), 0)
-
-    # Begin CGNE
 
     # Apply preconditioner and calculate initial search direction
     z = M @ r
     p = AH @ z
     old_zr = np.inner(z.conjugate(), r)
+
+    if residuals is not None:
+        residuals[:] = [normr]  # initial residual
+
+    # Check initial guess if b != 0,
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0  # reset so that tol is unscaled
+
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    elif criteria == 'MrMr':
+        normr = norm(z)
+        normMb = norm(M @ b)
+        rtol = tol * normMb
+    elif criteria == 'rMr':
+        normr = np.sqrt(old_zr)
+        rtol = tol
+    else:
+        raise ValueError('Invalid stopping criteria.')
+
+    if normr < rtol:
+        return (postprocess(x), 0)
+
+    # Begin CGNE
 
     it = 0
 
@@ -172,10 +193,17 @@ def cgne(A, b, x0=None, tol=1e-5, normA=None,
         if callback is not None:
             callback(x)
 
-        if normA is not None:
-            rtol = tol * (normA * np.linalg.norm(x) + normb)
-        else:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
             rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        elif criteria == 'MrMr':
+            normr = norm(z)
+            rtol = tol * normMb
+        elif criteria == 'rMr':
+            normr = np.sqrt(new_zr)
+            rtol = tol
 
         if normr < rtol:
             return (postprocess(x), 0)

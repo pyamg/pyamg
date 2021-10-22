@@ -36,11 +36,9 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        stopping criteria
-        ||r_k|| < tol * ||b||
-    normA : float
-        if provided, then the stopping criteria becomes
-        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
+        Tolerance for stopping criteria, let r=r_k
+           ||r||     < tol ||b||
+        if ||b||=0, then set ||b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -59,7 +57,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial residual
+        residual history in the 2-norm, including the initial residual
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
@@ -149,22 +147,18 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
         return (postprocess(b/entry), 0)
 
     # Prep for method
-    r = b - np.ravel(A @ x)
-    normr = norm(r)
+    r = b - A @ x
 
+    normr = norm(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
-    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0 and normA:
-        normb = 1.0
-    if normA is not None:
-        rtol = tol * (normA * np.linalg.norm(x) + normb)
-    else:
-        rtol = tol * normb
-    if normr < rtol:
+    if normb == 0.0:
+        normb = 1.0   # reset so that tol is unscaled
+
+    if normr < tol * normb:
         return (postprocess(x), 0)
 
     # Use separate variable to track iterations.  If convergence fails,
@@ -288,11 +282,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
                 normr = np.abs(g[inner+1])
-                if normA is not None:
-                    rtol = tol * (normA * np.linalg.norm(x) + normb)
-                else:
-                    rtol = tol * normb
-                if normr < rtol:
+                if normr < tol * normb:
                     break
                 if residuals is not None:
                     residuals.append(normr)
@@ -314,12 +304,12 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
         update = np.dot(Z[:, 0:inner+1], y)
         x = x + update
         r = b - A @ x
-        normr = norm(r)
 
         # Allow user access to the iterates
         if callback is not None:
             callback(x)
 
+        normr = norm(r)
         if residuals is not None:
             residuals.append(normr)
 
@@ -332,12 +322,7 @@ def fgmres(A, b, x0=None, tol=1e-5, normA=None,
                 return (postprocess(x), -1)
 
         # test for convergence
-        if normA is not None:
-            rtol = tol * (normA * np.linalg.norm(x) + normb)
-        else:
-            rtol = tol * normb
-
-        if normr < rtol:
+        if normr < tol * normb:
             return (postprocess(x), 0)
 
     # end outer loop

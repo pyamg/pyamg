@@ -56,9 +56,9 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        stopping criteria
-        ||r_k|| < tol * ||b|| or
-        ||M r_k || < tol * ||M b||, 2-norms
+        Tolerance for stopping criteria, let r=r_k
+           ||M r||     < tol ||M b||
+        if ||b||=0, then set ||M b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
@@ -76,7 +76,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial residual
+        preconditioned residual history in the 2-norm, including the initial preconditioned residual
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
@@ -178,18 +178,19 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     # Apply preconditioner
     r = M @ r
-    normr = norm(r)
 
+    normr = norm(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
-    # must account for case when norm(b) is very small)
     normb = norm(b)
     if normb == 0.0:
-        normMb = 1.0
+        normMb = 1.0   # reset so that tol is unscaled
     else:
         normMb = norm(M @ b)
+
+    # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
         return (postprocess(x), 0)
 

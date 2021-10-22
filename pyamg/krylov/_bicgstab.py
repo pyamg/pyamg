@@ -1,13 +1,14 @@
 import warnings
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
+import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 
 
 __all__ = ['bicgstab']
 
 
-def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
+def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
              maxiter=None, M=None,
              callback=None, residuals=None):
     """Biconjugate Gradient Algorithm with Stabilization.
@@ -23,11 +24,12 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        stopping criteria (see normA)
-        ||r_k|| < tol * ||b||, 2-norms
-    normA : float
-        if provided, then the stopping criteria becomes
-        ||r_k|| < tol * (normA * ||x_k|| + ||b||), 2-norms
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
         maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
@@ -96,14 +98,25 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
         residuals[:] = [normr]
 
     # Check initial guess, if b != 0,
-    # must account for case when norm(b) is very small)
     normb = norm(b)
-    if normb == 0.0 and normA:
-        normb = 1.0
-    if normA is not None:
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0  # reset so that tol is unscaled
+
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
         rtol = tol * (normA * np.linalg.norm(x) + normb)
     else:
-        rtol = tol * normb
+        raise ValueError('Invalid stopping criteria.')
+
     if normr < rtol:
         return (postprocess(x), 0)
 
@@ -160,10 +173,11 @@ def bicgstab(A, b, x0=None, tol=1e-5, normA=None,
         if callback is not None:
             callback(x)
 
-        if normA is not None:
-            rtol = tol * (normA * np.linalg.norm(x) + normb)
-        else:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
             rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
 
         if normr < rtol:
             return (postprocess(x), 0)
