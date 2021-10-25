@@ -138,7 +138,7 @@ class multilevel_solver:
         >>> levels[0].P = P
         >>> levels[0].R = R
         >>> # store second level data
-        >>> levels[1].A = R * A * P                      # coarse-level matrix
+        >>> levels[1].A = R @ A @ P                      # coarse-level matrix
         >>> # create multilevel_solver
         >>> ml = multilevel_solver(levels, coarse_solver='splu')
         >>> print ml
@@ -322,7 +322,7 @@ class multilevel_solver:
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
-              callback=None, residuals=None, return_residuals=False):
+              callback=None, residuals=None, return_info=False):
         """Execute multigrid cycling.
 
         Parameters
@@ -332,7 +332,8 @@ class multilevel_solver:
         x0 : array
             Initial guess.
         tol : float
-            Stopping criteria: relative residual r[k]/r[0] tolerance.
+            Stopping criteria: relative residual r[k]/||b|| tolerance.
+            If `accel` is used, the stopping criteria is set by the Krylov method.
         maxiter : int
             Stopping criteria: maximum number of allowable iterations.
         cycle : {'V','W','F','AMLI'}
@@ -347,12 +348,27 @@ class multilevel_solver:
             User-defined function called after each iteration.  It is
             called as callback(xk) where xk is the k-th iterate vector.
         residuals : list
-            List to contain residual norms at each iteration.
+            List to contain residual norms at each iteration.  The residuals
+            will be the residuals from the Krylov iteration -- see the `accel`
+            method to see verify whether this ||r|| or ||Mr|| (as in the case of
+            GMRES).
+        return_info : bool
+            If true, will return (x, info)
+            If false, will return x (default)
 
         Returns
         -------
         x : array
-            Approximate solution to Ax=b
+            Approximate solution to Ax=b after k iterations
+
+        info : string
+            Halting status
+
+            ==  =======================================
+            0   successful exit
+            >0  convergence to tolerance not achieved,
+                return iteration count instead.
+            ==  =======================================
 
         See Also
         --------
@@ -370,18 +386,20 @@ class multilevel_solver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
-        from pyamg.util.linalg import residual_norm, norm
+        from pyamg.util.linalg import norm
 
         if x0 is None:
             x = np.zeros_like(b)
         else:
             x = np.array(x0)  # copy
 
+        A = self.levels[0].A
+
         cycle = str(cycle).upper()
 
         # AMLI cycles require hermitian matrix
-        if (cycle == 'AMLI') and hasattr(self.levels[0].A, 'symmetry'):
-            if self.levels[0].A.symmetry != 'hermitian':
+        if (cycle == 'AMLI') and hasattr(A, 'symmetry'):
+            if A.symmetry != 'hermitian':
                 raise ValueError('AMLI cycles require \
                     symmetry to be hermitian')
 
@@ -416,80 +434,85 @@ class multilevel_solver:
                     accel = getattr(isolve, accel)
                     kwargs['atol'] = 'legacy'
 
-            A = self.levels[0].A
             M = self.aspreconditioner(cycle=cycle)
 
             try:  # try PyAMG style interface which has a residuals parameter
-                return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback, residuals=residuals, **kwargs)[0]
-            except BaseException:
+                x, info = accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
+                                callback=callback, residuals=residuals, **kwargs)
+                if return_info:
+                    return x, info
+                return x
+            except TypeError as e:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
                 # history is desired
 
                 cb = callback
                 if residuals is not None:
-                    residuals[:] = [residual_norm(A, x, b)]
+                    residuals[:] = [norm(b - A @ x)]
 
                     def callback(x):
                         if np.isscalar(x):
                             residuals.append(x)
                         else:
-                            residuals.append(residual_norm(A, x, b))
+                            residuals.append(norm(b - A @ x))
                         if cb is not None:
                             cb(x)
 
-                return accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                             callback=callback, **kwargs)[0]
+                x, info = accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
+                                callback=callback, **kwargs)
+                if return_info:
+                    return x, info
+                return x
 
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
             normb = norm(b)
-            if normb != 0:
-                tol = tol * normb
+            if normb == 0.0:
+                normb = 1.0  # set so that we have an absolute tolerance
 
-        if return_residuals:
-            warn('return_residuals is deprecated.  Use residuals instead')
-            residuals = []
-        if residuals is None:
-            residuals = []
-        else:
-            residuals[:] = []
+        # Start cycling (no acceleration)
+        normr = np.linalg.norm(b - A @ x)
+        if residuals is not None:
+            residuals[:] = [normr]  # initial residual
 
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of real A and complex b
         from scipy.sparse.sputils import upcast
         from pyamg.util.utils import to_type
-        tp = upcast(b.dtype, x.dtype, self.levels[0].A.dtype)
+        tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
         b = np.ravel(b)
         x = np.ravel(x)
 
-        A = self.levels[0].A
+        it = 0
 
-        residuals.append(residual_norm(A, x, b))
-
-        self.first_pass = True
-
-        while len(residuals) <= maxiter and residuals[-1] > tol:
+        while True:  # it <= maxiter and normr >= tol:
             if len(self.levels) == 1:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
                 self.__solve(0, x, b, cycle)
 
-            residuals.append(residual_norm(A, x, b))
+            it += 1
 
-            self.first_pass = False
+            normr = norm(b - A @ x)
+            if residuals is not None:
+                residuals.append(normr)
 
             if callback is not None:
                 callback(x)
 
-        if return_residuals:
-            return x, residuals
-        else:
-            return x
+            if normr < tol * normb:
+                if return_info:
+                    return x, 0
+                return x
+
+            if it == maxiter:
+                if return_info:
+                    return x, it
+                return x
 
     def __solve(self, lvl, x, b, cycle):
         """Multigrid cycling.
@@ -515,7 +538,7 @@ class multilevel_solver:
 
         self.levels[lvl].presmoother(A, x, b)
 
-        residual = b - A * x
+        residual = b - A @ x
 
         coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)

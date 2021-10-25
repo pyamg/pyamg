@@ -9,8 +9,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
-           'residual_norm', 'condest', 'cond', 'ishermitian',
-           'pinv_array']
+           'condest', 'cond', 'ishermitian', 'pinv_array']
 
 
 def norm(x, pnorm='2'):
@@ -101,11 +100,6 @@ def infinity_norm(A):
     else:
         return np.dot(np.abs(A), np.ones((A.shape[1],),
                                          dtype=A.dtype)).max()
-
-
-def residual_norm(A, x, b):
-    """Compute ||b - A*x||."""
-    return norm(np.ravel(b) - A*np.ravel(x))
 
 
 def axpy(x, y, a=1.0):
