@@ -235,7 +235,6 @@ def lloyd_cluster(G, centers):
         raise ValueError(f'invalid center index {centers.max()}')
 
     centers = np.asarray(centers, dtype=np.int32)
-    print('initial:', repr(centers))
 
     distances = np.empty(n, dtype=G.dtype)
     olddistances = np.empty(n, dtype=G.dtype)
@@ -246,7 +245,6 @@ def lloyd_cluster(G, centers):
                            centers,                                         # INOUT
                            distances, clusters, predecessors, # OUT
                            True)
-    print('final:', repr(centers))
 
     return distances, clusters, centers
 
