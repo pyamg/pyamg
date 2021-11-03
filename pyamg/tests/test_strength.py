@@ -9,7 +9,7 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.util.utils import scale_rows
+from pyamg.util.utils import scale_rows, set_tol
 
 from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
     assert_array_equal
@@ -632,12 +632,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     RHS = np.zeros((NullDim+1,), dtype=A.dtype)
 
     # Choose tolerance for dropping "numerically zero" values later
-    t = Atilde.dtype.char
-    eps = np.finfo(np.float).eps
-    feps = np.finfo(np.single).eps
-    geps = np.finfo(np.longfloat).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    tol = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    tol = set_tol(Atilde.dtype)
 
     for i in range(dimen):
 
@@ -789,7 +784,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
         for j in range(rowstart, rowend):
             if C.indices[j] == i:
                 # ignore the diagonal entry by making it large
-                C.data[j] = np.finfo(np.float).max
+                C.data[j] = np.finfo(np.float64).max
             else:
                 # distance between entry j and i
                 pt_j = V[C.indices[j], :]

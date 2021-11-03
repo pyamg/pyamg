@@ -29,7 +29,6 @@ def bellman_ford_reference(A, c):
     """
     A = A.tocoo()
     nnodes = A.shape[0]
-    nclusters = len(c)
     d = np.full(nnodes, np.inf)
     m = np.full(nnodes, -1.0, dtype=np.int32)
     p = np.full(nnodes, -1.0, dtype=np.int32)
@@ -38,7 +37,7 @@ def bellman_ford_reference(A, c):
     m[c] = np.arange(len(c))  # index
 
     done = False
-    cnt = 0;
+    cnt = 0
     while not done:
         done = True
         for i, j, Aij in zip(A.row, A.col, A.data):

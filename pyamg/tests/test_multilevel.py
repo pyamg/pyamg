@@ -61,7 +61,8 @@ class TestMultilevel(TestCase):
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M)
+            res = []
+            x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
             assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
 

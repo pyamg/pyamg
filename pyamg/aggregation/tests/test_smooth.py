@@ -632,7 +632,7 @@ class TestEnergyMin(TestCase):
 #            colindx = colindices[i]
 #            if len(colindx) > 0:
 #                Bi = np.array(B)[colindx,:]
-#                BtBinv[i] = pinv2(Bi.T.dot(Bi))
+#                BtBinv[i] = pinv(Bi.T.dot(Bi))
 #
 #        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
 #        assert_almost_equal(U*B, 0*U*B)

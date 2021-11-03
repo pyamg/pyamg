@@ -1,12 +1,46 @@
-from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres
+from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres, steepest_descent
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
 import numpy as np
 from scipy.linalg import solve
+import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 import pyamg
 
-from numpy.testing import TestCase, assert_array_almost_equal, assert_equal
+from numpy.testing import TestCase, assert_array_almost_equal, assert_equal, assert_almost_equal
+
+class TestStoppingCriteria(TestCase):
+    def setUp(self):
+        self.cases = []
+
+        np.random.seed(9062883)
+        n = 10
+        A = np.random.rand(n,n)
+        b = np.random.rand(n)
+        x0 = np.random.rand(n)
+        A = 0.5 * (A + A.T) + n*np.eye(n, n)
+        self.cases.append({'A': A, 'b': b, 'x0': x0, 'tol': 1e-8})
+        self.cases.append({'A': sparse.csr_matrix(A), 'b': b, 'x0': x0, 'tol': 1e-8})
+
+    def test_stoppingcriteria(self):
+        for method, crits in [
+                (cg,       ('rr', 'rr+', 'MrMr', 'rMr')),
+                (bicgstab, ('rr', 'rr+')),
+                (cgne,     ('rr', 'rr+', 'MrMr', 'rMr')),
+                (cgnr,     ('rr', 'rr+', 'MrMr', 'rMr')),
+                (cr,     ('rr', 'rr+', 'MrMr')),
+                (steepest_descent,     ('rr', 'rr+', 'MrMr', 'rMr')),
+                     ]:
+            for criteria in crits:
+                for case in self.cases:
+                    A = case['A']
+                    b = case['b']
+                    maxiter = None
+                    if method.__name__ == 'steepest_descent':
+                        maxiter = 100
+                    x1, info = method(A, b, x0=case['x0'], tol=case['tol'], criteria=criteria, maxiter=maxiter)
+                    assert_equal(info, 0, err_msg=f'Problem in {method.__name__}.')
+                    assert_almost_equal(np.linalg.norm(b - A @ x1), 0.0, decimal=6, err_msg=f'Problem in {method.__name__}.')
 
 
 class TestKrylov(TestCase):
@@ -123,7 +157,8 @@ class TestKrylov(TestCase):
                 if A_symm.shape[0] > 1:
                     residuals2 = []
                     (x2, flag2) = gmres_mgs(A_symm, b_symm, x0=x0_symm,
-                                            maxiter=min(A.shape[0], maxiter),
+                                            maxiter=maxiter,
+                                            restrt=None,
                                             residuals=residuals2)
                     residuals3 = []
                     (x3, flag2) = cr(A_symm, b_symm, x0=x0_symm,

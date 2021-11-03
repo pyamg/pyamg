@@ -20,7 +20,7 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
            'levelize_strength_or_aggregation',
            'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows']
+           'filter_matrix_rows', 'truncate_rows', 'set_tol']
 
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
@@ -2190,6 +2190,38 @@ def truncate_rows(A, nz_per_row):
         A = A.asformat(Aformat)
 
     return A
+
+def set_tol(dtype):
+    """Set a tolerance based on a numpy dtype char.
+
+    Parameters
+    ----------
+    dtype : np.dtype
+        numpy dtype
+
+    Returns
+    -------
+    tol : float
+        A smallish value based on precision
+
+    Notes
+    -----
+    Handles both real and complex (through the .lower() case)
+
+    See Also
+    --------
+    numpy.typecodes, numpy.sctypes
+    """
+    if dtype.char.lower() == 'f':
+        tol = 1e3 * np.finfo(np.single).eps
+    elif dtype.char.lower() == 'd':
+        tol = 1e6 * np.finfo(np.double).eps
+    elif dtype.char.lower() == 'g':
+        tol = 1e6 * np.finfo(np.longdouble).eps
+    else:
+        raise ValueError('Attempting to set a tolerance for an unsupported precision.')
+
+    return tol
 
 
 # from functools import partial, update_wrapper
