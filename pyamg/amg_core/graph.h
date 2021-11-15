@@ -20,7 +20,7 @@ void printv(T *v, int n, char* name)
       std::cout << ", ";
     }
   }
-  std::cout << "]" << std::endl;
+  std::cout << "]" << std::endl << std::endl;
 }
 
 
@@ -694,7 +694,7 @@ bool bellman_ford_balanced(const I num_nodes,
   }
 
   bool done; // did we make any changes during this iteration?
-  bool changed; // indicate a change for the return
+  bool changed = false; // indicate a change for the return
   bool swap; // should we swap node i to the same clusters as node j?
   I iteration = 0; // iteration count for safety check
   const double tol = 1e-14; // precision tolerance
@@ -809,7 +809,7 @@ bool bellman_ford_balanced(const I num_nodes,
 // - There are no checks within this kernel.
 // - Ax is assumed to be positive
 template<class I, class T>
-void most_interior_nodes(const I num_nodes,
+bool most_interior_nodes(const I num_nodes,
                    const I Ap[], const int Ap_size,
                    const I Aj[], const int Aj_size,
                    const T Ax[], const int Ax_size,
@@ -834,6 +834,8 @@ void most_interior_nodes(const I num_nodes,
     }
   }
 
+  bool changed = false; // indicate a change for the return
+
   // find the distance to the closest boundary point as marked in d
   // c is unused
   // m should be invariant under this operation
@@ -849,8 +851,10 @@ void most_interior_nodes(const I num_nodes,
 
     if( d[c[a]] < d[i] ) {
       c[a] = i;
+      changed = true;   // center changed
     }
   }
+  return changed;
 }
 
 
@@ -902,16 +906,20 @@ void lloyd_cluster(const I num_nodes,
       }
     }
     bool done = false;
+    bool changed = false; // indicate a change for the return
 
     while (!done) {
         done = true;
-
         // propagate distances outward
         bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
-                     d, d_size, m, m_size, p, p_size, false);
+                     d, d_size, m, m_size, p, p_size, true);
 
-        most_interior_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
-                            d, d_size, m, m_size, p, p_size);
+        changed = most_interior_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
+                                      d, d_size, m, m_size, p, p_size);
+
+        if (changed) {
+          done = false;
+        }
     }
 }
 

@@ -354,7 +354,7 @@ bool _bellman_ford_balanced(
 }
 
 template<class I, class T>
-void _most_interior_nodes(
+bool _most_interior_nodes(
         const I num_nodes,
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
@@ -730,21 +730,32 @@ Largest-Degree-First (LDF) algorithm
     m.def("floyd_warshall", &_floyd_warshall<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"),
 R"pbdoc(
-Floyd-Warshall
+Floyd-Warshall on a subgraph or cluster of nodes in A
 
-n = num_nodes
-D is pre-allocated
-D_size = max_N * max_N
-P is pre-allocated
-P_size = max_N * max_N
-C is pre-allocated
-C_size = max_N
-C[i] = global index of i for i=0, ..., N
-N = |C|
-L = local indices, nx1 (-1 if not in the cluster)
-m = cluster ids, nx1
-a = this cluster id
-assumes a fully connected (directed) graph)pbdoc");
+Parameters
+----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+   D[]       : (INOUT) FW distance array                               (max_size x max_size)
+   P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+   C[]       : (IN) FW global index for current cluster                (N x 1)
+   L[]       : (IN) FW local index for current cluster                 (num_nodes x 1)
+   m         : (IN) cluster index                                      (num_nodes x 1)
+   a         : center of current cluster
+   N         : size of current cluster
+
+Notes
+-----
+- There are no checks within this kernel
+- Ax > 0 is assumed
+- TODO: should P be initialized?
+- Only a slice of C is passed to Floyd–Warshall.  See lloyd_cluster_balanced.
+- C[i] is the global index of i for i=0, ..., N in the current cluster
+- N = |C|
+- L = local indices, nx1 (-1 if not in the cluster)
+- assumes a fully connected (directed) graph)pbdoc");
 
     m.def("center_nodes", &_center_nodes<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert());
@@ -753,7 +764,48 @@ assumes a fully connected (directed) graph)pbdoc");
     m.def("center_nodes", &_center_nodes<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert(),
 R"pbdoc(
-Update center nodes for a cluster)pbdoc");
+Update center nodes for a cluster
+
+Parameters
+----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
+   D[]       : (INOUT) FW distance array                               (max_size x max_size)
+   P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+   C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
+   L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
+   q         : (INOUT) FW work array for D**2                          (max_size x max_size)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   s         : (INOUT) cluster size                                    (num_clusters x 1)
+
+Returns
+-------
+changed : flag to indicate a change in arrays D or P
+
+Notes
+-----
+- sort into clusters first O(n)
+    s: [4           2     4               ....
+ Cptr: [0           4     6              11 ...
+        |           |     |              |
+        v           v     v              v
+    C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
+              ^  ^           ^
+              |  |________   |_____
+              |_____      |        |
+                    |     |        |
+    L: [            2     3        1
+        ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^
+        |  |  |  |  |  |  |  |  |  |  |  ...
+        0  1  2  3  4  5  6  7  8  9  10 ...
+- pass pointer to start of each C[start,...., start+N]
+- N is the cluster size)pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
@@ -766,31 +818,26 @@ Bellman-Ford on a distance graph stored in CSR format.
 
 Parameters
 ----------
-num_nodes  : (IN) number of nodes (number of rows in A)
-Ap         : (IN) CSR row pointer
-Aj         : (IN) CSR index array
-Ax         : (IN) CSR data array (edge lengths)
-c          : (IN) centers
-d          : (OUT) distance to nearest center
-m          : (OUT) cluster index for each node
-p          : (OUT) predecessor in the graph traversal
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
 initialize : (IN) flag whether the data should be (re)-initialized
 
 Notes
 -----
-There are no checks within this kernel.
+- There are no checks within this kernel.
+- Ax is assumed to be positive
 
 Initializations
 ---------------
-d = inf if not a center
-  = 0   if a center
-m = -1  if not a center
-  = 0, ..., nclusters if a center
-p = -1
-
-Assumptions
------------
-Ax > 0
+ d[i] = 0 if i is a center, else inf
+ m[i] = 0 .. num_clusters if in a cluster, else -1
+ p[i] = -1
 
 See Also
 --------
@@ -815,35 +862,30 @@ Bellman-Ford with a heuristic to balance cluster sizes
 
  Parameters
  ----------
- num_nodes  : (IN) number of nodes (number of rows in A)
- Ap         : (IN) CSR row pointer
- Aj         : (IN) CSR index array
- Ax         : (IN) CSR data array (edge lengths)
- c          : (IN) centers
- d          : (OUT) distance to nearest center
- m          : (OUT) cluster index for each node
- p          : (OUT) predecessor in the graph traversal
- pc         : (OUT) predecessor count
- s          : (OUT) running clusters size
- initialize : (IN) flag whether the data should be (re)-initialized
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   pc        : (INOUT) number of predecessors                          (num_nodes x 1)
+   s         : (INOUT) cluster size                                    (num_clusters x 1)
+ initialize  : (IN) flag whether the data should be (re)-initialized
 
  Notes
  -----
- There are no checks within this kernel.
+ - There are no checks within this kernel.
+ - Ax > 0 is assumed
 
  Initializations
  ---------------
- d = inf if not a center
-   = 0   if a center
- m = -1  if not a center
-   = 0, ..., nclusters if a center
+ d[i] = 0 if i is a center, else 0
+ m[i] = 0, ..., nclusters if i is in a cluster, else -1
  p = -1
  pc = 0
  s = 1
-
- Assumptions
- -----------
- Ax > 0
 
  See Also
  --------
@@ -856,7 +898,23 @@ Bellman-Ford with a heuristic to balance cluster sizes
     m.def("most_interior_nodes", &_most_interior_nodes<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
-Find the most interior nodes)pbdoc");
+Find the most interior nodes
+
+Parameters
+----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+
+Notes
+-----
+- There are no checks within this kernel.
+- Ax is assumed to be positive)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
@@ -875,32 +933,23 @@ Perform Lloyd clustering on a distance graph
  Ax[]      : (IN)  CSR data array (edge lengths)
   c[]      : (INOUT) cluster centers
   d[]      : (OUT) distance to nearest seed
- od[]      : (OUT) distance to nearest seed
   m[]      : (OUT) cluster index for each node
   p[]      : (OUT) predecessors in the graph traversal
 
  Notes
  -----
- There are no check within this kernel.
+- There are no checks within this kernel.
+- Ax is assumed to be positive
 
  Initializations
  ---------------
- d = inf if not a center
-   = 0   if a center
- od = inf
- m = -1  if not a center
-   = 0, ..., nclusters if a center
- p = -1
-
- Assumptions
- -----------
- Ax > 0
+ d[i] = 0 if i is a center, else inf
+ m[i] = 0 .. num_clusters if in a cluster, else -1
+ p[i] = -1
 
  References
  ----------
- Nathan Bell
- Algebraic Multigrid for Discrete Differential Forms
- PhD thesis (UIUC), August 2008)pbdoc");
+ Nathan Bell, Algebraic Multigrid for Discrete Differential Forms, PhD thesis (Illinois), August 2008)pbdoc");
 
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
@@ -912,10 +961,46 @@ R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph using
 balanced centers
 
-This version computes improved cluster centers with Floyd-Warshall and
-also uses a balanced version of Bellman-Ford to try and find
-nearly-equal-sized clusters.
-balanced lloyd)pbdoc");
+Parameters
+----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
+   D[]       : (INOUT) FW distance array                               (max_size x max_size)
+   P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+   C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
+   L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
+   q         : (OUT) FW work array for D**2                            (max_size x 1)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   pc        : (INOUT) number of predecessors                          (num_nodes x 1)
+   s         : (INOUT) cluster size                                    (num_clusters x 1)
+  initialize : bool, flag to initialize
+
+Notes
+-----
+- This version computes improved cluster centers with Floyd-Warshall and
+  also uses a balanced version of Bellman-Ford to try and find
+  nearly-equal-sized clusters.
+  balanced lloyd
+- There are no checks within this kernel.
+- Ax is assumed to be positive
+
+Initializations
+---------------
+ d[i] = 0 if i is a center, else inf
+ m[i] = 0 .. num_clusters if in a cluster, else -1
+ p[i] = -1
+pc[i] = 0
+ s[i] = 1
+
+See Also
+--------
+pyamg.amg_core.graph.lloyd_cluster)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
