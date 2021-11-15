@@ -370,7 +370,6 @@ T vertex_coloring_LDF(const I num_rows,
 // -----
 // - There are no checks within this kernel
 // - Ax > 0 is assumed
-// - TODO: should P be initialized?
 // - Only a slice of C is passed to Floyd–Warshall.  See lloyd_cluster_balanced.
 // - C[i] is the global index of i for i=0, ..., N in the current cluster
 // - N = |C|
@@ -693,10 +692,10 @@ bool bellman_ford_balanced(const I num_nodes,
     }
   }
 
-  bool done; // did we make any changes during this iteration?
+  bool done;            // did we make any changes during this iteration?
   bool changed = false; // indicate a change for the return
-  bool swap; // should we swap node i to the same clusters as node j?
-  I iteration = 0; // iteration count for safety check
+  bool swap;            // should we swap node i to the same clusters as node j?
+  int iter = 0;         // iteration count for safety check
   const double tol = 1e-14; // precision tolerance
 
   do{
@@ -715,24 +714,6 @@ bool bellman_ford_balanced(const I num_nodes,
         //if(d[i] + Aij < d[j]){  // standard Bellman-Ford
         if(d[j] - (d[i] + Aij) > 2*tol){  // if both are finite and close
           swap = true;
-                //std::cout << "1st: "
-                //  << iteration << " "
-                //  << i << " "
-                //  << j << " "
-                //  << m[i] << " "
-                //  << m[j] << " "
-                //  << c[m[i]] << " "
-                //  << c[m[j]] << " | "
-                //  << d[i] << " "
-                //  << d[j] << " "
-                //  << Aij << " | "
-                //  << s[m[i]] << " "
-                //  << s[m[j]] << " | "
-                //  << p[i] << " "
-                //  << p[j] << " "
-                //  << pc[p[i]] << " "
-                //  << pc[p[j]] << " "
-                //  <<std::endl;
         }
 
         if(m[j] > -1){                            // if j is unassigned, do not consider the tie
@@ -740,24 +721,6 @@ bool bellman_ford_balanced(const I num_nodes,
             if((s[m[i]] + 1) < s[m[j]]){          // if the size of cluster j is larger
               if(pc[j] == 0){                     // if the predecessor count is zero
                 swap = true;
-                //std::cout << "2nd: "
-                //  << iteration << " "
-                //  << i << " "
-                //  << j << " "
-                //  << m[i] << " "
-                //  << m[j] << " "
-                //  << c[m[i]] << " "
-                //  << c[m[j]] << " | "
-                //  << d[i] << " "
-                //  << d[j] << " "
-                //  << Aij << " | "
-                //  << s[m[i]] << " "
-                //  << s[m[j]] << " | "
-                //  << p[i] << " "
-                //  << p[j] << " "
-                //  << pc[p[i]] << " "
-                //  << pc[p[j]] << " "
-                //  <<std::endl;
               }
             }
           }
@@ -783,7 +746,7 @@ bool bellman_ford_balanced(const I num_nodes,
     }
 
     // safety check, regular unweighted BF is actually O(|V|.|E|)
-    if (++iteration > num_nodes*num_nodes){
+    if (++iter > num_nodes*num_nodes){
       throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
     }
   } while(!done);
@@ -894,7 +857,8 @@ void lloyd_cluster(const I num_nodes,
                          T  d[], const int  d_size,
                          I  m[], const int  m_size,
                          I  p[], const int  p_size,
-                   const bool initialize)
+                   const bool initialize,
+                   const int maxiter)
 {
     if(initialize){
       std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
@@ -905,8 +869,10 @@ void lloyd_cluster(const I num_nodes,
         m[c[i]] = i;   // clusters is 0, ..., nclusters
       }
     }
-    bool done = false;
+
+    bool done = false;    // done iterating
     bool changed = false; // indicate a change for the return
+    int iter = 0;         // maximum number of iterations
 
     while (!done) {
         done = true;
@@ -917,7 +883,9 @@ void lloyd_cluster(const I num_nodes,
         changed = most_interior_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
                                       d, d_size, m, m_size, p, p_size);
 
-        if (changed) {
+        iter += 1;
+
+        if (changed && iter < maxiter) {
           done = false;
         }
     }
@@ -989,7 +957,7 @@ void lloyd_cluster_balanced(const I num_nodes,
   bool changed1 = true;
   bool changed2 = true;
   int iters = 0;
-  int maxiters = 10;
+  int maxiter = 10;
   I maxsize = q_size;
   I clustermax = 0;
 
@@ -1006,7 +974,7 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while ((changed1 || changed2) && (iters < maxiters)) {
+  while ((changed1 || changed2) && (iters < maxiter)) {
     changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                                     c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
                                     pc, pc_size, s,  s_size,

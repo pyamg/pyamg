@@ -179,7 +179,7 @@ def naive_aggregation(C):
         return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def lloyd_aggregation(C, naggs=None, measure=None, maxiter=10):
+def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     """Aggregate nodes using Lloyd Clustering.
 
     Parameters
@@ -265,7 +265,10 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=10):
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
 
-    distances, clusters, seeds = lloyd_cluster(G, naggs)
+    distances, clusters, seeds = lloyd_cluster(G, naggs, maxiter=maxiter)
+
+    if np.any(np.inf(distances)):
+        warnings.warn('Lloyd aggregation encountered a point with a distance to no center.')
 
     if clusters.min() < 0:
         warnings.warn('Lloyd clustering did not cluster every point')

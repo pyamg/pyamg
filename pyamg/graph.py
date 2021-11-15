@@ -182,7 +182,7 @@ def bellman_ford(G, centers, method='standard'):
     return distances, nearest, predecessors
 
 
-def lloyd_cluster(G, centers):
+def lloyd_cluster(G, centers, maxiter=5):
     """Perform Lloyd clustering on graph with weighted edges.
 
     Parameters
@@ -208,6 +208,7 @@ def lloyd_cluster(G, centers):
     -----
     If G has complex values, abs(G) is used instead.
 
+    Only positive edge weights may be used
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -237,12 +238,11 @@ def lloyd_cluster(G, centers):
     centers = np.asarray(centers, dtype=np.int32)
 
     distances = np.empty(n, dtype=G.dtype)
-    olddistances = np.empty(n, dtype=G.dtype)
     clusters = np.empty(n, dtype=np.int32)
     predecessors = np.full(n, -1, dtype=np.int32)
 
-    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,                  # IN
-                           centers,                                         # INOUT
+    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,    # IN
+                           centers,                           # INOUT
                            distances, clusters, predecessors, # OUT
                            True)
 
