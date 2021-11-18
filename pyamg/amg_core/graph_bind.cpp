@@ -402,7 +402,8 @@ void _lloyd_cluster(
        py::array_t<T> & d,
        py::array_t<I> & m,
        py::array_t<I> & p,
-    const bool initialize
+    const bool initialize,
+        const int maxiter
                     )
 {
     auto py_Ap = Ap.unchecked();
@@ -429,7 +430,8 @@ void _lloyd_cluster(
                        _d, d.shape(0),
                        _m, m.shape(0),
                        _p, p.shape(0),
-               initialize
+               initialize,
+                  maxiter
                                );
 }
 
@@ -750,7 +752,6 @@ Notes
 -----
 - There are no checks within this kernel
 - Ax > 0 is assumed
-- TODO: should P be initialized?
 - Only a slice of C is passed to Floyd–Warshall.  See lloyd_cluster_balanced.
 - C[i] is the global index of i for i=0, ..., N in the current cluster
 - N = |C|
@@ -917,11 +918,11 @@ Notes
 - Ax is assumed to be positive)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"));
     m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"));
     m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"),
 R"pbdoc(
 Perform Lloyd clustering on a distance graph
 
