@@ -265,10 +265,10 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
 
-    distances, clusters, seeds = lloyd_cluster(G, naggs, maxiter=maxiter)
+    distances, clusters, seeds = lloyd_cluster(G.T, naggs, maxiter=maxiter)
 
-    if np.any(np.inf(distances)):
-        warnings.warn('Lloyd aggregation encountered a point with a distance to no center.')
+    if np.any(clusters < 0):
+        warnings.warn('Lloyd aggregation encountered a point that is unaggregated.')
 
     if clusters.min() < 0:
         warnings.warn('Lloyd clustering did not cluster every point')

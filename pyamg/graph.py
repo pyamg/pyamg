@@ -244,7 +244,7 @@ def lloyd_cluster(G, centers, maxiter=5):
     amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,    # IN
                            centers,                           # INOUT
                            distances, clusters, predecessors, # OUT
-                           True)
+                           True, maxiter)
 
     return distances, clusters, centers
 
