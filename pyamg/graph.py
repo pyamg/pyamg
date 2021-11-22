@@ -1,10 +1,11 @@
 """Algorithms related to graphs."""
 from __future__ import absolute_import
 
-
+import warnings
 import numpy as np
 import scipy as sp
 from scipy import sparse
+import scipy.sparse.csgraph
 
 from . import amg_core
 
@@ -197,8 +198,6 @@ def lloyd_cluster(G, centers, maxiter=5):
 
     Returns
     -------
-    distances : array
-        final distances
     clusters : int array
         id of each cluster of points
     centers : int array
@@ -227,15 +226,16 @@ def lloyd_cluster(G, centers, maxiter=5):
     else:
         centers = np.asarray(centers, dtype=np.int32)
 
-    if len(centers) < 1:
+    num_clusters = len(centers)
+
+    if num_clusters < 1:
         raise ValueError('at least one center is required')
 
     if centers.min() < 0:
         raise ValueError(f'invalid center index {centers.min()}')
+
     if centers.max() >= n:
         raise ValueError(f'invalid center index {centers.max()}')
-
-    centers = np.asarray(centers, dtype=np.int32)
 
     distances = np.empty(n, dtype=G.dtype)
     clusters = np.empty(n, dtype=np.int32)
@@ -246,7 +246,273 @@ def lloyd_cluster(G, centers, maxiter=5):
                            distances, clusters, predecessors, # OUT
                            True, maxiter)
 
-    return distances, clusters, centers
+    return clusters, centers
+
+
+def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
+    """Perform Lloyd clustering on graph with weighted edges.
+
+    Parameters
+    ----------
+    G : csr_matrix, csc_matrix
+        A sparse nxn matrix where each nonzero entry G[i,j] is the distance
+        between nodes i and j.
+    centers : int array
+        If centers is an integer, then its value determines the number of
+        clusters.  Otherwise, centers is an array of unique integers between 0
+        and n-1 that will be used as the initial centers for clustering.
+
+    Returns
+    -------
+    clusters : int array
+        id of each cluster of points
+    centers : int array
+        index of each center
+
+    Notes
+    -----
+    If G has complex values, abs(G) is used instead.
+
+    Only positive edge weights may be used
+    """
+    G = asgraph(G)
+    n = G.shape[0]
+
+    # complex dtype
+    if G.dtype.kind == 'c':
+        G = np.abs(G)
+
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('Lloyd Clustering is defined only for positive weights.')
+
+    if np.isscalar(centers):
+        centers = np.random.permutation(n)[:centers]  # same as np.random.choice()
+        centers = np.int32(centers)
+    else:
+        centers = np.asarray(centers, dtype=np.int32)
+
+    num_clusters = len(centers)
+
+    if num_clusters < 1:
+        raise ValueError('at least one center is required')
+
+    if centers.min() < 0:
+        raise ValueError(f'invalid center index {centers.min()}')
+
+    if centers.max() >= n:
+        raise ValueError(f'invalid center index {centers.max()}')
+
+    # create work arrays for C++
+    maxsize = int(4*np.ceil((n / num_clusters)))
+
+    Cptr = np.empty(num_clusters, dtype=np.int32)
+    D = np.zeros((maxsize, maxsize), dtype=G.dtype)
+    P = np.zeros((maxsize, maxsize), dtype=np.int32)
+    CC = np.arange(0, n, dtype=np.int32)
+    L  = np.arange(0, n, dtype=np.int32)
+
+    q  = np.zeros(maxsize, dtype=G.dtype)
+    d  = np.empty(n, dtype=G.dtype)
+    m  = np.empty(n, dtype=np.int32)
+    p  = np.empty(n, dtype=np.int32)
+    pc = np.empty(n, dtype=np.int32)
+    s = np.empty(num_clusters, dtype=np.int32)
+
+    for riter in range(rebalance_iters):
+        amg_core.lloyd_cluster_balanced(n,
+                                        G.indptr, G.indices, G.data,
+                                        Cptr, D.ravel(), P.ravel(), CC, L,
+                                        q, centers, d, m, p,
+                                        pc, s,
+                                        True)
+
+        centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
+
+    return m, centers
+
+
+def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
+    """
+    G sparse matrix
+    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+    m         : (INOUT) cluster index                                   (num_nodes x 1)
+    """
+    newc = c.copy()
+
+    AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
+    Agg2Agg = AggOp.T @ G @ AggOp
+    Agg2Agg = Agg2Agg.tocsr()
+
+    E       = _elimination_penalty(G, m, d, num_clusters, Cptr, C, L)
+    S, I, J = _split_improvement(G, m, d, num_clusters, Cptr, C, L)
+    M = np.ones(num_clusters, dtype=bool)
+    Elist = np.argsort(E)
+    Slist = np.argsort(S)
+    i_e = 0  # elimination index
+    i_s = 0  # splitting index
+    a_e = Elist[i_e]
+    a_s = Slist[-1-i_s]
+    if a_e == a_s:
+        i_s += 1
+        a_s = Slist[-1-i_s]
+
+    # show eliminated and split aggregates
+    # run one bellman_ford to get new clusters
+    gamma = 1.0
+    stopsplitting = False
+    while E[a_e] < gamma * S[a_s] or stopsplitting:
+        newc[a_e] = I[a_s]   # redefine centers
+        newc[a_s] = J[a_s]   # redefine centers
+        M[Agg2Agg.getrow(a_e).indices] = False  # cannot eliminate neighbors agg
+        M[Agg2Agg.getrow(a_s).indices] = False  # cannot split neighbors agg
+        if len(np.where(not M)[0]) == num_clusters:
+            break
+        findanother = True                          # should we find another aggregate pair?
+        stopsplitting = False                       # should we stop?
+        pushtie = False                             # tie breaker
+        while findanother:
+            if not M[Elist[i_e]]:                   # if we have an invalid aggregate
+                while i_e < num_clusters-1:         # increment elimination counter
+                    i_e += 1
+                    if M[Elist[i_e]]:               # if a valid aggregate is encountered
+                        break
+            if not M[Slist[-1-i_s]] or pushtie:     # if invalid aggregate or need a new one
+                if pushtie:
+                    pushtie = False
+                while i_s < num_clusters-1:         # increment elimination counter
+                    i_s += 1
+                    if M[Slist[-1-i_s]]:            # if a valid aggregate is encountered
+                        break
+            if i_s == num_clusters-1 or i_e == num_clusters-1:
+                stopsplitting = True                # if we've looped through, stop
+                break
+            a_e = Elist[i_e]
+            a_s = Slist[-1-i_s]
+            if a_e != a_s:                          # if we found a new pair, then we're done
+                findanother = False
+            else:
+                pushtie = True                      # otherwise push the tie breaker, and move on
+    return E, S, newc
+
+def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
+    E = np.inf * np.ones(num_clusters)
+    for a in range(num_clusters):
+        E[a] = 0
+        Va = np.int32(np.where(m==a)[0])
+
+        N = len(Va)
+        D = np.zeros((N, N))
+        P = np.zeros((N, N), dtype=np.int32)
+        _N = Cptr[a]+N
+        if _N >= A.shape[0]:
+            _N = None
+        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                      m, a, N)
+        for _i, i in enumerate(Va):
+            dmin = np.inf
+            for _j, j in enumerate(Va):
+                for k in A.getrow(j).indices:
+                    if m[k] != m[j]:
+                        if (d[k] + D[_i,_j] + A[j,k]) < dmin:
+                            dmin = d[k] + D[_i,_j] + A[j,k]
+            E[a] += dmin**2
+        E[a] -= np.sum(d[Va]**2)
+    return E
+
+def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
+    S = np.inf * np.ones(num_clusters)
+    I = -1 * np.ones(num_clusters)  # better cluster centers if split
+    J = -1 * np.ones(num_clusters)  # better cluster centers if split
+    for a in range(num_clusters):
+        S[a] = np.inf
+        Va = np.int32(np.where(m==a)[0])
+
+        N = len(Va)
+        D = np.zeros((N, N))
+        P = np.zeros((N, N), dtype=np.int32)
+        _N = Cptr[a]+N
+        if _N >= A.shape[0]:
+            _N = None
+        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                      m, a, N)
+        for _i, i in enumerate(Va):
+            for _j, j in enumerate(Va):
+                Snew = 0
+                for _k, k in enumerate(Va):
+                    if D[_k,_i] < D[_k,_j]:
+                        Snew = Snew + D[_k,_i]**2
+                    else:
+                        Snew = Snew + D[_k,_j]**2
+                if Snew < S[a]:
+                    S[a] = Snew
+                    I[a] = i
+                    J[a] = j
+        S[a] = np.sum(d[Va]**2) - S[a]
+    return S, I, J
+
+def _choice(p):
+    """
+    Parameters
+    ----------
+    p : array
+        probabilities [0,1], with sum(p) == 1
+
+    Return
+    ------
+    i : int
+        index to a selected integer based on the distribution of p
+
+    Notes
+    -----
+    For efficiency, there are no checks.
+
+    TODO - needs testing
+    """
+    a = p / np.max(p)
+    i = -1
+    while True:
+        i = np.random.randint(len(a))
+        if np.random.rand() < a[i]:
+            break
+    return i
+
+def kmeanspp_seed(G, nseeds):
+    """
+    Parameters
+    ----------
+    G : sparse matrix
+        sparse graph on which to seed
+
+    nseeds : int
+        number of seeds
+
+    Return
+    ------
+    C : array
+        list of seeds
+
+    Notes
+    -----
+    This is a reference algorithms, at O(n^3)
+
+    TODO - needs testing
+    """
+    warnings.warn("kmeanspp_seed is O(n^3) -- use only for testing")
+
+    n = G.shape[0]
+    C = np.random.choice(n, 1, replace=False)
+    for _ in range(nseeds-1):
+        d = scipy.sparse.csgraph.bellman_ford(G, directed=False, indices=C)
+        d = d.min(axis=0)   # shortest path from a seed
+        d = d**2            # distance squared
+        p = d / np.sum(d)   # probability
+        # newC = np.random.choice(n, 1, p=p, replace=False) # <- does not work properly
+        newC = _choice(p)
+        C = np.append(C, newC)
+    return C
 
 
 def breadth_first_search(G, seed):
