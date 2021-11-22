@@ -294,19 +294,35 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5, rebalance
     C : csr_matrix
         strength of connection matrix with positive weights
     naggs : int
-        Number of seeds or clusters expected (default: C.shape[0] / 10)
+        Number of aggregates or clusters expected (default: C.shape[0] / 10)
+    measure : ['unit','abs','inv',None]
+        Distance measure to use and assigned to each edge graph.
+
+        For each nonzero value C[i,j]:
+        =======  ===========================
+        None     G[i,j] = C[i,j]
+        'abs'    G[i,j] = abs(C[i,j])
+        'inv'    G[i,j] = 1.0/abs(C[i,j])
+        'unit'   G[i,j] = 1
+        'sub'    G[i,j] = C[i,j] - min(C)
+        =======  ===========================
+    maxiter : int
+        Maximum number of iterations to perform
+    rebalance_iters : int
+        Number of rebalance iterations to perform in balanced Lloyd clustering
 
     Returns
     -------
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    seeds : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+        of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
+    centers : array
+        array of centers or Cpts, i.e., centers[i] = root node of aggregate i
 
     See Also
     --------
     amg_core.standard_aggregation
+    amg_core.balanced_lloyd_cluster
 
     Examples
     --------

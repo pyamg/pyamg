@@ -10,7 +10,7 @@ import scipy.sparse.csgraph
 from . import amg_core
 
 __all__ = ['maximal_independent_set', 'vertex_coloring',
-           'bellman_ford',
+           'bellman_ford', 'balanced_lloyd_cluster',
            'lloyd_cluster', 'connected_components']
 
 from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
@@ -341,9 +341,29 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
 
 def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
     """
-    G sparse matrix
-    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
-    m         : (INOUT) cluster index                                   (num_nodes x 1)
+    Parameters
+    ----------
+    G : sparse matrix
+        Sparse graph
+    c : array
+        List of centers
+    d : array
+        Distance to cluster center
+    m : array
+        Cluster membership
+    num_clusters : int
+        Number of clusters (= number centers)
+    Cptr : array
+        Work array that points to the start of the nodes in C in a cluster
+    C : array
+        Work array of clusters, sorted by cluster
+    L : array
+        Work array of local ids for each cluster
+
+    Return
+    ------
+    centers : array
+        List of new centers
     """
     newc = c.copy()
 
@@ -403,6 +423,9 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
     return newc
 
 def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
+    """
+    see _rebalance()
+    """
     E = np.inf * np.ones(num_clusters)
     for a in range(num_clusters):
         E[a] = 0
@@ -429,6 +452,9 @@ def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
     return E
 
 def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
+    """
+    see _rebalance()
+    """
     S = np.inf * np.ones(num_clusters)
     I = -1 * np.ones(num_clusters)  # better cluster centers if split
     J = -1 * np.ones(num_clusters)  # better cluster centers if split
