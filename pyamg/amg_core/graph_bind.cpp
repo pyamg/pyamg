@@ -453,7 +453,8 @@ void _lloyd_cluster_balanced(
        py::array_t<I> & p,
       py::array_t<I> & pc,
        py::array_t<I> & s,
-    const bool initialize
+    const bool initialize,
+        const int maxiter
                              )
 {
     auto py_Ap = Ap.unchecked();
@@ -504,7 +505,8 @@ void _lloyd_cluster_balanced(
                        _p, p.shape(0),
                       _pc, pc.shape(0),
                        _s, s.shape(0),
-               initialize
+               initialize,
+                  maxiter
                                         );
 }
 
@@ -953,11 +955,11 @@ Perform Lloyd clustering on a distance graph
  Nathan Bell, Algebraic Multigrid for Discrete Differential Forms, PhD thesis (Illinois), August 2008)pbdoc");
 
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"), py::arg("maxiter"));
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"), py::arg("maxiter"));
     m.def("lloyd_cluster_balanced", &_lloyd_cluster_balanced<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("initialize"), py::arg("maxiter"),
 R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph using
 balanced centers

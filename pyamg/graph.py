@@ -319,15 +319,22 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     pc = np.empty(n, dtype=np.int32)
     s = np.empty(num_clusters, dtype=np.int32)
 
+    amg_core.lloyd_cluster_balanced(n,
+                                    G.indptr, G.indices, G.data,
+                                    Cptr, D.ravel(), P.ravel(), CC, L,
+                                    q, centers, d, m, p,
+                                    pc, s,
+                                    True, maxiter)
+
     for riter in range(rebalance_iters):
+        centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
+
         amg_core.lloyd_cluster_balanced(n,
                                         G.indptr, G.indices, G.data,
                                         Cptr, D.ravel(), P.ravel(), CC, L,
                                         q, centers, d, m, p,
                                         pc, s,
-                                        True)
-
-        centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
+                                        True, maxiter)
 
     return m, centers
 
@@ -366,7 +373,7 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
         newc[a_s] = J[a_s]   # redefine centers
         M[Agg2Agg.getrow(a_e).indices] = False  # cannot eliminate neighbors agg
         M[Agg2Agg.getrow(a_s).indices] = False  # cannot split neighbors agg
-        if len(np.where(not M)[0]) == num_clusters:
+        if len(np.where(np.logical_not(M))[0]) == num_clusters:
             break
         findanother = True                          # should we find another aggregate pair?
         stopsplitting = False                       # should we stop?
@@ -393,7 +400,7 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
                 findanother = False
             else:
                 pushtie = True                      # otherwise push the tie breaker, and move on
-    return E, S, newc
+    return newc
 
 def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
     E = np.inf * np.ones(num_clusters)

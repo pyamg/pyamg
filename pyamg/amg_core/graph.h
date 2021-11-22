@@ -952,12 +952,12 @@ void lloyd_cluster_balanced(const I num_nodes,
                                    I p[], const int  p_size,
                                    I pc[], const int pc_size,
                                    I s[], const int s_size,
-                          const bool initialize)
+                          const bool initialize,
+                          const int maxiter)
 {
   bool changed1 = true;
   bool changed2 = true;
-  int iters = 0;
-  int maxiter = 10;
+  int iter = 0;
   I maxsize = q_size;
   I clustermax = 0;
 
@@ -974,7 +974,7 @@ void lloyd_cluster_balanced(const I num_nodes,
     }
   }
 
-  while ((changed1 || changed2) && (iters < maxiter)) {
+  while ((changed1 || changed2) && (iter < maxiter)) {
     changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                                     c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
                                     pc, pc_size, s,  s_size,
@@ -987,7 +987,7 @@ void lloyd_cluster_balanced(const I num_nodes,
                            D, D_size, P, P_size, C, C_size, L, L_size,
                            q, q_size, c, c_size, d, d_size, m, m_size, p, p_size,
                            s, s_size);
-    iters++;
+    iter++;
   }
 }
 

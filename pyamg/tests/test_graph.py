@@ -156,7 +156,7 @@ class TestGraph(TestCase):
                 if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_clusters)
+                clusters, centers = lloyd_cluster(G, n_clusters)
 
 
 class TestComplexGraph(TestCase):
@@ -197,7 +197,7 @@ class TestComplexGraph(TestCase):
                 if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_clusters)
+                clusters, centers = lloyd_cluster(G, n_clusters)
 
 
 class TestVertexColorings(TestCase):
