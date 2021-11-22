@@ -207,8 +207,8 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     AggOp : csr_matrix
         aggregation operator which determines the sparsity pattern
         of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
-    seeds : array
-        array of seeds or Cpts, i.e., Cpts[i] = root node of aggregate i
+    centers : array
+        array of centers or Cpts, i.e., Cpts[i] = root node of aggregate i
 
     See Also
     --------
@@ -230,11 +230,13 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
             [1],
             [1],
             [1]], dtype=int8)
-    >>> # more seeding for two aggregates
-    >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
     """
-    C = asgraph(C)
+    C = sparse.csr_matrix(C)
+
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('graph should be a square matrix.')
+
     n = C.shape[0]
 
     if naggs is None:
@@ -259,13 +261,16 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     if C.dtype == complex:
         data = np.real(data)
 
+    if C.data.min() <= 0:
+        raise ValueError('positive edge weights required')
+
     if len(data) > 0:
         if data.min() < 0:
             raise ValueError('Lloyd aggregation requires a positive measure.')
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
 
-    distances, clusters, seeds = lloyd_cluster(G.T, naggs, maxiter=maxiter)
+    _, clusters, centers = lloyd_cluster(G.T, naggs, maxiter=maxiter)
 
     if np.any(clusters < 0):
         warnings.warn('Lloyd aggregation encountered a point that is unaggregated.')
@@ -278,17 +283,17 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     data = np.ones(len(row), dtype=np.int32)
     AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
 
-    return AggOp, seeds
+    return AggOp, centers
 
 
-def balanced_lloyd_aggregation(C, num_clusters=None, c=None, rebalance_iters=5):
+def balanced_lloyd_aggregation(C, naggs=None, c=None, rebalance_iters=5):
     """Aggregate nodes using Balanced Lloyd Clustering.
 
     Parameters
     ----------
     C : csr_matrix
         strength of connection matrix with positive weights
-    num_clusters : int
+    naggs : int
         Number of seeds or clusters expected (default: C.shape[0] / 10)
 
     Returns
@@ -316,15 +321,18 @@ def balanced_lloyd_aggregation(C, num_clusters=None, c=None, rebalance_iters=5):
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 
     """
+    C = sparse.csr_matrix(C)
 
-    if num_clusters is None:
-        num_clusters = int(C.shape[0] / 10)
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('Graph should be a square matrix.')
 
-    if num_clusters < 1 or num_clusters > C.shape[0]:
-        raise ValueError('num_clusters must be between 1 and n')
+    n = C.shape[0]
 
-    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
-        raise TypeError('expected csr_matrix or csc_matrix')
+    if naggs is None:
+        naggs = int(n / 10)
+
+    if naggs <= 0 or naggs > n:
+        raise ValueError('number of aggregates must be >=1 and <=n)')
 
     if C.data.min() <= 0:
         raise ValueError('positive edge weights required')
