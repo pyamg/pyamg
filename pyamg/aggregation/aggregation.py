@@ -342,16 +342,15 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
-    using_balanced_lloyd = False
+    Cnodes = None
     if fn == 'standard':
-        AggOp = standard_aggregation(C, **kwargs)[0]
+        AggOp, Cnodes = standard_aggregation(C, **kwargs)
     elif fn == 'naive':
-        AggOp = naive_aggregation(C, **kwargs)[0]
+        AggOp, Cnodes = naive_aggregation(C, **kwargs)
     elif fn == 'lloyd':
-        AggOp = lloyd_aggregation(C, **kwargs)[0]
+        AggOp, Cnodes = lloyd_aggregation(C, **kwargs)
     elif fn == 'balanced lloyd':
-        using_balanced_lloyd = True
-        AggOp, Cnodes, extras = balanced_lloyd_aggregation(C, **kwargs)
+        AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:
@@ -415,13 +414,10 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                              str(fn))
 
     if keep:
-        levels[-1].C = C  # strength of connection matrix
-        levels[-1].AggOp = AggOp  # aggregation operator
-        levels[-1].T = T  # tentative prolongator
-
-        if using_balanced_lloyd:
-            levels[-1].Cnodes = Cnodes
-            levels[-1].extras = extras
+        levels[-1].C = C           # strength of connection matrix
+        levels[-1].AggOp = AggOp   # aggregation operator
+        levels[-1].Cnodes = Cnodes # centers used to generate aggregates
+        levels[-1].T = T           # tentative prolongator
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
