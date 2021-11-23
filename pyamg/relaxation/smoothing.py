@@ -1,5 +1,4 @@
 """Method to create pre and post-smoothers on the levels of a multilevel_solver."""
-from __future__ import absolute_import
 
 import numpy as np
 import scipy.sparse as sparse

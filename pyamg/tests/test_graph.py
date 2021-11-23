@@ -345,7 +345,7 @@ def test_connected_components():
                 D[i] = set()
             for n, i in enumerate(arr):
                 D[i].add(n)
-            return set([frozenset(s) for s in D.values()])
+            return {frozenset(s) for s in D.values()}
 
         result = array_to_set_of_sets(result)
         expected = reference_connected_components(G)
@@ -422,7 +422,7 @@ def test_complex_connected_components():
                 D[i] = set()
             for n, i in enumerate(arr):
                 D[i].add(n)
-            return set([frozenset(s) for s in D.values()])
+            return {frozenset(s) for s in D.values()}
 
         result = array_to_set_of_sets(result)
         expected = reference_connected_components(G)

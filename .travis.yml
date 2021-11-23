@@ -2,11 +2,6 @@ language: python
 
 matrix:
   include:
-    - name: "Xenial Linux, Python 3.5"
-      python: 3.5
-      os: linux
-      dist: xenial
-      sudo: false
     - name: "Xenial Linux, Python 3.6"
       python: 3.6
       os: linux

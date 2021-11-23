@@ -1,5 +1,4 @@
 """Classical AMG"""
-from __future__ import absolute_import
 
 from .classical import *
 from .split import *

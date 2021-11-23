@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-from __future__ import print_function
 import yaml
 import os
 
@@ -43,7 +42,7 @@ def find_comments(fname, ch):
 
     Then, take off the first three spaces
     """
-    with open(fname, 'r') as inf:
+    with open(fname) as inf:
         fdata = inf.readlines()
 
     comments = {}
@@ -117,7 +116,7 @@ def build_function(func):
             if p['constant']:
                 const = 'const '
 
-            param = 'py::array_t<{}> &'.format(paramtype) + ' ' + p['name']
+            param = f'py::array_t<{paramtype}> &' + ' ' + p['name']
             arraylist.append((const, paramtype, p['name']))
             needsize = True
         elif '_size' not in p['name'] and needsize:
@@ -133,7 +132,7 @@ def build_function(func):
             # if not a pointer, just copy it
             param = p['type'] + ' ' + p['name']
 
-        fdef += '{:>25}'.format(param)    # set width to 25
+        fdef += f'{param:>25}'    # set width to 25
         fdef += ',\n'
     fdef = fdef[:-2]  # remove trailing comma and newline
     fdef += '\n' + ' ' * len(newcall) + ')'
@@ -177,13 +176,13 @@ def build_function(func):
             name, s = p['name'].split('_size')
             if s == '':
                 s = '0'
-            fdef += " {}.shape({})".format(name, s)
+            fdef += f" {name}.shape({s})"
         else:
             if p['pointer'] or p['array']:
                 name = '_' + p['name']
             else:
                 name = p['name']
-            fdef += '{:>25}'.format(name)
+            fdef += f'{name:>25}'
         if i < len(func['parameters'])-1:
             fdef += ',\n'
     fdef += '\n' + ' ' * len(newcall) + ');\n}'
@@ -212,9 +211,9 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     # plugin += '#define NC py::arg().noconvert()\n'
     # plugin += '#define YC py::arg()\n'
-    plugin += 'PYBIND11_MODULE({}, m) {{\n'.format(headerfilename)
+    plugin += f'PYBIND11_MODULE({headerfilename}, m) {{\n'
     plugin += indent + 'm.doc() = R"pbdoc(\n'
-    plugin += indent + 'Pybind11 bindings for {}\n\n'.format(headerfile)
+    plugin += indent + f'Pybind11 bindings for {headerfile}\n\n'
     plugin += indent + 'Methods\n'
     plugin += indent + '-------\n'
     for f in ch.functions:
@@ -307,7 +306,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 convert = ''
                 if array:
                     convert = '.noconvert()'
-                pyargnames.append('py::arg("{}"){}'.format(p, convert))
+                pyargnames.append(f'py::arg("{p}"){convert}')
 
             argstring = indent + indent + ', '.join(pyargnames)
             if len(pyargnames) > 0:
@@ -347,7 +346,7 @@ def main():
     #
     # Parse the header file
     #
-    print('[Generating binding for {}]'.format(args.input_file))
+    print(f'[Generating binding for {args.input_file}]')
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file, ch)
 
@@ -355,10 +354,10 @@ def main():
     # load the instantiate file
     #
     if args.input_file == 'bind_examples.h':
-        data = yaml.safe_load(open('instantiate-test.yml', 'r'))
+        data = yaml.safe_load(open('instantiate-test.yml'))
     else:
         try:
-            data = yaml.safe_load(open('instantiate.yml', 'r'))
+            data = yaml.safe_load(open('instantiate.yml'))
         except:
             data = {'instantiate': None}
     inst = data['instantiate']

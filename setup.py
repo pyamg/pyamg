@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 PyAMG: Algebraic Multigrid Solvers in Python
 
@@ -106,7 +105,7 @@ class BuildExt(build_ext):
         for ext in self.extensions:
             ext.extra_compile_args = c_opts
             ext.extra_link_args = l_opts
-            ext.define_macros = [('VERSION_INFO', '"{}"'.format(self.distribution.get_version()))]
+            ext.define_macros = [('VERSION_INFO', f'"{self.distribution.get_version()}"')]
 
         build_ext.build_extensions(self)
 
@@ -120,7 +119,7 @@ class BuildExt(build_ext):
         self.include_dirs.append(numpy.get_include())
 
 
-class get_pybind_include(object):
+class get_pybind_include:
     """Helper class to determine the pybind11 include path
 
     The purpose of this class is to postpone importing pybind11
