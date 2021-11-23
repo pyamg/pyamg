@@ -286,6 +286,12 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
                 if residuals is not None:
                     residuals.append(normr)
 
+                if callback is not None:
+                    y = sp.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
+                    update = np.ravel(V[:inner+1, :].T.dot(y.reshape(-1, 1)))
+                    callback(x + update)
+
+
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.

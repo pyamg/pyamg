@@ -287,6 +287,11 @@ def fgmres(A, b, x0=None, tol=1e-5,
                 if residuals is not None:
                     residuals.append(normr)
 
+                if callback is not None:
+                    y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.dot(Z[:, 0:inner+1], y)
+                    callback(x + update)
+
             niter += 1
 
         # end inner loop, back to outer loop
