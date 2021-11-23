@@ -1,11 +1,11 @@
+import warnings
 from warnings import warn
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.sputils import upcast
-from pyamg.util.linalg import norm
-from pyamg import amg_core
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
+from pyamg.util.linalg import norm
+from pyamg import amg_core
 
 
 __all__ = ['fgmres']
@@ -14,12 +14,12 @@ __all__ = ['fgmres']
 def mysign(x):
     if x == 0.0:
         return 1.0
-    else:
-        # return the complex "sign"
-        return x/np.abs(x)
+    # return the complex "sign"
+    return x/np.abs(x)
 
 
-def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
+def fgmres(A, b, x0=None, tol=1e-5,
+           restrt=None, maxiter=None,
            M=None, callback=None, residuals=None):
     """Flexible Generalized Minimum Residual Method (fGMRES).
 
@@ -36,58 +36,58 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        Tolerance for stopping criteria, let r=r_k
+           ||r||     < tol ||b||
+        if ||b||=0, then set ||b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
           and maxiter is the max number of outer iterations
-        - if None, do not restart GMRES, and max number of inner iterations is
-          maxiter
+        - if None, do not restart GMRES, and max number of inner iterations
+          is maxiter
     maxiter : None, int
         - if restrt is None, maxiter is the max number of inner iterations
           and GMRES does not restart
         - if restrt is int, maxiter is the max number of outer iterations,
           and restrt is the max number of inner iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve A M x = M b.
+        n x n, inverted preconditioner, i.e. solve M A x = M b.
         M need not be stationary for fgmres
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residual history in the 2-norm, including the initial residual
+    reorth : boolean
+        If True, then a check is made whether to re-orthogonalize the Krylov
+        space each GMRES iteration
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of gmres
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
-            ==  =============================================
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
-                return iteration count instead.  This value
-                is precisely the order of the Krylov space.
+                return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  =============================================
-
+            ==  =======================================
 
     Notes
     -----
-        - The LinearOperator class is in scipy.sparse.linalg.interface.
-          Use this class if you prefer to define A or M as a mat-vec routine
-          as opposed to explicitly constructing the matrix.  A.psolve(..) is
-          still supported as a legacy.
+    The LinearOperator class is in scipy.sparse.linalg.interface.
+    Use this class if you prefer to define A or M as a mat-vec routine
+    as opposed to explicitly constructing the matrix.
 
-        - fGMRES allows for non-stationary preconditioners, as opposed to GMRES
+    fGMRES allows for non-stationary preconditioners, as opposed to GMRES
 
-        - For robustness, Householder reflections are used to orthonormalize
-          the Krylov Space
-          Givens Rotations are used to provide the residual norm each iteration
-          Flexibility implies that the right preconditioner, M or A.psolve, can
-          vary from iteration to iteration
+    For robustness, Householder reflections are used to orthonormalize
+    the Krylov Space
+    Givens Rotations are used to provide the residual norm each iteration
+    Flexibility implies that the right preconditioner, M, can
+    vary from iteration to iteration
 
     Examples
     --------
@@ -98,7 +98,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = fgmres(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     6.5428213057
 
     References
@@ -110,76 +110,56 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
     """
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
-    dimen = A.shape[0]
+    n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._fgmres')
 
-    # Choose type
-    if not hasattr(A, 'dtype'):
-        Atype = upcast(x.dtype, b.dtype)
-    else:
-        Atype = A.dtype
-    if not hasattr(M, 'dtype'):
-        Mtype = upcast(x.dtype, b.dtype)
-    else:
-        Mtype = M.dtype
-    xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
-
-    # Should norm(r) be kept
-    if residuals == []:
-        keep_r = True
-    else:
-        keep_r = False
+    # Get fast access to underlying BLAS routines
+    [lartg] = get_lapack_funcs(['lartg'], [x])
 
     # Set number of outer and inner iterations
+    # If no restarts,
+    #     then set max_inner=maxiter and max_outer=n
+    # If restarts are set,
+    #     then set max_inner=restart and max_outer=maxiter
     if restrt:
         if maxiter:
             max_outer = maxiter
         else:
             max_outer = 1
-        if restrt > dimen:
-            warn('Setting number of inner iterations (restrt) to maximum \
-                  allowed, which is A.shape[0] ')
-            restrt = dimen
+        if restrt > n:
+            warn('Setting restrt to maximum allowed, n.')
+            restrt = n
         max_inner = restrt
     else:
         max_outer = 1
-        if maxiter > dimen:
-            warn('Setting number of inner iterations (maxiter) to maximum \
-                  allowed, which is A.shape[0] ')
-            maxiter = dimen
+        if maxiter > n:
+            warn('Setting maxiter to maximum allowed, n.')
+            maxiter = n
         elif maxiter is None:
-            maxiter = min(dimen, 40)
+            maxiter = min(n, 40)
         max_inner = maxiter
 
-    # Get fast access to underlying BLAS routines
-    [lartg] = get_lapack_funcs(['lartg'], [x])
-
     # Is this a one dimensional matrix?
-    if dimen == 1:
-        entry = np.ravel(A*np.array([1.0], dtype=xtype))
+    if n == 1:
+        entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
         return (postprocess(b/entry), 0)
 
     # Prep for method
-    r = b - np.ravel(A*x)
-    normr = norm(r)
-    if keep_r:
-        residuals.append(normr)
+    r = b - A @ x
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    normr = norm(r)
+    if residuals is not None:
+        residuals[:] = [normr]  # initial residual
+
+    # Check initial guess if b != 0,
     normb = norm(b)
     if normb == 0.0:
-        normb = 1.0
-    if normr < tol*normb:
-        return (postprocess(x), 0)
+        normb = 1.0   # reset so that tol is unscaled
 
-    # Scale tol by ||r_0||_2, we don't use the preconditioned
-    # residual because this is right preconditioned GMRES.
-    if normr != 0.0:
-        tol = tol*normr
+    if normr < tol * normb:
+        return (postprocess(x), 0)
 
     # Use separate variable to track iterations.  If convergence fails,
     # we cannot simply report niter = (outer-1)*max_outer + inner.  Numerical
@@ -193,40 +173,40 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         #    Take shortcut in calculating,
         #    w = r + sign(r[1])*||r||_2*e_1
         w = r
-        beta = mysign(w[0])*normr
+        beta = mysign(w[0]) * normr
         w[0] += beta
         w /= norm(w)
 
         # Preallocate for Krylov vectors, Householder reflectors and Hessenberg
         # matrix
-        # Space required is O(dimen*max_inner)
+        # Space required is O(n*max_inner)
         # Givens Rotations
-        Q = np.zeros((4*max_inner,), dtype=xtype)
+        Q = np.zeros((4 * max_inner,), dtype=x.dtype)
         # upper Hessenberg matrix (made upper tri with Givens Rotations)
-        H = np.zeros((max_inner, max_inner), dtype=xtype)
-        W = np.zeros((max_inner, dimen), dtype=xtype)  # Householder reflectors
+        H = np.zeros((max_inner, max_inner), dtype=x.dtype)
+        W = np.zeros((max_inner, n), dtype=x.dtype)  # Householder reflectors
         # For fGMRES, preconditioned vectors must be stored
         # No Horner-like scheme exists that allow us to avoid this
-        Z = np.zeros((dimen, max_inner), dtype=xtype)
+        Z = np.zeros((n, max_inner), dtype=x.dtype)
         W[0, :] = w
 
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
         # This is the RHS vector for the problem in the Krylov Space
-        g = np.zeros((dimen,), dtype=xtype)
+        g = np.zeros((n,), dtype=x.dtype)
         g[0] = -beta
 
         for inner in range(max_inner):
             # Calculate Krylov vector in two steps
             # (1) Calculate v = P_j = (I - 2*w*w.T)v, where k = inner
-            v = -2.0*np.conjugate(w[inner])*w
+            v = -2.0 * np.conjugate(w[inner]) * w
             v[inner] += 1.0
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             # for j in range(inner-1,-1,-1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), dimen, inner-1, -1, -1)
+            amg_core.apply_householders(v, np.ravel(W), n, inner-1, -1, -1)
 
             # Apply preconditioner
-            v = np.ravel(M*v)
+            v = M @ v
             # Check for nan, inf
             # if isnan(v).any() or isinf(v).any():
             #    warn('inf or nan after application of preconditioner')
@@ -234,28 +214,28 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             Z[:, inner] = v
 
             # Calculate new search direction
-            v = np.ravel(A*v)
+            v = A @ v
 
             # Factor in all Householder orthogonal reflections on new search
             # direction
             # for j in range(inner+1):
             #    v = v - 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), dimen, 0, inner+1, 1)
+            amg_core.apply_householders(v, np.ravel(W), n, 0, inner+1, 1)
 
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
-            #  Note that if max_inner = dimen, then this is unnecessary for
-            #  the last inner iteration, when inner = dimen-1.  Here we do
+            #  Note that if max_inner = n, then this is unnecessary for
+            #  the last inner iteration, when inner = n-1.  Here we do
             #  not need to calculate a Householder reflector or Givens
             #  rotation because nnz(v) is already the desired length,
             #  i.e. we do not need to zero anything out.
-            if inner != dimen-1:
+            if inner != n-1:
                 if inner < (max_inner-1):
                     w = W[inner+1, :]
                 vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
-                    alpha = mysign(vslice[0])*alpha
+                    alpha = mysign(vslice[0]) * alpha
                     # do not need the final reflector for future calculations
                     if inner < (max_inner-1):
                         w[inner+1:] = vslice
@@ -269,19 +249,19 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
 
             if inner > 0:
                 # Apply all previous Givens Rotations to v
-                amg_core.apply_givens(Q, v, dimen, inner)
+                amg_core.apply_givens(Q, v, n, inner)
 
             # Calculate the next Givens rotation, where j = inner Note that if
-            # max_inner = dimen, then this is unnecessary for the last inner
-            # iteration, when inner = dimen-1.  Here we do not need to
+            # max_inner = n, then this is unnecessary for the last inner
+            # iteration, when inner = n-1.  Here we do not need to
             # calculate a Householder reflector or Givens rotation because
             # nnz(v) is already the desired length, i.e. we do not need to zero
             # anything out.
-            if inner != dimen-1:
+            if inner != n-1:
                 if v[inner+1] != 0:
                     [c, s, r] = lartg(v[inner], v[inner+1])
                     Qblock = np.array([[c, s], [-np.conjugate(s), c]],
-                                      dtype=xtype)
+                                      dtype=x.dtype)
                     Q[(inner*4): ((inner+1)*4)] = np.ravel(Qblock).copy()
 
                     # Apply Givens Rotation to g, the RHS for the linear system
@@ -302,14 +282,15 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
             # normr is calculated directly after this loop ends.
             if inner < max_inner-1:
                 normr = np.abs(g[inner+1])
-                if normr < tol:
+                if normr < tol * normb:
                     break
-
-                # Allow user access to the iterates
-                if callback is not None:
-                    callback(x)
-                if keep_r:
+                if residuals is not None:
                     residuals.append(normr)
+
+                if callback is not None:
+                    y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.dot(Z[:, 0:inner+1], y)
+                    callback(x + update)
 
             niter += 1
 
@@ -327,13 +308,14 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
         # each iteration # Hence, we must store each preconditioned vector
         update = np.dot(Z[:, 0:inner+1], y)
         x = x + update
-        r = b - np.ravel(A*x)
-        normr = norm(r)
+        r = b - A @ x
 
         # Allow user access to the iterates
         if callback is not None:
             callback(x)
-        if keep_r:
+
+        normr = norm(r)
+        if residuals is not None:
             residuals.append(normr)
 
         # Has fGMRES stagnated?
@@ -345,7 +327,7 @@ def fgmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None, xtype=None,
                 return (postprocess(x), -1)
 
         # test for convergence
-        if normr < tol:
+        if normr < tol * normb:
             return (postprocess(x), 0)
 
     # end outer loop

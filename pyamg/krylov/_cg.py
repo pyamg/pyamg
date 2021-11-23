@@ -1,13 +1,16 @@
+import warnings
+from warnings import warn
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
+import scipy.sparse as sparse
 from pyamg.util.linalg import norm
-from warnings import warn
 
 
 __all__ = ['cg']
 
 
-def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def cg(A, b, x0=None, tol=1e-5, criteria='rr',
+       maxiter=None, M=None,
        callback=None, residuals=None):
     """Conjugate Gradient algorithm.
 
@@ -22,27 +25,29 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the
-        preconditioner norm of r_0, or ||r_0||_M.
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        'MrMr':      ||M r||     < tol ||M b||
+        'rMr':       <r, Mr>^1/2 < tol
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
+        n x n, inverse preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals contains the residual norm history,
-        including the initial residual.  The preconditioner norm
-        is used, instead of the Euclidean norm.
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of cg
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
             ==  =======================================
             0   successful exit
@@ -55,11 +60,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
-
-    The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
@@ -70,7 +71,7 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
+    >>> print norm(b - A @ x)
     10.9370700187
 
     References
@@ -80,10 +81,10 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     """
+    # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._cg')
 
     # determine maxiter
@@ -92,50 +93,55 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
 
-    # choose tolerance for numerically zero values
-    # t = A.dtype.char
-    # eps = np.finfo(np.float64).eps
-    # feps = np.finfo(np.single).eps
-    # geps = np.finfo(np.longfloat).eps
-    # _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    # numerically_zero = {0: feps*1e3, 1: eps*1e6,
-    #                    2: geps*1e6}[_array_precision[t]]
-
     # setup method
-    r = b - A*x
-    z = M*r
+    r = b - A @ x
+    z = M @ r
     p = z.copy()
     rz = np.inner(r.conjugate(), z)
 
-    # use preconditioner norm
-    normr = np.sqrt(rz)
-
+    normr = np.linalg.norm(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess if b != 0,
     normb = norm(b)
     if normb == 0.0:
-        normb = 1.0
-    if normr < tol*normb:
-        return (postprocess(x), 0)
+        normb = 1.0  # reset so that tol is unscaled
 
-    # Scale tol by ||r_0||_M
-    if normr != 0.0:
-        tol = tol*normr
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    elif criteria == 'MrMr':
+        normr = norm(z)
+        normMb = norm(M @ b)
+        rtol = tol * normMb
+    elif criteria == 'rMr':
+        normr = np.sqrt(rz)
+        rtol = tol
+    else:
+        raise ValueError('Invalid stopping criteria.')
+
+    if normr < rtol:
+        return (postprocess(x), 0)
 
     # How often should r be recomputed
     recompute_r = 8
 
-    iter = 0
+    it = 0
 
-    while True:
-        Ap = A*p
+    while True:                                   # Step number in Saad's pseudocode
+        Ap = A @ p
 
         rz_old = rz
-        # Step number in Saad's pseudocode
-        pAp = np.inner(Ap.conjugate(), p)            # check curvature of A
+        pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
             warn("\nIndefinite matrix detected in CG, aborting\n")
             return (postprocess(x), -1)
@@ -143,15 +149,15 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         alpha = rz/pAp                            # 3
         x += alpha * p                            # 4
 
-        if np.mod(iter, recompute_r) and iter > 0:   # 5
+        if np.mod(it, recompute_r) and it > 0:    # 5
             r -= alpha * Ap
         else:
-            r = b - A*x
+            r = b - A @ x
 
-        z = M*r                                   # 6
+        z = M @ r                                 # 6
         rz = np.inner(r.conjugate(), z)
 
-        if rz < 0.0:                              # check curvature of M
+        if rz < 0.0:                             # check curvature of M
             warn("\nIndefinite preconditioner detected in CG, aborting\n")
             return (postprocess(x), -1)
 
@@ -159,9 +165,9 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         p *= beta                                 # 8
         p += z
 
-        iter += 1
+        it += 1
 
-        normr = np.sqrt(rz)                          # use preconditioner norm
+        normr = np.linalg.norm(r)
 
         if residuals is not None:
             residuals.append(normr)
@@ -169,47 +175,114 @@ def cg(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if callback is not None:
             callback(x)
 
-        if normr < tol:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
+            rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        elif criteria == 'MrMr':
+            normr = norm(z)
+            rtol = tol * normMb
+        elif criteria == 'rMr':
+            normr = np.sqrt(rz)
+            rtol = tol
+
+        if normr < rtol:
             return (postprocess(x), 0)
-        elif rz == 0.0:
-            # important to test after testing normr < tol. rz == 0.0 is an
-            # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CG, ceasing \
-                  iterations\n")
-            return (postprocess(x), -1)
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
+        if it == maxiter:
+            return (postprocess(x), it)
 
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#
-#    from pyamg.gallery import stencil_grid
-#    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),
-#                     dtype=float,format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    import time
-#    from scipy.sparse.linalg.isolve import cg as icg
-#
-#    print '\n\nTesting CG with %d x %d 2D Laplace Matrix' % \
-#           (A.shape[0],A.shape[0])
-#    t1=time.time()
-#    (x,flag) = cg(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '%s took %0.3f ms' % ('cg', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)
-#
-#    t1=time.time()
-#    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*y))
-#    print 'info flag = %d'%(flag)
+
+if __name__ == '__main__':
+    from pyamg.gallery import stencil_grid
+    from numpy.random import random
+    import time
+    from scipy.sparse.linalg.isolve import cg as icg
+    import numpy as np
+
+    nx = 100
+    ny = nx
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
+    #b = random((A.shape[0],))
+    xstar = random((A.shape[0],))
+    b = A @ xstar
+    x0 = random((A.shape[0],))
+    print('initial residual: ', norm(b - A @ x0))
+    print('initial criteria 1: ', norm(b - A @ x0) / ((norm(A.data)*norm(x0) + norm(b))))
+    print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
+
+    print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')
+    x = x0.copy()
+    t1 = time.time()
+    res = []
+    (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
+    t2 = time.time()
+    #print('res1: ', res)
+    print(f'cg took {(t2-t1)*1000.0} ms')
+    print(f'norm = {norm(b - A @ x)}')
+    print(f'info flag = {flag}')
+
+    res = []
+    def mycb(xk):
+        res.append(norm(b - A @ xk))
+
+    x = x0.copy()
+    t1 = time.time()
+    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
+    t2 = time.time()
+    #print('res2: ', res)
+    print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
+    print(f'norm = {norm(b - A @ y)}')
+    print(f'info flag = {flag}')
+
+    print('-------------')
+    norm = np.linalg.norm
+    criterion1 = []
+    criterion2 = []
+    criterion5 = []
+    error = []
+    errorA = []
+    rz = []
+    zz = []
+
+    def mycb2(xk, M):
+        r = b - A @ xk
+        z = M @ r
+        e = xstar - xk
+        normr = norm(r)
+        norme = norm(e)
+        criterion1.append(normr / (norm(A.data)*norm(xk) + norm(b)))
+        criterion2.append(normr / norm(b))
+        criterion5.append(normr / norm(b - A @ x0))
+        error.append(norme)
+        rz.append(np.sqrt(np.inner(r, z)))
+        zz.append(norm(z) / norm(M @ b))
+        errorA.append(np.sqrt(np.inner(A @ e, e)))
+
+    import pyamg
+    res = []
+    ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
+    M =  ml.aspreconditioner()
+    x = x0.copy()
+    t1 = time.time()
+    res = []
+    (x, flag) = cg(A, b, x, M=M, tol=1e-16, maxiter=100, callback=mycb2, residuals=res)
+    t2 = time.time()
+
+    import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.rcParams['text.usetex'] = True
+    plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
+    plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
+    plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
+    plt.semilogy(error, label=r'$\|e_k\|$')
+    plt.semilogy(errorA, label=r'$\|e_k\|_A$')
+    plt.semilogy(rz, label=r'$\sqrt{<r, z>}$')
+    plt.semilogy(zz, label=r'$\|Mr\| / \|M b\|$')
+    plt.hlines(1e-8, 1, len(res), color='tab:gray', linestyle='dashed')
+    plt.xlabel('iterations')
+    plt.grid(True)
+    plt.legend()
+    plt.savefig('cg.png', dpi=300)
+    plt.show()

@@ -3,14 +3,13 @@ from __future__ import print_function
 
 
 import numpy as np
-import scipy as sp
 import scipy.sparse as sparse
+from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
-           'residual_norm', 'condest', 'cond', 'ishermitian',
-           'pinv_array']
+           'condest', 'cond', 'ishermitian', 'pinv_array']
 
 
 def norm(x, pnorm='2'):
@@ -103,11 +102,6 @@ def infinity_norm(A):
                                          dtype=A.dtype)).max()
 
 
-def residual_norm(A, x, b):
-    """Compute ||b - A*x||."""
-    return norm(np.ravel(b) - A*np.ravel(x))
-
-
 def axpy(x, y, a=1.0):
     """Quick level-1 call to BLAS y = a*x+y.
 
@@ -179,16 +173,12 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     To obtain approximate eigenvectors of A, compute V*W.
     """
     from scipy.sparse.linalg import aslinearoperator
+    from pyamg.util.utils import set_tol
 
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
     # Choose tolerance for deciding if break-down has occurred
-    t = A.dtype.char
-    eps = np.finfo(np.float64).eps
-    feps = np.finfo(np.float32).eps
-    geps = np.finfo(np.float128).eps
-    _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-    breakdown = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+    breakdown = set_tol(A.dtype)
     breakdown_flag = False
 
     if A.shape[0] != A.shape[1]:
@@ -420,11 +410,13 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
         If symmetric use the far more efficient Lanczos algorithm,
-        Else use Arnoldi
+        Else use Arnoldi.
+        If hermitian, use symmetric=True.
+        If complex symmetric, use symmetric=False.
 
     Returns
     -------
-    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\|
+    Estimate of cond(A) with \|lambda_max\| / \|lambda_min\| or simga_max / sigma_min
     through the use of Arnoldi or Lanczos iterations, depending on
     the symmetric flag
 
@@ -444,10 +436,18 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     2.0
 
     """
-    [evect, ev, H, V, breakdown_flag] =\
-        _approximate_eigenvalues(A, tol, maxiter, symmetric)
+    C = aslinearoperator(A)
+    power = 1
+    if not symmetric:
+        def matvec(v):
+            return C.rmatvec((C.A @ v))
+        C.matvec = matvec
+        power = 0.5
 
-    return np.max([norm(x) for x in ev])/min([norm(x) for x in ev])
+    [evect, ev, H, V, breakdown_flag] =\
+        _approximate_eigenvalues(C, tol, maxiter, symmetric)
+
+    return (np.max([norm(x) for x in ev])/min([norm(x) for x in ev]))**power
 
 
 def cond(A):
@@ -510,7 +510,8 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     verbose: {bool}
         prints
         max( \|A - A.conj().T\| ) if nonhermitian and fast_check=False..
-        abs( <Ax, y> - <x, Ay> )  if nonhermitian and fast_check=False
+        \| <Ax, y> - <x, Ay> ) \| / sqrt( \| <Ax, y> * <x, Ay> \| )
+        if nonhermitian and fast_check=True
 
     Returns
     -------
@@ -589,7 +590,7 @@ def pinv_array(a, cond=None):
     Notes
     -----
     By using lapack wrappers, this can be much faster for large n, than
-    directly calling pinv2
+    directly calling a pseudoinverse (SVD)
 
     Examples
     --------
@@ -601,6 +602,8 @@ def pinv_array(a, cond=None):
     >>> pinv_array(a)
 
     """
+    from pyamg.util.utils import set_tol
+
     n = a.shape[0]
     m = a.shape[1]
 
@@ -623,12 +626,7 @@ def pinv_array(a, cond=None):
 
         # Choose tolerance for which singular values are zero in *gelss below
         if cond is None:
-            t = a.dtype.char
-            eps = np.finfo(np.float64).eps
-            feps = np.finfo(np.float32).eps
-            geps = np.finfo(np.float128).eps
-            _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-            cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+            cond = set_tol(a.dtype)
 
         # Invert each block of a
         for kk in range(n):
