@@ -439,14 +439,14 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     power = 1
     if not symmetric:
         def matvec(v):
-            return C.rmatvec((C.A @ v))
+            return C.rmatvec(C.A @ v)
         C.matvec = matvec
         power = 0.5
 
     [evect, ev, H, V, breakdown_flag] =\
         _approximate_eigenvalues(C, tol, maxiter, symmetric)
 
-    return (np.max([norm(x) for x in ev])/min([norm(x) for x in ev]))**power
+    return (np.max([norm(x) for x in ev])/min(norm(x) for x in ev))**power
 
 
 def cond(A):
