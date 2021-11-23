@@ -533,6 +533,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # local imports for evolution_strength_of_connection
     from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
+    from pyamg.util.utils import set_tol
 
     # ====================================================================
     # Check inputs
@@ -766,12 +767,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                 counter = counter + 1
 
         # Choose tolerance for dropping "numerically zero" values later
-        t = Atilde.dtype.char
-        eps = np.finfo(np.float64).eps
-        feps = np.finfo(np.float32).eps
-        geps = np.finfo(np.float128).eps
-        _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-        tol = {0: feps * 1e3, 1: eps * 1e6, 2: geps * 1e6}[_array_precision[t]]
+        tol = set_tol(Atilde.dtype)
 
         # Use constrained min problem to define strength
         amg_core.evolution_strength_helper(Atilde.data,

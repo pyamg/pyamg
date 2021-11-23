@@ -119,7 +119,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                        prepostsmoother=('gauss_seidel',
                                         {'sweep': 'symmetric'}),
                        smooth=('jacobi', {}), strength='symmetric',
-                       coarse_solver='pinv2',
+                       coarse_solver='pinv',
                        eliminate_local=(False, {'Ca': 1.0}), keep=False,
                        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA).
@@ -503,6 +503,8 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             A_l = P_l.T.asformat(P_l.format) * A_l * P_l
         elif symmetry == 'hermitian':
             A_l = P_l.H.asformat(P_l.format) * A_l * P_l
+        else:
+            raise ValueError(f'aSA not implemented for symmetry={symmetry}.')
 
         StrengthOps.append(C_l)
         AggOps.append(AggOp)

@@ -1,13 +1,16 @@
+import warnings
+from warnings import warn
 import numpy as np
+import scipy.sparse as sparse
 from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
-from warnings import warn
 
 
 __all__ = ['steepest_descent']
 
 
-def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
+                     maxiter=None, M=None,
                      callback=None, residuals=None):
     """Steepest descent algorithm.
 
@@ -22,26 +25,28 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the
-        preconditioner norm of r_0, or ||r_0||_M.
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        'MrMr':      ||M r||     < tol ||M b||
+        'rMr':       <r, Mr>^1/2 < tol
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals contains the residual norm history,
-        including the initial residual.  The preconditioner norm
-        is used, instead of the Euclidean norm.
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
     info : halting status of cg
 
             ==  =======================================
@@ -55,11 +60,11 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     -----
     The LinearOperator class is in scipy.sparse.linalg.interface.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+    as opposed to explicitly constructing the matrix.
 
-    The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list.
+    See Also
+    --------
+    _minimal_residual
 
     Examples
     --------
@@ -83,7 +88,6 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._steepest_descent')
 
     # determine maxiter
@@ -93,37 +97,48 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A*x
-    z = M*r
+    r = b - A @ x
+    z = M @ r
     rz = np.inner(r.conjugate(), z)
 
-    # use preconditioner norm
-    normr = np.sqrt(rz)
+    normr = np.linalg.norm(r)
 
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess if b != 0,
     normb = norm(b)
     if normb == 0.0:
-        normb = 1.0
-    if normr < tol*normb:
-        return (postprocess(x), 0)
+        normb = 1.0  # reset so that tol is unscaled
 
-    # Scale tol by ||r_0||_M
-    if normr != 0.0:
-        tol = tol*normr
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    elif criteria == 'MrMr':
+        normr = norm(z)
+        normMb = norm(M @ b)
+        rtol = tol * normMb
+    elif criteria == 'rMr':
+        normr = np.sqrt(rz)
+        rtol = tol
+    else:
+        raise ValueError('Invalid stopping criteria.')
 
     # How often should r be recomputed
     recompute_r = 50
 
-    iter = 0
+    it = 0
 
     while True:
-        iter = iter+1
-
-        q = A*z
+        q = A @ z
         zAz = np.inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
             warn("\nIndefinite matrix detected in steepest descent,\
@@ -131,22 +146,22 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             return (postprocess(x), -1)
 
         alpha = rz / zAz                            # step size
-        x = x + alpha*z
+        x = x + alpha * z
 
-        if np.mod(iter, recompute_r) and iter > 0:
-            r = b - A*x
+        it += 1
+        if np.mod(it, recompute_r) and it > 0:
+            r = b - A @ x
         else:
-            r = r - alpha*q
+            r = r - alpha * q
 
-        z = M*r
+        z = M @ r
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                                # check curvature of M
-            warn("\nIndefinite preconditioner detected in steepest descent,\
-                  aborting\n")
+            warn("\nIndefinite preconditioner detected in steepest descent, stopping.\n")
             return (postprocess(x), -1)
 
-        normr = np.sqrt(rz)                   # use preconditioner norm
+        normr = norm(r)
 
         if residuals is not None:
             residuals.append(normr)
@@ -154,17 +169,29 @@ def steepest_descent(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if callback is not None:
             callback(x)
 
-        if normr < tol:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
+            rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        elif criteria == 'MrMr':
+            normr = norm(z)
+            rtol = tol * normMb
+        elif criteria == 'rMr':
+            normr = np.sqrt(rz)
+            rtol = tol
+
+        if normr < rtol:
             return (postprocess(x), 0)
-        elif rz == 0.0:
+
+        if rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in steepest descent,\
-                  ceasing iterations\n")
+            warn("\nSingular preconditioner detected in steepest descent, stopping.\n")
             return (postprocess(x), -1)
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
+        if it == maxiter:
+            return (postprocess(x), it)
 
 # if __name__ == '__main__':
 #    # from numpy import diag
