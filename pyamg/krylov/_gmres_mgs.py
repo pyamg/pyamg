@@ -1,6 +1,6 @@
 import warnings
 from warnings import warn
-J
+
 import numpy as np
 import scipy as sp
 from scipy.sparse.linalg.isolve.utils import make_system
