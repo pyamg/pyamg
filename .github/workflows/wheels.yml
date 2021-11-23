@@ -1,0 +1,41 @@
+name: Build wheels
+
+on:
+  push:
+    branches:
+      - main
+      - pybind11setup
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        python: [37, 38, 39]
+        bitness: [64]
+        manylinux_image: [manylinux1, manylinux2010]
+        exclude:
+          - os: windows-latest
+            manylinux_image: manylinux1
+          - os: macos-latest
+            manylinux_image: manylinux1
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v2
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.2.2
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Save wheels
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
