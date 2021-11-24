@@ -14,8 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python: [39]
-        bitness: [64]
 
     steps:
       - uses: actions/checkout@v2
