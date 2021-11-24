@@ -20,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # Used to host cibuildwheel
       - uses: actions/setup-python@v2
 
       - name: Install cibuildwheel
