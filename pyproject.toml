@@ -1,11 +1,12 @@
 [build-system]
+build-backend = "setuptools.build_meta"
 requires = [
     "setuptools>=42",
-    "wheel",
+    "setuptools_scm[toml]>=6",
     "pybind11>=2.8.0",
-    "numpy>=1.7.0",
-    "scipy>=0.12.0",
-    "pytest>=2",
+    "wheel",
 ]
 
-build-backend = "setuptools.build_meta"
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev"
+write_to = "pyamg/version.py"
