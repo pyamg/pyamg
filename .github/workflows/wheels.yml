@@ -13,15 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        python: [37, 38, 39]
+        os: [ubuntu-latest]
+        python: [39]
         bitness: [64]
-        manylinux_image: [manylinux1, manylinux2010]
-        exclude:
-          - os: windows-latest
-            manylinux_image: manylinux1
-          - os: macos-latest
-            manylinux_image: manylinux1
 
     steps:
       - uses: actions/checkout@v2
