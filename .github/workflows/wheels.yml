@@ -14,6 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        python: [38, 39]
 
     steps:
       - name: Checkout repo
