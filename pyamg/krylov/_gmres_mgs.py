@@ -1,5 +1,6 @@
 import warnings
 from warnings import warn
+
 import numpy as np
 import scipy as sp
 from scipy.sparse.linalg.isolve.utils import make_system
@@ -352,7 +353,7 @@ if __name__ == '__main__':
     t1 = time.time()
     (x, flag) = gmres_mgs(A, b, x0, tol=1e-8, maxiter=500)
     t2 = time.time()
-    print('%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0))
+    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*x)))
     print('info flag = %d' % (flag))
 
@@ -360,6 +361,6 @@ if __name__ == '__main__':
     # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
     (y, flag) = igmres(A, b, x0, tol=1e-8)
     t2 = time.time()
-    print('\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0))
+    print('\n{} took {:0.3f} ms'.format('linalg gmres', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*y)))
     print('info flag = %d' % (flag))

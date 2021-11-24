@@ -7,7 +7,6 @@ This will use the XML VTK format for unstructured meshes, .vtu
 
 See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
-from __future__ import print_function
 
 import xml.dom.minidom
 import numpy as np
@@ -120,8 +119,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     if isinstance(fname, str):
         try:
             fname = open(fname, 'w')
-        except IOError as e:
-            print(".vtu error (%s): %s" % (e.errno, e.strerror))
+        except OSError as e:
+            print(f".vtu error ({e.errno}): {e.strerror}")
     else:
         raise ValueError('fname is assumed to be a string')
 

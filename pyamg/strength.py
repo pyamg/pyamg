@@ -8,7 +8,6 @@ Requirements for the strength matrix C are:
        row block size of m, then C is (n/m) x (n/m)
 
 """
-from __future__ import print_function
 
 
 from warnings import warn

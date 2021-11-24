@@ -209,7 +209,7 @@ if __name__ == '__main__':
     b = A @ xstar
     x0 = random((A.shape[0],))
     print('initial residual: ', norm(b - A @ x0))
-    print('initial criteria 1: ', norm(b - A @ x0) / ((norm(A.data)*norm(x0) + norm(b))))
+    print('initial criteria 1: ', norm(b - A @ x0) / (norm(A.data)*norm(x0) + norm(b)))
     print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
 
     print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')

@@ -1,5 +1,4 @@
 """Classical AMG (Ruge-Stuben AMG)."""
-from __future__ import absolute_import
 
 
 from warnings import warn

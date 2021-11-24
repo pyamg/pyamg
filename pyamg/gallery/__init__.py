@@ -1,5 +1,4 @@
 "Matrix Gallery for Multigrid Solvers"
-from __future__ import absolute_import
 
 from .info import __doc__
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 PyAMG: Algebraic Multigrid Solvers in Python
 
@@ -18,7 +17,7 @@ PyAMG is primarily written in Python with
 supporting C++ code for performance critical operations.
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 amg_core_headers = ['evolution_strength',

@@ -1,5 +1,4 @@
 """Solve an arbitrary system."""
-from __future__ import print_function
 
 
 import numpy as np
@@ -321,7 +320,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         M = existing_solver.aspreconditioner()
         nr0 = np.sqrt(np.inner(np.conjugate(M * r0), r0))
         nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
-        print("  Residuals ||r_k||_M, ||r_0||_M = %1.2e, %1.2e" % (nrk, nr0))
+        print(f"  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}")
         if np.abs(nr0) > 1e-15:
             print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"
                   % (nrk / nr0))

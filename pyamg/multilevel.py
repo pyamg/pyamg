@@ -169,7 +169,7 @@ class multilevel_solver:
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
 
-        total_nnz = sum([level.A.nnz for level in self.levels])
+        total_nnz = sum(level.A.nnz for level in self.levels)
 
         output += '  level   unknowns     nonzeros\n'
         for n, level in enumerate(self.levels):
@@ -260,7 +260,7 @@ class multilevel_solver:
             Number of nonzeros in the matrix on the finest level
 
         """
-        return sum([level.A.nnz for level in self.levels]) /\
+        return sum(level.A.nnz for level in self.levels) /\
             float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
@@ -271,7 +271,7 @@ class multilevel_solver:
             Number of unknowns on the finest level
 
         """
-        return sum([level.A.shape[0] for level in self.levels]) /\
+        return sum(level.A.shape[0] for level in self.levels) /\
             float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
