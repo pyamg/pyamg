@@ -1,3 +1,11 @@
+#   from https://github.com/nedbat/coveragepy/blob/master/.github/workflows/kit.yml
+#   oss = ["ubuntu", "macos", "windows"]
+#   pys = ["cp36", "cp37", "cp38", "cp39", "cp310"]
+#   archs = {
+#       "ubuntu": ["x86_64", "i686", "aarch64"],
+#       "macos": ["x86_64"],
+#       "windows": ["x86", "AMD64"],
+#   }
 name: Build wheels
 
 on:
@@ -8,20 +16,35 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.os }} ${{ matrix.py }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python: [38, 39]
+        include:
+          - {"os": "ubuntu", "py": "cp38", "arch": "x86_64"}
+          - {"os": "ubuntu", "py": "cp38", "arch": "i686"}
+          - {"os": "ubuntu", "py": "cp38", "arch": "aarch64"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "x86_64"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "i686"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "aarch64"}
+          - {"os": "macos", "py": "cp38", "arch": "x86_64"}
+          - {"os": "macos", "py": "cp39", "arch": "x86_64"}
+          - {"os": "windows", "py": "cp38", "arch": "x86"}
+          - {"os": "windows", "py": "cp38", "arch": "AMD64"}
+          - {"os": "windows", "py": "cp39", "arch": "x86"}
+          - {"os": "windows", "py": "cp39", "arch": "AMD64"}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: Install Python
+        uses: actions/setup-python@v2
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.2.2
+        CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
         uses: actions/upload-artifact@v2
