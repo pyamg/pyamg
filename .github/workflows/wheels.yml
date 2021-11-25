@@ -44,7 +44,8 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.2.2
-        CIBW_BUILD_VERBOSITY: 2
+        env:
+          CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
         uses: actions/upload-artifact@v2
