@@ -42,3 +42,29 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+
+  sdist:
+    name: Build source distro
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+
+      - name: Build sdist
+        run: |
+          python -m build
+
+      - name: List
+        run: |
+          ls -al dist/
+
+          #      - name: "Upload sdist"
+          #        uses: actions/upload-artifact@v2
+          #        with:
+          #          name: dist
+          #          path: dist/*.tar.gz
