@@ -2,6 +2,7 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
@@ -24,6 +25,7 @@ copyright = '2018, Luke Olson'
 author = '2018, Luke Olson and Jacob Schroder'
 
 import pyamg
+
 version = pyamg.__version__
 release = version
 

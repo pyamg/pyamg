@@ -1,13 +1,15 @@
 import sys
-import numpy as np
-from scipy.io import loadmat
+
 import matplotlib as mplt
 import matplotlib.pyplot as plt
+import numpy as np
 import shapely.geometry as sg
+from scipy.io import loadmat
 from shapely.ops import cascaded_union
 
 import pyamg
-from pyamg.gallery.fem import mesh, gradgradform
+from pyamg.gallery.fem import gradgradform, mesh
+
 
 def plotaggs(AggOp, V, E, G,
              ax, color='b', edgecolor='0.5', lw=1):

@@ -21,7 +21,7 @@ import os
 import sys
 
 import setuptools
-from setuptools import setup, find_packages, Extension
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 from setuptools.command.test import test as TestCommand
 
@@ -131,6 +131,7 @@ class get_pybind_include:
 
     def __str__(self):
         import pybind11
+
         # The issue:
         # https://github.com/pybind/pybind11/issues/1067
         #
@@ -141,7 +142,6 @@ class get_pybind_include:
         # We need this to look like
         # TMP/pybind11/*.h
         # TMP/pybind11/detail/*.h
-
         # TMPDIR/pybind11-2.2.4-py3.7.egg/pybind11/__init__.py
         f = pybind11.__file__
 
