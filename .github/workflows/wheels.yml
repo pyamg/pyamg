@@ -52,12 +52,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Python
-        uses: actions/setup-python@v2
-
       - name: Build sdist
-        run: |
-          python -m build
+        run: pipx run build --sdist
 
       - name: List
         run: |
