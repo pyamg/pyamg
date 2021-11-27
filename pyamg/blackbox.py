@@ -3,11 +3,12 @@
 
 import numpy as np
 import scipy as sp
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
+from scipy.sparse import csr_matrix, isspmatrix_bsr, isspmatrix_csr
+
 from pyamg import smoothed_aggregation_solver
 from pyamg.util.linalg import ishermitian
 
-__all__ = ['solve', 'solver', 'solver_configuration']
+__all__ = ["solve", "solver", "solver_configuration"]
 
 
 def make_csr(A):
@@ -38,13 +39,14 @@ def make_csr(A):
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
+            print("Implicit conversion of A to CSR in pyamg.blackbox.make_csr")
         except BaseException:
-            raise TypeError('Argument A must have type csr_matrix or\
-                    bsr_matrix, or be convertible to csr_matrix')
+            raise TypeError(
+                "Argument A must have type csr_matrix or bsr_matrix, or be convertible to csr_matrix"
+            )
 
     if A.shape[0] != A.shape[1]:
-        raise TypeError('Argument A must be a square')
+        raise TypeError("Argument A must be a square")
 
     A = A.asfptype()
 
@@ -92,64 +94,79 @@ def solver_configuration(A, B=None, verb=True):
 
     # Detect symmetry
     if ishermitian(A, fast_check=True):
-        config['symmetry'] = 'hermitian'
+        config["symmetry"] = "hermitian"
         if verb:
             print("  Detected a Hermitian matrix")
     else:
-        config['symmetry'] = 'nonsymmetric'
+        config["symmetry"] = "nonsymmetric"
         if verb:
             print("  Detected a non-Hermitian matrix")
 
     # Symmetry dependent parameters
-    if config['symmetry'] == 'hermitian':
-        config['smooth'] = ('energy', {'krylov': 'cg', 'maxiter': 3,
-                                       'degree': 2, 'weighting': 'local'})
-        config['presmoother'] = ('block_gauss_seidel',
-                                 {'sweep': 'symmetric', 'iterations': 1})
-        config['postsmoother'] = ('block_gauss_seidel',
-                                  {'sweep': 'symmetric', 'iterations': 1})
+    if config["symmetry"] == "hermitian":
+        config["smooth"] = (
+            "energy",
+            {"krylov": "cg", "maxiter": 3, "degree": 2, "weighting": "local"},
+        )
+        config["presmoother"] = (
+            "block_gauss_seidel",
+            {"sweep": "symmetric", "iterations": 1},
+        )
+        config["postsmoother"] = (
+            "block_gauss_seidel",
+            {"sweep": "symmetric", "iterations": 1},
+        )
     else:
-        config['smooth'] = ('energy', {'krylov': 'gmres', 'maxiter': 3,
-                                       'degree': 2, 'weighting': 'local'})
-        config['presmoother'] = ('gauss_seidel_nr',
-                                 {'sweep': 'symmetric', 'iterations': 2})
-        config['postsmoother'] = ('gauss_seidel_nr',
-                                  {'sweep': 'symmetric', 'iterations': 2})
+        config["smooth"] = (
+            "energy",
+            {"krylov": "gmres", "maxiter": 3, "degree": 2, "weighting": "local"},
+        )
+        config["presmoother"] = (
+            "gauss_seidel_nr",
+            {"sweep": "symmetric", "iterations": 2},
+        )
+        config["postsmoother"] = (
+            "gauss_seidel_nr",
+            {"sweep": "symmetric", "iterations": 2},
+        )
 
     # Determine near null-space modes B
     if B is None:
         # B is the constant for each variable in a node
         if isspmatrix_bsr(A) and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
-            config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
-                                          dtype=A.dtype), np.eye(bsize))
+            config["B"] = np.kron(
+                np.ones((int(A.shape[0] / bsize), 1), dtype=A.dtype), np.eye(bsize)
+            )
         else:
-            config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)
-    elif (isinstance(B, type(np.zeros((1,)))) or
-            isinstance(B, type(sp.mat(np.zeros((1,)))))):
+            config["B"] = np.ones((A.shape[0], 1), dtype=A.dtype)
+    elif isinstance(B, type(np.zeros((1,)))) or isinstance(
+        B, type(sp.mat(np.zeros((1,))))
+    ):
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if (B.shape[0] != A.shape[0]) or (B.shape[1] == 0):
-            raise TypeError('Invalid dimensions of B, B.shape[0] must equal \
-                             A.shape[0]')
+            raise TypeError(
+                "Invalid dimensions of B, B.shape[0] must equal \
+                             A.shape[0]"
+            )
         else:
-            config['B'] = np.array(B, dtype=A.dtype)
+            config["B"] = np.array(B, dtype=A.dtype)
     else:
-        raise TypeError('Invalid B')
+        raise TypeError("Invalid B")
 
-    if config['symmetry'] == 'hermitian':
-        config['BH'] = None
+    if config["symmetry"] == "hermitian":
+        config["BH"] = None
     else:
-        config['BH'] = config['B'].copy()
+        config["BH"] = config["B"].copy()
 
     # Set non-symmetry related parameters
-    config['strength'] = ('evolution', {'k': 2, 'proj_type': 'l2',
-                                        'epsilon': 3.0})
-    config['max_levels'] = 15
-    config['max_coarse'] = 500
-    config['coarse_solver'] = 'pinv'
-    config['aggregate'] = 'standard'
-    config['keep'] = False
+    config["strength"] = ("evolution", {"k": 2, "proj_type": "l2", "epsilon": 3.0})
+    config["max_levels"] = 15
+    config["max_coarse"] = 500
+    config["coarse_solver"] = "pinv"
+    config["aggregate"] = "standard"
+    config["keep"] = False
 
     return config
 
@@ -190,26 +207,36 @@ def solver(A, config):
 
     # Generate smoothed aggregation solver
     try:
-        return \
-            smoothed_aggregation_solver(A,
-                                        B=config['B'],
-                                        BH=config['BH'],
-                                        smooth=config['smooth'],
-                                        strength=config['strength'],
-                                        max_levels=config['max_levels'],
-                                        max_coarse=config['max_coarse'],
-                                        coarse_solver=config['coarse_solver'],
-                                        symmetry=config['symmetry'],
-                                        aggregate=config['aggregate'],
-                                        presmoother=config['presmoother'],
-                                        postsmoother=config['postsmoother'],
-                                        keep=config['keep'])
+        return smoothed_aggregation_solver(
+            A,
+            B=config["B"],
+            BH=config["BH"],
+            smooth=config["smooth"],
+            strength=config["strength"],
+            max_levels=config["max_levels"],
+            max_coarse=config["max_coarse"],
+            coarse_solver=config["coarse_solver"],
+            symmetry=config["symmetry"],
+            aggregate=config["aggregate"],
+            presmoother=config["presmoother"],
+            postsmoother=config["postsmoother"],
+            keep=config["keep"],
+        )
     except BaseException:
-        raise TypeError('Failed generating smoothed_aggregation_solver')
+        raise TypeError("Failed generating smoothed_aggregation_solver")
 
 
-def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
-          existing_solver=None, verb=True, residuals=None):
+def solve(
+    A,
+    b,
+    x0=None,
+    tol=1e-5,
+    maxiter=400,
+    return_solver=False,
+    existing_solver=None,
+    verb=True,
+    residuals=None,
+):
     """Solve Ax=b.
 
     Solve the arbitrary system Ax=b with the best out-of-the box choice for a
@@ -283,18 +310,24 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     else:
         if existing_solver.levels[0].A.shape[0] != A.shape[0]:
-            raise TypeError('Argument existing_solver must have level 0 matrix\
-                             of same size as A')
+            raise TypeError(
+                "Argument existing_solver must have level 0 matrix of same size as A"
+            )
 
     # Krylov acceleration depends on symmetry of A
-    if existing_solver.levels[0].A.symmetry == 'hermitian':
-        accel = 'cg'
+    if existing_solver.levels[0].A.symmetry == "hermitian":
+        accel = "cg"
     else:
-        accel = 'gmres'
+        accel = "gmres"
 
     # Initial guess
     if x0 is None:
-        x0 = np.array(np.random.rand(A.shape[0],), dtype=A.dtype)
+        x0 = np.array(
+            np.random.rand(
+                A.shape[0],
+            ),
+            dtype=A.dtype,
+        )
 
     # Callback function to print iteration number
     if verb:
@@ -307,12 +340,20 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
         def callback2(x):
             return callback(x, iteration)
+
     else:
         callback2 = None
 
     # Solve with accelerated Krylov method
-    x = existing_solver.solve(b, x0=x0, accel=accel, tol=tol, maxiter=maxiter,
-                              callback=callback2, residuals=residuals)
+    x = existing_solver.solve(
+        b,
+        x0=x0,
+        accel=accel,
+        tol=tol,
+        maxiter=maxiter,
+        callback=callback2,
+        residuals=residuals,
+    )
 
     if verb:
         r0 = b - A * x0
@@ -322,8 +363,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
         print(f"  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}")
         if np.abs(nr0) > 1e-15:
-            print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"
-                  % (nrk / nr0))
+            print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e" % (nrk / nr0))
 
     if return_solver:
         return (x.reshape(b.shape), existing_solver)
