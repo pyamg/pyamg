@@ -1,6 +1,5 @@
-from ._gmres_mgs import gmres_mgs
 from ._gmres_householder import gmres_householder
-
+from ._gmres_mgs import gmres_mgs
 
 __all__ = ['gmres']
 

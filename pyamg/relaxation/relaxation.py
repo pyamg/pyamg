@@ -5,10 +5,10 @@ from warnings import warn
 
 import numpy as np
 from scipy import sparse
-
-from pyamg.util.utils import type_prep, get_diagonal, get_block_diag, set_tol
-from pyamg import amg_core
 from scipy.linalg import lapack as la
+
+from pyamg import amg_core
+from pyamg.util.utils import get_block_diag, get_diagonal, set_tol, type_prep
 
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial',
            'schwarz', 'schwarz_parameters',

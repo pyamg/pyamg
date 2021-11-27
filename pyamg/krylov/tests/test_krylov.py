@@ -1,13 +1,19 @@
+import numpy as np
+import scipy.sparse as sparse
+from numpy.testing import (
+    TestCase,
+    assert_almost_equal,
+    assert_array_almost_equal,
+    assert_equal,
+)
+from scipy.linalg import solve
+
+import pyamg
 from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres, steepest_descent
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
-import numpy as np
-from scipy.linalg import solve
-import scipy.sparse as sparse
 from pyamg.util.linalg import norm
-import pyamg
 
-from numpy.testing import TestCase, assert_array_almost_equal, assert_equal, assert_almost_equal
 
 class TestStoppingCriteria(TestCase):
     def setUp(self):

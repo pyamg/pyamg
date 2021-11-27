@@ -1,13 +1,15 @@
 """Compatible Relaxation."""
 
+from copy import deepcopy
+
 import numpy as np
 import scipy as sp
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
-from copy import deepcopy
+from scipy.sparse import isspmatrix, isspmatrix_csr, spdiags
+
+from pyamg import amg_core
 
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
-from pyamg import amg_core
 
 __all__ = ['CR', 'binormalize']
 

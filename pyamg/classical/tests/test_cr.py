@@ -1,9 +1,9 @@
 import numpy as np
-from scipy.sparse import csr_matrix
-from pyamg.gallery import poisson, load_example
-from pyamg.classical.cr import binormalize, CR
-
 from numpy.testing import TestCase
+from scipy.sparse import csr_matrix
+
+from pyamg.classical.cr import CR, binormalize
+from pyamg.gallery import load_example, poisson
 
 
 class TestCR(TestCase):

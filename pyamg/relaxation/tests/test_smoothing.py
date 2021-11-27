@@ -1,9 +1,9 @@
-from pyamg.gallery import poisson
-from pyamg import smoothed_aggregation_solver
-from pyamg.util.utils import profile_solver
-from pyamg.relaxation.smoothing import change_smoothers
-
 from numpy.testing import TestCase
+
+from pyamg import smoothed_aggregation_solver
+from pyamg.gallery import poisson
+from pyamg.relaxation.smoothing import change_smoothers
+from pyamg.util.utils import profile_solver
 
 methods = [('gauss_seidel', {'sweep': 'symmetric'}),
            'jacobi',

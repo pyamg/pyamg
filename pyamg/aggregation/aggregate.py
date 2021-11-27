@@ -3,6 +3,7 @@
 
 import numpy as np
 import scipy.sparse as sparse
+
 from pyamg import amg_core
 from pyamg.graph import lloyd_cluster
 

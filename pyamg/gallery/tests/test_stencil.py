@@ -1,7 +1,7 @@
 import numpy as np
-from pyamg.gallery.stencil import stencil_grid
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg.gallery.stencil import stencil_grid
 
 
 class TestStencil(TestCase):

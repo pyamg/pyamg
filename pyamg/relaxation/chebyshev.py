@@ -2,7 +2,6 @@
 
 import numpy as np
 
-
 __all__ = ['chebyshev_polynomial_coefficients']
 
 

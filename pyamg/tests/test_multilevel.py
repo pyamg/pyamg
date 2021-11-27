@@ -1,10 +1,9 @@
 import numpy as np
 import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
 from pyamg.gallery import poisson
-from pyamg.multilevel import multilevel_solver, coarse_grid_solver
-
-from numpy.testing import TestCase, assert_almost_equal, assert_equal
+from pyamg.multilevel import coarse_grid_solver, multilevel_solver
 
 
 def precon_norm(v, ml):
@@ -43,8 +42,9 @@ class TestMultilevel(TestCase):
                 assert_almost_equal(A*x, b)
 
     def test_aspreconditioner(self):
-        from pyamg import smoothed_aggregation_solver
         from scipy.sparse.linalg import cg
+
+        from pyamg import smoothed_aggregation_solver
         from pyamg.krylov import fgmres
         np.random.seed(1331277597)
 
@@ -68,7 +68,7 @@ class TestMultilevel(TestCase):
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
-        from pyamg.krylov import cg, bicgstab
+        from pyamg.krylov import bicgstab, cg
         np.random.seed(30459128)
 
         A = poisson((50, 50), format='csr')

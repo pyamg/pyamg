@@ -1,18 +1,14 @@
-import numpy as np
-import scipy.sparse as sparse
-import scipy.linalg as sla
+import warnings
 
-from pyamg.util.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian,\
-    load_example
+import numpy as np
+import scipy.linalg as sla
+import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_approx_equal, assert_array_almost_equal
+from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.aggregation.rootnode import rootnode_solver
-
-from numpy.testing import TestCase, assert_approx_equal,\
-    assert_array_almost_equal
-
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
+from pyamg.gallery import gauge_laplacian, linear_elasticity, load_example, poisson
+from pyamg.util.utils import diag_sparse
 
 
 class TestParameters(TestCase):

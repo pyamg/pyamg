@@ -1,13 +1,12 @@
-import numpy as np
+import warnings
 
-from pyamg.gallery import poisson, linear_elasticity
+import numpy as np
+from numpy.testing import TestCase
+from scipy.sparse import SparseEfficiencyWarning
+
 from pyamg.aggregation import smoothed_aggregation_solver
 from pyamg.aggregation.adaptive import adaptive_sa_solver
-
-from numpy.testing import TestCase
-
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
+from pyamg.gallery import linear_elasticity, poisson
 
 
 class TestAdaptiveSA(TestCase):

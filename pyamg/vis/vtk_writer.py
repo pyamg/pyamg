@@ -9,6 +9,7 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 """
 
 import xml.dom.minidom
+
 import numpy as np
 
 __all__ = ['write_vtu', 'write_basic_mesh']

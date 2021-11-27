@@ -92,8 +92,8 @@ import numpy as np
 import scipy as sp
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
-from pyamg.graph import vertex_coloring
 from pyamg import amg_core
+from pyamg.graph import vertex_coloring
 from pyamg.util.utils import remove_diagonal
 
 __all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc', 'MIS']

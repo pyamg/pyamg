@@ -1,12 +1,13 @@
 import warnings
 from warnings import warn
-import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.linalg import get_lapack_funcs
-import scipy as sp
-from pyamg.util.linalg import norm
-from pyamg import amg_core
 
+import numpy as np
+import scipy as sp
+from scipy.linalg import get_lapack_funcs
+from scipy.sparse.linalg.isolve.utils import make_system
+
+from pyamg import amg_core
+from pyamg.util.linalg import norm
 
 __all__ = ['fgmres']
 

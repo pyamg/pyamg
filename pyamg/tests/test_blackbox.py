@@ -1,9 +1,11 @@
-import numpy as np
-from pyamg.gallery import poisson, load_example
-from pyamg.blackbox import solve
-
-from numpy.testing import TestCase
 import warnings
+
+import numpy as np
+from numpy.testing import TestCase
+
+from pyamg.blackbox import solve
+from pyamg.gallery import load_example, poisson
+
 warnings.filterwarnings(action="ignore", module="scipy",
                         message="^internal gelsd")
 

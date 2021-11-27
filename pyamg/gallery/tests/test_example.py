@@ -1,6 +1,6 @@
-from pyamg.gallery.example import load_example
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg.gallery.example import load_example
 
 
 class TestExample(TestCase):

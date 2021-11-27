@@ -3,9 +3,8 @@
 
 import numpy as np
 import scipy.sparse as sparse
+from scipy.linalg.lapack import _compute_lwork, get_lapack_funcs
 from scipy.sparse.linalg import aslinearoperator
-from scipy.linalg.lapack import get_lapack_funcs
-from scipy.linalg.lapack import _compute_lwork
 
 __all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
            'condest', 'cond', 'ishermitian', 'pinv_array']
@@ -172,6 +171,7 @@ def _approximate_eigenvalues(A, tol, maxiter, symmetric=None,
     To obtain approximate eigenvectors of A, compute V*W.
     """
     from scipy.sparse.linalg import aslinearoperator
+
     from pyamg.util.utils import set_tol
 
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird

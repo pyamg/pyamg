@@ -1,13 +1,17 @@
 import numpy as np
 import scipy.sparse as sparse
-
-from pyamg.gallery import poisson, load_example
-from pyamg.graph import maximal_independent_set, vertex_coloring,\
-    bellman_ford, lloyd_cluster, connected_components,\
-    bellman_ford_reference
-from pyamg import amg_core
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg import amg_core
+from pyamg.gallery import load_example, poisson
+from pyamg.graph import (
+    bellman_ford,
+    bellman_ford_reference,
+    connected_components,
+    lloyd_cluster,
+    maximal_independent_set,
+    vertex_coloring,
+)
 
 
 def canonical_graph(G):

@@ -1,11 +1,10 @@
 import numpy as np
 import scipy.sparse as sparse
-
-from pyamg.gallery import poisson, load_example
-from pyamg.strength import symmetric_strength_of_connection
-from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg.aggregation.aggregate import naive_aggregation, standard_aggregation
+from pyamg.gallery import load_example, poisson
+from pyamg.strength import symmetric_strength_of_connection
 
 
 class TestAggregate(TestCase):

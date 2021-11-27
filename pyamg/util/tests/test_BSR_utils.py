@@ -1,9 +1,8 @@
 import numpy as np
-from scipy.sparse import bsr_matrix
-from pyamg.util.BSR_utils import BSR_Get_Row, BSR_Row_WriteScalar,\
-    BSR_Row_WriteVect
-
 from numpy.testing import TestCase, assert_equal
+from scipy.sparse import bsr_matrix
+
+from pyamg.util.BSR_utils import BSR_Get_Row, BSR_Row_WriteScalar, BSR_Row_WriteVect
 
 
 class TestBSRUtils(TestCase):

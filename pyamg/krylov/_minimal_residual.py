@@ -1,9 +1,10 @@
 import warnings
 from warnings import warn
+
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
 
+from pyamg.util.linalg import norm
 
 __all__ = ['minimal_residual']
 

@@ -1,20 +1,28 @@
-import numpy as np
-import scipy
-from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
-from scipy.linalg import solve
-
-from pyamg.gallery import poisson, sprand, elasticity
-from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
-    block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
-    gauss_seidel_indexed, polynomial, gauss_seidel_ne,\
-    gauss_seidel_nr
-from pyamg.util.utils import get_block_diag
-
-from numpy.testing import TestCase, assert_almost_equal
-
 # Ignore efficiency warnings
 import warnings
-from scipy.sparse import SparseEfficiencyWarning
+
+import numpy as np
+import scipy
+from numpy.testing import TestCase, assert_almost_equal
+from scipy.linalg import solve
+from scipy.sparse import SparseEfficiencyWarning, bsr_matrix, csr_matrix, eye, spdiags
+
+from pyamg.gallery import elasticity, poisson, sprand
+from pyamg.relaxation.relaxation import (
+    block_gauss_seidel,
+    block_jacobi,
+    gauss_seidel,
+    gauss_seidel_indexed,
+    gauss_seidel_ne,
+    gauss_seidel_nr,
+    jacobi,
+    jacobi_ne,
+    polynomial,
+    schwarz,
+    sor,
+)
+from pyamg.util.utils import get_block_diag
+
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 

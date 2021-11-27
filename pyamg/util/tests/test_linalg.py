@@ -1,16 +1,24 @@
 import numpy as np
+from numpy.testing import (
+    TestCase,
+    assert_almost_equal,
+    assert_array_almost_equal,
+    assert_equal,
+)
 from scipy import linalg
+from scipy.linalg import eigvals, pinv, svd
 from scipy.sparse import csr_matrix
-from scipy.linalg import svd, eigvals, pinv
-
-from pyamg.util.linalg import approximate_spectral_radius,\
-    infinity_norm, norm, condest, cond,\
-    ishermitian, pinv_array
 
 from pyamg import gallery
-
-from numpy.testing import TestCase, assert_almost_equal, assert_equal,\
-    assert_array_almost_equal
+from pyamg.util.linalg import (
+    approximate_spectral_radius,
+    cond,
+    condest,
+    infinity_norm,
+    ishermitian,
+    norm,
+    pinv_array,
+)
 
 
 class TestLinalg(TestCase):

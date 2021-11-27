@@ -2,11 +2,13 @@
 
 import numpy as np
 import scipy.sparse as sparse
+
+from pyamg.krylov import cg, cgne, cgnr, gmres
+from pyamg.util.linalg import approximate_spectral_radius
+from pyamg.util.utils import get_block_diag, get_diagonal, scale_rows
+
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
-from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
-from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.krylov import gmres, cgne, cgnr, cg
 
 __all__ = ['change_smoothers']
 

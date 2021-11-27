@@ -2,26 +2,50 @@
 
 
 from warnings import warn
+
 import numpy as np
 import scipy as sp
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
-    isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
+from scipy.sparse import (
+    SparseEfficiencyWarning,
+    bsr_matrix,
+    csr_matrix,
+    eye,
+    isspmatrix_bsr,
+    isspmatrix_csc,
+    isspmatrix_csr,
+)
 
-from pyamg.multilevel import multilevel_solver
-from pyamg.strength import symmetric_strength_of_connection,\
-    classical_strength_of_connection, evolution_strength_of_connection
-from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
-    gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
-from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
-from pyamg.util.linalg import norm, approximate_spectral_radius
+from pyamg.multilevel import multilevel_solver
+from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
+from pyamg.strength import (
+    classical_strength_of_connection,
+    evolution_strength_of_connection,
+    symmetric_strength_of_connection,
+)
+from pyamg.util.linalg import approximate_spectral_radius, norm
+from pyamg.util.utils import (
+    amalgamate,
+    levelize_smooth_or_improve_candidates,
+    levelize_strength_or_aggregation,
+)
+
+from ..relaxation.relaxation import (
+    gauss_seidel,
+    gauss_seidel_indexed,
+    gauss_seidel_ne,
+    gauss_seidel_nr,
+    jacobi,
+    polynomial,
+)
+from .aggregate import lloyd_aggregation, standard_aggregation
 from .aggregation import smoothed_aggregation_solver
-from .aggregate import standard_aggregation, lloyd_aggregation
-from .smooth import jacobi_prolongation_smoother,\
-    energy_prolongation_smoother, richardson_prolongation_smoother
+from .smooth import (
+    energy_prolongation_smoother,
+    jacobi_prolongation_smoother,
+    richardson_prolongation_smoother,
+)
 from .tentative import fit_candidates
-from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
-    levelize_smooth_or_improve_candidates
 
 __all__ = ['adaptive_sa_solver']
 

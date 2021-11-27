@@ -2,8 +2,9 @@ import warnings
 from warnings import warn
 
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 import scipy.sparse as sparse
+from scipy.sparse.linalg.isolve.utils import make_system
+
 from pyamg.util.linalg import norm
 
 __all__ = ['cr']
@@ -202,9 +203,11 @@ if __name__ == '__main__':
     # b = random((4,1))
     # x0 = random((4,1))
 
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
     import time
+
+    from numpy.random import random
+
+    from pyamg.gallery import stencil_grid
     from pyamg.krylov._gmres import gmres
 
     A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),

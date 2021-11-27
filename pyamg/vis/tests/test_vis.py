@@ -1,15 +1,14 @@
 """ Try creating a point and primal aggregate view for a C/F splitting and
 simple aggregation, respectively."""
 
-import tempfile
 import os
+import tempfile
 
-from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
+from numpy.testing import TestCase
+from scipy.sparse import csr_matrix
 
 from pyamg.vis import vis_aggregate_groups
-
-from numpy.testing import TestCase
 
 
 class TestVis(TestCase):

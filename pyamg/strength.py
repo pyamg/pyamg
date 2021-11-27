@@ -13,10 +13,11 @@ Requirements for the strength matrix C are:
 from warnings import warn
 
 import numpy as np
-from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from scipy import sparse
+
 from pyamg import amg_core
 from pyamg.relaxation.relaxation import jacobi
+from pyamg.util.utils import amalgamate, scale_rows_by_largest_entry
 
 __all__ = ['classical_strength_of_connection',
            'symmetric_strength_of_connection',
@@ -531,9 +532,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     """
     # local imports for evolution_strength_of_connection
-    from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
     from pyamg.util.linalg import approximate_spectral_radius
-    from pyamg.util.utils import set_tol
+    from pyamg.util.utils import get_block_diag, scale_columns, scale_rows, set_tol
 
     # ====================================================================
     # Check inputs

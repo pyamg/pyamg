@@ -6,6 +6,18 @@ on:
     branches: [ main ]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - uses: actions/checkout@v2
+      - name: isort
+        run: |
+          pip install isort
+          isort --check .
+
   Test:
 
     runs-on: ${{ matrix.os }}

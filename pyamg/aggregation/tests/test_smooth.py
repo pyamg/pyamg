@@ -1,15 +1,17 @@
+import warnings
+
 import numpy as np
 import scipy.sparse as sparse
+from numpy.testing import (
+    TestCase,
+    assert_almost_equal,
+    assert_array_almost_equal,
+    assert_equal,
+)
 
-from pyamg.gallery import poisson, linear_elasticity, load_example,\
-    gauge_laplacian
-from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
+from pyamg.aggregation import rootnode_solver, smoothed_aggregation_solver
 from pyamg.amg_core import incomplete_mat_mult_bsr
-
-from numpy.testing import TestCase, assert_array_almost_equal,\
-    assert_equal, assert_almost_equal
-
-import warnings
+from pyamg.gallery import gauge_laplacian, linear_elasticity, load_example, poisson
 
 
 class TestEnergyMin(TestCase):

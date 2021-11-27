@@ -2,18 +2,24 @@
 
 
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+
+from scipy.sparse import SparseEfficiencyWarning, csr_matrix, isspmatrix_csr
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import classical_strength_of_connection, \
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    distance_strength_of_connection, energy_based_strength_of_connection,\
-    algebraic_distance, affinity_distance
+from pyamg.strength import (
+    affinity_distance,
+    algebraic_distance,
+    classical_strength_of_connection,
+    distance_strength_of_connection,
+    energy_based_strength_of_connection,
+    evolution_strength_of_connection,
+    symmetric_strength_of_connection,
+)
 
-from .interpolate import direct_interpolation
 from . import split
 from .cr import CR
+from .interpolate import direct_interpolation
 
 __all__ = ['ruge_stuben_solver']
 

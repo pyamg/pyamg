@@ -1,7 +1,7 @@
 import numpy as np
-from pyamg.gallery.diffusion import diffusion_stencil_2d
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
+from pyamg.gallery.diffusion import diffusion_stencil_2d
 
 
 class TestDiffusionStencil2D(TestCase):

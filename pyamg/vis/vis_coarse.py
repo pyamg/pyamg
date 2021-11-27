@@ -9,8 +9,10 @@ vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 
 
 import warnings
+
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix, triu
+from scipy.sparse import coo_matrix, csr_matrix, triu
+
 from .vtk_writer import write_basic_mesh, write_vtu
 
 __all__ = ['vis_splitting', 'vis_aggregate_groups']
@@ -235,7 +237,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
             write_basic_mesh(Verts=Verts, E2V=E2V, mesh_type='vertex',
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
-            from pylab import figure, show, plot, xlabel, ylabel, title, axis
+            from pylab import axis, figure, plot, show, title, xlabel, ylabel
             cdataF = np.where(cdata == 0)[0]
             cdataC = np.where(cdata == 1)[0]
             xC = Verts[cdataC, 0]

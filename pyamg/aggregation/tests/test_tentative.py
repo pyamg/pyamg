@@ -1,9 +1,8 @@
 import numpy as np
+from numpy.testing import TestCase, assert_almost_equal
 from scipy.sparse import csr_matrix
 
 from pyamg.aggregation.aggregation import fit_candidates
-
-from numpy.testing import TestCase, assert_almost_equal
 
 
 class TestFitCandidates(TestCase):

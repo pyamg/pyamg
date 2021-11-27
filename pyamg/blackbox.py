@@ -3,7 +3,8 @@
 
 import numpy as np
 import scipy as sp
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
+from scipy.sparse import csr_matrix, isspmatrix_bsr, isspmatrix_csr
+
 from pyamg import smoothed_aggregation_solver
 from pyamg.util.linalg import ishermitian
 

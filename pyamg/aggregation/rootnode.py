@@ -1,26 +1,40 @@
 """Support for aggregation-based AMG."""
 
 
-import numpy as np
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
-    SparseEfficiencyWarning
+
+import numpy as np
+from scipy.sparse import (
+    SparseEfficiencyWarning,
+    csr_matrix,
+    isspmatrix_bsr,
+    isspmatrix_csr,
+)
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import relaxation_as_linear_operator,\
-    scale_T, get_Cpt_params, \
-    eliminate_diag_dom_nodes, blocksize, \
-    levelize_strength_or_aggregation, \
-    levelize_smooth_or_improve_candidates
-from pyamg.strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    energy_based_strength_of_connection, distance_strength_of_connection,\
-    algebraic_distance, affinity_distance
-from .aggregate import standard_aggregation, naive_aggregation, \
-    lloyd_aggregation
-from .tentative import fit_candidates
+from pyamg.strength import (
+    affinity_distance,
+    algebraic_distance,
+    classical_strength_of_connection,
+    distance_strength_of_connection,
+    energy_based_strength_of_connection,
+    evolution_strength_of_connection,
+    symmetric_strength_of_connection,
+)
+from pyamg.util.utils import (
+    blocksize,
+    eliminate_diag_dom_nodes,
+    get_Cpt_params,
+    levelize_smooth_or_improve_candidates,
+    levelize_strength_or_aggregation,
+    relaxation_as_linear_operator,
+    scale_T,
+)
+
+from .aggregate import lloyd_aggregation, naive_aggregation, standard_aggregation
 from .smooth import energy_prolongation_smoother
+from .tentative import fit_candidates
 
 __all__ = ['rootnode_solver']
 

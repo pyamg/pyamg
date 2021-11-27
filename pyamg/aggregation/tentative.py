@@ -2,7 +2,8 @@
 
 
 import numpy as np
-from scipy.sparse import isspmatrix_csr, bsr_matrix
+from scipy.sparse import bsr_matrix, isspmatrix_csr
+
 from pyamg import amg_core
 
 __all__ = ['fit_candidates']

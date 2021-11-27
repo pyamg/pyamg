@@ -2,13 +2,21 @@
 
 
 import numpy as np
-import scipy.sparse as sparse
 import scipy.linalg as la
-from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
-    UnAmal, filter_operator, compute_BtBinv, filter_matrix_rows, \
-    truncate_rows
-from pyamg.util.linalg import approximate_spectral_radius
+import scipy.sparse as sparse
+
 import pyamg.amg_core
+from pyamg.util.linalg import approximate_spectral_radius
+from pyamg.util.utils import (
+    UnAmal,
+    compute_BtBinv,
+    filter_matrix_rows,
+    filter_operator,
+    get_block_diag,
+    get_diagonal,
+    scale_rows,
+    truncate_rows,
+)
 
 __all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
            'energy_prolongation_smoother']

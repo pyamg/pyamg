@@ -1,18 +1,23 @@
 import numpy as np
-import scipy.sparse as sparse
 import scipy.linalg as sla
+import scipy.sparse as sparse
+from numpy.testing import (
+    TestCase,
+    assert_array_almost_equal,
+    assert_array_equal,
+    assert_equal,
+)
 
-from pyamg.gallery import poisson, linear_elasticity, load_example,\
-    stencil_grid
-from pyamg.strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    distance_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
+from pyamg.gallery import linear_elasticity, load_example, poisson, stencil_grid
+from pyamg.strength import (
+    classical_strength_of_connection,
+    distance_strength_of_connection,
+    evolution_strength_of_connection,
+    symmetric_strength_of_connection,
+)
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows, set_tol
-
-from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
-    assert_array_equal
 
 classical_soc = classical_strength_of_connection
 symmetric_soc = symmetric_strength_of_connection

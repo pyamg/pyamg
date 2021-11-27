@@ -1,18 +1,39 @@
 import numpy as np
-from scipy.sparse import csr_matrix, csc_matrix, isspmatrix, bsr_matrix, isspmatrix_bsr,\
-    spdiags
+from numpy.testing import (
+    TestCase,
+    assert_almost_equal,
+    assert_array_almost_equal,
+    assert_array_equal,
+    assert_equal,
+)
+from scipy.sparse import (
+    bsr_matrix,
+    csc_matrix,
+    csr_matrix,
+    isspmatrix,
+    isspmatrix_bsr,
+    spdiags,
+)
 
 import pyamg
-
-from pyamg.util.utils import diag_sparse, profile_solver, to_type,\
-    type_prep, get_diagonal,\
-    scale_rows, scale_columns,\
-    get_block_diag, symmetric_rescaling, symmetric_rescaling_sa,\
-    relaxation_as_linear_operator, filter_operator, scale_T, get_Cpt_params,\
-    compute_BtBinv, eliminate_diag_dom_nodes
-
-from numpy.testing import TestCase, assert_equal, assert_almost_equal,\
-    assert_array_almost_equal, assert_array_equal
+from pyamg.util.utils import (
+    compute_BtBinv,
+    diag_sparse,
+    eliminate_diag_dom_nodes,
+    filter_operator,
+    get_block_diag,
+    get_Cpt_params,
+    get_diagonal,
+    profile_solver,
+    relaxation_as_linear_operator,
+    scale_columns,
+    scale_rows,
+    scale_T,
+    symmetric_rescaling,
+    symmetric_rescaling_sa,
+    to_type,
+    type_prep,
+)
 
 
 class TestUtils(TestCase):
@@ -159,8 +180,9 @@ class TestUtils(TestCase):
 
     def test_profile_solver(self):
         from scipy.sparse.linalg import cg
-        from pyamg.gallery import poisson
+
         from pyamg.aggregation import smoothed_aggregation_solver
+        from pyamg.gallery import poisson
 
         A = poisson((100, 100), format='csr')
         ml = smoothed_aggregation_solver(A)
@@ -175,7 +197,7 @@ class TestUtils(TestCase):
         del residuals
 
     def test_get_block_diag(self):
-        from scipy import arange, ravel, array
+        from scipy import arange, array, ravel
         from scipy.sparse import csr_matrix
         A = csr_matrix(np.arange(1, 37, dtype=float).reshape(6, 6))
         block_diag = get_block_diag(A, blocksize=1, inv_flag=False)
@@ -637,8 +659,9 @@ class TestUtils(TestCase):
         assert_array_almost_equal(T_answer, T_scaled)
 
     def test_get_Cpt_params(self):
+        from scipy.sparse import bsr_matrix, csr_matrix
+
         from pyamg.gallery import poisson
-        from scipy.sparse import csr_matrix, bsr_matrix
 
         # Begin with trivially sized tests
         # 1x1
@@ -1168,8 +1191,9 @@ class TestComplexUtils(TestCase):
 
     def test_profile_solver(self):
         from scipy.sparse.linalg import cg
-        from pyamg.gallery import poisson
+
         from pyamg.aggregation import smoothed_aggregation_solver
+        from pyamg.gallery import poisson
 
         A = poisson((100, 100), format='csr')
         A.data = A.data + 1e-5*np.random.rand(A.nnz)
@@ -1405,6 +1429,7 @@ class TestLevelize(TestCase):
 
     def test_levelize_smooth_or_improve_candidates(self):
         from pyamg.util.utils import levelize_smooth_or_improve_candidates
+
         # test 1
         result = levelize_smooth_or_improve_candidates([('jacobi', {})], 5)
         assert_equal(result, [('jacobi', {}) for i in range(5)])
@@ -1420,8 +1445,8 @@ class TestLevelize(TestCase):
         assert_equal(result, [('jacobi', {}), None, None, None, None])
 
     def test_levelize_strength_or_aggregation(self):
-        from pyamg.util.utils import levelize_strength_or_aggregation
         from pyamg.gallery import poisson
+        from pyamg.util.utils import levelize_strength_or_aggregation
         A = poisson((100,), format='csr')
         # test 1
         max_levels, max_coarse, result = \

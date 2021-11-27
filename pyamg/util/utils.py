@@ -3,12 +3,22 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
-    isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
-from scipy.sparse.sputils import upcast
-from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
+from scipy.sparse import (
+    bsr_matrix,
+    coo_matrix,
+    csc_matrix,
+    csr_matrix,
+    eye,
+    isspmatrix,
+    isspmatrix_bsr,
+    isspmatrix_csc,
+    isspmatrix_csr,
+)
+from scipy.sparse.sputils import upcast
+
 import pyamg.amg_core
+from pyamg.util.linalg import cond, norm, pinv_array
 
 __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
@@ -22,11 +32,19 @@ __all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
            'filter_matrix_rows', 'truncate_rows', 'set_tol']
 
 try:
-    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse._sparsetools import (
+        bsr_scale_columns,
+        bsr_scale_rows,
+        csr_scale_columns,
+        csr_scale_rows,
+    )
 except ImportError:
-    from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse.sparsetools import (
+        bsr_scale_columns,
+        bsr_scale_rows,
+        csr_scale_columns,
+        csr_scale_rows,
+    )
 
 
 def blocksize(A):
@@ -1145,9 +1163,10 @@ def relaxation_as_linear_operator(method, A, b):
     >>> B = relax*B
 
     """
-    from pyamg import relaxation
     from scipy.sparse.linalg.interface import LinearOperator
+
     import pyamg.multilevel
+    from pyamg import relaxation
 
     def unpack_arg(v):
         if isinstance(v, tuple):

@@ -1,11 +1,12 @@
 import warnings
 from warnings import warn
+
 import numpy as np
 import scipy.sparse as sparse
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.linalg.interface import aslinearoperator
-from pyamg.util.linalg import norm
+from scipy.sparse.linalg.isolve.utils import make_system
 
+from pyamg.util.linalg import norm
 
 __all__ = ['cgnr']
 

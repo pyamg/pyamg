@@ -1,10 +1,11 @@
 import warnings
 from warnings import warn
-import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
 
+import numpy as np
+import scipy.sparse as sparse
+from scipy.sparse.linalg.isolve.utils import make_system
+
+from pyamg.util.linalg import norm
 
 __all__ = ['cg']
 
@@ -195,11 +196,13 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
 
 if __name__ == '__main__':
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
     import time
-    from scipy.sparse.linalg.isolve import cg as icg
+
     import numpy as np
+    from numpy.random import random
+    from scipy.sparse.linalg.isolve import cg as icg
+
+    from pyamg.gallery import stencil_grid
 
     nx = 100
     ny = nx
@@ -270,8 +273,8 @@ if __name__ == '__main__':
     (x, flag) = cg(A, b, x, M=M, tol=1e-16, maxiter=100, callback=mycb2, residuals=res)
     t2 = time.time()
 
-    import matplotlib.pyplot as plt
     import matplotlib
+    import matplotlib.pyplot as plt
     matplotlib.rcParams['text.usetex'] = True
     plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
     plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')

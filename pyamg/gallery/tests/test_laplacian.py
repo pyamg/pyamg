@@ -1,8 +1,8 @@
 import numpy as np
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
 from scipy.linalg import eigvals
-from pyamg.gallery.laplacian import poisson, gauge_laplacian
 
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
+from pyamg.gallery.laplacian import gauge_laplacian, poisson
 
 
 class TestPoisson(TestCase):

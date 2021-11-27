@@ -1,10 +1,11 @@
 """Testing for fem.py
 """
+import os
+
 import numpy as np
-from pyamg.gallery import fem
 import scipy.sparse.linalg as sla
 
-import os
+from pyamg.gallery import fem
 
 test_dir = os.path.split(__file__)[0]
 base_dir = os.path.split(test_dir)[0]

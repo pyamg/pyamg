@@ -1,9 +1,10 @@
 import warnings
-import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
 
+import numpy as np
+import scipy.sparse as sparse
+from scipy.sparse.linalg.isolve.utils import make_system
+
+from pyamg.util.linalg import norm
 
 __all__ = ['bicgstab']
 

@@ -1,9 +1,9 @@
 import numpy as np
+import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_array_equal, assert_equal
+
 import pyamg.amg_core as amg_core
 from pyamg.gallery import load_example
-import scipy.sparse as sparse
-
-from numpy.testing import TestCase, assert_equal, assert_array_equal
 
 
 def canonical_graph(G):

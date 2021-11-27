@@ -1,9 +1,9 @@
-from pyamg.krylov import minimal_residual, steepest_descent
 import numpy as np
-from pyamg.util.linalg import norm
-import pyamg
-
 from numpy.testing import TestCase
+
+import pyamg
+from pyamg.krylov import minimal_residual, steepest_descent
+from pyamg.util.linalg import norm
 
 
 class TestSimpleIterations(TestCase):

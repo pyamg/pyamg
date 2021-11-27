@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
-import yaml
 import os
+
+import yaml
 
 PYBINDHEADER = """\
 #include <pybind11/pybind11.h>
@@ -328,6 +329,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
 def main():
     import argparse
+
     import CppHeaderParser
 
     parser = argparse.ArgumentParser(

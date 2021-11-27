@@ -1,19 +1,18 @@
 """PyAMG: Algebraic Multigrid Solvers in Python"""
 
-import numpy as np
 import re
+import warnings
+
+import numpy as np
 import scipy as sp
 
-from .version import version_tuple as __version_tuple__
-from .version import version as __version__
-
-from .multilevel import coarse_grid_solver, multilevel_solver
-from .classical import ruge_stuben_solver
-from .aggregation import smoothed_aggregation_solver, rootnode_solver
-from .gallery import demo
+from .aggregation import rootnode_solver, smoothed_aggregation_solver
 from .blackbox import solve, solver, solver_configuration
-
-import warnings
+from .classical import ruge_stuben_solver
+from .gallery import demo
+from .multilevel import coarse_grid_solver, multilevel_solver
+from .version import version as __version__
+from .version import version_tuple as __version_tuple__
 
 __all__ = [__version_tuple__, __version__,
            coarse_grid_solver, multilevel_solver,
@@ -55,6 +54,7 @@ if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
 
 def test(verbose=False):
     import sys
+
     import pytest
 
     print("Python version: %s" % sys.version.replace('\n', ''))

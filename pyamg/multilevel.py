@@ -3,10 +3,9 @@
 
 from warnings import warn
 
+import numpy as np
 import scipy as sp
 import scipy.linalg
-import numpy as np
-
 from pkg_resources import parse_version  # included with setuptools
 
 if parse_version(sp.__version__) >= parse_version('1.7'):
@@ -425,8 +424,9 @@ class multilevel_solver:
             # Acceleration is being used
             kwargs = {}
             if isinstance(accel, basestring):
-                from pyamg import krylov
                 from scipy.sparse.linalg import isolve
+
+                from pyamg import krylov
                 kwargs = {}
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
@@ -480,6 +480,7 @@ class multilevel_solver:
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of real A and complex b
         from scipy.sparse.sputils import upcast
+
         from pyamg.util.utils import to_type
         tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
@@ -701,8 +702,8 @@ def coarse_grid_solver(solver):
             kwargs['iterations'] = 10
 
         def solve(self, A, b):
-            from pyamg.relaxation import smoothing
             from pyamg import multilevel_solver
+            from pyamg.relaxation import smoothing
 
             lvl = multilevel_solver.level()
             lvl.A = A

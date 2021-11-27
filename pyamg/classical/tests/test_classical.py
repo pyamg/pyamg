@@ -1,18 +1,15 @@
+import warnings
+
 import numpy as np
 import scipy as sp
-
-from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
-
-from pyamg.gallery import poisson, load_example
-from pyamg.strength import classical_strength_of_connection
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
+from scipy.sparse import SparseEfficiencyWarning, coo_matrix, csr_matrix
 
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
 from pyamg.classical.interpolate import direct_interpolation
-
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
-
-import warnings
+from pyamg.gallery import load_example, poisson
+from pyamg.strength import classical_strength_of_connection
 
 
 class TestRugeStubenFunctions(TestCase):

@@ -3,10 +3,10 @@ from warnings import warn
 
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
-from pyamg.util.linalg import norm
+from scipy.sparse.linalg.isolve.utils import make_system
 
+from pyamg.util.linalg import norm
 
 __all__ = ['gmres_mgs']
 
@@ -337,8 +337,9 @@ if __name__ == '__main__':
     # x0 = random((4,1))
     # %timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
 
-    from pyamg.gallery import poisson
     from numpy.random import random
+
+    from pyamg.gallery import poisson
     from pyamg.util.linalg import norm
     A = poisson((125, 125), dtype=float, format='csr')
     # A.data = A.data + 0.001j*rand(A.data.shape[0])
@@ -346,6 +347,7 @@ if __name__ == '__main__':
     x0 = random((A.shape[0],))
 
     import time
+
     from scipy.sparse.linalg.isolve import gmres as igmres
 
     print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %
