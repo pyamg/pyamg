@@ -3,8 +3,6 @@ name: Build wheels
 on:
   workflow_dispatch:
   release:
-    branches:
-      - main
     types:
       - published
 
