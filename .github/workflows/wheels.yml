@@ -55,8 +55,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pypa/build
+        run: pip install 'build[virtualenv]'
+
       - name: Build sdist
-        run: pipx run build --sdist
+        run: python -m build --sdist
 
       - name: Save sdist
         uses: actions/upload-artifact@v2

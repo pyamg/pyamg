@@ -5,3 +5,5 @@ include README.md
 include requirements.txt
 include pyamg/amg_core/*.h
 include pyamg/amg_core/tests/*.h
+recursive-exclude .github
+exclude .gitignore
