@@ -1,0 +1,83 @@
+name: Build wheels
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - pybind11setup
+  release:
+    types:
+      - published
+
+jobs:
+  build_wheels:
+    name: Build wheel for ${{ matrix.os }} ${{ matrix.py }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {"os": "ubuntu", "py": "cp38", "arch": "x86_64"}
+          - {"os": "ubuntu", "py": "cp38", "arch": "i686"}
+          - {"os": "ubuntu", "py": "cp38", "arch": "aarch64"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "x86_64"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "i686"}
+          - {"os": "ubuntu", "py": "cp39", "arch": "aarch64"}
+          - {"os": "macos", "py": "cp38", "arch": "x86_64"}
+          - {"os": "macos", "py": "cp39", "arch": "x86_64"}
+          - {"os": "windows", "py": "cp38", "arch": "x86"}
+          - {"os": "windows", "py": "cp38", "arch": "AMD64"}
+          - {"os": "windows", "py": "cp39", "arch": "x86"}
+          - {"os": "windows", "py": "cp39", "arch": "AMD64"}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.2.2
+        env:
+          CIBW_BUILD_VERBOSITY: 2
+
+      - name: Save wheels
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install pypa/build
+        run: pip install 'build[virtualenv]'
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - name: Save sdist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/*.tar.gz
+
+  upload_all:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: artifact
+        path: dist
+
+    - uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_token }}
