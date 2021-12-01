@@ -3,8 +3,10 @@ name: Build wheels
 on:
   workflow_dispatch:
   push:
+    tags:
+      - 'v*'
     branches:
-      - pybind11setup
+      - main
   release:
     types:
       - published
