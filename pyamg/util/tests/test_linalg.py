@@ -146,8 +146,8 @@ class TestComplexLinalg(TestCase):
         cases.append(np.array([[-2.0-2.4j, 0], [0, 1.21]]))
 
         cases.append(np.array([[100+1.0j, 0, 0],
-                             [0, 101-1.0j, 0],
-                             [0, 0, 99+9.9j]]))
+                               [0, 101-1.0j, 0],
+                               [0, 0, 99+9.9j]]))
 
         for i in range(1, 6):
             cases.append(np.array(np.random.rand(i, i)+1.0j*np.random.rand(i, i)))

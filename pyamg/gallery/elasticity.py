@@ -127,7 +127,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         indices = np.arange((X-1)*(Y-1))
         indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
         P = sparse.bsr_matrix((data, indices, indptr),
-                       shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
+                              shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
         A = P.T * A * P
 

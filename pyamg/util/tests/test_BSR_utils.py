@@ -24,11 +24,11 @@ class TestBSRUtils(TestCase):
         indptr2 = np.array([0, 2, 3, 6])
         indices2 = np.array([0, 2, 2, 0, 1, 2])
         data2 = np.array([[[1, 1], [1, 1]],
-                       [[2, 2], [2, 2]],
-                       [[3, 3], [3, 3]],
-                       [[4, 4], [22, 22]],
-                       [[5, 5], [22, 22]],
-                       [[6, 6], [22, 22]]])
+                          [[2, 2], [2, 2]],
+                          [[3, 3], [3, 3]],
+                          [[4, 4], [22, 22]],
+                          [[5, 5], [22, 22]],
+                          [[6, 6], [22, 22]]])
 
         B2 = bsr_matrix((data2, indices2, indptr2), shape=(6, 6))
         B = bsr_matrix((data, indices, indptr), shape=(6, 6))
@@ -44,11 +44,11 @@ class TestBSRUtils(TestCase):
         indptr2 = np.array([0, 2, 3, 6])
         indices2 = np.array([0, 2, 2, 0, 1, 2])
         data2 = np.array([[[1, 1], [1, 1]],
-                       [[2, 2], [2, 2]],
-                       [[3, 3], [3, 3]],
-                       [[4, 4], [11, 22]],
-                       [[5, 5], [33, 44]],
-                       [[6, 6], [55, 66]]])
+                          [[2, 2], [2, 2]],
+                          [[3, 3], [3, 3]],
+                          [[4, 4], [11, 22]],
+                          [[5, 5], [33, 44]],
+                          [[6, 6], [55, 66]]])
 
         B2 = bsr_matrix((data2, indices2, indptr2), shape=(6, 6))
         B = bsr_matrix((data, indices, indptr), shape=(6, 6))
