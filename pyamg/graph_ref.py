@@ -28,7 +28,6 @@ def bellman_ford_reference(A, c):
 
     """
     Nnode = A.shape[0]
-    Ncluster = len(c)
     d = np.full((Nnode,), np.inf)
     m = np.full((Nnode,), -1.0, dtype=np.int32)
 
@@ -58,7 +57,7 @@ if __name__ == '__main__':
                       [4, 3]])
     w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
     A = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-    c = np.array([0,1,2,3,4])
+    c = np.array([0, 1, 2, 3, 4])
 
     print('\nreference--')
     for cc in c:

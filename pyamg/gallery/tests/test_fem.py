@@ -145,15 +145,15 @@ class TestGradGradFEM(np.testing.TestCase):
         # 3 x 3 mesh
         h = 1
         V = np.array(
-            [[  0,  0],
-             [  h,  0],
-             [2*h,  0],
-             [  0,  h],
-             [  h,  h],
-             [2*h,  h],
-             [  0,2*h],
-             [  h,2*h],
-             [2*h,2*h]])
+            [[  0,   0],
+             [  h,   0],
+             [2*h,   0],
+             [  0,   h],
+             [  h,   h],
+             [2*h,   h],
+             [  0, 2*h],
+             [  h, 2*h],
+             [2*h, 2*h]])
         E = np.array(
             [[0, 1, 3],
              [1, 2, 4],

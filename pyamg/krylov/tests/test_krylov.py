@@ -15,7 +15,7 @@ class TestStoppingCriteria(TestCase):
 
         np.random.seed(9062883)
         n = 10
-        A = np.random.rand(n,n)
+        A = np.random.rand(n, n)
         b = np.random.rand(n)
         x0 = np.random.rand(n)
         A = 0.5 * (A + A.T) + n*np.eye(n, n)

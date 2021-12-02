@@ -487,8 +487,8 @@ class mesh:
         maxit = 100
         for it in range(maxit):
             Vnew = G @ Vnew
-            Vnew /= W[:, None] # scale the columns by 1/W
-            Vnew[bid,:] = self.V[bid, :]
+            Vnew /= W[:, None]  # scale the columns by 1/W
+            Vnew[bid, :] = self.V[bid, :]
             newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2 +
                                     (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
             move = np.max(np.abs(newedgelength - edgelength) / newedgelength)
@@ -766,8 +766,8 @@ def divform(mesh):
 
             dphi = invJ.dot(dbasis)
 
-            DXelem += (detJ / 2) * w * (np.outer(basis1, dphi[0,:]))
-            DYelem += (detJ / 2) * w * (np.outer(basis1, dphi[1,:]))
+            DXelem += (detJ / 2) * w * (np.outer(basis1, dphi[0, :]))
+            DYelem += (detJ / 2) * w * (np.outer(basis1, dphi[1, :]))
             dphi.T.dot(dphi)
 
         # Step 7
