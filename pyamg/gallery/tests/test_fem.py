@@ -153,8 +153,7 @@ class TestGradGradFEM(np.testing.TestCase):
              [2*h,  h],
              [  0,2*h],
              [  h,2*h],
-             [2*h,2*h],
-            ])
+             [2*h,2*h]])
         E = np.array(
             [[0, 1, 3],
              [1, 2, 4],
