@@ -47,7 +47,7 @@ def bellman_ford_reference(A, c):
     return (d, m)
 
 
-if __name__  == '__main__':
+if __name__ == '__main__':
     Edges = np.array([[1, 4],
                       [3, 1],
                       [1, 3],

@@ -263,7 +263,7 @@ if __name__ == '__main__':
     import pyamg
     res = []
     ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
-    M =  ml.aspreconditioner()
+    M = ml.aspreconditioner()
     x = x0.copy()
     t1 = time.time()
     res = []
