@@ -209,7 +209,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             else:
                 n_cvdata = 1
                 cvdata[key] = cvdata[key].reshape((cvdata[key].size, 1))
-            if cvdata[key].shape[0] != 3*Cells[key].shape[0]:
+            if cvdata[key].shape[0] != 3 * Cells[key].shape[0]:
                 raise ValueError('size mismatch with cvdata and Cells')
             if cvdata[key] is None:
                 raise ValueError('cvdata array cannot be empty for key %d' %
@@ -223,15 +223,15 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     cdata_all = None
     cvdata_all = None
     for key in Cells:
-            # non-Poly data
+        # non-Poly data
         sz = Cells[key].shape[0]
         offset = Cells[key].shape[1]
 
         Ncells += sz
         uu = np.ones((sz,), dtype='uint8')
         cell_ind = np.hstack((cell_ind, Cells[key].ravel()))
-        cell_offset = np.hstack((cell_offset, offset*uu))
-        cell_type = np.hstack((cell_type, key*uu))
+        cell_offset = np.hstack((cell_offset, offset * uu))
+        cell_type = np.hstack((cell_type, key * uu))
 
         if cdata is not None:
             if cdata_all is None:
