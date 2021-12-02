@@ -204,7 +204,7 @@ if __name__ == '__main__':
     nx = 100
     ny = nx
     A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
-    #b = random((A.shape[0],))
+    # b = random((A.shape[0],))
     xstar = random((A.shape[0],))
     b = A @ xstar
     x0 = random((A.shape[0],))
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     res = []
     (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
     t2 = time.time()
-    #print('res1: ', res)
+    # print('res1: ', res)
     print(f'cg took {(t2-t1)*1000.0} ms')
     print(f'norm = {norm(b - A @ x)}')
     print(f'info flag = {flag}')
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     t1 = time.time()
     (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
     t2 = time.time()
-    #print('res2: ', res)
+    # print('res2: ', res)
     print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
     print(f'norm = {norm(b - A @ y)}')
     print(f'info flag = {flag}')
