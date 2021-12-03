@@ -511,9 +511,7 @@ def compute_diffusion_matrix(kappa_lmbda, x, y):
         isinstance(kappa, float)):
         return np.eye(2) * kappa
     elif isinstance(kappa, np.ndarray):
-        if kappa.flatten().shape == (2,):
-            return np.diag(kappa.flatten())
-        elif kappa.shape == (2,2):
+        if kappa.shape == (2,2):
             return kappa
         else:
             raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), received ndarray of shape {kappa_elem.shape}')
