@@ -140,7 +140,6 @@ class TestGraph(TestCase):
             distance, nearest = bellman_ford(G, [seed])
             assert_equal(distance, distances_FROM_seed[seed])
 
-
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
 

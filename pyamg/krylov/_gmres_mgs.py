@@ -292,7 +292,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
                     update = np.ravel(V[:inner+1, :].T.dot(y.reshape(-1, 1)))
                     callback(x + update)
 
-
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
