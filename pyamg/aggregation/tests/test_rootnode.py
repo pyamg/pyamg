@@ -491,8 +491,7 @@ class TestComplexSolverPerformance(TestCase):
         B = data['B']
         np.random.seed(625)
         x0 = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-        b = (A * np.random.rand(A.shape[0])
-             + 1.0j * (A * np.random.rand(A.shape[0])))
+        b = A @ np.random.rand(A.shape[0]) + 1.0j * (A @ np.random.rand(A.shape[0]))
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',

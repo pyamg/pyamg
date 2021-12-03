@@ -535,8 +535,8 @@ class TestEnergyMin(TestCase):
             smooth[1]['postfilter'] = postfilter
             ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
                                         smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz >
-                         ml_filter.levels[0].P.nnz, True)
+            assert_equal(ml_nofilter.levels[0].P.nnz
+                         > ml_filter.levels[0].P.nnz, True)
 
     def test_prefilter(self):
         """Check that using prefilter reduces NNZ in P"""
@@ -588,8 +588,8 @@ class TestEnergyMin(TestCase):
             smooth[1]['prefilter'] = prefilter
             ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
                                         smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz >
-                         ml_filter.levels[0].P.nnz, True)
+            assert_equal(ml_nofilter.levels[0].P.nnz
+                         > ml_filter.levels[0].P.nnz, True)
 
 # class TestSatisfyConstaints(TestCase):
 #    def test_scalar(self):

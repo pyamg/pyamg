@@ -335,7 +335,6 @@ def rowsum_stdev(x, beta):
 
     """
     n = x.size
-    betabar = (1.0/n) * np.dot(x, beta)
-    stdev = np.sqrt((1.0/n) *
-                    np.sum(np.power(np.multiply(x, beta) - betabar, 2)))
-    return stdev/betabar
+    betabar = (1.0 / n) * np.dot(x, beta)
+    stdev = np.sqrt((1.0 / n) * np.sum(np.power(np.multiply(x, beta) - betabar, 2)))
+    return stdev / betabar

@@ -1159,8 +1159,9 @@ class TestComplexRelaxation(TestCase):
         A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
                     format='csr')
         A.data = A.data + 1.0j*A.data
-        soln = np.array([11./15. + 1.0j/15., 11./15. +
-                         31.0j/15, 77./15. - 53.0j/15.])
+        soln = np.array([11./15. + 1.0j/15.,
+                         11./15. + 31.0j/15,
+                         77./15. - 53.0j/15.])
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
@@ -1175,8 +1176,9 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
         x_copy = x.copy()
-        solnpart = np.array([11./15. + 1.0j/15., 11./15. +
-                             31.0j/15, 77./15. - 53.0j/15.])
+        solnpart = np.array([11./15. + 1.0j/15.,
+                             11./15. + 31.0j/15,
+                             77./15. - 53.0j/15.])
         soln = 2.0/3.0*x_copy + 1.0/3.0*solnpart
 
         jacobi_ne(A, x, b, omega=1.0/3.0)

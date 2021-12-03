@@ -183,11 +183,12 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=case['maxiter'])
+                factor = case['reduction_factor']
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
-                assert_equal((norm(b - A.dot(xNew))/norm(b - A.dot(x0))) < case['reduction_factor'], True,
-                             err_msg='Oblique Krylov Method Failed Test')
+                assert_equal((norm(b - A.dot(xNew)) / norm(b - A.dot(x0))) < factor,
+                             True, err_msg='Oblique Krylov Method Failed Test')
 
         # Oblique projectors reduce the residual, here we consider oblique
         # projectors for symmetric matrices
@@ -196,11 +197,12 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=case['maxiter'])
+                factor = case['reduction_factor']
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
-                assert_equal((norm(b - A.dot(xNew))/norm(b - A.dot(x0))) < case['reduction_factor'], True,
-                             err_msg='Symmetric oblique Krylov Method Failed')
+                assert_equal((norm(b - A.dot(xNew)) / norm(b - A.dot(x0))) < factor,
+                             True, err_msg='Symmetric oblique Krylov Method Failed')
 
         # Orthogonal projectors reduce the error
         for method in self.orth:
@@ -208,13 +210,13 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=case['maxiter'])
+                factor = case['reduction_factor']
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
                 soln = solve(A, b)
-                assert_equal((norm(soln - xNew)/norm(soln - x0)) <
-                             case['reduction_factor'], True,
-                             err_msg='Orthogonal Krylov Method Failed Test')
+                assert_equal((norm(soln - xNew) / norm(soln - x0)) < factor,
+                             True, err_msg='Orthogonal Krylov Method Failed Test')
 
         # SPD Orthogonal projectors reduce the error
         for method in self.spd_orth:
@@ -222,13 +224,13 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=case['maxiter'])
+                factor = case['reduction_factor']
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
                 soln = solve(A, b)
-                assert_equal((norm(soln - xNew)/norm(soln - x0)) <
-                             case['reduction_factor'], True,
-                             err_msg='Orthogonal Krylov Method Failed Test')
+                assert_equal((norm(soln - xNew) / norm(soln - x0)) < factor,
+                             True, err_msg='Orthogonal Krylov Method Failed Test')
 
         # Assume that Inexact Methods reduce the residual for these examples
         for method in self.inexact:
@@ -236,8 +238,8 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=A.shape[0])
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=A.shape[0])
                 xNew = xNew.reshape(-1, 1)
-                assert_equal((norm(b - A.dot(xNew))/norm(b - A.dot(x0))) < 0.35, True,
-                             err_msg='Inexact Krylov Method Failed Test')
+                assert_equal((norm(b - A.dot(xNew)) / norm(b - A.dot(x0))) < 0.35,
+                             True, err_msg='Inexact Krylov Method Failed Test')

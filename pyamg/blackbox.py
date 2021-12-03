@@ -124,8 +124,8 @@ def solver_configuration(A, B=None, verb=True):
                                           dtype=A.dtype), np.eye(bsize))
         else:
             config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)
-    elif (isinstance(B, type(np.zeros((1,)))) or
-            isinstance(B, type(sp.mat(np.zeros((1,)))))):
+    elif (isinstance(B, type(np.zeros((1,))))
+          or isinstance(B, type(sp.mat(np.zeros((1,)))))):
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if (B.shape[0] != A.shape[0]) or (B.shape[1] == 0):

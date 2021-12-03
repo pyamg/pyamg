@@ -489,8 +489,8 @@ class mesh:
             Vnew = G @ Vnew
             Vnew /= W[:, None]  # scale the columns by 1/W
             Vnew[bid, :] = self.V[bid, :]
-            newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2 +
-                                    (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
+            newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2
+                                    + (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
             move = np.max(np.abs(newedgelength - edgelength) / newedgelength)
             edgelength = newedgelength
             if move < tol:

@@ -244,22 +244,10 @@ class TestUtils(TestCase):
         As.append(pyamg.gallery.elasticity.linear_elasticity((20, 20))[0])
         for A in As:
             if A.dtype == 'complex':
-                xs.append(
-                    np.random.rand(
-                        A.shape[0],
-                        1) +
-                    1.0j *
-                    np.random.rand(
-                        A.shape[0],
-                        1))
-                bs.append(
-                    np.random.rand(
-                        A.shape[0],
-                        1) +
-                    1.0j *
-                    np.random.rand(
-                        A.shape[0],
-                        1))
+                xs.append(np.random.rand(A.shape[0], 1)
+                          + 1.0j * np.random.rand(A.shape[0], 1))
+                bs.append(np.random.rand(A.shape[0], 1)
+                          + 1.0j * np.random.rand(A.shape[0], 1))
             else:
                 bs.append(np.random.rand(A.shape[0], 1))
                 xs.append(np.random.rand(A.shape[0], 1))
@@ -274,7 +262,7 @@ class TestUtils(TestCase):
                     else:
                         fmethod = (method, kwargs_linop)
                         relax = relaxation_as_linear_operator(fmethod, A, b)
-                    x_linop = relax*x
+                    x_linop = relax * x
 
                     # manually run the relaxation routine
                     relax2 = getattr(pyamg.relaxation.relaxation, method)
