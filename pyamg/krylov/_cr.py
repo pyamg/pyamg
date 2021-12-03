@@ -195,6 +195,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
         if it == maxiter:
             return (postprocess(x), it)
 
+
 if __name__ == '__main__':
     # from numpy import diag
     # A = random((4,4))
