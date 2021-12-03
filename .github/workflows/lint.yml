@@ -20,8 +20,6 @@ jobs:
 
         - name: Run flake8
           run: |
-            python3 -m virtualenv lintenv
-            source lintenv/bin/activate
             python -m pip install flake8
             #pep8-naming flake8-quotes flake8-bugbear flake8-docstrings flake8-builtins flake8-pytest-style flake8-simplify flake8-use-fstring
             python -m flake8 --statistics pyamg
