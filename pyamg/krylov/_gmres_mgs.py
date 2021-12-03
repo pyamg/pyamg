@@ -338,7 +338,6 @@ if __name__ == '__main__':
 
     from pyamg.gallery import poisson
     from numpy.random import random
-    from pyamg.util.linalg import norm
     A = poisson((125, 125), dtype=float, format='csr')
     # A.data = A.data + 0.001j*rand(A.data.shape[0])
     b = random((A.shape[0],))

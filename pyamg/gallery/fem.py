@@ -361,7 +361,7 @@ def l2norm(u, mesh):
     if mesh.degree == 2:
         I = np.arange(6)
 
-        def basis(x, y):
+        def basis(x, y):  # noqa
             return np.array([(1-x-y)*(1-2*x-2*y),
                              x*(2*x-1),
                              y*(2*y-1),
