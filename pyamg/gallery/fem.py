@@ -499,6 +499,7 @@ class mesh:
         self.V = Vnew
         return it
 
+
 def gradgradform(mesh, kappa=None, f=None, degree=1):
     """Finite element discretization of a Poisson problem.
 

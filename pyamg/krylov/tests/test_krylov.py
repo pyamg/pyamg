@@ -9,6 +9,7 @@ import pyamg
 
 from numpy.testing import TestCase, assert_array_almost_equal, assert_equal, assert_almost_equal
 
+
 class TestStoppingCriteria(TestCase):
     def setUp(self):
         self.cases = []

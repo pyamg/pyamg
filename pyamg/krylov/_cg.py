@@ -199,7 +199,6 @@ if __name__ == '__main__':
     from numpy.random import random
     import time
     from scipy.sparse.linalg.isolve import cg as icg
-    import numpy as np
 
     nx = 100
     ny = nx
@@ -216,7 +215,7 @@ if __name__ == '__main__':
     x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
+    (x, flag) = cg(A, b, x, tol=1e-8, criteria='rr+', maxiter=100, residuals=res)
     t2 = time.time()
     # print('res1: ', res)
     print(f'cg took {(t2-t1)*1000.0} ms')
@@ -224,6 +223,7 @@ if __name__ == '__main__':
     print(f'info flag = {flag}')
 
     res = []
+
     def mycb(xk):
         res.append(norm(b - A @ xk))
 

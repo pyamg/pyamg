@@ -35,6 +35,7 @@ class TestDiameter(np.testing.TestCase):
 
             h = h / 2
 
+
 class TestQuadratic(np.testing.TestCase):
     """
     Testing for generate_quadratic
@@ -105,7 +106,7 @@ class TestL2Norm(np.testing.TestCase):
             [[0, 1, 2]])
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
-        V2, E2 = mesh.V2, mesh.E2
+        V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
         np.testing.assert_almost_equal(fem.l2norm(X, mesh), 0.2886, decimal=4)
 
@@ -114,9 +115,10 @@ class TestL2Norm(np.testing.TestCase):
         E = data['elements']
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
-        V2, E2 = mesh.V2, mesh.E2
+        V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
         np.testing.assert_almost_equal(fem.l2norm(np.sin(X)*np.sin(Y), mesh), 0.54, decimal=2)
+
 
 class TestGradGradFEM(np.testing.TestCase):
     def test_gradgradfem(self):

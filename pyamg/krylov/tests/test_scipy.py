@@ -5,6 +5,7 @@ from pyamg.krylov._gmres_householder import gmres_householder
 
 from numpy.testing import TestCase, assert_array_almost_equal, assert_equal
 
+
 class TestScipy(TestCase):
     def setUp(self):
         self.cases = []

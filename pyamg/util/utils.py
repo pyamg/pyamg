@@ -2190,6 +2190,7 @@ def truncate_rows(A, nz_per_row):
 
     return A
 
+
 def set_tol(dtype):
     """Set a tolerance based on a numpy dtype char.
 
