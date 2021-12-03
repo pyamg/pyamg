@@ -89,14 +89,11 @@ References
 
 """
 import numpy as np
-import scipy as sp
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
 from pyamg.util.utils import remove_diagonal
-
-__all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc', 'MIS']
 
 
 def RS(S, second_pass=False):
@@ -188,7 +185,7 @@ def PMIS(S):
 
     """
     S = remove_diagonal(S)
-    weights, G, S, T = preprocess(S)
+    weights, G, S, T = _preprocess(S)
     return MIS(G, weights)
 
 
@@ -233,7 +230,7 @@ def PMISc(S, method='JP'):
 
     """
     S = remove_diagonal(S)
-    weights, G, S, T = preprocess(S, coloring_method=method)
+    weights, G, S, T = _preprocess(S, coloring_method=method)
     return MIS(G, weights)
 
 
@@ -382,7 +379,7 @@ def MIS(G, weights, maxiter=None):
 
 
 # internal function
-def preprocess(S, coloring_method=None):
+def _preprocess(S, coloring_method=None):
     """Preprocess splitting functions.
 
     Parameters

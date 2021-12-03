@@ -4,8 +4,9 @@
 import numpy as np
 import scipy as sp
 from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
-from pyamg import smoothed_aggregation_solver
-from pyamg.util.linalg import ishermitian
+
+from .aggregation import smoothed_aggregation_solver
+from .util.linalg import ishermitian
 
 __all__ = ['solve', 'solver', 'solver_configuration']
 

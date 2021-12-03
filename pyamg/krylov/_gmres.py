@@ -2,9 +2,6 @@ from ._gmres_mgs import gmres_mgs
 from ._gmres_householder import gmres_householder
 
 
-__all__ = ['gmres']
-
-
 def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
           M=None, callback=None, residuals=None, orthog='householder',
           **kwargs):

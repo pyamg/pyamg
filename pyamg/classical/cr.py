@@ -1,15 +1,12 @@
 """Compatible Relaxation."""
 
+from copy import deepcopy
 import numpy as np
-import scipy as sp
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
-from copy import deepcopy
 
-from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 from pyamg import amg_core
-
-__all__ = ['CR', 'binormalize']
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 
 
 def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):

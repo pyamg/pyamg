@@ -11,8 +11,6 @@ See here for a guide:  http://www.vtk.org/pdf/file-formats.pdf
 import xml.dom.minidom
 import numpy as np
 
-__all__ = ['write_vtu', 'write_basic_mesh']
-
 
 def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
               fname='output.vtk'):
@@ -252,7 +250,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     root = doc.createElementNS('VTK', 'VTKFile')
     d = {'type': 'UnstructuredGrid', 'version': '0.1',
          'byte_order': 'LittleEndian'}
-    set_attributes(d, root)
+    _set_attributes(d, root)
 
     # unstructured element
     grid = doc.createElementNS('VTK', 'UnstructuredGrid')
@@ -260,7 +258,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     # piece element
     piece = doc.createElementNS('VTK', 'Piece')
     d = {'NumberOfPoints': str(Ndof), 'NumberOfCells': str(Ncells)}
-    set_attributes(d, piece)
+    _set_attributes(d, piece)
 
     # POINTS
     # points element
@@ -269,9 +267,9 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     points_data = doc.createElementNS('VTK', 'DataArray')
     d = {'type': 'Float32', 'Name': 'vertices', 'NumberOfComponents': '3',
          'format': 'ascii'}
-    set_attributes(d, points_data)
+    _set_attributes(d, points_data)
     # string for data element
-    points_data_str = doc.createTextNode(a2s(Verts))
+    points_data_str = doc.createTextNode(_a2s(Verts))
 
     # CELLS
     # points element
@@ -279,21 +277,21 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     # data element
     cells_data = doc.createElementNS('VTK', 'DataArray')
     d = {'type': 'Int32', 'Name': 'connectivity', 'format': 'ascii'}
-    set_attributes(d, cells_data)
+    _set_attributes(d, cells_data)
     # string for data element
-    cells_data_str = doc.createTextNode(a2s(cell_ind))
+    cells_data_str = doc.createTextNode(_a2s(cell_ind))
     # offset data element
     cells_offset_data = doc.createElementNS('VTK', 'DataArray')
     d = {'type': 'Int32', 'Name': 'offsets', 'format': 'ascii'}
-    set_attributes(d, cells_offset_data)
+    _set_attributes(d, cells_offset_data)
     # string for data element
-    cells_offset_data_str = doc.createTextNode(a2s(cell_offset.cumsum()))
+    cells_offset_data_str = doc.createTextNode(_a2s(cell_offset.cumsum()))
     # offset data element
     cells_type_data = doc.createElementNS('VTK', 'DataArray')
     d = {'type': 'UInt8', 'Name': 'types', 'format': 'ascii'}
-    set_attributes(d, cells_type_data)
+    _set_attributes(d, cells_type_data)
     # string for data element
-    cells_type_data_str = doc.createTextNode(a2s(cell_type))
+    cells_type_data_str = doc.createTextNode(_a2s(cell_type))
 
     # POINT DATA
     pointdata = doc.createElementNS('VTK', 'PointData')
@@ -304,8 +302,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         pdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
         d = {'type': 'Float32', 'Name': 'pdata %d' % (i),
              'NumberOfComponents': '1', 'format': 'ascii'}
-        set_attributes(d, pdata_obj[i])
-        pdata_str.append(doc.createTextNode(a2s(pdata[:, i])))
+        _set_attributes(d, pdata_obj[i])
+        pdata_str.append(doc.createTextNode(_a2s(pdata[:, i])))
     # pvdata
     pvdata_obj = []
     pvdata_str = []
@@ -313,8 +311,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         pvdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
         d = {'type': 'Float32', 'Name': 'pvdata %d' % (i),
              'NumberOfComponents': '3', 'format': 'ascii'}
-        set_attributes(d, pvdata_obj[i])
-        pvdata_str.append(doc.createTextNode(a2s(pvdata[:, i])))
+        _set_attributes(d, pvdata_obj[i])
+        pvdata_str.append(doc.createTextNode(_a2s(pvdata[:, i])))
 
     # CELL DATA
     celldata = doc.createElementNS('VTK', 'CellData')
@@ -325,8 +323,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         cdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
         d = {'type': 'Float32', 'Name': 'cdata %d' % (i),
              'NumberOfComponents': '1', 'format': 'ascii'}
-        set_attributes(d, cdata_obj[i])
-        cdata_str.append(doc.createTextNode(a2s(cdata_all[:, i])))
+        _set_attributes(d, cdata_obj[i])
+        cdata_str.append(doc.createTextNode(_a2s(cdata_all[:, i])))
     # cvdata
     cvdata_obj = []
     cvdata_str = []
@@ -334,8 +332,8 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         cvdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
         d = {'type': 'Float32', 'Name': 'cvdata %d' % (i),
              'NumberOfComponents': '3', 'format': 'ascii'}
-        set_attributes(d, cvdata_obj[i])
-        cvdata_str.append(doc.createTextNode(a2s(cvdata_all[:, i])))
+        _set_attributes(d, cvdata_obj[i])
+        cvdata_str.append(doc.createTextNode(_a2s(cvdata_all[:, i])))
 
     doc.appendChild(root)
     root.appendChild(grid)
@@ -474,13 +472,13 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
               cdata=cdata, cvdata=cvdata, fname=fname)
 
 
-def set_attributes(d, elm):
+def _set_attributes(d, elm):
     """Set attributes from dictionary of values."""
     for key in d:
         elm.setAttribute(key, d[key])
 
 
-def a2s(a):
+def _a2s(a):
     """Convert to string."""
     str = ''
     return str.join(['%g ' % (v) for v in a.ravel()])

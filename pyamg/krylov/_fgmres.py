@@ -8,9 +8,6 @@ from pyamg.util.linalg import norm
 from pyamg import amg_core
 
 
-__all__ = ['fgmres']
-
-
 def mysign(x):
     if x == 0.0:
         return 1.0

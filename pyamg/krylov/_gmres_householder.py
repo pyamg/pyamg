@@ -8,8 +8,6 @@ import scipy as sp
 from pyamg.util.linalg import norm
 from pyamg import amg_core
 
-__all__ = ['gmres_householder']
-
 
 def mysign(x):
     if x == 0.0:

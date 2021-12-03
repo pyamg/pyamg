@@ -6,8 +6,6 @@ import scipy.sparse as sparse
 from pyamg import amg_core
 from pyamg.graph import lloyd_cluster
 
-__all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation', 'balanced_lloyd_aggregation']
-
 
 def standard_aggregation(C):
     """Compute the sparsity pattern of the tentative prolongator.

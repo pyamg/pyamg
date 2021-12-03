@@ -8,9 +8,6 @@ from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from pyamg.util.linalg import norm
 
 
-__all__ = ['gmres_mgs']
-
-
 def apply_givens(Q, v, k):
     """Apply the first k Givens rotations in Q to v.
 

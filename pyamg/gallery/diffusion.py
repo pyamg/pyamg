@@ -11,9 +11,6 @@ isotropic diffusion).
 import numpy as np
 
 
-__all__ = ['diffusion_stencil_2d']
-
-
 def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     """Rotated Anisotropic diffusion in 2d of the form.
 

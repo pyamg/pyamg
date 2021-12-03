@@ -3,9 +3,6 @@
 import numpy as np
 
 
-__all__ = ['chebyshev_polynomial_coefficients']
-
-
 def chebyshev_polynomial_coefficients(a, b, degree):
     """Chebyshev polynomial coefficients for the interval [a,b].
 

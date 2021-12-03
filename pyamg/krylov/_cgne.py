@@ -7,9 +7,6 @@ from scipy.sparse.linalg.interface import aslinearoperator
 from pyamg.util.linalg import norm
 
 
-__all__ = ['cgne']
-
-
 def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
          maxiter=None, M=None,
          callback=None, residuals=None):

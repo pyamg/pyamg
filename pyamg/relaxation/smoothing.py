@@ -2,13 +2,11 @@
 
 import numpy as np
 import scipy.sparse as sparse
-from . import relaxation
-from .chebyshev import chebyshev_polynomial_coefficients
 from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.krylov import gmres, cgne, cgnr, cg
-
-__all__ = ['change_smoothers']
+from . import relaxation
+from .chebyshev import chebyshev_polynomial_coefficients
 
 
 # Default relaxation parameters and list of by-definition
@@ -19,7 +17,7 @@ SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
                         'jacobi_ne', 'chebyshev', None]
 
 
-def unpack_arg(v):
+def _unpack_arg(v):
     if isinstance(v, tuple):
         return v[0], v[1]
     else:
@@ -156,7 +154,7 @@ def change_smoothers(ml, presmoother, postsmoother):
     same = (len(presmoother) == len(postsmoother))
     for i in range(0, min_len):
         # unpack presmoother[i]
-        fn1, kwargs1 = unpack_arg(presmoother[i])
+        fn1, kwargs1 = _unpack_arg(presmoother[i])
         # get function handle
         try:
             setup_presmoother = eval('setup_' + str(fn1))
@@ -165,7 +163,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
         # unpack postsmoother[i]
-        fn2, kwargs2 = unpack_arg(postsmoother[i])
+        fn2, kwargs2 = _unpack_arg(postsmoother[i])
         # get function handle
         try:
             setup_postsmoother = eval('setup_' + str(fn2))
@@ -208,7 +206,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                 setup_presmoother(ml.levels[i], **kwargs1)
 
             # unpack postsmoother[i]
-            fn2, kwargs2 = unpack_arg(postsmoother[i])
+            fn2, kwargs2 = _unpack_arg(postsmoother[i])
             # get function handle
             try:
                 setup_postsmoother = eval('setup_' + str(fn2))
@@ -248,7 +246,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         mid_len = min(len(presmoother), len(ml.levels[:-1]))
         for i in range(min_len, mid_len):
             # unpack presmoother[i]
-            fn1, kwargs1 = unpack_arg(presmoother[i])
+            fn1, kwargs1 = _unpack_arg(presmoother[i])
             # get function handle
             try:
                 setup_presmoother = eval('setup_' + str(fn1))

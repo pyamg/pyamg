@@ -4,9 +4,6 @@ import numpy as np
 import scipy.linalg as sla
 import scipy.sparse as sparse
 
-__all__ = ['linear_elasticity', 'linear_elasticity_p1']
-
-
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
 

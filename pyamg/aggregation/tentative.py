@@ -5,8 +5,6 @@ import numpy as np
 from scipy.sparse import isspmatrix_csr, bsr_matrix
 from pyamg import amg_core
 
-__all__ = ['fit_candidates']
-
 
 def fit_candidates(AggOp, B, tol=1e-10):
     """Fit near-nullspace candidates to form the tentative prolongator.

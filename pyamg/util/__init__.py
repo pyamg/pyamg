@@ -1,8 +1,16 @@
 "Utility Functions"
 
-from .info import __doc__
+from . import linalg
+from . import utils
 
-from .linalg import *
-from .utils import *
+__all__ = ['linalg', 'utils']
 
-__all__ = [s for s in dir() if not s.startswith('_')]
+__doc__ += """
+linalg.py provides some linear algebra functionality not yet found in scipy.
+
+utils.py provides some utility functions for use with pyamg
+
+BSR_utils.py provides utility functions for accessing and writing individual
+rows of BSR matrices
+
+"""

@@ -10,9 +10,6 @@ from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
-__all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
-           'energy_prolongation_smoother']
-
 
 # Satisfy_Constraints is a helper function for prolongation smoothing routines
 def Satisfy_Constraints(U, B, BtBinv):

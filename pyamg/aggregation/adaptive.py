@@ -3,7 +3,6 @@
 
 from warnings import warn
 import numpy as np
-import scipy as sp
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
     isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
 
@@ -22,8 +21,6 @@ from .smooth import jacobi_prolongation_smoother,\
 from .tentative import fit_candidates
 from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
-
-__all__ = ['adaptive_sa_solver']
 
 
 def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):

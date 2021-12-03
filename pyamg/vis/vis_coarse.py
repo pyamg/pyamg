@@ -13,8 +13,6 @@ import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix, triu
 from .vtk_writer import write_basic_mesh, write_vtu
 
-__all__ = ['vis_splitting', 'vis_aggregate_groups']
-
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
                          fname='output.vtu'):

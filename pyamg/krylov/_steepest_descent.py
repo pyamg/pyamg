@@ -6,9 +6,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
 
-__all__ = ['steepest_descent']
-
-
 def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
                      maxiter=None, M=None,
                      callback=None, residuals=None):

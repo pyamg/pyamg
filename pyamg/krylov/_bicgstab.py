@@ -5,9 +5,6 @@ import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 
 
-__all__ = ['bicgstab']
-
-
 def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
              maxiter=None, M=None,
              callback=None, residuals=None):

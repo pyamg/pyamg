@@ -21,8 +21,6 @@ from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
 
-__all__ = ['smoothed_aggregation_solver']
-
 
 def smoothed_aggregation_solver(A, B=None, BH=None,
                                 symmetry='hermitian', strength='symmetric',
@@ -275,7 +273,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     while len(levels) < max_levels and\
             int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth,
+        _extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
@@ -283,7 +281,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     return ml
 
 
-def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
+def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                      diagonal_dominance=False, keep=True):
     """Extend the multigrid hierarchy.
 

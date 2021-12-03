@@ -1,8 +1,8 @@
 """Support for aggregation-based AMG."""
 
 
-import numpy as np
 from warnings import warn
+import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
     SparseEfficiencyWarning
 
@@ -21,8 +21,6 @@ from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
-
-__all__ = ['rootnode_solver']
 
 
 def rootnode_solver(A, B=None, BH=None,
@@ -301,7 +299,7 @@ def rootnode_solver(A, B=None, BH=None,
 
     while len(levels) < max_levels and \
             int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
-        extend_hierarchy(levels, strength, aggregate, smooth,
+        _extend_hierarchy(levels, strength, aggregate, smooth,
                          improve_candidates, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
@@ -309,7 +307,7 @@ def rootnode_solver(A, B=None, BH=None,
     return ml
 
 
-def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
+def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                      diagonal_dominance=False, keep=True):
     """Extend the multigrid hierarchy.
 

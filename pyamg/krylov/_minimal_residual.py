@@ -5,9 +5,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
 
-__all__ = ['minimal_residual']
-
-
 def minimal_residual(A, b, x0=None, tol=1e-5,
                      maxiter=None, M=None,
                      callback=None, residuals=None):

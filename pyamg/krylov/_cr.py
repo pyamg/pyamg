@@ -6,8 +6,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 
-__all__ = ['cr']
-
 
 def cr(A, b, x0=None, tol=1e-5, criteria='rr',
        maxiter=None, M=None,

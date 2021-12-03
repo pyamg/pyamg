@@ -1,9 +1,10 @@
 import numpy as np
 import scipy.sparse.linalg as sla
+
+from numpy.testing import TestCase, assert_array_almost_equal
+
 from pyamg.krylov._gmres_mgs import gmres_mgs
 from pyamg.krylov._gmres_householder import gmres_householder
-
-from numpy.testing import TestCase, assert_array_almost_equal, assert_equal
 
 
 class TestScipy(TestCase):

@@ -1,18 +1,19 @@
 import numpy as np
-from scipy.sparse import csr_matrix, csc_matrix, isspmatrix, bsr_matrix, isspmatrix_bsr,\
-    spdiags
+from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
+                          bsr_matrix, isspmatrix_bsr,
+                          spdiags)
+
+from numpy.testing import (TestCase, assert_equal, assert_almost_equal,
+                           assert_array_almost_equal, assert_array_equal)
 
 import pyamg
 
-from pyamg.util.utils import diag_sparse, profile_solver, to_type,\
-    type_prep, get_diagonal,\
-    scale_rows, scale_columns,\
-    get_block_diag, symmetric_rescaling, symmetric_rescaling_sa,\
-    relaxation_as_linear_operator, filter_operator, scale_T, get_Cpt_params,\
-    compute_BtBinv, eliminate_diag_dom_nodes
-
-from numpy.testing import TestCase, assert_equal, assert_almost_equal,\
-    assert_array_almost_equal, assert_array_equal
+from pyamg.util.utils import (diag_sparse, profile_solver, to_type,
+                              type_prep, get_diagonal,
+                              scale_rows, scale_columns,
+                              get_block_diag, symmetric_rescaling, symmetric_rescaling_sa,
+                              relaxation_as_linear_operator, filter_operator, scale_T,
+                              get_Cpt_params, compute_BtBinv, eliminate_diag_dom_nodes)
 
 
 class TestUtils(TestCase):
@@ -173,8 +174,6 @@ class TestUtils(TestCase):
         del residuals
 
     def test_get_block_diag(self):
-        from scipy import arange, ravel, array
-        from scipy.sparse import csr_matrix
         A = csr_matrix(np.arange(1, 37, dtype=float).reshape(6, 6))
         block_diag = get_block_diag(A, blocksize=1, inv_flag=False)
         assert_array_almost_equal(np.ravel(block_diag), A.diagonal())
@@ -1252,8 +1251,6 @@ class TestComplexUtils(TestCase):
         assert_array_almost_equal(A_known, A_filter)
 
     def test_scale_T(self):
-        from scipy.sparse import bsr_matrix
-
         # Test for one CSR and one BSR example
         T = np.array([[1.0, 0., 0.],
                       [0.5j, 0., 0.],

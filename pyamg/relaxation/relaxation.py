@@ -5,15 +5,10 @@ from warnings import warn
 
 import numpy as np
 from scipy import sparse
+from scipy.linalg import lapack as la
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag, set_tol
 from pyamg import amg_core
-from scipy.linalg import lapack as la
-
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial',
-           'schwarz', 'schwarz_parameters',
-           'jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr',
-           'gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel']
 
 
 def make_system(A, x, b, formats=None):
