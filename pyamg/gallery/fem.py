@@ -499,6 +499,28 @@ class mesh:
         self.V = Vnew
         return it
 
+def compute_diffusion_matrix(kappa_lmbda, x, y):
+    """
+    Generates a standard diffusion matrix given some kappa function that
+    can return different types of outputs
+    """
+
+    kappa = kappa_lmbda(x, y)
+
+    if (isinstance(kappa, int) or
+        isinstance(kappa, float)):
+        return np.eye(2) * kappa
+    elif isinstance(kappa, np.ndarray):
+        if kappa.flatten().shape == (2,):
+            return np.diag(kappa.flatten())
+        elif kappa.shape == (2,2):
+            return kappa
+        else:
+            raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), received ndarray of shape {kappa_elem.shape}')
+    else:
+        raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), received type {type(kappa_)}')
+
+
 def gradgradform(mesh, kappa=None, f=None, degree=1):
     """Finite element discretization of a Poisson problem.
 
@@ -514,6 +536,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
+        can either return a scalar value or a 2x2 matrix that transforms <grad u>
 
     fa : function
         right hand side, f(x,y) with vector input
@@ -641,7 +664,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
             dphi = invJ.dot(dbasis)
 
             # Step 5, 1-point gauss quadrature
-            Aelem = kappa(X[K].mean(), Y[K].mean()) * (detJ / 2.0) * (dphi.T).dot(dphi)
+            kappaelem = compute_diffusion_matrix(kappa, X[K].mean(), Y[K].mean())
+            Aelem = (detJ / 2.0) * dphi.T @ kappaelem @ dphi
 
             # Step 6, 1-point gauss quadrature
             belem = f(X[K].mean(), Y[K].mean()) * (detJ / 6.0) * np.ones((3,))
@@ -680,7 +704,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
                 # Step 5
                 xt, yt = J.dot(np.array([x, y])) + np.array([x0, y0])
-                Aelem += (detJ / 2) * w * kappa(xt, yt) * dphi.T.dot(dphi)
+                kappaelem = compute_diffusion_matrix(kappa, xt, yt)
+                Aelem += (detJ / 2) * w * dphi.T @ kappaelem @ dphi
 
                 # Step 6
                 belem += (detJ / 2) * w * f(xt, yt) * basis
