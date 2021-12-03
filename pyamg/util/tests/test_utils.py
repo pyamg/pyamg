@@ -49,8 +49,6 @@ class TestUtils(TestCase):
                      csr_matrix(A).toarray())
 
     def test_scale_rows(self):
-        cases = []
-
         Aorig = np.array([[0.0, 1, 0], [2, 0, 3], [4, 5, 6]])
         v = np.array([7.0, 8, 9])
         Ascaled = np.array([[0.0, 7, 0], [16, 0, 24], [36, 45, 54]])

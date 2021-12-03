@@ -151,7 +151,7 @@ def change_smoothers(ml, presmoother, postsmoother):
     kwargs1 = {}
     kwargs2 = {}
     min_len = min(len(presmoother), len(postsmoother), len(ml.levels[:-1]))
-    same = (len(presmoother) == len(postsmoother))
+    # same = (len(presmoother) == len(postsmoother))
     for i in range(0, min_len):
         # unpack presmoother[i]
         fn1, kwargs1 = _unpack_arg(presmoother[i])

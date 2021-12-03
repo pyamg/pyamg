@@ -663,7 +663,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             Bi = Bmat[colindx, :]
 
             # Construct constrained min problem
-            CC = D_A[iInRow, iInRow]
+            # CC = D_A[iInRow, iInRow]
             LHS[0:NullDim, 0:NullDim] = 2.0*Bi.conj().T.dot(D_A.dot(Bi))
             LHS[0:NullDim, NullDim] = D_A[iInRow, iInRow]*(Bi[iInRow, :].conj().T)
             LHS[NullDim, 0:NullDim] = Bi[iInRow, :]

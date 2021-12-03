@@ -40,7 +40,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
     """
     n = A.shape[0]    # problem size
-    numax = nu
+    # numax = nu
     z = np.zeros((n,))
     e = deepcopy(B[:, 0])
     e[Cindex] = 0.0

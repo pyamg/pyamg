@@ -274,7 +274,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     while len(levels) < max_levels and\
             int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, smooth,
-                         improve_candidates, diagonal_dominance, keep)
+                          improve_candidates, diagonal_dominance, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -282,7 +282,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
 
 def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
-                     diagonal_dominance=False, keep=True):
+                      diagonal_dominance=False, keep=True):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,

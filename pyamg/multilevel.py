@@ -440,7 +440,7 @@ class multilevel_solver:
                 if return_info:
                     return x, info
                 return x
-            except TypeError as e:
+            except TypeError:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
                 # history is desired

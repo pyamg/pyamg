@@ -30,8 +30,7 @@ class TestStoppingCriteria(TestCase):
                 (cgne,     ('rr', 'rr+', 'MrMr', 'rMr')),
                 (cgnr,     ('rr', 'rr+', 'MrMr', 'rMr')),
                 (cr,     ('rr', 'rr+', 'MrMr')),
-                (steepest_descent,     ('rr', 'rr+', 'MrMr', 'rMr')),
-                     ]:
+                (steepest_descent,     ('rr', 'rr+', 'MrMr', 'rMr'))]:
             for criteria in crits:
                 for case in self.cases:
                     A = case['A']

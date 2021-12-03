@@ -600,13 +600,11 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     if degree == 1:
         E = mesh.E
-        V = mesh.V
         X = mesh.X
         Y = mesh.Y
 
     if degree == 2:
         E = mesh.E2
-        V = mesh.V2
         X = mesh.X2
         Y = mesh.Y2
 
@@ -713,7 +711,6 @@ def divform(mesh):
     X, Y = mesh.X, mesh.Y
     ne = mesh.ne
     E = mesh.E2
-    V = mesh.V2
 
     m1 = 6
     m2 = 3
@@ -753,12 +750,12 @@ def divform(mesh):
         for w, x, y in zip(ww, xx, yy):
             basis1 = np.array([1-x-y, x, y])
 
-            basis2 = np.array([(1-x-y)*(1-2*x-2*y),
-                              x*(2*x-1),
-                              y*(2*y-1),
-                              4*x*(1-x-y),
-                              4*x*y,
-                              4*y*(1-x-y)])
+            # basis2 = np.array([(1-x-y)*(1-2*x-2*y),
+            #                   x*(2*x-1),
+            #                   y*(2*y-1),
+            #                   4*x*(1-x-y),
+            #                   4*x*y,
+            #                   4*y*(1-x-y)])
 
             dbasis = np.array([
                 [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
