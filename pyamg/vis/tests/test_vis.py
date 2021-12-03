@@ -7,9 +7,9 @@ import os
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
 
-from pyamg.vis import vis_aggregate_groups
-
 from numpy.testing import TestCase
+
+from pyamg.vis import vis_aggregate_groups
 
 
 class TestVis(TestCase):
