@@ -181,8 +181,11 @@ class TestGradGradFEM(np.testing.TestCase):
         np.testing.assert_array_almost_equal(A.toarray(), AA)
 
         # non zero f, all zero g
-        f = lambda x, y: 0*x + 1.0
-        g = lambda x, y: 0*x + 0.0
+        def f(x, y):
+            return 0*x + 0*y + 1.0
+
+        def g(x, y):
+            return 0*x + 0*y + 0.0
 
         tol = 1e-12
         X, Y = V[:, 0], V[:, 1]
@@ -215,9 +218,14 @@ class TestGradGradFEM(np.testing.TestCase):
         np.testing.assert_array_almost_equal(b, bb)
 
         # non zero boundary
-        f = lambda x, y: 0*x + 1.0
-        g = lambda x, y: 0*x + 0.0
-        g1 = lambda x, y: 0*x + 1.0
+        def f(x, y):
+            return 0*x + 0*y + 1.0
+
+        def g(x, y):
+            return 0*x + 0*y + 0.0
+
+        def g1(x, y):
+            return 0*x + 0*y + 1.0
 
         tol = 1e-12
         X, Y = V[:, 0], V[:, 1]
