@@ -3,13 +3,7 @@
 
 import numpy as np
 from scipy import sparse
-
-from pyamg.graph_ref import bellman_ford_reference
-
 from . import amg_core
-
-__all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
-           'lloyd_cluster', 'connected_components', 'bellman_ford_reference']
 
 
 def asgraph(G):

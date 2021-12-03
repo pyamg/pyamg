@@ -3,8 +3,6 @@
 
 import numpy as np
 
-__all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
-
 
 def BSR_Get_Row(A, i):
     """Return row i in BSR matrix A.

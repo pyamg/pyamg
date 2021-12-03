@@ -10,17 +10,6 @@ from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
 import pyamg.amg_core
 
-__all__ = ['blocksize', 'diag_sparse', 'profile_solver', 'to_type',
-           'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
-           'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
-           'scale_rows', 'scale_columns',
-           'symmetric_rescaling', 'symmetric_rescaling_sa',
-           'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
-           'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
-           'levelize_strength_or_aggregation',
-           'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows', 'set_tol']
-
 try:
     from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
     from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns

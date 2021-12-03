@@ -7,9 +7,6 @@ from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
 
-__all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
-           'condest', 'cond', 'ishermitian', 'pinv_array']
-
 
 def norm(x, pnorm='2'):
     """2-norm of a vector.
