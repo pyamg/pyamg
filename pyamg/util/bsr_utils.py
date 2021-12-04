@@ -4,7 +4,7 @@
 import numpy as np
 
 
-def BSR_Get_Row(A, i):
+def bsr_getrow(A, i):
     """Return row i in BSR matrix A.
 
     Only nonzero entries are returned
@@ -26,12 +26,12 @@ def BSR_Get_Row(A, i):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Get_Row
+    >>> from pyamg.util.bsr_utils import bsr_getrow
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> Brow = BSR_Get_Row(B,2)
+    >>> Brow = bsr_getrow(B,2)
     >>> print Brow[1]
     [4 5]
 
@@ -82,7 +82,7 @@ def BSR_Row_WriteScalar(A, i, x):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Row_WriteScalar
+    >>> from pyamg.util.bsr_utils import BSR_Row_WriteScalar
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
@@ -126,13 +126,13 @@ def BSR_Row_WriteVect(A, i, x):
         overwritten with entries from x.  x must be same
         length as nonzeros of row i.  This is guaranteed
         when this routine is used with vectors derived form
-        Get_BSR_Row
+        bsr_getrow
 
     Examples
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Row_WriteVect
+    >>> from pyamg.util.bsr_utils import BSR_Row_WriteVect
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
