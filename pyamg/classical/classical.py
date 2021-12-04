@@ -4,7 +4,7 @@
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection,\
@@ -54,7 +54,7 @@ def ruge_stuben_solver(A,
 
     Returns
     -------
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Multigrid hierarchy of matrices and prolongation operators
 
     Examples
@@ -82,11 +82,11 @@ def ruge_stuben_solver(A,
 
     See Also
     --------
-    aggregation.smoothed_aggregation_solver, multilevel_solver,
+    aggregation.smoothed_aggregation_solver, MultilevelSolver,
     aggregation.rootnode_solver
 
     """
-    levels = [multilevel_solver.level()]
+    levels = [MultilevelSolver.level()]
 
     # convert A to csr
     if not isspmatrix_csr(A):
@@ -107,7 +107,7 @@ def ruge_stuben_solver(A,
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         _extend_hierarchy(levels, strength, CF, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -179,7 +179,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
 
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.level())
 
     # Form next level through Galerkin product
     A = R * A * P

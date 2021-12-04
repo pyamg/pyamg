@@ -6,7 +6,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
     isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.strength import symmetric_strength_of_connection,\
     classical_strength_of_connection, evolution_strength_of_connection
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
@@ -180,7 +180,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     Returns
     -------
-    multilevel_solver : multilevel_solver
+    MultilevelSolver : MultilevelSolver
         Smoothed aggregation solver with adaptively generated candidates
 
     Notes
@@ -703,7 +703,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
             levels[i+1].R = levels[i+1].P.H.asformat(levels[i+1].P.format)
 
         # run solver on candidate
-        solver = multilevel_solver(levels[i+1:], coarse_solver=coarse_solver)
+        solver = MultilevelSolver(levels[i+1:], coarse_solver=coarse_solver)
         change_smoothers(solver, presmoother=prepostsmoother,
                          postsmoother=prepostsmoother)
         x = solver.solve(np.zeros_like(x), x0=x,

@@ -11,7 +11,7 @@ from .version import version as __version__
 from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, util, vis)
 from . import (blackbox, graph, graph_ref, multilevel, strength)
 
-from .multilevel import coarse_grid_solver, multilevel_solver
+from .multilevel import coarse_grid_solver, multilevel_solver, MultilevelSolver
 from .classical import ruge_stuben_solver
 from .aggregation import smoothed_aggregation_solver, rootnode_solver
 from .gallery import demo
@@ -21,7 +21,7 @@ __all__ = ['__version_tuple__', '__version__',
            'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation',
            'util', 'vis',
            'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
-           'coarse_grid_solver', 'multilevel_solver',
+           'coarse_grid_solver', 'multilevel_solver', 'MultilevelSolver',
            'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',
            'demo', 'solve', 'solver', 'solver_configuration']
 

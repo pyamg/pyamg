@@ -1,4 +1,4 @@
-"""Method to create pre and post-smoothers on the levels of a multilevel_solver."""
+"""Method to create pre and post-smoothers on the levels of a MultilevelSolver."""
 
 import numpy as np
 import scipy.sparse as sparse
@@ -27,10 +27,10 @@ def _unpack_arg(v):
 def change_smoothers(ml, presmoother, postsmoother):
     """Initialize pre and post smoothers.
 
-    Initialize pre- and post- smoothers throughout a multilevel_solver, with
+    Initialize pre- and post- smoothers throughout a MultilevelSolver, with
     the option of having different smoothers at different levels
 
-    For each level of the multilevel_solver 'ml' (except the coarsest level),
+    For each level of the MultilevelSolver 'ml' (except the coarsest level),
     initialize the .presmoother() and .postsmoother() methods used in the
     multigrid cycle.
 

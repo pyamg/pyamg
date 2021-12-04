@@ -6,7 +6,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
     SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     scale_T, get_Cpt_params, \
@@ -130,12 +130,12 @@ def rootnode_solver(A, B=None, BH=None,
 
     Returns
     -------
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Multigrid hierarchy of matrices and prolongation operators
 
     See Also
     --------
-    multilevel_solver, aggregation.smoothed_aggregation_solver,
+    MultilevelSolver, aggregation.smoothed_aggregation_solver,
     classical.ruge_stuben_solver
 
     Notes
@@ -152,7 +152,7 @@ def rootnode_solver(A, B=None, BH=None,
            root-node style SA.
 
          - The additional parameters are passed through as arguments to
-           multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+           MultilevelSolver.  Refer to pyamg.MultilevelSolver for additional
            documentation.
 
          - At each level, four steps are executed in order to define the coarser
@@ -289,7 +289,7 @@ def rootnode_solver(A, B=None, BH=None,
 
     # Construct multilevel structure
     levels = []
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.level())
     levels[-1].A = A          # matrix
 
     # Append near nullspace candidates
@@ -302,7 +302,7 @@ def rootnode_solver(A, B=None, BH=None,
         _extend_hierarchy(levels, strength, aggregate, smooth,
                           improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -453,7 +453,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].R = R                          # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.level())
     A = R * A * P                                 # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A

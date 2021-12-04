@@ -14,13 +14,13 @@ else:
     from scipy.linalg import pinv2 as pinv
 
 
-class multilevel_solver:
+class MultilevelSolver:
     """Stores multigrid hierarchy and implements the multigrid cycle.
 
     The class constructs the cycling process and points to the methods for
-    coarse grid solves.  A multilevel_solver object is typically returned from a
+    coarse grid solves.  A MultilevelSolver object is typically returned from a
     particular AMG method (see ruge_stuben_solver or smoothed_aggregation_solver
-    for example).  A call to multilevel_solver.solve() is a typical access
+    for example).  A call to MultilevelSolver.solve() is a typical access
     point.  The class also defines methods for constructing operator, cycle, and
     grid complexities.
 
@@ -116,7 +116,7 @@ class multilevel_solver:
         --------
         >>> # manual construction of a two-level AMG hierarchy
         >>> from pyamg.gallery import poisson
-        >>> from pyamg.multilevel import multilevel_solver
+        >>> from pyamg.multilevel import MultilevelSolver
         >>> from pyamg.strength import classical_strength_of_connection
         >>> from pyamg.classical import direct_interpolation
         >>> from pyamg.classical.split import RS
@@ -128,8 +128,8 @@ class multilevel_solver:
         >>> R = P.T
         >>> # store first level data
         >>> levels = []
-        >>> levels.append(multilevel_solver.level())
-        >>> levels.append(multilevel_solver.level())
+        >>> levels.append(MultilevelSolver.level())
+        >>> levels.append(MultilevelSolver.level())
         >>> levels[0].A = A
         >>> levels[0].C = C
         >>> levels[0].splitting = splitting
@@ -137,10 +137,10 @@ class multilevel_solver:
         >>> levels[0].R = R
         >>> # store second level data
         >>> levels[1].A = R @ A @ P                      # coarse-level matrix
-        >>> # create multilevel_solver
-        >>> ml = multilevel_solver(levels, coarse_solver='splu')
+        >>> # create MultilevelSolver
+        >>> ml = MultilevelSolver(levels, coarse_solver='splu')
         >>> print ml
-        multilevel_solver
+        MultilevelSolver
         Number of Levels:     2
         Operator Complexity:  1.891
         Grid Complexity:      1.500
@@ -161,7 +161,7 @@ class multilevel_solver:
 
     def __repr__(self):
         """Print basic statistics about the multigrid hierarchy."""
-        output = 'multilevel_solver\n'
+        output = 'MultilevelSolver\n'
         output += 'Number of Levels:     %d\n' % len(self.levels)
         output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
@@ -294,7 +294,7 @@ class multilevel_solver:
 
         See Also
         --------
-        multilevel_solver.solve, scipy.sparse.linalg.LinearOperator
+        MultilevelSolver.solve, scipy.sparse.linalg.LinearOperator
 
         Examples
         --------
@@ -590,7 +590,7 @@ class multilevel_solver:
 
 
 def coarse_grid_solver(solver):
-    """Return a coarse grid solver suitable for multilevel_solver.
+    """Return a coarse grid solver suitable for MultilevelSolver.
 
     Parameters
     ----------
@@ -700,9 +700,9 @@ def coarse_grid_solver(solver):
 
         def solve(self, A, b):
             from pyamg.relaxation import smoothing
-            from pyamg import multilevel_solver
+            from pyamg import MultilevelSolver
 
-            lvl = multilevel_solver.level()
+            lvl = MultilevelSolver.level()
             lvl.A = A
             fn = getattr(smoothing, 'setup_' + str(solver))
             relax = fn(lvl, **kwargs)
@@ -752,3 +752,11 @@ def coarse_grid_solver(solver):
             return repr(solver)
 
     return generic_solver()
+
+
+class multilevel_solver(MultilevelSolver):  # noqa: N801
+    # only raise deprecation warning on use, not import
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warn("multilevel_solver is deprectated.  use MultilevelSolver()",
+             category=DeprecationWarning, stacklevel=2)

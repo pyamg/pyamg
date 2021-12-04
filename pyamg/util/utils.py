@@ -1154,7 +1154,7 @@ def relaxation_as_linear_operator(method, A, b):
 
     b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
-    lvl = pyamg.multilevel_solver.level()
+    lvl = pyamg.MultilevelSolver.level()
     lvl.A = A
 
     # Retrieve setup call from relaxation.smoothing for this relaxation method

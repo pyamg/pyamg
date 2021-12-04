@@ -245,7 +245,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     -------
     x : array
         Solution to Ax = b
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Optional return of the multilevel structure used for the solve
 
     Notes

@@ -6,7 +6,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
     SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     eliminate_diag_dom_nodes, blocksize,\
@@ -126,12 +126,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     Returns
     -------
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Multigrid hierarchy of matrices and prolongation operators
 
     See Also
     --------
-    multilevel_solver, classical.ruge_stuben_solver,
+    MultilevelSolver, classical.ruge_stuben_solver,
     aggregation.smoothed_aggregation_solver
 
     Notes
@@ -140,7 +140,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
           (see aggregation.rootnode_solver).
 
         - The additional parameters are passed through as arguments to
-          multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+          MultilevelSolver.  Refer to pyamg.MultilevelSolver for additional
           documentation.
 
         - At each level, four steps are executed in order to define the coarser
@@ -267,7 +267,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     # Construct multilevel structure
     levels = []
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.level())
     levels[-1].A = A          # matrix
 
     # Append near nullspace candidates
@@ -280,7 +280,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         _extend_hierarchy(levels, strength, aggregate, smooth,
                           improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -419,7 +419,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
 
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.level())
     A = R * A * P              # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
