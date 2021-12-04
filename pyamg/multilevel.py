@@ -626,7 +626,7 @@ def coarse_grid_solver(solver):
 
     Returns
     -------
-    ptr : generic_solver
+    ptr : GenericSolver
         A class for use as a standalone or coarse grids solver
 
     Examples
@@ -730,7 +730,7 @@ def coarse_grid_solver(solver):
     else:
         raise ValueError('unknown solver: %s' % solver)
 
-    class generic_solver:
+    class GenericSolver:
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
             b = np.asanyarray(b)
@@ -758,7 +758,7 @@ def coarse_grid_solver(solver):
         def name(self):
             return repr(solver)
 
-    return generic_solver()
+    return GenericSolver()
 
 
 class multilevel_solver(MultilevelSolver):  # noqa: N801
