@@ -240,7 +240,6 @@ if __name__ == '__main__':
     criterion2 = []
     criterion5 = []
     error = []
-    errorA = []
     rz = []
     zz = []
 
@@ -256,7 +255,6 @@ if __name__ == '__main__':
         error.append(norme)
         rz.append(np.sqrt(np.inner(r, z)))
         zz.append(norm(z) / norm(M @ b))
-        errorA.append(np.sqrt(np.inner(A @ e, e)))
 
     import pyamg
     res = []
@@ -275,7 +273,6 @@ if __name__ == '__main__':
     plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
     plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
     plt.semilogy(error, label=r'$\|e_k\|$')
-    plt.semilogy(errorA, label=r'$\|e_k\|_A$')
     plt.semilogy(rz, label=r'$\sqrt{<r, z>}$')
     plt.semilogy(zz, label=r'$\|Mr\| / \|M b\|$')
     plt.hlines(1e-8, 1, len(res), color='tab:gray', linestyle='dashed')
