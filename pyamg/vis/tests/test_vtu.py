@@ -15,13 +15,13 @@ class TestWriteVtu(TestCase):
     def setUp(self):
         cases = []
 
-        class mesh:
+        class Mesh:
             file_name = tempfile.mktemp()
             V = None
             E2V = None
             pdata = None
             cdata = None
-        mesh = mesh()
+        mesh = Mesh()
 
         # 1 triangle
         mesh.V = array([[0.0, 0.0],
