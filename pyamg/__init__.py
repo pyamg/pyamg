@@ -18,7 +18,8 @@ from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
 __all__ = ['__version_tuple__', '__version__',
-           'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation', 'util', 'vis',
+           'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation',
+           'util', 'vis',
            'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
            'coarse_grid_solver', 'multilevel_solver',
            'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',

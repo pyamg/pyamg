@@ -132,7 +132,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
 
 def _symbolic_rotation_helper():
-    """Use SymPy to generate the 3D rotation matrix and products for diffusion_stencil_3d."""
+    """Use SymPy to generate the 3D matrices for diffusion_stencil_3d."""
     from sympy import symbols, Matrix
 
     cpsi, spsi = symbols('cpsi, spsi')

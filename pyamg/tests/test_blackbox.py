@@ -27,7 +27,9 @@ class TestBlackbox(TestCase):
         np.random.seed(3105563891)
         for A, b in self.cases:
             x = solve(A, b, verb=False, maxiter=A.shape[0])
-            assert(np.linalg.norm(b - A*x)/np.linalg.norm(b - A*np.random.rand(b.shape[0],)) < 1e-4)
+            norm1 = np.linalg.norm(b - A*x)
+            norm2 = np.linalg.norm(b - A*np.random.rand(b.shape[0],))
+            assert(norm1 / norm2 < 1e-4)
 
         # Special tests
         # (1) Make sure BSR format is preserved, and B is multiple vecs
@@ -38,7 +40,9 @@ class TestBlackbox(TestCase):
 
         # (2) Run with solver and make sure that solution is still good
         x = solve(A, b, existing_solver=ml, verb=False)
-        assert(np.linalg.norm(b - A*x)/np.linalg.norm(b - A*np.random.rand(b.shape[0],)) < 1e-4)
+        norm1 = np.linalg.norm(b - A*x)
+        norm2 = np.linalg.norm(b - A*np.random.rand(b.shape[0],))
+        assert(norm1 / norm2 < 1e-4)
 
         # (3) Convert to CSR, make sure B is a single vector
         (x, ml) = solve(A.tocsr(), b, return_solver=True, verb=False)
@@ -48,7 +52,9 @@ class TestBlackbox(TestCase):
         # (4) Run with x0, maxiter and tol
         x = solve(A, b, existing_solver=ml, x0=np.zeros_like(b), tol=1e-8,
                   maxiter=300, verb=False)
-        assert(np.linalg.norm(b - A*x)/np.linalg.norm(b - A*np.random.rand(b.shape[0],)) < 1e-7)
+        norm1 = np.linalg.norm(b - A*x)
+        norm2 = np.linalg.norm(b - A*np.random.rand(b.shape[0],))
+        assert(norm1 / norm2 < 1e-7)
 
         # (5) Run nonsymmetric example, make sure BH isn't None
         A, b = self.cases[2]

@@ -28,7 +28,8 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance', 'algebraic_distance','affinity', 'energy_based', None]
+    strength : ['symmetric', 'classical', 'evolution', 'distance',
+                'algebraic_distance','affinity', 'energy_based', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If

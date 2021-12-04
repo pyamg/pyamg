@@ -673,7 +673,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N, format='csr')
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)],
+                    [0, -1, 1], N, N, format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')

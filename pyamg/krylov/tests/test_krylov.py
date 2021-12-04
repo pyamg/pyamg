@@ -1,13 +1,14 @@
+import numpy as np
+from numpy.testing import (TestCase, assert_array_almost_equal,
+                           assert_equal, assert_almost_equal)
+from scipy.linalg import solve
+import scipy.sparse as sparse
+
+import pyamg
+from pyamg.util.linalg import norm
 from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres, steepest_descent
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
-import numpy as np
-from scipy.linalg import solve
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
-import pyamg
-
-from numpy.testing import TestCase, assert_array_almost_equal, assert_equal, assert_almost_equal
 
 
 class TestStoppingCriteria(TestCase):
@@ -38,9 +39,12 @@ class TestStoppingCriteria(TestCase):
                     maxiter = None
                     if method.__name__ == 'steepest_descent':
                         maxiter = 100
-                    x1, info = method(A, b, x0=case['x0'], tol=case['tol'], criteria=criteria, maxiter=maxiter)
+                    x1, info = method(A, b, x0=case['x0'], tol=case['tol'],
+                                      criteria=criteria, maxiter=maxiter)
                     assert_equal(info, 0, err_msg=f'Problem in {method.__name__}.')
-                    assert_almost_equal(np.linalg.norm(b - A @ x1), 0.0, decimal=6, err_msg=f'Problem in {method.__name__}.')
+                    assert_almost_equal(np.linalg.norm(b - A @ x1), 0.0,
+                                        decimal=6,
+                                        err_msg=f'Problem in {method.__name__}.')
 
 
 class TestKrylov(TestCase):

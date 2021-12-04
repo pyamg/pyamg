@@ -428,7 +428,8 @@ class mesh:
         """generate a quadratic mesh
         """
         if self.V2 is None:
-            self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E, return_edges=True)
+            self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E,
+                                                              return_edges=True)
             self.X2 = self.V2[:, 0]
             self.Y2 = self.V2[:, 1]
             self.newID = self.nv + np.arange(self.Edges.shape[0])
@@ -482,7 +483,8 @@ class mesh:
         W = np.array(G.sum(axis=1)).flatten()
 
         Vnew = self.V.copy()
-        edgelength = (Vnew[edge0, 0] - Vnew[edge1, 0])**2 + (Vnew[edge0, 1] - Vnew[edge1, 1])**2
+        edgelength = (Vnew[edge0, 0] - Vnew[edge1, 0])**2 +\
+                     (Vnew[edge0, 1] - Vnew[edge1, 1])**2
 
         maxit = 100
         for it in range(maxit):

@@ -6,7 +6,7 @@ import scipy.sparse as sparse
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
+    """Linear elasticity problem with Q1 finite elements on a regular rectangular grid.
 
     Parameters
     ----------

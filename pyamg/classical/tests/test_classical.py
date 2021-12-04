@@ -153,7 +153,9 @@ class TestSolverPerformance(TestCase):
         rs_old = ruge_stuben_solver(A, max_coarse=10)
         for AA in cases:
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(rs_old.levels[-1].A.toarray() - rs_new.levels[-1].A.toarray())).max() < 0.01)
+            Ac_old = rs_old.levels[-1].A.toarray()
+            Ac_new = rs_new.levels[-1].A.toarray()
+            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
             rs_old = rs_new
 
 

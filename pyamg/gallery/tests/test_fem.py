@@ -93,10 +93,13 @@ class TestL2Norm(np.testing.TestCase):
         # 2 = sqrt( integrate(x*y + 1, (x,-1,1), (y,-1,1))).evalf()
         np.testing.assert_almost_equal(fem.l2norm(np.sqrt(X*Y+1), mesh), 2, decimal=2)
 
-        # 0.545351286587159 = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
-        np.testing.assert_almost_equal(fem.l2norm(np.sin(X)*np.sin(Y), mesh), 0.54, decimal=2)
+        # 0.545351286587159 =
+        # sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        norm1 = fem.l2norm(np.sin(X)*np.sin(Y), mesh)
+        np.testing.assert_almost_equal(norm1, 0.54, decimal=2)
 
-        # 0.288675134594813 = = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        # 0.288675134594813 =
+        # sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
         h = 1
         V = np.array(
             [[0, 0],
@@ -110,14 +113,16 @@ class TestL2Norm(np.testing.TestCase):
         X, Y = V2[:, 0], V2[:, 1]
         np.testing.assert_almost_equal(fem.l2norm(X, mesh), 0.2886, decimal=4)
 
-        # 0.545351286587159 = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        # 0.545351286587159
+        # = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
         V = data['vertices']
         E = data['elements']
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
         V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
-        np.testing.assert_almost_equal(fem.l2norm(np.sin(X)*np.sin(Y), mesh), 0.54, decimal=2)
+        norm1 = fem.l2norm(np.sin(X)*np.sin(Y), mesh)
+        np.testing.assert_almost_equal(norm1, 0.54, decimal=2)
 
 
 class TestGradGradFEM(np.testing.TestCase):

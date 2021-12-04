@@ -73,5 +73,6 @@ if __name__ == '__main__':
     print('\ncsgraph.bellman_ford')
     from scipy.sparse import csgraph
     for cc in c:
-        d, p = csgraph.bellman_ford(A, directed=True, indices=[cc], return_predecessors=True)
+        d, p = csgraph.bellman_ford(A, directed=True, indices=[cc],
+                                    return_predecessors=True)
         print(d.ravel(), p.ravel())

@@ -97,7 +97,7 @@ class multilevel_solver:
 
             Sparse iterative methods:
 
-            * the name of any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').
+            * any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').
             * Methods in pyamg.krylov take precedence.
             * relaxation method, such as 'gauss_seidel' or 'jacobi',
 

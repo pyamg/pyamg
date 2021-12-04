@@ -287,7 +287,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
         If n x 1 array, then use as initial guess for Arnoldi/Lanczos.
         If None, then use a random initial guess.
     return_vector : {boolean}
-        True - return an approximate dominant eigenvector, in addition to the spectral radius.
+        True - return an approximate dominant eigenvector and the spectral radius.
         False - Do not return the approximate dominant eigenvector
 
     Returns
@@ -568,7 +568,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
 
 def pinv_array(a, cond=None):
-    """Calculate the Moore-Penrose pseudo inverse of each block of the three dimensional array a.
+    """Calculate the Moore-Penrose pseudo inverse of each block of the 3D array a.
 
     Parameters
     ----------

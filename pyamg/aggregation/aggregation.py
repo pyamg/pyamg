@@ -213,13 +213,15 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
         except BaseException:
-            raise TypeError('Argument A must have type csr_matrix or bsr_matrix, or be convertible to csr_matrix')
+            raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
+                            'or be convertible to csr_matrix')
 
     A = A.asfptype()
 
     if (symmetry != 'symmetric') and (symmetry != 'hermitian') and\
             (symmetry != 'nonsymmetric'):
-        raise ValueError('expected \'symmetric\', \'nonsymmetric\' or \'hermitian\' for the symmetry parameter ')
+        raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
+                         'for the symmetry parameter ')
     A.symmetry = symmetry
 
     if A.shape[0] != A.shape[1]:
@@ -234,9 +236,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if B.shape[0] != A.shape[0]:
-            raise ValueError('The near null-space modes B have incorrect dimensions for matrix A')
+            raise ValueError('The shape of near null-space modes B is incorrect')
         if B.shape[1] < blocksize(A):
-            warn('Having less target vectors, B.shape[1], than blocksize of A can degrade convergence factors.')
+            warn('Having less target vectors, B.shape[1], than blocksize of A '
+                 'can degrade convergence factors.')
 
     # Left near nullspace candidates
     if A.symmetry == 'nonsymmetric':
@@ -247,9 +250,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             if len(BH.shape) == 1:
                 BH = BH.reshape(-1, 1)
             if BH.shape[1] != B.shape[1]:
-                raise ValueError('The number of left and right near null-space modes B and BH, must be equal')
+                raise ValueError('The number of left and right near null-space '
+                                 'modes B and BH must be equal')
             if BH.shape[0] != A.shape[0]:
-                raise ValueError('The near null-space modes BH have incorrect dimensions for matrix A')
+                raise ValueError('The shape of near null-space modes B is incorrect')
 
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.

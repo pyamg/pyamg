@@ -199,7 +199,8 @@ if __name__ == '__main__':
 
     nx = 100
     ny = nx
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny),
+                     dtype=float, format='csr')
     # b = random((A.shape[0],))
     xstar = random((A.shape[0],))
     b = A @ xstar
