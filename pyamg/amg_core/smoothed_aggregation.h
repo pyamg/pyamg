@@ -501,14 +501,14 @@ void fit_candidates_complex(const I n_row,
  *     by energy_prolongation_smoother(...) in smooth.py
  * This implements the python code:
  *
- *   # U is a BSR matrix, B is num_block_rows x ColsPerBlock x ColsPerBlock
- *   # UB is num_block_rows x RowsPerBlock x ColsPerBlock,  BtBinv is
- *        num_block_rows x ColsPerBlock x ColsPerBlock
- *   B  = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
- *   UB = asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1])
+ *   # U is a BSR matrix, B is num_block_rows x cols_per_block x cols_per_block
+ *   # UB is num_block_rows x rows_per_block x cols_per_block,  BtBinv is
+ *        num_block_rows x cols_per_block x cols_per_block
+ *   B  = asarray(B).reshape(-1,cols_per_block,B.shape[1])
+ *   UB = asarray(UB).reshape(-1,rows_per_block,UB.shape[1])
  *
  *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
- *           shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
+ *           shape=(U.shape[0]/rows_per_block,U.shape[1]/cols_per_block)).tocoo(copy=False).row
  *   for n,j in enumerate(U.indices):
  *      i = rows[n]
  *      Bi  = mat(B[j])
@@ -517,12 +517,12 @@ void fit_candidates_complex(const I n_row,
  *
  * Parameters
  * ----------
- * RowsPerBlock : {int}
+ * rows_per_block : {int}
  *      rows per block in the BSR matrix, S
- * ColsPerBlock : {int}
+ * cols_per_block : {int}
  *      cols per block in the BSR matrix, S
  * num_block_rows : {int}
- *      Number of block rows, S.shape[0]/RowsPerBlock
+ *      Number of block rows, S.shape[0]/rows_per_block
  * NullDim : {int}
  *      Null-space dimension, i.e., the number of columns in B
  * x : {float|complex array}
@@ -551,8 +551,8 @@ void fit_candidates_complex(const I n_row,
  */
 
 template<class I, class T, class F>
-void satisfy_constraints_helper(const I RowsPerBlock,
-                                const I ColsPerBlock,
+void satisfy_constraints_helper(const I rows_per_block,
+                                const I cols_per_block,
                                  const I num_block_rows,
                                  const I NullDim,
                                  const T x[], const int x_size,
@@ -568,10 +568,10 @@ void satisfy_constraints_helper(const I RowsPerBlock,
     const T * BtBinv = z;
 
     //Declare
-    I BlockSize = RowsPerBlock*ColsPerBlock;
+    I BlockSize = rows_per_block*cols_per_block;
     I NullDimSq = NullDim*NullDim;
-    I NullDim_Cols = NullDim*ColsPerBlock;
-    I NullDim_Rows = NullDim*RowsPerBlock;
+    I NullDim_Cols = NullDim*cols_per_block;
+    I NullDim_Rows = NullDim*rows_per_block;
 
     //C will store an intermediate mat-mat product
     std::vector<T> Update(BlockSize,0);
@@ -589,11 +589,11 @@ void satisfy_constraints_helper(const I RowsPerBlock,
         {
             // Calculate C = BtBinv[i*NullDimSq => (i+1)*NullDimSq]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
             // Implicit transpose of conjugate(B_i) is done through gemm assuming Bt is in column major
-            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, ColsPerBlock, 'F', &(C[0]), NullDim, ColsPerBlock, 'T', 'T');
+            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, cols_per_block, 'F', &(C[0]), NullDim, cols_per_block, 'T', 'T');
 
             // Calculate Sx[ j*BlockSize => (j+1)*blocksize ] =  UB[ i*BlockSize => (i+1)*blocksize ] * C
             // Note that C actually stores C^T in row major, or C in col major.  gemm assumes C is in col major, so we're OK
-            gemm(&(UB[i*NullDim_Rows]), RowsPerBlock, NullDim, 'F', &(C[0]), NullDim, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F', 'T');
+            gemm(&(UB[i*NullDim_Rows]), rows_per_block, NullDim, 'F', &(C[0]), NullDim, cols_per_block, 'F', &(Update[0]), rows_per_block, cols_per_block, 'F', 'T');
 
             //Update Sx
             for(I k = 0; k < BlockSize; k++)
@@ -607,11 +607,11 @@ void satisfy_constraints_helper(const I RowsPerBlock,
  * Helper routine for energy_prolongation_smoother
  * Calculates the following python code:
  *
- *   RowsPerBlock = Sparsity_Pattern.blocksize[0]
+ *   rows_per_block = Sparsity_Pattern.blocksize[0]
  *   BtB = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
  *   S2 = Sparsity_Pattern.tocsr()
  *   for i in range(Nnodes):
- *       Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
+ *       Bi = mat( B[S2.indices[S2.indptr[i*rows_per_block]:S2.indptr[i*rows_per_block + 1]],:] )
  *       BtB[i,:,:] = Bi.H*Bi
  *
  * Parameters
@@ -620,7 +620,7 @@ void satisfy_constraints_helper(const I RowsPerBlock,
  *      Number of near nullspace vectors
  * Nnodes : {int}
  *      Number of nodes, i.e. number of block rows in BSR matrix, S
- * ColsPerBlock : {int}
+ * cols_per_block : {int}
  *      Columns per block in S
  * b : {float|complex array}
  *      Nnodes x BsqCols array, in row-major form.
@@ -653,7 +653,7 @@ void satisfy_constraints_helper(const I RowsPerBlock,
 template<class I, class T, class F>
 void calc_BtB(const I NullDim,
               const I Nnodes,
-              const I ColsPerBlock,
+              const I cols_per_block,
               const T  b[], const int  b_size,
               const I BsqCols,
                     T  x[], const int  x_size,
@@ -686,8 +686,8 @@ void calc_BtB(const I NullDim,
         {
             // Calculate absolute column index start and stop
             //  for block column j of BSR matrix, S
-            const I colstart = Sj[j]*ColsPerBlock;
-            const I colend   = colstart + ColsPerBlock;
+            const I colstart = Sj[j]*cols_per_block;
+            const I colend   = colstart + cols_per_block;
 
             //Loop over each absolute column index, k, of block column, j
             for(I k = colstart; k < colend; k++)
