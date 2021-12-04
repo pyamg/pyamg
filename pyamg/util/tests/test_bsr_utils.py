@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.sparse import bsr_matrix
-from pyamg.util.bsr_utils import bsr_getrow, BSR_Row_WriteScalar,\
+from pyamg.util.bsr_utils import bsr_getrow, bsr_row_setscalar,\
     BSR_Row_WriteVect
 
 from numpy.testing import TestCase, assert_equal
@@ -16,7 +16,7 @@ class TestBSRUtils(TestCase):
         assert_equal(r, np.array([[3], [3]]))
         assert_equal(i, np.array([4, 5]))
 
-    def test_BSR_Row_WriteScalar(self):
+    def test_bsr_row_setscalar(self):
         indptr = np.array([0, 2, 3, 6])
         indices = np.array([0, 2, 2, 0, 1, 2])
         data = np.array([1, 2, 3, 4, 5, 6]).repeat(4).reshape(6, 2, 2)
@@ -32,7 +32,7 @@ class TestBSRUtils(TestCase):
 
         B2 = bsr_matrix((data2, indices2, indptr2), shape=(6, 6))
         B = bsr_matrix((data, indices, indptr), shape=(6, 6))
-        BSR_Row_WriteScalar(B, 5, 22)
+        bsr_row_setscalar(B, 5, 22)
         diff = np.ravel((B - B2).data)
         assert_equal(diff.shape[0], 0)
 

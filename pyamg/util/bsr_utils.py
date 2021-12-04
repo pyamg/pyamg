@@ -59,8 +59,8 @@ def bsr_getrow(A, i):
     return z.reshape(-1, 1), colindx[0, :]
 
 
-def BSR_Row_WriteScalar(A, i, x):
-    """Write a scalar at each nonzero location in row i of BSR matrix A.
+def bsr_row_setscalar(A, i, x):
+    """Set a scalar at each nonzero location in row i of BSR matrix A.
 
     Parameters
     ----------
@@ -82,12 +82,12 @@ def BSR_Row_WriteScalar(A, i, x):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.bsr_utils import BSR_Row_WriteScalar
+    >>> from pyamg.util.bsr_utils import bsr_row_setscalar
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> BSR_Row_WriteScalar(B,5,22)
+    >>> bsr_row_setscalar(B,5,22)
 
     """
     blocksize = A.blocksize[0]
