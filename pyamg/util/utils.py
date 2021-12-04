@@ -981,16 +981,16 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         pylab.show()
 
 
-def Coord2RBM(numNodes, numPDEs, x, y, z):
+def Coord2RBM(nnodes, ndof, x, y, z):
     """Convert 2D or 3D coordinates into Rigid body modes.
 
     For use as near nullspace modes in elasticity AMG solvers.
 
     Parameters
     ----------
-    numNodes : int
+    nnodes : int
         Number of nodes
-    numPDEs :
+    ndof :
         Number of dofs per node
     x,y,z : array_like
         Coordinate vectors
@@ -998,7 +998,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
     Returns
     -------
     rbm : array
-        An array of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
+        An array of size (nnodes*ndof) x (1 | 6) containing the 6 rigid
         body modes
 
     Examples
@@ -1028,35 +1028,35 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
 
     """
     # check inputs
-    if(numPDEs == 1):
+    if(ndof == 1):
         numcols = 1
-    elif((numPDEs == 3) or (numPDEs == 6)):
+    elif((ndof == 3) or (ndof == 6)):
         numcols = 6
     else:
         raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per\
-                          spatial location,i.e. numPDEs = [1 | 3 | 6].\
-                          You've entered " + str(numPDEs) + ".")
+                          spatial location,i.e. ndof = [1 | 3 | 6].\
+                          You've entered " + str(ndof) + ".")
 
-    if((max(x.shape) != numNodes)
-       or (max(y.shape) != numNodes)
-       or (max(z.shape) != numNodes)):
+    if((max(x.shape) != nnodes)
+       or (max(y.shape) != nnodes)
+       or (max(z.shape) != nnodes)):
         raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
-                          length.  Length must be numNodes = " + str(numNodes))
+                          length.  Length must be nnodes = " + str(nnodes))
 
     # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
     #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are
-    #    (numNodes x 1) or (1 x numNodes).")
+    #    (nnodes x 1) or (1 x nnodes).")
 
     # preallocate rbm
-    rbm = np.array(np.zeros((numNodes*numPDEs, numcols)))
+    rbm = np.array(np.zeros((nnodes*ndof, numcols)))
 
-    for node in range(numNodes):
-        dof = node*numPDEs
+    for node in range(nnodes):
+        dof = node * ndof
 
-        if(numPDEs == 1):
+        if(ndof == 1):
             rbm[node] = 1.0
 
-        if(numPDEs == 6):
+        if(ndof == 6):
             for ii in range(3, 6):  # lower half = [ 0 I ]
                 for jj in range(0, 6):
                     if(ii == jj):
@@ -1064,7 +1064,7 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
                     else:
                         rbm[dof+ii, jj] = 0.0
 
-        if((numPDEs == 3) or (numPDEs == 6)):
+        if((ndof == 3) or (ndof == 6)):
             for ii in range(0, 3):  # upper left = [ I ]
                 for jj in range(0, 3):
                     if(ii == jj):
