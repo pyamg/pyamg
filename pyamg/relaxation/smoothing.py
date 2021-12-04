@@ -669,7 +669,7 @@ def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
     return smoother
 
 
-def setup_None(lvl):
+def setup_none(lvl):
     def smoother(A, x, b):
         pass
     return smoother
