@@ -14,7 +14,7 @@ from scipy.sparse import csr_matrix, coo_matrix, triu
 from .vtk_writer import write_basic_mesh, write_vtu
 
 
-def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
+def vis_aggregate_groups(V, E2V, Agg, mesh_type, output='vtk',
                          fname='output.vtu'):
     """Coarse grid visualization of aggregate groups.
 
@@ -22,7 +22,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
 
     Parameters
     ----------
-    Verts : {array}
+    V : {array}
         coordinate array (N x D)
     E2V : {array}
         element index array (Nel x Nelnodes)
@@ -56,7 +56,7 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> Agg = standard_aggregation(A)[0]
-    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tri',
+    >>> vis_aggregate_groups(V=V, E2V=E2V, Agg=Agg, mesh_type='tri',
                              output='vtk', fname='output.vtu')
 
     >>> from pyamg.aggregation import standard_aggregation
@@ -67,11 +67,11 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> Agg = standard_aggregation(A)[0]
-    >>> vis_aggregate_groups(Verts=V, E2V=E2V, Agg=Agg, mesh_type='tet',
+    >>> vis_aggregate_groups(V=V, E2V=E2V, Agg=Agg, mesh_type='tet',
                              output='vtk', fname='output.vtu')
 
     """
-    check_input(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type=mesh_type)
+    check_input(V=V, E2V=E2V, Agg=Agg, mesh_type=mesh_type)
     map_type_to_key = {'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
     if mesh_type not in map_type_to_key:
         raise ValueError('unknown mesh_type=%s' % mesh_type)
@@ -141,15 +141,15 @@ def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',
 
     Cells = {1: E2V_c, 3: E2V_b, key: E2V_a}
     cdata = {1: colors_c, 3: colors_b, key: colors_a}  # make sure it's a tuple
-    write_vtu(Verts=Verts, Cells=Cells, fname=fname, cdata=cdata)
+    write_vtu(V=V, Cells=Cells, fname=fname, cdata=cdata)
 
 
-def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
+def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     """Coarse grid visualization for C/F splittings.
 
     Parameters
     ----------
-    Verts : {array}
+    V : {array}
         coordinate array (N x D)
     splitting : {array}
         coarse(1)/fine(0) flags
@@ -168,7 +168,7 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     D :
         dimension of coordinate space
     N :
-        # of vertices in the mesh represented in Verts
+        # of vertices in the mesh represented in V
     Ndof :
         # of dof (= ldof * N)
 
@@ -183,12 +183,12 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     --------
     >>> import numpy as np
     >>> from pyamg.vis.vis_coarse import vis_splitting
-    >>> Verts = np.array([[0.0,0.0],
-    ...                   [1.0,0.0],
-    ...                   [0.0,1.0],
-    ...                   [1.0,1.0]])
+    >>> V = np.array([[0.0,0.0],
+    ...               [1.0,0.0],
+    ...               [0.0,1.0],
+    ...               [1.0,1.0]])
     >>> splitting = np.array([0,1,0,1,1,0,1,0])    # two variables
-    >>> vis_splitting(Verts,splitting,output='vtk',fname='output.vtu')
+    >>> vis_splitting(V,splitting,output='vtk',fname='output.vtu')
 
     >>> from pyamg.classical import RS
     >>> from pyamg.vis.vis_coarse import vis_splitting
@@ -198,13 +198,13 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> splitting = RS(A)
-    >>> vis_splitting(Verts=V,splitting=splitting,output='vtk',
+    >>> vis_splitting(V=V,splitting=splitting,output='vtk',
                       fname='output.vtu')
 
     """
-    check_input(Verts, splitting)
+    check_input(V, splitting)
 
-    N = Verts.shape[0]
+    N = V.shape[0]
     Ndof = int(len(splitting) / N)
 
     E2V = np.arange(0, N, dtype=int)
@@ -230,16 +230,16 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
         cdata = splitting[(d*N):((d+1)*N)]
 
         if output == 'vtk':
-            write_basic_mesh(Verts=Verts, E2V=E2V, mesh_type='vertex',
+            write_basic_mesh(V=V, E2V=E2V, mesh_type='vertex',
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
             from pylab import figure, show, plot, xlabel, ylabel, title, axis
             cdataF = np.where(cdata == 0)[0]
             cdataC = np.where(cdata == 1)[0]
-            xC = Verts[cdataC, 0]
-            yC = Verts[cdataC, 1]
-            xF = Verts[cdataF, 0]
-            yF = Verts[cdataF, 1]
+            xC = V[cdataC, 0]
+            yC = V[cdataC, 1]
+            xF = V[cdataF, 0]
+            yF = V[cdataF, 1]
             figure()
             plot(xC, yC, 'r.', xF, yF, 'b.', clip_on=True)
             title('C/F splitting (red=coarse, blue=fine)')
@@ -251,12 +251,12 @@ def vis_splitting(Verts, splitting, output='vtk', fname='output.vtu'):
             raise ValueError('problem with outputtype')
 
 
-def check_input(Verts=None, E2V=None, Agg=None, A=None, splitting=None,
+def check_input(V=None, E2V=None, Agg=None, A=None, splitting=None,
                 mesh_type=None):
     """Check input for local functions."""
-    if Verts is not None:
-        if not np.issubdtype(Verts.dtype, np.floating):
-            raise ValueError('Verts should be of type float')
+    if V is not None:
+        if not np.issubdtype(V.dtype, np.floating):
+            raise ValueError('V should be of type float')
 
     if E2V is not None:
         if not np.issubdtype(E2V.dtype, np.integer):
@@ -278,8 +278,8 @@ def check_input(Verts=None, E2V=None, Agg=None, A=None, splitting=None,
 
     if splitting is not None:
         splitting = splitting.ravel()
-        if Verts is not None:
-            if (len(splitting) % Verts.shape[0]) != 0:
+        if V is not None:
+            if (len(splitting) % V.shape[0]) != 0:
                 raise ValueError('splitting must be a multiple of N')
         else:
             raise ValueError('problem with check_input')

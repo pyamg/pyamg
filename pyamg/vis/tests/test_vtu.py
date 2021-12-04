@@ -17,16 +17,16 @@ class TestWriteVtu(TestCase):
 
         class mesh:
             file_name = tempfile.mktemp()
-            Verts = None
+            V = None
             E2V = None
             pdata = None
             cdata = None
         mesh = mesh()
 
         # 1 triangle
-        mesh.Verts = array([[0.0, 0.0],
-                            [0.0, 1.0],
-                            [1.0, 1.0]])
+        mesh.V = array([[0.0, 0.0],
+                        [0.0, 1.0],
+                        [1.0, 1.0]])
         E2V = array([[0, 2, 1]], uint32)
         mesh.Cells = {5: E2V}
         mesh.pdata = None
@@ -34,10 +34,10 @@ class TestWriteVtu(TestCase):
         cases.append(mesh)
 
         # 2 triangles
-        mesh.Verts = array([[0.0, 0.0],
-                            [1.0, 0.0],
-                            [0.0, 1.0],
-                            [1.0, 1.0]])
+        mesh.Vs = array([[0.0, 0.0],
+                         [1.0, 0.0],
+                         [0.0, 1.0],
+                         [1.0, 1.0]])
         E2V = array([[0, 3, 2],
                      [0, 1, 3]], uint32)
         mesh.Cells = {5: E2V}
@@ -46,15 +46,15 @@ class TestWriteVtu(TestCase):
         cases.append(mesh)
 
         # 8 triangles
-        mesh.Verts = array([[0.0, 0.0],
-                            [1.0, 0.0],
-                            [2.0, 0.0],
-                            [0.0, 1.0],
-                            [1.0, 1.0],
-                            [2.0, 1.0],
-                            [0.0, 2.0],
-                            [1.0, 2.0],
-                            [2.0, 2.0]])
+        mesh.V = array([[0.0, 0.0],
+                        [1.0, 0.0],
+                        [2.0, 0.0],
+                        [0.0, 1.0],
+                        [1.0, 1.0],
+                        [2.0, 1.0],
+                        [0.0, 2.0],
+                        [1.0, 2.0],
+                        [2.0, 2.0]])
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
                      [1, 5, 4],
@@ -72,7 +72,7 @@ class TestWriteVtu(TestCase):
 
     def test_xml(self):
         for mesh in self.cases:
-            write_vtu(Verts=mesh.Verts, Cells=mesh.Cells,
+            write_vtu(V=mesh.V, Cells=mesh.Cells,
                       pdata=mesh.pdata, cdata=mesh.cdata,
                       fname=mesh.file_name)
 

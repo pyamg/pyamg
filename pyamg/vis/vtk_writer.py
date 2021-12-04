@@ -12,7 +12,7 @@ import xml.dom.minidom
 import numpy as np
 
 
-def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
+def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
               fname='output.vtk'):
     """Write a .vtu file in xml format.
 
@@ -20,7 +20,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     ----------
     fname : {string}
         file to be written, e.g. 'mymesh.vtu'
-    Verts : {array}
+    V : {array}
         Ndof x 3 (if 2, then expanded by 0)
         list of (x,y,z) point coordinates
     Cells : {dictionary}
@@ -71,18 +71,18 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     --------
     >>> from pyamg.vis import write_vtu
     >>> import numpy as np
-    >>> Verts = np.array([[0.0,0.0],
-    ...                   [1.0,0.0],
-    ...                   [2.0,0.0],
-    ...                   [0.0,1.0],
-    ...                   [1.0,1.0],
-    ...                   [2.0,1.0],
-    ...                   [0.0,2.0],
-    ...                   [1.0,2.0],
-    ...                   [2.0,2.0],
-    ...                   [0.0,3.0],
-    ...                   [1.0,3.0],
-    ...                   [2.0,3.0]])
+    >>> V = np.array([[0.0,0.0],
+    ...               [1.0,0.0],
+    ...               [2.0,0.0],
+    ...               [0.0,1.0],
+    ...               [1.0,1.0],
+    ...               [2.0,1.0],
+    ...               [0.0,2.0],
+    ...               [1.0,2.0],
+    ...               [2.0,2.0],
+    ...               [0.0,3.0],
+    ...               [1.0,3.0],
+    ...               [2.0,3.0]])
     >>> E2V = np.array([[0,4,3],
     ...                 [0,1,4],
     ...                 [1,5,4],
@@ -103,7 +103,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     >>> cdata={5:np.ones((12,2)),3:np.ones((1,2)),1:np.ones((4,2))}
     >>> cvdata={5:np.ones((3*12,2)),3:np.ones((3*1,2)),
                 1:np.ones((3*4,2))}
-    >>> write_vtu(Verts=Verts, Cells=Cells, fname='test.vtu')
+    >>> write_vtu(V=V, Cells=Cells, fname='test.vtu')
 
     See Also
     --------
@@ -122,12 +122,12 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     else:
         raise ValueError('fname is assumed to be a string')
 
-    # check Verts
+    # check V
     # get dimension and verify that it's 3d data
-    Ndof, dim = Verts.shape
+    Ndof, dim = V.shape
     if dim == 2:
         # always use 3d coordinates (x,y) -> (x,y,0)
-        Verts = np.hstack((Verts, np.zeros((Ndof, 1))))
+        V = np.hstack((V, np.zeros((Ndof, 1))))
 
     # check Cells
     # keys must ve valid (integer and not "None" in vtk_cell_info)
@@ -269,7 +269,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
          'format': 'ascii'}
     _set_attributes(d, points_data)
     # string for data element
-    points_data_str = doc.createTextNode(_a2s(Verts))
+    points_data_str = doc.createTextNode(_a2s(V))
 
     # CELLS
     # points element
@@ -371,7 +371,7 @@ def write_vtu(Verts, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     fname.close()
 
 
-def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
+def write_basic_mesh(V, E2V=None, mesh_type='tri',
                      pdata=None, pvdata=None,
                      cdata=None, cvdata=None, fname='output.vtk'):
     """Write mesh file for basic types of elements.
@@ -380,7 +380,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
     ----------
     fname : {string}
         file to be written, e.g. 'mymesh.vtu'
-    Verts : {array}
+    V : {array}
         coordinate array (N x D)
     E2V : {array}
         element index array (Nel x Nelnodes)
@@ -409,18 +409,18 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
     --------
     >>> import numpy as np
     >>> from pyamg.vis import write_basic_mesh
-    >>> Verts = np.array([[0.0,0.0],
-    ...                   [1.0,0.0],
-    ...                   [2.0,0.0],
-    ...                   [0.0,1.0],
-    ...                   [1.0,1.0],
-    ...                   [2.0,1.0],
-    ...                   [0.0,2.0],
-    ...                   [1.0,2.0],
-    ...                   [2.0,2.0],
-    ...                   [0.0,3.0],
-    ...                   [1.0,3.0],
-    ...                   [2.0,3.0]])
+    >>> V = np.array([[0.0,0.0],
+    ...               [1.0,0.0],
+    ...               [2.0,0.0],
+    ...               [0.0,1.0],
+    ...               [1.0,1.0],
+    ...               [2.0,1.0],
+    ...               [0.0,2.0],
+    ...               [1.0,2.0],
+    ...               [2.0,2.0],
+    ...               [0.0,3.0],
+    ...               [1.0,3.0],
+    ...               [2.0,3.0]])
     >>> E2V = np.array([[0,4,3],
     ...                 [0,1,4],
     ...                 [1,5,4],
@@ -437,7 +437,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
     >>> pvdata=np.ones((12*3,2))
     >>> cdata=np.ones((12,2))
     >>> cvdata=np.ones((3*12,2))
-    >>> write_basic_mesh(Verts, E2V=E2V, mesh_type='tri',pdata=pdata,
+    >>> write_basic_mesh(V, E2V=E2V, mesh_type='tri',pdata=pdata,
                          pvdata=pvdata, cdata=cdata, cvdata=cvdata,
                          fname='test.vtu')
 
@@ -457,7 +457,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
     key = map_type_to_key[mesh_type]
 
     if mesh_type == 'vertex':
-        uidx = np.arange(0, Verts.shape[0]).reshape((Verts.shape[0], 1))
+        uidx = np.arange(0, V.shape[0]).reshape((V.shape[0], 1))
         E2V = {key: uidx}
     else:
         E2V = {key: E2V}
@@ -468,7 +468,7 @@ def write_basic_mesh(Verts, E2V=None, mesh_type='tri',
     if cvdata is not None:
         cvdata = {key: cvdata}
 
-    write_vtu(Verts=Verts, Cells=E2V, pdata=pdata, pvdata=pvdata,
+    write_vtu(V=V, Cells=E2V, pdata=pdata, pvdata=pvdata,
               cdata=cdata, cvdata=cvdata, fname=fname)
 
 

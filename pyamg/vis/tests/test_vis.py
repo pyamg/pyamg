@@ -20,18 +20,18 @@ class TestVis(TestCase):
         os.remove(self.file_name)
 
     def test_1(self):
-        Verts = array([[0.0, 0.0],
-                       [1.0, 0.0],
-                       [2.0, 0.0],
-                       [0.0, 1.0],
-                       [1.0, 1.0],
-                       [2.0, 1.0],
-                       [0.0, 2.0],
-                       [1.0, 2.0],
-                       [2.0, 2.0],
-                       [0.0, 3.0],
-                       [1.0, 3.0],
-                       [2.0, 3.0]])
+        V = array([[0.0, 0.0],
+                   [1.0, 0.0],
+                   [2.0, 0.0],
+                   [0.0, 1.0],
+                   [1.0, 1.0],
+                   [2.0, 1.0],
+                   [0.0, 2.0],
+                   [1.0, 2.0],
+                   [2.0, 2.0],
+                   [0.0, 3.0],
+                   [1.0, 3.0],
+                   [2.0, 3.0]])
 
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
@@ -52,28 +52,28 @@ class TestVis(TestCase):
 
         Agg = csr_matrix((data, (row, col)), shape=(12, 2))
 
-        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri',
+        vis_aggregate_groups(V=V, E2V=E2V, Agg=Agg, mesh_type='tri',
                              fname=self.file_name)
 
     def test_2(self):
-        Verts = array([[0.0, 0.0],
-                       [1.0, 0.0],
-                       [2.0, 0.0],
-                       [0.0, 1.0],
-                       [1.0, 1.0],
-                       [2.0, 1.0],
-                       [3.0, 1.0],
-                       [0.0, 2.0],
-                       [1.0, 2.0],
-                       [2.0, 2.0],
-                       [3.0, 2.0],
-                       [4.0, 2.0],
-                       [0.0, 3.0],
-                       [1.0, 3.0],
-                       [2.0, 3.0],
-                       [3.0, 3.0],
-                       [4.0, 3.0],
-                       [5.0, 3.0]])
+        V = array([[0.0, 0.0],
+                   [1.0, 0.0],
+                   [2.0, 0.0],
+                   [0.0, 1.0],
+                   [1.0, 1.0],
+                   [2.0, 1.0],
+                   [3.0, 1.0],
+                   [0.0, 2.0],
+                   [1.0, 2.0],
+                   [2.0, 2.0],
+                   [3.0, 2.0],
+                   [4.0, 2.0],
+                   [0.0, 3.0],
+                   [1.0, 3.0],
+                   [2.0, 3.0],
+                   [3.0, 3.0],
+                   [4.0, 3.0],
+                   [5.0, 3.0]])
 
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
@@ -105,5 +105,5 @@ class TestVis(TestCase):
 
         Agg = csr_matrix((data, (row, col)), shape=(18, 5))
 
-        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri',
+        vis_aggregate_groups(V=V, E2V=E2V, Agg=Agg, mesh_type='tri',
                              fname=self.file_name)
