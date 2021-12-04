@@ -23,7 +23,7 @@ from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
 
 
-def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
+def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     """Eliminate canidates locally.
 
     Helper function that determines where to eliminate candidates locally
@@ -39,7 +39,7 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         Operator for the level that x was generated for
     T : sparse matrix
         Tentative prolongation operator for the level that x was generated for
-    Ca : scalar
+    thresh : scalar
         Constant threshold parameter to decide when to drop candidates
 
     Returns
@@ -84,7 +84,7 @@ def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
         return weights.reshape(-1, 1)
 
     # Run test 1, which finds where x is small relative to its energy
-    weights = Ca*get_aggregate_weights(AggOp, A, x, nPDEs, ndof)
+    weights = thresh * get_aggregate_weights(AggOp, A, x, nPDEs, ndof)
     mask1 = aggregate_wise_inner_product(x, AggOp, nPDEs, ndof) <= weights
 
     # Run test 2, which finds where x is already approximated
@@ -117,7 +117,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                         {'sweep': 'symmetric'}),
                        smooth=('jacobi', {}), strength='symmetric',
                        coarse_solver='pinv',
-                       eliminate_local=(False, {'Ca': 1.0}), keep=False,
+                       eliminate_local=(False, {'thresh': 1.0}), keep=False,
                        **kwargs):
     """Create a multilevel solver using Adaptive Smoothed Aggregation (aSA).
 
