@@ -384,7 +384,7 @@ def l2norm(u, mesh):
     return np.sqrt(val)
 
 
-class mesh:
+class Mesh:
     """Simple mesh object that holds vertices and mesh functions
     """
 
