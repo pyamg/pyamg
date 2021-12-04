@@ -52,9 +52,9 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     else:
         AggOp = AggOp.tocsc()
         ndof = max(x.shape)
-        nPDEs = int(ndof/AggOp.shape[0])
+        npde = int(ndof/AggOp.shape[0])
 
-    def aggregate_wise_inner_product(z, AggOp, nPDEs, ndof):
+    def aggregate_wise_inner_product(z, AggOp, npde, ndof):
         """Inner products per aggregate.
 
         Helper function that calculates <z, z>_i, i.e., the
@@ -64,12 +64,12 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         """
         z = np.ravel(z)*np.ravel(z)
         innerp = np.zeros((1, AggOp.shape[1]), dtype=z.dtype)
-        for j in range(nPDEs):
-            innerp += z[slice(j, ndof, nPDEs)].reshape(1, -1) * AggOp
+        for j in range(npde):
+            innerp += z[slice(j, ndof, npde)].reshape(1, -1) * AggOp
 
         return innerp.reshape(-1, 1)
 
-    def get_aggregate_weights(AggOp, A, z, nPDEs, ndof):
+    def get_aggregate_weights(AggOp, A, z, npde, ndof):
         """Weights per aggregate.
 
         Calculate local aggregate quantities
@@ -79,25 +79,25 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         """
         rho = approximate_spectral_radius(A)
         zAz = np.dot(z.reshape(1, -1), A*z.reshape(-1, 1))
-        card = nPDEs*(AggOp.indptr[1:]-AggOp.indptr[:-1])
+        card = npde * (AggOp.indptr[1:]-AggOp.indptr[:-1])
         weights = (np.ravel(card)*zAz)/(A.shape[0]*rho)
         return weights.reshape(-1, 1)
 
     # Run test 1, which finds where x is small relative to its energy
-    weights = thresh * get_aggregate_weights(AggOp, A, x, nPDEs, ndof)
-    mask1 = aggregate_wise_inner_product(x, AggOp, nPDEs, ndof) <= weights
+    weights = thresh * get_aggregate_weights(AggOp, A, x, npde, ndof)
+    mask1 = aggregate_wise_inner_product(x, AggOp, npde, ndof) <= weights
 
     # Run test 2, which finds where x is already approximated
     # accurately by the existing T
     projected_x = x - T*(T.T*x)
     mask2 = aggregate_wise_inner_product(projected_x,
-                                         AggOp, nPDEs, ndof) <= weights
+                                         AggOp, npde, ndof) <= weights
 
     # Combine masks and zero out corresponding aggregates in x
     mask = np.ravel(mask1 + mask2).nonzero()[0]
     if mask.shape[0] > 0:
-        mask = nPDEs*AggOp[:, mask].indices
-        for j in range(nPDEs):
+        mask = npde * AggOp[:, mask].indices
+        for j in range(npde):
             x[mask+j] = 0.0
 
 
