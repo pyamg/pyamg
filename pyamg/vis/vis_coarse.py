@@ -139,9 +139,9 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type, output='vtk',
     colors_b = 2*np.ones((Nel_b,))  # color edges with twos
     colors_c = 1*np.ones((Nel_c,))  # color the vertices with ones
 
-    Cells = {1: E2V_c, 3: E2V_b, key: E2V_a}
+    cells = {1: E2V_c, 3: E2V_b, key: E2V_a}
     cdata = {1: colors_c, 3: colors_b, key: colors_a}  # make sure it's a tuple
-    write_vtu(V=V, Cells=Cells, fname=fname, cdata=cdata)
+    write_vtu(V=V, cells=cells, fname=fname, cdata=cdata)
 
 
 def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):

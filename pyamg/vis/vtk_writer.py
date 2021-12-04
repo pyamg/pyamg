@@ -12,7 +12,7 @@ import xml.dom.minidom
 import numpy as np
 
 
-def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
+def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
               fname='output.vtk'):
     """Write a .vtu file in xml format.
 
@@ -23,7 +23,7 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     V : {array}
         Ndof x 3 (if 2, then expanded by 0)
         list of (x,y,z) point coordinates
-    Cells : {dictionary}
+    cells : {dictionary}
         Dictionary of with the keys
     pdata : {array}
         Ndof x Nfields array of scalar values for the vertices
@@ -45,7 +45,7 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     - Each I1 must be >=3
     - pdata = Ndof x Nfields
     - pvdata = 3*Ndof x Nfields
-    - cdata,cvdata = list of dictionaries in the form of Cells
+    - cdata,cvdata = list of dictionaries in the form of cells
 
 
     =====  =================== ============= ===
@@ -97,13 +97,13 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     ...                 [7,8,11]])
     >>> E2edge = np.array([[0,1]])
     >>> E2point = np.array([2,3,4,5])
-    >>> Cells = {5:E2V,3:E2edge,1:E2point}
+    >>> cells = {5:E2V,3:E2edge,1:E2point}
     >>> pdata=np.ones((12,2))
     >>> pvdata=np.ones((12*3,2))
     >>> cdata={5:np.ones((12,2)),3:np.ones((1,2)),1:np.ones((4,2))}
     >>> cvdata={5:np.ones((3*12,2)),3:np.ones((3*1,2)),
                 1:np.ones((3*4,2))}
-    >>> write_vtu(V=V, Cells=Cells, fname='test.vtu')
+    >>> write_vtu(V=V, cells=cells, fname='test.vtu')
 
     See Also
     --------
@@ -129,24 +129,24 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         # always use 3d coordinates (x,y) -> (x,y,0)
         V = np.hstack((V, np.zeros((Ndof, 1))))
 
-    # check Cells
+    # check cells
     # keys must ve valid (integer and not "None" in vtk_cell_info)
     # Cell data can't be empty for a non empty key
-    for key in Cells:
+    for key in cells:
         if ((not isinstance(key, int)) or (key not in list(range(1, 15)))):
             raise ValueError('cell array must have positive integer keys\
                               in [1,14]')
-        if (vtk_cell_info[key] is None) and (Cells[key] is not None):
+        if (vtk_cell_info[key] is None) and (cells[key] is not None):
             # Poly data
             raise NotImplementedError('Poly Data not implemented yet')
-        if Cells[key] is None:
+        if cells[key] is None:
             raise ValueError('cell array cannot be empty for\
                               key %d' % (key))
-        if np.ndim(Cells[key]) != 2:
-            Cells[key] = Cells[key].reshape((Cells[key].size, 1))
-        if vtk_cell_info[key] != Cells[key].shape[1]:
+        if np.ndim(cells[key]) != 2:
+            cells[key] = cells[key].reshape((cells[key].size, 1))
+        if vtk_cell_info[key] != cells[key].shape[1]:
             raise ValueError('cell array has %d columns, expected %d' %
-                             (Cells[key].shape[1], vtk_cell_info[key]))
+                             (cells[key].shape[1], vtk_cell_info[key]))
 
     # check pdata
     # must be Ndof x n_pdata
@@ -175,10 +175,10 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
                               (it is now %d)' % (Ndof*3, pvdata.shape[0]))
 
     # check cdata
-    # must be NCells x n_cdata for each key
+    # must be Ncells x n_cdata for each key
     n_cdata = 0
     if cdata is not None:
-        for key in Cells:   # all valid now
+        for key in cells:   # all valid now
             if np.ndim(cdata[key]) > 1:
                 if n_cdata == 0:
                     n_cdata = cdata[key].shape[1]
@@ -187,18 +187,18 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             else:
                 n_cdata = 1
                 cdata[key] = cdata[key].reshape((cdata[key].size, 1))
-            if cdata[key].shape[0] != Cells[key].shape[0]:
-                raise ValueError('size mismatch with cdata %d and Cells %d' %
-                                 (cdata[key].shape[0], Cells[key].shape[0]))
+            if cdata[key].shape[0] != cells[key].shape[0]:
+                raise ValueError('size mismatch with cdata %d and cells %d' %
+                                 (cdata[key].shape[0], cells[key].shape[0]))
             if cdata[key] is None:
                 raise ValueError('cdata array cannot be empty for key %d' %
                                  (key))
 
     # check cvdata
-    # must be NCells*3 x n_cdata for each key
+    # must be Ncells*3 x n_cdata for each key
     n_cvdata = 0
     if cvdata is not None:
-        for key in Cells:   # all valid now
+        for key in cells:   # all valid now
             if np.ndim(cvdata[key]) > 1:
                 if n_cvdata == 0:
                     n_cvdata = cvdata[key].shape[1]
@@ -207,8 +207,8 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             else:
                 n_cvdata = 1
                 cvdata[key] = cvdata[key].reshape((cvdata[key].size, 1))
-            if cvdata[key].shape[0] != 3 * Cells[key].shape[0]:
-                raise ValueError('size mismatch with cvdata and Cells')
+            if cvdata[key].shape[0] != 3 * cells[key].shape[0]:
+                raise ValueError('size mismatch with cvdata and cells')
             if cvdata[key] is None:
                 raise ValueError('cvdata array cannot be empty for key %d' %
                                  (key))
@@ -220,14 +220,14 @@ def write_vtu(V, Cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
 
     cdata_all = None
     cvdata_all = None
-    for key in Cells:
+    for key in cells:
         # non-Poly data
-        sz = Cells[key].shape[0]
-        offset = Cells[key].shape[1]
+        sz = cells[key].shape[0]
+        offset = cells[key].shape[1]
 
         Ncells += sz
         uu = np.ones((sz,), dtype='uint8')
-        cell_ind = np.hstack((cell_ind, Cells[key].ravel()))
+        cell_ind = np.hstack((cell_ind, cells[key].ravel()))
         cell_offset = np.hstack((cell_offset, offset * uu))
         cell_type = np.hstack((cell_type, key * uu))
 
@@ -468,7 +468,7 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     if cvdata is not None:
         cvdata = {key: cvdata}
 
-    write_vtu(V=V, Cells=E2V, pdata=pdata, pvdata=pvdata,
+    write_vtu(V=V, cells=E2V, pdata=pdata, pvdata=pvdata,
               cdata=cdata, cvdata=cvdata, fname=fname)
 
 

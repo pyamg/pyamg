@@ -28,7 +28,7 @@ class TestWriteVtu(TestCase):
                         [0.0, 1.0],
                         [1.0, 1.0]])
         E2V = array([[0, 2, 1]], uint32)
-        mesh.Cells = {5: E2V}
+        mesh.cells = {5: E2V}
         mesh.pdata = None
         mesh.cdata = None
         cases.append(mesh)
@@ -40,7 +40,7 @@ class TestWriteVtu(TestCase):
                          [1.0, 1.0]])
         E2V = array([[0, 3, 2],
                      [0, 1, 3]], uint32)
-        mesh.Cells = {5: E2V}
+        mesh.cells = {5: E2V}
         mesh.pdata = None
         mesh.cdata = None
         cases.append(mesh)
@@ -63,7 +63,7 @@ class TestWriteVtu(TestCase):
                      [3, 4, 7],
                      [4, 8, 7],
                      [4, 5, 8]], uint32)
-        mesh.Cells = {5: E2V}
+        mesh.cells = {5: E2V}
         mesh.pdata = None
         mesh.cdata = None
         cases.append(mesh)
@@ -72,7 +72,7 @@ class TestWriteVtu(TestCase):
 
     def test_xml(self):
         for mesh in self.cases:
-            write_vtu(V=mesh.V, Cells=mesh.Cells,
+            write_vtu(V=mesh.V, cells=mesh.cells,
                       pdata=mesh.pdata, cdata=mesh.cdata,
                       fname=mesh.file_name)
 
