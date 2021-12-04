@@ -289,7 +289,7 @@ def rootnode_solver(A, B=None, BH=None,
 
     # Construct multilevel structure
     levels = []
-    levels.append(MultilevelSolver.level())
+    levels.append(MultilevelSolver.Level())
     levels[-1].A = A          # matrix
 
     # Append near nullspace candidates
@@ -453,7 +453,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].R = R                          # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
-    levels.append(MultilevelSolver.level())
+    levels.append(MultilevelSolver.Level())
     A = R * A * P                                 # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A

@@ -86,7 +86,7 @@ def ruge_stuben_solver(A,
     aggregation.rootnode_solver
 
     """
-    levels = [MultilevelSolver.level()]
+    levels = [MultilevelSolver.Level()]
 
     # convert A to csr
     if not isspmatrix_csr(A):
@@ -179,7 +179,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     levels[-1].P = P                  # prolongation operator
     levels[-1].R = R                  # restriction operator
 
-    levels.append(MultilevelSolver.level())
+    levels.append(MultilevelSolver.Level())
 
     # Form next level through Galerkin product
     A = R * A * P

@@ -46,7 +46,7 @@ class MultilevelSolver:
 
     """
 
-    class level:
+    class Level:
         """Stores one level of the multigrid hierarchy.
 
         All level objects will have an 'A' attribute referencing the matrix
@@ -73,6 +73,13 @@ class MultilevelSolver:
         def __init__(self):
             """Level construct (empty)."""
             pass
+
+    class level(Level):  # noqa: N801
+        # only raise deprecation warning on use, not import
+        def __init__(self):
+            super().__init__()
+            warn("level() is deprectated.  use Level()",
+                 category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
         """Class constructor to initialize the cycle and ensure the list of levels is complete.
@@ -128,8 +135,8 @@ class MultilevelSolver:
         >>> R = P.T
         >>> # store first level data
         >>> levels = []
-        >>> levels.append(MultilevelSolver.level())
-        >>> levels.append(MultilevelSolver.level())
+        >>> levels.append(MultilevelSolver.Level())
+        >>> levels.append(MultilevelSolver.Level())
         >>> levels[0].A = A
         >>> levels[0].C = C
         >>> levels[0].splitting = splitting
@@ -702,7 +709,7 @@ def coarse_grid_solver(solver):
             from pyamg.relaxation import smoothing
             from pyamg import MultilevelSolver
 
-            lvl = MultilevelSolver.level()
+            lvl = MultilevelSolver.Level()
             lvl.A = A
             fn = getattr(smoothing, 'setup_' + str(solver))
             relax = fn(lvl, **kwargs)

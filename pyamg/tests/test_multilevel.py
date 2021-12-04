@@ -101,16 +101,16 @@ class TestMultilevel(TestCase):
     def test_cycle_complexity(self):
         # four levels
         levels = []
-        levels.append(MultilevelSolver.level())
+        levels.append(MultilevelSolver.Level())
         levels[0].A = sparse.csr_matrix(np.ones((10, 10)))
         levels[0].P = sparse.csr_matrix(np.ones((10, 5)))
-        levels.append(MultilevelSolver.level())
+        levels.append(MultilevelSolver.Level())
         levels[1].A = sparse.csr_matrix(np.ones((5, 5)))
         levels[1].P = sparse.csr_matrix(np.ones((5, 3)))
-        levels.append(MultilevelSolver.level())
+        levels.append(MultilevelSolver.Level())
         levels[2].A = sparse.csr_matrix(np.ones((3, 3)))
         levels[2].P = sparse.csr_matrix(np.ones((3, 2)))
-        levels.append(MultilevelSolver.level())
+        levels.append(MultilevelSolver.Level())
         levels[3].A = sparse.csr_matrix(np.ones((2, 2)))
 
         # one level hierarchy
