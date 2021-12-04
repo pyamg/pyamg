@@ -981,7 +981,7 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         pylab.show()
 
 
-def Coord2RBM(nnodes, ndof, x, y, z):
+def coord_to_rbm(nnodes, ndof, x, y, z):
     """Convert 2D or 3D coordinates into Rigid body modes.
 
     For use as near nullspace modes in elasticity AMG solvers.
@@ -1004,9 +1004,9 @@ def Coord2RBM(nnodes, ndof, x, y, z):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyamg.util.utils import Coord2RBM
+    >>> from pyamg.util.utils import coord_to_rbm
     >>> a = np.array([0,1,2])
-    >>> Coord2RBM(3,6,a,a,a)
+    >>> coord_to_rbm(3,6,a,a,a)
     array([[ 1.,  0.,  0.,  0.,  0., -0.],
            [ 0.,  1.,  0., -0.,  0.,  0.],
            [ 0.,  0.,  1.,  0., -0.,  0.],
@@ -1033,18 +1033,18 @@ def Coord2RBM(nnodes, ndof, x, y, z):
     elif((ndof == 3) or (ndof == 6)):
         numcols = 6
     else:
-        raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per\
+        raise ValueError("coord_to_rbm(...) only supports 1, 3 or 6 PDEs per\
                           spatial location,i.e. ndof = [1 | 3 | 6].\
                           You've entered " + str(ndof) + ".")
 
     if((max(x.shape) != nnodes)
        or (max(y.shape) != nnodes)
        or (max(z.shape) != nnodes)):
-        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
+        raise ValueError("coord_to_rbm(...) requires coordinate vectors of equal\
                           length.  Length must be nnodes = " + str(nnodes))
 
     # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
-    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are
+    #    raise ValueError("coord_to_rbm(...) requires coordinate vectors that are
     #    (nnodes x 1) or (1 x nnodes).")
 
     # preallocate rbm
