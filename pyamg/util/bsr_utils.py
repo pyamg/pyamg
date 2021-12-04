@@ -105,8 +105,8 @@ def bsr_row_setscalar(A, i, x):
     A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
 
-def BSR_Row_WriteVect(A, i, x):
-    """Overwrite the nonzeros in row i of BSR matrix A with the vector x.
+def bsr_row_setvector(A, i, x):
+    """Set the nonzeros in row i of BSR matrix A with the vector x.
 
     length(x) and nnz(A[i,:]) must be equivalent
 
@@ -132,12 +132,12 @@ def BSR_Row_WriteVect(A, i, x):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.bsr_utils import BSR_Row_WriteVect
+    >>> from pyamg.util.bsr_utils import bsr_row_setvector
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> BSR_Row_WriteVect(B,5,array([11,22,33,44,55,66]))
+    >>> bsr_row_setvector(B,5,array([11,22,33,44,55,66]))
 
     """
     blocksize = A.blocksize[0]
