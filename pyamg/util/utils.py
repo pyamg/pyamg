@@ -719,28 +719,28 @@ def amalgamate(A, blocksize):
     return csr_matrix(subI, shape=shape)
 
 
-def UnAmal(A, RowsPerBlock, ColsPerBlock):
+def UnAmal(A, rows_per_block, cols_per_block):
     """Unamalgamate a CSR A with blocks of 1's.
 
     This operation is equivalent to
-    replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
+    replacing each entry of A with ones(rows_per_block, cols_per_block), i.e., this
     is equivalent to setting all of A's nonzeros to 1 and then doing a
-    Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
+    Kronecker product between A and ones(rows_per_block, cols_per_block).
 
     Parameters
     ----------
     A : csr_matrix
         Amalgamted matrix
-    RowsPerBlock : int
-        Give A blocks of size (RowsPerBlock, ColsPerBlock)
-    ColsPerBlock : int
-        Give A blocks of size (RowsPerBlock, ColsPerBlock)
+    rows_per_block : int
+        Give A blocks of size (rows_per_block, cols_per_block)
+    cols_per_block : int
+        Give A blocks of size (rows_per_block, cols_per_block)
 
     Returns
     -------
     A : bsr_matrix
         Returns A.data[:] = 1, followed by a Kronecker product of A and
-        ones(RowsPerBlock, ColsPerBlock)
+        ones(rows_per_block, cols_per_block)
 
     Examples
     --------
@@ -764,9 +764,9 @@ def UnAmal(A, RowsPerBlock, ColsPerBlock):
             [ 1.,  1.,  1.,  1.,  1.,  1.]])
 
     """
-    data = np.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
+    data = np.ones((A.indices.shape[0], rows_per_block, cols_per_block))
     blockI = (data, A.indices, A.indptr)
-    shape = (RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1])
+    shape = (rows_per_block*A.shape[0], cols_per_block*A.shape[1])
     return bsr_matrix(blockI, shape=shape)
 
 
@@ -1247,19 +1247,19 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     if isspmatrix_bsr(C):
         isBSR = True
-        ColsPerBlock = C.blocksize[1]
-        RowsPerBlock = C.blocksize[0]
-        Nnodes = int(Nfine/RowsPerBlock)
+        cols_per_block = C.blocksize[1]
+        rows_per_block = C.blocksize[0]
+        Nnodes = int(Nfine/rows_per_block)
         if not isspmatrix_bsr(A):
             raise ValueError('A and C must either both be CSR or BSR')
-        elif (ColsPerBlock != A.blocksize[1]) or\
-             (RowsPerBlock != A.blocksize[0]):
+        elif (cols_per_block != A.blocksize[1]) or\
+             (rows_per_block != A.blocksize[0]):
             raise ValueError('A and C must have same BSR blocksizes')
     elif isspmatrix_csr(C):
         isBSR = False
-        ColsPerBlock = 1
-        RowsPerBlock = 1
-        Nnodes = int(Nfine/RowsPerBlock)
+        cols_per_block = 1
+        rows_per_block = 1
+        Nnodes = int(Nfine/rows_per_block)
         if not isspmatrix_csr(A):
             raise ValueError('A and C must either both be CSR or BSR')
     else:
@@ -1308,7 +1308,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     A.row = np.hstack((C.row, A.row))
     A.col = np.hstack((C.col, A.col))
     if isBSR:
-        A = A.tobsr((RowsPerBlock, ColsPerBlock))
+        A = A.tobsr((rows_per_block, cols_per_block))
     else:
         A = A.tocsr()
 
@@ -1320,7 +1320,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
-    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
+    pyamg.amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
                                               Nnodes, NullDim,
                                               np.conjugate(np.ravel(B)),
                                               np.ravel(diff),
@@ -1641,15 +1641,15 @@ def compute_BtBinv(B, C):
 
     # Problem parameters
     if isspmatrix_bsr(C):
-        ColsPerBlock = C.blocksize[1]
-        RowsPerBlock = C.blocksize[0]
+        cols_per_block = C.blocksize[1]
+        rows_per_block = C.blocksize[0]
     else:
-        ColsPerBlock = 1
-        RowsPerBlock = 1
+        cols_per_block = 1
+        rows_per_block = 1
     Ncoarse = C.shape[1]
     Nfine = C.shape[0]
     NullDim = B.shape[1]
-    Nnodes = int(Nfine/RowsPerBlock)
+    Nnodes = int(Nfine/rows_per_block)
 
     # Construct BtB
     BtBinv = np.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
@@ -1662,7 +1662,7 @@ def compute_BtBinv(B, C):
                 np.ravel(np.asarray(B[:, j]))
             counter = counter + 1
     # This specialized C-routine calculates (B.T B) for each row using Bsq
-    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock,
+    pyamg.amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
                             np.ravel(np.asarray(Bsq)),
                             BsqCols, np.ravel(np.asarray(BtBinv)),
                             C.indptr, C.indices)

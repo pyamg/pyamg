@@ -38,15 +38,15 @@ def satisfy_constraints(U, B, BtBinv):
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
     """
-    RowsPerBlock = U.blocksize[0]
-    ColsPerBlock = U.blocksize[1]
-    num_block_rows = int(U.shape[0]/RowsPerBlock)
+    rows_per_block = U.blocksize[0]
+    cols_per_block = U.blocksize[1]
+    num_block_rows = int(U.shape[0]/rows_per_block)
 
     UB = np.ravel(U*B)
 
     # Apply constraints, noting that we need the conjugate of B
     # for use as Bi.H in local projection
-    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
+    pyamg.amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
                                               num_block_rows, B.shape[1],
                                               np.conjugate(np.ravel(B)),
                                               UB, np.ravel(BtBinv),
