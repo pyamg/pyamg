@@ -11,8 +11,8 @@ from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
 
 
-# Satisfy_Constraints is a helper function for prolongation smoothing routines
-def Satisfy_Constraints(U, B, BtBinv):
+# satisfy_constraints is a helper function for prolongation smoothing routines
+def satisfy_constraints(U, B, BtBinv):
     """U is the prolongator update.  Project out components of U such that U*B = 0.
 
     Parameters
@@ -181,11 +181,11 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
 
             # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
-            # restricted to row i's sparsity pattern in Sparsity Pattern. This
-            # array is used multiple times in Satisfy_Constraints(...).
+            # restricted to row i's sparsity pattern in pattern. This
+            # array is used multiple times in satisfy_constraints(...).
             BtBinv = compute_BtBinv(B, U)
             # (2) Apply satisfy constraints
-            Satisfy_Constraints(U, B, BtBinv)
+            satisfy_constraints(U, B, BtBinv)
 
             # Update P
             P = P - U
@@ -270,7 +270,7 @@ prolongator for use in SA
 """
 
 
-def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
+def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
                               weighting='local', Cpt_params=None):
     """Use CG to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
@@ -289,7 +289,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    Sparsity_Pattern : csr_matrix, bsr_matrix
+    pattern : csr_matrix, bsr_matrix
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -313,7 +313,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     T : bsr_matrix
         Smoothed prolongator using conjugate gradients to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
-        outside of the sparsity pattern in Sparsity_Pattern.
+        outside of the sparsity pattern in pattern.
 
     See Also
     --------
@@ -322,10 +322,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
 
     """
     # Preallocate
-    AP = sparse.bsr_matrix((np.zeros(Sparsity_Pattern.data.shape,
-                                     dtype=T.dtype),
-                            Sparsity_Pattern.indices, Sparsity_Pattern.indptr),
-                           shape=(Sparsity_Pattern.shape))
+    AP = sparse.bsr_matrix((np.zeros(pattern.data.shape, dtype=T.dtype),
+                            pattern.indices, pattern.indptr),
+                           shape=(pattern.shape))
 
     # CG will be run with diagonal preconditioning
     if weighting == 'diagonal':
@@ -344,13 +343,13 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         raise ValueError('weighting value is invalid')
 
     # Calculate initial residual
-    #   Equivalent to R = -A*T;    R = R.multiply(Sparsity_Pattern)
+    #   Equivalent to R = -A*T;    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
-    #   R is 0 and Sparsity_Pattern is not
-    uones = np.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, Sparsity_Pattern.indices,
-                           Sparsity_Pattern.indptr),
-                          shape=(Sparsity_Pattern.shape))
+    #   R is 0 and pattern is not
+    uones = np.zeros(pattern.data.shape, dtype=T.dtype)
+    R = sparse.bsr_matrix((uones, pattern.indices,
+                           pattern.indptr),
+                          shape=(pattern.shape))
     pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                            np.ravel(A.data),
                                            T.indptr, T.indices,
@@ -364,11 +363,11 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     R.data *= -1.0
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
+    satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n")
+        print('Error in sa_energy_min(..).  Initial R no nonzeros on a level. '
+              'Returning tentative prolongator\n')
         return T
 
     # Calculate Frobenius norm of the residual
@@ -400,9 +399,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
         oldsum = newsum
 
         # Calculate new direction and enforce constraints
-        #   Equivalent to:  AP = A*P;    AP = AP.multiply(Sparsity_Pattern)
+        #   Equivalent to:  AP = A*P;    AP = AP.multiply(pattern)
         #   with the added constraint that explicit zeros are in AP wherever
-        #   AP = 0 and Sparsity_Pattern does not  !!!!
+        #   AP = 0 and pattern does not  !!!!
         AP.data[:] = 0.0
         pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                                np.ravel(A.data),
@@ -416,7 +415,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
                                                P.blocksize[1])
 
         # Enforce AP*B = 0
-        Satisfy_Constraints(AP, B, BtBinv)
+        satisfy_constraints(AP, B, BtBinv)
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
@@ -441,7 +440,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter, tol,
     return T
 
 
-def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
+def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                 tol, weighting='local', Cpt_params=None):
     """Use CGNR to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
@@ -461,7 +460,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    Sparsity_Pattern : csr_matrix, bsr_matrix
+    pattern : csr_matrix, bsr_matrix
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -486,7 +485,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     T : bsr_matrix
         Smoothed prolongator using CGNR to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
-        outside of the sparsity pattern in Sparsity_Pattern.
+        outside of the sparsity pattern in pattern.
 
     See Also
     --------
@@ -500,22 +499,20 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     Ah.sort_indices()
 
     # Preallocate
-    uones = np.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype)
-    AP = sparse.bsr_matrix((uones, Sparsity_Pattern.indices,
-                            Sparsity_Pattern.indptr),
-                           shape=(Sparsity_Pattern.shape))
+    uones = np.zeros(pattern.data.shape, dtype=T.dtype)
+    AP = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+                           shape=(pattern.shape))
 
     # D for A.H*A
     Dinv = get_diagonal(A, norm_eq=1, inv=True)
 
     # Calculate initial residual
-    #   Equivalent to R = -Ah*(A*T);    R = R.multiply(Sparsity_Pattern)
+    #   Equivalent to R = -Ah*(A*T);    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
-    #   R is 0 and Sparsity_Pattern is not
-    uones = np.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, Sparsity_Pattern.indices,
-                           Sparsity_Pattern.indptr),
-                          shape=(Sparsity_Pattern.shape))
+    #   R is 0 and pattern is not
+    uones = np.zeros(pattern.data.shape, dtype=T.dtype)
+    R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+                          shape=(pattern.shape))
     AT = -1.0*A*T
     R.data[:] = 0.0
     pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
@@ -530,7 +527,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
                                            T.blocksize[1])
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
+    satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
         print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
@@ -568,9 +565,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         oldsum = newsum
 
         # Calculate new direction
-        #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(Sparsity_Pattern)
+        #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(pattern)
         #  with the added constraint that explicit zeros are in AP wherever
-        #  AP = 0 and Sparsity_Pattern does not
+        #  AP = 0 and pattern does not
         AP_temp = A*P
         AP.data[:] = 0.0
         pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
@@ -586,7 +583,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         del AP_temp
 
         # Enforce AP*B = 0
-        Satisfy_Constraints(AP, B, BtBinv)
+        satisfy_constraints(AP, B, BtBinv)
 
         # Frobenius inner-product of (P, AP)
         alpha = newsum/(P.conjugate().multiply(AP)).sum()
@@ -643,7 +640,7 @@ def apply_givens(Q, v, k):
         v[j:j+2] = np.dot(Qloc, v[j:j+2])
 
 
-def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
+def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                  tol, weighting='local', Cpt_params=None):
     """Use GMRES to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
@@ -663,7 +660,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    Sparsity_Pattern : csr_matrix, bsr_matrix
+    pattern : csr_matrix, bsr_matrix
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -687,7 +684,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     T : bsr_matrix
         Smoothed prolongator using GMRES to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
-        outside of the sparsity pattern in Sparsity_Pattern.
+        outside of the sparsity pattern in pattern.
 
     See Also
     --------
@@ -698,10 +695,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
     # For non-SPD system, apply GMRES with Diagonal Preconditioning
 
     # Preallocate space for new search directions
-    uones = np.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype)
-    AV = sparse.bsr_matrix((uones, Sparsity_Pattern.indices,
-                            Sparsity_Pattern.indptr),
-                           shape=(Sparsity_Pattern.shape))
+    uones = np.zeros(pattern.data.shape, dtype=T.dtype)
+    AV = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+                           shape=(pattern.shape))
 
     # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
     xtype = sparse.sputils.upcast(A.dtype, T.dtype, B.dtype)
@@ -729,13 +725,12 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         raise ValueError('weighting value is invalid')
 
     # Calculate initial residual
-    #   Equivalent to R = -A*T;    R = R.multiply(Sparsity_Pattern)
+    #   Equivalent to R = -A*T;    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
-    #   R is 0 and Sparsity_Pattern is not
-    uones = np.zeros(Sparsity_Pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, Sparsity_Pattern.indices,
-                           Sparsity_Pattern.indptr),
-                          shape=(Sparsity_Pattern.shape))
+    #   R is 0 and pattern is not
+    uones = np.zeros(pattern.data.shape, dtype=T.dtype)
+    R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+                          shape=(pattern.shape))
     pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                            np.ravel(A.data),
                                            T.indptr, T.indices,
@@ -755,11 +750,11 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         R = Dinv*R
 
     # Enforce R*B = 0
-    Satisfy_Constraints(R, B, BtBinv)
+    satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n")
+        print('Error in sa_energy_min(..).  Initial R no nonzeros on a level. '
+              'Returning tentative prolongator\n')
         return T
 
     # This is the RHS vector for the problem in the Krylov Space
@@ -783,9 +778,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
         i = i+1
 
         # Calculate new search direction
-        #   Equivalent to:  AV = A*V;    AV = AV.multiply(Sparsity_Pattern)
+        #   Equivalent to:  AV = A*V;    AV = AV.multiply(pattern)
         #   with the added constraint that explicit zeros are in AP wherever
-        #   AP = 0 and Sparsity_Pattern does not
+        #   AP = 0 and pattern does not
         AV.data[:] = 0.0
         pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                                np.ravel(A.data),
@@ -804,7 +799,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern, maxiter,
             AV = Dinv*AV
 
         # Enforce AV*B = 0
-        Satisfy_Constraints(AV, B, BtBinv)
+        satisfy_constraints(AV, B, BtBinv)
         V.append(AV.copy())
 
         # Modified Gram-Schmidt
@@ -1056,89 +1051,83 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # Expand allowed sparsity pattern for P through multiplication by Atilde
     if degree > 0:
 
-        # Construct Sparsity_Pattern by multiplying with Atilde
+        # Construct pattern by multiplying with Atilde
         T.sort_indices()
         shape = (int(T.shape[0]/T.blocksize[0]),
                  int(T.shape[1]/T.blocksize[1]))
-        Sparsity_Pattern = sparse.csr_matrix((np.ones(T.indices.shape),
-                                              T.indices, T.indptr),
-                                             shape=shape)
+        pattern = sparse.csr_matrix((np.ones(T.indices.shape), T.indices, T.indptr),
+                                    shape=shape)
 
         AtildeCopy = Atilde.copy()
         for i in range(degree):
-            Sparsity_Pattern = AtildeCopy*Sparsity_Pattern
+            pattern = AtildeCopy * pattern
 
         # Optional filtering of sparsity pattern before smoothing
         if 'theta' in prefilter and 'k' in prefilter:
-            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern,
-                                                prefilter['theta'])
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            pattern_theta = filter_matrix_rows(pattern, prefilter['theta'])
+            pattern = truncate_rows(pattern, prefilter['k'])
             # Union two sparsity patterns
-            Sparsity_Pattern += Sparsity_theta
+            pattern += pattern_theta
         elif 'k' in prefilter:
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            pattern = truncate_rows(pattern, prefilter['k'])
         elif 'theta' in prefilter:
-            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern,
-                                                  prefilter['theta'])
+            pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
         # UnAmal returns a BSR matrix with 1's in the nonzero locations
-        Sparsity_Pattern = UnAmal(Sparsity_Pattern,
-                                  T.blocksize[0], T.blocksize[1])
-        Sparsity_Pattern.sort_indices()
+        pattern = UnAmal(pattern, T.blocksize[0], T.blocksize[1])
+        pattern.sort_indices()
 
     else:
         # If degree is 0, just copy T for the sparsity pattern
-        Sparsity_Pattern = T.copy()
+        pattern = T.copy()
         if 'theta' in prefilter and 'k' in prefilter:
-            Sparsity_theta = filter_matrix_rows(Sparsity_Pattern,
-                                                prefilter['theta'])
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            pattern_theta = filter_matrix_rows(pattern, prefilter['theta'])
+            pattern = truncate_rows(pattern, prefilter['k'])
             # Union two sparsity patterns
-            Sparsity_Pattern += Sparsity_theta
+            pattern += pattern_theta
         elif 'k' in prefilter:
-            Sparsity_Pattern = truncate_rows(Sparsity_Pattern, prefilter['k'])
+            pattern = truncate_rows(pattern, prefilter['k'])
         elif 'theta' in prefilter:
-            Sparsity_Pattern = filter_matrix_rows(Sparsity_Pattern,
-                                                  prefilter['theta'])
+            pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
-        Sparsity_Pattern.data[:] = 1.0
-        Sparsity_Pattern.sort_indices()
+        pattern.data[:] = 1.0
+        pattern.sort_indices()
 
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
-        Sparsity_Pattern = Cpt_params[1]['I_F'] * Sparsity_Pattern
-        Sparsity_Pattern = Cpt_params[1]['P_I'] + Sparsity_Pattern
+        pattern = Cpt_params[1]['I_F'] * pattern
+        pattern = Cpt_params[1]['P_I'] + pattern
 
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
-    # sparsity pattern in Sparsity Pattern. This array is used multiple times
-    # in Satisfy_Constraints(...).
-    BtBinv = compute_BtBinv(B, Sparsity_Pattern)
+    # sparsity pattern in pattern. This array is used multiple times
+    # in satisfy_constraints(...).
+    BtBinv = compute_BtBinv(B, pattern)
 
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
     if ((Cpt_params[0] and (B.shape[1] > A.blocksize[0]))
        or ('secondpass' in postfilter)):
-        T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
+        T = filter_operator(T, pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
             T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
 
     # Iteratively minimize the energy of T subject to the constraints of
-    # Sparsity_Pattern and maintaining T's effect on B, i.e. T*B =
+    # pattern and maintaining T's effect on B, i.e. T*B =
     # (T+Update)*B, i.e. Update*B = 0
     if krylov == 'cg':
-        T = cg_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern,
+        T = cg_prolongation_smoothing(A, T, B, BtBinv, pattern,
                                       maxiter, tol, weighting, Cpt_params)
     elif krylov == 'cgnr':
-        T = cgnr_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern,
+        T = cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern,
                                         maxiter, tol, weighting, Cpt_params)
     elif krylov == 'gmres':
-        T = gmres_prolongation_smoothing(A, T, B, BtBinv, Sparsity_Pattern,
+        T = gmres_prolongation_smoothing(A, T, B, BtBinv, pattern,
                                          maxiter, tol, weighting, Cpt_params)
 
     T.eliminate_zeros()

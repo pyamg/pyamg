@@ -613,30 +613,30 @@ class TestEnergyMin(TestCase):
 #    def test_scalar(self):
 #
 #        U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
-#        Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
+#        pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
 #        B = np.array(np.array([[1],[1]]))
 #        BtBinv = [ np.array([[0.5]]), np.array([[0.5]]) ]
 #        colindices = [ np.array([0,1]), np.array([0,1]) ]
 #
-#        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+#        U = satisfy_constraints(U, pattern, B, BtBinv, colindices)
 #
 #
 #        assert_equal(U.toarray(), np.array([[0,1],[1,0]]))
 #        assert_almost_equal(U*B, 0*U*B)
 #
 #    def test_block(self):
-#        SparsityPattern = np.array([[1,1,0,0],
-#                                 [1,1,0,0],
-#                                 [1,1,1,1],
-#                                 [0,0,1,1],
-#                                 [0,0,1,1]])
+#        pattern = np.array([[1,1,0,0],
+#                            [1,1,0,0],
+#                            [1,1,1,1],
+#                            [0,0,1,1],
+#                            [0,0,1,1]])
 #        U = np.array([[1,2,0,0],
 #                   [4,3,0,0],
 #                   [5,6,8,7],
 #                   [0,0,4,1],
 #                   [0,0,2,3]])
 #
-#        Sparsity_Pattern = bsr_matrix(SparsityPattern, blocksize=(1,2))
+#        pattern = bsr_matrix(pattern, blocksize=(1,2))
 #        U = bsr_matrix(U, blocksize=(1,2))
 #        B = np.array([[1,1],
 #                   [1,2],
@@ -652,5 +652,5 @@ class TestEnergyMin(TestCase):
 #                Bi = np.array(B)[colindx,:]
 #                BtBinv[i] = pinv(Bi.T.dot(Bi))
 #
-#        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+#        U = satisfy_constraints(U, pattern, B, BtBinv, colindices)
 #        assert_almost_equal(U*B, 0*U*B)

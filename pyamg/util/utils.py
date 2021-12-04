@@ -1293,7 +1293,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
-    # C. This array is used multiple times in Satisfy_Constraints(...).
+    # C. This array is used multiple times in satisfy_constraints(...).
     if BtBinv is None:
         BtBinv = compute_BtBinv(B, C)
 
