@@ -5,7 +5,7 @@ import numpy as np
 import scipy.sparse as sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
-    UnAmal, filter_operator, compute_BtBinv, filter_matrix_rows, \
+    unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
     truncate_rows
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
@@ -144,7 +144,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             numPDEs = 1
 
         # Create a filtered S with entries dropped that aren't in C
-        C = UnAmal(C, numPDEs, numPDEs)
+        C = unamal(C, numPDEs, numPDEs)
         S = S.multiply(C)
         S.eliminate_zeros()
 
@@ -1075,8 +1075,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         elif len(prefilter) > 0:
             raise ValueError("Unrecognized prefilter option")
 
-        # UnAmal returns a BSR matrix with 1's in the nonzero locations
-        pattern = UnAmal(pattern, T.blocksize[0], T.blocksize[1])
+        # unamal returns a BSR matrix with 1's in the nonzero locations
+        pattern = unamal(pattern, T.blocksize[0], T.blocksize[1])
         pattern.sort_indices()
 
     else:

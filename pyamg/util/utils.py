@@ -685,7 +685,7 @@ def amalgamate(A, blocksize):
 
     Notes
     -----
-    inverse operation of UnAmal for square matrices
+    inverse operation of unamal for square matrices
 
     Examples
     --------
@@ -719,7 +719,7 @@ def amalgamate(A, blocksize):
     return csr_matrix(subI, shape=shape)
 
 
-def UnAmal(A, rows_per_block, cols_per_block):
+def unamal(A, rows_per_block, cols_per_block):
     """Unamalgamate a CSR A with blocks of 1's.
 
     This operation is equivalent to
@@ -746,7 +746,7 @@ def UnAmal(A, rows_per_block, cols_per_block):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg.util.utils import UnAmal
+    >>> from pyamg.util.utils import unamal
     >>> row = array([0,0,1,2,2,2])
     >>> col = array([0,2,2,0,1,2])
     >>> data = array([1,2,3,4,5,6])
@@ -755,7 +755,7 @@ def UnAmal(A, rows_per_block, cols_per_block):
     matrix([[1, 0, 2],
             [0, 0, 3],
             [4, 5, 6]])
-    >>> UnAmal(A,2,2).toarray()
+    >>> unamal(A,2,2).toarray()
     matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 1.,  1.,  0.,  0.,  1.,  1.],
             [ 0.,  0.,  0.,  0.,  1.,  1.],
