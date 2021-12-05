@@ -7,7 +7,6 @@ from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
 from scipy.linalg import eigvals
-from scipy.sparse.linalg.interface import LinearOperator
 
 try:
     from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
@@ -16,10 +15,8 @@ except ImportError:
     from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
                                           csr_scale_columns, bsr_scale_columns)
 
-from pyamg.util.linalg import norm, cond, pinv_array
-import pyamg.amg_core
-from pyamg import relaxation
-from pyamg.multilevel import MultilevelSolver
+from .. import amg_core
+from . import linalg
 
 
 def get_blocksize(A):
@@ -72,7 +69,7 @@ def profile_solver(ml, accel=None, **kwargs):
         ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
-            residuals.append(norm(np.ravel(b) - np.ravel(A*x)))
+            residuals.append(linalg.norm(np.ravel(b) - np.ravel(A*x)))
         M = ml.aspreconditioner(cycle=kwargs.get('cycle', 'V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
@@ -185,7 +182,7 @@ def scale_rows(A, v, copy=True):
         bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                        np.ravel(A.data), v)
     elif isspmatrix_csc(A):
-        pyamg.amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
+        amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
         A = scale_rows(csr_matrix(A), v).asformat(fmt)
@@ -263,7 +260,7 @@ def scale_columns(A, v, copy=True):
         bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                           np.ravel(A.data), v)
     elif isspmatrix_csc(A):
-        pyamg.amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
+        amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
         A = scale_columns(csr_matrix(A), v).asformat(fmt)
@@ -660,10 +657,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
         # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
-            pyamg.amg_core.pinv_array(block_diag.ravel(), block_diag.shape[0],
-                                      block_diag.shape[1], 'T')
+            amg_core.pinv_array(block_diag.ravel(), block_diag.shape[0],
+                                block_diag.shape[1], 'T')
         else:
-            pinv_array(block_diag)
+            linalg.pinv_array(block_diag)
         A.block_D_inv = block_diag
     else:
         A.block_D = block_diag
@@ -954,7 +951,7 @@ def hierarchy_spectrum(mg, filter_entries=True):
             A = A.toarray()
 
         e = eigvals(A)
-        c = cond(A)
+        c = linalg.cond(A)
         lambda_min = min(np.real(e))
         lambda_max = max(np.real(e))
         num_neg = max(e[np.real(e) < 0.0].shape)
@@ -1095,78 +1092,6 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
             rbm[dof+ii, jj] *= -1.0
 
     return rbm
-
-
-def relaxation_as_linear_operator(method, A, b):
-    """Create a linear operator that applies a relaxation method for the given right-hand-side.
-
-    Parameters
-    ----------
-    methods : {tuple or string}
-        Relaxation descriptor: Each tuple must be of the form ('method','opts')
-        where 'method' is the name of a supported smoother, e.g., gauss_seidel,
-        and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
-        {'sweep':symmetric}.  If string, must be that of a supported smoother,
-        e.g., gauss_seidel.
-
-    Returns
-    -------
-    linear operator that applies the relaxation method to a vector for a
-    fixed right-hand-side, b.
-
-    Notes
-    -----
-    This method is primarily used to improve B during the aggregation setup
-    phase.  Here b = 0, and each relaxation call can improve the quality of B,
-    especially near the boundaries.
-
-    Examples
-    --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.util.utils import relaxation_as_linear_operator
-    >>> import numpy as np
-    >>> A = poisson((100,100), format='csr')           # matrix
-    >>> B = np.ones((A.shape[0],1))                 # Candidate vector
-    >>> b = np.zeros((A.shape[0]))                  # RHS
-    >>> relax = relaxation_as_linear_operator('gauss_seidel', A, b)
-    >>> B = relax*B
-
-    """
-
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            return v[0], v[1]
-        return v, {}
-
-    # setup variables
-    accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
-                        'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
-                        'block_jacobi', 'richardson', 'schwarz',
-                        'strength_based_schwarz', 'jacobi_ne']
-
-    b = np.array(b, dtype=A.dtype)
-    fn, kwargs = unpack_arg(method)
-    lvl = MultilevelSolver.Level()
-    lvl.A = A
-
-    # Retrieve setup call from relaxation.smoothing for this relaxation method
-    if not accepted_methods.__contains__(fn):
-        raise NameError(f'invalid relaxation method: {fn}')
-    try:
-        setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
-    except NameError as e:
-        raise NameError(f'invalid presmoother method: {fn}') from e
-
-    # Get relaxation routine that takes only (A, x, b) as parameters
-    relax = setup_smoother(lvl, **kwargs)
-
-    # Define matvec
-    def matvec(x):
-        xcopy = x.copy()
-        relax(A, xcopy, b)
-        return xcopy
-
-    return LinearOperator(A.shape, matvec, dtype=A.dtype)
 
 
 def filter_operator(A, C, B, Bf, BtBinv=None):
@@ -1314,12 +1239,12 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
-    pyamg.amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
-                                              Nnodes, NullDim,
-                                              np.conjugate(np.ravel(B)),
-                                              np.ravel(diff),
-                                              np.ravel(BtBinv), A.indptr,
-                                              A.indices, np.ravel(A.data))
+    amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
+                                        Nnodes, NullDim,
+                                        np.conjugate(np.ravel(B)),
+                                        np.ravel(diff),
+                                        np.ravel(BtBinv), A.indptr,
+                                        A.indices, np.ravel(A.data))
 
     A.eliminate_zeros()
     return A
@@ -1423,7 +1348,7 @@ def scale_T(T, P_I, I_F):
         D = P_I.T*T
         if D.nnz > 0:
             # changes D in place
-            pinv_array(D.data)
+            linalg.pinv_array(D.data)
 
         # Scale T to be identity at root-nodes
         T = T*D
@@ -1662,17 +1587,17 @@ def compute_BtBinv(B, C):
                 np.ravel(np.asarray(B[:, j]))
             counter = counter + 1
     # This specialized C-routine calculates (B.T B) for each row using Bsq
-    pyamg.amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
-                            np.ravel(np.asarray(Bsq)),
-                            BsqCols, np.ravel(np.asarray(BtBinv)),
-                            C.indptr, C.indices)
+    amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
+                      np.ravel(np.asarray(Bsq)),
+                      BsqCols, np.ravel(np.asarray(BtBinv)),
+                      C.indptr, C.indices)
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
     #   This is the old call to a specialized routine, but lacks robustness
-    #   pyamg.amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
+    #   amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
     BtBinv = BtBinv.transpose((0, 2, 1)).copy()
-    pinv_array(BtBinv)
+    linalg.pinv_array(BtBinv)
 
     return BtBinv
 
@@ -1827,8 +1752,8 @@ def scale_rows_by_largest_entry(S):
 
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
-    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry,
-                                     S.indptr, S.indices, S.data)
+    amg_core.maximum_row_value(S.shape[0], largest_row_entry,
+                               S.indptr, S.indices, S.data)
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
@@ -2030,15 +1955,14 @@ def filter_matrix_columns(A, theta):
     A.indices += A.shape[1]
     A_filter.indices += A.shape[1]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(
-        A.shape[1],
-        theta,
-        A.indptr,
-        A.indices,
-        A.data,
-        A_filter.indptr,
-        A_filter.indices,
-        A_filter.data)
+    amg_core.classical_strength_of_connection_abs(A.shape[1],
+                                                  theta,
+                                                  A.indptr,
+                                                  A.indices,
+                                                  A.data,
+                                                  A_filter.indptr,
+                                                  A_filter.indices,
+                                                  A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
     A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2105,15 +2029,14 @@ def filter_matrix_rows(A, theta):
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(
-        A.shape[0],
-        theta,
-        A.indptr,
-        A.indices,
-        A.data,
-        A_filter.indptr,
-        A_filter.indices,
-        A_filter.data)
+    amg_core.classical_strength_of_connection_abs(A.shape[0],
+                                                  theta,
+                                                  A.indptr,
+                                                  A.indices,
+                                                  A.data,
+                                                  A_filter.indptr,
+                                                  A_filter.indices,
+                                                  A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2169,8 +2092,8 @@ def truncate_rows(A, nz_per_row):
     nz_per_row = int(nz_per_row)
 
     # Truncate rows of A, and then convert A back to original format
-    pyamg.amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr,
-                                     A.indices, A.data)
+    amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr,
+                               A.indices, A.data)
 
     A.eliminate_zeros()
     if Aformat == 'bsr':
@@ -2179,39 +2102,6 @@ def truncate_rows(A, nz_per_row):
         A = A.asformat(Aformat)
 
     return A
-
-
-def set_tol(dtype):
-    """Set a tolerance based on a numpy dtype char.
-
-    Parameters
-    ----------
-    dtype : np.dtype
-        numpy dtype
-
-    Returns
-    -------
-    tol : float
-        A smallish value based on precision
-
-    Notes
-    -----
-    Handles both real and complex (through the .lower() case)
-
-    See Also
-    --------
-    numpy.typecodes, numpy.sctypes
-    """
-    if dtype.char.lower() == 'f':
-        tol = 1e3 * np.finfo(np.single).eps
-    elif dtype.char.lower() == 'd':
-        tol = 1e6 * np.finfo(np.double).eps
-    elif dtype.char.lower() == 'g':
-        tol = 1e6 * np.finfo(np.longdouble).eps
-    else:
-        raise ValueError('Attempting to set a tolerance for an unsupported precision.')
-
-    return tol
 
 
 # from functools import partial, update_wrapper

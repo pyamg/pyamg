@@ -7,8 +7,10 @@ import numpy as np
 from scipy import sparse
 from scipy.linalg import lapack as la
 
-from pyamg.util.utils import type_prep, get_diagonal, get_block_diag, set_tol
-from pyamg import amg_core
+from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
+
+from ..params import set_tol
+from .. import amg_core
 
 
 def make_system(A, x, b, formats=None):

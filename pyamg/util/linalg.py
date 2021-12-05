@@ -7,7 +7,7 @@ from scipy import sparse
 from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg import lapack, get_blas_funcs, eig, svd
 
-from pyamg.util.utils import set_tol
+from .params import set_tol
 
 
 def norm(x, pnorm='2'):

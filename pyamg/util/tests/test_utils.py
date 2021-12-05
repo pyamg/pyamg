@@ -12,8 +12,10 @@ from pyamg.util.utils import (diag_sparse, profile_solver, to_type,
                               type_prep, get_diagonal,
                               scale_rows, scale_columns,
                               get_block_diag, symmetric_rescaling, symmetric_rescaling_sa,
-                              relaxation_as_linear_operator, filter_operator, scale_T,
+                              filter_operator, scale_T,
                               get_Cpt_params, compute_BtBinv, eliminate_diag_dom_nodes)
+
+from pyamg.relaxation.utils import relaxation_as_linear_operator
 
 
 class TestUtils(TestCase):

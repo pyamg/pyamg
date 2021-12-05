@@ -8,8 +8,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import relaxation_as_linear_operator,\
-    eliminate_diag_dom_nodes, get_blocksize,\
+from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize,\
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
@@ -20,6 +19,8 @@ from .aggregate import standard_aggregation, naive_aggregation,\
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
+
+from ..relaxation.utils import relaxation_as_linear_operator
 
 
 def smoothed_aggregation_solver(A, B=None, BH=None,

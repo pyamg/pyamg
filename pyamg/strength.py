@@ -18,8 +18,8 @@ from . import amg_core
 from .relaxation.relaxation import jacobi
 from .util.linalg import approximate_spectral_radius
 from .util.utils import (scale_rows_by_largest_entry, amalgamate, scale_rows,
-                         get_block_diag, scale_columns, set_tol)
-
+                         get_block_diag, scale_columns)
+from .util.params import set_tol
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     """Distance based strength-of-connection.

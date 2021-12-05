@@ -11,8 +11,8 @@ import numpy as np
 from pkg_resources import parse_version  # included with setuptools
 
 from . import krylov
-from .util.linalg import norm
-from .util.utils import to_type, set_tol
+from .util.utils import to_type
+from .util.params import set_tol
 from .relaxation import smoothing
 
 if parse_version(sp.__version__) >= parse_version('1.7'):
@@ -456,13 +456,13 @@ class MultilevelSolver:
                 # history is desired
 
                 if residuals is not None:
-                    residuals[:] = [norm(b - A @ x)]
+                    residuals[:] = [np.linalg.norm(b - A @ x)]
 
                     def callback_wrapper(x):
                         if np.isscalar(x):
                             residuals.append(x)
                         else:
-                            residuals.append(norm(b - A @ x))
+                            residuals.append(np.linalg.norm(b - A @ x))
                         if callback is not None:
                             callback(x)
                 else:
@@ -477,7 +477,7 @@ class MultilevelSolver:
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
-            normb = norm(b)
+            normb = np.linalg.norm(b)
             if normb == 0.0:
                 normb = 1.0  # set so that we have an absolute tolerance
 
@@ -504,7 +504,7 @@ class MultilevelSolver:
 
             it += 1
 
-            normr = norm(b - A @ x)
+            normr = np.linalg.norm(b - A @ x)
             if residuals is not None:
                 residuals.append(normr)
 

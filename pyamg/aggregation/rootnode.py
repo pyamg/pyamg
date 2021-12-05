@@ -8,8 +8,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import relaxation_as_linear_operator,\
-    scale_T, get_Cpt_params, \
+from pyamg.util.utils import scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, get_blocksize, \
     levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
@@ -21,6 +20,7 @@ from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
+from ..relaxation.utils import relaxation_as_linear_operator
 
 
 def rootnode_solver(A, B=None, BH=None,
