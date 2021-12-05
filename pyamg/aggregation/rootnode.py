@@ -142,7 +142,7 @@ def rootnode_solver(A, B=None, BH=None,
     -----
          - Root-node style SA differs from classical SA primarily by preserving
            and identity block in the interpolation operator, P.  Each aggregate
-           has a "root-node" or "center-node" associated with it, and this
+           has a 'root-node' or 'center-node' associated with it, and this
            root-node is injected from the coarse grid to the fine grid.  The
            injection corresponds to the identity block.
 
@@ -232,18 +232,17 @@ def rootnode_solver(A, B=None, BH=None,
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR",
+            warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
-        except BaseException:
-            raise TypeError('Argument A must have type csr_matrix, \
-                             bsr_matrix, or be convertible to csr_matrix')
+        except BaseException as e:
+            raise TypeError('Argument A must have type csr_matrix, '
+                            'bsr_matrix, or be convertible to csr_matrix') from e
 
     A = A.asfptype()
 
-    if (symmetry != 'symmetric') and (symmetry != 'hermitian') and \
-            (symmetry != 'nonsymmetric'):
-        raise ValueError('expected \'symmetric\', \'nonsymmetric\' \
-                          or \'hermitian\' for the symmetry parameter ')
+    if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
+        raise ValueError('Expected "symmetric", "nonsymmetric" '
+                         'or "hermitian" for the symmetry parameter.')
     A.symmetry = symmetry
 
     if A.shape[0] != A.shape[1]:
@@ -319,12 +318,11 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     A = levels[-1].A
     B = levels[-1].B
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         AH = A.H.asformat(A.format)
         BH = levels[-1].BH
 
@@ -337,7 +335,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         if 'B' in kwargs:
             C = evolution_strength_of_connection(A, **kwargs)
         else:
@@ -353,8 +351,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -375,7 +372,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
     else:
-        raise ValueError('unrecognized aggregation method %s' % str(fn))
+        raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
@@ -383,7 +380,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
         B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
         levels[-1].B = B
-        if A.symmetry == "nonsymmetric":
+        if A.symmetry == 'nonsymmetric':
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
@@ -392,20 +389,20 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # B_fine[:, 0:blocksize(A)] = T B_coarse[:, 0:blocksize(A)].
     T, dummy = fit_candidates(AggOp, B[:, 0:blocksize(A)])
     del dummy
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)])
         del dummyH
 
     # Create necessary root node matrices
     Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
     T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
 
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
     B = Cpt_params[1]['P_I'].T*levels[-1].B
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         BH = Cpt_params[1]['P_I'].T*levels[-1].BH
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
@@ -417,8 +414,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError('unrecognized prolongation smoother \
-                          method %s' % str(fn))
+        raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 
     # Compute the restriction matrix R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
@@ -437,27 +433,26 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         elif fn is None:
             R = T.H
         else:
-            raise ValueError('unrecognized prolongation smoother \
-                              method %s' % str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 
     if keep:
-        levels[-1].C = C                      # strength of connection matrix
-        levels[-1].AggOp = AggOp                  # aggregation operator
-        levels[-1].T = T                      # tentative prolongator
+        levels[-1].C = C                         # strength of connection matrix
+        levels[-1].AggOp = AggOp                 # aggregation operator
+        levels[-1].T = T                         # tentative prolongator
         levels[-1].Fpts = Cpt_params[1]['Fpts']  # Fpts
-        levels[-1].P_I = Cpt_params[1]['P_I']   # Injection operator
-        levels[-1].I_F = Cpt_params[1]['I_F']   # Identity on F-pts
-        levels[-1].I_C = Cpt_params[1]['I_C']   # Identity on C-pts
+        levels[-1].P_I = Cpt_params[1]['P_I']    # Injection operator
+        levels[-1].I_F = Cpt_params[1]['I_F']    # Identity on F-pts
+        levels[-1].I_C = Cpt_params[1]['I_C']    # Identity on C-pts
 
-    levels[-1].P = P                          # smoothed prolongator
-    levels[-1].R = R                          # restriction operator
+    levels[-1].P = P                             # smoothed prolongator
+    levels[-1].R = R                             # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P                                 # Galerkin operator
+    A = R * A * P                                # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
-    levels[-1].B = B                          # right near nullspace candidates
+    levels[-1].B = B                             # right near nullspace candidates
 
-    if A.symmetry == "nonsymmetric":
-        levels[-1].BH = BH                   # left near nullspace candidates
+    if A.symmetry == 'nonsymmetric':
+        levels[-1].BH = BH                       # left near nullspace candidates
