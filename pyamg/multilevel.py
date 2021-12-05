@@ -465,6 +465,8 @@ class MultilevelSolver:
                             residuals.append(norm(b - A @ x))
                         if callback is not None:
                             callback(x)
+                else:
+                    callback_wrapper = callback
 
                 x, info = accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
                                 callback=callback_wrapper, **kwargs)
