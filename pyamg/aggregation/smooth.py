@@ -438,7 +438,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
 def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                 tol, weighting='diagonal', Cpt_params=None):
-    """Use CGNR to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
+    """Smooth T with CGNR by solving A T = 0, subject to nullspace and sparsity constraints.
 
     Parameters
     ----------
@@ -641,7 +641,7 @@ def apply_givens(Q, v, k):
 
 def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                  tol, weighting='local', Cpt_params=None):
-    """Use GMRES to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
+    """Smooth T with GMRES by solving A T = 0 subject to nullspace and sparsity constraints.
 
     Parameters
     ----------
