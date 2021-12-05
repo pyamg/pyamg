@@ -1,8 +1,10 @@
+"""Conjugate Gradient Krylov solver."""
+
 import warnings
 from warnings import warn
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
+from scipy import sparse
 from pyamg.util.linalg import norm
 
 
@@ -189,95 +191,3 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if it == maxiter:
             return (postprocess(x), it)
-
-
-if __name__ == '__main__':
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    import time
-    from scipy.sparse.linalg.isolve import cg as icg
-
-    nx = 100
-    ny = nx
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny),
-                     dtype=float, format='csr')
-    # b = random((A.shape[0],))
-    xstar = random((A.shape[0],))
-    b = A @ xstar
-    x0 = random((A.shape[0],))
-    print('initial residual: ', norm(b - A @ x0))
-    print('initial criteria 1: ', norm(b - A @ x0) / (norm(A.data)*norm(x0) + norm(b)))
-    print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
-
-    print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')
-    x = x0.copy()
-    t1 = time.time()
-    res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, criteria='rr+', maxiter=100, residuals=res)
-    t2 = time.time()
-    # print('res1: ', res)
-    print(f'cg took {(t2-t1)*1000.0} ms')
-    print(f'norm = {norm(b - A @ x)}')
-    print(f'info flag = {flag}')
-
-    res = []
-
-    def mycb(xk):
-        res.append(norm(b - A @ xk))
-
-    x = x0.copy()
-    t1 = time.time()
-    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
-    t2 = time.time()
-    # print('res2: ', res)
-    print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
-    print(f'norm = {norm(b - A @ y)}')
-    print(f'info flag = {flag}')
-
-    print('-------------')
-    norm = np.linalg.norm
-    criterion1 = []
-    criterion2 = []
-    criterion5 = []
-    error = []
-    rz = []
-    zz = []
-
-    def mycb2(xk, M):
-        r = b - A @ xk
-        z = M @ r
-        e = xstar - xk
-        normr = norm(r)
-        norme = norm(e)
-        criterion1.append(normr / (norm(A.data)*norm(xk) + norm(b)))
-        criterion2.append(normr / norm(b))
-        criterion5.append(normr / norm(b - A @ x0))
-        error.append(norme)
-        rz.append(np.sqrt(np.inner(r, z)))
-        zz.append(norm(z) / norm(M @ b))
-
-    import pyamg
-    res = []
-    ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
-    M = ml.aspreconditioner()
-    x = x0.copy()
-    t1 = time.time()
-    res = []
-    (x, flag) = cg(A, b, x, M=M, tol=1e-16, maxiter=100, callback=mycb2, residuals=res)
-    t2 = time.time()
-
-    import matplotlib.pyplot as plt
-    import matplotlib
-    matplotlib.rcParams['text.usetex'] = True
-    plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
-    plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
-    plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
-    plt.semilogy(error, label=r'$\|e_k\|$')
-    plt.semilogy(rz, label=r'$\sqrt{<r, z>}$')
-    plt.semilogy(zz, label=r'$\|Mr\| / \|M b\|$')
-    plt.hlines(1e-8, 1, len(res), color='tab:gray', linestyle='dashed')
-    plt.xlabel('iterations')
-    plt.grid(True)
-    plt.legend()
-    plt.savefig('cg.png', dpi=300)
-    plt.show()
