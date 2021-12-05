@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
-    eliminate_diag_dom_nodes, blocksize,\
+    eliminate_diag_dom_nodes, get_blocksize,\
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
@@ -228,15 +228,15 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
-                    np.eye(blocksize(A), dtype=A.dtype))
+        B = np.kron(np.ones((int(A.shape[0]/get_blocksize(A)), 1), dtype=A.dtype),
+                    np.eye(get_blocksize(A), dtype=A.dtype))
     else:
         B = np.asarray(B, dtype=A.dtype)
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if B.shape[0] != A.shape[0]:
             raise ValueError('The shape of near null-space modes B is incorrect')
-        if B.shape[1] < blocksize(A):
+        if B.shape[1] < get_blocksize(A):
             warn('Having less target vectors, B.shape[1], than blocksize of A '
                  'can degrade convergence factors.')
 
@@ -275,7 +275,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and\
-            int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
+            int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, smooth,
                           improve_candidates, diagonal_dominance, keep)
 

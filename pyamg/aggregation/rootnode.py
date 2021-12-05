@@ -10,7 +10,7 @@ from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import relaxation_as_linear_operator,\
     scale_T, get_Cpt_params, \
-    eliminate_diag_dom_nodes, blocksize, \
+    eliminate_diag_dom_nodes, get_blocksize, \
     levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
@@ -49,14 +49,14 @@ def rootnode_solver(A, B=None, BH=None,
         Right near-nullspace candidates stored in the columns of an NxK array.
         K must be >= the blocksize of A (see reference [2011OlScTu]_). The default value
         B=None is equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/blocksize(A), 1)), np.eye(blocksize(A)))
+        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
 
     BH : None, array_like
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry='nonsymmetric'.  K must be >= the
         blocksize of A (see reference [2011OlScTu]_). The default value B=None is
         equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/blocksize(A), 1)), np.eye(blocksize(A)))
+        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
 
     symmetry : string
         'symmetric' refers to both real and complex symmetric
@@ -249,8 +249,8 @@ def rootnode_solver(A, B=None, BH=None,
         raise ValueError('expected square matrix')
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
-                    np.eye(blocksize(A)))
+        B = np.kron(np.ones((int(A.shape[0]/get_blocksize(A)), 1), dtype=A.dtype),
+                    np.eye(get_blocksize(A)))
     else:
         B = np.asarray(B, dtype=A.dtype)
         if len(B.shape) == 1:
@@ -258,7 +258,7 @@ def rootnode_solver(A, B=None, BH=None,
         if B.shape[0] != A.shape[0]:
             raise ValueError('The near null-space modes B have incorrect \
                               dimensions for matrix A')
-        if B.shape[1] < blocksize(A):
+        if B.shape[1] < get_blocksize(A):
             raise ValueError('B.shape[1] must be >= the blocksize of A')
 
     # Left near nullspace candidates
@@ -297,7 +297,7 @@ def rootnode_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and \
-            int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
+            int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, smooth,
                           improve_candidates, diagonal_dominance, keep)
 
@@ -386,11 +386,11 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
-    # B_fine[:, 0:blocksize(A)] = T B_coarse[:, 0:blocksize(A)].
-    T, dummy = fit_candidates(AggOp, B[:, 0:blocksize(A)])
+    # B_fine[:, 0:get_blocksize(A)] = T B_coarse[:, 0:get_blocksize(A)].
+    T, dummy = fit_candidates(AggOp, B[:, 0:get_blocksize(A)])
     del dummy
     if A.symmetry == 'nonsymmetric':
-        TH, dummyH = fit_candidates(AggOp, BH[:, 0:blocksize(A)])
+        TH, dummyH = fit_candidates(AggOp, BH[:, 0:get_blocksize(A)])
         del dummyH
 
     # Create necessary root node matrices

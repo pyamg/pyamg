@@ -6,24 +6,27 @@ import numpy as np
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.sparse.sputils import upcast
-from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
-import pyamg.amg_core
+from scipy.sparse.linalg.interface import LinearOperator
 
 try:
-    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
+                                           csr_scale_columns, bsr_scale_columns)
 except ImportError:
-    from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
+                                          csr_scale_columns, bsr_scale_columns)
+
+from pyamg.util.linalg import norm, cond, pinv_array
+import pyamg.amg_core
+from pyamg import relaxation
+from pyamg.multilevel import MultilevelSolver
 
 
-def blocksize(A):
+def get_blocksize(A):
     """Return the block size of a matrix."""
     if isspmatrix_bsr(A):
         return A.blocksize[0]
-    else:
-        return 1
+    return 1
 
 
 def profile_solver(ml, accel=None, **kwargs):
@@ -109,11 +112,12 @@ def diag_sparse(A):
     """
     if isspmatrix(A):
         return A.diagonal()
-    else:
-        if(np.ndim(A) != 1):
-            raise ValueError('input diagonal array expected to be 1d')
-        return csr_matrix((np.asarray(A), np.arange(len(A)),
-                           np.arange(len(A)+1)), (len(A), len(A)))
+
+    if np.ndim(A) != 1:
+        raise ValueError('input diagonal array expected to be 1d')
+
+    return csr_matrix((np.asarray(A), np.arange(len(A)),
+                       np.arange(len(A)+1)), (len(A), len(A)))
 
 
 def scale_rows(A, v, copy=True):
@@ -339,8 +343,7 @@ def symmetric_rescaling(A, copy=True):
 
         return D_sqrt, D_sqrt_inv, DAD
 
-    else:
-        return symmetric_rescaling(csr_matrix(A))
+    return symmetric_rescaling(csr_matrix(A))
 
 
 def symmetric_rescaling_sa(A, B, BH=None):
@@ -401,7 +404,8 @@ def symmetric_rescaling_sa(A, B, BH=None):
 
     """
     # rescale A
-    [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
+    D_sqrt, _, A = symmetric_rescaling(A, copy=False)
+
     # scale candidates
     for i in range(B.shape[1]):
         B[:, i] = np.ravel(B[:, i])*np.ravel(D_sqrt)
@@ -410,9 +414,9 @@ def symmetric_rescaling_sa(A, B, BH=None):
         if A.symmetry == 'nonsymmetric':
             if BH is None:
                 raise ValueError("BH should be an n x m array")
-            else:
-                for i in range(BH.shape[1]):
-                    BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
+
+            for i in range(BH.shape[1]):
+                BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
 
     return [A, B, BH]
 
@@ -455,7 +459,8 @@ def type_prep(upcast_type, varlist):
 
     """
     varlist = to_type(upcast_type, varlist)
-    for i in range(len(varlist)):
+    nv = len(varlist)
+    for i in range(nv):
         if np.isscalar(varlist[i]):
             varlist[i] = np.array([varlist[i]])
 
@@ -494,7 +499,8 @@ def to_type(upcast_type, varlist):
     """
     # convert_type = type(np.array([0], upcast_type)[0])
 
-    for i in range(len(varlist)):
+    nv = len(varlist)
+    for i in range(nv):
 
         # convert scalars to complex
         if np.isscalar(varlist[i]):
@@ -506,7 +512,6 @@ def to_type(upcast_type, varlist):
                     varlist[i] = varlist[i].astype(upcast_type)
             except AttributeError:
                 warn('Failed to cast in to_type')
-                pass
 
     return varlist
 
@@ -570,8 +575,8 @@ def get_diagonal(A, norm_eq=False, inv=False):
         mask = (D != 0.0)
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
-    else:
-        return D
+
+    return D
 
 
 def get_block_diag(A, blocksize, inv_flag=True):
@@ -708,7 +713,8 @@ def amalgamate(A, blocksize):
     """
     if blocksize == 1:
         return A
-    elif np.mod(A.shape[0], blocksize) != 0:
+
+    if np.mod(A.shape[0], blocksize) != 0:
         raise ValueError("Incompatible blocksize")
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
@@ -823,18 +829,18 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     # Calculate each column's width
     colwidths = []
-    for i in range(len(table)):
+    for row in table:
         # extend colwidths for row i
-        for k in range(len(table[i]) - len(colwidths)):
+        for _ in range(len(row) - len(colwidths)):
             colwidths.append(-1)
 
-        # Update colwidths if table[i][j] is wider than colwidth[j]
-        for j in range(len(table[i])):
-            if len(table[i][j]) > colwidths[j]:
-                colwidths[j] = len(table[i][j])
+        # Update colwidths if row[j] is wider than colwidth[j]
+        for j, r in enumerate(row):
+            if len(r) > colwidths[j]:
+                colwidths[j] = len(r)
 
     # Factor in extra column padding
-    for i in range(len(colwidths)):
+    for i, _ in enumerate(colwidths):
         colwidths[i] += col_padding
 
     # Total table width
@@ -843,8 +849,8 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
     # Print Title
     if len(title) > 0:
         title = title.split("\n")
-        for i in range(len(title)):
-            table_str += str.center(title[i], ttwidth) + '\n'
+        for t in title:
+            table_str += str.center(t, ttwidth) + '\n'
         table_str += "\n"
 
     # Choose centering scheme
@@ -883,7 +889,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
     return table_str
 
 
-def hierarchy_spectrum(mg, filter=True, plot=False):
+def hierarchy_spectrum(mg, filter_entries=True):
     """Examine a multilevel hierarchy's spectrum.
 
     Parameters
@@ -894,14 +900,15 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
     Returns
     -------
-    (1) table to standard out detailing the spectrum of each level in mg
-    (2) if plot==True, a sequence of plots in the complex plane of the
-        spectrum at each level
+    leveleigs : list
+        List of eigenvalues per level
 
     Notes
     -----
     This can be useful for troubleshooting and when examining how your
     problem's nature changes from level to level
+
+    A table is printed to standard out detailing the spectrum of each level in mg
 
     Examples
     --------
@@ -928,10 +935,11 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0',
                    'num im(eig) > 0', 'cond_2(A)']]
 
-    for i in range(len(mg.levels)):
-        A = mg.levels[i].A.tocsr()
+    leveleigs = []
+    for i, level in enumerate(mg.levels):
+        A = level.A.tocsr()
 
-        if filter is True:
+        if filter_entries is True:
             # Filter out any zero rows and columns of A
             A.eliminate_zeros()
             nnz_per_row = A.indptr[0:-1] - A.indptr[1:]
@@ -951,34 +959,22 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
         lambda_max = max(np.real(e))
         num_neg = max(e[np.real(e) < 0.0].shape)
         num_pos = max(e[np.real(e) > 0.0].shape)
-        real_table.append([str(i), ('%1.3f' % lambda_min),
-                           ('%1.3f' % lambda_max),
-                           str(num_neg), str(num_pos), ('%1.2e' % c)])
+        real_table.append([str(i), f'{lambda_min:1.3f}', f'{lambda_max:1.3f}',
+                           str(num_neg), str(num_pos), f'{c:1.2e}'])
 
         lambda_min = min(np.imag(e))
         lambda_max = max(np.imag(e))
         num_neg = max(e[np.imag(e) < 0.0].shape)
         num_pos = max(e[np.imag(e) > 0.0].shape)
-        imag_table.append([str(i), ('%1.3f' % lambda_min),
-                           ('%1.3f' % lambda_max),
-                           str(num_neg), str(num_pos), ('%1.2e' % c)])
+        imag_table.append([str(i), f'{lambda_min:1.3f}', f'{lambda_max:1.3f}',
+                           str(num_neg), str(num_pos), f'{c:1.2e}'])
 
-        if plot:
-            import pylab
-            pylab.figure(i+1)
-            pylab.plot(np.real(e), np.imag(e), 'kx')
-            handle = pylab.title('Level %d Spectrum' % i)
-            handle.set_fontsize(19)
-            handle = pylab.xlabel('real(eig)')
-            handle.set_fontsize(17)
-            handle = pylab.ylabel('imag(eig)')
-            handle.set_fontsize(17)
+        leveleigs.append(e)
 
     print(print_table(real_table))
     print(print_table(imag_table))
 
-    if plot:
-        pylab.show()
+    return leveleigs
 
 
 def coord_to_rbm(nnodes, ndof, x, y, z):
@@ -1028,20 +1024,20 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
 
     """
     # check inputs
-    if(ndof == 1):
+    if ndof == 1:
         numcols = 1
-    elif((ndof == 3) or (ndof == 6)):
+    elif ndof in (3, 6):
         numcols = 6
     else:
-        raise ValueError("coord_to_rbm(...) only supports 1, 3 or 6 PDEs per\
-                          spatial location,i.e. ndof = [1 | 3 | 6].\
-                          You've entered " + str(ndof) + ".")
+        raise ValueError('coord_to_rbm(...) only supports 1, 3 or 6 PDEs per '
+                         'spatial location,i.e. ndof = [1 | 3 | 6]. '
+                         f'You have entered {ndof}.')
 
     if((max(x.shape) != nnodes)
        or (max(y.shape) != nnodes)
        or (max(z.shape) != nnodes)):
-        raise ValueError("coord_to_rbm(...) requires coordinate vectors of equal\
-                          length.  Length must be nnodes = " + str(nnodes))
+        raise ValueError('coord_to_rbm(...) requires coordinate vectors of equal '
+                         f'length.  Length must be nnodes = {nnodes}')
 
     # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
     #    raise ValueError("coord_to_rbm(...) requires coordinate vectors that are
@@ -1050,38 +1046,38 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
     # preallocate rbm
     rbm = np.array(np.zeros((nnodes*ndof, numcols)))
 
-    for node in range(nnodes):
+    for node in range(nnodes):  # pylint: disable=too-many-nested-blocks
         dof = node * ndof
 
-        if(ndof == 1):
+        if ndof == 1:
             rbm[node] = 1.0
 
-        if(ndof == 6):
+        if ndof == 6:
             for ii in range(3, 6):  # lower half = [ 0 I ]
                 for jj in range(0, 6):
-                    if(ii == jj):
+                    if ii == jj:
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
-        if((ndof == 3) or (ndof == 6)):
+        if ndof in (3, 6):
             for ii in range(0, 3):  # upper left = [ I ]
                 for jj in range(0, 3):
-                    if(ii == jj):
+                    if ii == jj:
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
             for ii in range(0, 3):  # upper right = [ Q ]
                 for jj in range(3, 6):
-                    if(ii == (jj-3)):
+                    if ii == (jj-3):
                         rbm[dof+ii, jj] = 0.0
                     else:
-                        if((ii+jj) == 4):
+                        if (ii+jj) == 4:
                             rbm[dof+ii, jj] = z[node]
-                        elif((ii+jj) == 5):
+                        elif (ii+jj) == 5:
                             rbm[dof+ii, jj] = y[node]
-                        elif((ii+jj) == 6):
+                        elif (ii+jj) == 6:
                             rbm[dof+ii, jj] = x[node]
                         else:
                             rbm[dof+ii, jj] = 0.0
@@ -1136,15 +1132,11 @@ def relaxation_as_linear_operator(method, A, b):
     >>> B = relax*B
 
     """
-    from pyamg import relaxation
-    from scipy.sparse.linalg.interface import LinearOperator
-    import pyamg.multilevel
 
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     # setup variables
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
@@ -1154,16 +1146,17 @@ def relaxation_as_linear_operator(method, A, b):
 
     b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
-    lvl = pyamg.MultilevelSolver.Level()
+    lvl = MultilevelSolver.Level()
     lvl.A = A
 
     # Retrieve setup call from relaxation.smoothing for this relaxation method
     if not accepted_methods.__contains__(fn):
-        raise NameError("invalid relaxation method: ", fn)
+        raise NameError(f'invalid relaxation method: {fn}')
     try:
         setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
-    except NameError:
-        raise NameError("invalid presmoother method: ", fn)
+    except NameError as e:
+        raise NameError(f'invalid presmoother method: {fn}') from e
+
     # Get relaxation routine that takes only (A, x, b) as parameters
     relax = setup_smoother(lvl, **kwargs)
 
@@ -1252,9 +1245,10 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         Nnodes = int(Nfine/rows_per_block)
         if not isspmatrix_bsr(A):
             raise ValueError('A and C must either both be CSR or BSR')
-        elif (cols_per_block != A.blocksize[1]) or\
-             (rows_per_block != A.blocksize[0]):
+
+        if (cols_per_block != A.blocksize[1]) or (rows_per_block != A.blocksize[0]):
             raise ValueError('A and C must have same BSR blocksizes')
+
     elif isspmatrix_csr(C):
         isBSR = False
         cols_per_block = 1
@@ -1279,8 +1273,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if B.shape[1] != Bf.shape[1]:
         raise ValueError('B and Bf must have the same second\
                           dimension')
-    else:
-        NullDim = B.shape[1]
+
+    NullDim = B.shape[1]
 
     if A.dtype == int:
         A.data = np.array(A.data, dtype=float)
@@ -1403,16 +1397,22 @@ def scale_T(T, P_I, I_F):
     """
     if not isspmatrix_bsr(T):
         raise TypeError('Expected BSR matrix T')
-    elif T.blocksize[0] != T.blocksize[1]:
+
+    if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected BSR matrix T with square blocks')
+
     if not isspmatrix_bsr(P_I):
         raise TypeError('Expected BSR matrix P_I')
-    elif P_I.blocksize[0] != P_I.blocksize[1]:
+
+    if P_I.blocksize[0] != P_I.blocksize[1]:
         raise TypeError('Expected BSR matrix P_I with square blocks')
+
     if not isspmatrix_bsr(I_F):
         raise TypeError('Expected BSR matrix I_F')
-    elif I_F.blocksize[0] != I_F.blocksize[1]:
+
+    if I_F.blocksize[0] != I_F.blocksize[1]:
         raise TypeError('Expected BSR matrix I_F with square blocks')
+
     if (I_F.blocksize[0] != P_I.blocksize[0]) or\
        (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
@@ -1730,7 +1730,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
                                                    dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
-    bsize = blocksize(A_abs)
+    bsize = get_blocksize(A_abs)
     if bsize > 1:
         diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
@@ -1894,11 +1894,10 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
 
     elif isinstance(to_levelize, str):
         if to_levelize == 'predefined':
-            raise ValueError('predefined to_levelize requires a user-provided\
-                              CSR matrix representing strength or aggregation\
-                              i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
-        else:
-            to_levelize = [to_levelize for i in range(max_levels-1)]
+            raise ValueError('predefined to_levelize requires a user-provided '
+                             'CSR matrix representing strength or aggregation '
+                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
+        to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
         if isinstance(to_levelize[-1], tuple) and\
@@ -1962,7 +1961,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     ['gauss_seidel', None, None, None]
 
     """
-    if isinstance(to_levelize, tuple) or isinstance(to_levelize, str):
+    if isinstance(to_levelize, (str, tuple)):
         to_levelize = [to_levelize for i in range(max_levels)]
     elif isinstance(to_levelize, list):
         if len(to_levelize) < max_levels:

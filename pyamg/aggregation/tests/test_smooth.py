@@ -450,12 +450,12 @@ class TestEnergyMin(TestCase):
             R = ml.levels[1].B
             assert_almost_equal(P * R, B)
 
-        def blocksize(A):
+        def _get_blocksize(A):
             # Helper Function: return the blocksize of a matrix
             if sparse.isspmatrix_bsr(A):
                 return A.blocksize[0]
-            else:
-                return 1
+
+            return 1
 
         # Root-node cases
         counter = 0
@@ -467,7 +467,7 @@ class TestEnergyMin(TestCase):
             else:
                 smoother = smooth
 
-            if smoother == 'energy' and (B.shape[1] >= blocksize(A)):
+            if smoother == 'energy' and (B.shape[1] >= _get_blocksize(A)):
                 ic = [('gauss_seidel_nr',
                        {'sweep': 'symmetric', 'iterations': 4}), None]
                 ml = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
