@@ -2,8 +2,9 @@
 
 from . import linalg
 from . import utils
+from . import params
 
-__all__ = ['linalg', 'utils']
+__all__ = ['linalg', 'utils', 'params']
 
 __doc__ += """
 linalg.py provides some linear algebra functionality not yet found in scipy.
