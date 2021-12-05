@@ -1,8 +1,9 @@
 """Methods to smooth tentative prolongation operators."""
 
 
+from warnings import warn
 import numpy as np
-import scipy.sparse as sparse
+from scipy import sparse
 import scipy.linalg as la
 from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
     unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
@@ -57,7 +58,7 @@ def satisfy_constraints(U, B, BtBinv):
 
 
 def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
-                                 filter=False, weighting='diagonal'):
+                                 filter_entries=False, weighting='diagonal'):
     """Jacobi prolongation smoother.
 
     Parameters
@@ -73,7 +74,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         exactly reproduces the fine grid near nullspace modes
     omega : scalar
         Damping parameter
-    filter : boolean
+    filter_entries : boolean
         If true, filter S before smoothing T.  This option can greatly control
         complexity.
     weighting : string
@@ -134,7 +135,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
             if S.blocksize[0] == 1:
                 weighting = 'diagonal'
 
-    if filter:
+    if filter_entries:
         # Implement filtered prolongation smoothing for the general case by
         # utilizing satisfy constraints
 
@@ -173,17 +174,18 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     else:
         raise ValueError('Incorrect weighting option')
 
-    if filter:
+    if filter_entries:
         # Carry out Jacobi, but after calculating the prolongator update, U,
         # apply satisfy constraints so that U*B = 0
         P = T
-        for i in range(degree):
+        for _ in range(degree):
             U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
 
             # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in pattern. This
             # array is used multiple times in satisfy_constraints(...).
             BtBinv = compute_BtBinv(B, U)
+
             # (2) Apply satisfy constraints
             satisfy_constraints(U, B, BtBinv)
 
@@ -193,7 +195,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     else:
         # Carry out Jacobi as normal
         P = T
-        for i in range(degree):
+        for _ in range(degree):
             P = P - (D_inv_S*P)
 
     return P
@@ -258,16 +260,10 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     weight = omega/approximate_spectral_radius(S)
 
     P = T
-    for i in range(degree):
+    for _ in range(degree):
         P = P - weight*(S*P)
 
     return P
-
-
-"""
-sa_energy_min + helper functions minimize the energy of a tentative
-prolongator for use in SA
-"""
 
 
 def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
@@ -378,7 +374,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
     i = 0
     while i < maxiter and resid > tol:
         # Apply diagonal preconditioner
-        if weighting == 'local' or weighting == 'diagonal':
+        if weighting in ('local', 'diagonal'):
             Z = scale_rows(R, Dinv)
         else:
             Z = Dinv*R
@@ -390,7 +386,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
             break
 
         # P is the search direction, not the prolongator, which is T.
-        if(i == 0):
+        if i == 0:
             P = Z
             oldsum = newsum
         else:
@@ -441,7 +437,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
 
 def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
-                                tol, weighting='local', Cpt_params=None):
+                                tol, weighting='diagonal', Cpt_params=None):
     """Use CGNR to smooth T by solving A T = 0, subject to nullspace and sparsity constraints.
 
     Parameters
@@ -493,6 +489,9 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     pyamg.aggregation.smooth.energy_prolongation_smoother
 
     """
+    if weighting != 'diagonal':
+        warn(f'Weighting of {weighting} unused.')
+
     # For non-SPD system, apply CG on Normal Equations with Diagonal
     # Preconditioning (requires transpose)
     Ah = A.H
@@ -556,7 +555,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
             break
 
         # P is the search direction, not the prolongator, which is T.
-        if(i == 0):
+        if i == 0:
             P = Z
             oldsum = newsum
         else:
@@ -744,7 +743,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     R.data *= -1.0
 
     # Apply diagonal preconditioner
-    if weighting == 'local' or weighting == 'diagonal':
+    if weighting in ('local', 'diagonal'):
         R = scale_rows(R, Dinv)
     else:
         R = Dinv*R
@@ -793,7 +792,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                                A.blocksize[0], A.blocksize[1],
                                                T.blocksize[1])
 
-        if weighting == 'local' or weighting == 'diagonal':
+        if weighting in ('local', 'diagonal'):
             AV = scale_rows(AV, Dinv)
         else:
             AV = Dinv*AV
@@ -870,7 +869,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
-                                 prefilter={}, postfilter={}):
+                                 prefilter=None, postfilter=None):
     """Minimize the energy of the coarse basis functions (columns of T).
 
     Both root-node and non-root-node style prolongation smoothing is available,
@@ -1031,6 +1030,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if not sparse.isspmatrix_csr(Atilde):
         raise TypeError("Atilde must be csr_matrix")
 
+    if prefilter is None:
+        prefilter = {}
+
+    if postfilter is None:
+        postfilter = {}
+
     if ('theta' in prefilter) and (prefilter['theta'] == 0):
         prefilter.pop('theta', None)
 
@@ -1059,7 +1064,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                     shape=shape)
 
         AtildeCopy = Atilde.copy()
-        for i in range(degree):
+        for _ in range(degree):
             pattern = AtildeCopy * pattern
 
         # Optional filtering of sparsity pattern before smoothing
@@ -1138,34 +1143,34 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
        or ('secondpass' in postfilter)
        or (Cpt_params[0] is False)):
         return T
+
+    if 'theta' in postfilter and 'k' in postfilter:
+        T_theta = filter_matrix_rows(T, postfilter['theta'])
+        T_k = truncate_rows(T, postfilter['k'])
+
+        # Union two sparsity patterns
+        T_theta.data[:] = 1.0
+        T_k.data[:] = 1.0
+        T_filter = T_theta + T_k
+        T_filter.data[:] = 1.0
+        T_filter = T.multiply(T_filter)
+
+    elif 'k' in postfilter:
+        T_filter = truncate_rows(T, postfilter['k'])
+    elif 'theta' in postfilter:
+        T_filter = filter_matrix_rows(T, postfilter['theta'])
     else:
-        if 'theta' in postfilter and 'k' in postfilter:
-            T_theta = filter_matrix_rows(T, postfilter['theta'])
-            T_k = truncate_rows(T, postfilter['k'])
+        raise ValueError("Unrecognized postfilter option")
 
-            # Union two sparsity patterns
-            T_theta.data[:] = 1.0
-            T_k.data[:] = 1.0
-            T_filter = T_theta + T_k
-            T_filter.data[:] = 1.0
-            T_filter = T.multiply(T_filter)
-
-        elif 'k' in postfilter:
-            T_filter = truncate_rows(T, postfilter['k'])
-        elif 'theta' in postfilter:
-            T_filter = filter_matrix_rows(T, postfilter['theta'])
-        else:
-            raise ValueError("Unrecognized postfilter option")
-
-        # Re-smooth T_filter and re-fit the modes B into the span.
-        # Note, we set 'secondpass', because this is the second
-        # filtering pass
-        T = energy_prolongation_smoother(A, T_filter,
-                                         Atilde, B, Bf, Cpt_params,
-                                         krylov=krylov, maxiter=1,
-                                         tol=1e-8, degree=0,
-                                         weighting=weighting,
-                                         prefilter={},
-                                         postfilter={'secondpass': True})
+    # Re-smooth T_filter and re-fit the modes B into the span.
+    # Note, we set 'secondpass', because this is the second
+    # filtering pass
+    T = energy_prolongation_smoother(A, T_filter,
+                                     Atilde, B, Bf, Cpt_params,
+                                     krylov=krylov, maxiter=1,
+                                     tol=1e-8, degree=0,
+                                     weighting=weighting,
+                                     prefilter={},
+                                     postfilter={'secondpass': True})
 
     return T

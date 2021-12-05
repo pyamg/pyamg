@@ -572,7 +572,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
 def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
                         smooth, eliminate_local, coarse_solver, work):
-    """Compute additional candidates and improvements following Algorithm 4 in Brezina et al.
+    """Compute additional candidates and improvements.
 
     Parameters
     ----------
@@ -580,6 +580,10 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         number of test relaxation iterations
     epsilon
         minimum acceptable relaxation convergence factor
+
+    Notes
+    -----
+    Follows Algorithm 4 in Brezina et al.
 
     References
     ----------
