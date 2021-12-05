@@ -30,10 +30,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                              {'sweep': 'symmetric'}),
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
-                                improve_candidates=[('block_gauss_seidel',
+                                improve_candidates=(('block_gauss_seidel',
                                                      {'sweep': 'symmetric',
                                                       'iterations': 4}),
-                                                    None],
+                                                    None),
                                 max_levels=10, max_coarse=10,
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
@@ -212,14 +212,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
-        except BaseException:
+        except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
-                            'or be convertible to csr_matrix')
+                            'or be convertible to csr_matrix') from e
 
     A = A.asfptype()
 
-    if (symmetry != 'symmetric') and (symmetry != 'hermitian') and\
-            (symmetry != 'nonsymmetric'):
+    if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
                          'for the symmetry parameter ')
     A.symmetry = symmetry
@@ -297,8 +296,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     A = levels[-1].A
     B = levels[-1].B
@@ -315,7 +313,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         if 'B' in kwargs:
             C = evolution_strength_of_connection(A, **kwargs)
         else:
@@ -331,8 +329,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -352,7 +349,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:
-        raise ValueError('unrecognized aggregation method %s' % str(fn))
+        raise ValueError(f'Unrecognized aggregation method {str(fn)}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
@@ -384,8 +381,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError('unrecognized prolongation smoother method %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
     # Compute the restriction matrix, R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
@@ -408,8 +404,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         elif fn is None:
             R = T.H
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
     if keep:
         levels[-1].C = C  # strength of connection matrix
