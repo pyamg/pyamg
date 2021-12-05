@@ -9,18 +9,18 @@ from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
 from pyamg.multilevel import MultilevelSolver
 from pyamg.strength import symmetric_strength_of_connection,\
     classical_strength_of_connection, evolution_strength_of_connection
-from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
-    gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
 from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
 from pyamg.krylov import gmres
 from pyamg.util.linalg import norm, approximate_spectral_radius
+from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
+    levelize_smooth_or_improve_candidates
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
+    gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
 from .aggregation import smoothed_aggregation_solver
 from .aggregate import standard_aggregation, lloyd_aggregation
 from .smooth import jacobi_prolongation_smoother,\
     energy_prolongation_smoother, richardson_prolongation_smoother
 from .tentative import fit_candidates
-from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
-    levelize_smooth_or_improve_candidates
 
 
 def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
@@ -49,10 +49,13 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     """
     if not (isspmatrix_csr(AggOp) or isspmatrix_csc(AggOp)):
         raise TypeError('AggOp must be a CSR or CSC matrix')
-    else:
-        AggOp = AggOp.tocsc()
-        ndof = max(x.shape)
-        npde = int(ndof/AggOp.shape[0])
+
+    if kwargs:  # process any needed kwargs for elimination
+        pass
+
+    AggOp = AggOp.tocsc()
+    ndof = max(x.shape)
+    npde = int(ndof/AggOp.shape[0])
 
     def aggregate_wise_inner_product(z, AggOp, npde, ndof):
         """Inner products per aggregate.
@@ -77,6 +80,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         (card(agg_i)/A.shape[0]) ( <Az, z>/rho(A) )
 
         """
+        _ = ndof
         rho = approximate_spectral_radius(A)
         zAz = np.dot(z.reshape(1, -1), A*z.reshape(-1, 1))
         card = npde * (AggOp.indptr[1:]-AggOp.indptr[:-1])
@@ -105,8 +109,7 @@ def unpack_arg(v):
     """Use for local methods."""
     if isinstance(v, tuple):
         return v[0], v[1]
-    else:
-        return v, {}
+    return v, {}
 
 
 def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
@@ -185,7 +188,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     Notes
     -----
-    - Floating point value representing the "work" required to generate
+    - Floating point value representing the 'work' required to generate
       the solver.  This value is the total cost of just relaxation, relative
       to the fine grid.  The relaxation method used is assumed to symmetric
       Gauss-Seidel.
@@ -217,9 +220,9 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
-        except BaseException:
-            raise TypeError('Argument A must have type csr_matrix or\
-                            bsr_matrix, or be convertible to csr_matrix')
+        except BaseException as e:
+            raise TypeError('Argument A must have type csr_matrix or '
+                            'bsr_matrix, or be convertible to csr_matrix') from e
 
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
@@ -286,7 +289,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         # Normalize x and add to candidate list
         x = x/norm(x, 'inf')
         if np.isinf(x[0]) or np.isnan(x[0]):
-            raise ValueError('Adaptive candidate is all 0.')
+            raise ValueError(f'The {i}th adaptive candidate is all 0.')
         B = np.hstack((B, x.reshape(-1, 1)))
 
     # Improve candidates
@@ -309,7 +312,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                                                 improve_candidates=None,
                                                 keep=True, **kwargs)
                 x = sa_temp.solve(b, x0=x0,
-                                  tol=float(np.finfo(np.float64).tiny),
+                                  tol=1e-20,
                                   maxiter=candidate_iters, cycle='V')
                 work[:] += 2 * sa_temp.operator_complexity() *\
                     sa_temp.levels[0].A.nnz * candidate_iters
@@ -325,7 +328,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                 # Normalize x and add to candidate list
                 x = x/norm(x, 'inf')
                 if np.isinf(x[0]) or np.isnan(x[0]):
-                    raise ValueError('Adaptive candidate is all 0.')
+                    raise ValueError(f'The {j}th improved adaptive candidate is all 0.')
                 B = np.hstack((B, x.reshape(-1, 1)))
 
     elif improvement_iters > 0:
@@ -379,7 +382,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     """
     # Define relaxation routine
     def relax(A, x):
-        fn, kwargs = unpack_arg(prepostsmoother)
+        fn, _ = unpack_arg(prepostsmoother)
         if fn == 'gauss_seidel':
             gauss_seidel(A, x, np.zeros_like(x),
                          iterations=candidate_iters, sweep='symmetric')
@@ -450,7 +453,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
             if isspmatrix_bsr(A_l):
                 C_l = amalgamate(C_l, A_l.blocksize[0])
-        elif (fn == 'ode') or (fn == 'evolution'):
+        elif fn in ('ode', 'evolution'):
             C_l = evolution_strength_of_connection(A_l,
                                                    np.ones(
                                                        (A_l.shape[0], 1),
@@ -461,17 +464,16 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             C_l = A_l.tocsr()
         else:
-            raise ValueError('unrecognized strength of connection method: %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
 
-        # In SA, strength represents "distance", so we take magnitude of
+        # In SA, strength represents 'distance', so we take magnitude of
         # complex values
         if C_l.dtype.name.startswith('complex'):
             C_l.data = np.abs(C_l.data)
 
         # Create a unified strength framework so that large values represent
         # strong connections and small values represent weak connections
-        if (fn == 'ode') or (fn == 'evolution') or (fn == 'energy_based'):
+        if fn in ('ode', 'evolution', 'energy_based'):
             C_l.data = 1.0 / C_l.data
 
         # aggregation
@@ -483,7 +485,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn == 'predefined':
             AggOp = kwargs['AggOp'].tocsr()
         else:
-            raise ValueError('unrecognized aggregation method %s' % str(fn))
+            raise ValueError(f'Unrecognized aggregation method {str(fn)}')
 
         T_l, x = fit_candidates(AggOp, x)  # step 4c
 
@@ -498,8 +500,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             P_l = T_l
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 
         # R should reflect A's structure # step 4e
         if symmetry == 'symmetric':
@@ -535,7 +536,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
 
             if err_ratio < epsilon:  # step 4i
-                # print "sufficient convergence, skipping"
+                # print 'sufficient convergence, skipping'
                 skip_f_to_i = True
                 if x_A_x == 0:
                     x = x_hat  # need to restore x
@@ -599,7 +600,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         return bsr_matrix((data, T.indices, T.indptr),
                           shape=((K + 1) * int(M / K), N))
 
-    def expand_candidates(B_old, nodesize):
+    def expand_candidates(B_old, nodesize):  # pylint: disable=unused-variable
         # insert a new dof that is always zero, to create NullDim+1 dofs per
         # node in B
         NullDim = B_old.shape[1]
@@ -615,7 +616,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         x = x + 1.0j*np.random.rand(levels[0].A.shape[0], 1)
     b = np.zeros_like(x)
 
-    x = ml.solve(b, x0=x, tol=float(np.finfo(np.float64).tiny),
+    x = ml.solve(b, x0=x, tol=1e-20,
                  maxiter=candidate_iters)
     work[:] += ml.operator_complexity()*ml.levels[0].A.nnz*candidate_iters*2
 
@@ -657,8 +658,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i].P = T
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 
         # construct R
         if symmetry == 'symmetric':  # R should reflect A's structure
@@ -693,10 +693,9 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i+1].P = T_bridge
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
-        # construct the "bridging" R
+        # construct the 'bridging' R
         if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
         elif symmetry == 'hermitian':
@@ -707,7 +706,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         change_smoothers(solver, presmoother=prepostsmoother,
                          postsmoother=prepostsmoother)
         x = solver.solve(np.zeros_like(x), x0=x,
-                         tol=float(np.finfo(np.float64).tiny),
+                         tol=1e-20,
                          maxiter=candidate_iters)
         work[:] += 2 * solver.operator_complexity() * solver.levels[0].A.nnz *\
             candidate_iters*2
