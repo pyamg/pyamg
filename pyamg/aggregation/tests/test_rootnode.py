@@ -128,7 +128,8 @@ class TestComplexParameters(TestCase):
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
-        for smooth in [('energy', {'krylov': 'cgnr'}),
+        for smooth in [('energy', {'krylov': 'cgnr',
+                                   'weighting': 'diagonal'}),
                        ('energy', {'krylov': 'gmres'})]:
             self.run_cases({'smooth': smooth})
 
@@ -178,13 +179,15 @@ class TestSolverPerformance(TestCase):
         self.cases.append((A, None, 0.26, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, None, 0.30, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
 
         A, B = linear_elasticity((50, 50), format='bsr')
         self.cases.append((A, B, 0.3, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, B, 0.3, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
         self.cases.append((A, B, 0.3, 'symmetric',
                            ('energy', {'krylov': 'gmres'})))
         # TODO add unstructured tests
@@ -441,13 +444,15 @@ class TestComplexSolverPerformance(TestCase):
         Ai = A + (0.625 / 0.01) * 1.0j *\
             sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
 
         # Test 3
         A = poisson((60, 60), format='csr')
         Ai = 1.0j * A
         self.cases.append((Ai, None, 0.35, 'symmetric',
-                           ('energy', {'krylov': 'cgnr', 'maxiter': 8})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal', 'maxiter': 8})))
         self.cases.append((Ai, None, 0.35, 'symmetric',
                            ('energy', {'krylov': 'gmres', 'maxiter': 8})))
 
