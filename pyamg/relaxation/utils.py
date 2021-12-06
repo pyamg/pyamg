@@ -7,7 +7,7 @@ from .. import relaxation
 
 
 def relaxation_as_linear_operator(method, A, b):
-    """Create a linear operator that applies a relaxation method for the given right-hand-side.
+    """Create a linear operator that applies a relaxation method to a right-hand-side.
 
     Parameters
     ----------
