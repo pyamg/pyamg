@@ -191,7 +191,7 @@ class MultilevelSolver:
         for n, level in enumerate(self.levels):
             A = level.A
             ratio = 100 * A.nnz / total_nnz
-            output += f'{n:<6} {A.shape[1]:<11} {A.nnz:<12} [%{ratio:2.2}]'
+            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [%{ratio:2.2}]\n'
 
         return output
 

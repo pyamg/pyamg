@@ -1,4 +1,5 @@
 """Discretizations of the Poisson problem."""
+# pylint: disable=redefined-builtin
 
 import numpy as np
 import scipy as sp
@@ -47,7 +48,7 @@ def poisson(grid, dtype=float, format=None, type='FD'):
     N = len(grid)  # grid dimension
 
     if N < 1 or min(grid) < 1:
-        raise ValueError('invalid grid shape: %s' % str(grid))
+        raise ValueError(f'Invalid grid shape: {grid}')
 
     # create N-dimension Laplacian stencil
     if type == 'FD':
@@ -156,9 +157,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
         new_c.append(i - N + 1)
         new_diff.append(1)
 
-    for i in range(len(new_r)):
-        r = new_r[i]
-        c = new_c[i]
+    for i, (r, c) in enumerate(zip(new_r, new_c)):
         diff = new_diff[i]
         index = min(r, c)
         if r > c:

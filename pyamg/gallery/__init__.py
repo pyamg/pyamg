@@ -4,6 +4,7 @@ from . import elasticity
 from . import laplacian
 from . import stencil
 from . import diffusion
+
 from .elasticity import linear_elasticity, linear_elasticity_p1
 from .example import load_example
 from .laplacian import poisson, gauge_laplacian
