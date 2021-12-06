@@ -851,10 +851,7 @@ def applybc(A, b, mesh, bc):
         idx = c['var'] + c['id']
         Dflag[idx] = True
     # write identity (2 of 2)
-    ndata = len(A.data)
-    for k in range(0, len(ndata)):
-        i = A.row[k]
-        j = A.col[k]
+    for k, (i, j) in enumerate(zip(A.row, A.col)):
         if Dflag[i] or Dflag[j]:
             if i == j:
                 A.data[k] = 1.0
