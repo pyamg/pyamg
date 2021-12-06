@@ -186,6 +186,7 @@ def PMIS(S):
     """
     S = remove_diagonal(S)
     weights, G, S, T = _preprocess(S)
+    del S, T
     return MIS(G, weights)
 
 
@@ -231,6 +232,7 @@ def PMISc(S, method='JP'):
     """
     S = remove_diagonal(S)
     weights, G, S, T = _preprocess(S, coloring_method=method)
+    del S, T
     return MIS(G, weights)
 
 

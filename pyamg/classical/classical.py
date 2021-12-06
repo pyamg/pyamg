@@ -94,9 +94,9 @@ def ruge_stuben_solver(A,
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR",
                  SparseEfficiencyWarning)
-        except BaseException:
-            raise TypeError('Argument A must have type csr_matrix, \
-                             or be convertible to csr_matrix')
+        except BaseException as e:
+            raise TypeError('Argument A must have type csr_matrix, '
+                            'or be convertible to csr_matrix') from e
     # preprocess A
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
@@ -118,8 +118,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     A = levels[-1].A
 
@@ -132,7 +131,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         C = evolution_strength_of_connection(A, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
@@ -143,8 +142,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn is None:
         C = A
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError('Unrecognized strength of connection method: {str(fn)}')
 
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -161,7 +159,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
-        raise ValueError('unknown C/F splitting method (%s)' % CF)
+        raise ValueError('Unknown C/F splitting method {CF}')
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
