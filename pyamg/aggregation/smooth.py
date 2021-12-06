@@ -490,7 +490,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     """
     if weighting != 'diagonal':
-        warn(f'Weighting of {weighting} unused.')
+        warn(f'Weighting of {weighting} unused.', stacklevel=2)
 
     # For non-SPD system, apply CG on Normal Equations with Diagonal
     # Preconditioning (requires transpose)

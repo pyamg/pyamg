@@ -300,7 +300,7 @@ class TestEnergyMin(TestCase):
                              {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((A, B, ('energy', {'maxiter': 3}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         name = 'poisson'
@@ -313,7 +313,8 @@ class TestEnergyMin(TestCase):
 
         cases.append((A, B, 'energy', name))
         cases.append((A, B, ('energy', {'degree': 2}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'degree': 2}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'degree': 2,
+                                        'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres'}), name))
 
         # Simple, imaginary-valued problems
@@ -336,21 +337,25 @@ class TestEnergyMin(TestCase):
         cases.append((iA.tobsr(blocksize=(5, 5)), iB,
                       ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
-        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'degree': 2}), name))
-        cases.append((iA, iB, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'degree': 2,
+                                         'weighting': 'diagonal'}), name))
+        cases.append((iA, iB, ('energy', {'krylov': 'cgnr',
+                                          'weighting': 'diagonal'}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
                        {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
-                        'postfilter': {'theta': 0.05}}), name))
+                        'weighting': 'diagonal', 'postfilter': {'theta': 0.05}}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
                        {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
+                        'weighting': 'diagonal',
                         'prefilter': {'theta': 0.05}}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
-                       {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}), name))
+                       {'krylov': 'cgnr', 'degree': 2,
+                        'weighting': 'diagonal', 'maxiter': 3}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), iB,
-                      ('energy', {'krylov': 'cgnr'}), name))
+                      ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'gmres'}), name))
         cases.append((iA, iB, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
@@ -375,9 +380,9 @@ class TestEnergyMin(TestCase):
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
                       ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
-        cases.append((iA, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
-                      ('energy', {'krylov': 'cgnr'}), name))
+                      ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'gmres'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
@@ -402,26 +407,27 @@ class TestEnergyMin(TestCase):
                               {'filter_entries': True, 'weighting': 'local'}), name))
 
         cases.append((A, B, ('energy', {'krylov': 'cg'}), name))
-        cases.append((A, iB, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, iB, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, iB, ('energy', {'krylov': 'gmres'}), name))
 
         name = 'gauge laplacian bsr'
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2,
-                                 'maxiter': 3, 'postfilter': {'theta': 0.05}}),
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'weighting': 'diagonal',
+                                  'maxiter': 3, 'postfilter': {'theta': 0.05}}),
                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2,
-                      'maxiter': 3, 'prefilter': {'theta': 0.05}}),
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'weighting': 'diagonal',
+                       'maxiter': 3, 'prefilter': {'theta': 0.05}}),
                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}),
-                     name))
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
+                                  'weighting': 'diagonal'}),
+                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), iB,
                      ('energy', {'krylov': 'cg'}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     name))
+                      ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
+                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
                      ('energy', {'krylov': 'gmres', 'degree': 2,
                       'maxiter': 3, 'postfilter': {'theta': 0.05}}),
@@ -443,7 +449,7 @@ class TestEnergyMin(TestCase):
         cases.append((A, B, ('energy', {'degree': 2}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'postfilter': {'theta': 0.05}}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'prefilter': {'theta': 0.05}}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         # Classic SA cases
