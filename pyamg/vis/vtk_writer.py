@@ -114,12 +114,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     vtk_cell_info = [-1, 1, None, 2, None, 3, None, None, 4, 4, 4, 8, 8, 6, 5]
 
     # check fname
-    if isinstance(fname, str):
-        try:
-            fname = open(fname, 'w')
-        except OSError as e:
-            print(f".vtu error ({e.errno}): {e.strerror}")
-    else:
+    if not isinstance(fname, str):
         raise ValueError('fname is assumed to be a string')
 
     # check V
@@ -134,19 +129,17 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     # Cell data can't be empty for a non empty key
     for key in cells:
         if ((not isinstance(key, int)) or (key not in list(range(1, 15)))):
-            raise ValueError('cell array must have positive integer keys\
-                              in [1,14]')
+            raise ValueError('cell array must have positive integer keys in [1,14]')
         if (vtk_cell_info[key] is None) and (cells[key] is not None):
             # Poly data
             raise NotImplementedError('Poly Data not implemented yet')
         if cells[key] is None:
-            raise ValueError('cell array cannot be empty for\
-                              key %d' % (key))
+            raise ValueError(f'Cell array cannot be empty for key {key}')
         if np.ndim(cells[key]) != 2:
             cells[key] = cells[key].reshape((cells[key].size, 1))
         if vtk_cell_info[key] != cells[key].shape[1]:
-            raise ValueError('cell array has %d columns, expected %d' %
-                             (cells[key].shape[1], vtk_cell_info[key]))
+            raise ValueError(f'Cell array has {cells[key].shape[1]} columns. '
+                             f'Expected {vtk_cell_info[key]}.')
 
     # check pdata
     # must be Ndof x n_pdata
@@ -158,8 +151,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             n_pdata = 1
             pdata = pdata.reshape((pdata.size, 1))
         if pdata.shape[0] != Ndof:
-            raise ValueError('pdata array should be length %d (it is %d)' %
-                             (Ndof, pdata.shape[0]))
+            raise ValueError(f'pdata array should be length {Ndof} (not {pdata.shape[0]})')
 
     # check pvdata
     # must be 3*Ndof x n_pvdata
@@ -171,8 +163,8 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             n_pvdata = 1
             pvdata = pvdata.reshape((pvdata.size, 1))
         if pvdata.shape[0] != 3*Ndof:
-            raise ValueError('pvdata array should be of size %d (or multiples)\
-                              (it is now %d)' % (Ndof*3, pvdata.shape[0]))
+            raise ValueError(f'pvdata array should be of size {3*Ndof} '
+                             f'(or multiples) (it is now {pvdata.shape[0]}).')
 
     # check cdata
     # must be Ncells x n_cdata for each key
@@ -188,11 +180,10 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
                 n_cdata = 1
                 cdata[key] = cdata[key].reshape((cdata[key].size, 1))
             if cdata[key].shape[0] != cells[key].shape[0]:
-                raise ValueError('size mismatch with cdata %d and cells %d' %
-                                 (cdata[key].shape[0], cells[key].shape[0]))
+                raise ValueError(f'Size mismatch with cdata {cdata[key].shape[0]} '
+                                 f'and cells {cells[key].shape[0]}.')
             if cdata[key] is None:
-                raise ValueError('cdata array cannot be empty for key %d' %
-                                 (key))
+                raise ValueError(f'cdata array cannot be empty for key {key}')
 
     # check cvdata
     # must be Ncells*3 x n_cdata for each key
@@ -210,8 +201,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
             if cvdata[key].shape[0] != 3 * cells[key].shape[0]:
                 raise ValueError('size mismatch with cvdata and cells')
             if cvdata[key] is None:
-                raise ValueError('cvdata array cannot be empty for key %d' %
-                                 (key))
+                raise ValueError(f'cvdata array cannot be empty for key {key}')
 
     Ncells = 0
     cell_ind = []
@@ -300,7 +290,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     pdata_str = []
     for i in range(0, n_pdata):
         pdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
-        d = {'type': 'Float32', 'Name': 'pdata %d' % (i),
+        d = {'type': 'Float32', 'Name': f'pdata {i}',
              'NumberOfComponents': '1', 'format': 'ascii'}
         _set_attributes(d, pdata_obj[i])
         pdata_str.append(doc.createTextNode(_a2s(pdata[:, i])))
@@ -309,7 +299,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     pvdata_str = []
     for i in range(0, n_pvdata):
         pvdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
-        d = {'type': 'Float32', 'Name': 'pvdata %d' % (i),
+        d = {'type': 'Float32', 'Name': f'pvdata {i}',
              'NumberOfComponents': '3', 'format': 'ascii'}
         _set_attributes(d, pvdata_obj[i])
         pvdata_str.append(doc.createTextNode(_a2s(pvdata[:, i])))
@@ -321,7 +311,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     cdata_str = []
     for i in range(0, n_cdata):
         cdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
-        d = {'type': 'Float32', 'Name': 'cdata %d' % (i),
+        d = {'type': 'Float32', 'Name': f'cdata {i}',
              'NumberOfComponents': '1', 'format': 'ascii'}
         _set_attributes(d, cdata_obj[i])
         cdata_str.append(doc.createTextNode(_a2s(cdata_all[:, i])))
@@ -330,7 +320,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     cvdata_str = []
     for i in range(0, n_cvdata):
         cvdata_obj.append(doc.createElementNS('VTK', 'DataArray'))
-        d = {'type': 'Float32', 'Name': 'cvdata %d' % (i),
+        d = {'type': 'Float32', 'Name': f'cvdata {i}',
              'NumberOfComponents': '3', 'format': 'ascii'}
         _set_attributes(d, cvdata_obj[i])
         cvdata_str.append(doc.createTextNode(_a2s(cvdata_all[:, i])))
@@ -367,8 +357,11 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
         celldata.appendChild(cvdata_obj[i])
         cvdata_obj[i].appendChild(cvdata_str[i])
 
-    doc.writexml(fname, newl='\n')
-    fname.close()
+    try:
+        with open(fname, 'w', encoding='utf-8') as f:
+            doc.writexml(f, newl='\n')
+    except OSError as e:
+        print(f'.vtu error ({e.errno}): {e.strerror}')
 
 
 def write_basic_mesh(V, E2V=None, mesh_type='tri',
@@ -452,7 +445,7 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     map_type_to_key = {'vertex': 1, 'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
 
     if mesh_type not in map_type_to_key:
-        raise ValueError('unknown mesh_type=%s' % mesh_type)
+        raise ValueError('Unknown mesh_type={mesh_type}')
 
     key = map_type_to_key[mesh_type]
 
@@ -480,5 +473,5 @@ def _set_attributes(d, elm):
 
 def _a2s(a):
     """Convert to string."""
-    str = ''
-    return str.join(['%g ' % (v) for v in a.ravel()])
+    newstr = ''
+    return newstr.join([f'{v} ' for v in a.ravel()])

@@ -14,7 +14,7 @@ from scipy.sparse import csr_matrix, coo_matrix, triu
 from .vtk_writer import write_basic_mesh, write_vtu
 
 
-def vis_aggregate_groups(V, E2V, AggOp, mesh_type, output='vtk',
+def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
                          fname='output.vtu'):
     """Coarse grid visualization of aggregate groups.
 
@@ -32,8 +32,6 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type, output='vtk',
         type of elements: vertex, tri, quad, tet, hex (all 3d)
     fname : {string, file object}
         file to be written, e.g. 'output.vtu'
-    output : {string}
-        'vtk' or 'matplotlib'
 
     Returns
     -------
@@ -74,7 +72,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type, output='vtk',
     check_input(V=V, E2V=E2V, AggOp=AggOp, mesh_type=mesh_type)
     map_type_to_key = {'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
     if mesh_type not in map_type_to_key:
-        raise ValueError('unknown mesh_type=%s' % mesh_type)
+        raise ValueError('Unknown mesh_type={mesh_type}')
     key = map_type_to_key[mesh_type]
 
     AggOp = csr_matrix(AggOp)
@@ -87,8 +85,6 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type, output='vtk',
     # Find elements with all vertices in same aggregate
 
     # account for 0 rows.  Mark them as solitary aggregates
-    # TODO: (Luke) full_aggs is not defined, I think its just a mask
-    #       indicated with rows are not 0.
     if len(AggOp.indices) != AggOp.shape[0]:
         full_aggs = ((AggOp.indptr[1:] - AggOp.indptr[:-1]) == 0).nonzero()[0]
         new_aggs = np.array(AggOp.sum(axis=1), dtype=int).ravel()
@@ -225,7 +221,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
         # for each variables, write a file or open a figure
 
         if Ndof > 1:
-            new_fname = fname1 + '_%d.' % (d+1) + fname2
+            new_fname = f'{fname1}_{d+1}.{fname2}'
 
         cdata = splitting[(d*N):((d+1)*N)]
 
@@ -233,20 +229,20 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
             write_basic_mesh(V=V, E2V=E2V, mesh_type='vertex',
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
-            from pylab import figure, show, plot, xlabel, ylabel, title, axis
+            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
             cdataF = np.where(cdata == 0)[0]
             cdataC = np.where(cdata == 1)[0]
             xC = V[cdataC, 0]
             yC = V[cdataC, 1]
             xF = V[cdataF, 0]
             yF = V[cdataF, 1]
-            figure()
-            plot(xC, yC, 'r.', xF, yF, 'b.', clip_on=True)
-            title('C/F splitting (red=coarse, blue=fine)')
-            xlabel('x')
-            ylabel('y')
-            axis('off')
-            show()
+            plt.figure()
+            plt.plot(xC, yC, 'r.', xF, yF, 'b.', clip_on=True)
+            plt.title('C/F splitting (red=coarse, blue=fine)')
+            plt.xlabel('x')
+            plt.ylabel('y')
+            plt.axis('off')
+            plt.show()
         else:
             raise ValueError('problem with outputtype')
 
@@ -262,7 +258,7 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
         if not np.issubdtype(E2V.dtype, np.integer):
             raise ValueError('E2V should be of type integer')
         if E2V.min() != 0:
-            warnings.warn('element indices begin at %d' % E2V.min())
+            warnings.warn(f'Element indices begin at {E2V.min()}')
 
     if AggOp is not None:
         if AggOp.shape[1] > AggOp.shape[0]:
@@ -271,8 +267,7 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
     if A is not None:
         if AggOp is not None:
             if (A.shape[0] != A.shape[1]) or (A.shape[0] != AggOp.shape[0]):
-                raise ValueError('expected square matrix A\
-                                  and compatible with AggOp')
+                raise ValueError('expected square matrix A and compatible with AggOp')
         else:
             raise ValueError('problem with check_input')
 
@@ -287,5 +282,4 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
     if mesh_type is not None:
         valid_mesh_types = ('vertex', 'tri', 'quad', 'tet', 'hex')
         if mesh_type not in valid_mesh_types:
-            raise ValueError('mesh_type should be %s' %
-                             ' or '.join(valid_mesh_types))
+            raise ValueError('mesh_type should be {" or ".join(valid_mesh_types)}')
