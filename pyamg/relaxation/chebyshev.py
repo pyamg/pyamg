@@ -104,35 +104,3 @@ def mls_polynomial_coefficients(rho, degree):
     coeffs = -coeffs[:-1]             # coeff for smoother
 
     return (coeffs, roots)
-
-
-if __name__ == '__main__':
-    if True:
-        # show Chebyshev polynomial
-        a = 1.0/100.0
-        b = 1.0
-        degree = 4
-
-        coeffs = chebyshev_polynomial_coefficients(a, b, degree)
-        print("coeffs", coeffs)
-
-        import matplotlib.pyplot as plt
-        x = np.linspace(-0.1, 1.1, 100)
-        plt.plot(x, np.polyval(coeffs, x))
-        plt.vlines([a, b], -1, 1)
-        y = np.polyval(coeffs, a)
-        plt.hlines([-y, y], a, b)
-        plt.ylim(-1.1, 1.1)
-        plt.show()
-
-    if False:
-        # show MLS polynomial, currently broken?
-        degree = 2
-        rho = 1.0
-
-        coeffs, roots = mls_polynomial_coefficients(rho, degree)
-
-        x = np.linspace(0.0, 1.1, 100)
-        plt.jplot(x, np.polyval(coeffs, x))
-        plt.xlim(0, rho)
-        plt.show()
