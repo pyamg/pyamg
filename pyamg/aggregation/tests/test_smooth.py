@@ -295,9 +295,9 @@ class TestEnergyMin(TestCase):
         A = X['A'].tocsr()
         B = X['B']
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'local'}), name))
+                             {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'block'}), name))
+                             {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((A, B, ('energy', {'maxiter': 3}), name))
         cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
@@ -307,9 +307,9 @@ class TestEnergyMin(TestCase):
         A = poisson((10, 10), format='csr')
         B = np.ones((A.shape[0], 1))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'diagonal'}), name))
+                             {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'local'}), name))
+                             {'filter_entries': True, 'weighting': 'local'}), name))
 
         cases.append((A, B, 'energy', name))
         cases.append((A, B, ('energy', {'degree': 2}), name))
@@ -323,18 +323,18 @@ class TestEnergyMin(TestCase):
                  + 1.0j * (1.0 + np.random.rand(iA.shape[0], 2))
 
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'diagonal'}), name))
+                              {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'block'}), name))
+                              {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'local'}), name))
+                               {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'block'}), name))
+                               {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), iB,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'degree': 2}), name))
         cases.append((iA, iB, ('energy', {'krylov': 'cgnr'}), name))
@@ -365,15 +365,15 @@ class TestEnergyMin(TestCase):
         iA = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
 
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'local'}), name))
+                              {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'block'}), name))
+                              {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'diagonal'}), name))
+                               {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'block'}), name))
+                               {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'cgnr'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
@@ -396,8 +396,10 @@ class TestEnergyMin(TestCase):
         name = 'gauge laplacian'
         A = gauge_laplacian(10, spacing=1.0, beta=0.21)
         B = np.ones((A.shape[0], 1))
-        cases.append((A, iB, ('jacobi', {'filter': True, 'weighting': 'diagonal'}), name))
-        cases.append((A, iB, ('jacobi', {'filter': True, 'weighting': 'local'}), name))
+        cases.append((A, iB, ('jacobi',
+                              {'filter_entries': True, 'weighting': 'diagonal'}), name))
+        cases.append((A, iB, ('jacobi',
+                              {'filter_entries': True, 'weighting': 'local'}), name))
 
         cases.append((A, B, ('energy', {'krylov': 'cg'}), name))
         cases.append((A, iB, ('energy', {'krylov': 'cgnr'}), name))
@@ -432,9 +434,12 @@ class TestEnergyMin(TestCase):
         #
         name = 'linear elasticity'
         A, B = linear_elasticity((10, 10))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'diagonal'}), name))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'local'}), name))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'diagonal'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'local'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((A, B, ('energy', {'degree': 2}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'postfilter': {'theta': 0.05}}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'prefilter': {'theta': 0.05}}), name))

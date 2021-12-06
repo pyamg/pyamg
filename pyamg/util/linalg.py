@@ -363,15 +363,15 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             #           evect[:,max_index].reshape(-1,1) )
             # print str(error) + "    " + str(sp.linalg.norm(e2))
 
-            if breakdown_flag:
-                warn(f'Breakdown occured in step {j}')
+            v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
 
-            if (np.abs(error)/np.abs(ev[max_index]) < tol) or breakdown_flag:
+            if (np.abs(error)/np.abs(ev[max_index]) < tol):
                 # halt if below relative tolerance
-                v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
                 break
 
-            v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
+            if breakdown_flag:
+                warn(f'Breakdown occured in step {j}')
+                break
         # end j-loop
 
         rho = np.abs(ev[max_index])

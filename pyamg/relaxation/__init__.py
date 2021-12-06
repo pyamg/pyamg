@@ -3,7 +3,7 @@
 from . import chebyshev
 from . import relaxation
 from . import smoothing
-from . import utils
+# from . import utils
 
 __all__ = ['chebyshev', 'relaxation', 'smoothing', 'utils']
 

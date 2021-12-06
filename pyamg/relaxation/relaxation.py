@@ -9,7 +9,7 @@ from scipy.linalg import lapack as la
 
 from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
 
-from ..params import set_tol
+from ..util.params import set_tol
 from .. import amg_core
 
 
