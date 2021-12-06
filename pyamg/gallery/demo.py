@@ -1,7 +1,6 @@
 """Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG with AMG."""
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from .laplacian import poisson
 from ..aggregation.aggregation import smoothed_aggregation_solver
@@ -41,6 +40,7 @@ def demo():
 
     # Plot convergence history
     try:
+        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
         plt.figure()
         plt.title('Convergence History')
         plt.xlabel('Iteration')
@@ -52,4 +52,4 @@ def demo():
         plt.legend()
         plt.show()
     except ImportError:
-        print("\n\nNote: pylab not available on your system.")
+        print("\nNote: matplotlib is needed for plotting.")
