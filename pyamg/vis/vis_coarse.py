@@ -229,20 +229,23 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
             write_basic_mesh(V=V, E2V=E2V, mesh_type='vertex',
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
-            import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
-            cdataF = np.where(cdata == 0)[0]
-            cdataC = np.where(cdata == 1)[0]
-            xC = V[cdataC, 0]
-            yC = V[cdataC, 1]
-            xF = V[cdataF, 0]
-            yF = V[cdataF, 1]
-            plt.figure()
-            plt.plot(xC, yC, 'r.', xF, yF, 'b.', clip_on=True)
-            plt.title('C/F splitting (red=coarse, blue=fine)')
-            plt.xlabel('x')
-            plt.ylabel('y')
-            plt.axis('off')
-            plt.show()
+            try:
+                import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+                cdataF = np.where(cdata == 0)[0]
+                cdataC = np.where(cdata == 1)[0]
+                xC = V[cdataC, 0]
+                yC = V[cdataC, 1]
+                xF = V[cdataF, 0]
+                yF = V[cdataF, 1]
+                plt.figure()
+                plt.plot(xC, yC, 'r.', xF, yF, 'b.', clip_on=True)
+                plt.title('C/F splitting (red=coarse, blue=fine)')
+                plt.xlabel('x')
+                plt.ylabel('y')
+                plt.axis('off')
+                plt.show()
+            except ImportError:
+                print("\nNote: matplotlib is needed for plotting.")
         else:
             raise ValueError('problem with outputtype')
 
