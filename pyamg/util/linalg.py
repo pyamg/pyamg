@@ -365,7 +365,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
 
             v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
 
-            if (np.abs(error)/np.abs(ev[max_index]) < tol):
+            if np.abs(error)/np.abs(ev[max_index]) < tol:
                 # halt if below relative tolerance
                 break
 

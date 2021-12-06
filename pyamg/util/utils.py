@@ -1886,6 +1886,15 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     ['gauss_seidel', None, None, None]
 
     """
+    # handle default value (mutable)
+    # improve_candidates=(('block_gauss_seidel',
+    #                      {'sweep': 'symmetric', 'iterations': 4}),
+    #                     None)
+    # -> make it a list
+    if isinstance(to_levelize, tuple):
+        if isinstance(to_levelize[0], tuple):
+            to_levelize = list(to_levelize)
+
     if isinstance(to_levelize, (str, tuple)):
         to_levelize = [to_levelize for i in range(max_levels)]
     elif isinstance(to_levelize, list):

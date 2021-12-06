@@ -28,3 +28,28 @@ jobs:
             python -m pip install pep8-naming
             #pep8-naming flake8-quotes flake8-bugbear flake8-docstrings flake8-builtins flake8-pytest-style flake8-simplify flake8-use-fstring
             python -m flake8 --statistics pyamg && echo "flake8 passed."
+
+    pylint:
+        name: pylint
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Setup Python
+          uses: actions/setup-python@v1
+          with:
+            python-version: '3.8'
+
+        - name: Install Dependencies
+          run: |
+            python -m pip install --upgrade pip
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+        - name: Install
+          run: pip install -e .
+
+        - name: Run pylint
+          run: |
+            python -m pip install pylint
+            pylint --rcfile setup.cfg pyamg
