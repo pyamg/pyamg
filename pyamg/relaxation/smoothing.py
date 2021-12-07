@@ -25,7 +25,6 @@
 
 """
 
-from ast import literal_eval
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import LinearOperator
@@ -182,8 +181,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn1, kwargs1 = _unpack_arg(presmoother[i])
         # get function handle
         try:
-            evalstr = f'setup_{str(fn1).lower()}'
-            setup_presmoother = literal_eval(evalstr)
+            setup_presmoother = _setup_call(str(fn1).lower())
         except NameError as e:
             raise NameError(f'Invalid presmoother method: {fn1}') from e
 
@@ -193,8 +191,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn2, kwargs2 = _unpack_arg(postsmoother[i])
         # get function handle
         try:
-            evalstr = f'setup_{str(fn2).lower()}'
-            setup_postsmoother = literal_eval(evalstr)
+            setup_postsmoother = _setup_call(str(fn2).lower())
         except NameError as e:
             raise NameError(f'Invalid postsmoother method: {fn2}') from e
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
@@ -238,8 +235,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             fn2, kwargs2 = _unpack_arg(postsmoother[i])
             # get function handle
             try:
-                evalstr = f'setup_{str(fn2).lower()}'
-                setup_postsmoother = literal_eval(evalstr)
+                setup_postsmoother = _setup_call(str(fn2).lower())
             except NameError as e:
                 raise NameError(f'Invalid postsmoother method: {fn2}') from e
 
@@ -281,8 +277,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             fn1, kwargs1 = _unpack_arg(presmoother[i])
             # get function handle
             try:
-                evalstr = f'setup_{str(fn1).lower()}'
-                setup_presmoother = literal_eval(evalstr)
+                setup_presmoother = _setup_call(str(fn1).lower())
             except NameError as e:
                 raise NameError(f'Invalid presmoother method: {fn1}') from e
 
@@ -698,3 +693,35 @@ def setup_none(lvl):
     def smoother(A, x, b):
         pass
     return smoother
+
+
+def _setup_call(fn):
+    """Helper function to call the setup methods.
+
+    This avoids use of eval()
+    """
+
+    setup_register = {
+        'gauss_seidel':           setup_gauss_seidel,
+        'jacobi':                 setup_jacobi,
+        'schwarz':                setup_schwarz,
+        'strength_based_schwarz': setup_strength_based_schwarz,
+        'block_jacobi':           setup_block_jacobi,
+        'block_gauss_seidel':     setup_block_gauss_seidel,
+        'richardson':             setup_richardson,
+        'sor':                    setup_sor,
+        'chebyshev':              setup_chebyshev,
+        'jacobi_ne':              setup_jacobi_ne,
+        'gauss_seidel_ne':        setup_gauss_seidel_ne,
+        'gauss_seidel_nr':        setup_gauss_seidel_nr,
+        'gmres':                  setup_gmres,
+        'cg':                     setup_cg,
+        'cgne':                   setup_cgne,
+        'cgnr':                   setup_cgnr,
+        'none':                   setup_none,
+    }
+
+    if fn not in setup_register:
+        raise ValueError(f'Function {fn} does not have a setup')
+
+    return setup_register[fn]
