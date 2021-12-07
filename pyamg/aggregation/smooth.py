@@ -5,11 +5,11 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 import scipy.linalg as la
-from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
+from .. import amg_core
+from ..util.utils import scale_rows, get_diagonal, get_block_diag, \
     unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
     truncate_rows
-from pyamg.util.linalg import approximate_spectral_radius
-import pyamg.amg_core
+from ..util.linalg import approximate_spectral_radius
 
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
@@ -47,12 +47,12 @@ def satisfy_constraints(U, B, BtBinv):
 
     # Apply constraints, noting that we need the conjugate of B
     # for use as Bi.H in local projection
-    pyamg.amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
-                                              num_block_rows, B.shape[1],
-                                              np.conjugate(np.ravel(B)),
-                                              UB, np.ravel(BtBinv),
-                                              U.indptr, U.indices,
-                                              np.ravel(U.data))
+    amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
+                                        num_block_rows, B.shape[1],
+                                        np.conjugate(np.ravel(B)),
+                                        UB, np.ravel(BtBinv),
+                                        U.indptr, U.indices,
+                                        np.ravel(U.data))
 
     return U
 
@@ -346,16 +346,16 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
     R = sparse.bsr_matrix((uones, pattern.indices,
                            pattern.indptr),
                           shape=(pattern.shape))
-    pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
-                                           np.ravel(A.data),
-                                           T.indptr, T.indices,
-                                           np.ravel(T.data),
-                                           R.indptr, R.indices,
-                                           np.ravel(R.data),
-                                           int(T.shape[0]/T.blocksize[0]),
-                                           int(T.shape[1]/T.blocksize[1]),
-                                           A.blocksize[0], A.blocksize[1],
-                                           T.blocksize[1])
+    amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
+                                     np.ravel(A.data),
+                                     T.indptr, T.indices,
+                                     np.ravel(T.data),
+                                     R.indptr, R.indices,
+                                     np.ravel(R.data),
+                                     int(T.shape[0]/T.blocksize[0]),
+                                     int(T.shape[1]/T.blocksize[1]),
+                                     A.blocksize[0], A.blocksize[1],
+                                     T.blocksize[1])
     R.data *= -1.0
 
     # Enforce R*B = 0
@@ -399,16 +399,16 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         #   with the added constraint that explicit zeros are in AP wherever
         #   AP = 0 and pattern does not  !!!!
         AP.data[:] = 0.0
-        pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
-                                               np.ravel(A.data),
-                                               P.indptr, P.indices,
-                                               np.ravel(P.data),
-                                               AP.indptr, AP.indices,
-                                               np.ravel(AP.data),
-                                               int(T.shape[0]/T.blocksize[0]),
-                                               int(T.shape[1]/T.blocksize[1]),
-                                               A.blocksize[0], A.blocksize[1],
-                                               P.blocksize[1])
+        amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
+                                         np.ravel(A.data),
+                                         P.indptr, P.indices,
+                                         np.ravel(P.data),
+                                         AP.indptr, AP.indices,
+                                         np.ravel(AP.data),
+                                         int(T.shape[0]/T.blocksize[0]),
+                                         int(T.shape[1]/T.blocksize[1]),
+                                         A.blocksize[0], A.blocksize[1],
+                                         P.blocksize[1])
 
         # Enforce AP*B = 0
         satisfy_constraints(AP, B, BtBinv)
@@ -514,16 +514,16 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                           shape=(pattern.shape))
     AT = -1.0*A*T
     R.data[:] = 0.0
-    pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
-                                           np.ravel(Ah.data),
-                                           AT.indptr, AT.indices,
-                                           np.ravel(AT.data),
-                                           R.indptr, R.indices,
-                                           np.ravel(R.data),
-                                           int(T.shape[0]/T.blocksize[0]),
-                                           int(T.shape[1]/T.blocksize[1]),
-                                           Ah.blocksize[0], Ah.blocksize[1],
-                                           T.blocksize[1])
+    amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
+                                     np.ravel(Ah.data),
+                                     AT.indptr, AT.indices,
+                                     np.ravel(AT.data),
+                                     R.indptr, R.indices,
+                                     np.ravel(R.data),
+                                     int(T.shape[0]/T.blocksize[0]),
+                                     int(T.shape[1]/T.blocksize[1]),
+                                     Ah.blocksize[0], Ah.blocksize[1],
+                                     T.blocksize[1])
 
     # Enforce R*B = 0
     satisfy_constraints(R, B, BtBinv)
@@ -569,16 +569,16 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         #  AP = 0 and pattern does not
         AP_temp = A*P
         AP.data[:] = 0.0
-        pyamg.amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
-                                               np.ravel(Ah.data),
-                                               AP_temp.indptr, AP_temp.indices,
-                                               np.ravel(AP_temp.data),
-                                               AP.indptr, AP.indices,
-                                               np.ravel(AP.data),
-                                               int(T.shape[0]/T.blocksize[0]),
-                                               int(T.shape[1]/T.blocksize[1]),
-                                               Ah.blocksize[0],
-                                               Ah.blocksize[1], T.blocksize[1])
+        amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
+                                         np.ravel(Ah.data),
+                                         AP_temp.indptr, AP_temp.indices,
+                                         np.ravel(AP_temp.data),
+                                         AP.indptr, AP.indices,
+                                         np.ravel(AP.data),
+                                         int(T.shape[0]/T.blocksize[0]),
+                                         int(T.shape[1]/T.blocksize[1]),
+                                         Ah.blocksize[0],
+                                         Ah.blocksize[1], T.blocksize[1])
         del AP_temp
 
         # Enforce AP*B = 0
@@ -730,16 +730,16 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
                           shape=(pattern.shape))
-    pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
-                                           np.ravel(A.data),
-                                           T.indptr, T.indices,
-                                           np.ravel(T.data),
-                                           R.indptr, R.indices,
-                                           np.ravel(R.data),
-                                           int(T.shape[0]/T.blocksize[0]),
-                                           int(T.shape[1]/T.blocksize[1]),
-                                           A.blocksize[0], A.blocksize[1],
-                                           T.blocksize[1])
+    amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
+                                     np.ravel(A.data),
+                                     T.indptr, T.indices,
+                                     np.ravel(T.data),
+                                     R.indptr, R.indices,
+                                     np.ravel(R.data),
+                                     int(T.shape[0]/T.blocksize[0]),
+                                     int(T.shape[1]/T.blocksize[1]),
+                                     A.blocksize[0], A.blocksize[1],
+                                     T.blocksize[1])
     R.data *= -1.0
 
     # Apply diagonal preconditioner
@@ -781,16 +781,16 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         #   with the added constraint that explicit zeros are in AP wherever
         #   AP = 0 and pattern does not
         AV.data[:] = 0.0
-        pyamg.amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
-                                               np.ravel(A.data),
-                                               V[i].indptr, V[i].indices,
-                                               np.ravel(V[i].data),
-                                               AV.indptr, AV.indices,
-                                               np.ravel(AV.data),
-                                               int(T.shape[0]/T.blocksize[0]),
-                                               int(T.shape[1]/T.blocksize[1]),
-                                               A.blocksize[0], A.blocksize[1],
-                                               T.blocksize[1])
+        amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
+                                         np.ravel(A.data),
+                                         V[i].indptr, V[i].indices,
+                                         np.ravel(V[i].data),
+                                         AV.indptr, AV.indices,
+                                         np.ravel(AV.data),
+                                         int(T.shape[0]/T.blocksize[0]),
+                                         int(T.shape[1]/T.blocksize[1]),
+                                         A.blocksize[0], A.blocksize[1],
+                                         T.blocksize[1])
 
         if weighting in ('local', 'diagonal'):
             AV = scale_rows(AV, Dinv)

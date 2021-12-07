@@ -3,8 +3,8 @@
 
 import numpy as np
 from scipy import sparse
-from pyamg import amg_core
-from pyamg.graph import lloyd_cluster
+from .. import amg_core
+from ..graph import lloyd_cluster
 
 
 def standard_aggregation(C):

@@ -6,14 +6,14 @@ import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
     isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
 
-from pyamg.multilevel import MultilevelSolver
-from pyamg.strength import symmetric_strength_of_connection,\
+from ..multilevel import MultilevelSolver
+from ..strength import symmetric_strength_of_connection,\
     classical_strength_of_connection, evolution_strength_of_connection
-from pyamg.relaxation.smoothing import change_smoothers, rho_D_inv_A
-from pyamg.krylov import gmres
-from pyamg.util.linalg import norm, approximate_spectral_radius
-from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
+from ..krylov import gmres
+from ..util.linalg import norm, approximate_spectral_radius
+from ..util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
+from ..relaxation.smoothing import change_smoothers, rho_D_inv_A
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
     gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
 from .aggregation import smoothed_aggregation_solver
