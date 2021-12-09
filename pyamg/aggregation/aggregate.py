@@ -196,6 +196,7 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
         None     G[i,j] = C[i,j]
         'abs'    G[i,j] = abs(C[i,j])
         'inv'    G[i,j] = 1.0/abs(C[i,j])
+        'inv+'    G[i,j] = 1.0/abs(C[i,j])
         'unit'   G[i,j] = 1
         'sub'    G[i,j] = C[i,j] - min(C)
         =======  ===========================
@@ -286,7 +287,8 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     return AggOp, centers
 
 
-def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5, rebalance_iters=5):
+def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
+                               rebalance_iters=5, pad=None, A=None):
     """Aggregate nodes using Balanced Lloyd Clustering.
 
     Parameters
@@ -310,6 +312,10 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5, rebalance
         Maximum number of iterations to perform
     rebalance_iters : int
         Number of rebalance iterations to perform in balanced Lloyd clustering
+    pad : float
+        A pad for the measure with the sparsity of A.
+    A : csr_matrix
+        Sparse matrix to pad with.
 
     Returns
     -------
@@ -318,6 +324,14 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5, rebalance
         of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
     centers : array
         array of centers or Cpts, i.e., centers[i] = root node of aggregate i
+
+    Notes
+    -----
+    If pad is not None, then C will be augmented by
+        C = C + E
+    where E=A and E.data = pad.  The goal is to "fix up" the connectivity of G.
+    As an example, if pad is small and if measure='inv' is used, then C + E
+    will have "long" edges for the pad.
 
     See Also
     --------
@@ -349,6 +363,18 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5, rebalance
 
     if naggs <= 0 or naggs > n:
         raise ValueError('number of aggregates must be >=1 and <=n)')
+
+    if pad is not None:
+        if A is None:
+            raise ValueError('Matrix A is required if pad is used')
+
+        if not sparse.isspmatrix_csr(A):
+            raise TypeError('Matrix A is required to be CSR')
+
+        Epad = A.copy()
+        Epad.data[:] = pad
+
+        C += Epad
 
     if measure is None:
         data = C.data

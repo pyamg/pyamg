@@ -350,6 +350,8 @@ def extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'lloyd':
         AggOp, Cnodes = lloyd_aggregation(C, **kwargs)
     elif fn == 'balanced lloyd':
+        if 'pad' in kwargs:
+            kwargs['A'] = A
         AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
