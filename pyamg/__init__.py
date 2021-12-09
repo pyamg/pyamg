@@ -1,12 +1,15 @@
 """PyAMG: Algebraic Multigrid Solvers in Python"""
-from __future__ import absolute_import
 
-import numpy as np
 import re
+import warnings
+import numpy as np
 import scipy as sp
 
-from .version import git_revision as __git_revision__
+from .version import version_tuple as __version_tuple__
 from .version import version as __version__
+
+from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, util, vis)
+from . import (blackbox, graph, graph_ref, multilevel, strength)
 
 from .multilevel import coarse_grid_solver, multilevel_solver
 from .classical import ruge_stuben_solver
@@ -14,15 +17,15 @@ from .aggregation import smoothed_aggregation_solver, rootnode_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
-import warnings
+__all__ = ['__version_tuple__', '__version__',
+           'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation',
+           'util', 'vis',
+           'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
+           'coarse_grid_solver', 'multilevel_solver',
+           'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',
+           'demo', 'solve', 'solver', 'solver_configuration']
 
-__all__ = [__git_revision__, __version__,
-           coarse_grid_solver, multilevel_solver,
-           ruge_stuben_solver, smoothed_aggregation_solver, rootnode_solver,
-           demo, solve, solver, solver_configuration]
-
-__all__ = [s for s in dir() if not s.startswith('_')]
-__all__ += ['test', '__version__']
+__all__ += ['test']
 
 __doc__ += """
 

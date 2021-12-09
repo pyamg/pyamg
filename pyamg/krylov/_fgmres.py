@@ -8,9 +8,6 @@ from pyamg.util.linalg import norm
 from pyamg import amg_core
 
 
-__all__ = ['fgmres']
-
-
 def mysign(x):
     if x == 0.0:
         return 1.0
@@ -286,6 +283,11 @@ def fgmres(A, b, x0=None, tol=1e-5,
                     break
                 if residuals is not None:
                     residuals.append(normr)
+
+                if callback is not None:
+                    y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.dot(Z[:, 0:inner+1], y)
+                    callback(x + update)
 
             niter += 1
 

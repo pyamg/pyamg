@@ -1,0 +1,25 @@
+name: CI-lint
+
+on:
+  pull_request:
+  push:
+
+
+jobs:
+    flake8:
+        name: flake8
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Setup Python
+          uses: actions/setup-python@v1
+          with:
+            python-version: '3.8'
+
+        - name: Run flake8
+          run: |
+            python -m pip install flake8
+            #pep8-naming flake8-quotes flake8-bugbear flake8-docstrings flake8-builtins flake8-pytest-style flake8-simplify flake8-use-fstring
+            python -m flake8 --statistics pyamg && echo "flake8 passed."

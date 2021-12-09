@@ -1,10 +1,8 @@
 """Adaptive Smoothed Aggregation."""
-from __future__ import absolute_import
 
 
 from warnings import warn
 import numpy as np
-import scipy as sp
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
     isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
 
@@ -23,8 +21,6 @@ from .smooth import jacobi_prolongation_smoother,\
 from .tentative import fit_candidates
 from pyamg.util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
-
-__all__ = ['adaptive_sa_solver']
 
 
 def eliminate_local_candidates(x, AggOp, A, T, Ca=1.0, **kwargs):
@@ -156,9 +152,10 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Maximum number of variables permitted on the coarse grid.
     prepostsmoother : string or dict
         Pre- and post-smoother used in the adaptive method
-    strength : ['symmetric', 'classical', 'evolution', ('predefined', {'C': csr_matrix}), None]
+    strength : ['symmetric', 'classical', 'evolution', None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  See smoothed_aggregation_solver(...) documentation.
+        Predefined strength may be used with ('predefined', {'C': csr_matrix}).
     aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_matrix})]
         Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
         documentation.
@@ -206,8 +203,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     >>> import numpy as np
     >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
     >>> [asa,work] = adaptive_sa_solver(A,num_candidates=1)
-    >>> residuals=[]
-    >>> x=asa.solve(b=np.ones((A.shape[0],)), x0=np.ones((A.shape[0],)), residuals=residuals)
+    >>> res=[]
+    >>> x=asa.solve(b=np.ones((A.shape[0],)), x0=np.ones((A.shape[0],)), residuals=res)
 
     References
     ----------
@@ -358,7 +355,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                         max_levels, max_coarse, aggregate, prepostsmoother,
                         smooth, strength, work, initial_candidate=None):
-    """Compute aggregation and the first near-nullspace candidate following Algorithm 3 in Brezina et al.
+    """Compute aggregation and the first near-nullspace candidate.
+
 
     Parameters
     ----------
@@ -366,6 +364,10 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         number of test relaxation iterations
     epsilon
         minimum acceptable relaxation convergence factor
+
+    Notes
+    -----
+    This follows Algorithm 3 in Brezina et al.
 
     References
     ----------

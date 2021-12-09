@@ -1,17 +1,14 @@
 """Examples stored in files."""
 
-
 import os
 from glob import glob
 
 from scipy.io import loadmat
 
-__all__ = ['load_example']
-
 base_dir = os.path.split(__file__)[0]
 example_dir = os.path.join(base_dir, 'example_data')
 example_files = glob(os.path.join(example_dir, '*.mat'))
-example_names = sorted([os.path.split(name)[1][:-4] for name in example_files])
+example_names = sorted(os.path.split(name)[1][:-4] for name in example_files)
 
 
 def load_example(name):

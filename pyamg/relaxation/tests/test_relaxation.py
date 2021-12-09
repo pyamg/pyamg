@@ -673,7 +673,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N, format='csr')
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)],
+                    [0, -1, 1], N, N, format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')
@@ -1159,8 +1160,9 @@ class TestComplexRelaxation(TestCase):
         A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
                     format='csr')
         A.data = A.data + 1.0j*A.data
-        soln = np.array([11./15. + 1.0j/15., 11./15. +
-                      31.0j/15, 77./15. - 53.0j/15.])
+        soln = np.array([11./15. + 1.0j/15.,
+                         11./15. + 31.0j/15,
+                         77./15. - 53.0j/15.])
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
@@ -1175,8 +1177,9 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
         x_copy = x.copy()
-        solnpart = np.array([11./15. + 1.0j/15., 11./15. +
-                          31.0j/15, 77./15. - 53.0j/15.])
+        solnpart = np.array([11./15. + 1.0j/15.,
+                             11./15. + 31.0j/15,
+                             77./15. - 53.0j/15.])
         soln = 2.0/3.0*x_copy + 1.0/3.0*solnpart
 
         jacobi_ne(A, x, b, omega=1.0/3.0)
@@ -1466,11 +1469,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
-                   [18.2, 19.6, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1., 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2, 19.6, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1., 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1524,11 +1527,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
-                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1.0j, 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1.0j, 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1568,11 +1571,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
-                   [18.2, 19.6, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1., 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2, 19.6, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1., 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1668,11 +1671,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
-                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1.0j, 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1.0j, 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))

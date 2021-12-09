@@ -1,13 +1,12 @@
 import warnings
 from warnings import warn
+
 import numpy as np
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
 from pyamg.util.linalg import norm
 from pyamg import amg_core
-
-__all__ = ['gmres_householder']
 
 
 def mysign(x):
@@ -55,7 +54,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial preconditioned residual
+        preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
@@ -289,6 +289,13 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
                 if residuals is not None:
                     residuals.append(normr)
 
+                if callback is not None:
+                    y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
+                    update = np.zeros(x.shape, dtype=x.dtype)
+                    amg_core.householder_hornerscheme(update, np.ravel(W), np.ravel(y),
+                                                      n, inner, -1, -1)
+                    callback(x + update)
+
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space, V.  Solve inner+1 x inner+1
@@ -363,7 +370,7 @@ if __name__ == '__main__':
     t1 = time.time()
     (x, flag) = gmres_householder(A, b, x0, tol=1e-8, maxiter=500)
     t2 = time.time()
-    print('%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0))
+    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*x)))
     print('info flag = %d' % (flag))
 
@@ -371,6 +378,6 @@ if __name__ == '__main__':
     # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
     (y, flag) = igmres(A, b, x0, tol=1e-8)
     t2 = time.time()
-    print('\n%s took %0.3f ms' % ('linalg gmres', (t2-t1)*1000.0))
+    print('\n{} took {:0.3f} ms'.format('linalg gmres', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*y)))
     print('info flag = %d' % (flag))

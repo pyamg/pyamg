@@ -1,10 +1,6 @@
 """Compute coefficients for polynomial smoothers."""
-from __future__ import print_function
 
 import numpy as np
-
-
-__all__ = ['chebyshev_polynomial_coefficients']
 
 
 def chebyshev_polynomial_coefficients(a, b, degree):
@@ -36,7 +32,7 @@ def chebyshev_polynomial_coefficients(a, b, degree):
 
     """
     if a >= b or a <= 0:
-        raise ValueError('invalid interval [%s,%s]' % (a, b))
+        raise ValueError(f'invalid interval [{a},{b}]')
 
     # Chebyshev roots for the interval [-1,1]
     std_roots = np.cos(np.pi * (np.arange(degree) + 0.5) / degree)

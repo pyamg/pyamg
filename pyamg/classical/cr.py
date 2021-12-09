@@ -1,16 +1,12 @@
 """Compatible Relaxation."""
-from __future__ import print_function
 
+from copy import deepcopy
 import numpy as np
-import scipy as sp
 from scipy.linalg import norm
 from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
-from copy import deepcopy
 
-from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 from pyamg import amg_core
-
-__all__ = ['CR', 'binormalize']
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 
 
 def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
@@ -44,7 +40,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
     """
     n = A.shape[0]    # problem size
-    numax = nu
+    # numax = nu
     z = np.zeros((n,))
     e = deepcopy(B[:, 0])
     e[Cindex] = 0.0
@@ -339,7 +335,6 @@ def rowsum_stdev(x, beta):
 
     """
     n = x.size
-    betabar = (1.0/n) * np.dot(x, beta)
-    stdev = np.sqrt((1.0/n) *
-                    np.sum(np.power(np.multiply(x, beta) - betabar, 2)))
-    return stdev/betabar
+    betabar = (1.0 / n) * np.dot(x, beta)
+    stdev = np.sqrt((1.0 / n) * np.sum(np.power(np.multiply(x, beta) - betabar, 2)))
+    return stdev / betabar

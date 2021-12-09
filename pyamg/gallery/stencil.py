@@ -1,11 +1,7 @@
 """Construct sparse matrix from a local stencil."""
-from __future__ import print_function
-
 
 import numpy as np
 import scipy.sparse as sparse
-
-__all__ = ['stencil_grid']
 
 
 def stencil_grid(S, grid, dtype=None, format=None):

@@ -35,6 +35,7 @@ class TestDiameter(np.testing.TestCase):
 
             h = h / 2
 
+
 class TestQuadratic(np.testing.TestCase):
     """
     Testing for generate_quadratic
@@ -92,10 +93,13 @@ class TestL2Norm(np.testing.TestCase):
         # 2 = sqrt( integrate(x*y + 1, (x,-1,1), (y,-1,1))).evalf()
         np.testing.assert_almost_equal(fem.l2norm(np.sqrt(X*Y+1), mesh), 2, decimal=2)
 
-        # 0.545351286587159 = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
-        np.testing.assert_almost_equal(fem.l2norm(np.sin(X)*np.sin(Y), mesh), 0.54, decimal=2)
+        # 0.545351286587159 =
+        # sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        norm1 = fem.l2norm(np.sin(X)*np.sin(Y), mesh)
+        np.testing.assert_almost_equal(norm1, 0.54, decimal=2)
 
-        # 0.288675134594813 = = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        # 0.288675134594813 =
+        # sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
         h = 1
         V = np.array(
             [[0, 0],
@@ -105,18 +109,21 @@ class TestL2Norm(np.testing.TestCase):
             [[0, 1, 2]])
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
-        V2, E2 = mesh.V2, mesh.E2
+        V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
         np.testing.assert_almost_equal(fem.l2norm(X, mesh), 0.2886, decimal=4)
 
-        # 0.545351286587159 = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
+        # 0.545351286587159
+        # = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
         V = data['vertices']
         E = data['elements']
         mesh = fem.mesh(V, E)
         mesh.generate_quadratic()
-        V2, E2 = mesh.V2, mesh.E2
+        V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
-        np.testing.assert_almost_equal(fem.l2norm(np.sin(X)*np.sin(Y), mesh), 0.54, decimal=2)
+        norm1 = fem.l2norm(np.sin(X)*np.sin(Y), mesh)
+        np.testing.assert_almost_equal(norm1, 0.54, decimal=2)
+
 
 class TestGradGradFEM(np.testing.TestCase):
     def test_gradgradfem(self):
@@ -145,16 +152,15 @@ class TestGradGradFEM(np.testing.TestCase):
         # 3 x 3 mesh
         h = 1
         V = np.array(
-            [[  0,  0],
-             [  h,  0],
-             [2*h,  0],
-             [  0,  h],
-             [  h,  h],
-             [2*h,  h],
-             [  0,2*h],
-             [  h,2*h],
-             [2*h,2*h],
-            ])
+            [[  0,   0],
+             [  h,   0],
+             [2*h,   0],
+             [  0,   h],
+             [  h,   h],
+             [2*h,   h],
+             [  0, 2*h],
+             [  h, 2*h],
+             [2*h, 2*h]])
         E = np.array(
             [[0, 1, 3],
              [1, 2, 4],
@@ -180,8 +186,11 @@ class TestGradGradFEM(np.testing.TestCase):
         np.testing.assert_array_almost_equal(A.toarray(), AA)
 
         # non zero f, all zero g
-        f = lambda x, y: 0*x + 1.0
-        g = lambda x, y: 0*x + 0.0
+        def f(x, y):
+            return 0*x + 0*y + 1.0
+
+        def g(x, y):
+            return 0*x + 0*y + 0.0
 
         tol = 1e-12
         X, Y = V[:, 0], V[:, 1]
@@ -214,9 +223,14 @@ class TestGradGradFEM(np.testing.TestCase):
         np.testing.assert_array_almost_equal(b, bb)
 
         # non zero boundary
-        f = lambda x, y: 0*x + 1.0
-        g = lambda x, y: 0*x + 0.0
-        g1 = lambda x, y: 0*x + 1.0
+        def f(x, y):
+            return 0*x + 0*y + 1.0
+
+        def g(x, y):
+            return 0*x + 0*y + 0.0
+
+        def g1(x, y):
+            return 0*x + 0*y + 1.0
 
         tol = 1e-12
         X, Y = V[:, 0], V[:, 1]

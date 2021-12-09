@@ -1,16 +1,16 @@
 import numpy as np
 from scipy import linalg
 from scipy.sparse import csr_matrix
-from scipy.linalg import svd, eigvals, pinv
+from scipy.linalg import svd, pinv
 
-from pyamg.util.linalg import approximate_spectral_radius,\
-    infinity_norm, norm, condest, cond,\
-    ishermitian, pinv_array
+from numpy.testing import (TestCase, assert_almost_equal, assert_equal,
+                           assert_array_almost_equal)
+
+from pyamg.util.linalg import (approximate_spectral_radius,
+                               infinity_norm, norm, condest, cond,
+                               ishermitian, pinv_array)
 
 from pyamg import gallery
-
-from numpy.testing import TestCase, assert_almost_equal, assert_equal,\
-    assert_array_almost_equal
 
 
 class TestLinalg(TestCase):
@@ -146,8 +146,8 @@ class TestComplexLinalg(TestCase):
         cases.append(np.array([[-2.0-2.4j, 0], [0, 1.21]]))
 
         cases.append(np.array([[100+1.0j, 0, 0],
-                             [0, 101-1.0j, 0],
-                             [0, 0, 99+9.9j]]))
+                               [0, 101-1.0j, 0],
+                               [0, 0, 99+9.9j]]))
 
         for i in range(1, 6):
             cases.append(np.array(np.random.rand(i, i)+1.0j*np.random.rand(i, i)))

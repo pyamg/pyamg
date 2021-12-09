@@ -432,7 +432,9 @@ class TestSolverPerformance(TestCase):
         sa_old = smoothed_aggregation_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(sa_old.levels[-1].A.toarray() - sa_new.levels[-1].A.toarray())).max() < 0.01)
+            Ac_old = sa_old.levels[-1].A.toarray()
+            Ac_new = sa_new.levels[-1].A.toarray()
+            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
             sa_old = sa_new
 
 

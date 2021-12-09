@@ -6,15 +6,12 @@ vis_splitting:        visualize C/F splittings through vertex elements
 vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 
 """
-from __future__ import absolute_import
 
 
 import warnings
 import numpy as np
 from scipy.sparse import csr_matrix, coo_matrix, triu
 from .vtk_writer import write_basic_mesh, write_vtu
-
-__all__ = ['vis_splitting', 'vis_aggregate_groups']
 
 
 def vis_aggregate_groups(Verts, E2V, Agg, mesh_type, output='vtk',

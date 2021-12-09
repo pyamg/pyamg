@@ -1,5 +1,4 @@
 """Methods to smooth tentative prolongation operators."""
-from __future__ import print_function
 
 
 import numpy as np
@@ -10,9 +9,6 @@ from pyamg.util.utils import scale_rows, get_diagonal, get_block_diag, \
     truncate_rows
 from pyamg.util.linalg import approximate_spectral_radius
 import pyamg.amg_core
-
-__all__ = ['jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
-           'energy_prolongation_smoother']
 
 
 # Satisfy_Constraints is a helper function for prolongation smoothing routines
@@ -1125,8 +1121,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # If using root nodes and B has more columns that A's blocksize, then
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
-    if ((Cpt_params[0] and (B.shape[1] > A.blocksize[0])) or
-            ('secondpass' in postfilter)):
+    if ((Cpt_params[0] and (B.shape[1] > A.blocksize[0]))
+       or ('secondpass' in postfilter)):
         T = filter_operator(T, Sparsity_Pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
@@ -1149,8 +1145,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     # Filter entries in P, only in the rootnode case,
     # i.e., Cpt_params[0] == True
-    if ((len(postfilter) == 0) or ('secondpass' in postfilter) or
-            (Cpt_params[0] is False)):
+    if ((len(postfilter) == 0)
+       or ('secondpass' in postfilter)
+       or (Cpt_params[0] is False)):
         return T
     else:
         if 'theta' in postfilter and 'k' in postfilter:

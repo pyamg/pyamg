@@ -5,9 +5,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 from pyamg.util.linalg import norm
 
 
-__all__ = ['minimal_residual']
-
-
 def minimal_residual(A, b, x0=None, tol=1e-5,
                      maxiter=None, M=None,
                      callback=None, residuals=None):
@@ -35,7 +32,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial preconditioned residual
+        preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual
 
     Returns
     -------

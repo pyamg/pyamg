@@ -5,8 +5,6 @@ import numpy as np
 from scipy.sparse import isspmatrix_csr, bsr_matrix
 from pyamg import amg_core
 
-__all__ = ['fit_candidates']
-
 
 def fit_candidates(AggOp, B, tol=1e-10):
     """Fit near-nullspace candidates to form the tentative prolongator.
@@ -127,8 +125,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
         raise ValueError('expected 2d array for argument B')
 
     if B.shape[0] % AggOp.shape[0] != 0:
-        raise ValueError('dimensions of AggOp %s and B %s are \
-                          incompatible' % (AggOp.shape, B.shape))
+        raise ValueError('dimensions of AggOp {} and B {} are \
+                          incompatible'.format(AggOp.shape, B.shape))
 
     N_fine, N_coarse = AggOp.shape
 

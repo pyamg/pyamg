@@ -49,6 +49,7 @@ class TestClustering(TestCase):
                        [0, 1],
                        [1, 1],
                        [2, 1]])
+        del xy
         G = np.zeros((6, 6))
         G[0, [1, 3, 4]] = 1
         G[1, [0, 2, 3, 4, 5]] = 1
@@ -125,6 +126,7 @@ class TestClustering(TestCase):
                        [3, 1],
                        [3, 0],
                        [4, 0]])
+        del xy
         G = np.zeros((12, 12))
         G[0, [1, 2]] = 1
         G[1, [0, 2, 7]] = 1
@@ -199,6 +201,7 @@ class TestClustering(TestCase):
                        [3, 1],
                        [3, 0],
                        [4, 0]])
+        del xy
         G = np.zeros((12, 12))
         G[0, [1]] = 1
         G[1, [2, 7]] = 1

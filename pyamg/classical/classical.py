@@ -1,5 +1,4 @@
 """Classical AMG (Ruge-Stuben AMG)."""
-from __future__ import absolute_import
 
 
 from warnings import warn
@@ -16,8 +15,6 @@ from .interpolate import direct_interpolation
 from . import split
 from .cr import CR
 
-__all__ = ['ruge_stuben_solver']
-
 
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
@@ -31,7 +28,8 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance', 'algebraic_distance','affinity', 'energy_based', None]
+    strength : ['symmetric', 'classical', 'evolution', 'distance',
+                'algebraic_distance','affinity', 'energy_based', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -107,7 +105,7 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, keep)
+        _extend_hierarchy(levels, strength, CF, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -115,7 +113,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, keep):
+def _extend_hierarchy(levels, strength, CF, keep):
     """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):

@@ -1,12 +1,8 @@
 """Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG with AMG."""
-from __future__ import print_function
 
-import scipy as sp
 import numpy as np
 from pyamg.gallery import poisson
 from pyamg.aggregation import smoothed_aggregation_solver
-
-__all__ = ['demo']
 
 
 def demo():

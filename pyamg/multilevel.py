@@ -4,7 +4,6 @@
 from warnings import warn
 
 import scipy as sp
-import scipy.linalg
 import numpy as np
 
 from pkg_resources import parse_version  # included with setuptools
@@ -13,8 +12,6 @@ if parse_version(sp.__version__) >= parse_version('1.7'):
     from scipy.linalg import pinv
 else:
     from scipy.linalg import pinv2 as pinv
-
-__all__ = ['multilevel_solver', 'coarse_grid_solver']
 
 
 class multilevel_solver:
@@ -78,7 +75,7 @@ class multilevel_solver:
             pass
 
     def __init__(self, levels, coarse_solver='pinv'):
-        """Class constructor responsible for initializing the cycle and ensuring the list of levels is complete.
+        """Class constructor to initialize the cycle and ensure the list of levels is complete.
 
         Parameters
         ----------
@@ -100,7 +97,8 @@ class multilevel_solver:
 
             Sparse iterative methods:
 
-            * the name of any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').  Methods in pyamg.krylov take precedence.
+            * any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').
+            * Methods in pyamg.krylov take precedence.
             * relaxation method, such as 'gauss_seidel' or 'jacobi',
 
             Dense methods:
@@ -169,7 +167,7 @@ class multilevel_solver:
         output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
         output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
 
-        total_nnz = sum([level.A.nnz for level in self.levels])
+        total_nnz = sum(level.A.nnz for level in self.levels)
 
         output += '  level   unknowns     nonzeros\n'
         for n, level in enumerate(self.levels):
@@ -260,7 +258,7 @@ class multilevel_solver:
             Number of nonzeros in the matrix on the finest level
 
         """
-        return sum([level.A.nnz for level in self.levels]) /\
+        return sum(level.A.nnz for level in self.levels) /\
             float(self.levels[0].A.nnz)
 
     def grid_complexity(self):
@@ -271,7 +269,7 @@ class multilevel_solver:
             Number of unknowns on the finest level
 
         """
-        return sum([level.A.shape[0] for level in self.levels]) /\
+        return sum(level.A.shape[0] for level in self.levels) /\
             float(self.levels[0].A.shape[0])
 
     def psolve(self, b):
@@ -442,7 +440,7 @@ class multilevel_solver:
                 if return_info:
                     return x, info
                 return x
-            except TypeError as e:
+            except TypeError:
                 # try the scipy.sparse.linalg.isolve style interface,
                 # which requires a call back function if a residual
                 # history is desired

@@ -404,13 +404,30 @@ class TestEnergyMin(TestCase):
         cases.append((A, iB, ('energy', {'krylov': 'gmres'}), name))
 
         name = 'gauge laplacian bsr'
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3, 'postfilter': {'theta': 0.05}}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3, 'prefilter': {'theta': 0.05}}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), iB, ('energy', {'krylov': 'cg'}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3, 'postfilter': {'theta': 0.05}}), name))
-        cases.append((A.tobsr(blocksize=(2, 2)), B, ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3, 'prefilter': {'theta': 0.05}}), name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'cgnr', 'degree': 2,
+                                 'maxiter': 3, 'postfilter': {'theta': 0.05}}),
+                     name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'cgnr', 'degree': 2,
+                      'maxiter': 3, 'prefilter': {'theta': 0.05}}),
+                     name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}),
+                     name))
+        cases.append((A.tobsr(blocksize=(2, 2)), iB,
+                     ('energy', {'krylov': 'cg'}), name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
+                     name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                      'maxiter': 3, 'postfilter': {'theta': 0.05}}),
+                     name))
+        cases.append((A.tobsr(blocksize=(2, 2)), B,
+                     ('energy', {'krylov': 'gmres', 'degree': 2,
+                      'maxiter': 3, 'prefilter': {'theta': 0.05}}),
+                     name))
 
         #
         name = 'linear elasticity'
@@ -426,7 +443,8 @@ class TestEnergyMin(TestCase):
 
         # Classic SA cases
         for A, B, smooth, name in cases:
-            ml = smoothed_aggregation_solver(A, B=B, max_coarse=1, max_levels=2, smooth=smooth)
+            ml = smoothed_aggregation_solver(A, B=B, max_coarse=1,
+                                             max_levels=2, smooth=smooth)
             P = ml.levels[0].P
             B = ml.levels[0].B
             R = ml.levels[1].B
@@ -535,8 +553,8 @@ class TestEnergyMin(TestCase):
             smooth[1]['postfilter'] = postfilter
             ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
                                         smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz >
-                         ml_filter.levels[0].P.nnz, True)
+            assert_equal(ml_nofilter.levels[0].P.nnz
+                         > ml_filter.levels[0].P.nnz, True)
 
     def test_prefilter(self):
         """Check that using prefilter reduces NNZ in P"""
@@ -588,8 +606,8 @@ class TestEnergyMin(TestCase):
             smooth[1]['prefilter'] = prefilter
             ml_filter = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
                                         smooth=smooth, keep=True)
-            assert_equal(ml_nofilter.levels[0].P.nnz >
-                         ml_filter.levels[0].P.nnz, True)
+            assert_equal(ml_nofilter.levels[0].P.nnz
+                         > ml_filter.levels[0].P.nnz, True)
 
 # class TestSatisfyConstaints(TestCase):
 #    def test_scalar(self):

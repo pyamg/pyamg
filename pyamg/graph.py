@@ -1,22 +1,10 @@
 """Algorithms related to graphs."""
-from __future__ import absolute_import
 
 import warnings
 import numpy as np
-import scipy as sp
 from scipy import sparse
-import scipy.sparse.csgraph
 
 from . import amg_core
-
-__all__ = ['maximal_independent_set', 'vertex_coloring',
-           'bellman_ford', 'balanced_lloyd_cluster',
-           'lloyd_cluster', 'connected_components']
-
-from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
-
-__all__ += ['bellman_ford_reference', 'bellman_ford_balanced_reference']
-
 
 def asgraph(G):
     if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):

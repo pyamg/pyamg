@@ -361,7 +361,7 @@ def l2norm(u, mesh):
     if mesh.degree == 2:
         I = np.arange(6)
 
-        def basis(x, y):
+        def basis(x, y):  # noqa
             return np.array([(1-x-y)*(1-2*x-2*y),
                              x*(2*x-1),
                              y*(2*y-1),
@@ -428,7 +428,8 @@ class mesh:
         """generate a quadratic mesh
         """
         if self.V2 is None:
-            self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E, return_edges=True)
+            self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E,
+                                                              return_edges=True)
             self.X2 = self.V2[:, 0]
             self.Y2 = self.V2[:, 1]
             self.newID = self.nv + np.arange(self.Edges.shape[0])
@@ -482,15 +483,16 @@ class mesh:
         W = np.array(G.sum(axis=1)).flatten()
 
         Vnew = self.V.copy()
-        edgelength = (Vnew[edge0, 0] - Vnew[edge1, 0])**2 + (Vnew[edge0, 1] - Vnew[edge1, 1])**2
+        edgelength = (Vnew[edge0, 0] - Vnew[edge1, 0])**2 +\
+                     (Vnew[edge0, 1] - Vnew[edge1, 1])**2
 
         maxit = 100
         for it in range(maxit):
             Vnew = G @ Vnew
-            Vnew /= W[:, None] # scale the columns by 1/W
-            Vnew[bid,:] = self.V[bid, :]
-            newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2 +
-                                    (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
+            Vnew /= W[:, None]  # scale the columns by 1/W
+            Vnew[bid, :] = self.V[bid, :]
+            newedgelength = np.sqrt((Vnew[edge0, 0] - Vnew[edge1, 0])**2
+                                    + (Vnew[edge0, 1] - Vnew[edge1, 1])**2)
             move = np.max(np.abs(newedgelength - edgelength) / newedgelength)
             edgelength = newedgelength
             if move < tol:
@@ -498,6 +500,7 @@ class mesh:
 
         self.V = Vnew
         return it
+
 
 def gradgradform(mesh, kappa=None, f=None, degree=1):
     """Finite element discretization of a Poisson problem.
@@ -599,13 +602,11 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     if degree == 1:
         E = mesh.E
-        V = mesh.V
         X = mesh.X
         Y = mesh.Y
 
     if degree == 2:
         E = mesh.E2
-        V = mesh.V2
         X = mesh.X2
         Y = mesh.Y2
 
@@ -712,7 +713,6 @@ def divform(mesh):
     X, Y = mesh.X, mesh.Y
     ne = mesh.ne
     E = mesh.E2
-    V = mesh.V2
 
     m1 = 6
     m2 = 3
@@ -741,7 +741,7 @@ def divform(mesh):
                        [-0.10810301816806966, -0.10810301816807061],
                        [-0.78379396366386020, -0.10810301816806944],
                        [-0.81684757298045740, -0.81684757298045920],
-                       [ 0.63369514596091700, -0.81684757298045810],
+                       [ 0.63369514596091700, -0.81684757298045810],   # noqa: E201
                        [-0.81684757298045870,  0.63369514596091750]])
         xx, yy = (xy[:, 0]+1)/2, (xy[:, 1]+1)/2
         ww *= 0.5
@@ -752,12 +752,12 @@ def divform(mesh):
         for w, x, y in zip(ww, xx, yy):
             basis1 = np.array([1-x-y, x, y])
 
-            basis2 = np.array([(1-x-y)*(1-2*x-2*y),
-                              x*(2*x-1),
-                              y*(2*y-1),
-                              4*x*(1-x-y),
-                              4*x*y,
-                              4*y*(1-x-y)])
+            # basis2 = np.array([(1-x-y)*(1-2*x-2*y),
+            #                   x*(2*x-1),
+            #                   y*(2*y-1),
+            #                   4*x*(1-x-y),
+            #                   4*x*y,
+            #                   4*y*(1-x-y)])
 
             dbasis = np.array([
                 [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
@@ -766,8 +766,8 @@ def divform(mesh):
 
             dphi = invJ.dot(dbasis)
 
-            DXelem += (detJ / 2) * w * (np.outer(basis1, dphi[0,:]))
-            DYelem += (detJ / 2) * w * (np.outer(basis1, dphi[1,:]))
+            DXelem += (detJ / 2) * w * (np.outer(basis1, dphi[0, :]))
+            DYelem += (detJ / 2) * w * (np.outer(basis1, dphi[1, :]))
             dphi.T.dot(dphi)
 
         # Step 7

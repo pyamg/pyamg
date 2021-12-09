@@ -3,10 +3,6 @@
 import numpy as np
 import scipy as sp
 
-__all__ = ['sprand']
-
-# TODO add sprandn
-
 
 def _rand_sparse(m, n, density, format='csr'):
     """Construct base function for sprand, sprandn."""

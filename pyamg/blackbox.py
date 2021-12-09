@@ -1,14 +1,12 @@
 """Solve an arbitrary system."""
-from __future__ import print_function
 
 
 import numpy as np
 import scipy as sp
 from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
-from pyamg import smoothed_aggregation_solver
-from pyamg.util.linalg import ishermitian
 
-__all__ = ['solve', 'solver', 'solver_configuration']
+from .aggregation import smoothed_aggregation_solver
+from .util.linalg import ishermitian
 
 
 def make_csr(A):
@@ -126,8 +124,8 @@ def solver_configuration(A, B=None, verb=True):
                                           dtype=A.dtype), np.eye(bsize))
         else:
             config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)
-    elif (isinstance(B, type(np.zeros((1,)))) or
-            isinstance(B, type(sp.mat(np.zeros((1,)))))):
+    elif (isinstance(B, type(np.zeros((1,))))
+          or isinstance(B, type(sp.mat(np.zeros((1,)))))):
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if (B.shape[0] != A.shape[0]) or (B.shape[1] == 0):
@@ -321,7 +319,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         M = existing_solver.aspreconditioner()
         nr0 = np.sqrt(np.inner(np.conjugate(M * r0), r0))
         nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
-        print("  Residuals ||r_k||_M, ||r_0||_M = %1.2e, %1.2e" % (nrk, nr0))
+        print(f"  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}")
         if np.abs(nr0) > 1e-15:
             print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"
                   % (nrk / nr0))

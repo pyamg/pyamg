@@ -8,25 +8,15 @@ Requirements for the strength matrix C are:
        row block size of m, then C is (n/m) x (n/m)
 
 """
-from __future__ import print_function
 
 
 from warnings import warn
 
 import numpy as np
-from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from scipy import sparse
 from pyamg import amg_core
+from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
 from pyamg.relaxation.relaxation import jacobi
-
-__all__ = ['classical_strength_of_connection',
-           'symmetric_strength_of_connection',
-           'evolution_strength_of_connection',
-           'distance_strength_of_connection',
-           'algebraic_distance',
-           'affinity_distance',
-           # deprecated:
-           'ode_strength_of_connection']
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):

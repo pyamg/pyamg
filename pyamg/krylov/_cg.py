@@ -6,9 +6,6 @@ import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 
 
-__all__ = ['cg']
-
-
 def cg(A, b, x0=None, tol=1e-5, criteria='rr',
        maxiter=None, M=None,
        callback=None, residuals=None):
@@ -199,31 +196,32 @@ if __name__ == '__main__':
     from numpy.random import random
     import time
     from scipy.sparse.linalg.isolve import cg as icg
-    import numpy as np
 
     nx = 100
     ny = nx
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
-    #b = random((A.shape[0],))
+    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny),
+                     dtype=float, format='csr')
+    # b = random((A.shape[0],))
     xstar = random((A.shape[0],))
     b = A @ xstar
     x0 = random((A.shape[0],))
     print('initial residual: ', norm(b - A @ x0))
-    print('initial criteria 1: ', norm(b - A @ x0) / ((norm(A.data)*norm(x0) + norm(b))))
+    print('initial criteria 1: ', norm(b - A @ x0) / (norm(A.data)*norm(x0) + norm(b)))
     print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
 
     print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')
     x = x0.copy()
     t1 = time.time()
     res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
+    (x, flag) = cg(A, b, x, tol=1e-8, criteria='rr+', maxiter=100, residuals=res)
     t2 = time.time()
-    #print('res1: ', res)
+    # print('res1: ', res)
     print(f'cg took {(t2-t1)*1000.0} ms')
     print(f'norm = {norm(b - A @ x)}')
     print(f'info flag = {flag}')
 
     res = []
+
     def mycb(xk):
         res.append(norm(b - A @ xk))
 
@@ -231,7 +229,7 @@ if __name__ == '__main__':
     t1 = time.time()
     (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
     t2 = time.time()
-    #print('res2: ', res)
+    # print('res2: ', res)
     print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
     print(f'norm = {norm(b - A @ y)}')
     print(f'info flag = {flag}')
@@ -263,7 +261,7 @@ if __name__ == '__main__':
     import pyamg
     res = []
     ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
-    M =  ml.aspreconditioner()
+    M = ml.aspreconditioner()
     x = x0.copy()
     t1 = time.time()
     res = []

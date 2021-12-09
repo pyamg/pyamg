@@ -6,8 +6,6 @@ from scipy.sparse.linalg.isolve.utils import make_system
 import scipy.sparse as sparse
 from pyamg.util.linalg import norm
 
-__all__ = ['cr']
-
 
 def cr(A, b, x0=None, tol=1e-5, criteria='rr',
        maxiter=None, M=None,
@@ -195,6 +193,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
         if it == maxiter:
             return (postprocess(x), it)
 
+
 if __name__ == '__main__':
     # from numpy import diag
     # A = random((4,4))
@@ -218,7 +217,7 @@ if __name__ == '__main__':
     r = []
     (x, flag) = cr(A, b, x0, tol=1e-8, maxiter=100, residuals=r)
     t2 = time.time()
-    print('%s took %0.3f ms' % ('cr', (t2-t1)*1000.0))
+    print('{} took {:0.3f} ms'.format('cr', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*x)))
     print('info flag = %d' % (flag))
 
@@ -226,7 +225,7 @@ if __name__ == '__main__':
     r2 = []
     (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100, residuals=r2)
     t2 = time.time()
-    print('%s took %0.3f ms' % ('gmres', (t2-t1)*1000.0))
+    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
     print('norm = %g' % (norm(b - A*x)))
     print('info flag = %d' % (flag))
 

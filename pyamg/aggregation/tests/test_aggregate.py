@@ -114,7 +114,7 @@ def reference_standard_aggregation(C):
 
     # Pass #1
     for i, row in enumerate(S):
-        Ni = set(row) | set([i])
+        Ni = set(row) | {i}
 
         if Ni.issubset(R):
             Cpts.append(i)
@@ -139,7 +139,7 @@ def reference_standard_aggregation(C):
     for i, row in enumerate(S):
         if i not in R:
             continue
-        Ni = set(row) | set([i])
+        Ni = set(row) | {i}
         Cpts.append(i)
 
         for x in Ni:

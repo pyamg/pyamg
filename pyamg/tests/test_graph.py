@@ -1,13 +1,13 @@
 import numpy as np
 import scipy.sparse as sparse
 
-from pyamg.gallery import poisson, load_example
-from pyamg.graph import maximal_independent_set, vertex_coloring,\
-    bellman_ford, lloyd_cluster, connected_components
-from pyamg.graph import bellman_ford_reference, bellman_ford_balanced_reference
-from pyamg import amg_core
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg.gallery import poisson, load_example
+from pyamg.graph import (maximal_independent_set, vertex_coloring,
+                         bellman_ford, lloyd_cluster, connected_components)
+from pyamg.graph_ref import bellman_ford_reference
+from pyamg import amg_core
 
 
 def canonical_graph(G):
@@ -144,7 +144,6 @@ class TestGraph(TestCase):
 
             distance, nearest, predecessor = bellman_ford(G, [center])
             assert_equal(distance, distances_FROM_center[center])
-
 
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
@@ -350,7 +349,7 @@ def test_connected_components():
                 D[i] = set()
             for n, i in enumerate(arr):
                 D[i].add(n)
-            return set([frozenset(s) for s in D.values()])
+            return {frozenset(s) for s in D.values()}
 
         result = array_to_set_of_sets(result)
         expected = reference_connected_components(G)
@@ -427,7 +426,7 @@ def test_complex_connected_components():
                 D[i] = set()
             for n, i in enumerate(arr):
                 D[i].add(n)
-            return set([frozenset(s) for s in D.values()])
+            return {frozenset(s) for s in D.values()}
 
         result = array_to_set_of_sets(result)
         expected = reference_connected_components(G)

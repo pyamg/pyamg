@@ -37,7 +37,6 @@ class TestCR(TestCase):
 
     def test_cr(self):
         A = self.cases[6]
-        splitting = CR(A)
 
         # 1d-tests, should be alternating aggregates
         #       (n-1)/2 < = sum <= (n+1)/2.

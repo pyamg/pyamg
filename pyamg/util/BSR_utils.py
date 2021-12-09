@@ -3,8 +3,6 @@
 
 import numpy as np
 
-__all__ = ['BSR_Get_Row', 'BSR_Row_WriteScalar', 'BSR_Row_WriteVect']
-
 
 def BSR_Get_Row(A, i):
     """Return row i in BSR matrix A.
@@ -58,7 +56,7 @@ def BSR_Get_Row(A, i):
         colindx[0, counter:(counter+increment)] = coloffset + indys
         counter += increment
 
-    return z.reshape(-1,1), colindx[0, :]
+    return z.reshape(-1, 1), colindx[0, :]
 
 
 def BSR_Row_WriteScalar(A, i, x):

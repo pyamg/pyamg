@@ -1,5 +1,4 @@
 """Linear Algebra Helper Routines."""
-from __future__ import print_function
 
 
 import numpy as np
@@ -7,9 +6,6 @@ import scipy.sparse as sparse
 from scipy.sparse.linalg import aslinearoperator
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.lapack import _compute_lwork
-
-__all__ = ['approximate_spectral_radius', 'infinity_norm', 'norm',
-           'condest', 'cond', 'ishermitian', 'pinv_array']
 
 
 def norm(x, pnorm='2'):
@@ -291,7 +287,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
         If n x 1 array, then use as initial guess for Arnoldi/Lanczos.
         If None, then use a random initial guess.
     return_vector : {boolean}
-        True - return an approximate dominant eigenvector, in addition to the spectral radius.
+        True - return an approximate dominant eigenvector and the spectral radius.
         False - Do not return the approximate dominant eigenvector
 
     Returns
@@ -440,14 +436,14 @@ def condest(A, tol=0.1, maxiter=25, symmetric=False):
     power = 1
     if not symmetric:
         def matvec(v):
-            return C.rmatvec((C.A @ v))
+            return C.rmatvec(C.A @ v)
         C.matvec = matvec
         power = 0.5
 
     [evect, ev, H, V, breakdown_flag] =\
         _approximate_eigenvalues(C, tol, maxiter, symmetric)
 
-    return (np.max([norm(x) for x in ev])/min([norm(x) for x in ev]))**power
+    return (np.max([norm(x) for x in ev])/min(norm(x) for x in ev))**power
 
 
 def cond(A):
@@ -572,7 +568,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
 
 def pinv_array(a, cond=None):
-    """Calculate the Moore-Penrose pseudo inverse of each block of the three dimensional array a.
+    """Calculate the Moore-Penrose pseudo inverse of each block of the 3D array a.
 
     Parameters
     ----------

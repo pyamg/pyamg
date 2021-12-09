@@ -4,11 +4,9 @@ import numpy as np
 import scipy.linalg as sla
 import scipy.sparse as sparse
 
-__all__ = ['linear_elasticity', 'linear_elasticity_p1']
-
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
+    """Linear elasticity problem with Q1 finite elements on a regular rectangular grid.
 
     Parameters
     ----------
@@ -55,7 +53,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
     else:
-        raise NotImplemented('no support for grid=%s' % str(grid))
+        raise NotImplementedError('no support for grid=%s' % str(grid))
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
@@ -127,7 +125,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         indices = np.arange((X-1)*(Y-1))
         indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
         P = sparse.bsr_matrix((data, indices, indptr),
-                       shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
+                              shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
         A = P.T * A * P
 
@@ -170,19 +168,19 @@ def q12d_local(vertices, lame, mu):
     M = lame + 2*mu  # P-wave modulus
 
     R_11 = np.array([[2, -2, -1, 1],
-                      [-2, 2, 1, -1],
-                      [-1, 1, 2, -2],
-                      [1, -1, -2, 2]]) / 6.0
+                     [-2, 2, 1, -1],
+                     [-1, 1, 2, -2],
+                     [1, -1, -2, 2]]) / 6.0
 
     R_12 = np.array([[1, 1, -1, -1],
-                      [-1, -1, 1, 1],
-                      [-1, -1, 1, 1],
-                      [1, 1, -1, -1]]) / 4.0
+                     [-1, -1, 1, 1],
+                     [-1, -1, 1, 1],
+                     [1, 1, -1, -1]]) / 4.0
 
     R_22 = np.array([[2, 1, -1, -2],
-                      [1, 2, -2, -1],
-                      [-1, -2, 2, 1],
-                      [-2, -1, 1, 2]]) / 6.0
+                     [1, 2, -2, -1],
+                     [-1, -2, 2, 1],
+                     [-2, -1, 1, 2]]) / 6.0
 
     F = sla.inv(np.vstack((vertices[1] - vertices[0], vertices[3] - vertices[0])))
 
