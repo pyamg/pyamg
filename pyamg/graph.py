@@ -178,7 +178,10 @@ def bellman_ford(G, centers, method='standard'):
                                        predecessors_count, cluster_size,        # OUT
                                        True)
     else:
-        raise ValueError(f'method {method} is not supported in Bellman-Ford')
+        raise ValueError(f'Method {method} is not supported in Bellman-Ford')
+
+    if not np.all(nearest >= 0) or not np.all(distances >= 0):
+        raise ValueError(f'Encountered disconnected nodes.')
 
     return distances, nearest, predecessors
 
@@ -307,6 +310,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     # empty() values are initialized in the kernel
     maxsize = int(4*np.ceil((n / num_clusters)))
 
+    Cptr = np.empty(num_clusters, dtype=np.int32)
     D = np.empty((maxsize, maxsize), dtype=G.dtype)
     P = np.empty((maxsize, maxsize), dtype=np.int32)
     CC = np.empty(n, dtype=np.int32)
