@@ -391,6 +391,7 @@ void floyd_warshall(const I num_nodes,
 {
   // initialize distance
   std::fill(D, D+D_size, std::numeric_limits<T>::infinity());
+  std::fill(P, P+P_size, -1);
 
   // initialize D and P
   for(I _i = 0; _i < N; _i++){              // each node in the cluster, local index

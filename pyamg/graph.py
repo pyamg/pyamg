@@ -304,15 +304,15 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
         raise ValueError(f'invalid center index {centers.max()}')
 
     # create work arrays for C++
+    # empty() values are initialized in the kernel
     maxsize = int(4*np.ceil((n / num_clusters)))
 
-    Cptr = np.empty(num_clusters, dtype=np.int32)
-    D = np.zeros((maxsize, maxsize), dtype=G.dtype)
-    P = np.zeros((maxsize, maxsize), dtype=np.int32)
-    CC = np.arange(0, n, dtype=np.int32)
-    L  = np.arange(0, n, dtype=np.int32)
+    D = np.empty((maxsize, maxsize), dtype=G.dtype)
+    P = np.empty((maxsize, maxsize), dtype=np.int32)
+    CC = np.empty(n, dtype=np.int32)
+    L  = np.empty(n, dtype=np.int32)
 
-    q  = np.zeros(maxsize, dtype=G.dtype)
+    q  = np.empty(maxsize, dtype=G.dtype)
     d  = np.empty(n, dtype=G.dtype)
     m  = np.empty(n, dtype=np.int32)
     p  = np.empty(n, dtype=np.int32)
