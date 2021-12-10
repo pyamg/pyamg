@@ -72,34 +72,6 @@ class TestClustering(TestCase):
         del case['output']
         cases_bellman_ford_balanced.append(case)
 
-        #cluster_node_incidence_input[0] = {'num_clusters': 2,
-        #                                   'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32)}
-        #cluster_node_incidence_output[0] = {'ICp': np.array([0, 3, 6], dtype=np.int32),
-        #                                    'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
-        #                                    'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
-
-        #cluster_center_input[0] = {'a': [0, 1],
-        #                           'num_clusters': 2,
-        #                           'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-        #                           'ICp': np.array([0, 3, 6], dtype=np.int32),
-        #                           'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
-        #                           'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
-        #cluster_center_output[0] = [0, 1]
-
-        #bellman_ford_balanced_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
-        #bellman_ford_balanced_output[0] = {'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-        #                                   'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
-
-        #lloyd_cluster_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
-        #lloyd_cluster_output[0] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
-        #                           'd': np.array([1., 0., 0., 1., 0., 0.], dtype=G.dtype),
-        #                           'c': np.array([0, 5], dtype=np.int32)}
-
-        #lloyd_cluster_exact_input[0] = {'centers': np.array([0, 5], dtype=np.int32)}
-        #lloyd_cluster_exact_output[0] = {'cm': np.array([0, 0, 1, 0, 1, 1], dtype=np.int32),
-        #                                 'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype),
-        #                                 'c': np.array([0, 2], dtype=np.int32)}
-
         ############################################################
         # (1) 12 node undirected, unit length
         ############################################################
@@ -149,19 +121,6 @@ class TestClustering(TestCase):
         case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
         cases_bellman_ford.append(case)
         cases_bellman_ford_balanced.append(case)
-
-        #cluster_node_incidence_input.append({'num_clusters': 2,
-        #                                     'cm': np.array([0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1], dtype=np.int32)})
-        #cluster_node_incidence_output.append({'ICp': np.array([0, 6, 12], dtype=np.int32),
-        #                                      'ICi': np.array([0, 1, 2, 3, 6, 7, 4, 5, 8, 9, 10, 11], dtype=np.int32),
-        #                                      'L': np.array([0, 1, 2, 3, 0, 1, 4, 5, 2, 3, 4, 5], dtype=np.int32)})
-        #cluster_center_input[0] = {'a': [0, 1],
-        #                           'num_clusters': 2,
-        #                           'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-        #                           'ICp': np.array([0, 3, 6], dtype=np.int32),
-        #                           'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
-        #                           'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
-        #cluster_center_output[0] = [0, 1]
 
         ############################################################
         # (2) 16 node undirected, random length (0,2)
@@ -251,7 +210,7 @@ class TestClustering(TestCase):
         w = np.array([1, 1, 1, 1, 1, 1], dtype=float)
         G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
-        c = np.array([1,3], dtype=np.int32)
+        c = np.array([1, 3], dtype=np.int32)
 
         case = {}
         case['id'] = 5
@@ -274,7 +233,7 @@ class TestClustering(TestCase):
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
         G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
-        c = np.array([0,1,2], dtype=np.int32)
+        c = np.array([0, 1, 2], dtype=np.int32)
 
         case = {}
         case['id'] = 6
