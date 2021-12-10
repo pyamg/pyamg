@@ -413,10 +413,10 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
     if keep:
-        levels[-1].C = C           # strength of connection matrix
-        levels[-1].AggOp = AggOp   # aggregation operator
-        levels[-1].Cnodes = Cnodes # centers used to generate aggregates
-        levels[-1].T = T           # tentative prolongator
+        levels[-1].C = C            # strength of connection matrix
+        levels[-1].AggOp = AggOp    # aggregation operator
+        levels[-1].Cnodes = Cnodes  # centers used to generate aggregates
+        levels[-1].T = T            # tentative prolongator
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator

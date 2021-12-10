@@ -1,9 +1,9 @@
+"""Test Floyd-Warshall."""
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase
+from scipy import sparse
 
 from pyamg import amg_core
-
-from numpy.testing import TestCase, assert_equal
 
 
 class TestAllPairs(TestCase):
@@ -12,10 +12,10 @@ class TestAllPairs(TestCase):
 
         # https://www.geeksforgeeks.org/floyd-warshall-algorithm-dp-16/
         A = np.zeros((4, 4))
-        A[0,3] = 10
-        A[2,3] = 1
-        A[1,2] = 3
-        A[0,1] = 5
+        A[0, 3] = 10
+        A[2, 3] = 1
+        A[1, 2] = 3
+        A[0, 1] = 5
         A = sparse.csr_matrix(A)
 
         inf = np.inf
@@ -30,12 +30,12 @@ class TestAllPairs(TestCase):
         cases.append([A, D_ref, P_ref])
 
         # https://github.com/epomp447/Floyd-Warshall-Algorithm-Java-
-        A = np.zeros((5,5))
-        A[0,[1,2,4]] = [3,8,-4]
-        A[1,[3,4]] = [1,7]
-        A[2,1] = 4
-        A[3,[0,2]] = [2,-5]
-        A[4,3] = 6
+        A = np.zeros((5, 5))
+        A[0, [1, 2, 4]] = [3, 8, -4]
+        A[1, [3, 4]] = [1, 7]
+        A[2, 1] = 4
+        A[3, [0, 2]] = [2, -5]
+        A[4, 3] = 6
         A = sparse.csr_matrix(A)
 
         D_ref = np.array([[ 0.,  1., -3.,  2., -4.],
@@ -51,22 +51,22 @@ class TestAllPairs(TestCase):
         cases.append([A, D_ref, P_ref])
 
         # https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
-        A = np.zeros((4,4))
-        A[0,2] = -2
-        A[2,3] = 2
-        A[3,1] = -1
-        A[1,0] = 4
-        A[1,2] = 3
+        A = np.zeros((4, 4))
+        A[0, 2] = -2
+        A[2, 3] = 2
+        A[3, 1] = -1
+        A[1, 0] = 4
+        A[1, 2] = 3
         A = sparse.csr_matrix(A)
 
-        D_ref = np.array([[0.,-1,-2,0],
-                          [ 4, 0, 2,4],
-                          [ 5, 1, 0,2],
-                          [ 3,-1, 1,0]])
-        P_ref = np.array([[0,3,0,2],
-                          [1,1,0,2],
-                          [1,3,2,2],
-                          [1,3,0,3]], dtype=np.int32)
+        D_ref = np.array([[0., -1, -2, 0],
+                          [ 4,  0,  2, 4],
+                          [ 5,  1,  0, 2],
+                          [ 3, -1,  1, 0]])
+        P_ref = np.array([[0, 3, 0, 2],
+                          [1, 1, 0, 2],
+                          [1, 3, 2, 2],
+                          [1, 3, 0, 3]], dtype=np.int32)
         cases.append([A, D_ref, P_ref])
 
         self.cases = cases
@@ -78,9 +78,9 @@ class TestAllPairs(TestCase):
             N = num_nodes
             D = np.zeros((N, N))
             P = np.zeros((N, N), dtype=np.int32)
-            C  = np.arange(0, N, dtype=np.int32)
-            L  = np.arange(0, N, dtype=np.int32)
-            m  = np.ones((N,), dtype=np.int32)
+            C = np.arange(0, N, dtype=np.int32)
+            L = np.arange(0, N, dtype=np.int32)
+            m = np.ones((N,), dtype=np.int32)
             a = 1
 
             amg_core.floyd_warshall(num_nodes, A.indptr, A.indices, A.data,

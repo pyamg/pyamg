@@ -74,6 +74,7 @@ def bellman_ford_balanced_reference(A, c):
     amg_core.graph.bellman_ford
 
     """
+    # pylint: disable=too-many-nested-blocks
     A = A.tocoo()
     nnodes = A.shape[0]
     nclusters = len(c)
@@ -88,7 +89,8 @@ def bellman_ford_balanced_reference(A, c):
     s = np.ones(nclusters, dtype=np.int32)
 
     done = False
-    cnt = 0;
+    cnt = 0
+
     while not done:
         done = True
         for i, j, Aij in zip(A.row, A.col, A.data):
@@ -97,7 +99,7 @@ def bellman_ford_balanced_reference(A, c):
 
             swap = False
 
-            if d[i] + Aij < d[j]: # BF
+            if d[i] + Aij < d[j]:  # BF
                 swap = True
 
             si = s[m[i]] if m[i] >= 0 else 0
@@ -110,17 +112,17 @@ def bellman_ford_balanced_reference(A, c):
                             swap = True
 
             if swap:
-                if m[j] >= 0:     # if part of a cluster
-                    s[m[j]] -= 1  # update size of cluster (removing j)
-                if p[j] >= 0:     # if there's a predecessor
-                    pc[p[j]] -= 1 # update predecessor count (removing j)
+                if m[j] >= 0:      # if part of a cluster
+                    s[m[j]] -= 1   # update size of cluster (removing j)
+                if p[j] >= 0:      # if there's a predecessor
+                    pc[p[j]] -= 1  # update predecessor count (removing j)
 
                 m[j] = m[i]
                 d[j] = d[i] + Aij
                 p[j] = i
 
-                s[m[j]] += 1  # update size of cluster (adding j)
-                pc[p[j]] += 1 # update predecessor count (adding j)
+                s[m[j]] += 1   # update size of cluster (adding j)
+                pc[p[j]] += 1  # update predecessor count (adding j)
 
                 done = False
 

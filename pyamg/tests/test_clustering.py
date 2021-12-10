@@ -1,11 +1,11 @@
 """Test clustering routines in amg_core."""
 import numpy as np
-import pyamg.amg_core as amg_core
+from numpy.testing import TestCase, assert_array_equal
+from scipy import sparse
+
+from pyamg import amg_core
 from pyamg.gallery import load_example
 from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
-import scipy.sparse as sparse
-
-from numpy.testing import TestCase, assert_equal, assert_array_equal
 
 
 def canonical_graph(G):
@@ -245,38 +245,6 @@ class TestClustering(TestCase):
         self.cases_bellman_ford = cases_bellman_ford
         self.cases_bellman_ford_balanced = cases_bellman_ford_balanced
 
-    def test_cluster_node_incidence(self):
-        if 0:
-            num_nodes = A.shape[0]
-            num_clusters = argin['num_clusters']
-            cm = argin['cm']
-            ICp = -1*np.ones(num_clusters+1, dtype=np.int32)
-            ICi = -1*np.ones(num_nodes, dtype=np.int32)
-            L = -1*np.ones(num_nodes, dtype=np.int32)
-
-            amg_core.cluster_node_incidence(num_nodes, num_clusters, cm, ICp, ICi, L)
-
-            assert_array_equal(ICp, argout['ICp'])
-            assert_array_equal(ICi, argout['ICi'])
-            assert_array_equal(L, argout['L'])
-
-    def test_cluster_center(self):
-        if 0:
-            for a, ccorrect in zip(argin['a'], argout):
-                num_nodes = A.shape[0]
-                num_clusters = argin['num_clusters']
-                cm = argin['cm']
-                ICp = argin['ICp']
-                ICi = argin['ICi']
-                L = argin['L']
-                c = amg_core.cluster_center(a,
-                                            num_nodes, num_clusters,
-                                            A.indptr, A.indices, A.data,
-                                            cm,
-                                            ICp, ICi, L)
-
-                assert_equal(c, ccorrect)
-
     def test_bellman_ford(self):
         for case in self.cases_bellman_ford:
             G = case['G']
@@ -326,50 +294,3 @@ class TestClustering(TestCase):
 
             assert_array_equal(d, d_ref)
             assert_array_equal(m, m_ref)
-
-    def test_lloyd_cluster(self):
-        if 0:
-            centers = argin['centers']
-            num_nodes = A.shape[0]
-            c = centers.copy()
-
-            d = np.full(num_nodes, np.inf, dtype=A.dtype)
-            od = np.full(num_nodes, np.inf, dtype=A.dtype)
-            d[centers] = 0
-            od[centers] = 0
-
-            m = np.full(num_nodes, -1, dtype=np.int32)
-            m[c] = np.arange(len(c))
-
-            p = np.full(num_nodes, -1, dtype=np.int32)
-
-            amg_core.lloyd_cluster(num_nodes,
-                                   A.indptr, A.indices, A.data,
-                                   d, od, m, c, p)
-
-            assert_array_equal(d, argout['d'])
-            assert_array_equal(m, argout['m'])
-            assert_array_equal(c, argout['c'])
-
-    def test_lloyd_cluster_exact(self):
-        if 0:
-            centers = argin['centers']
-            num_nodes = A.shape[0]
-            c = centers.copy()
-            num_clusters = len(centers)
-
-            mv = np.finfo(A.dtype).max
-            d = mv * np.ones(num_nodes, dtype=A.dtype)
-            d[centers] = 0
-
-            cm = -1 * np.ones(num_nodes, dtype=np.int32)
-            cm[centers] = centers
-
-            amg_core.lloyd_cluster_exact(num_nodes,
-                                         A.indptr, A.indices, A.data,
-                                         num_clusters,
-                                         d, cm, c)
-
-            assert_array_equal(d, argout['d'])
-            assert_array_equal(cm, argout['cm'])
-            assert_array_equal(c, argout['c'])

@@ -113,9 +113,11 @@ class TestGraph(TestCase):
                 for method in ['standard', 'balanced']:
                     d_result, m_result, p_result = bellman_ford(G, centers, method=method)
                     if method == 'standard':
-                        d_expected, m_expected, p_expected = bellman_ford_reference(G, centers)
+                        d_expected, m_expected, p_expected = \
+                            bellman_ford_reference(G, centers)
                     if method == 'balanced':
-                        d_expected, m_expected, p_expected = bellman_ford_balanced_reference(G, centers)
+                        d_expected, m_expected, p_expected = \
+                            bellman_ford_balanced_reference(G, centers)
 
                 assert_equal(d_result, d_expected)
                 assert_equal(m_result, m_expected)

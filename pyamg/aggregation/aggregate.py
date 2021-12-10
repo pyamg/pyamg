@@ -255,7 +255,7 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     elif measure == 'min':
         data = C.data - C.data.min()
     else:
-        raise ValueError(f'Unrecognized value distance={distance}')
+        raise ValueError(f'Unrecognized value measure={measure}')
 
     if C.dtype == complex:
         data = np.real(data)
@@ -360,7 +360,7 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
         naggs = int(n / 10)
 
     if naggs <= 0 or naggs > n:
-        raise ValueError('number of aggregates must be >=1 and <=n)')
+        raise ValueError('Number of aggregates must be >=1 and <=n)')
 
     if pad is not None:
         if A is None:
@@ -385,7 +385,7 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
     elif measure == 'min':
         data = C.data - C.data.min()
     else:
-        raise ValueError('unrecognized value measure=%s' % measure)
+        raise ValueError(f'Unrecognized value measure={measure}')
 
     if C.dtype == complex:
         data = np.real(C.data)

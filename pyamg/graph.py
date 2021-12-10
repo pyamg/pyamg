@@ -6,6 +6,7 @@ from scipy import sparse
 
 from . import amg_core
 
+
 def asgraph(G):
     """Return (square) matrix as sparse."""
     if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):
@@ -158,13 +159,13 @@ def bellman_ford(G, centers, method='standard'):
         cluster_size = np.empty(len(centers), dtype=np.int32)
 
     if method == 'standard':
-        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers, # IN
-                              distances, nearest, predecessors,        # OUT
+        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,  # IN
+                              distances, nearest, predecessors,         # OUT
                               True)
     elif method == 'balanced':
-        amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers, # IN
-                                       distances, nearest, predecessors,        # OUT
-                                       predecessors_count, cluster_size,        # OUT
+        amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
+                                       distances, nearest, predecessors,         # OUT
+                                       predecessors_count, cluster_size,         # OUT
                                        True)
     else:
         raise ValueError(f'Method {method} is not supported in Bellman-Ford')
@@ -230,9 +231,9 @@ def lloyd_cluster(G, centers, maxiter=5):
     clusters = np.empty(n, dtype=np.int32)
     predecessors = np.full(n, -1, dtype=np.int32)
 
-    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,    # IN
-                           centers,                           # INOUT
-                           distances, clusters, predecessors, # OUT
+    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,     # IN
+                           centers,                            # INOUT
+                           distances, clusters, predecessors,  # OUT
                            True, maxiter)
 
     return clusters, centers
@@ -300,12 +301,12 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     D = np.empty((maxsize, maxsize), dtype=G.dtype)
     P = np.empty((maxsize, maxsize), dtype=np.int32)
     CC = np.empty(n, dtype=np.int32)
-    L  = np.empty(n, dtype=np.int32)
+    L = np.empty(n, dtype=np.int32)
 
-    q  = np.empty(maxsize, dtype=G.dtype)
-    d  = np.empty(n, dtype=G.dtype)
-    m  = np.empty(n, dtype=np.int32)
-    p  = np.empty(n, dtype=np.int32)
+    q = np.empty(maxsize, dtype=G.dtype)
+    d = np.empty(n, dtype=G.dtype)
+    m = np.empty(n, dtype=np.int32)
+    p = np.empty(n, dtype=np.int32)
     pc = np.empty(n, dtype=np.int32)
     s = np.empty(num_clusters, dtype=np.int32)
 
@@ -316,7 +317,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
                                     pc, s,
                                     True, maxiter)
 
-    for riter in range(rebalance_iters):
+    for _riter in range(rebalance_iters):
         centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
 
         amg_core.lloyd_cluster_balanced(n,
@@ -357,11 +358,11 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
     """
     newc = c.copy()
 
-    AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)),m))).tocsr()
+    AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)), m))).tocsr()
     Agg2Agg = AggOp.T @ G @ AggOp
     Agg2Agg = Agg2Agg.tocsr()
 
-    E       = _elimination_penalty(G, m, d, num_clusters, Cptr, C, L)
+    E = _elimination_penalty(G, m, d, num_clusters, Cptr, C, L)
     S, I, J = _split_improvement(G, m, d, num_clusters, Cptr, C, L)
     M = np.ones(num_clusters, dtype=bool)
     Elist = np.argsort(E)
@@ -406,20 +407,22 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
                 break
             a_e = Elist[i_e]
             a_s = Slist[-1-i_s]
-            if a_e != a_s:                          # if we found a new pair, then we're done
+            if a_e != a_s:                          # if new pair found, then done
                 findanother = False
             else:
-                pushtie = True                      # otherwise push the tie breaker, and move on
+                pushtie = True                      # otherwise push the tie breaker
     return newc
+
 
 def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
     """
     see _rebalance()
     """
+    # pylint: disable=too-many-nested-blocks
     E = np.inf * np.ones(num_clusters)
     for a in range(num_clusters):
         E[a] = 0
-        Va = np.int32(np.where(m==a)[0])
+        Va = np.int32(np.where(m == a)[0])
 
         N = len(Va)
         D = np.zeros((N, N))
@@ -427,19 +430,20 @@ def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
         _N = Cptr[a]+N
         if _N >= A.shape[0]:
             _N = None
-        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
-                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
-                                      m, a, N)
-        for _i, i in enumerate(Va):
+        amg_core.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                m, a, N)
+        for _i, i in enumerate(Va):  # pylint: disable=unused-variable
             dmin = np.inf
             for _j, j in enumerate(Va):
                 for k in A.getrow(j).indices:
                     if m[k] != m[j]:
-                        if (d[k] + D[_i,_j] + A[j,k]) < dmin:
-                            dmin = d[k] + D[_i,_j] + A[j,k]
+                        if (d[k] + D[_i, _j] + A[j, k]) < dmin:
+                            dmin = d[k] + D[_i, _j] + A[j, k]
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
+
 
 def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
     """
@@ -450,7 +454,7 @@ def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
     J = -1 * np.ones(num_clusters)  # better cluster centers if split
     for a in range(num_clusters):
         S[a] = np.inf
-        Va = np.int32(np.where(m==a)[0])
+        Va = np.int32(np.where(m == a)[0])
 
         N = len(Va)
         D = np.zeros((N, N))
@@ -458,23 +462,24 @@ def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
         _N = Cptr[a]+N
         if _N >= A.shape[0]:
             _N = None
-        amg_core.graph.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
-                                      D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
-                                      m, a, N)
+        amg_core.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
+                                D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
+                                m, a, N)
         for _i, i in enumerate(Va):
             for _j, j in enumerate(Va):
                 Snew = 0
-                for _k, k in enumerate(Va):
-                    if D[_k,_i] < D[_k,_j]:
-                        Snew = Snew + D[_k,_i]**2
+                for _k, k in enumerate(Va):  # pylint: disable=unused-variable
+                    if D[_k, _i] < D[_k, _j]:
+                        Snew = Snew + D[_k, _i]**2
                     else:
-                        Snew = Snew + D[_k,_j]**2
+                        Snew = Snew + D[_k, _j]**2
                 if Snew < S[a]:
                     S[a] = Snew
                     I[a] = i
                     J[a] = j
         S[a] = np.sum(d[Va]**2) - S[a]
     return S, I, J
+
 
 def _choice(p):
     """
@@ -502,6 +507,7 @@ def _choice(p):
             break
     return i
 
+
 def kmeanspp_seed(G, nseeds):
     """
     Parameters
@@ -523,12 +529,12 @@ def kmeanspp_seed(G, nseeds):
 
     TODO - needs testing
     """
-    warnings.warn("kmeanspp_seed is O(n^3) -- use only for testing")
+    warn("kmeanspp_seed is O(n^3) -- use only for testing")
 
     n = G.shape[0]
     C = np.random.choice(n, 1, replace=False)
     for _ in range(nseeds-1):
-        d = scipy.sparse.csgraph.bellman_ford(G, directed=False, indices=C)
+        d = sparse.csgraph.bellman_ford(G, directed=False, indices=C)
         d = d.min(axis=0)   # shortest path from a seed
         d = d**2            # distance squared
         p = d / np.sum(d)   # probability

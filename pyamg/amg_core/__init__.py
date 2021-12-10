@@ -1,6 +1,9 @@
 """amg_core - a C++ implementation of AMG-related routines
 """
 
+from . import (evolution_strength, graph, krylov, linalg, relaxation,
+               ruge_stuben, smoothed_aggregation)
+
 from .evolution_strength import (apply_absolute_distance_filter, apply_distance_filter,
                                  min_blocks, evolution_strength_helper,
                                  incomplete_mat_mult_csr)
@@ -34,6 +37,13 @@ from .smoothed_aggregation import (symmetric_strength_of_connection, standard_ag
                                    incomplete_mat_mult_bsr, truncate_rows_csr)
 
 __all__ = [
+    'evolution_strength',
+    'graph',
+    'krylov',
+    'linalg',
+    'relaxation',
+    'ruge_stuben',
+    'smoothed_aggregation',
     'apply_absolute_distance_filter',
     'apply_distance_filter',
     'min_blocks',
