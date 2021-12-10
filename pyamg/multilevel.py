@@ -4,23 +4,30 @@
 from warnings import warn
 
 import scipy as sp
+from scipy.sparse.linalg import LinearOperator, isolve
+from scipy.sparse.sputils import upcast
 import numpy as np
 
 from pkg_resources import parse_version  # included with setuptools
 
+from . import krylov
+from .util.utils import to_type
+from .util.params import set_tol
+from .relaxation import smoothing
+
 if parse_version(sp.__version__) >= parse_version('1.7'):
-    from scipy.linalg import pinv
+    from scipy.linalg import pinv           # pylint: disable=ungrouped-imports
 else:
-    from scipy.linalg import pinv2 as pinv
+    from scipy.linalg import pinv2 as pinv  # pylint: disable=ungrouped-imports
 
 
-class multilevel_solver:
+class MultilevelSolver:
     """Stores multigrid hierarchy and implements the multigrid cycle.
 
     The class constructs the cycling process and points to the methods for
-    coarse grid solves.  A multilevel_solver object is typically returned from a
+    coarse grid solves.  A MultilevelSolver object is typically returned from a
     particular AMG method (see ruge_stuben_solver or smoothed_aggregation_solver
-    for example).  A call to multilevel_solver.solve() is a typical access
+    for example).  A call to MultilevelSolver.solve() is a typical access
     point.  The class also defines methods for constructing operator, cycle, and
     grid complexities.
 
@@ -46,7 +53,7 @@ class multilevel_solver:
 
     """
 
-    class level:
+    class Level:
         """Stores one level of the multigrid hierarchy.
 
         All level objects will have an 'A' attribute referencing the matrix
@@ -72,10 +79,18 @@ class multilevel_solver:
 
         def __init__(self):
             """Level construct (empty)."""
-            pass
+            self.A = None
+
+    class level(Level):  # noqa: N801
+        """Deprecated level class."""
+        # only raise deprecation warning on use, not import
+        def __init__(self):
+            super().__init__()
+            warn("level() is deprectated.  use Level()",
+                 category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
-        """Class constructor to initialize the cycle and ensure the list of levels is complete.
+        """Class constructor to initialize the cycle and ensure list of levels is complete.
 
         Parameters
         ----------
@@ -116,7 +131,7 @@ class multilevel_solver:
         --------
         >>> # manual construction of a two-level AMG hierarchy
         >>> from pyamg.gallery import poisson
-        >>> from pyamg.multilevel import multilevel_solver
+        >>> from pyamg.multilevel import MultilevelSolver
         >>> from pyamg.strength import classical_strength_of_connection
         >>> from pyamg.classical import direct_interpolation
         >>> from pyamg.classical.split import RS
@@ -128,8 +143,8 @@ class multilevel_solver:
         >>> R = P.T
         >>> # store first level data
         >>> levels = []
-        >>> levels.append(multilevel_solver.level())
-        >>> levels.append(multilevel_solver.level())
+        >>> levels.append(MultilevelSolver.Level())
+        >>> levels.append(MultilevelSolver.Level())
         >>> levels[0].A = A
         >>> levels[0].C = C
         >>> levels[0].splitting = splitting
@@ -137,10 +152,10 @@ class multilevel_solver:
         >>> levels[0].R = R
         >>> # store second level data
         >>> levels[1].A = R @ A @ P                      # coarse-level matrix
-        >>> # create multilevel_solver
-        >>> ml = multilevel_solver(levels, coarse_solver='splu')
+        >>> # create MultilevelSolver
+        >>> ml = MultilevelSolver(levels, coarse_solver='splu')
         >>> print ml
-        multilevel_solver
+        MultilevelSolver
         Number of Levels:     2
         Operator Complexity:  1.891
         Grid Complexity:      1.500
@@ -151,6 +166,7 @@ class multilevel_solver:
         <BLANKLINE>
 
         """
+        self.symmetric_smoothing = False  # force change_smoothers to set to True
         self.levels = levels
 
         self.coarse_solver = coarse_grid_solver(coarse_solver)
@@ -161,20 +177,21 @@ class multilevel_solver:
 
     def __repr__(self):
         """Print basic statistics about the multigrid hierarchy."""
-        output = 'multilevel_solver\n'
-        output += 'Number of Levels:     %d\n' % len(self.levels)
-        output += 'Operator Complexity: %6.3f\n' % self.operator_complexity()
-        output += 'Grid Complexity:     %6.3f\n' % self.grid_complexity()
-        output += 'Coarse Solver:        %s\n' % self.coarse_solver.name()
+        output = 'MultilevelSolver\n'
+        output += f'Number of Levels:     {len(self.levels)}\n'
+        output += f'Operator Complexity:  {self.operator_complexity():6.3f}\n'
+        output += f'Grid Complexity:      {self.grid_complexity():6.3f}\n'
+        output += f'Coarse Solver:        {self.coarse_solver.name()}\n'
 
         total_nnz = sum(level.A.nnz for level in self.levels)
 
+        #          123456712345678901 123456789012 123456789
+        #               0       10000        49600 [52.88%]
         output += '  level   unknowns     nonzeros\n'
         for n, level in enumerate(self.levels):
             A = level.A
-            output += '   %2d   %10d   %10d [%5.2f%%]\n' %\
-                (n, A.shape[1], A.nnz,
-                 (100 * float(A.nnz) / float(total_nnz)))
+            ratio = 100 * A.nnz / total_nnz
+            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [%{ratio:2.2}]\n'
 
         return output
 
@@ -218,35 +235,38 @@ class multilevel_solver:
         def V(level):
             if len(self.levels) == 1:
                 return nnz[0]
-            elif level == len(self.levels) - 2:
+
+            if level == len(self.levels) - 2:
                 return 2 * nnz[level] + nnz[level + 1]
-            else:
-                return 2 * nnz[level] + V(level + 1)
+
+            return 2 * nnz[level] + V(level + 1)
 
         def W(level):
             if len(self.levels) == 1:
                 return nnz[0]
-            elif level == len(self.levels) - 2:
+
+            if level == len(self.levels) - 2:
                 return 2 * nnz[level] + nnz[level + 1]
-            else:
-                return 2 * nnz[level] + 2 * W(level + 1)
+
+            return 2 * nnz[level] + 2 * W(level + 1)
 
         def F(level):
             if len(self.levels) == 1:
                 return nnz[0]
-            elif level == len(self.levels) - 2:
+
+            if level == len(self.levels) - 2:
                 return 2 * nnz[level] + nnz[level + 1]
-            else:
-                return 2 * nnz[level] + F(level + 1) + V(level + 1)
+
+            return 2 * nnz[level] + F(level + 1) + V(level + 1)
 
         if cycle == 'V':
             flops = V(0)
-        elif (cycle == 'W') or (cycle == 'AMLI'):
+        elif cycle in ('W', 'AMLI'):
             flops = W(0)
         elif cycle == 'F':
             flops = F(0)
         else:
-            raise TypeError('Unrecognized cycle type (%s)' % cycle)
+            raise TypeError(f'Unrecognized cycle type ({cycle})')
 
         return float(flops) / float(nnz[0])
 
@@ -294,7 +314,7 @@ class multilevel_solver:
 
         See Also
         --------
-        multilevel_solver.solve, scipy.sparse.linalg.LinearOperator
+        MultilevelSolver.solve, scipy.sparse.linalg.LinearOperator
 
         Examples
         --------
@@ -309,7 +329,6 @@ class multilevel_solver:
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
 
         """
-        from scipy.sparse.linalg import LinearOperator
 
         shape = self.levels[0].A.shape
         dtype = self.levels[0].A.dtype
@@ -384,7 +403,6 @@ class multilevel_solver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
-        from pyamg.util.linalg import norm
 
         if x0 is None:
             x = np.zeros_like(b)
@@ -414,17 +432,9 @@ class multilevel_solver:
                 raise ValueError('AMLI cycles require acceleration (accel) '
                                  'to be fgmres, or no acceleration')
 
-            # py23 compatibility:
-            try:
-                basestring
-            except NameError:
-                basestring = str
-
             # Acceleration is being used
             kwargs = {}
-            if isinstance(accel, basestring):
-                from pyamg import krylov
-                from scipy.sparse.linalg import isolve
+            if isinstance(accel, str):
                 kwargs = {}
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
@@ -442,23 +452,24 @@ class multilevel_solver:
                 return x
             except TypeError:
                 # try the scipy.sparse.linalg.isolve style interface,
-                # which requires a call back function if a residual
+                # which requires a callback function if a residual
                 # history is desired
 
-                cb = callback
                 if residuals is not None:
-                    residuals[:] = [norm(b - A @ x)]
+                    residuals[:] = [np.linalg.norm(b - A @ x)]
 
-                    def callback(x):
+                    def callback_wrapper(x):
                         if np.isscalar(x):
                             residuals.append(x)
                         else:
-                            residuals.append(norm(b - A @ x))
-                        if cb is not None:
-                            cb(x)
+                            residuals.append(np.linalg.norm(b - A @ x))
+                        if callback is not None:
+                            callback(x)
+                else:
+                    callback_wrapper = callback
 
                 x, info = accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
-                                callback=callback, **kwargs)
+                                callback=callback_wrapper, **kwargs)
                 if return_info:
                     return x, info
                 return x
@@ -466,7 +477,7 @@ class multilevel_solver:
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
-            normb = norm(b)
+            normb = np.linalg.norm(b)
             if normb == 0.0:
                 normb = 1.0  # set so that we have an absolute tolerance
 
@@ -477,8 +488,6 @@ class multilevel_solver:
 
         # Create uniform types for A, x and b
         # Clearly, this logic doesn't handle the case of real A and complex b
-        from scipy.sparse.sputils import upcast
-        from pyamg.util.utils import to_type
         tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
         b = np.ravel(b)
@@ -495,7 +504,7 @@ class multilevel_solver:
 
             it += 1
 
-            normr = norm(b - A @ x)
+            normr = np.linalg.norm(b - A @ x)
             if residuals is not None:
                 residuals.append(normr)
 
@@ -582,7 +591,7 @@ class multilevel_solver:
                     # Update residual
                     coarse_b -= alpha * Ap.reshape(coarse_b.shape)
             else:
-                raise TypeError('Unrecognized cycle type (%s)' % cycle)
+                raise TypeError(f'Unrecognized cycle type ({cycle})')
 
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
@@ -590,7 +599,7 @@ class multilevel_solver:
 
 
 def coarse_grid_solver(solver):
-    """Return a coarse grid solver suitable for multilevel_solver.
+    """Return a coarse grid solver suitable for MultilevelSolver.
 
     Parameters
     ----------
@@ -619,7 +628,7 @@ def coarse_grid_solver(solver):
 
     Returns
     -------
-    ptr : generic_solver
+    ptr : GenericSolver
         A class for use as a standalone or coarse grids solver
 
     Examples
@@ -678,14 +687,12 @@ def coarse_grid_solver(solver):
             return self.LU_Map * self.LU.solve(np.ravel(self.LU_Map.T * b))
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
-        from pyamg import krylov
-        from pyamg.util.utils import set_tol
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
             fn = getattr(sp.sparse.linalg.isolve, solver)
 
-        def solve(self, A, b):
+        def solve(_, A, b):
             if 'tol' not in kwargs:
                 kwargs['tol'] = set_tol(A.dtype)
 
@@ -698,11 +705,9 @@ def coarse_grid_solver(solver):
         if 'iterations' not in kwargs:
             kwargs['iterations'] = 10
 
-        def solve(self, A, b):
-            from pyamg.relaxation import smoothing
-            from pyamg import multilevel_solver
+        def solve(_, A, b):
 
-            lvl = multilevel_solver.level()
+            lvl = MultilevelSolver.Level()
             lvl.A = A
             fn = getattr(smoothing, 'setup_' + str(solver))
             relax = fn(lvl, **kwargs)
@@ -713,17 +718,18 @@ def coarse_grid_solver(solver):
 
     elif solver is None:
         # No coarse grid solve
-        def solve(self, A, b):
+        def solve(_, __, b):
             return 0 * b  # should this return b instead?
 
     elif callable(solver):
-        def solve(self, A, b):
+        def solve(_, A, b):
             return solver(A, b, **kwargs)
 
     else:
-        raise ValueError('unknown solver: %s' % solver)
+        raise ValueError(f'unknown solver: {solver}')
 
-    class generic_solver:
+    class GenericSolver:
+        """Generic solver class."""
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
             b = np.asanyarray(b)
@@ -748,7 +754,18 @@ def coarse_grid_solver(solver):
         def __repr__(self):
             return 'coarse_grid_solver(' + repr(solver) + ')'
 
-        def name(self):
+        @classmethod
+        def name(cls):
+            """Return the coarse solver name."""
             return repr(solver)
 
-    return generic_solver()
+    return GenericSolver()
+
+
+class multilevel_solver(MultilevelSolver):  # noqa: N801
+    """Deprecated level class."""
+    # only raise deprecation warning on use, not import
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warn("multilevel_solver is deprectated.  use MultilevelSolver()",
+             category=DeprecationWarning, stacklevel=2)

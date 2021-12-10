@@ -3,9 +3,9 @@
 
 import warnings
 import numpy as np
-import scipy.sparse as sparse
-from pyamg import amg_core
-from pyamg.graph import lloyd_cluster, balanced_lloyd_cluster
+from scipy import sparse
+from .. import amg_core
+from ..graph import lloyd_cluster, balanced_lloyd_cluster
 
 
 def standard_aggregation(C):
@@ -72,25 +72,26 @@ def standard_aggregation(C):
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
 
+    # no nodes aggregated
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
         return sparse.csr_matrix((num_rows, 1), dtype='int8'),\
             np.array([], dtype=index_type)
-    else:
 
-        shape = (num_rows, num_aggregates)
-        if Tj.min() == -1:
-            # some nodes not aggregated
-            mask = Tj != -1
-            row = np.arange(num_rows, dtype=index_type)[mask]
-            col = Tj[mask]
-            data = np.ones(len(col), dtype='int8')
-            return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
-        else:
-            # all nodes aggregated
-            Tp = np.arange(num_rows+1, dtype=index_type)
-            Tx = np.ones(len(Tj), dtype='int8')
-            return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+    shape = (num_rows, num_aggregates)
+
+    # some nodes not aggregated
+    if Tj.min() == -1:
+        mask = Tj != -1
+        row = np.arange(num_rows, dtype=index_type)[mask]
+        col = Tj[mask]
+        data = np.ones(len(col), dtype='int8')
+        return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
+
+    # all nodes aggregated
+    Tp = np.arange(num_rows+1, dtype=index_type)
+    Tx = np.ones(len(Tj), dtype='int8')
+    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def naive_aggregation(C):
@@ -168,12 +169,12 @@ def naive_aggregation(C):
     if num_aggregates == 0:
         # all zero matrix
         return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
-    else:
-        shape = (num_rows, num_aggregates)
-        # all nodes aggregated
-        Tp = np.arange(num_rows+1, dtype=index_type)
-        Tx = np.ones(len(Tj), dtype='int8')
-        return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+
+    shape = (num_rows, num_aggregates)
+    # all nodes aggregated
+    Tp = np.arange(num_rows+1, dtype=index_type)
+    Tx = np.ones(len(Tj), dtype='int8')
+    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
@@ -254,7 +255,7 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     elif measure == 'min':
         data = C.data - C.data.min()
     else:
-        raise ValueError('unrecognized value measure=%s' % measure)
+        raise ValueError(f'Unrecognized value distance={distance}')
 
     if C.dtype == complex:
         data = np.real(data)

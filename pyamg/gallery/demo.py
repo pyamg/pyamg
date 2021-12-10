@@ -1,8 +1,9 @@
 """Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG with AMG."""
 
 import numpy as np
-from pyamg.gallery import poisson
-from pyamg.aggregation import smoothed_aggregation_solver
+
+from .laplacian import poisson
+from ..aggregation.aggregation import smoothed_aggregation_solver
 
 
 def demo():
@@ -34,12 +35,12 @@ def demo():
     factor1 = standalone_residuals[-1]**(1.0/len(standalone_residuals))
     factor2 = accelerated_residuals[-1]**(1.0/len(accelerated_residuals))
 
-    print("                     MG convergence factor: %g" % (factor1))
-    print("MG with CG acceleration convergence factor: %g" % (factor2))
+    print(f'                     MG convergence factor: {factor1}')
+    print(f'MG with CG acceleration convergence factor: {factor2}')
 
     # Plot convergence history
     try:
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
         plt.figure()
         plt.title('Convergence History')
         plt.xlabel('Iteration')
@@ -51,4 +52,4 @@ def demo():
         plt.legend()
         plt.show()
     except ImportError:
-        print("\n\nNote: pylab not available on your system.")
+        print("\nNote: matplotlib is needed for plotting.")

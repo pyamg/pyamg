@@ -1,3 +1,5 @@
+"""Generalized Minimum Residual Method (GMRES) Krylov solver."""
+
 from ._gmres_mgs import gmres_mgs
 from ._gmres_householder import gmres_householder
 

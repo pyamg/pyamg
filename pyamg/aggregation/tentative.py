@@ -125,8 +125,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
         raise ValueError('expected 2d array for argument B')
 
     if B.shape[0] % AggOp.shape[0] != 0:
-        raise ValueError('dimensions of AggOp {} and B {} are \
-                          incompatible'.format(AggOp.shape, B.shape))
+        raise ValueError(f'Dimensions of AggOp {AggOp.shape} and B {B.shape} '
+                         'are incompatible')
 
     N_fine, N_coarse = AggOp.shape
 

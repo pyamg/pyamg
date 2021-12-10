@@ -1,12 +1,13 @@
 """Algorithms related to graphs."""
 
-import warnings
+from warnings import warn
 import numpy as np
 from scipy import sparse
 
 from . import amg_core
 
 def asgraph(G):
+    """Return (square) matrix as sparse."""
     if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):
         G = sparse.csr_matrix(G)
 
@@ -57,7 +58,7 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn = amg_core.maximal_independent_set_parallel
             fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
-            raise ValueError('unknown algorithm (%s)' % algo)
+            raise ValueError('Unknown algorithm ({algo})')
     else:
         fn = amg_core.maximal_independent_set_k_parallel
         fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
@@ -105,7 +106,7 @@ def vertex_coloring(G, method='MIS'):
         fn = amg_core.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
-        raise ValueError('unknown method (%s)' % method)
+        raise ValueError('Unknown method ({method})')
 
     return coloring
 
@@ -679,15 +680,12 @@ def symmetric_rcm(A):
     pseudo_peripheral_node
 
     """
-    n = A.shape[0]
 
-    root, order, level = pseudo_peripheral_node(A)
+    dummy_root, order, dummy_level = pseudo_peripheral_node(A)
 
-    Perm = sparse.identity(n, format='csr')
-    p = level.argsort()
-    Perm = Perm[p, :]
+    p = order[::-1]
 
-    return Perm * A * Perm.T
+    return A[p, :][:, p]
 
 
 def pseudo_peripheral_node(A):
@@ -712,7 +710,6 @@ def pseudo_peripheral_node(A):
     Algorithm in Saad
 
     """
-    from pyamg.graph import breadth_first_search
     n = A.shape[0]
 
     valence = np.diff(A.indptr)

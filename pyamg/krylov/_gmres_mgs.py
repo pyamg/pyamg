@@ -1,3 +1,5 @@
+"""GMRES Gram-Schmidt-based implementation."""
+
 import warnings
 from warnings import warn
 
@@ -199,7 +201,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):
+    for outer in range(max_outer):  # pylint: disable=unused-variable
 
         # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(n*max_inner).
@@ -324,39 +326,3 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # end outer loop
 
     return (postprocess(x), niter)
-
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-    # %timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
-
-    from pyamg.gallery import poisson
-    from numpy.random import random
-    A = poisson((125, 125), dtype=float, format='csr')
-    # A.data = A.data + 0.001j*rand(A.data.shape[0])
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import gmres as igmres
-
-    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %
-          (A.shape[0], A.shape[0]))
-    t1 = time.time()
-    (x, flag) = gmres_mgs(A, b, x0, tol=1e-8, maxiter=500)
-    t2 = time.time()
-    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
-
-    t1 = time.time()
-    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-    (y, flag) = igmres(A, b, x0, tol=1e-8)
-    t2 = time.time()
-    print('\n{} took {:0.3f} ms'.format('linalg gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*y)))
-    print('info flag = %d' % (flag))

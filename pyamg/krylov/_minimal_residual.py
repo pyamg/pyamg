@@ -1,3 +1,5 @@
+"""Minimum Residual projection method."""
+
 import warnings
 from warnings import warn
 import numpy as np
@@ -154,38 +156,3 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
         if it == maxiter:
             return (postprocess(x), it)
-
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#
-#    from pyamg.gallery import stencil_grid
-#    from pyamg import smoothed_aggregation_solver
-#    from numpy.random import random
-#    from numpy import zeros_like, dot
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,
-#                     format='csr')
-#    x0 = random((A.shape[0],))
-#    b = zeros_like(x0)
-#
-#    # This function should always decrease (assuming zero RHS)
-#    fvals = []
-#    def callback(x):
-#        fvals.append( sqrt(dot( ravel(x), ravel(A*x.reshape(-1,1)) )) )
-#
-#    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix' %\
-#          (A.shape[0],A.shape[0])
-#    resvec = []
-#    sa = smoothed_aggregation_solver(A)
-#    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
-#    M=sa.aspreconditioner())
-#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
-#    callback=callback)
-#    print 'Funcation values:  ' + str(fvals)
-#    print 'initial norm = %g'%(norm(b - A*x0))
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)

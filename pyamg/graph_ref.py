@@ -1,6 +1,5 @@
 """Reference implementations of graph algorithms."""
 import numpy as np
-import scipy.sparse as sparse
 
 
 def bellman_ford_reference(A, c):

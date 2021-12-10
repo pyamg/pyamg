@@ -295,25 +295,26 @@ class TestEnergyMin(TestCase):
         A = X['A'].tocsr()
         B = X['B']
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'local'}), name))
+                             {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'block'}), name))
+                             {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((A, B, ('energy', {'maxiter': 3}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         name = 'poisson'
         A = poisson((10, 10), format='csr')
         B = np.ones((A.shape[0], 1))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'diagonal'}), name))
+                             {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('jacobi',
-                             {'filter': True, 'weighting': 'local'}), name))
+                             {'filter_entries': True, 'weighting': 'local'}), name))
 
         cases.append((A, B, 'energy', name))
         cases.append((A, B, ('energy', {'degree': 2}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'degree': 2}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'degree': 2,
+                                        'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres'}), name))
 
         # Simple, imaginary-valued problems
@@ -323,34 +324,38 @@ class TestEnergyMin(TestCase):
                  + 1.0j * (1.0 + np.random.rand(iA.shape[0], 2))
 
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'diagonal'}), name))
+                              {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'block'}), name))
+                              {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'local'}), name))
+                               {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'block'}), name))
+                               {'filter_entries': True, 'weighting': 'block'}), name))
 
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), iB,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
-        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'degree': 2}), name))
-        cases.append((iA, iB, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'degree': 2,
+                                         'weighting': 'diagonal'}), name))
+        cases.append((iA, iB, ('energy', {'krylov': 'cgnr',
+                                          'weighting': 'diagonal'}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
                        {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
-                        'postfilter': {'theta': 0.05}}), name))
+                        'weighting': 'diagonal', 'postfilter': {'theta': 0.05}}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
                        {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
+                        'weighting': 'diagonal',
                         'prefilter': {'theta': 0.05}}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), B,
                       ('energy',
-                       {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}), name))
+                       {'krylov': 'cgnr', 'degree': 2,
+                        'weighting': 'diagonal', 'maxiter': 3}), name))
         cases.append((iA.tobsr(blocksize=(5, 5)), iB,
-                      ('energy', {'krylov': 'cgnr'}), name))
+                      ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'gmres'}), name))
         cases.append((iA, iB, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
@@ -365,19 +370,19 @@ class TestEnergyMin(TestCase):
         iA = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
 
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'local'}), name))
+                              {'filter_entries': True, 'weighting': 'local'}), name))
         cases.append((iA, B, ('jacobi',
-                              {'filter': True, 'weighting': 'block'}), name))
+                              {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'diagonal'}), name))
+                               {'filter_entries': True, 'weighting': 'diagonal'}), name))
         cases.append((iA, iB, ('jacobi',
-                               {'filter': True, 'weighting': 'block'}), name))
+                               {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
-                      ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+                      ('jacobi', {'filter_entries': True, 'weighting': 'block'}), name))
 
-        cases.append((iA, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((iA, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
-                      ('energy', {'krylov': 'cgnr'}), name))
+                      ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
 
         cases.append((iA, B, ('energy', {'krylov': 'gmres'}), name))
         cases.append((iA.tobsr(blocksize=(4, 4)), iB,
@@ -396,30 +401,33 @@ class TestEnergyMin(TestCase):
         name = 'gauge laplacian'
         A = gauge_laplacian(10, spacing=1.0, beta=0.21)
         B = np.ones((A.shape[0], 1))
-        cases.append((A, iB, ('jacobi', {'filter': True, 'weighting': 'diagonal'}), name))
-        cases.append((A, iB, ('jacobi', {'filter': True, 'weighting': 'local'}), name))
+        cases.append((A, iB, ('jacobi',
+                              {'filter_entries': True, 'weighting': 'diagonal'}), name))
+        cases.append((A, iB, ('jacobi',
+                              {'filter_entries': True, 'weighting': 'local'}), name))
 
         cases.append((A, B, ('energy', {'krylov': 'cg'}), name))
-        cases.append((A, iB, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, iB, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, iB, ('energy', {'krylov': 'gmres'}), name))
 
         name = 'gauge laplacian bsr'
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2,
-                                 'maxiter': 3, 'postfilter': {'theta': 0.05}}),
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'weighting': 'diagonal',
+                                  'maxiter': 3, 'postfilter': {'theta': 0.05}}),
                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2,
-                      'maxiter': 3, 'prefilter': {'theta': 0.05}}),
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'weighting': 'diagonal',
+                       'maxiter': 3, 'prefilter': {'theta': 0.05}}),
                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3}),
-                     name))
+                      ('energy', {'krylov': 'cgnr', 'degree': 2, 'maxiter': 3,
+                                  'weighting': 'diagonal'}),
+                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), iB,
                      ('energy', {'krylov': 'cg'}), name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
-                     ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
-                     name))
+                      ('energy', {'krylov': 'gmres', 'degree': 2, 'maxiter': 3}),
+                      name))
         cases.append((A.tobsr(blocksize=(2, 2)), B,
                      ('energy', {'krylov': 'gmres', 'degree': 2,
                       'maxiter': 3, 'postfilter': {'theta': 0.05}}),
@@ -432,13 +440,16 @@ class TestEnergyMin(TestCase):
         #
         name = 'linear elasticity'
         A, B = linear_elasticity((10, 10))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'diagonal'}), name))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'local'}), name))
-        cases.append((A, B, ('jacobi', {'filter': True, 'weighting': 'block'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'diagonal'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'local'}), name))
+        cases.append((A, B, ('jacobi',
+                             {'filter_entries': True, 'weighting': 'block'}), name))
         cases.append((A, B, ('energy', {'degree': 2}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'postfilter': {'theta': 0.05}}), name))
         cases.append((A, B, ('energy', {'degree': 3, 'prefilter': {'theta': 0.05}}), name))
-        cases.append((A, B, ('energy', {'krylov': 'cgnr'}), name))
+        cases.append((A, B, ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}), name))
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         # Classic SA cases
@@ -450,12 +461,12 @@ class TestEnergyMin(TestCase):
             R = ml.levels[1].B
             assert_almost_equal(P * R, B)
 
-        def blocksize(A):
+        def _get_blocksize(A):
             # Helper Function: return the blocksize of a matrix
             if sparse.isspmatrix_bsr(A):
                 return A.blocksize[0]
-            else:
-                return 1
+
+            return 1
 
         # Root-node cases
         counter = 0
@@ -467,7 +478,7 @@ class TestEnergyMin(TestCase):
             else:
                 smoother = smooth
 
-            if smoother == 'energy' and (B.shape[1] >= blocksize(A)):
+            if smoother == 'energy' and (B.shape[1] >= _get_blocksize(A)):
                 ic = [('gauss_seidel_nr',
                        {'sweep': 'symmetric', 'iterations': 4}), None]
                 ml = rootnode_solver(A, B=B, max_coarse=1, max_levels=2,
@@ -613,30 +624,30 @@ class TestEnergyMin(TestCase):
 #    def test_scalar(self):
 #
 #        U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
-#        Sparsity_Pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
+#        pattern = bsr_matrix([[1,1],[1,1]],blocksize=(1,1))
 #        B = np.array(np.array([[1],[1]]))
 #        BtBinv = [ np.array([[0.5]]), np.array([[0.5]]) ]
 #        colindices = [ np.array([0,1]), np.array([0,1]) ]
 #
-#        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+#        U = satisfy_constraints(U, pattern, B, BtBinv, colindices)
 #
 #
 #        assert_equal(U.toarray(), np.array([[0,1],[1,0]]))
 #        assert_almost_equal(U*B, 0*U*B)
 #
 #    def test_block(self):
-#        SparsityPattern = np.array([[1,1,0,0],
-#                                 [1,1,0,0],
-#                                 [1,1,1,1],
-#                                 [0,0,1,1],
-#                                 [0,0,1,1]])
+#        pattern = np.array([[1,1,0,0],
+#                            [1,1,0,0],
+#                            [1,1,1,1],
+#                            [0,0,1,1],
+#                            [0,0,1,1]])
 #        U = np.array([[1,2,0,0],
 #                   [4,3,0,0],
 #                   [5,6,8,7],
 #                   [0,0,4,1],
 #                   [0,0,2,3]])
 #
-#        Sparsity_Pattern = bsr_matrix(SparsityPattern, blocksize=(1,2))
+#        pattern = bsr_matrix(pattern, blocksize=(1,2))
 #        U = bsr_matrix(U, blocksize=(1,2))
 #        B = np.array([[1,1],
 #                   [1,2],
@@ -652,5 +663,5 @@ class TestEnergyMin(TestCase):
 #                Bi = np.array(B)[colindx,:]
 #                BtBinv[i] = pinv(Bi.T.dot(Bi))
 #
-#        U = Satisfy_Constraints(U, Sparsity_Pattern, B, BtBinv, colindices)
+#        U = satisfy_constraints(U, pattern, B, BtBinv, colindices)
 #        assert_almost_equal(U*B, 0*U*B)

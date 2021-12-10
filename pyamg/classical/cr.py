@@ -67,8 +67,9 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         # criteria 1 -- fast convergence
         if rhok < 0.1 * thetacr:
             break
+
         # criteria 2 -- at least nu iters, small relative change in CF (<0.1)
-        elif ((abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
+        if ((abs(rhok - rhok_old) / rhok) < 0.1) and (it >= nu):
             break
 
     return rhok, e
@@ -154,7 +155,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     # initial vector of ones
     if B is None:
         B = np.ones((n, 1))
-    elif (B.ndim == 1):
+
+    if B.ndim == 1:
         B = B.reshape((len(B), 1))
 
     target = B[:, 0]
@@ -281,12 +283,13 @@ def binormalize(A, tol=1e-5, maxiter=10):
             c2 = (n-1)*d[i]
             c1 = (n-2)*(beta[i] - d[i]*x[i])
             c0 = -d[i]*x[i]*x[i] + 2*beta[i]*x[i] - n*betabar
-            if (-c0 < 1e-14):
+
+            if -c0 < 1e-14:
                 print('warning: A nearly un-binormalizable...')
                 return A
-            else:
-                # see equation (12)
-                xnew = (2*c0)/(-c1 - np.sqrt(c1*c1 - 4*c0*c2))
+
+            # see equation (12)
+            xnew = (2*c0)/(-c1 - np.sqrt(c1*c1 - 4*c0*c2))
             dx = xnew - x[i]
 
             # here we assume input matrix is symmetric since we grab a row of B
