@@ -2,7 +2,7 @@
 import numpy as np
 import pyamg.amg_core as amg_core
 from pyamg.gallery import load_example
-from pyamg.graph import bellman_ford_reference, bellman_ford_balanced_reference
+from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
 import scipy.sparse as sparse
 
 from numpy.testing import TestCase, assert_equal, assert_array_equal

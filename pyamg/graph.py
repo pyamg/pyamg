@@ -168,9 +168,6 @@ def bellman_ford(G, centers, method='standard'):
     else:
         raise ValueError(f'Method {method} is not supported in Bellman-Ford')
 
-    if not np.all(nearest >= 0) or not np.all(distances >= 0):
-        raise ValueError(f'Encountered disconnected nodes.')
-
     return distances, nearest, predecessors
 
 
