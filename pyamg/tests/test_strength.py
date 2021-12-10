@@ -9,7 +9,8 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.util.utils import scale_rows, set_tol
+from pyamg.util.utils import scale_rows
+from pyamg.util.params import set_tol
 
 from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
     assert_array_equal

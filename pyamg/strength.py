@@ -14,9 +14,12 @@ from warnings import warn
 
 import numpy as np
 from scipy import sparse
-from pyamg import amg_core
-from pyamg.util.utils import scale_rows_by_largest_entry, amalgamate
-from pyamg.relaxation.relaxation import jacobi
+from . import amg_core
+from .relaxation.relaxation import jacobi
+from .util.linalg import approximate_spectral_radius
+from .util.utils import (scale_rows_by_largest_entry, amalgamate, scale_rows,
+                         get_block_diag, scale_columns)
+from .util.params import set_tol
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
@@ -374,11 +377,11 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     >>> S = energy_based_strength_of_connection(A, 0.0)
 
     """
-    if (theta < 0):
+    if theta < 0:
         raise ValueError('expected a positive theta')
     if not sparse.isspmatrix(A):
         raise ValueError('expected sparse matrix')
-    if (k < 0):
+    if k < 0:
         raise ValueError('expected positive number of steps')
     if not isinstance(k, int):
         raise ValueError('expected integer')
@@ -401,7 +404,6 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
         Atilde = Atilde.tocsr()
 
     # Calculate the weighted-Jacobi parameter
-    from pyamg.util.linalg import approximate_spectral_radius
     D = A.diagonal()
     Dinv = 1.0 / D
     Dinv[D == 0] = 0.0
@@ -521,11 +523,6 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     >>> S = evolution_strength_of_connection(A,  np.ones((A.shape[0],1)))
 
     """
-    # local imports for evolution_strength_of_connection
-    from pyamg.util.utils import scale_rows, get_block_diag, scale_columns
-    from pyamg.util.linalg import approximate_spectral_radius
-    from pyamg.util.utils import set_tol
-
     # ====================================================================
     # Check inputs
     if epsilon < 1.0:
@@ -547,7 +544,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     # Pre-process A.  We need A in CSR, to be devoid of explicit 0's and have
     # sorted indices
-    if (not sparse.isspmatrix_csr(A)):
+    if not sparse.isspmatrix_csr(A):
         csrflag = False
         numPDEs = A.blocksize[0]
         D = A.diagonal()
@@ -969,8 +966,8 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
         if p != np.inf:
             avg = np.sum(np.abs(x[rows] - x[cols])**p, axis=1) / R
             return (avg)**(1.0 / p)
-        else:
-            return np.abs(x[rows] - x[cols]).max(axis=1)
+
+        return np.abs(x[rows] - x[cols]).max(axis=1)
 
     return distance_measure_common(A, distance, alpha, R, k, epsilon)
 

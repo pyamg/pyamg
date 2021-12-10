@@ -1,8 +1,9 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D."""
+# pylint: disable=redefined-builtin
 
 import numpy as np
 import scipy.linalg as sla
-import scipy.sparse as sparse
+from scipy import sparse
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
@@ -52,8 +53,8 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     """
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
-    else:
-        raise NotImplementedError('no support for grid=%s' % str(grid))
+
+    raise NotImplementedError('No support for grid={grid}')
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
@@ -315,7 +316,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
 def p12d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 2d."""
-    assert(vertices.shape == (3, 2))
+    assert vertices.shape == (3, 2)
 
     A = np.vstack((np.ones((1, 3)), vertices.T))
     PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions
@@ -330,7 +331,7 @@ def p12d_local(vertices, lame, mu):
 
 def p13d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 3d."""
-    assert(vertices.shape == (4, 3))
+    assert vertices.shape == (4, 3)
 
     A = np.vstack((np.ones((1, 4)), vertices.T))
     PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions

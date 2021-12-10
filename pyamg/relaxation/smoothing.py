@@ -1,10 +1,37 @@
-"""Method to create pre and post-smoothers on the levels of a multilevel_solver."""
+"""Method to create pre and post-smoothers on the levels of a MultilevelSolver.
+
+    The setup_smoother_name functions are helper functions for
+    parsing user input and assigning each level the appropriate smoother for
+    the functions in 'change_smoothers'.
+
+    The standard interface is
+
+    Parameters
+    ----------
+    lvl : multilevel level
+        the level in the hierarchy for which to assign a smoother
+    iterations : int
+        how many smoother iterations
+    optional_params : dict
+        optional params specific for each method such as omega or sweep
+
+    Returns
+    -------
+    Function pointer for the appropriate relaxation method for level=lvl
+
+    Examples
+    --------
+    See change_smoothers above
+
+"""
 
 import numpy as np
-import scipy.sparse as sparse
-from pyamg.util.utils import scale_rows, get_block_diag, get_diagonal
-from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.krylov import gmres, cgne, cgnr, cg
+from scipy import sparse
+from scipy.sparse.linalg import LinearOperator
+from ..util.utils import scale_rows, get_block_diag, get_diagonal
+from ..util.linalg import approximate_spectral_radius
+from ..krylov import gmres, cgne, cgnr, cg
+
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 
@@ -20,17 +47,16 @@ SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
 def _unpack_arg(v):
     if isinstance(v, tuple):
         return v[0], v[1]
-    else:
-        return v, {}
+    return v, {}
 
 
 def change_smoothers(ml, presmoother, postsmoother):
     """Initialize pre and post smoothers.
 
-    Initialize pre- and post- smoothers throughout a multilevel_solver, with
+    Initialize pre- and post- smoothers throughout a MultilevelSolver, with
     the option of having different smoothers at different levels
 
-    For each level of the multilevel_solver 'ml' (except the coarsest level),
+    For each level of the MultilevelSolver 'ml' (except the coarsest level),
     initialize the .presmoother() and .postsmoother() methods used in the
     multigrid cycle.
 
@@ -62,8 +88,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     Returns
     -------
     ml changed in place
-    ml.level[i].presmoother   <===  presmoother[i]
-    ml.level[i].postsmoother  <===  postsmoother[i]
+    ml.levels[i].presmoother   <===  presmoother[i]
+    ml.levels[i].postsmoother  <===  postsmoother[i]
     ml.symmetric_smoothing is marked True/False depending on whether
         the smoothing scheme is symmetric.
 
@@ -132,14 +158,12 @@ def change_smoothers(ml, presmoother, postsmoother):
     ml.symmetric_smoothing = True
 
     # interpret arguments into list
-    if isinstance(presmoother, str) or isinstance(presmoother, tuple) or\
-       (presmoother is None):
+    if isinstance(presmoother, (str, tuple)) or (presmoother is None):
         presmoother = [presmoother]
     elif not isinstance(presmoother, list):
         raise ValueError('Unrecognized presmoother')
 
-    if isinstance(postsmoother, str) or isinstance(postsmoother, tuple) or\
-       (postsmoother is None):
+    if isinstance(postsmoother, (str, tuple)) or (postsmoother is None):
         postsmoother = [postsmoother]
     elif not isinstance(postsmoother, list):
         raise ValueError('Unrecognized postsmoother')
@@ -157,89 +181,93 @@ def change_smoothers(ml, presmoother, postsmoother):
         fn1, kwargs1 = _unpack_arg(presmoother[i])
         # get function handle
         try:
-            setup_presmoother = eval('setup_' + str(fn1))
-        except NameError:
-            raise NameError("invalid presmoother method: ", fn1)
+            setup_presmoother = _setup_call(str(fn1).lower())
+        except NameError as e:
+            raise NameError(f'Invalid presmoother method: {fn1}') from e
+
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
         # unpack postsmoother[i]
         fn2, kwargs2 = _unpack_arg(postsmoother[i])
         # get function handle
         try:
-            setup_postsmoother = eval('setup_' + str(fn2))
-        except NameError:
-            raise NameError("invalid postsmoother method: ", fn2)
+            setup_postsmoother = _setup_call(str(fn2).lower())
+        except NameError as e:
+            raise NameError(f'Invalid postsmoother method: {fn2}') from e
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
         # Check if symmetric smoothing scheme
-        try:
+        if 'iterations' in kwargs1:
             it1 = kwargs1['iterations']
-        except BaseException:
+        else:
             it1 = DEFAULT_NITER
-        try:
+
+        if 'iterations' in kwargs2:
             it2 = kwargs2['iterations']
-        except BaseException:
+        else:
             it2 = DEFAULT_NITER
+
         if (fn1 != fn2) or (it1 != it2):
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
-            try:
+            if 'sweep' in kwargs1:
                 sweep1 = kwargs1['sweep']
-            except BaseException:
-                sweep1 = DEFAULT_SWEEP
-            try:
-                sweep2 = kwargs2['sweep']
-            except BaseException:
-                sweep2 = DEFAULT_SWEEP
-            if (sweep1 == 'forward' and sweep2 == 'backward') or \
-               (sweep1 == 'backward' and sweep2 == 'forward') or \
-               (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
-                pass
             else:
+                sweep1 = DEFAULT_SWEEP
+
+            if 'sweep' in kwargs2:
+                sweep2 = kwargs2['sweep']
+            else:
+                sweep2 = DEFAULT_SWEEP
+
+            if (sweep1, sweep2) not in (('forward', 'backward'),
+                                        ('backward', 'forward'),
+                                        ('symmetric', 'symmetric')):
                 ml.symmetric_smoothing = False
 
     if len(presmoother) < len(postsmoother):
         mid_len = min(len(postsmoother), len(ml.levels[:-1]))
         for i in range(min_len, mid_len):
             # Set up presmoother
-            ml.levels[i].presmoother =\
-                setup_presmoother(ml.levels[i], **kwargs1)
+            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
             # unpack postsmoother[i]
             fn2, kwargs2 = _unpack_arg(postsmoother[i])
             # get function handle
             try:
-                setup_postsmoother = eval('setup_' + str(fn2))
-            except NameError:
-                raise NameError("invalid postsmoother method: ", fn2)
-            ml.levels[i].postsmoother =\
-                setup_postsmoother(ml.levels[i], **kwargs2)
+                setup_postsmoother = _setup_call(str(fn2).lower())
+            except NameError as e:
+                raise NameError(f'Invalid postsmoother method: {fn2}') from e
+
+            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
             # Check if symmetric smoothing scheme
-            try:
+            if 'iterations' in kwargs1:
                 it1 = kwargs1['iterations']
-            except BaseException:
+            else:
                 it1 = DEFAULT_NITER
-            try:
+
+            if 'iterations' in kwargs2:
                 it2 = kwargs2['iterations']
-            except BaseException:
+            else:
                 it2 = DEFAULT_NITER
+
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                try:
+                if 'sweep' in kwargs1:
                     sweep1 = kwargs1['sweep']
-                except BaseException:
-                    sweep1 = DEFAULT_SWEEP
-                try:
-                    sweep2 = kwargs2['sweep']
-                except BaseException:
-                    sweep2 = DEFAULT_SWEEP
-                if (sweep1 == 'forward' and sweep2 == 'backward') or \
-                   (sweep1 == 'backward' and sweep2 == 'forward') or \
-                   (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
-                    pass
                 else:
+                    sweep1 = DEFAULT_SWEEP
+
+                if 'sweep' in kwargs2:
+                    sweep2 = kwargs2['sweep']
+                else:
+                    sweep2 = DEFAULT_SWEEP
+
+                if (sweep1, sweep2) not in (('forward', 'backward'),
+                                            ('backward', 'forward'),
+                                            ('symmetric', 'symmetric')):
                     ml.symmetric_smoothing = False
 
     elif len(presmoother) > len(postsmoother):
@@ -249,41 +277,42 @@ def change_smoothers(ml, presmoother, postsmoother):
             fn1, kwargs1 = _unpack_arg(presmoother[i])
             # get function handle
             try:
-                setup_presmoother = eval('setup_' + str(fn1))
-            except NameError:
-                raise NameError("invalid presmoother method: ", fn1)
-            ml.levels[i].presmoother =\
-                setup_presmoother(ml.levels[i], **kwargs1)
+                setup_presmoother = _setup_call(str(fn1).lower())
+            except NameError as e:
+                raise NameError(f'Invalid presmoother method: {fn1}') from e
+
+            ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
             # Set up postsmoother
-            ml.levels[i].postsmoother =\
-                setup_postsmoother(ml.levels[i], **kwargs2)
+            ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
             # Check if symmetric smoothing scheme
-            try:
+            if 'iterations' in kwargs1:
                 it1 = kwargs1['iterations']
-            except BaseException:
+            else:
                 it1 = DEFAULT_NITER
-            try:
+
+            if 'iterations' in kwargs2:
                 it2 = kwargs2['iterations']
-            except BaseException:
+            else:
                 it2 = DEFAULT_NITER
+
             if (fn1 != fn2) or (it1 != it2):
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                try:
+                if 'sweep' in kwargs1:
                     sweep1 = kwargs1['sweep']
-                except BaseException:
-                    sweep1 = DEFAULT_SWEEP
-                try:
-                    sweep2 = kwargs2['sweep']
-                except BaseException:
-                    sweep2 = DEFAULT_SWEEP
-                if (sweep1 == 'forward' and sweep2 == 'backward') or \
-                   (sweep1 == 'backward' and sweep2 == 'forward') or \
-                   (sweep1 == 'symmetric' and sweep2 == 'symmetric'):
-                    pass
                 else:
+                    sweep1 = DEFAULT_SWEEP
+
+                if 'sweep' in kwargs2:
+                    sweep2 = kwargs2['sweep']
+                else:
+                    sweep2 = DEFAULT_SWEEP
+
+                if (sweep1, sweep2) not in (('forward', 'backward'),
+                                            ('backward', 'forward'),
+                                            ('symmetric', 'symmetric')):
                     ml.symmetric_smoothing = False
 
     else:
@@ -350,12 +379,12 @@ def rho_block_D_inv_A(A, Dinv):
 
     """
     if not hasattr(A, 'rho_block_D_inv'):
-        from scipy.sparse.linalg import LinearOperator
 
         blocksize = Dinv.shape[1]
         if Dinv.shape[1] != Dinv.shape[2]:
             raise ValueError('Dinv has incorrect dimensions')
-        elif Dinv.shape[0] != int(A.shape[0]/blocksize):
+
+        if Dinv.shape[0] != int(A.shape[0]/blocksize):
             raise ValueError('Dinv and A have incompatible dimensions')
 
         Dinv = sparse.bsr_matrix((Dinv,
@@ -373,6 +402,7 @@ def rho_block_D_inv_A(A, Dinv):
     return A.rho_block_D_inv
 
 
+# pylint: disable=redefined-builtin
 def matrix_asformat(lvl, name, format, blocksize=None):
     """Set a matrix to a specific format.
 
@@ -414,40 +444,16 @@ def matrix_asformat(lvl, name, format, blocksize=None):
     return getattr(lvl, desired_matrix)
 
 
-"""
-    The following setup_smoother_name functions are helper functions for
-    parsing user input and assigning each level the appropriate smoother for
-    the above functions "change_smoothers".
-
-    The standard interface is
-
-    Parameters
-    ----------
-    lvl : multilevel level
-        the level in the hierarchy for which to assign a smoother
-    iterations : int
-        how many smoother iterations
-    optional_params : dict
-        optional params specific for each method such as omega or sweep
-
-    Returns
-    -------
-    Function pointer for the appropriate relaxation method for level=lvl
-
-    Examples
-    --------
-    See change_smoothers above
-
-"""
-
-
+# pylint: disable=unused-argument
 def setup_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
+    """Setup Gauss-Seidel."""
     def smoother(A, x, b):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
 
 
 def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
+    """Setup weighted-Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
@@ -459,6 +465,7 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
 def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                   subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None,
                   sweep=DEFAULT_SWEEP):
+    """Setup Schwarz."""
 
     matrix_asformat(lvl, 'A', 'csr')
     lvl.Acsr.sort_indices()
@@ -477,6 +484,7 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
 
 def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
                                  sweep=DEFAULT_SWEEP):
+    """Setup strength-based Schwarz."""
     # Use the overlapping regions defined by strength of connection matrix C
     # for the overlapping Schwarz method
     if not hasattr(lvl, 'C'):
@@ -494,6 +502,7 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
                        blocksize=None, withrho=True):
+    """Setup block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -507,23 +516,23 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
         # Block Jacobi is equivalent to normal Jacobi
         return setup_jacobi(lvl, iterations=iterations, omega=omega,
                             withrho=withrho)
-    else:
-        # Use Block Jacobi
-        if Dinv is None:
-            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-        if withrho:
-            omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
-        def smoother(A, x, b):
-            relaxation.block_jacobi(A, x, b, iterations=iterations,
-                                    omega=omega, Dinv=Dinv,
-                                    blocksize=blocksize)
-        return smoother
+    def smoother(A, x, b):
+        relaxation.block_jacobi(A, x, b, iterations=iterations,
+                                omega=omega, Dinv=Dinv,
+                                blocksize=blocksize)
+    return smoother
 
 
 def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
                              sweep=DEFAULT_SWEEP,
                              Dinv=None, blocksize=None):
+    """Setup block Gauss-Seidel."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -536,20 +545,21 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
     if blocksize == 1:
         # Block GS is equivalent to normal GS
         return setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
-    else:
-        # Use Block GS
-        if Dinv is None:
-            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
 
-        def smoother(A, x, b):
-            relaxation.block_gauss_seidel(A, x, b, iterations=iterations,
-                                          Dinv=Dinv, blocksize=blocksize,
-                                          sweep=sweep)
+    # Use Block GS
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
 
-        return smoother
+    def smoother(A, x, b):
+        relaxation.block_gauss_seidel(A, x, b, iterations=iterations,
+                                      Dinv=Dinv, blocksize=blocksize,
+                                      sweep=sweep)
+
+    return smoother
 
 
 def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
+    """Setup Richardson."""
     omega = omega/approximate_spectral_radius(lvl.A)
 
     def smoother(A, x, b):
@@ -559,6 +569,7 @@ def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
 
 
 def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
+    """Setup SOR."""
     def smoother(A, x, b):
         relaxation.sor(A, x, b, omega=omega, iterations=iterations,
                        sweep=sweep)
@@ -567,6 +578,7 @@ def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
 
 def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
                     iterations=DEFAULT_NITER):
+    """Setup Chebyshev."""
     rho = approximate_spectral_radius(lvl.A)
     a = rho * lower_bound
     b = rho * upper_bound
@@ -580,6 +592,7 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
 
 
 def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
+    """Setup Jacobi NE."""
     matrix_asformat(lvl, 'A', 'csr')
     if withrho:
         omega = omega/rho_D_inv_A(lvl.Acsr)**2
@@ -592,6 +605,7 @@ def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
 
 def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
                           omega=1.0):
+    """Setup Gauss-Seidel NE."""
     matrix_asformat(lvl, 'A', 'csr')
 
     def smoother(A, x, b):
@@ -602,6 +616,7 @@ def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
                           omega=1.0):
+    """Setup Gauss-Seidel NR."""
     matrix_asformat(lvl, 'A', 'csc')
 
     def smoother(A, x, b):
@@ -612,6 +627,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
                 residuals=None):
+    """Setup GMRES smoothing."""
     def smoother(A, x, b):
         x[:] = (
             gmres(
@@ -629,6 +645,7 @@ def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
 
 
 def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
+    """Setup CG smoothing."""
     def smoother(A, x, b):
         x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
                    callback=callback, residuals=residuals)[0]).reshape(x.shape)
@@ -637,6 +654,7 @@ def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
 
 def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
+    """Setup CGNE smoothing."""
     def smoother(A, x, b):
         x[:] = (
             cgne(
@@ -654,6 +672,7 @@ def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
 
 def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
+    """Setup CGNR smoothing."""
     def smoother(A, x, b):
         x[:] = (
             cgnr(
@@ -669,7 +688,40 @@ def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
     return smoother
 
 
-def setup_None(lvl):
+def setup_none(lvl):
+    """Setup default, empty smoother."""
     def smoother(A, x, b):
         pass
     return smoother
+
+
+def _setup_call(fn):
+    """Helper function to call the setup methods.
+
+    This avoids use of eval()
+    """
+
+    setup_register = {
+        'gauss_seidel':           setup_gauss_seidel,
+        'jacobi':                 setup_jacobi,
+        'schwarz':                setup_schwarz,
+        'strength_based_schwarz': setup_strength_based_schwarz,
+        'block_jacobi':           setup_block_jacobi,
+        'block_gauss_seidel':     setup_block_gauss_seidel,
+        'richardson':             setup_richardson,
+        'sor':                    setup_sor,
+        'chebyshev':              setup_chebyshev,
+        'jacobi_ne':              setup_jacobi_ne,
+        'gauss_seidel_ne':        setup_gauss_seidel_ne,
+        'gauss_seidel_nr':        setup_gauss_seidel_nr,
+        'gmres':                  setup_gmres,
+        'cg':                     setup_cg,
+        'cgne':                   setup_cgne,
+        'cgnr':                   setup_cgnr,
+        'none':                   setup_none,
+    }
+
+    if fn not in setup_register:
+        raise ValueError(f'Function {fn} does not have a setup')
+
+    return setup_register[fn]

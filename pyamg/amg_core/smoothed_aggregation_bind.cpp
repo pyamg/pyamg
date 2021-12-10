@@ -179,8 +179,8 @@ void _fit_candidates_complex(
 
 template<class I, class T, class F>
 void _satisfy_constraints_helper(
-     const I RowsPerBlock,
-     const I ColsPerBlock,
+   const I rows_per_block,
+   const I cols_per_block,
    const I num_block_rows,
           const I NullDim,
        py::array_t<T> & x,
@@ -205,8 +205,8 @@ void _satisfy_constraints_helper(
     T *_Sx = py_Sx.mutable_data();
 
     return satisfy_constraints_helper<I, T, F>(
-             RowsPerBlock,
-             ColsPerBlock,
+           rows_per_block,
+           cols_per_block,
            num_block_rows,
                   NullDim,
                        _x, x.shape(0),
@@ -222,7 +222,7 @@ template<class I, class T, class F>
 void _calc_BtB(
           const I NullDim,
            const I Nnodes,
-     const I ColsPerBlock,
+   const I cols_per_block,
        py::array_t<T> & b,
           const I BsqCols,
        py::array_t<T> & x,
@@ -242,7 +242,7 @@ void _calc_BtB(
     return calc_BtB<I, T, F>(
                   NullDim,
                    Nnodes,
-             ColsPerBlock,
+           cols_per_block,
                        _b, b.shape(0),
                   BsqCols,
                        _x, x.shape(0),
@@ -445,33 +445,33 @@ R"pbdoc(
 )pbdoc");
 
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, float, float>,
-        py::arg("RowsPerBlock"), py::arg("ColsPerBlock"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, double, double>,
-        py::arg("RowsPerBlock"), py::arg("ColsPerBlock"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, std::complex<float>, float>,
-        py::arg("RowsPerBlock"), py::arg("ColsPerBlock"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, std::complex<double>, double>,
-        py::arg("RowsPerBlock"), py::arg("ColsPerBlock"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 )pbdoc");
 
     m.def("calc_BtB", &_calc_BtB<int, float, float>,
-        py::arg("NullDim"), py::arg("Nnodes"), py::arg("ColsPerBlock"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
     m.def("calc_BtB", &_calc_BtB<int, double, double>,
-        py::arg("NullDim"), py::arg("Nnodes"), py::arg("ColsPerBlock"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
     m.def("calc_BtB", &_calc_BtB<int, std::complex<float>, float>,
-        py::arg("NullDim"), py::arg("Nnodes"), py::arg("ColsPerBlock"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
     m.def("calc_BtB", &_calc_BtB<int, std::complex<double>, double>,
-        py::arg("NullDim"), py::arg("Nnodes"), py::arg("ColsPerBlock"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(),
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(),
 R"pbdoc(
 Helper routine for energy_prolongation_smoother
 Calculates the following python code:
 
-  RowsPerBlock = Sparsity_Pattern.blocksize[0]
+  rows_per_block = Sparsity_Pattern.blocksize[0]
   BtB = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
   S2 = Sparsity_Pattern.tocsr()
   for i in range(Nnodes):
-      Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
+      Bi = mat( B[S2.indices[S2.indptr[i*rows_per_block]:S2.indptr[i*rows_per_block + 1]],:] )
       BtB[i,:,:] = Bi.H*Bi
 
 Parameters
@@ -480,7 +480,7 @@ NullDim : {int}
      Number of near nullspace vectors
 Nnodes : {int}
      Number of nodes, i.e. number of block rows in BSR matrix, S
-ColsPerBlock : {int}
+cols_per_block : {int}
      Columns per block in S
 b : {float|complex array}
      Nnodes x BsqCols array, in row-major form.

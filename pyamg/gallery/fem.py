@@ -1,7 +1,7 @@
 """Poisson problem with finite elements
 """
 import numpy as np
-import scipy.sparse as sparse
+from scipy import sparse
 
 
 def check_mesh(V, E):
@@ -353,21 +353,23 @@ def l2norm(u, mesh):
     if mesh.degree == 1:
         I = np.arange(3)
 
-        def basis(x, y):
+        def basis1(x, y):
             return np.array([1-x-y,
                              x,
                              y])
+        basis = basis1
 
     if mesh.degree == 2:
         I = np.arange(6)
 
-        def basis(x, y):  # noqa
+        def basis2(x, y):
             return np.array([(1-x-y)*(1-2*x-2*y),
                              x*(2*x-1),
                              y*(2*y-1),
                              4*x*(1-x-y),
                              4*x*y,
                              4*y*(1-x-y)])
+        basis = basis2
 
     for e in E:
         x = V[e, 0]
@@ -384,9 +386,12 @@ def l2norm(u, mesh):
     return np.sqrt(val)
 
 
-class mesh:
+class Mesh:
     """Simple mesh object that holds vertices and mesh functions
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # This is reasonble for this class
 
     def __init__(self, V, E, degree=1):
 
@@ -441,7 +446,7 @@ class mesh:
         self.E2 = None
         self.Edges = None
         self.newID = None
-        for l in range(levels):
+        for _ in range(levels):
             self.V, self.E = refine2dtri(self.V, self.E)
         self.nv = self.V.shape[0]
         self.ne = self.E.shape[0]
@@ -588,11 +593,11 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         raise ValueError('degree = 1 or 2 supported')
 
     if f is None:
-        def f(x, y):
+        def f(_x, _y):
             return 0.0
 
     if kappa is None:
-        def kappa(x, y):
+        def kappa(_x, _y):
             return 1.0
 
     if not callable(f) or not callable(kappa):
@@ -846,9 +851,7 @@ def applybc(A, b, mesh, bc):
         idx = c['var'] + c['id']
         Dflag[idx] = True
     # write identity (2 of 2)
-    for k in range(0, len(A.data)):
-        i = A.row[k]
-        j = A.col[k]
+    for k, (i, j) in enumerate(zip(A.row, A.col)):
         if Dflag[i] or Dflag[j]:
             if i == j:
                 A.data[k] = 1.0
@@ -898,4 +901,5 @@ def model(num=0):
     Notes
     -----
     """
-    pass
+    print(num)
+    raise NotImplementedError('model is unimplemented')

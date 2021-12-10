@@ -4,7 +4,7 @@
 import numpy as np
 
 
-def BSR_Get_Row(A, i):
+def bsr_getrow(A, i):
     """Return row i in BSR matrix A.
 
     Only nonzero entries are returned
@@ -26,12 +26,12 @@ def BSR_Get_Row(A, i):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Get_Row
+    >>> from pyamg.util.bsr_utils import bsr_getrow
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> Brow = BSR_Get_Row(B,2)
+    >>> Brow = bsr_getrow(B,2)
     >>> print Brow[1]
     [4 5]
 
@@ -59,8 +59,8 @@ def BSR_Get_Row(A, i):
     return z.reshape(-1, 1), colindx[0, :]
 
 
-def BSR_Row_WriteScalar(A, i, x):
-    """Write a scalar at each nonzero location in row i of BSR matrix A.
+def bsr_row_setscalar(A, i, x):
+    """Set a scalar at each nonzero location in row i of BSR matrix A.
 
     Parameters
     ----------
@@ -82,12 +82,12 @@ def BSR_Row_WriteScalar(A, i, x):
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Row_WriteScalar
+    >>> from pyamg.util.bsr_utils import bsr_row_setscalar
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> BSR_Row_WriteScalar(B,5,22)
+    >>> bsr_row_setscalar(B,5,22)
 
     """
     blocksize = A.blocksize[0]
@@ -105,8 +105,8 @@ def BSR_Row_WriteScalar(A, i, x):
     A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]] = x
 
 
-def BSR_Row_WriteVect(A, i, x):
-    """Overwrite the nonzeros in row i of BSR matrix A with the vector x.
+def bsr_row_setvector(A, i, x):
+    """Set the nonzeros in row i of BSR matrix A with the vector x.
 
     length(x) and nnz(A[i,:]) must be equivalent
 
@@ -126,18 +126,18 @@ def BSR_Row_WriteVect(A, i, x):
         overwritten with entries from x.  x must be same
         length as nonzeros of row i.  This is guaranteed
         when this routine is used with vectors derived form
-        Get_BSR_Row
+        bsr_getrow
 
     Examples
     --------
     >>> from numpy import array
     >>> from scipy.sparse import bsr_matrix
-    >>> from pyamg.util.BSR_utils import BSR_Row_WriteVect
+    >>> from pyamg.util.bsr_utils import bsr_row_setvector
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
-    >>> BSR_Row_WriteVect(B,5,array([11,22,33,44,55,66]))
+    >>> bsr_row_setvector(B,5,array([11,22,33,44,55,66]))
 
     """
     blocksize = A.blocksize[0]

@@ -6,10 +6,9 @@ import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
     SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import relaxation_as_linear_operator,\
-    eliminate_diag_dom_nodes, blocksize,\
+from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize,\
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
@@ -21,6 +20,8 @@ from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
 
+from ..relaxation.utils import relaxation_as_linear_operator
+
 
 def smoothed_aggregation_solver(A, B=None, BH=None,
                                 symmetry='hermitian', strength='symmetric',
@@ -30,10 +31,10 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
                                              {'sweep': 'symmetric'}),
                                 postsmoother=('block_gauss_seidel',
                                               {'sweep': 'symmetric'}),
-                                improve_candidates=[('block_gauss_seidel',
+                                improve_candidates=(('block_gauss_seidel',
                                                      {'sweep': 'symmetric',
                                                       'iterations': 4}),
-                                                    None],
+                                                    None),
                                 max_levels=10, max_coarse=10,
                                 diagonal_dominance=False,
                                 keep=False, **kwargs):
@@ -126,12 +127,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     Returns
     -------
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Multigrid hierarchy of matrices and prolongation operators
 
     See Also
     --------
-    multilevel_solver, classical.ruge_stuben_solver,
+    MultilevelSolver, classical.ruge_stuben_solver,
     aggregation.smoothed_aggregation_solver
 
     Notes
@@ -140,7 +141,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
           (see aggregation.rootnode_solver).
 
         - The additional parameters are passed through as arguments to
-          multilevel_solver.  Refer to pyamg.multilevel_solver for additional
+          MultilevelSolver.  Refer to pyamg.MultilevelSolver for additional
           documentation.
 
         - At each level, four steps are executed in order to define the coarser
@@ -212,14 +213,13 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         try:
             A = csr_matrix(A)
             warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
-        except BaseException:
+        except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
-                            'or be convertible to csr_matrix')
+                            'or be convertible to csr_matrix') from e
 
     A = A.asfptype()
 
-    if (symmetry != 'symmetric') and (symmetry != 'hermitian') and\
-            (symmetry != 'nonsymmetric'):
+    if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
                          'for the symmetry parameter ')
     A.symmetry = symmetry
@@ -229,15 +229,15 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     # Right near nullspace candidates use constant for each variable as default
     if B is None:
-        B = np.kron(np.ones((int(A.shape[0]/blocksize(A)), 1), dtype=A.dtype),
-                    np.eye(blocksize(A), dtype=A.dtype))
+        B = np.kron(np.ones((int(A.shape[0]/get_blocksize(A)), 1), dtype=A.dtype),
+                    np.eye(get_blocksize(A), dtype=A.dtype))
     else:
         B = np.asarray(B, dtype=A.dtype)
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
         if B.shape[0] != A.shape[0]:
             raise ValueError('The shape of near null-space modes B is incorrect')
-        if B.shape[1] < blocksize(A):
+        if B.shape[1] < get_blocksize(A):
             warn('Having less target vectors, B.shape[1], than blocksize of A '
                  'can degrade convergence factors.')
 
@@ -267,7 +267,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     # Construct multilevel structure
     levels = []
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.Level())
     levels[-1].A = A          # matrix
 
     # Append near nullspace candidates
@@ -276,11 +276,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         levels[-1].BH = BH    # left candidates
 
     while len(levels) < max_levels and\
-            int(levels[-1].A.shape[0]/blocksize(levels[-1].A)) > max_coarse:
+            int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, smooth,
                           improve_candidates, diagonal_dominance, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
@@ -297,8 +297,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     A = levels[-1].A
     B = levels[-1].B
@@ -315,7 +314,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         if 'B' in kwargs:
             C = evolution_strength_of_connection(A, **kwargs)
         else:
@@ -331,8 +330,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -352,7 +350,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:
-        raise ValueError('unrecognized aggregation method %s' % str(fn))
+        raise ValueError(f'Unrecognized aggregation method {str(fn)}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
@@ -384,8 +382,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError('unrecognized prolongation smoother method %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
     # Compute the restriction matrix, R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
@@ -408,8 +405,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         elif fn is None:
             R = T.H
         else:
-            raise ValueError('unrecognized prolongation smoother method %s' %
-                             str(fn))
+            raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
 
     if keep:
         levels[-1].C = C  # strength of connection matrix
@@ -419,7 +415,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
 
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.Level())
     A = R * A * P              # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A

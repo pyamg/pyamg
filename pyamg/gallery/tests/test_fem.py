@@ -84,7 +84,7 @@ class TestL2Norm(np.testing.TestCase):
         V = data['vertices']
         E = data['elements']
         print(V, E)
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         X, Y = V[:, 0], V[:, 1]
 
         # 2 = sqrt( integrate(x + 1, (x,-1,1), (y,-1,1))).evalf()
@@ -107,7 +107,7 @@ class TestL2Norm(np.testing.TestCase):
              [0, h]])
         E = np.array(
             [[0, 1, 2]])
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         mesh.generate_quadratic()
         V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
@@ -117,7 +117,7 @@ class TestL2Norm(np.testing.TestCase):
         # = sqrt( integrate(sin(x)*sin(x)*sin(y)*sin(y), (x,-1,1), (y,-1,1))).evalf()
         V = data['vertices']
         E = data['elements']
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         mesh.generate_quadratic()
         V2, _ = mesh.V2, mesh.E2
         X, Y = V2[:, 0], V2[:, 1]
@@ -138,7 +138,7 @@ class TestGradGradFEM(np.testing.TestCase):
             [[0, 1, 2],
              [1, 3, 2]])
 
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
 
         A, b = fem.gradgradform(mesh)
 
@@ -171,7 +171,7 @@ class TestGradGradFEM(np.testing.TestCase):
              [4, 7, 6],
              [5, 8, 7]])
 
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         A, b = fem.gradgradform(mesh)
         AA = np.array([[ 1. , -0.5,  0. , -0.5,  0. ,  0. ,  0. ,  0. ,  0. ],
                        [-0.5,  2. , -0.5,  0. , -1. ,  0. ,  0. ,  0. ,  0. ],
@@ -203,7 +203,7 @@ class TestGradGradFEM(np.testing.TestCase):
               {'id': id2, 'g': g},
               {'id': id3, 'g': g},
               {'id': id4, 'g': g}]
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         A, b = fem.gradgradform(mesh, f=f)
         A, b = fem.applybc(A, b, mesh, bc)
 
@@ -243,7 +243,7 @@ class TestGradGradFEM(np.testing.TestCase):
               {'id': id2, 'g': g},
               {'id': id3, 'g': g1},
               {'id': id4, 'g': g}]
-        mesh = fem.mesh(V, E)
+        mesh = fem.Mesh(V, E)
         A, b = fem.gradgradform(mesh, f=f)
         A, b = fem.applybc(A, b, mesh, bc=bc)
         A = A.tocsr()
