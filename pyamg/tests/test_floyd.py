@@ -23,10 +23,10 @@ class TestAllPairs(TestCase):
                           [inf, 0,  3.,  4.],
                           [inf, inf, 0,  1.],
                           [inf, inf, inf, 0]])
-        P_ref = np.array([[0, 0, 1, 2],
-                          [0, 1, 1, 2],
-                          [0, 0, 2, 2],
-                          [0, 0, 0, 3]], dtype=np.int32)
+        P_ref = np.array([[ 0,  0,  1, 2],
+                          [-1,  1,  1, 2],
+                          [-1, -1,  2, 2],
+                          [-1, -1, -1, 3]], dtype=np.int32)
         cases.append([A, D_ref, P_ref])
 
         # https://github.com/epomp447/Floyd-Warshall-Algorithm-Java-
