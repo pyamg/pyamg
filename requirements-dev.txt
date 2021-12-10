@@ -1,2 +1,5 @@
 flake8
+pep8-naming
 pylint
+matplotlib
+shapely
