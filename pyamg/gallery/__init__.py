@@ -4,6 +4,7 @@ from . import elasticity
 from . import laplacian
 from . import stencil
 from . import diffusion
+from . import fem
 
 from .elasticity import linear_elasticity, linear_elasticity_p1
 from .example import load_example
@@ -25,6 +26,7 @@ __all__ = [
     'diffusion_stencil_2d',
     'sprand',
     'demo',
+    'fem',
 ]
 
 __doc__ += """Matrix Gallery for Multigrid Solvers.

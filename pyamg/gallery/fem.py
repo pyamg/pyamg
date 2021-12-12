@@ -790,7 +790,7 @@ def divform(mesh):
     return BX, BY
 
 
-def applybc(A, b, mesh, bc):
+def applybc(A, b, mesh, bc, remove_dirichlet=False):
     """
     bc : list
        list of boundary conditions
@@ -850,6 +850,7 @@ def applybc(A, b, mesh, bc):
     for c in bc:
         idx = c['var'] + c['id']
         Dflag[idx] = True
+
     # write identity (2 of 2)
     for k, (i, j) in enumerate(zip(A.row, A.col)):
         if Dflag[i] or Dflag[j]:
@@ -857,6 +858,11 @@ def applybc(A, b, mesh, bc):
                 A.data[k] = 1.0
             else:
                 A.data[k] = 0.0
+
+    if remove_dirichlet:
+        I = np.where(not Dflag)[0]
+        A = A[I,:][:,I]
+        b = b[I]
 
     return A, b
 
