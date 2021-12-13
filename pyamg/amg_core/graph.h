@@ -985,10 +985,10 @@ void lloyd_cluster_balanced(const I num_nodes,
     clustermax = *std::max_element(s, s+s_size);
     coreassert((clustermax < maxsize), "maxsize (maximum cluster size) is too small");
 
-    connected = std::all_of(m, m + m_size, [](I mi){ return mi > 0; });
+    connected = std::all_of(m, m + m_size, [](I m_i){ return m_i >= 0; });
     coreassert(connected, "Encountered a disconnected nodes from m.");
 
-    connected = std::all_of(d, d + d_size, [](I di){ return di > 0; });
+    connected = std::all_of(d, d + d_size, [](I d_i){ return d_i >= 0; });
     coreassert(connected, "Encountered a disconnected nodes from d.");
 
     changed2 = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,

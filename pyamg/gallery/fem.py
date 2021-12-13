@@ -846,23 +846,25 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
 
     # set BC to identity in the matrix
     # collect all BC indices (1 of 2)
-    Dflag = np.full((A.shape[0],), False)
+    dirichlet = np.full(A.shape[0], False)
     for c in bc:
         idx = c['var'] + c['id']
-        Dflag[idx] = True
+        dirichlet[idx] = True
 
     # write identity (2 of 2)
-    for k, (i, j) in enumerate(zip(A.row, A.col)):
-        if Dflag[i] or Dflag[j]:
-            if i == j:
-                A.data[k] = 1.0
-            else:
-                A.data[k] = 0.0
-
-    if remove_dirichlet:
-        I = np.where(not Dflag)[0]
-        A = A[I,:][:,I]
-        b = b[I]
+    # mark dirichlet in the data array
+    dirichlet_idx = np.logical_or(dirichlet[A.row], dirichlet[A.col])
+    A.data[dirichlet_idx] = 0.0
+    if not remove_dirichlet:
+        diag_idx = np.logical_and(dirichlet_idx, A.row == A.col)
+        A.data[diag_idx] = 1.0
+        A.eliminate_zeros()
+        A = A.tocsr()
+    else:
+        A.eliminate_zeros()
+        A = A.tocsr()
+        not_dirichlet = np.logical_not(dirichlet)
+        A = A[not_dirichlet,:][:,not_dirichlet]
 
     return A, b
 
