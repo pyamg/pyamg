@@ -382,8 +382,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'richardson':
         P = richardson_prolongation_smoother(A, T, **kwargs)
     elif fn == 'energy':
-        P = energy_prolongation_smoother(A, T, C, B, None, (False, {}),
-                                         **kwargs)
+        P = energy_prolongation_smoother(A, T, C, B, None, (False, {}), **kwargs)
     elif fn is None:
         P = T
     else:

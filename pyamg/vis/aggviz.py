@@ -9,6 +9,7 @@ from shapely.ops import unary_union
 
 def plotaggs(AggOp, V, G, ax,
              aggvals=None, vmin=None, vmax=None, cmapname='cool',
+             buffer=None,
              **kwargs):
     """
     Parameters
@@ -28,6 +29,9 @@ def plotaggs(AggOp, V, G, ax,
         min and max values to for cmapname
     cmapname : string
         matplotlib cmap name
+    buffer : tuple, list
+        buffer[0] is the expansion buffer, to smooth
+        buffer[1] is the contraction buffer, to make the aggregates smaller
     kwargs : dictionary
         keyword arguments sent to plt.fill
     """
@@ -39,6 +43,9 @@ def plotaggs(AggOp, V, G, ax,
             vmax = max(aggvals)
         norm = matplotlib.colors.Normalize(vmin=0, vmax=vmax)
         aggcolor = [cmap(norm(v)) for v in aggvals]
+
+    if buffer is None:
+        buffer = (0.1, -0.05)
 
     for aggnum, agg in enumerate(AggOp.T):                 # for each aggregate
         aggids = agg.indices                               # get the indices
@@ -68,8 +75,8 @@ def plotaggs(AggOp, V, G, ax,
                     todraw.append(newobj)
 
         todraw = unary_union(todraw)                       # union all in the aggregate
-        todraw = todraw.buffer(0.1)                        # expand to smooth
-        todraw = todraw.buffer(-0.05)                      # then contract
+        todraw = todraw.buffer(buffer[0])                  # expand to smooth
+        todraw = todraw.buffer(buffer[1])                  # then contract
 
         try:
             # pylint: disable=no-member
@@ -77,8 +84,9 @@ def plotaggs(AggOp, V, G, ax,
             if aggvals is not None:
                 kwargs['color'] = aggcolor[aggnum]
             ax.fill(xs, ys,
-                    **kwargs,
-                    clip_on=False)                         # fill with a color
+                    clip_on=False,
+                    **kwargs)                         # fill with a color
+            print(kwargs)
         except Exception:  # pylint: disable=broad-except
             print('Problem drawing exterior points')
 

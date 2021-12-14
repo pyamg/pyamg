@@ -366,8 +366,7 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
         if A is None:
             raise ValueError('Matrix A is required if pad is used')
 
-        if not sparse.isspmatrix_csr(A):
-            raise TypeError('Matrix A is required to be CSR')
+        A = sparse.csr_matrix(A)
 
         Epad = A.copy()
         Epad.data[:] = pad
