@@ -1,5 +1,6 @@
 """Plot aggregates."""
 
+import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -34,6 +35,12 @@ def plotaggs(AggOp, V, G, ax,
         buffer[1] is the contraction buffer, to make the aggregates smaller
     kwargs : dictionary
         keyword arguments sent to plt.fill
+
+    Returns
+    -------
+    mappable : mappable
+        Mappable object for use with colorbar: plt.colorbar(mappable, ax=ax).
+        None if aggval is None
     """
 
     cmap = plt.get_cmap(cmapname)
@@ -43,6 +50,9 @@ def plotaggs(AggOp, V, G, ax,
             vmax = max(aggvals)
         norm = matplotlib.colors.Normalize(vmin=0, vmax=vmax)
         aggcolor = [cmap(norm(v)) for v in aggvals]
+        mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    else:
+        mappable = None
 
     if buffer is None:
         buffer = (0.1, -0.05)
@@ -59,17 +69,19 @@ def plotaggs(AggOp, V, G, ax,
 
         for i in aggids:                                   # for each point in the aggregate
             nbrs = G.getrow(i).indices                     # get the neighbors in the graph
+            nbrs = np.array([k for k in nbrs if k != i])   # remove i from the neighbors
 
             for j1 in nbrs:                                # for each neighbor
                 found = False                              # mark if a triad is found
                 for j2 in nbrs:
-                    if ((j1, i, i) != (j2, j1, j2)         # don't count i-j-j as a triangle
+                    if (j1 != j2                           # don't count i-j-j as a triangle
                        and j1 in aggids and j2 in aggids   # j1/j2 are in the aggregate
                        and G[j1, j2]):                     # j1/j2 are connected
                         found = True                       # i-j1-j2 are in the aggregate
                         coords = list(zip(V[[i, j1, j2], 0], V[[i, j1, j2], 1]))
                         todraw.append(sg.Polygon(coords))  # add the triangle to the list
-                if not found and i != j1 and j1 in aggids:  # didn't find a triangle
+
+                if not found and j1 in aggids:             # didn't find a triangle
                     coords = list(zip(V[[i, j1], 0], V[[i, j1], 1]))
                     newobj = sg.LineString(coords)         # add a line object to the list
                     todraw.append(newobj)
@@ -86,10 +98,9 @@ def plotaggs(AggOp, V, G, ax,
             ax.fill(xs, ys,
                     clip_on=False,
                     **kwargs)                         # fill with a color
-            print(kwargs)
         except Exception:  # pylint: disable=broad-except
             print('Problem drawing exterior points')
 
-    if aggvals is not None:
-        plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
     ax.set_aspect('equal')
+
+    return mappable
