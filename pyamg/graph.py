@@ -251,6 +251,11 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
         If centers is an integer, then its value determines the number of
         clusters.  Otherwise, centers is an array of unique integers between 0
         and n-1 that will be used as the initial centers for clustering.
+    maxiter : int
+        Number of bellman_ford_balanced->center_nodes iterations to run within
+        the clustering.
+    rebalance_iters : int
+        Number of post-Lloyd rebalancing iterations to run.
 
     Returns
     -------
