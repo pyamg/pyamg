@@ -1,15 +1,21 @@
+"""Test balanced lloyd clustering."""
+
+import numpy as np
+from numpy.testing import assert_array_equal
+from scipy import sparse
+
 import pytest
+
 import pyamg
 from pyamg import amg_core
-import numpy as np
-from scipy import sparse
-from numpy.testing import assert_array_equal
+
 
 @pytest.fixture()
 def construct_1dfd_graph():
     u = np.ones(9, dtype=np.float64)
     G = np.diag(2 * u, k=0) + np.diag(u[1:], k=1) + np.diag(u[1:], k=-1)
     return G
+
 
 @pytest.fixture()
 def construct_graph_laplacian():
@@ -21,20 +27,24 @@ def construct_graph_laplacian():
     G = np.abs(G.astype(np.float64))
     return G
 
+
 def test_balanced_lloyd_1d(construct_1dfd_graph):
     G = construct_1dfd_graph
 
     # one pass
     centers = np.array([1, 7, 8])
-    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=1, rebalance_iters=0)
+    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=1,
+                                                    rebalance_iters=0)
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1, 2])
     assert_array_equal(centers, [1, 5, 8])
 
     # multiple passes
     centers = np.array([1, 7, 8])
-    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=0)
+    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=5,
+                                                    rebalance_iters=0)
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 2, 2])
     assert_array_equal(centers, [1, 5, 8])
+
 
 def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     G = construct_1dfd_graph
@@ -73,7 +83,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     Ax = G.data
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
                                              d,  m, p, pc, s,
-                                             False);
+                                             False)
 
     # >>Check Pass 0 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1, 2])
@@ -87,7 +97,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s);
+                                    centers, d, m, p, s)
 
     # >>Check Pass 0 center_nodes
     assert_array_equal(centers, [1, 5, 8])
@@ -103,7 +113,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     # Pass 1 bellman_ford_balanced
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
                                              d,  m, p, pc, s,
-                                             False);
+                                             False)
 
     # >>Check Pass 1 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 2, 2])
@@ -119,7 +129,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s);
+                                    centers, d, m, p, s)
 
     # >>Check Pass 1 center_nodes
     assert_array_equal(centers, [1, 5, 8])
@@ -132,14 +142,17 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     assert_array_equal(s, [4, 3, 2])
     assert not changed
 
+
 def test_balanced_lloyd_laplacian(construct_graph_laplacian):
     G = construct_graph_laplacian
 
     # one pass
     centers = np.array([1, 5])
-    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=1, rebalance_iters=0)
+    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers, maxiter=1,
+                                                    rebalance_iters=0)
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(centers, [1, 5])
+
 
 def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     G = construct_graph_laplacian
@@ -178,7 +191,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     Ax = G.data
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
                                              d,  m, p, pc, s,
-                                             False);
+                                             False)
 
     # >>Check Pass 0 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1])
@@ -192,7 +205,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s);
+                                    centers, d, m, p, s)
 
     # >>Check Pass 0 center_nodes
     assert_array_equal(centers, [1, 5])

@@ -864,7 +864,7 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
         A.eliminate_zeros()
         A = A.tocsr()
         not_dirichlet = np.logical_not(dirichlet)
-        A = A[not_dirichlet,:][:,not_dirichlet]
+        A = A[not_dirichlet, :][:, not_dirichlet]
 
     return A, b
 
