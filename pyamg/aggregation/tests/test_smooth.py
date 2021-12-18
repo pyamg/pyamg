@@ -17,11 +17,11 @@ class TestEnergyMin(TestCase):
 
         # Define incomplete mat mult bsr gold
         def incomplete_mat_mult_bsr_gold(A, B, S):
-            '''
+            """
             Compute A*B --> S, but only at the existing
             sparsity structure of S
             A,B and S are assumed BSR
-            '''
+            """
             # Ablocksize = A.blocksize
             # Bblocksize = B.blocksize
             S = S.copy()   # don't overwrite the original S

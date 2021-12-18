@@ -129,7 +129,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         # (p, z) = (M A M r, M r) = (M A z, z)
         pz = np.inner(p.conjugate(), z)  # check curvature of M^-1 A
         if pz < 0.0:
-            warn("\nIndefinite matrix detected in minimal residual, stopping.\n")
+            warn('\nIndefinite matrix detected in minimal residual, stopping.\n')
             return (postprocess(x), -1)
 
         alpha = pz / np.inner(p.conjugate(), p)

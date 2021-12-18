@@ -211,7 +211,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
         fname1 = a[0]
         fname2 = '.vtu'
     elif len(a) >= 2:
-        fname1 = "".join(a[:-1])
+        fname1 = ''.join(a[:-1])
         fname2 = a[-1]
     else:
         raise ValueError('problem with fname')
@@ -245,7 +245,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
                 plt.axis('off')
                 plt.show()
             except ImportError:
-                print("\nNote: matplotlib is needed for plotting.")
+                print('\nNote: matplotlib is needed for plotting.')
         else:
             raise ValueError('problem with outputtype')
 

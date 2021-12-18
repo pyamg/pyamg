@@ -212,7 +212,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
+            warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
                             'or be convertible to csr_matrix') from e
@@ -301,7 +301,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     A = levels[-1].A
     B = levels[-1].B
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         AH = A.H.asformat(A.format)
         BH = levels[-1].BH
 
@@ -358,7 +358,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
         B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
         levels[-1].B = B
-        if A.symmetry == "nonsymmetric":
+        if A.symmetry == 'nonsymmetric':
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
 
@@ -366,7 +366,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
     # B_fine = T B_coarse.
     T, B = fit_candidates(AggOp, B)
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         TH, BH = fit_candidates(AggOp, BH)
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
@@ -421,5 +421,5 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates
 
-    if A.symmetry == "nonsymmetric":
+    if A.symmetry == 'nonsymmetric':
         levels[-1].BH = BH     # left near nullspace candidates

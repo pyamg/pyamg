@@ -8,7 +8,7 @@ from numpy.testing import TestCase, assert_almost_equal, assert_equal
 
 
 def precon_norm(v, ml):
-    ''' helper function to calculate preconditioner norm of v '''
+    """ helper function to calculate preconditioner norm of v """
     v = np.ravel(v)
     w = ml.aspreconditioner()*v
     return np.sqrt(np.dot(v.conjugate(), w))

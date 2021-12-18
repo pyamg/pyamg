@@ -86,7 +86,7 @@ class MultilevelSolver:
         # only raise deprecation warning on use, not import
         def __init__(self):
             super().__init__()
-            warn("level() is deprectated.  use Level()",
+            warn('level() is deprectated.  use Level()',
                  category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
@@ -561,7 +561,7 @@ class MultilevelSolver:
             elif cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
-            elif cycle == "AMLI":
+            elif cycle == 'AMLI':
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
                 nAMLI = 2
@@ -767,5 +767,5 @@ class multilevel_solver(MultilevelSolver):  # noqa: N801
     # only raise deprecation warning on use, not import
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        warn("multilevel_solver is deprectated.  use MultilevelSolver()",
+        warn('multilevel_solver is deprectated.  use MultilevelSolver()',
              category=DeprecationWarning, stacklevel=2)

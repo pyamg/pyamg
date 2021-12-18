@@ -529,8 +529,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n")
+        print('Error in sa_energy_min(..).  Initial R no nonzeros on a level. '
+              'Returning tentative prolongator')
         return T
 
     # Calculate Frobenius norm of the residual
@@ -1008,27 +1008,27 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     elif sparse.isspmatrix_bsr(A):
         pass
     else:
-        raise TypeError("A must be csr_matrix or bsr_matrix")
+        raise TypeError('A must be csr_matrix or bsr_matrix')
 
     if sparse.isspmatrix_csr(T):
         T = T.tobsr(blocksize=(1, 1), copy=False)
     elif sparse.isspmatrix_bsr(T):
         pass
     else:
-        raise TypeError("T must be csr_matrix or bsr_matrix")
+        raise TypeError('T must be csr_matrix or bsr_matrix')
 
     if T.blocksize[0] != A.blocksize[0]:
-        raise ValueError("T row-blocksize should be the same as A blocksize")
+        raise ValueError('T row-blocksize should be the same as A blocksize')
 
     if B.shape[0] != T.shape[1]:
-        raise ValueError("B is the candidates for the coarse grid. \
-                            num_rows(b) = num_cols(T)")
+        raise ValueError('B is the candidates for the coarse grid. '
+                         '  num_rows(b) = num_cols(T)')
 
     if min(T.nnz, A.nnz) == 0:
         return T
 
     if not sparse.isspmatrix_csr(Atilde):
-        raise TypeError("Atilde must be csr_matrix")
+        raise TypeError('Atilde must be csr_matrix')
 
     if prefilter is None:
         prefilter = {}
@@ -1078,7 +1078,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         elif 'theta' in prefilter:
             pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
-            raise ValueError("Unrecognized prefilter option")
+            raise ValueError('Unrecognized prefilter option')
 
         # unamal returns a BSR matrix with 1's in the nonzero locations
         pattern = unamal(pattern, T.blocksize[0], T.blocksize[1])
@@ -1097,7 +1097,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         elif 'theta' in prefilter:
             pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
-            raise ValueError("Unrecognized prefilter option")
+            raise ValueError('Unrecognized prefilter option')
 
         pattern.data[:] = 1.0
         pattern.sort_indices()
@@ -1160,7 +1160,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     elif 'theta' in postfilter:
         T_filter = filter_matrix_rows(T, postfilter['theta'])
     else:
-        raise ValueError("Unrecognized postfilter option")
+        raise ValueError('Unrecognized postfilter option')
 
     # Re-smooth T_filter and re-fit the modes B into the span.
     # Note, we set 'secondpass', because this is the second

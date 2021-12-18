@@ -1,0 +1,2 @@
+pep8-naming
+flake8-quotes

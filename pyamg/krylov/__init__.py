@@ -1,4 +1,4 @@
-"Krylov Solvers"
+"""Krylov Solvers"""
 
 from ._gmres import gmres
 from ._gmres_householder import gmres_householder

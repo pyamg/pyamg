@@ -67,7 +67,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
 
     if not sparse.isspmatrix_csr(A):
-        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     dim = V.shape[1]
@@ -176,7 +176,7 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
         blocksize = 1
 
     if not sparse.isspmatrix_csr(A):
-        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     if (theta < 0 or theta > 1):
@@ -466,7 +466,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 @np.deprecate
-def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
+def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
                                block_flag=False, symmetrize_measure=True):
     """(deprecated) Use evolution_strength_of_connection instead."""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
@@ -474,7 +474,7 @@ def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
 
 
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
-                                     proj_type="l2", block_flag=False,
+                                     proj_type='l2', block_flag=False,
                                      symmetrize_measure=True):
     """Evolution Strength Measure.
 
@@ -526,13 +526,13 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # ====================================================================
     # Check inputs
     if epsilon < 1.0:
-        raise ValueError("expected epsilon > 1.0")
+        raise ValueError('expected epsilon > 1.0')
     if k <= 0:
-        raise ValueError("number of time steps must be > 0")
+        raise ValueError('number of time steps must be > 0')
     if proj_type not in ['l2', 'D_A']:
-        raise ValueError("proj_type must be 'l2' or 'D_A'")
+        raise ValueError('proj_type must be "l2" or "D_A"')
     if (not sparse.isspmatrix_csr(A)) and (not sparse.isspmatrix_bsr(A)):
-        raise TypeError("expected csr_matrix or bsr_matrix")
+        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # ====================================================================
     # Format A and B correctly.
@@ -584,10 +584,10 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
     # Calculate D_A for later use in the minimization problem
-    if proj_type == "D_A":
+    if proj_type == 'D_A':
         D_A = sparse.spdiags([D], [0], dimen, dimen, format='csr')
     else:
-        D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
+        D_A = sparse.eye(dimen, dimen, format='csr', dtype=A.dtype)
 
     # Calculate (I - delta_t Dinv A)^k
     #      In order to later access columns, we calculate the transpose in
@@ -598,7 +598,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     ninc = k - 2**nsquare
 
     # Calculate one time step
-    Id = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
+    Id = sparse.eye(dimen, dimen, format='csr', dtype=A.dtype)
     Atilde = (Id - (1.0 / rho_DinvA) * Dinv_A)
     Atilde = Atilde.T.tocsr()
 
@@ -620,8 +620,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # a very efficient computational short-cut.  Otherwise, we support
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0:
-        warn("The most efficient time stepping for the Evolution Strength "
-             "Method is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
+        warn('The most efficient time stepping for the Evolution Strength '
+             f'Method is done in powers of two.\nYou have chosen {k} time steps.')
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for i in range(nsquare):
@@ -784,7 +784,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde = 0.5 * (Atilde + Atilde.T)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    Id = sparse.eye(dimen, dimen, format="csr")
+    Id = sparse.eye(dimen, dimen, format='csr')
     Id.data -= Atilde.diagonal()
     Atilde = Atilde + Id
 

@@ -1,11 +1,11 @@
+"""Teset blackbox.py solver"""
+import warnings
 import numpy as np
+from numpy.testing import TestCase
 from pyamg.gallery import poisson, load_example
 from pyamg.blackbox import solve
 
-from numpy.testing import TestCase
-import warnings
-warnings.filterwarnings(action="ignore", module="scipy",
-                        message="^internal gelsd")
+warnings.filterwarnings(action='ignore', module='scipy', message='^internal gelsd')
 
 
 class TestBlackbox(TestCase):

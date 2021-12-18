@@ -1,6 +1,10 @@
+"""Test relaxation."""
+import warnings
 import numpy as np
+from numpy.testing import TestCase, assert_almost_equal
 import scipy
 from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
+from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
 from pyamg.gallery import poisson, sprand, elasticity
@@ -10,11 +14,7 @@ from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     gauss_seidel_nr
 from pyamg.util.utils import get_block_diag
 
-from numpy.testing import TestCase, assert_almost_equal
-
 # Ignore efficiency warnings
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 
@@ -24,7 +24,8 @@ def check_raises(error, f, *args, **kwargs):
     except error:
         pass
     else:
-        raise Exception("%s should throw an error" % f.__name__)
+        fname = f.__name__
+        raise Exception(f'{fname} should throw an error')
 
 
 class TestCommonRelaxation(TestCase):

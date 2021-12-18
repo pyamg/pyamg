@@ -189,7 +189,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if zz == 0.0:
             # rz == 0.0 is an indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CR, ceasing iterations\n")
+            warn('\nSingular preconditioner detected in CR, ceasing iterations\n')
             return (postprocess(x), -1)
 
         if it == maxiter:

@@ -410,7 +410,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
             if BH is None:
-                raise ValueError("BH should be an n x m array")
+                raise ValueError('BH should be an n x m array')
 
             for i in range(BH.shape[1]):
                 BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
@@ -616,9 +616,9 @@ def get_block_diag(A, blocksize, inv_flag=True):
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
-        raise ValueError("Expected square matrix")
+        raise ValueError('Expected square matrix')
     if np.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("blocksize and A.shape must be compatible")
+        raise ValueError('blocksize and A.shape must be compatible')
 
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
@@ -712,7 +712,7 @@ def amalgamate(A, blocksize):
         return A
 
     if np.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("Incompatible blocksize")
+        raise ValueError('Incompatible blocksize')
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
@@ -845,10 +845,10 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     # Print Title
     if len(title) > 0:
-        title = title.split("\n")
+        title = title.split('\n')
         for t in title:
             table_str += str.center(t, ttwidth) + '\n'
-        table_str += "\n"
+        table_str += '\n'
 
     # Choose centering scheme
     centering = centering.lower()
@@ -1821,7 +1821,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         if to_levelize == 'predefined':
             raise ValueError('predefined to_levelize requires a user-provided '
                              'CSR matrix representing strength or aggregation '
-                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
+                             'i.e., ("predefined", {"C" : CSR_MAT}).')
         to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
@@ -1946,13 +1946,13 @@ def filter_matrix_columns(A, theta):
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each column of A, which is most easily
     # accessed by converting to CSC.  We apply the drop-tolerance with
@@ -2021,14 +2021,14 @@ def filter_matrix_rows(A, theta):
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
     A = A.tocsr()
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
     # amg_core.classical_strength_of_connection(), which ignores diagonal
@@ -2091,7 +2091,7 @@ def truncate_rows(A, nz_per_row):
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     if isspmatrix_csr(A):

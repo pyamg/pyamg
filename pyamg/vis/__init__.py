@@ -1,4 +1,4 @@
-"Visualization Support"
+"""Visualization Support"""
 
 from . import vtk_writer
 from . import vis_coarse

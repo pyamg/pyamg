@@ -142,7 +142,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz_old = rz
         pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
-            warn("\nIndefinite matrix detected in CG, aborting\n")
+            warn('\nIndefinite matrix detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         alpha = rz/pAp                            # 3
@@ -157,7 +157,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                             # check curvature of M
-            warn("\nIndefinite preconditioner detected in CG, aborting\n")
+            warn('\nIndefinite preconditioner detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         beta = rz/rz_old                          # 7

@@ -424,11 +424,11 @@ class TestSolverPerformance(TestCase):
 
 
 class TestComplexSolverPerformance(TestCase):
-    ''' Imaginary tests from
-        'Algebraic Multigrid Solvers for Complex-Valued Matrices",
+    """ Imaginary tests from
+        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
-    '''
+    """
 
     def setUp(self):
         self.cases = []

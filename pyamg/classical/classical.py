@@ -92,7 +92,7 @@ def ruge_stuben_solver(A,
     if not isspmatrix_csr(A):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR",
+            warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix, '

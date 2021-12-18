@@ -239,7 +239,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     A.sort_indices()
 
     if subdomain is None and inv_subblock is not None:
-        raise ValueError("inv_subblock must be None if subdomain is None")
+        raise ValueError('inv_subblock must be None if subdomain is None')
 
     # If no subdomains are defined, default is to use the sparsity pattern of A
     # to define the overlapping regions

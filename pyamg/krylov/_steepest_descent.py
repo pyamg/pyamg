@@ -140,8 +140,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         q = A @ z
         zAz = np.inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
-            warn("\nIndefinite matrix detected in steepest descent,\
-                  aborting\n")
+            warn('\nIndefinite matrix detected in steepest descent, aborting\n')
             return (postprocess(x), -1)
 
         alpha = rz / zAz                            # step size
@@ -157,7 +156,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                                # check curvature of M
-            warn("\nIndefinite preconditioner detected in steepest descent, stopping.\n")
+            warn('\nIndefinite preconditioner detected in steepest descent, stopping.\n')
             return (postprocess(x), -1)
 
         normr = norm(r)
@@ -186,7 +185,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         if rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in steepest descent, stopping.\n")
+            warn('\nSingular preconditioner detected in steepest descent, stopping.\n')
             return (postprocess(x), -1)
 
         if it == maxiter:

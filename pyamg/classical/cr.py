@@ -140,10 +140,10 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
             thetacs = list(thetacs)
 
         if (np.max(thetacs) >= 1) or (np.min(thetacs) <= 0):
-            raise ValueError("Must have 0 < thetacs < 1")
+            raise ValueError('Must have 0 < thetacs < 1')
 
     if (thetacr >= 1) or (thetacr <= 0):
-        raise ValueError("Must have 0 < thetacr < 1")
+        raise ValueError('Must have 0 < thetacr < 1')
 
     if not isspmatrix_csr(A):
         raise TypeError('expecting csr sparse matrix A')
@@ -205,8 +205,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
         # Print details on current iteration
         if verbose:
-            print("CR Iteration ", it, ", CF = ", rho,
-                  ", Coarsening factor = ", float(n-indices[0])/n)
+            print(f'CR Iteration {it} CF = {rho}'
+                  f', Coarsening factor = {(n-indices[0])/n}')
 
         # If convergence factor satisfactory, break loop
         if rho < thetacr:
