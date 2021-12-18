@@ -260,7 +260,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
-    if D != 2 or D != 3:
+    if D not in (2, 3):
         raise ValueError('only dimension 2 and 3 are supported')
 
     if D == 2:
