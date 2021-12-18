@@ -1,7 +1,6 @@
 name: Build wheels
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'v*'

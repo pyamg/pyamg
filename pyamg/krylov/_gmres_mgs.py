@@ -201,7 +201,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):  # pylint: disable=unused-variable
+    for _outer in range(max_outer):
 
         # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(n*max_inner).

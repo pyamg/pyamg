@@ -1,15 +1,14 @@
+"""Test (prolongation) smoothing."""
+import warnings
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_array_almost_equal,\
+    assert_equal, assert_almost_equal
+from scipy import sparse
 
 from pyamg.gallery import poisson, linear_elasticity, load_example,\
     gauge_laplacian
 from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
 from pyamg.amg_core import incomplete_mat_mult_bsr
-
-from numpy.testing import TestCase, assert_array_almost_equal,\
-    assert_equal, assert_almost_equal
-
-import warnings
 
 
 class TestEnergyMin(TestCase):
@@ -282,9 +281,9 @@ class TestEnergyMin(TestCase):
             assert_array_almost_equal(result.indptr, exact.indptr)
 
     def test_range(self):
+        """Check that P*R=B"""
         warnings.filterwarnings('ignore', category=UserWarning,
                                 message='Having less target vectors')
-        """Check that P*R=B"""
         np.random.seed(18410243)  # make tests repeatable
 
         cases = []
@@ -453,7 +452,7 @@ class TestEnergyMin(TestCase):
         cases.append((A, B, ('energy', {'krylov': 'gmres', 'degree': 2}), name))
 
         # Classic SA cases
-        for A, B, smooth, name in cases:
+        for A, B, smooth, _name in cases:
             ml = smoothed_aggregation_solver(A, B=B, max_coarse=1,
                                              max_levels=2, smooth=smooth)
             P = ml.levels[0].P
@@ -470,7 +469,7 @@ class TestEnergyMin(TestCase):
 
         # Root-node cases
         counter = 0
-        for A, B, smooth, name in cases:
+        for A, B, smooth, _name in cases:
             counter += 1
 
             if isinstance(smooth, tuple):

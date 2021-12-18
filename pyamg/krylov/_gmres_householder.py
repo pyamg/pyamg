@@ -171,7 +171,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):  # pylint: disable=unused-variable
+    for _outer in range(max_outer):
 
         # Calculate vector w, which defines the Householder reflector
         #    Take shortcut in calculating,

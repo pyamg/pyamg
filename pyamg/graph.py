@@ -205,7 +205,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     clusters = np.empty(N, dtype='intc')
     distances = np.empty(N, dtype=G.dtype)
 
-    for it in range(1, maxiter+1):
+    for _it in range(1, maxiter+1):
         last_seeds = seeds.copy()
 
         amg_core.lloyd_cluster(N, G.indptr, G.indices, G.data,
@@ -214,7 +214,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
         if (seeds == last_seeds).all():
             break
 
-    if it == maxiter:
+    if _it == maxiter:
         warn('Lloyd clustering reached maxiter (did not converge)')
 
     return (distances, clusters, seeds)
