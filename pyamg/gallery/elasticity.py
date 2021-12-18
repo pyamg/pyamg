@@ -260,12 +260,13 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
+    if D != 2 or D != 3:
+        raise ValueError('only dimension 2 and 3 are supported')
+
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
-    else:
-        raise NotImplementedError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D

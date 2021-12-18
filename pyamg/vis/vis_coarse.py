@@ -213,8 +213,6 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     elif len(a) >= 2:
         fname1 = ''.join(a[:-1])
         fname2 = a[-1]
-    else:
-        raise ValueError('problem with fname')
 
     new_fname = fname
     for d in range(0, Ndof):
@@ -224,6 +222,9 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
             new_fname = f'{fname1}_{d+1}.{fname2}'
 
         cdata = splitting[(d*N):((d+1)*N)]
+
+        if output not in ('vtk', 'matplotlib'):
+            raise ValueError('problem with outputtype')
 
         if output == 'vtk':
             write_basic_mesh(V=V, E2V=E2V, mesh_type='vertex',
@@ -246,16 +247,12 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
                 plt.show()
             except ImportError:
                 print('\nNote: matplotlib is needed for plotting.')
-        else:
-            raise ValueError('problem with outputtype')
 
 
-def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
-                mesh_type=None):
+def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None, mesh_type=None):
     """Check input for local functions."""
-    if V is not None:
-        if not np.issubdtype(V.dtype, np.floating):
-            raise ValueError('V should be of type float')
+    if V is not None and not np.issubdtype(V.dtype, np.floating):
+        raise ValueError('V should be of type float')
 
     if E2V is not None:
         if not np.issubdtype(E2V.dtype, np.integer):
@@ -263,24 +260,23 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
         if E2V.min() != 0:
             warnings.warn(f'Element indices begin at {E2V.min()}')
 
-    if AggOp is not None:
-        if AggOp.shape[1] > AggOp.shape[0]:
-            raise ValueError('AggOp should be of size N x Nagg')
+    if AggOp is not None and AggOp.shape[1] > AggOp.shape[0]:
+        raise ValueError('AggOp should be of size N x Nagg')
 
-    if A is not None:
-        if AggOp is not None:
-            if (A.shape[0] != A.shape[1]) or (A.shape[0] != AggOp.shape[0]):
-                raise ValueError('expected square matrix A and compatible with AggOp')
-        else:
-            raise ValueError('problem with check_input')
+    if A is not None and AggOp is None:
+        raise ValueError('problem with check_input')
+
+    if (A is not None and AggOp is not None
+       and ((A.shape[0] != A.shape[1]) or (A.shape[0] != AggOp.shape[0]))):
+        raise ValueError('expected square matrix A and compatible with AggOp')
+
+    if splitting is not None and V is None:
+        raise ValueError('problem with check_input')
 
     if splitting is not None:
         splitting = splitting.ravel()
-        if V is not None:
-            if (len(splitting) % V.shape[0]) != 0:
-                raise ValueError('splitting must be a multiple of N')
-        else:
-            raise ValueError('problem with check_input')
+        if V is not None and (len(splitting) % V.shape[0]) != 0:
+            raise ValueError('splitting must be a multiple of N')
 
     if mesh_type is not None:
         valid_mesh_types = ('vertex', 'tri', 'quad', 'tet', 'hex')

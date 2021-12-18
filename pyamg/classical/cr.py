@@ -49,14 +49,14 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     it = 0
 
     while True:
+        if method not in ('habituated', 'concurrent'):
+            raise NotImplementedError('method not recognized: need habituated '
+                                      'or concurrent')
         if method == 'habituated':
             gauss_seidel(A, e, z, iterations=1)
             e[Cindex] = 0.0
         elif method == 'concurrent':
             gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
-        else:
-            raise NotImplementedError('method not recognized: need habituated '
-                                      'or concurrent')
 
         enorm_old = enorm
         enorm = norm(e)
