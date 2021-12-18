@@ -492,7 +492,7 @@ class Mesh:
                      (Vnew[edge0, 1] - Vnew[edge1, 1])**2
 
         maxit = 100
-        for it in range(maxit):
+        for _it in range(maxit):
             Vnew = G @ Vnew
             Vnew /= W[:, None]  # scale the columns by 1/W
             Vnew[bid, :] = self.V[bid, :]
@@ -504,7 +504,7 @@ class Mesh:
                 break
 
         self.V = Vnew
-        return it
+        return _it
 
 
 def gradgradform(mesh, kappa=None, f=None, degree=1):

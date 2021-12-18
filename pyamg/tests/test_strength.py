@@ -598,8 +598,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     # Calculate (Atilde^k) naively
     S = (sparse.eye(dimen, dimen, format='csr') - (1.0/rho_DinvA)*Dinv_A)
     Atilde = sparse.eye(dimen, dimen, format='csr')
-    for i in range(k):
-        Atilde = S*Atilde
+    for _i in range(k):
+        Atilde = S * Atilde
 
     # Strength Info should be row-based, so transpose Atilde
     Atilde = Atilde.T.tocsr()

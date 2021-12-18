@@ -48,7 +48,7 @@ class TestGraph(TestCase):
         cases = []
         np.random.seed(651978631)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -158,7 +158,7 @@ class TestComplexGraph(TestCase):
         cases = []
         np.random.seed(3084315563)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 

@@ -295,7 +295,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     # Improve candidates
     if B.shape[1] > 1 and improvement_iters > 0:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        for i in range(improvement_iters):
+        for _i in range(improvement_iters):
             for j in range(B.shape[1]):
                 # Run a V-cycle built on everything except candidate j, while
                 # using candidate j as the initial guess
@@ -335,7 +335,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         # Special case for improving a single candidate
         max_levels = len(aggregate) + 1
         max_coarse = 0
-        for i in range(improvement_iters):
+        for _i in range(improvement_iters):
             B, aggregate, strength =\
                 initial_setup_stage(A, symmetry, pdef, candidate_iters,
                                     epsilon, max_levels, max_coarse,

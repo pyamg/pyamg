@@ -4,11 +4,11 @@ xml."""
 import tempfile
 
 import xml.parsers.expat
+
+from numpy.testing import TestCase
 from numpy import array, uint32
 
 from pyamg.vis import write_vtu
-
-from numpy.testing import TestCase
 
 
 class TestWriteVtu(TestCase):
@@ -81,4 +81,5 @@ class TestWriteVtu(TestCase):
                 with open(mesh.file_name, 'rb') as f:
                     parser.ParseFile(f)
             except Exception as ex:
-                assert False, 'problem: %s' % (ex)
+                print(f'problem: {ex}')
+                raise

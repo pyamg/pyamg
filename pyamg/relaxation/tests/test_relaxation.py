@@ -266,7 +266,7 @@ class TestRelaxation(TestCase):
             D = np.diag(np.diag(A))
             U = np.triu(A, k=1)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = solve(L + D, (b - U.dot(x)))
                 elif sweep == 'backward':
@@ -496,7 +496,7 @@ class TestRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + A.T.dot(solve(L, (b - A.dot(x))))
                 elif sweep == 'backward':
@@ -641,7 +641,7 @@ class TestRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + (solve(L, AH.dot(b - A.dot(x))))
                 elif sweep == 'backward':
@@ -735,7 +735,7 @@ class TestRelaxation(TestCase):
                 indices = np.concatenate((indices1, indices2))
 
             # Multiplicative Schwarz iterations
-            for j in range(iterations):
+            for _j in range(iterations):
                 for i in indices:
                     si = subdomains[i]
                     x[si] = np.dot(subblocks[i], (b[si] - A[si, :]*x)) + x[si]
@@ -942,7 +942,7 @@ class TestComplexRelaxation(TestCase):
                 subblocks.append(blkAinv)
 
             # Multiplicative Schwarz iterations
-            for j in range(iterations):
+            for _j in range(iterations):
                 for i in range(len(subdomains)):
                     si = subdomains[i]
                     x[si] = np.dot(subblocks[i], (b[si] - A[si, :]*x)) + x[si]
@@ -982,7 +982,7 @@ class TestComplexRelaxation(TestCase):
             D = np.diag(np.diag(A))
             U = np.triu(A, k=1)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = solve(L + D, (b - U.dot(x)))
                 elif sweep == 'backward':
@@ -1228,7 +1228,7 @@ class TestComplexRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + AH.dot(solve(L, (b - A.dot(x))))
                 elif sweep == 'backward':
@@ -1390,7 +1390,7 @@ class TestComplexRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + (solve(L, AH.dot(b - A.dot(x))))
                 elif sweep == 'backward':

@@ -416,7 +416,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
     S = sparse.csc_matrix(A.shape, dtype=A.dtype)  # empty matrix
     Id = sparse.eye(A.shape[0], A.shape[1], format='csc')
-    for i in range(k + 1):
+    for _i in range(k + 1):
         S = S + omega * (Dinv * (Id - A * S))
 
     # Calculate the strength entries in S column-wise, but only strength
@@ -624,11 +624,11 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
              f'Method is done in powers of two.\nYou have chosen {k} time steps.')
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
-        for i in range(nsquare):
+        for _i in range(nsquare):
             Atilde = Atilde * Atilde
 
         JacobiStep = (Id - (1.0 / rho_DinvA) * Dinv_A).T.tocsr()
-        for i in range(ninc):
+        for _i in range(ninc):
             Atilde = Atilde * JacobiStep
         del JacobiStep
 
@@ -651,7 +651,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     else:
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
         # Calculate Atilde^k only at the sparsity pattern of mask.
-        for i in range(nsquare - 1):
+        for _i in range(nsquare - 1):
             Atilde = Atilde * Atilde
 
         # Call incomplete mat-mat mult
