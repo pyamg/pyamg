@@ -357,7 +357,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.01 and resid2 < 0.01)
+        assert resid1 < 0.01
+        assert resid2 < 0.01
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_indexed(self):
@@ -595,7 +596,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        assert resid1 < 0.2
+        assert resid2 < 0.2
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_nr_bsr(self):
@@ -683,7 +685,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        assert resid1 < 0.2
+        assert resid2 < 0.2
         assert_almost_equal(resid1, resid2)
 
     def test_schwarz_gold(self):
@@ -1113,7 +1116,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.03 and resid2 < 0.03)
+        assert resid1 < 0.03
+        assert resid2 < 0.03
         assert_almost_equal(resid1, resid2)
 
     def test_jacobi_ne(self):
@@ -1341,7 +1345,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        assert resid1 < 0.3
+        assert resid2 < 0.3
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_nr_bsr(self):
@@ -1436,7 +1441,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        assert resid1 < 0.3
+        assert resid2 < 0.3
         assert_almost_equal(resid1, resid2)
 
 
