@@ -1821,7 +1821,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         if to_levelize == 'predefined':
             raise ValueError('predefined to_levelize requires a user-provided '
                              'CSR matrix representing strength or aggregation '
-                             'i.e., ("predefined", {"C" : CSR_MAT}).')
+                             'i.e., ("predefined", {"C" : CSR_MAT}).')  # noqa: FS003
         to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):

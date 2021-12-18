@@ -72,7 +72,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     check_input(V=V, E2V=E2V, AggOp=AggOp, mesh_type=mesh_type)
     map_type_to_key = {'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
     if mesh_type not in map_type_to_key:
-        raise ValueError('Unknown mesh_type={mesh_type}')
+        raise ValueError(f'Unknown mesh_type={mesh_type}')
     key = map_type_to_key[mesh_type]
 
     AggOp = csr_matrix(AggOp)
@@ -285,4 +285,4 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None,
     if mesh_type is not None:
         valid_mesh_types = ('vertex', 'tri', 'quad', 'tet', 'hex')
         if mesh_type not in valid_mesh_types:
-            raise ValueError('mesh_type should be {" or ".join(valid_mesh_types)}')
+            raise ValueError(f'mesh_type should be {" or ".join(valid_mesh_types)}')

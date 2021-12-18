@@ -59,7 +59,7 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn = amg_core.maximal_independent_set_parallel
             fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
-            raise ValueError('Unknown algorithm ({algo})')
+            raise ValueError(f'Unknown algorithm ({algo})')
     else:
         fn = amg_core.maximal_independent_set_k_parallel
         fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
@@ -107,7 +107,7 @@ def vertex_coloring(G, method='MIS'):
         fn = amg_core.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
-        raise ValueError('Unknown method ({method})')
+        raise ValueError(f'Unknown method ({method})')
 
     return coloring
 
@@ -198,9 +198,9 @@ def lloyd_cluster(G, seeds, maxiter=10):
         raise ValueError('at least one seed is required')
 
     if seeds.min() < 0:
-        raise ValueError('Invalid seed index ({seeds.min()})')
+        raise ValueError(f'Invalid seed index ({seeds.min()})')
     if seeds.max() >= N:
-        raise ValueError('Invalid seed index ({seeds.max()})')
+        raise ValueError(f'Invalid seed index ({seeds.max()})')
 
     clusters = np.empty(N, dtype='intc')
     distances = np.empty(N, dtype=G.dtype)

@@ -44,7 +44,7 @@ m = re.match(r'(\d+)\.(\d+).*', np.__version__)
 npver = [int(m.group(1)), int(m.group(2))]
 if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
     warnings.warn(f'Numpy {npmin} or above is recommended for this version of'
-                  'PyAMG (detected version {npver})', UserWarning)
+                  f'PyAMG (detected version {npver})', UserWarning)
 
 spreq = '0.11'
 spmin = [int(j) for j in spreq.split('.')]
@@ -52,7 +52,7 @@ m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
 spver = [int(m.group(1)), int(m.group(2))]
 if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
     warnings.warn(f'SciPy {spmin} or above is recommended for this version of'
-                  'PyAMG (detected version {spver})', UserWarning)
+                  f'PyAMG (detected version {spver})', UserWarning)
 
 
 def test(verbose=False):

@@ -300,7 +300,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
         def callback(_x, iteration):
             iteration[0] = iteration[0] + 1
-            print('    iteration {iteration[0]}')
+            print(f'    iteration {iteration[0]}')
 
         def callback2(x):
             return callback(x, iteration)
