@@ -186,14 +186,15 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     Sj = np.empty_like(A.indices)
     Sx = np.empty_like(A.data)
 
+    if norm not in ('abs', 'min'):
+        raise ValueError('Unknown norm')
+
     if norm == 'abs':
         amg_core.classical_strength_of_connection_abs(
             A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     elif norm == 'min':
         amg_core.classical_strength_of_connection_min(
             A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
-    else:
-        raise ValueError('Unknown norm')
 
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
@@ -275,6 +276,9 @@ def symmetric_strength_of_connection(A, theta=0):
     if theta < 0:
         raise ValueError('expected a positive theta')
 
+    if not sparse.isspmatrix_csr(A) and not sparse.isspmatrix_bsr(A):
+        raise TypeError('expected csr_matrix or bsr_matrix')
+
     if sparse.isspmatrix_csr(A):
         # if theta == 0:
         #     return A
@@ -307,8 +311,6 @@ def symmetric_strength_of_connection(A, theta=0):
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
-    else:
-        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
