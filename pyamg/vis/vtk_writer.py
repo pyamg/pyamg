@@ -445,7 +445,7 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     map_type_to_key = {'vertex': 1, 'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
 
     if mesh_type not in map_type_to_key:
-        raise ValueError('Unknown mesh_type={mesh_type}')
+        raise ValueError(f'Unknown mesh_type={mesh_type}')
 
     key = map_type_to_key[mesh_type]
 

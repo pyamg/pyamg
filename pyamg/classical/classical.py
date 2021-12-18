@@ -142,7 +142,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn is None:
         C = A
     else:
-        raise ValueError('Unrecognized strength of connection method: {str(fn)}')
+        raise ValueError(f'Unrecognized strength of connection method: {fn}')
 
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -159,7 +159,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
-        raise ValueError('Unknown C/F splitting method {CF}')
+        raise ValueError(f'Unknown C/F splitting method {CF}')
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid

@@ -54,7 +54,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
 
-    raise NotImplementedError('No support for grid={grid}')
+    raise NotImplementedError(f'No support for grid={grid}')
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
