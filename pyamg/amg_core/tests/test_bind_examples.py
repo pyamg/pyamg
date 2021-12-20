@@ -122,7 +122,7 @@ class TestVectors(TestCase):
 
     def test_10i(self):
         # int64, float32  (should FAIL on downconvert)
-        J = np.array([1, 1, 1], dtype=np.int32)
-        x = np.array([1.0, 2.0, 3.0], dtype=np.longdouble)
+        J = np.array([1, 1, 1], dtype=np.int64)
+        x = np.array([1.0, 2.0, 3.0], dtype=np.float64)
 
         assert_raises(TypeError, g.test10, J, x)
