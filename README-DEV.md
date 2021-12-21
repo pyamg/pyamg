@@ -1,13 +1,14 @@
 Release Steps:
 - with no staged commits and a clean status...
-- add notes to `CHANGELOG.md`
+- meld a summary of `git log 7a74ef7..HEAD --oneline` with whatever hash with `[unreleased]` in changelog
+- commit, push
 - `mkvirtualenv releasetest`
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
 - remove untracked files `git clean -xdf`
 - `git tag -a v3.2.0 -m "version 3.2.0"`
 - `git push`
 - `git push --tags`
-- then release the version on Github: `gh release create v1.2.3 --notes "bugfix release, see CHANGELOG.md"`
+- then release the version on Github: `gh release create v1.2.3 --notes "see changelog.md"`
   - This will trigger the GHA `.github/workflows/wheels.yml` which builds wheels and a source distribution, and publishes to pypi
 
 Testing notes:
