@@ -24,6 +24,8 @@ jobs:
           - {"os": "ubuntu", "py": "cp39", "arch": "aarch64"}
           - {"os": "macos", "py": "cp38", "arch": "x86_64"}
           - {"os": "macos", "py": "cp39", "arch": "x86_64"}
+          - {"os": "macos", "py": "cp38", "arch": "arm64"}
+          - {"os": "macos", "py": "cp39", "arch": "arm64"}
           - {"os": "windows", "py": "cp38", "arch": "x86"}
           - {"os": "windows", "py": "cp38", "arch": "AMD64"}
           - {"os": "windows", "py": "cp39", "arch": "x86"}
