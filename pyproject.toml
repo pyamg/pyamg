@@ -10,4 +10,4 @@ requires = [
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"
 write_to = "pyamg/version.py"
-fallback_version = "v4.2.1-alpha.4"
+fallback_version = "v4.2.1-alpha.5"
