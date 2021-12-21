@@ -5,6 +5,7 @@ Release Steps:
 - `mkvirtualenv releasetest`
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
 - remove untracked files `git clean -xdf`
+- the following can be done with a pre-release, `v4.2.1-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease`
 - mark `fallback_version` in `pyproject.toml`
 - `git tag -a v3.2.0 -m "version 3.2.0"`
 - `git push`
