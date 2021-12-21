@@ -1,9 +1,6 @@
 name: Build wheels
 
 on:
-  push:
-    tags:
-      - 'v*'
   release:
     types:
       - published

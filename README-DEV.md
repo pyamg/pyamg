@@ -5,6 +5,7 @@ Release Steps:
 - `mkvirtualenv releasetest`
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
 - remove untracked files `git clean -xdf`
+- mark `fallback_version` in `pyproject.toml`
 - `git tag -a v3.2.0 -m "version 3.2.0"`
 - `git push`
 - `git push --tags`
