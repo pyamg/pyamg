@@ -7,26 +7,13 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheel for ${{ matrix.os }} ${{ matrix.py }} ${{ matrix.arch }}
+    name: Build wheel for ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {"os": "ubuntu", "py": "cp38", "arch": "x86_64"}
-          - {"os": "ubuntu", "py": "cp38", "arch": "i686"}
-          - {"os": "ubuntu", "py": "cp38", "arch": "aarch64"}
-          - {"os": "ubuntu", "py": "cp39", "arch": "x86_64"}
-          - {"os": "ubuntu", "py": "cp39", "arch": "i686"}
-          - {"os": "ubuntu", "py": "cp39", "arch": "aarch64"}
-          - {"os": "macos", "py": "cp38", "arch": "x86_64"}
-          - {"os": "macos", "py": "cp39", "arch": "x86_64"}
-          - {"os": "macos", "py": "cp38", "arch": "arm64"}
-          - {"os": "macos", "py": "cp39", "arch": "arm64"}
-          - {"os": "windows", "py": "cp38", "arch": "x86"}
-          - {"os": "windows", "py": "cp38", "arch": "AMD64"}
-          - {"os": "windows", "py": "cp39", "arch": "x86"}
-          - {"os": "windows", "py": "cp39", "arch": "AMD64"}
+        os = [ubuntu-latest, windows-latest, macos-11, macos-12]
+        python-version = [37, 38, 39]
 
     steps:
       - name: Checkout repo
@@ -37,6 +24,11 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.2.2
         env:
+          CIBW_BUILD: cp*{{ matrix.python-version }}-*
+          CIBW_SKIP: pp*
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_ARCHS_LINUX: "x86_64	"
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
