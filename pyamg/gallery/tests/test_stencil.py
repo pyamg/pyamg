@@ -1,3 +1,4 @@
+"""Test stencil construction."""
 import numpy as np
 from pyamg.gallery.stencil import stencil_grid
 

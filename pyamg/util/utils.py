@@ -1788,7 +1788,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         change these values.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
@@ -1866,7 +1866,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
         at level i.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry

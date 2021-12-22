@@ -1,3 +1,4 @@
+"""Test Krylov methods."""
 import numpy as np
 from numpy.testing import (TestCase, assert_array_almost_equal,
                            assert_equal, assert_almost_equal)

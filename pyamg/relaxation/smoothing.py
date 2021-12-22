@@ -1,28 +1,27 @@
 """Method to create pre and post-smoothers on the levels of a MultilevelSolver.
 
-    The setup_smoother_name functions are helper functions for
-    parsing user input and assigning each level the appropriate smoother for
-    the functions in 'change_smoothers'.
+The setup_smoother_name functions are helper functions for
+parsing user input and assigning each level the appropriate smoother for
+the functions in 'change_smoothers'.
 
-    The standard interface is
+The standard interface is
 
-    Parameters
-    ----------
-    lvl : multilevel level
-        the level in the hierarchy for which to assign a smoother
-    iterations : int
-        how many smoother iterations
-    optional_params : dict
-        optional params specific for each method such as omega or sweep
+Parameters
+----------
+lvl : multilevel level
+    the level in the hierarchy for which to assign a smoother
+iterations : int
+    how many smoother iterations
+optional_params : dict
+    optional params specific for each method such as omega or sweep
 
-    Returns
-    -------
-    Function pointer for the appropriate relaxation method for level=lvl
+Returns
+-------
+Function pointer for the appropriate relaxation method for level=lvl
 
-    Examples
-    --------
-    See change_smoothers above
-
+Examples
+--------
+See change_smoothers above
 """
 
 import numpy as np
@@ -446,14 +445,14 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 
 # pylint: disable=unused-argument
 def setup_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
-    """Setup Gauss-Seidel."""
+    """Set up Gauss-Seidel."""
     def smoother(A, x, b):
         relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
     return smoother
 
 
 def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
-    """Setup weighted-Jacobi."""
+    """Set up weighted-Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
@@ -465,8 +464,7 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
 def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                   subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None,
                   sweep=DEFAULT_SWEEP):
-    """Setup Schwarz."""
-
+    """Set up Schwarz."""
     matrix_asformat(lvl, 'A', 'csr')
     lvl.Acsr.sort_indices()
     subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
@@ -484,7 +482,7 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
 
 def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
                                  sweep=DEFAULT_SWEEP):
-    """Setup strength-based Schwarz."""
+    """Set up strength-based Schwarz."""
     # Use the overlapping regions defined by strength of connection matrix C
     # for the overlapping Schwarz method
     if not hasattr(lvl, 'C'):
@@ -502,7 +500,7 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
                        blocksize=None, withrho=True):
-    """Setup block Jacobi."""
+    """Set up block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -532,7 +530,7 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
 def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
                              sweep=DEFAULT_SWEEP,
                              Dinv=None, blocksize=None):
-    """Setup block Gauss-Seidel."""
+    """Set up block Gauss-Seidel."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -559,7 +557,7 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
 
 
 def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
-    """Setup Richardson."""
+    """Set up Richardson."""
     omega = omega/approximate_spectral_radius(lvl.A)
 
     def smoother(A, x, b):
@@ -569,7 +567,7 @@ def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
 
 
 def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
-    """Setup SOR."""
+    """Set up SOR."""
     def smoother(A, x, b):
         relaxation.sor(A, x, b, omega=omega, iterations=iterations,
                        sweep=sweep)
@@ -578,7 +576,7 @@ def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
 
 def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
                     iterations=DEFAULT_NITER):
-    """Setup Chebyshev."""
+    """Set up Chebyshev."""
     rho = approximate_spectral_radius(lvl.A)
     a = rho * lower_bound
     b = rho * upper_bound
@@ -592,7 +590,7 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
 
 
 def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
-    """Setup Jacobi NE."""
+    """Set up Jacobi NE."""
     matrix_asformat(lvl, 'A', 'csr')
     if withrho:
         omega = omega/rho_D_inv_A(lvl.Acsr)**2
@@ -605,7 +603,7 @@ def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
 
 def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
                           omega=1.0):
-    """Setup Gauss-Seidel NE."""
+    """Set up Gauss-Seidel NE."""
     matrix_asformat(lvl, 'A', 'csr')
 
     def smoother(A, x, b):
@@ -616,7 +614,7 @@ def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
                           omega=1.0):
-    """Setup Gauss-Seidel NR."""
+    """Set up Gauss-Seidel NR."""
     matrix_asformat(lvl, 'A', 'csc')
 
     def smoother(A, x, b):
@@ -627,7 +625,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
                 residuals=None):
-    """Setup GMRES smoothing."""
+    """Set up GMRES smoothing."""
     def smoother(A, x, b):
         x[:] = (
             gmres(
@@ -645,7 +643,7 @@ def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
 
 
 def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
-    """Setup CG smoothing."""
+    """Set up CG smoothing."""
     def smoother(A, x, b):
         x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
                    callback=callback, residuals=residuals)[0]).reshape(x.shape)
@@ -654,7 +652,7 @@ def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
 
 def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
-    """Setup CGNE smoothing."""
+    """Set up CGNE smoothing."""
     def smoother(A, x, b):
         x[:] = (
             cgne(
@@ -672,7 +670,7 @@ def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
 
 def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
                residuals=None):
-    """Setup CGNR smoothing."""
+    """Set up CGNR smoothing."""
     def smoother(A, x, b):
         x[:] = (
             cgnr(
@@ -689,18 +687,17 @@ def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
 
 
 def setup_none(lvl):
-    """Setup default, empty smoother."""
+    """Set up default, empty smoother."""
     def smoother(A, x, b):
         pass
     return smoother
 
 
 def _setup_call(fn):
-    """Helper function to call the setup methods.
+    """Register setup functions.
 
-    This avoids use of eval()
+    This is a helper function to call the setup methods and avoids use of eval().
     """
-
     setup_register = {
         'gauss_seidel':           setup_gauss_seidel,
         'jacobi':                 setup_jacobi,

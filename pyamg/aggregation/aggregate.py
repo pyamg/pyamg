@@ -306,7 +306,6 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 
     """
-
     if num_clusters is None:
         num_clusters = int(C.shape[0] / 10)
 

@@ -1,3 +1,4 @@
+"""Test loading examples."""
 from pyamg.gallery.example import load_example
 
 from numpy.testing import TestCase, assert_equal

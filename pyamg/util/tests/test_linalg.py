@@ -1,3 +1,4 @@
+"""Test internal linalg."""
 import numpy as np
 from scipy import linalg
 from scipy.sparse import csr_matrix

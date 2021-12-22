@@ -1,5 +1,4 @@
-"""Testing for fem.py
-"""
+"""Test fem."""
 import numpy as np
 from pyamg.gallery import fem
 import scipy.sparse.linalg as sla
@@ -12,13 +11,10 @@ mesh_dir = os.path.join(base_dir, 'mesh_data')
 
 
 class TestDiameter(np.testing.TestCase):
-    """
-    Testing for diameter """
+    """Testing for diameter."""
 
     def test_diameter(self):
-        """
-        Test the longest edge for a two triangle mesh
-        """
+        """Test the longest edge for a two triangle mesh."""
         h = 1.0
         for _ in range(5):
 
@@ -37,11 +33,10 @@ class TestDiameter(np.testing.TestCase):
 
 
 class TestQuadratic(np.testing.TestCase):
-    """
-    Testing for generate_quadratic
-    """
+    """Testing for generate_quadratic."""
 
     def test_quadratic(self):
+        """Test order 2."""
         V = np.array(
             [[0., 0.],
              [1., 0.],
@@ -70,15 +65,17 @@ class TestQuadratic(np.testing.TestCase):
 
 
 class TestL2Norm(np.testing.TestCase):
-    """
-    Testing for l2norm
+    """Test for L2-norm.
 
-    Notes:
+    Notes
+    -----
         - testing formed with sympy
           from sympy import *
           x, y = symbols("x y")
     """
+
     def test_l2norm(self):
+        """Test L2-norm."""
         data = np.load(os.path.join(mesh_dir, 'square_mesh.npz'))
         # import square mesh of vertices, elements
         V = data['vertices']
@@ -126,7 +123,10 @@ class TestL2Norm(np.testing.TestCase):
 
 
 class TestGradGradFEM(np.testing.TestCase):
+    """Test (grad u, grad v) form."""
+
     def test_gradgradfem(self):
+        """Test fem assembly."""
         # two element
         h = 1
         V = np.array(

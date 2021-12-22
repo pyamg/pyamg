@@ -58,8 +58,7 @@ class TestCommonRelaxation(TestCase):
             method(A, x, b, *args, **kwargs)
 
     def test_strided_x(self):
-        """non-contiguous x should raise errors"""
-
+        """Non-contiguous x should raise errors."""
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b = np.arange(A.shape[0], dtype='float64')
@@ -67,8 +66,7 @@ class TestCommonRelaxation(TestCase):
             check_raises(ValueError, method, A, x, b, *args, **kwargs)
 
     def test_mixed_precision(self):
-        """mixed precision arguments should raise errors"""
-
+        """Mixed precision arguments should raise errors."""
         for method, args, kwargs in self.cases:
             A32 = poisson((4,), format='csr').astype('float32')
             b32 = np.arange(A32.shape[0], dtype='float32')
@@ -86,8 +84,7 @@ class TestCommonRelaxation(TestCase):
             check_raises(TypeError, method, A64, x32, b64, *args, **kwargs)
 
     def test_vector_sizes(self):
-        """incorrect vector sizes should raise errors"""
-
+        """Incorrect vector sizes should raise errors."""
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b4 = np.arange(4, dtype='float64')

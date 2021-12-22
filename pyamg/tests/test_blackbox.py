@@ -1,4 +1,4 @@
-"""Teset blackbox.py solver"""
+"""Teset blackbox.py solver."""
 import warnings
 import numpy as np
 from numpy.testing import TestCase

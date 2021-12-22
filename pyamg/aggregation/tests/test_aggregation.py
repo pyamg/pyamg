@@ -1,3 +1,4 @@
+"""Test smoothed aggregation solver."""
 import numpy as np
 import scipy.sparse as sparse
 import scipy.linalg as sla
@@ -199,8 +200,7 @@ class TestSolverPerformance(TestCase):
                            ('energy', {'krylov': 'gmres'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
@@ -441,11 +441,15 @@ class TestSolverPerformance(TestCase):
 
 
 class TestComplexSolverPerformance(TestCase):
-    """ Imaginary tests from
+    """Test imaginary examples.
+
+    Notes
+    -----
+    Examples from
         "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
-    '"""
+    """
 
     def setUp(self):
         self.cases = []
@@ -488,8 +492,7 @@ class TestComplexSolverPerformance(TestCase):
                            ('energy', {'krylov': 'cg'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             A = sparse.csr_matrix(A)
 
@@ -576,12 +579,10 @@ class TestComplexSolverPerformance(TestCase):
                                       nonsymm_lvl.A.toarray())
 
     def test_precision(self):
-        """
-        Check single precision.
+        """Check single precision.
 
         Test that x_32 == x_64 up to single precision tolerance
         """
-
         np.random.seed(3158637515)  # make tests repeatable
         A = poisson((10, 10), dtype=np.float64, format='csr')
         b = np.random.rand(A.shape[0]).astype(A.dtype)

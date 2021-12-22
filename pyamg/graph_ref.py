@@ -3,10 +3,10 @@ import numpy as np
 
 
 def bellman_ford_reference(A, c):
-    """Reference implementation of Bellman-Ford.
+    """Execute reference implementation of Bellman-Ford.
 
     Parameters
-    ---------
+    ----------
     A : coo sparse matrix
         n x n directed graph with positive weights
 

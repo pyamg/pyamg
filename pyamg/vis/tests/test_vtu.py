@@ -1,5 +1,4 @@
-""" Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed
-xml."""
+"""Test 1, 2, 8 element meshes writing the vtu file.  Validate as well-formed xml."""
 
 import tempfile
 

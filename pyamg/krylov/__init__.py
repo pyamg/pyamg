@@ -1,32 +1,4 @@
-"""Krylov Solvers"""
-
-from ._gmres import gmres
-from ._gmres_householder import gmres_householder
-from ._gmres_mgs import gmres_mgs
-from ._fgmres import fgmres
-from ._cg import cg
-from ._cr import cr
-from ._cgnr import cgnr
-from ._cgne import cgne
-from ._bicgstab import bicgstab
-from ._steepest_descent import steepest_descent
-from ._minimal_residual import minimal_residual
-
-__all__ = [
-    'gmres',
-    'gmres_householder',
-    'gmres_mgs',
-    'fgmres',
-    'cg',
-    'cr',
-    'cgnr',
-    'cgne',
-    'bicgstab',
-    'steepest_descent',
-    'minimal_residual'
-]
-
-__doc__ += """Krylov Solvers.
+"""Krylov solvers.
 
 This module contains several Krylov subspace methods, in addition to two simple
 iterations, to solve linear systems iteratively.  These methods often use
@@ -56,3 +28,29 @@ References
    http://www.netlib.org/templates/
 
 """
+
+from ._gmres import gmres
+from ._gmres_householder import gmres_householder
+from ._gmres_mgs import gmres_mgs
+from ._fgmres import fgmres
+from ._cg import cg
+from ._cr import cr
+from ._cgnr import cgnr
+from ._cgne import cgne
+from ._bicgstab import bicgstab
+from ._steepest_descent import steepest_descent
+from ._minimal_residual import minimal_residual
+
+__all__ = [
+    'gmres',
+    'gmres_householder',
+    'gmres_mgs',
+    'fgmres',
+    'cg',
+    'cr',
+    'cgnr',
+    'cgne',
+    'bicgstab',
+    'steepest_descent',
+    'minimal_residual'
+]

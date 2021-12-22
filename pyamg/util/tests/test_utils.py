@@ -1,3 +1,4 @@
+"""Test utils."""
 import numpy as np
 from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
                           bsr_matrix, isspmatrix_bsr,

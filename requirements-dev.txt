@@ -1,3 +1,6 @@
 pep8-naming
 flake8-quotes
 flake8-bugbear
+flake8-use-fstring
+flake8-pytest-style
+flake8-docstrings

@@ -1,12 +1,10 @@
-"""Poisson problem with finite elements
-"""
+"""Poisson problem with finite elements."""
 import numpy as np
 from scipy import sparse
 
 
 def check_mesh(V, E):
-    """Check the ccw orientation of each simplex in the mesh
-    """
+    """Check the ccw orientation of each simplex in the mesh."""
     E01 = np.vstack((V[E[:, 1], 0] - V[E[:, 0], 0],
                      V[E[:, 1], 1] - V[E[:, 0], 1],
                      np.zeros(E.shape[0]))).T
@@ -19,7 +17,7 @@ def check_mesh(V, E):
 
 
 def generate_quadratic(V, E, return_edges=False):
-    """Generate a quadratic element list by adding midpoints to each edge
+    """Generate a quadratic element list by adding midpoints to each edge.
 
     Parameters
     ----------
@@ -67,7 +65,6 @@ def generate_quadratic(V, E, return_edges=False):
     array([[0, 1, 2, 4, 5, 6],
            [2, 3, 1, 7, 8, 5]])
     """
-
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
 
@@ -107,7 +104,7 @@ def generate_quadratic(V, E, return_edges=False):
 
 
 def diameter(V, E):
-    """Compute the diameter of a mesh
+    """Compute the diameter of a mesh.
 
     Parameters
     ----------
@@ -149,7 +146,7 @@ def diameter(V, E):
 
 
 def refine2dtri(V, E, marked_elements=None):
-    r"""Refine a triangular mesh
+    r"""Refine a triangular mesh.
 
     Parameters
     ----------
@@ -278,7 +275,7 @@ def refine2dtri(V, E, marked_elements=None):
 
 
 def l2norm(u, mesh):
-    """Calculate the L2 norm of a funciton on mesh (V,E)
+    """Calculate the L2 norm of a funciton on mesh (V,E).
 
     Parameters
     ----------
@@ -387,14 +384,22 @@ def l2norm(u, mesh):
 
 
 class Mesh:
-    """Simple mesh object that holds vertices and mesh functions
-    """
+    """Simple mesh object that holds vertices and mesh functions."""
 
     # pylint: disable=too-many-instance-attributes
     # This is reasonble for this class
 
     def __init__(self, V, E, degree=1):
+        """Initialize mesh.
 
+        Parameters
+        ----------
+        V : ndarray
+            nv x 2 list of coordinates
+
+        E : ndarray
+            ne x 3 list of vertices
+        """
         # check to see if E is numbered 0 ... nv
         ids = np.full((E.max()+1,), False)
         ids[E.ravel()] = True
@@ -430,8 +435,7 @@ class Mesh:
             self.generate_quadratic()
 
     def generate_quadratic(self):
-        """generate a quadratic mesh
-        """
+        """Generate a quadratic mesh."""
         if self.V2 is None:
             self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E,
                                                               return_edges=True)
@@ -440,7 +444,12 @@ class Mesh:
             self.newID = self.nv + np.arange(self.Edges.shape[0])
 
     def refine(self, levels):
-        """refine the mesh
+        """Refine the mesh.
+
+        Parameters
+        ----------
+        levels : int
+            Number of refinement levels.
         """
         self.V2 = None
         self.E2 = None
@@ -709,8 +718,17 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
 
 def divform(mesh):
-    """Calculate the (div u , p) form that arises in Stokes
-       assumes P2-P1 elements
+    """Calculate the (div u , p) form that arises in Stokes assumes P2-P1 elements.
+
+    Parameters
+    ----------
+    mesh : Mesh
+        Mesh object
+
+    Returns
+    -------
+    BX, BY : ndarray
+        div block B = [BX, BY].T in [[A, B], [B.T 0]]
     """
     if mesh.V2 is None:
         mesh.generate_quadratic()
@@ -791,7 +809,16 @@ def divform(mesh):
 
 
 def applybc(A, b, mesh, bc):
-    """
+    """Apply boundary conditions.
+
+    Parameters
+    ----------
+    A : sparse matrix
+        Fully assembled sparse matrix
+    b : ndarray
+        Fully assembled right-hand side
+    mesh : Mesh
+        Mesh object
     bc : list
        list of boundary conditions
        bc = [bc1, bc2, ..., bck]
@@ -800,8 +827,14 @@ def applybc(A, b, mesh, bc):
                    'var': var    the variable, given as a start in the dof list
                 'degree': degree degree of the variable, either 1 or 2
                    }
-    """
 
+    Returns
+    -------
+    A : sparse matrix
+        Modified, assembled sparse matrix
+    b : ndarray
+        Modified, assembled right-hand side
+    """
     for c in bc:
         if not callable(c['g']):
             raise ValueError('each bc g must be callable functions')
@@ -862,8 +895,7 @@ def applybc(A, b, mesh, bc):
 
 
 def stokes(mesh, fu, fv):
-    """Stokes Flow
-    """
+    """Stokes Flow."""
     mesh.generate_quadratic()
     Au, bu = gradgradform(mesh, f=fu, degree=2)
     Av, bv = gradgradform(mesh, f=fv, degree=2)
@@ -878,7 +910,7 @@ def stokes(mesh, fu, fv):
 
 
 def model(num=0):
-    """A list of model (elliptic) problems
+    """Construct model elliptic problem.
 
     Parameters
     ----------
@@ -901,5 +933,4 @@ def model(num=0):
     Notes
     -----
     """
-    print(num)
-    raise NotImplementedError('model is unimplemented')
+    raise NotImplementedError(f'model (num={num}) is unimplemented')
