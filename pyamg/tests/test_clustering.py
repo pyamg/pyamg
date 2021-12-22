@@ -1,3 +1,4 @@
+"""Test clustering."""
 import numpy as np
 import pyamg.amg_core as amg_core
 from pyamg.gallery import load_example

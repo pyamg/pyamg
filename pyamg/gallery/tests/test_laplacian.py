@@ -1,3 +1,4 @@
+"""Test Laplacian example."""
 import numpy as np
 from scipy.linalg import eigvals
 from pyamg.gallery.laplacian import poisson, gauge_laplacian

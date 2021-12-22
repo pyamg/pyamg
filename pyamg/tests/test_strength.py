@@ -450,7 +450,8 @@ class TestComplexStrengthOfConnection(TestCase):
 
 # reference implementations for unittests  #
 def reference_classical_soc(A, theta, norm='abs'):
-    """
+    """Construct reference implementation of classical SOC.
+
     This complex extension of the classic Ruge-Stuben
     strength-of-connection has some theoretical justification in
     "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan,
@@ -560,15 +561,12 @@ def reference_symmetric_soc(A, theta):
 
 
 def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
-    """
-    All python reference implementation for Evolution Strength of Connection
+    """All python reference implementation for Evolution Strength of Connection.
 
-    --> If doing imaginary test, both A and B should be imaginary type upon
-    entry
+    --> If doing imaginary test, both A and B should be imaginary type upon entry
 
     --> This does the "unsymmetrized" version of the ode measure
     """
-
     # number of PDEs per point is defined implicitly by block size
     csrflag = sparse.isspmatrix_csr(A)
     if csrflag:
@@ -758,10 +756,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
 
 
 def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
-    """
-    Reference routine for distance based strength of connection
-    """
-
+    """Construct reference distance based strength of connection."""
     # deal with the supernode case
     if sparse.isspmatrix_bsr(A):
         dimen = int(A.shape[0]/A.blocksize[0])

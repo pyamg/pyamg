@@ -1,3 +1,4 @@
+"""Test basic mesh construction."""
 from pyamg.gallery.mesh import regular_triangle_mesh
 
 from numpy.testing import TestCase, assert_equal
