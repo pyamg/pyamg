@@ -1,3 +1,4 @@
+"""Test scipy methods."""
 import numpy as np
 import scipy.sparse.linalg as sla
 

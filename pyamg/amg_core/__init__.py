@@ -1,5 +1,4 @@
-"""amg_core - a C++ implementation of AMG-related routines
-"""
+"""amg_core - a C++ implementation of AMG-related routines."""
 
 from .evolution_strength import (apply_absolute_distance_filter, apply_distance_filter,
                                  min_blocks, evolution_strength_helper,
