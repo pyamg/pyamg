@@ -97,7 +97,7 @@ from pyamg.util.utils import remove_diagonal
 
 
 def RS(S, second_pass=False):
-    """Compute a C/F splitting using Ruge-Stuben coarsening
+    """Compute a C/F splitting using Ruge-Stuben coarsening.
 
     Parameters
     ----------

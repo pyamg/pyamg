@@ -1,4 +1,4 @@
-"""Classical AMG"""
+"""Classical AMG."""
 
 from . import classical
 from . import split
