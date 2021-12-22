@@ -470,7 +470,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 @np.deprecate
 def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
                                block_flag=False, symmetrize_measure=True):
-    """(deprecated) Use evolution_strength_of_connection instead."""
+    """Use evolution_strength_of_connection instead (deprecated)."""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 

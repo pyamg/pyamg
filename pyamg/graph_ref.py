@@ -6,7 +6,7 @@ def bellman_ford_reference(A, c):
     """Execute reference implementation of Bellman-Ford.
 
     Parameters
-    ---------
+    ----------
     A : coo sparse matrix
         n x n directed graph with positive weights
 

@@ -1,6 +1,5 @@
 """Generic AMG solver."""
 
-
 from warnings import warn
 
 import scipy as sp
@@ -83,8 +82,9 @@ class MultilevelSolver:
 
     class level(Level):  # noqa: N801
         """Deprecated level class."""
-        # only raise deprecation warning on use, not import
+
         def __init__(self):
+            """Raise deprecation warning on use, not import."""
             super().__init__()
             warn('level() is deprectated.  use Level()',
                  category=DeprecationWarning, stacklevel=2)
@@ -329,7 +329,6 @@ class MultilevelSolver:
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
 
         """
-
         shape = self.levels[0].A.shape
         dtype = self.levels[0].A.dtype
 
@@ -403,7 +402,6 @@ class MultilevelSolver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
-
         if x0 is None:
             x = np.zeros_like(b)
         else:
@@ -730,6 +728,7 @@ def coarse_grid_solver(solver):
 
     class GenericSolver:
         """Generic solver class."""
+
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
             b = np.asanyarray(b)
@@ -764,8 +763,9 @@ def coarse_grid_solver(solver):
 
 class multilevel_solver(MultilevelSolver):  # noqa: N801
     """Deprecated level class."""
-    # only raise deprecation warning on use, not import
+
     def __init__(self, *args, **kwargs):
+        """Raise deprecation warning on use, not import."""
         super().__init__(*args, **kwargs)
         warn('multilevel_solver is deprectated.  use MultilevelSolver()',
              category=DeprecationWarning, stacklevel=2)
