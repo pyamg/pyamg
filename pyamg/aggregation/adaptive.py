@@ -30,7 +30,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     on a per aggregate basis.
 
     Parameters
-    ---------
+    ----------
     x : array
         n x 1 vector of new candidate
     AggOp : CSR or CSC sparse matrix
@@ -359,7 +359,6 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                         max_levels, max_coarse, aggregate, prepostsmoother,
                         smooth, strength, work, initial_candidate=None):
     """Compute aggregation and the first near-nullspace candidate.
-
 
     Parameters
     ----------
