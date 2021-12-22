@@ -1,4 +1,4 @@
-"""Test (prolongation) smoothing."""
+"""Test prolongation smoothing."""
 import warnings
 import numpy as np
 from numpy.testing import TestCase, assert_array_almost_equal,\
@@ -16,9 +16,9 @@ class TestEnergyMin(TestCase):
 
         # Define incomplete mat mult bsr gold
         def incomplete_mat_mult_bsr_gold(A, B, S):
-            """
-            Compute A*B --> S, but only at the existing
-            sparsity structure of S
+            """Compute A*B --> S.
+
+            Compute only at the existing sparsity structure of S
             A,B and S are assumed BSR
             """
             # Ablocksize = A.blocksize
@@ -281,7 +281,7 @@ class TestEnergyMin(TestCase):
             assert_array_almost_equal(result.indptr, exact.indptr)
 
     def test_range(self):
-        """Check that P*R=B"""
+        """Check that P*R=B."""
         warnings.filterwarnings('ignore', category=UserWarning,
                                 message='Having less target vectors')
         np.random.seed(18410243)  # make tests repeatable
@@ -514,7 +514,7 @@ class TestEnergyMin(TestCase):
                 assert_equal(I1.indices, I2.indices)
 
     def test_postfilter(self):
-        """Check that using postfilter reduces NNZ in P"""
+        """Check that using postfilter reduces NNZ in P."""
         np.random.seed(3198379291)  # make tests repeatable
         cases = []
 
@@ -567,7 +567,7 @@ class TestEnergyMin(TestCase):
                          > ml_filter.levels[0].P.nnz, True)
 
     def test_prefilter(self):
-        """Check that using prefilter reduces NNZ in P"""
+        """Check that using prefilter reduces NNZ in P."""
         np.random.seed(483333169)  # make tests repeatable
         cases = []
 
