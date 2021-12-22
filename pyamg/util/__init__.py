@@ -1,4 +1,4 @@
-"""Utility Functions"""
+"""Utility functions."""
 
 from . import linalg
 from . import utils
