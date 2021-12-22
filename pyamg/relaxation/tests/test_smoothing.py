@@ -1,3 +1,4 @@
+"""Test prolongation smoothing."""
 from pyamg.gallery import poisson
 from pyamg import smoothed_aggregation_solver
 from pyamg.util.utils import profile_solver
