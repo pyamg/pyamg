@@ -3,7 +3,7 @@ import numpy as np
 
 
 def bellman_ford_reference(A, c):
-    """Reference implementation of Bellman-Ford.
+    """Execute reference implementation of Bellman-Ford.
 
     Parameters
     ---------

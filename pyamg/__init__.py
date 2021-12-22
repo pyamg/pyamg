@@ -1,4 +1,4 @@
-"""PyAMG: Algebraic Multigrid Solvers in Python"""
+"""PyAMG: Algebraic Multigrid Solvers in Python."""
 
 import re
 import warnings
