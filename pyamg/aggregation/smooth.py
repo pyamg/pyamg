@@ -110,21 +110,21 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
-    matrix([[ 1.,  0.],
-            [ 1.,  0.],
-            [ 1.,  0.],
-            [ 0.,  1.],
-            [ 0.,  1.],
-            [ 0.,  1.]])
+    array([[1., 0.],
+           [1., 0.],
+           [1., 0.],
+           [0., 1.],
+           [0., 1.],
+           [0., 1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = jacobi_prolongation_smoother(A,T,A,np.ones((2,1)))
     >>> P.toarray()
-    matrix([[ 0.64930164,  0.        ],
-            [ 1.        ,  0.        ],
-            [ 0.64930164,  0.35069836],
-            [ 0.35069836,  0.64930164],
-            [ 0.        ,  1.        ],
-            [ 0.        ,  0.64930164]])
+    array([[0.64930164, 0.        ],
+           [1.        , 0.        ],
+           [0.64930164, 0.35069836],
+           [0.35069836, 0.64930164],
+           [0.        , 1.        ],
+           [0.        , 0.64930164]])
 
     """
     # preprocess weighting
@@ -240,21 +240,21 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
-    matrix([[ 1.,  0.],
-            [ 1.,  0.],
-            [ 1.,  0.],
-            [ 0.,  1.],
-            [ 0.,  1.],
-            [ 0.,  1.]])
+    array([[1., 0.],
+           [1., 0.],
+           [1., 0.],
+           [0., 1.],
+           [0., 1.],
+           [0., 1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = richardson_prolongation_smoother(A,T)
     >>> P.toarray()
-    matrix([[ 0.64930164,  0.        ],
-            [ 1.        ,  0.        ],
-            [ 0.64930164,  0.35069836],
-            [ 0.35069836,  0.64930164],
-            [ 0.        ,  1.        ],
-            [ 0.        ,  0.64930164]])
+    array([[0.64930164, 0.        ],
+           [1.        , 0.        ],
+           [0.64930164, 0.35069836],
+           [0.35069836, 0.64930164],
+           [0.        , 1.        ],
+           [0.        , 0.64930164]])
 
     """
     weight = omega/approximate_spectral_radius(S)
@@ -965,23 +965,23 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> print T.toarray()
-    [[ 1.  0.]
-     [ 1.  0.]
-     [ 1.  0.]
-     [ 0.  1.]
-     [ 0.  1.]
-     [ 0.  1.]]
+    >>> print(T.toarray())
+    [[1. 0.]
+     [1. 0.]
+     [1. 0.]
+     [0. 1.]
+     [0. 1.]
+     [0. 1.]]
     >>> A = poisson((6,),format='csr')
     >>> B = np.ones((2,1),dtype=float)
     >>> P = energy_prolongation_smoother(A,T,A,B, None, (False,{}))
-    >>> print P.toarray()
-    [[ 1.          0.        ]
-     [ 1.          0.        ]
-     [ 0.66666667  0.33333333]
-     [ 0.33333333  0.66666667]
-     [ 0.          1.        ]
-     [ 0.          1.        ]]
+    >>> print(P.toarray())
+    [[1.         0.        ]
+     [1.         0.        ]
+     [0.66666667 0.33333333]
+     [0.33333333 0.66666667]
+     [0.         1.        ]
+     [0.         1.        ]]
 
     References
     ----------
