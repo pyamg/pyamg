@@ -49,21 +49,23 @@ def generate_quadratic(V, E, return_edges=False):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> V = np.array([[0.,0.], [1.,0.], [0.,1.], [1.,1.]])
     >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> import fem
     >>> V2, E2 = fem.generate_quadratic(V, E)
-    array([[0. , 0. ],
-           [1. , 0. ],
-           [0. , 1. ],
-           [1. , 1. ],
-           [0.5, 0. ],
-           [0.5, 0.5],
-           [0. , 0.5],
-           [0.5, 1. ],
-           [1. , 0.5]])
-    array([[0, 1, 2, 4, 5, 6],
-           [2, 3, 1, 7, 8, 5]])
+    >>> print(V2)
+    [[0.  0. ]
+     [1.  0. ]
+     [0.  1. ]
+     [1.  1. ]
+     [0.5 0. ]
+     [0.5 0.5]
+     [0.  0.5]
+     [0.5 1. ]
+     [1.  0.5]]
+    >>> print(E2)
+    [[0 1 2 4 5 6]
+     [2 3 1 7 8 5]]
     """
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
@@ -298,17 +300,21 @@ def l2norm(u, mesh):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> V = np.array([[0,0], [1,0], [0,1], [1,1]])
-    >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> X, Y = V[:, 0], V[:, 1]
-    >>> import fem
-    >>> I = fem.l2norm(X+Y, V, E, degree=1)
-    >>> print(I)
-    >>> V2, E2 = fem.generate_quadratic(V, E)
-    >>> X, Y = V2[:, 0], V2[:, 1]
-    >>> I = fem.l2norm(X+Y, V2, E2, degree=2)
-    >>> print(I)
-    >>> # actual (from sympy): 1.08012344973464
+    >>> E = np.array([[0,1,2], [1,3,2]])
+    >>> mesh = Mesh(V, E, degree=1)
+    >>> X, Y = mesh.V[:, 0], mesh.V[:, 1]
+    >>> u = X + Y
+    >>> unorm = fem.l2norm(u, mesh)
+    >>> print(f'{unorm:2.6}')
+    1.08012
+    >>> mesh = Mesh(V, E, degree=2)
+    >>> X, Y = mesh.V2[:, 0], mesh.V2[:, 1]
+    >>> u = X + Y
+    >>> unorm = fem.l2norm(u, mesh)
+    >>> print(f'{unorm:2.6}')
+    1.08012
     """
     if mesh.degree == 1:
         V = mesh.V
@@ -532,7 +538,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
 
-    fa : function
+    f : function
         right hand side, f(x,y) with vector input
 
     degree : 1 or 2
@@ -554,49 +560,68 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     Example
     -------
     >>> import numpy as np
-    >>> import fem
+    >>> from pyamg.gallery import fem
     >>> import scipy.sparse.linalg as sla
     >>> V = np.array(
-        [[  0,  0],
-         [  1,  0],
-         [2*1,  0],
-         [  0,  1],
-         [  1,  1],
-         [2*1,  1],
-         [  0,2*1],
-         [  1,2*1],
-         [2*1,2*1],
-        ])
+    ... [[  0,  0],
+    ...  [  1,  0],
+    ...  [2*1,  0],
+    ...  [  0,  1],
+    ...  [  1,  1],
+    ...  [2*1,  1],
+    ...  [  0,2*1],
+    ...  [  1,2*1],
+    ...  [2*1,2*1]])
     >>> E = np.array(
-        [[0,1,3],
-         [1,2,4],
-         [1,4,3],
-         [2,5,4],
-         [3,4,6],
-         [4,5,7],
-         [4,7,6],
-         [5,8,7]])
-    >>> A, b = fem.poissonfem(V, E)
+    ... [[0, 1, 3],
+    ...  [1, 2, 4],
+    ...  [1, 4, 3],
+    ...  [2, 5, 4],
+    ...  [3, 4, 6],
+    ...  [4, 5, 7],
+    ...  [4, 7, 6],
+    ...  [5, 8, 7]])
+    >>> mesh = Mesh(V, E)
+    >>> A, b = fem.gradgradform(mesh)
     >>> print(A.toarray())
+    [[ 1.  -0.5  0.  -0.5  0.   0.   0.   0.   0. ]
+     [-0.5  2.  -0.5  0.  -1.   0.   0.   0.   0. ]
+     [ 0.  -0.5  1.   0.   0.  -0.5  0.   0.   0. ]
+     [-0.5  0.   0.   2.  -1.   0.  -0.5  0.   0. ]
+     [ 0.  -1.   0.  -1.   4.  -1.   0.  -1.   0. ]
+     [ 0.   0.  -0.5  0.  -1.   2.   0.   0.  -0.5]
+     [ 0.   0.   0.  -0.5  0.   0.   1.  -0.5  0. ]
+     [ 0.   0.   0.   0.  -1.   0.  -0.5  2.  -0.5]
+     [ 0.   0.   0.   0.   0.  -0.5  0.  -0.5  1. ]]
     >>> print(b)
+    [0. 0. 0. 0. 0. 0. 0. 0. 0.]
     >>> f = lambda x, y : 0*x + 1.0
     >>> g = lambda x, y : 0*x + 0.0
     >>> g1 = lambda x, y : 0*x + 1.0
     >>> tol = 1e-12
     >>> X, Y = V[:,0], V[:,1]
-    >>> id1 = np.where(abs(Y) < tol)[0]
-    >>> id2 = np.where(abs(Y-2) < tol)[0]
-    >>> id3 = np.where(abs(X) < tol)[0]
-    >>> id4 = np.where(abs(X-2) < tol)[0]
+    >>> id1 = np.where(abs(Y) < tol)[0]    # north
+    >>> id2 = np.where(abs(Y-2) < tol)[0]  # south
     >>> bc = [{'id': id1, 'g': g},
-              {'id': id2, 'g': g},
-              {'id': id3, 'g': g1},
-              {'id': id4, 'g': g}]
-    >>> A, b = fem.poissonfem(V, E, f=f, bc=bc)
+    ...       {'id': id2, 'g': g}]
+    >>> A, b = fem.gradgradform(mesh, f=f)
+    >>> A, b = fem.applybc(A, b, mesh, bc)
+    >>> A = A.tocsr()
     >>> u = sla.spsolve(A, b)
     >>> print(A.toarray())
+    [[ 1.  0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  1.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  1.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2. -1.  0.  0.  0.  0.]
+     [ 0.  0.  0. -1.  4. -1.  0.  0.  0.]
+     [ 0.  0.  0.  0. -1.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  1.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  1.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.  1.]]
     >>> print(b)
+    [0.  0.  0.  0.5 1.  0.5 0.  0.  0. ]
     >>> print(u)
+    [0.  0.  0.  0.5 0.5 0.5 0.  0.  0. ]
     """
     if degree not in [1, 2]:
         raise ValueError('degree = 1 or 2 supported')
