@@ -80,7 +80,6 @@ class TestL2Norm(np.testing.TestCase):
         # import square mesh of vertices, elements
         V = data['vertices']
         E = data['elements']
-        print(V, E)
         mesh = fem.Mesh(V, E)
         X, Y = V[:, 0], V[:, 1]
 
