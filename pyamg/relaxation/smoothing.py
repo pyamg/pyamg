@@ -129,23 +129,20 @@ def change_smoothers(ml, presmoother, postsmoother):
     >>> from pyamg.aggregation import smoothed_aggregation_solver
     >>> from pyamg.relaxation.smoothing import change_smoothers
     >>> from pyamg.util.linalg import norm
-    >>> from scipy import rand, array, mean
+    >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> b = rand(A.shape[0],)
+    >>> b = np.random.rand(A.shape[0],)
     >>> ml = smoothed_aggregation_solver(A, max_coarse=10)
-    >>> #
     >>> # Set all levels to use gauss_seidel's defaults
     >>> smoothers = 'gauss_seidel'
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=smoothers)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> #
     >>> # Set all levels to use three iterations of gauss_seidel's defaults
     >>> smoothers = ('gauss_seidel', {'iterations' : 3})
     >>> change_smoothers(ml, presmoother=smoothers, postsmoother=None)
     >>> residuals=[]
     >>> x = ml.solve(b, tol=1e-8, residuals=residuals)
-    >>> #
     >>> # Set level 0 to use gauss_seidel's defaults, and all
     >>> # subsequent levels to use 5 iterations of cgnr
     >>> smoothers = ['gauss_seidel', ('cgnr', {'maxiter' : 5})]
@@ -341,7 +338,7 @@ def rho_D_inv_A(A):
     >>> from scipy.sparse import csr_matrix
     >>> import numpy as np
     >>> A = csr_matrix(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
-    >>> print rho_D_inv_A(A)
+    >>> print(f'{rho_D_inv_A(A):2.2}')
     1.0
 
     """
