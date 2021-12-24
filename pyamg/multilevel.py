@@ -133,7 +133,7 @@ class MultilevelSolver:
         >>> from pyamg.gallery import poisson
         >>> from pyamg.multilevel import MultilevelSolver
         >>> from pyamg.strength import classical_strength_of_connection
-        >>> from pyamg.classical import direct_interpolation
+        >>> from pyamg.classical.interpolate import direct_interpolation
         >>> from pyamg.classical.split import RS
         >>> # compute necessary operators
         >>> A = poisson((100, 100), format='csr')
@@ -154,7 +154,7 @@ class MultilevelSolver:
         >>> levels[1].A = R @ A @ P                      # coarse-level matrix
         >>> # create MultilevelSolver
         >>> ml = MultilevelSolver(levels, coarse_solver='splu')
-        >>> print ml
+        >>> print(ml)
         MultilevelSolver
         Number of Levels:     2
         Operator Complexity:  1.891
