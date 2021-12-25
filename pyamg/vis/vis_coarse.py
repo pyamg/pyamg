@@ -54,9 +54,8 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> AggOp = standard_aggregation(A)[0]
-    >>> vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tri',
-                             output='vtk', fname='output.vtu')
-
+    >>> vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp,
+    ...                      mesh_type='tri', fname='output.vtu')
     >>> from pyamg.aggregation import standard_aggregation
     >>> from pyamg.vis.vis_coarse import vis_aggregate_groups
     >>> from pyamg.gallery import load_example
@@ -65,8 +64,8 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> AggOp = standard_aggregation(A)[0]
-    >>> vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tet',
-                             output='vtk', fname='output.vtu')
+    >>> vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp,
+    ...                      mesh_type='tet', fname='output.vtu')
 
     """
     check_input(V=V, E2V=E2V, AggOp=AggOp, mesh_type=mesh_type)
@@ -186,7 +185,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     >>> splitting = np.array([0,1,0,1,1,0,1,0])    # two variables
     >>> vis_splitting(V,splitting,output='vtk',fname='output.vtu')
 
-    >>> from pyamg.classical import RS
+    >>> from pyamg.classical.split import RS
     >>> from pyamg.vis.vis_coarse import vis_splitting
     >>> from pyamg.gallery import load_example
     >>> data = load_example('unit_square')
@@ -194,8 +193,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     >>> V = data['vertices']
     >>> E2V = data['elements']
     >>> splitting = RS(A)
-    >>> vis_splitting(V=V,splitting=splitting,output='vtk',
-                      fname='output.vtu')
+    >>> vis_splitting(V=V,splitting=splitting,output='vtk', fname='output.vtu')
 
     """
     check_input(V, splitting)
