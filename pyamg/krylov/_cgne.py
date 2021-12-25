@@ -66,15 +66,15 @@ def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Examples
     --------
-    >>> from pyamg.krylov.cgne import cgne
+    >>> from pyamg.krylov import cgne
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cgne(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    46.1547104367
+    >>> print(f'{norm(b - A*x):.6}')
+    46.1547
 
     References
     ----------

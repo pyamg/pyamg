@@ -116,8 +116,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8, orthog='mgs')
-    >>> print norm(b - A*x)
-    >>> 6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------

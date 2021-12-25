@@ -124,7 +124,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from cr import CR
+    >>> from pyamg.classical.cr import CR
     >>> A = poisson((20,20),format='csr')
     >>> splitting = CR(A)
 
@@ -245,7 +245,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import binormalize
+    >>> from pyamg.classical.cr import binormalize
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
 

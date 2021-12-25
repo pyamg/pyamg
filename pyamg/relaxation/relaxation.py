@@ -48,11 +48,11 @@ def make_system(A, x, b, formats=None):
     >>> x = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
-    >>> print str(x.shape)
+    >>> print(x.shape)
     (100,)
-    >>> print str(b.shape)
+    >>> print(b.shape)
     (100,)
-    >>> print A.format
+    >>> print(A.format)
     csc
 
     """
@@ -136,8 +136,8 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print norm(b-A*x0)
-    3.03888724811
+    >>> print(f'{norm(b-A*x0):2.4}')
+    3.039
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -221,8 +221,8 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    0.126326160522
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.1263
     >>> #
     >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -304,8 +304,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    4.00733716236
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.007
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -374,7 +374,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     Examples
     --------
     >>> # Use Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation.relaxation.relaxation import jacobi
+    >>> from pyamg.relaxation.relaxation import jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
@@ -382,8 +382,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    5.83475132751
+    >>> print(f'{norm(b-A*x0):2.4}')
+    5.835
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -461,8 +461,8 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    4.66474230129
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.665
     >>> #
     >>> # Use block Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -541,10 +541,9 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> A = poisson((10,10), format='csr')
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
-    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4,
-                           sweep='symmetric')
-    >>> print norm(b-A*x0)
-    0.958333817624
+    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.9583
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -785,8 +784,8 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print norm(b-A*x0)
-    49.3886046066
+    >>> print(f'{norm(b-A*x0):2.4}')
+    49.39
     >>> #
     >>> # Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -869,8 +868,8 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.47576806771
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.476
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -954,8 +953,8 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.45044864352
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.45
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver

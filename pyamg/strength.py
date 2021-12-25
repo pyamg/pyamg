@@ -373,8 +373,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     >>> from pyamg.strength import energy_based_strength_of_connection
     >>> n=3
     >>> stencil =  np.array([[-1.0,-1.0,-1.0],
-    ...                        [-1.0, 8.0,-1.0],
-    ...                        [-1.0,-1.0,-1.0]])
+    ...                      [-1.0, 8.0,-1.0],
+    ...                      [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = energy_based_strength_of_connection(A, 0.0)
 
@@ -425,15 +425,16 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
         v = S[:, i].toarray()
-        Av = A.dot(v)
-        denom = np.sqrt(np.dot(v.conj(), Av))
+        v = v.ravel()
+        Av = A @ v
+        denom = np.sqrt(np.inner(v.conj(), Av))
         # replace entries in row i with strength values
         for j in range(Atilde.indptr[i], Atilde.indptr[i + 1]):
             col = Atilde.indices[j]
             vj = v[col].copy()
             v[col] = 0.0
             #   =  (||v_j||_A - ||v||_A) / ||v||_A
-            val = np.sqrt(np.dot(v.conj(), A.dot(v))) / denom - 1.0
+            val = np.sqrt(np.inner(v.conj(), A @ v)) / denom - 1.0
 
             # Negative values generally imply a weak connection
             if val > -0.01:

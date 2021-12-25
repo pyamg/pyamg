@@ -32,7 +32,7 @@ def relaxation_as_linear_operator(method, A, b):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.util.utils import relaxation_as_linear_operator
+    >>> from pyamg.relaxation.utils import relaxation_as_linear_operator
     >>> import numpy as np
     >>> A = poisson((100,100), format='csr')           # matrix
     >>> B = np.ones((A.shape[0],1))                 # Candidate vector

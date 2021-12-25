@@ -27,17 +27,17 @@ def direct_interpolation(A, C, splitting):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import direct_interpolation
+    >>> from pyamg.classical.interpolate import direct_interpolation
     >>> import numpy as np
     >>> A = poisson((5,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = direct_interpolation(A, A, splitting)
-    >>> print P.toarray()
-    [[ 1.   0.   0. ]
-     [ 0.5  0.5  0. ]
-     [ 0.   1.   0. ]
-     [ 0.   0.5  0.5]
-     [ 0.   0.   1. ]]
+    >>> print(P.toarray())
+    [[1.  0.  0. ]
+     [0.5 0.5 0. ]
+     [0.  1.  0. ]
+     [0.  0.5 0.5]
+     [0.  0.  1. ]]
 
     """
     if not isspmatrix_csr(A):

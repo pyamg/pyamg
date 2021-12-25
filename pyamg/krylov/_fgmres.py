@@ -91,15 +91,15 @@ def fgmres(A, b, x0=None, tol=1e-5,
 
     Examples
     --------
-    >>> from pyamg.krylov.fgmres import fgmres
+    >>> from pyamg.krylov import fgmres
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = fgmres(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------

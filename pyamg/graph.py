@@ -254,14 +254,14 @@ def breadth_first_search(G, seed):
     >>> import pyamg
     >>> import scipy.sparse as sparse
     >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
-                          [4,6], [4,7], [6,7], [7,8], [8,9]])
+    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
     >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
     >>> c, l = pyamg.graph.breadth_first_search(A, 0)
     >>> print(l)
-    >>> print(c)
     [0 1 1 2 2 3 3 3 4 5]
+    >>> print(c)
     [0 1 2 3 4 5 6 7 8 9]
 
     """
@@ -303,13 +303,13 @@ def connected_components(G):
     Examples
     --------
     >>> from pyamg.graph import connected_components
-    >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,1],[0,1,0]] ))
     [0 0 0]
-    >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,0],[0,0,0]] ))
     [0 0 1]
-    >>> print connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,0,0],[0,0,0],[0,0,0]] ))
     [0 1 2]
-    >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    >>> print(connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] ))
     [0 0 1 1]
 
     """
@@ -350,12 +350,12 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
-    >>> import matplotlib.pyplot as plt
-    >>> plt.figure()
-    >>> plt.subplot(121)
-    >>> plt.spy(S,marker='.')
-    >>> plt.subplot(122)
-    >>> plt.spy(symmetric_rcm(S),marker='.')
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.figure()
+    >>> # plt.subplot(121)
+    >>> # plt.spy(S,marker='.')
+    >>> # plt.subplot(122)
+    >>> # plt.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------

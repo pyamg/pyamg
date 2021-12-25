@@ -32,7 +32,7 @@ def bsr_getrow(A, i):
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
     >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
     >>> Brow = bsr_getrow(B,2)
-    >>> print Brow[1]
+    >>> print(Brow[1])
     [4 5]
 
     """

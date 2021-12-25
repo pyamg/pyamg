@@ -77,8 +77,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = minimal_residual(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    7.26369350856
+    >>> print(f'{norm(b - A*x):.6}')
+    7.26369
 
     References
     ----------

@@ -263,7 +263,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     >>> A = poisson((40,40),format='csr')
     >>> b = np.array(np.arange(A.shape[0]), dtype=float)
     >>> x = solve(A,b,verb=False)
-    >>> print "%1.2e"%(norm(b - A*x)/norm(b))
+    >>> print(f'{norm(b - A*x)/norm(b):1.2e}')
     6.28e-06
 
     """

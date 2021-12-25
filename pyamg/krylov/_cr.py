@@ -64,15 +64,15 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Examples
     --------
-    >>> from pyamg.krylov.cr import cr
+    >>> from pyamg.krylov import cr
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cr(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    10.9370700187
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------

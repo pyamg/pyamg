@@ -133,7 +133,7 @@ class MultilevelSolver:
         >>> from pyamg.gallery import poisson
         >>> from pyamg.multilevel import MultilevelSolver
         >>> from pyamg.strength import classical_strength_of_connection
-        >>> from pyamg.classical import direct_interpolation
+        >>> from pyamg.classical.interpolate import direct_interpolation
         >>> from pyamg.classical.split import RS
         >>> # compute necessary operators
         >>> A = poisson((100, 100), format='csr')
@@ -154,15 +154,15 @@ class MultilevelSolver:
         >>> levels[1].A = R @ A @ P                      # coarse-level matrix
         >>> # create MultilevelSolver
         >>> ml = MultilevelSolver(levels, coarse_solver='splu')
-        >>> print ml
+        >>> print(ml)
         MultilevelSolver
         Number of Levels:     2
         Operator Complexity:  1.891
         Grid Complexity:      1.500
         Coarse Solver:        'splu'
           level   unknowns     nonzeros
-            0        10000        49600 [52.88%]
-            1         5000        44202 [47.12%]
+             0       10000        49600 [52.88%]
+             1        5000        44202 [47.12%]
         <BLANKLINE>
 
         """
@@ -179,8 +179,8 @@ class MultilevelSolver:
         """Print basic statistics about the multigrid hierarchy."""
         output = 'MultilevelSolver\n'
         output += f'Number of Levels:     {len(self.levels)}\n'
-        output += f'Operator Complexity:  {self.operator_complexity():6.3f}\n'
-        output += f'Grid Complexity:      {self.grid_complexity():6.3f}\n'
+        output += f'Operator Complexity: {self.operator_complexity():6.3f}\n'
+        output += f'Grid Complexity:     {self.grid_complexity():6.3f}\n'
         output += f'Coarse Solver:        {self.coarse_solver.name()}\n'
 
         total_nnz = sum(level.A.nnz for level in self.levels)
@@ -191,7 +191,7 @@ class MultilevelSolver:
         for n, level in enumerate(self.levels):
             A = level.A
             ratio = 100 * A.nnz / total_nnz
-            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [%{ratio:2.2}]\n'
+            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [{ratio:2.2f}%]\n'
 
         return output
 
