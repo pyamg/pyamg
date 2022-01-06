@@ -177,15 +177,16 @@ def naive_aggregation(C):
     return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
+def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     """Aggregate nodes using Lloyd Clustering.
 
     Parameters
     ----------
     C : csr_matrix
         strength of connection matrix
-    naggs : int
-        number of aggregates or clusters
+    ratio : scalar
+        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
+        a coarsening by 10
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.
 
@@ -238,11 +239,10 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
 
     n = C.shape[0]
 
-    if naggs is None:
-        naggs = int(n / 10)
+    if ratio <= 0 or ratio > 1:
+        raise ValueError('ratio must be > 0.0 and <= 1.0')
 
-    if naggs <= 0 or naggs > n:
-        raise ValueError('number of aggregates must be >=1 and <=n)')
+    naggs = int(min(max(ratio * n, 1), n))
 
     if measure is None:
         data = C.data
@@ -285,7 +285,7 @@ def lloyd_aggregation(C, naggs=None, measure=None, maxiter=5):
     return AggOp, centers
 
 
-def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
+def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
                                rebalance_iters=5, pad=None, A=None):
     """Aggregate nodes using Balanced Lloyd Clustering.
 
@@ -293,6 +293,9 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
     ----------
     C : csr_matrix
         strength of connection matrix with positive weights
+    ratio : scalar
+        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
+        a coarsening by 10
     naggs : int
         Number of aggregates or clusters expected (default: C.shape[0] / 10)
     measure : ['unit','abs','inv',None]
@@ -356,11 +359,10 @@ def balanced_lloyd_aggregation(C, naggs=None, measure=None, maxiter=5,
 
     n = C.shape[0]
 
-    if naggs is None:
-        naggs = int(n / 10)
+    if ratio <= 0 or ratio > 1:
+        raise ValueError('ratio must be > 0.0 and <= 1.0')
 
-    if naggs <= 0 or naggs > n:
-        raise ValueError('Number of aggregates must be >=1 and <=n)')
+    naggs = int(min(max(ratio * n, 1), n))
 
     if pad is not None:
         if A is None:
