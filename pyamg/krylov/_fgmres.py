@@ -3,7 +3,7 @@
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
+from scipy.sparse.linalg._isolve.utils import make_system
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
 from pyamg.util.linalg import norm

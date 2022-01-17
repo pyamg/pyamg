@@ -46,7 +46,7 @@ class TestScipy(TestCase):
             def cb(x):
                 scipyres.append(x*normb)
 
-            _ = sla.iterative.gmres(A, b, x0, callback=cb, callback_type='pr_norm',
+            _ = sla.isolve.iterative.gmres(A, b, x0, callback=cb, callback_type='pr_norm',
                                     tol=tol, atol=0, restrt=3, maxiter=2)
 
             assert_array_almost_equal(mgsres[1:], scipyres)

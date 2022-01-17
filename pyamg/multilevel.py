@@ -3,7 +3,7 @@
 from warnings import warn
 
 import scipy as sp
-from scipy.sparse.linalg import LinearOperator, isolve
+from scipy.sparse.linalg import LinearOperator, _isolve
 from scipy.sparse.sputils import upcast
 import numpy as np
 
@@ -112,7 +112,7 @@ class MultilevelSolver:
 
             Sparse iterative methods:
 
-            * any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').
+            * any method in scipy.sparse.linalg._isolve or pyamg.krylov (e.g. 'cg').
             * Methods in pyamg.krylov take precedence.
             * relaxation method, such as 'gauss_seidel' or 'jacobi',
 
@@ -357,7 +357,7 @@ class MultilevelSolver:
         accel : string, function
             Defines acceleration method.  Can be a string such as 'cg'
             or 'gmres' which is the name of an iterative solver in
-            pyamg.krylov (preferred) or scipy.sparse.linalg.isolve.
+            pyamg.krylov (preferred) or scipy.sparse.linalg._isolve.
             If accel is not a string, it will be treated like a function
             with the same interface provided by the iterative solvers in SciPy.
         callback : function
@@ -437,7 +437,7 @@ class MultilevelSolver:
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
                 else:
-                    accel = getattr(isolve, accel)
+                    accel = getattr(_isolve, accel)
                     kwargs['atol'] = 'legacy'
 
             M = self.aspreconditioner(cycle=cycle)
@@ -449,7 +449,7 @@ class MultilevelSolver:
                     return x, info
                 return x
             except TypeError:
-                # try the scipy.sparse.linalg.isolve style interface,
+                # try the scipy.sparse.linalg._isolve style interface,
                 # which requires a callback function if a residual
                 # history is desired
 
@@ -614,7 +614,7 @@ def coarse_grid_solver(solver):
             - Sparse direct methods:
                 + splu : sparse LU solver
             - Sparse iterative methods:
-                + the name of any method in scipy.sparse.linalg.isolve or
+                + the name of any method in scipy.sparse.linalg._isolve or
                   pyamg.krylov (e.g. 'cg').
                   Methods in pyamg.krylov take precedence.
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
@@ -688,7 +688,7 @@ def coarse_grid_solver(solver):
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
-            fn = getattr(sp.sparse.linalg.isolve, solver)
+            fn = getattr(sp.sparse.linalg._isolve, solver)
 
         def solve(_, A, b):
             if 'tol' not in kwargs:

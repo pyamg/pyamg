@@ -2,7 +2,7 @@
 
 import warnings
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
+from scipy.sparse.linalg._isolve.utils import make_system
 from scipy import sparse
 from pyamg.util.linalg import norm
 
