@@ -9,11 +9,13 @@ PyAMG requires `numpy` and `scipy`
 pip install pyamg
 ```
 
-or
+or from source:
 
 ```
-python setup.py install
+pip install .
 ```
+
+(`python setup.py install` will no longer work)
 
 or with conda (see details below)
 
