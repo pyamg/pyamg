@@ -3,6 +3,7 @@
 from warnings import warn
 import numpy as np
 from scipy import sparse
+# from icecream import ic
 
 from . import amg_core
 
@@ -300,7 +301,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
 
     # create work arrays for C++
     # empty() values are initialized in the kernel
-    maxsize = int(4*np.ceil((n / num_clusters)))
+    maxsize = int(8*np.ceil((n / num_clusters)))
 
     Cptr = np.empty(num_clusters, dtype=np.int32)
     D = np.empty((maxsize, maxsize), dtype=G.dtype)
@@ -323,6 +324,11 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
                                     True, maxiter)
 
     for _riter in range(rebalance_iters):
+
+        # don't rebalance a single cluster
+        if num_clusters < 2:
+            break
+
         centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
 
         amg_core.lloyd_cluster_balanced(n,
