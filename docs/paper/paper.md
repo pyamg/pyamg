@@ -47,7 +47,7 @@ Methods section), the ability to reproduce results in the literature, and a usea
 interface to AMG allowing straightforward access to the variety of parameters
 in the method(s). At the same time, pure Python may not be efficient for sparse matrix
 operations that are not immediately expressed as efficient SciPy operations like a sparse
-matrix-vector multipy `A @ x`.  For many of the cases in `pyAMG`, the method
+matrix-vector multiply `A @ x`.  For many of the cases in `pyAMG`, the method
 interface and error handling is handled directly in Python, while compute (or
 memory) intensive kernels are expressed in C++ and wrapped through PyBind11.
 (more in the next section).
@@ -141,6 +141,6 @@ x = ml.solve(b, x0, tol=1e-8, residuals=res)
 ```
 This leads to the residual history shown in \autoref{fig:example}.
 
-![Algebraic mutlgrid confergence (relative residual).\label{fig:example}](example.pdf)
+![Algebraic multigrid convergence (relative residual).\label{fig:example}](example.pdf)
 
 # References
