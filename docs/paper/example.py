@@ -7,17 +7,17 @@ set_figure(fontsize=9, width=250)
 fig, ax = plt.subplots()
 
 np.random.seed(2022)
-#A = pyamg.gallery.poisson((1000,1000), format='csr')
-A = pyamg.gallery.poisson((10000,10000), format='csr')
+A = pyamg.gallery.poisson((1000,1000), format='csr')
+#A = pyamg.gallery.poisson((10000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 print(ml)
 
-x0 = np.zeros(A.shape[0])
-b = np.random.rand(A.shape[0])
+x0 = np.random.rand(A.shape[0])
+b = np.zeros(A.shape[0])
 res = []
 x = ml.solve(b, x0, tol=1e-10, residuals=res)
 
-res = np.array(res) / res[0]
+res = np.array(res) # / res[0]
 print(res[1:]/res[:-1])
 ax.semilogy(res, marker='o', color='tab:gray', markerfacecolor='w', ms=3)
 ax.set_xlabel('iterations')
