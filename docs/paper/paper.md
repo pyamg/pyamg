@@ -36,23 +36,25 @@ Sparse linear systems arise in a range of
 problems in the science, from fluid flows to solid mechanics to data analysis.
 While the direct solvers available in SciPy's sparse linear algebra package
 (`scipy.sparse.linalg`) are highly efficient, in many cases *iterative* methods
-are preferred due to overall complexity.  Likewise, the iterative methods in
+are preferred due to overall complexity.  However, the iterative methods in
 SciPy, such as CG and GMRES, often require an efficient preconditioner in order
-to improve convergence.  `PyAMG` is constructs multigrid solvers for use as a
+to achieve a lower complexity.  Preconditioning is a powerful tool whereby the 
+conditioning of the linear system and iterative method convergence rate 
+are both dramatically improved.
+`PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
 solvers can be found in [@encmg,@encamg]; a detailed description can be found
 in [@mgtutorial,@mgbook].
 
 The overarching goals of `PyAMG` include both readability and performance.
 This includes readable implementations of popular variations of AMG (see the
-Methods section), the ability to reproduce results in the literature, and a useable
-interface to AMG allowing straightforward access to the variety of parameters
-in the method(s). At the same time, pure Python may not be efficient for sparse matrix
-operations that are not immediately expressed as efficient SciPy operations like a sparse
-matrix-vector multiply `A @ x`.  For many of the cases in `PyAMG`, the method
-interface and error handling is handled directly in Python, while compute (or
-memory) intensive kernels are expressed in C++ and wrapped through PyBind11.
-(more in the next section).
+Methods section), the ability to reproduce results in the literature, and a user-friendly
+interface to AMG allowing straightforward access to the variety of AMG parameters
+in the method(s). Additionally, pure Python implementations are not efficient for many sparse matrix
+operations not already available in scipy.sparse, e.g., the sparse matrix graph 
+coarsening algorithms needed by AMG. For such cases in `PyAMG`, the compute (or
+memory) intensive kernels are typically expressed in C++ and wrapped through PyBind11, while the method
+interface and error handling is handled directly in Python (more in the next section).
 
 In the end, the goal of `PyAMG` is provide quick access, rapid prototyping,
 and performant execution of AMG methods.
