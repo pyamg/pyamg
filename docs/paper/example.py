@@ -7,7 +7,7 @@ set_figure(fontsize=9, width=250)
 fig, ax = plt.subplots()
 
 np.random.seed(2022)
-A = pyamg.gallery.poisson((1000,1000), format='csr')
+A = pyamg.gallery.poisson((1000,10000), format='csr')
 #A = pyamg.gallery.poisson((10000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 print(ml)

@@ -54,37 +54,41 @@ in the method(s). Additionally, pure Python implementations are not efficient fo
 operations not already available in scipy.sparse, e.g., the sparse matrix graph 
 coarsening algorithms needed by AMG. For such cases in `PyAMG`, the compute (or
 memory) intensive kernels are typically expressed in C++ and wrapped through PyBind11, while the method
-interface and error handling is handled directly in Python (more in the next section).
+interface and error handling is handled directly in Python (more in the next section). 
 
-In the end, the goal of `PyAMG` is provide quick access, rapid prototyping,
-and performant execution of AMG methods.
+In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers,
+and performant execution of AMG methods.  The extensive PyAMG 
+[Examples](https://github.com/pyamg/pyamg/wiki/Examples) page highlights many of the package's
+advanced AMG capabilities, e.g., for Hermitian, complex, nonsymmetric, and other challenging system types. 
 
 # Design
 
 The central data model in `PyAMG` is that of a `MultiLevel` object, which is
 constructed in the *setup* phase of AMG.  The multigrid hierarchy is expressed
-in this object along with details of the *solve* phase (which can be executed
-on various input data, $b$).
+in this object along with details of the *solve* phase, which can be executed
+on various input data, $b$, to solve $A x = b$.
 
-The `MultiLevel` object consists of a list of `Level`s and diagnostic
-information.  For example, a `MultiLevel` object named `ml` contains
-`ml.levels`.  Then, the data on level `i` (with the fine level denoted `i=0`),
-in `ml.levels[i]`, includes
-  - `A`: the sparse matrix operator, in CSR format, on level `i`;
-  - `P`: a sparse matrix interpolation operator to transfer grid vectors from level `i+1` to `i`;
-  - `R`: a sparse matrix restriction operator to transfer grid vectors from level `i` to `i+1`; and
-  - `presmoother`, `postsmoother`: functions that implement pre/post-relaxation in the solve phase, such as weighted Jacobi or Gauss-Seidel.
+The `MultiLevel` object consists of a list of multigrid `Level`s and diagnostic
+information.  For example, a `MultiLevel` object named `ml` contains the list
+`ml.levels`.  Then, the data on level `i` (with the finest level denoted `i=0`)
+accessible in `ml.levels[i]` includes
+
+- `A`: the sparse matrix operator, in CSR or BSR format, on level `i`;
+- `P`: a sparse matrix interpolation operator to transfer grid vectors from level `i+1` to `i`;
+- `R`: a sparse matrix restriction operator to transfer grid vectors from level `i` to `i+1`; and
+- `presmoother`, `postsmoother`: functions that implement pre/post-relaxation in the solve phase, such as weighted Jacobi or Gauss-Seidel.
+
 Other information, may be contained for additional diagnostics, such as grid
 splitting information, aggregation information, etc.
 
 Specific multigrid methods (next section) in `PyAMG` and their parameters are generally described
-and constructed in Python, while key components of both the setup and solve phase
+and constructed in Python, while key performance components of both the setup and solve phase
 are written in C++.  Heavy looping that cannot be accomplished with vectorized
 or efficient calls to NumPy or sparse matrix operations that are not readily
-expressed as ScyPy sparse (CSR or CSC) operations are contained in short,
+expressed as SciPy sparse (CSR or CSC) operations are contained in short,
 templated C++ functions.  The templates are used to avoid type recasting the variety
-of input arrays, and the direct wrapping to Python is handled through another layer
-with PyBind11.
+of input arrays. The direct wrapping to Python is handled through another layer
+with PyBind11.  Roughly 26\% of PyAMG is in C++, with the rest in Python.
 
 # Methods
 
@@ -94,7 +98,7 @@ for a solver include
 - `ruge_stuben_solver()`: the classical form of C/F-type AMG [@cfamg:1987];
 - `smoothed_aggregation_solver()`: smoothed aggregation based AMG as introduced in [@aggamg:1996];
 - `adaptive_sa_solver()`: a so-called adaptive form of smoothed aggregation from [@adaptiveamg:2005]; and
-- `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017].
+- `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systmes.
 
 In each of these, the *base* algorithm is available but defaults may be
 modified for robustness.  Options such as the default smoother or smoothing the
@@ -111,33 +115,34 @@ As an example, consider a five-point finite difference approximation to a
 Poisson problem, $-\Delta u = f$, given in matrix form as $A x = b$.  The
 AMG setup phase is called with
 ```python
-A = pyamg.gallery.poisson((10000,10000), format='csr')
+import pyamg
+A = pyamg.gallery.poisson((1000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
-For this case, with 100M unknowns, the following multilevel hierarchy
-is generated for smoothed aggregation:
+For this case, with 10M unknowns, the following multilevel hierarchy
+is generated for smoothed aggregation (use `print(ml)`):
 ```
 MultilevelSolver
-Number of Levels:     9
-Operator Complexity:  1.338
+Number of Levels:     8
+Operator Complexity:  1.337
 Grid Complexity:      1.188
 Coarse Solver:        'pinv'
   level   unknowns     nonzeros
-     0   100000000    499960000 [74.76%]
-     1    16670000    149993328 [22.43%]
-     2     1852454     16670676 [ 2.49%]
-     3      205859      1852805 [ 0.28%]
-     4       22924       208516 [ 0.03%]
-     5        2539        23563 [ 0.00%]
-     6         289         2789 [ 0.00%]
-     7          34          332 [ 0.00%]
-     8           4           16 [ 0.00%]
+     0    10000000     49978000 [74.79%]
+     1     1667000     14975328 [22.41%]
+     2      185579      1662051 [2.49%]
+     3       20734       183930 [0.28%]
+     4        2350        20426 [0.03%]
+     5         287         2305 [0.00%]
+     6          41          251 [0.00%]
+     7           5           13 [0.00%]
 ```
-In this case, the hierarchy consists of nine levels, with SciPy's pseudoinverse ('pinv')
+In this case, the hierarchy consists of eight levels, with SciPy's pseudoinverse ('pinv')
 being used on the coarsest level.
 
 The solve phase, using standard V-cycles, is executed with the object's solve:
 ```python
+import numpy as np
 x0 = np.random.rand(A.shape[0])
 b = np.zeros(A.shape[0])
 res = []
