@@ -33,17 +33,17 @@ algebraic equations,
 $$A x = b,$$
 where $A$ is an $n\times n$ sparse matrix.
 Sparse linear systems arise in a range of
-problems in the science, from fluid flows to solid mechanics to data analysis.
+problems in science, from fluid flows to solid mechanics to data analysis.
 While the direct solvers available in SciPy's sparse linear algebra package
 (`scipy.sparse.linalg`) are highly efficient, in many cases *iterative* methods
 are preferred due to overall complexity.  However, the iterative methods in
 SciPy, such as CG and GMRES, often require an efficient preconditioner in order
 to achieve a lower complexity.  Preconditioning is a powerful tool whereby the 
-conditioning of the linear system and iterative method convergence rate 
+conditioning of the linear system and convergence rate of the iterative method
 are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
-solvers can be found in [@encmg,@encamg]; a detailed description can be found
+solvers can be found in [@encmg,@encamg,@amgintro]; a detailed description can be found
 in [@mgtutorial,@mgbook].
 
 The overarching goals of `PyAMG` include both readability and performance.
@@ -51,7 +51,7 @@ This includes readable implementations of popular variations of AMG (see the
 Methods section), the ability to reproduce results in the literature, and a user-friendly
 interface to AMG allowing straightforward access to the variety of AMG parameters
 in the method(s). Additionally, pure Python implementations are not efficient for many sparse matrix
-operations not already available in scipy.sparse, e.g., the sparse matrix graph 
+operations not already available in `scipy.sparse` --- e.g., the sparse matrix graph 
 coarsening algorithms needed by AMG. For such cases in `PyAMG`, the compute (or
 memory) intensive kernels are typically expressed in C++ and wrapped through PyBind11, while the method
 interface and error handling is handled directly in Python (more in the next section). 
@@ -98,7 +98,7 @@ for a solver include
 - `ruge_stuben_solver()`: the classical form of C/F-type AMG [@cfamg:1987];
 - `smoothed_aggregation_solver()`: smoothed aggregation based AMG as introduced in [@aggamg:1996];
 - `adaptive_sa_solver()`: a so-called adaptive form of smoothed aggregation from [@adaptiveamg:2005]; and
-- `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systmes.
+- `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systems.
 
 In each of these, the *base* algorithm is available but defaults may be
 modified for robustness.  Options such as the default smoother or smoothing the
@@ -107,7 +107,7 @@ modified to tune the solver.  In addition, several cycles are available,
 including the standard V and W cycles, for the solve phase.  The resulting
 method can also be used in the form of a preconditioner within the Krylov
 methods available in `PyAMG` or with SciPy's Krylov methods.  The methods in
-`PyAMG` (generally) support for complex data types and non-symmetric matrices.  
+`PyAMG` (generally) support for complex data types and nonsymmetric matrices.  
 
 # Example
 
@@ -120,7 +120,7 @@ A = pyamg.gallery.poisson((1000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
 For this case, with 10M unknowns, the following multilevel hierarchy
-is generated for smoothed aggregation (use `print(ml)`):
+is generated for smoothed aggregation (using `print(ml)`):
 ```
 MultilevelSolver
 Number of Levels:     8
@@ -137,7 +137,7 @@ Coarse Solver:        'pinv'
      6          41          251 [0.00%]
      7           5           13 [0.00%]
 ```
-In this case, the hierarchy consists of eight levels, with SciPy's pseudoinverse ('pinv')
+In this case, the hierarchy consists of eight levels, with SciPy's pseudoinverse (`pinv`)
 being used on the coarsest level.
 
 The solve phase, using standard V-cycles, is executed with the object's solve:
