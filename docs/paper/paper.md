@@ -65,13 +65,13 @@ advanced AMG capabilities, e.g., for Hermitian, complex, nonsymmetric, and other
 
 The central data model in `PyAMG` is that of a `MultiLevel` object, which is
 constructed in the *setup* phase of AMG.  The multigrid hierarchy is expressed
-in this object along with information for the *solve* phase, which can be executed
+in this object (details below) along with information for the *solve* phase, which can be executed
 on various input data, $b$, to solve $A x = b$.
 
 The `MultiLevel` object consists of a list of multigrid `Level` objects and diagnostic
 information.  For example, a `MultiLevel` object named `ml` contains the list
 `ml.levels`.  Then, the data on level `i` (with the finest level denoted `i=0`)
-accessible in `ml.levels[i]` includes the following information
+accessible in `ml.levels[i]` includes the following information:
 
 - `A`: the sparse matrix operator, in CSR or BSR format, on level `i`;
 - `P`: a sparse matrix interpolation operator to transfer grid vectors from level `i+1` to `i`;
