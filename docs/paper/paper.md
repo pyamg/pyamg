@@ -139,7 +139,7 @@ Coarse Solver:        'pinv'
      8           4           16 [0.00%]
 ```
 In this case, the hierarchy consists of nine levels, with SciPy's pseudoinverse (`pinv`)
-being used on the coarsest level. Also displayed is the fraction of unknowns (nonzeros) on all levels
+being used on the coarsest level. Also displayed is the ratio of unknowns (nonzeros) on all levels
 compared to the fine level, also known as the grid (operator) complexity.
 
 The solve phase, using standard V-cycles, is executed with the object's solve:
