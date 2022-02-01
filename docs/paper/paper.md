@@ -43,8 +43,8 @@ conditioning of the linear system and convergence rate of the iterative method
 are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
-solvers can be found in [@encmg,@encamg,@amgintro]; a detailed description can be found
-in [@mgtutorial,@mgbook].
+solvers can be found in [@encmg;@encamg;@amgintro]; a detailed description can be found
+in [@mgtutorial;@mgbook].
 
 The overarching goals of `PyAMG` include both readability and performance.
 This includes readable implementations of popular variations of AMG (see the
@@ -55,6 +55,7 @@ operations not already available in `scipy.sparse` --- e.g., the sparse matrix g
 coarsening algorithms needed by AMG. For such cases in `PyAMG`, the compute (or
 memory) intensive kernels are typically expressed in C++ and wrapped through PyBind11, while the method
 interface and error handling is handled directly in Python (more in the next section). 
+\medskip
 
 In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers,
 and performant execution of AMG methods.  The extensive PyAMG 
