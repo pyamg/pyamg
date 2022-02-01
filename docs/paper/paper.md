@@ -146,7 +146,7 @@ being used on the coarsest level. Also displayed is the ratio of unknowns (nonze
 compared to the fine level, also known as the grid (operator) complexity.
 
 The solve phase, using standard V-cycles, is executed with the object's solve:
-```python
+```{.python .numberLines}
 import numpy as np
 x0 = np.random.rand(A.shape[0])
 b = np.zeros(A.shape[0])
