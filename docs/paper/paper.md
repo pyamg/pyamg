@@ -54,7 +54,7 @@ in the method(s). Additionally, pure Python implementations are not efficient fo
 operations not already available in `scipy.sparse` --- e.g., the sparse matrix graph 
 coarsening algorithms needed by AMG. For such cases in `PyAMG`, the compute (or
 memory) intensive kernels are typically expressed in C++ and wrapped through PyBind11, while the method
-interface and error handling is handled directly in Python (more in the next section). 
+interface and error handling is implemented directly in Python (more in the next section). 
 \medskip
 
 In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers,
@@ -94,7 +94,7 @@ with PyBind11.  Roughly 26\% of PyAMG is in C++, with the rest in Python.
 
 # Methods
 
-`PyAMG` implements several base methods, each with a range of options.  The base forms
+`PyAMG` implements several base AMG methods, each with a range of options.  The base forms
 for a solver include
 
 - `ruge_stuben_solver()`: the classical form of C/F-type AMG [@cfamg:1987];
@@ -103,13 +103,13 @@ for a solver include
 - `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systems.
 
 In each of these, the *base* algorithm is available but defaults may be
-modified for robustness.  Options such as the default smoother or smoothing the
+modified for robustness.  Options such as the default pre/postsmoother or smoothing the
 input candidate vectors (in the case of smoothed aggregation AMG), can be
 modified to tune the solver.  In addition, several cycles are available,
 including the standard V and W cycles, for the solve phase.  The resulting
-method can also be used in the form of a preconditioner within the Krylov
+method can also be used as a preconditioner within the Krylov
 methods available in `PyAMG` or with SciPy's Krylov methods.  The methods in
-`PyAMG` (generally) support for complex data types and nonsymmetric matrices.  
+`PyAMG` (generally) support complex data types and nonsymmetric matrices.  
 
 # Example
 
@@ -118,7 +118,7 @@ Poisson problem, $-\Delta u = f$, given in matrix form as $A x = b$.  The
 AMG setup phase is called with
 ```python
 import pyamg
-A = pyamg.gallery.poisson((1000,10000), format='csr')
+A = pyamg.gallery.poisson((10000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
 For this case, with 100M unknowns, the following multilevel hierarchy
