@@ -116,7 +116,7 @@ methods available in `PyAMG` or with SciPy's Krylov methods.  The methods in
 As an example, consider a five-point finite difference approximation to a
 Poisson problem, $-\Delta u = f$, given in matrix form as $A x = b$.  The
 AMG setup phase is called with
-```python
+```{.python .numberLines}
 import pyamg
 A = pyamg.gallery.poisson((10000,10000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
