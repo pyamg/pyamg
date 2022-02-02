@@ -17,14 +17,14 @@ from .smooth import energy_prolongation_smoother
 from .tentative import fit_candidates
 
 
-def _blocksize(A):
+def blocksize(A):
     """Return the blocksize of a matrix."""
     if isspmatrix_bsr(A):
         return A.blocksize[0]
     return 1
 
 
-def _unpack_arg(v):
+def unpack_arg(v):
     """Unpack arguments for local methods."""
     if isinstance(v, tuple):
         return v[0], v[1]
@@ -55,7 +55,7 @@ def cost(smoother):
     For example, the symmetric option for gauss_seidel results in a multiplier
     that is a factor of 2, and number of iterations is also a multiplier.
     """
-    _, kwargs = _unpack_arg(smoother)
+    _, kwargs = unpack_arg(smoother)
     multiplier = 1.0
     if 'iterations' in kwargs:
         multiplier *= kwargs['iterations']
@@ -95,7 +95,7 @@ def eigen_relaxation_as_linear_operator(A, M, smoother, candidate_iters):
     A - <Ax, x>/<Mx, x> M
     for a homogeneous right-hand-side.
     """
-    fn, kwargs = _unpack_arg(smoother)
+    fn, kwargs = unpack_arg(smoother)
     b = np.zeros((A.shape[0],), dtype=A.dtype)
 
     if fn == 'gauss_seidel':
@@ -163,7 +163,7 @@ def relaxation_as_linear_operator(A, smoother, candidate_iters):
     LinearOperator object that can be used to "multiply" vectors to carry out
     relaxation based on the matrix A for a homogeneous right-hand-side.
     """
-    fn, kwargs = _unpack_arg(smoother)
+    fn, kwargs = unpack_arg(smoother)
     b = np.zeros((A.shape[0],), dtype=A.dtype)
 
     if fn == 'gauss_seidel':
@@ -194,7 +194,7 @@ def relaxation_as_linear_operator(A, smoother, candidate_iters):
     return LinearOperator(A.shape, matvec, dtype=A.dtype)
 
 
-def bootamg_rootnode(A,
+def bootstrap_solver(A,
                      symmetry='hermitian',
                      initial_candidates=None,
                      cands_to_freeze=None,
@@ -211,7 +211,8 @@ def bootamg_rootnode(A,
                      smooth=('energy', {'krylov': 'cg', 'maxiter': 4,
                                         'degree': 2, 'weighting': 'local'}),
                      coarse_solver='pinv2',
-                     prepostsmoother=('gauss_seidel', {'sweep': 'symmetric'})):
+                     prepostsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
+                     verbose=False):
     """Construct a bootstrap AMG solver in a rootnode SA framework.
 
     Parameters
@@ -266,6 +267,8 @@ def bootamg_rootnode(A,
         values like 'gauss_seidel'.  If tuple, use values like ('gauss_seidel',
         {'sweep':'symmetric'}), where the first tuple value is the relaxation
         method, and the second tuple value is a parameter dictionary.
+    verbose : bool
+        Print diagnostic statements in bootstrap_setup
 
     Returns
     -------
@@ -290,10 +293,10 @@ def bootamg_rootnode(A,
     Examples
     --------
     >>> from pyamg.gallery import stencil_grid
-    >>> from bootamg import bootamg_rootnode
+    >>> from pyamg import bootstrap_solver
     >>> import numpy as np
     >>> A=stencil_grid([[-1,-1,-1],[-1,8.0,-1],[-1,-1,-1]], (31,31),format='csr')
-    >>> [asa,work] = bootamg_rootnode(A,num_candidates=1)
+    >>> [asa,work] = bootstrap_solver(A,num_candidates=1)
     >>> residuals=[]
     >>> x=asa.solve(b=np.ones((A.shape[0],)),x0=np.ones((A.shape[0],)),residuals=residuals)
 
@@ -351,21 +354,21 @@ def bootamg_rootnode(A,
     levels[-1].U = U
     levels[-1].M = eye(A.shape[0], A.shape[1], format='csr', dtype=A.dtype)
 
-    # Run bootamg setup
+    # Run bootstrap setup
     for _ in range(outer_iters):
-        bootamg_setup(levels, 0, aggregate, max_coarse, max_levels, strength,
+        bootstrap_setup(levels, 0, aggregate, max_coarse, max_levels, strength,
                       prepostsmoother, smooth, coarse_solver, work, symmetry,
-                      mu, candidate_iters, not_frozen, reaggregate, num_eigvects)
+                      mu, candidate_iters, not_frozen, reaggregate, num_eigvects, verbose)
 
     # Return
     sa = multilevel_solver(levels, coarse_solver=coarse_solver)
     change_smoothers(sa, presmoother=prepostsmoother, postsmoother=prepostsmoother)
-    return [sa, work[0]/A.nnz]
+    return sa, work[0]/A.nnz
 
 
-def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
+def bootstrap_setup(levels, l, aggregate, max_coarse, max_levels, strength,
                   prepostsmoother, smooth, coarse_solver, work, symmetry,
-                  mu, candidate_iters, not_frozen, recoarsen, num_eigvects):
+                  mu, candidate_iters, not_frozen, recoarsen, num_eigvects, verbose):
     """Compute additional candidates/levels, recursively using bootstrap.
 
     Parameters
@@ -378,14 +381,15 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
         Integer value of level where adaptive cycling is to start.
 
     For further parameter information, see above parameter descriptions for
-    bootamg_rootnode(...).
+    bootstrap_solver(...).
 
 
     Returns
     -------
     levels is modified in place, reflecting the bootstrap process
     """
-    print(f'\nStarting level {l}')
+    if verbose:
+        print(f'\nStarting level {l}')
     lvl = levels[l]
     A = lvl.A
     M = lvl.M
@@ -405,7 +409,8 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
         else:
             lvl.V = V[:, indices[:num_eigvects]]
 
-        print(f'\nFinished coarsest level {l}')
+        if verbose:
+            print(f'\nFinished coarsest level {l}')
 
     else:
         # Not at coarsest level, carry out recursive call
@@ -440,9 +445,9 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
             # Strength
             if compute_aggregation:
                 if isinstance(strength, list):
-                    fn, kwargs = _unpack_arg(strength[len(levels)-1])
+                    fn, kwargs = unpack_arg(strength[len(levels)-1])
                 else:
-                    fn, kwargs = _unpack_arg(strength)
+                    fn, kwargs = unpack_arg(strength)
                 if fn == 'symmetric':
                     C = symmetric_strength_of_connection(A, **kwargs)
                     C = C + eye(C.shape[0], C.shape[1], format='csr')  # nonzero diagonal
@@ -478,9 +483,9 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
             # Aggregate
             if compute_aggregation:
                 if isinstance(aggregate, list):
-                    fn, kwargs = _unpack_arg(aggregate[len(levels)-1])
+                    fn, kwargs = unpack_arg(aggregate[len(levels)-1])
                 else:
-                    fn, kwargs = _unpack_arg(aggregate)
+                    fn, kwargs = unpack_arg(aggregate)
                 if fn == 'standard':
                     AggOp, Cnodes = standard_aggregation(C, **kwargs)
                 elif fn == 'naive':
@@ -518,7 +523,7 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
             Vc = P_I.T*lvl.V
 
             # Smoothed Prolongator must be recomputed because U and V have been updated
-            fn, kwargs = _unpack_arg(smooth)
+            fn, kwargs = unpack_arg(smooth)
             if fn == 'energy':
                 Cpt_params = (True, {'I_F': I_F, 'I_C': I_C, 'P_I': P_I, 'Cpts': Cpts})
                 B = np.hstack((lvl.U, lvl.V))
@@ -580,9 +585,9 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
             lvl.C = C
 
             # Recursive call -- Updates U and V on all coarser levels
-            bootamg_setup(levels, l+1, aggregate, max_coarse, max_levels, strength,
-                          prepostsmoother, smooth, coarse_solver, work, symmetry,
-                          mu, candidate_iters, not_frozen, recoarsen, num_eigvects)
+            bootstrap_setup(levels, l+1, aggregate, max_coarse, max_levels, strength,
+                            prepostsmoother, smooth, coarse_solver, work, symmetry,
+                            mu, candidate_iters, not_frozen, recoarsen, num_eigvects, verbose)
 
             # Interpolate coarse-grid candidates
             if len(not_frozen) > 0:
@@ -598,7 +603,8 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
             ##
             # Interpolate the coarse grid eigenvector approximations
             lvl.V = P*levels[l+1].V
-            print(f'\nFinishing level {l}, Grid size ({A.shape[0]}, {A.shape[1]})')
+            if verbose:
+                print(f'\nFinishing level {l}, Grid size ({A.shape[0]}, {A.shape[1]})')
             if lvl.V.shape[1] > 0:
                 init_eigs = np.zeros((lvl.V.shape[1],), dtype=lvl.V.dtype)
                 for j in range(lvl.V.shape[1]):
@@ -625,6 +631,7 @@ def bootamg_setup(levels, l, aggregate, max_coarse, max_levels, strength,
                 # Check for eigenvalue convergence
                 conv_test = np.abs(final_eigs - init_eigs) / np.abs(final_eigs)
                 rel_change = [f'{ee:1.1e}' for ee in conv_test]
-                print('Relative change in eig estimate:  ' + str(rel_change))
-                eig_est = [f'{ee.real:1.1e} + {ee.imag:1.1e}' for ee in final_eigs]
-                print('Eigenvalue estimate:              ' + str(eig_est))
+                if verbose:
+                    print('Relative change in eig estimate:  ' + str(rel_change))
+                    eig_est = [f'{ee.real:1.1e} + {ee.imag:1.1e}' for ee in final_eigs]
+                    print('Eigenvalue estimate:              ' + str(eig_est))

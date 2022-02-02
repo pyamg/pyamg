@@ -8,6 +8,7 @@ from .tentative import fit_candidates
 from .smooth import (jacobi_prolongation_smoother, richardson_prolongation_smoother,
                      energy_prolongation_smoother)
 from .rootnode import rootnode_solver
+from .bootstrap import bootstrap_solver
 
 __all__ = ['adaptive_sa_solver',
            'standard_aggregation', 'naive_aggregation',
@@ -16,4 +17,5 @@ __all__ = ['adaptive_sa_solver',
            'fit_candidates',
            'jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
            'energy_prolongation_smoother',
-           'rootnode_solver']
+           'rootnode_solver',
+           'bootstrap_solver']
