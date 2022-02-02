@@ -5,7 +5,7 @@ import scipy as sp
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, eye
 from scipy.sparse.linalg.interface import LinearOperator
 
-from ..multilevel import multilevel_solver
+from ..multilevel import MultilevelSolver
 from ..strength import symmetric_strength_of_connection, evolution_strength_of_connection
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, gauss_seidel_ne
 from ..relaxation.smoothing import change_smoothers
@@ -272,7 +272,7 @@ def bootstrap_solver(A,
 
     Returns
     -------
-    multilevel_solver : multilevel_solver
+    ml : MultilevelSolver
         Rootnode-style smoothed aggregation solver with adaptively generated candidates
 
     work : {float}
@@ -348,7 +348,7 @@ def bootstrap_solver(A,
     # U: new candidates are stored as U at each
     #    level in the hierarchy.
     levels = []
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.Level())
     levels[-1].A = A
     levels[-1].V = np.zeros((A.shape[0], 0), dtype=A.dtype)
     levels[-1].U = U
@@ -361,7 +361,7 @@ def bootstrap_solver(A,
                       mu, candidate_iters, not_frozen, reaggregate, num_eigvects, verbose)
 
     # Return
-    sa = multilevel_solver(levels, coarse_solver=coarse_solver)
+    sa = MultilevelSolver(levels, coarse_solver=coarse_solver)
     change_smoothers(sa, presmoother=prepostsmoother, postsmoother=prepostsmoother)
     return sa, work[0]/A.nnz
 
@@ -563,7 +563,7 @@ def bootstrap_setup(levels, l, aggregate, max_coarse, max_levels, strength,
 
             # Store matrices
             if len(levels) == (l+1):
-                levels.append(multilevel_solver.level())
+                levels.append(MultilevelSolver.Level())
 
             levels[l+1].U = Uc
             levels[l+1].V = Vc
