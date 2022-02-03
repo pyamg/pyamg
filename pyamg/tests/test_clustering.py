@@ -277,14 +277,16 @@ class TestClustering(TestCase):
                 centers = case['input']['centers']
                 n = G.shape[0]
 
-                d = np.empty(n, dtype=G.dtype)
-                m = np.empty(n, dtype=np.int32)
-                p = np.empty(n, dtype=np.int32)
-                pc = np.empty(n, dtype=np.int32)
-                s = np.empty(len(centers), dtype=np.int32)
+                d = np.full(n, np.inf, dtype=G.dtype)         # distance to cluster center (inf)
+                m = np.full(n, -1, dtype=np.int32)            # cluster membership or index (-1)
+                p = np.full(n, -1, dtype=np.int32)            # predecessor on the shortest path (-1)
+                pc = np.full(n, 0, dtype=np.int32)            # predecessor count (0)
+                s = np.full(len(centers), 1, dtype=np.int32)  # cluster size (1)
+                d[centers] = 0                                # distance = 0 at centers
+                m[centers] = np.arange(len(centers))          # number the membership
 
                 amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,
-                                               d, m, p, pc, s, True)
+                                               d, m, p, pc, s)
 
             if 'output' in case:
                 d_ref = case['output']['d']

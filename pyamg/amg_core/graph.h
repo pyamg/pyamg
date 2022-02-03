@@ -370,7 +370,7 @@ T vertex_coloring_LDF(const I num_rows,
 // -----
 // - There are no checks within this kernel
 // - Ax > 0 is assumed
-// - Only a slice of C is passed to Floyd–Warshall.  See lloyd_cluster_balanced.
+// - Only a slice of C is passed to Floyd–Warshall.  See center_nodes.
 // - C[i] is the global index of i for i=0, ..., N in the current cluster
 // - N = |C|
 // - L = local indices, nx1 (-1 if not in the cluster)
@@ -678,21 +678,8 @@ bool bellman_ford_balanced(const I num_nodes,
                                  I  m[], const int  m_size,
                                  I  p[], const int  p_size,
                                  I pc[], const int pc_size,
-                                 I  s[], const int  s_size,
-                           const bool initialize)
+                                 I  s[], const int  s_size)
 {
-  if(initialize){
-    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
-    std::fill(m, m+m_size, -1);
-    std::fill(p, p+p_size, -1);
-    std::fill(pc, pc+pc_size, 0); // predecessor count is 0
-    std::fill(s, s+s_size, 1);    // cluster size 1
-    for(I a=0; a<c_size; a++){
-      d[c[a]] = 0;                // distance is 0
-      m[c[a]] = a;                // clusters is 0, ..., nclusters
-    }
-  }
-
   bool done;            // did we make any changes during this iteration?
   bool changed = false; // indicate a change for the return
   bool swap;            // should we swap node i to the same clusters as node j?
@@ -890,114 +877,6 @@ void lloyd_cluster(const I num_nodes,
           done = false;
         }
     }
-}
-
-//
-// Perform one iteration of Lloyd clustering on a distance graph using
-// balanced centers
-//
-// Parameters
-// ----------
-//   num_nodes  : (IN) number of nodes (number of rows in A)
-//   Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
-//   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
-//   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
-// Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
-//    D[]       : (INOUT) FW distance array                               (max_size x max_size)
-//    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
-//    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
-//    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
-//    q         : (OUT) FW work array for D**2                            (max_size x 1)
-//    c         : (INOUT) cluster center                                  (num_clusters x 1)
-//    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
-//    m         : (INOUT) cluster index                                   (num_nodes x 1)
-//    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
-//    pc        : (INOUT) number of predecessors                          (num_nodes x 1)
-//    s         : (INOUT) cluster size                                    (num_clusters x 1)
-//   initialize : bool, flag to initialize
-//
-// Notes
-// -----
-// - This version computes improved cluster centers with Floyd-Warshall and
-//   also uses a balanced version of Bellman-Ford to try and find
-//   nearly-equal-sized clusters.
-//   balanced lloyd
-// - There are no checks within this kernel.
-// - Ax is assumed to be positive
-//
-// Initializations
-// ---------------
-//  d[i] = 0 if i is a center, else inf
-//  m[i] = 0 .. num_clusters if in a cluster, else -1
-//  p[i] = -1
-// pc[i] = 0
-//  s[i] = 1
-//
-// See Also
-// --------
-// pyamg.amg_core.graph.lloyd_cluster
-template<class I, class T>
-void lloyd_cluster_balanced(const I num_nodes,
-                            const I Ap[], const int Ap_size,
-                            const I Aj[], const int Aj_size,
-                            const T Ax[], const int Ax_size,
-                                I Cptr[],  const int Cptr_size,
-                                   T D[],  const int D_size,
-                                   I P[],  const int P_size,
-                                   I C[],  const int C_size,
-                                   I L[],  const int L_size,
-                                   T q[],  const int q_size,
-                                   I c[], const int  c_size,
-                                   T d[], const int  d_size,
-                                   I m[], const int  m_size,
-                                   I p[], const int  p_size,
-                                   I pc[], const int pc_size,
-                                   I s[], const int s_size,
-                          const bool initialize,
-                          const int maxiter)
-{
-  bool changed1 = true;
-  bool changed2 = true;
-  bool connected = true;
-  int iter = 0;
-  I maxsize = q_size;
-  I clustermax = 0;
-
-  // initialize m, d, p, n, s
-  if(initialize){
-    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
-    std::fill(m, m+m_size, -1);
-    std::fill(p, p+p_size, -1);
-    std::fill(pc, pc+pc_size, 0); // predecessor count is 0
-    std::fill(s, s+s_size, 1);    // cluster size 1
-    for(I a=0; a<c_size; a++){
-      d[c[a]] = 0;                // distance is 0
-      m[c[a]] = a;                // clusters is 0, ..., nclusters
-    }
-  }
-
-  while ((changed1 || changed2) && (iter < maxiter)) {
-    changed1 = bellman_ford_balanced(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                                    c,  c_size, d,  d_size,  m,  m_size,  p,  p_size,
-                                    pc, pc_size, s,  s_size,
-                                    false);
-
-    clustermax = *std::max_element(s, s+s_size);
-    coreassert((clustermax < maxsize), "maxsize (maximum cluster size) is too small");
-
-    connected = std::all_of(m, m + m_size, [](I m_i){ return m_i >= 0; });
-    coreassert(connected, "Encountered a disconnected nodes from m.");
-
-    connected = std::all_of(d, d + d_size, [](I d_i){ return d_i >= 0; });
-    coreassert(connected, "Encountered a disconnected nodes from d.");
-
-    changed2 = center_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                           Cptr, Cptr_size,
-                           D, D_size, P, P_size, C, C_size, L, L_size,
-                           q, q_size, c, c_size, d, d_size, m, m_size, p, p_size,
-                           s, s_size);
-    iter++;
-  }
 }
 
 /*

@@ -150,14 +150,18 @@ def bellman_ford(G, centers, method='standard'):
         raise ValueError('Bellman-Ford is defined only for real weights.')
 
     centers = np.asarray(centers, dtype=np.int32)
+    num_clusters = len(centers)
 
     # allocate space for returns and working arrays
-    distances = np.empty(n, dtype=G.dtype)
-    nearest = np.empty(n, dtype=np.int32)
-    predecessors = np.empty(n, dtype=np.int32)
+    distances = np.full(n, np.inf, dtype=G.dtype) # distance to cluster center (inf)
+    nearest = np.full(n, -1, dtype=np.int32)      # nearest center or cluster membership or index (-1)
+    predecessors = np.full(n, -1, dtype=np.int32) # predecessor on the shortest path (-1)
+    distances[centers] = 0                        # distance = 0 at centers
+    nearest[centers] = np.arange(num_clusters)    # number the membership
+
     if method == 'balanced':
-        predecessors_count = np.empty(n, dtype=np.int32)
-        cluster_size = np.empty(len(centers), dtype=np.int32)
+        predecessors_count = np.full(n, 0, dtype=np.int32)
+        cluster_size = np.full(num_clusters, 1, dtype=np.int32)
 
     if method == 'standard':
         amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,  # IN
@@ -166,8 +170,7 @@ def bellman_ford(G, centers, method='standard'):
     elif method == 'balanced':
         amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
                                        distances, nearest, predecessors,         # OUT
-                                       predecessors_count, cluster_size,         # OUT
-                                       True)
+                                       predecessors_count, cluster_size)         # OUT
     else:
         raise ValueError(f'Method {method} is not supported in Bellman-Ford')
 
@@ -267,9 +270,11 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
 
     Notes
     -----
-    If G has complex values, abs(G) is used instead.
-
-    Only positive edge weights may be used
+    - If G has complex values, abs(G) is used instead.
+    - Only positive edge weights may be used
+    - This version computes improved cluster centers with Floyd-Warshall and
+      also uses a balanced version of Bellman-Ford to try and find
+      nearly-equal-sized clusters.
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -303,40 +308,57 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     # empty() values are initialized in the kernel
     maxsize = int(8*np.ceil((n / num_clusters)))
 
-    Cptr = np.empty(num_clusters, dtype=np.int32)
-    D = np.empty((maxsize, maxsize), dtype=G.dtype)
-    P = np.empty((maxsize, maxsize), dtype=np.int32)
-    CC = np.empty(n, dtype=np.int32)
-    L = np.empty(n, dtype=np.int32)
+    d = np.full(n, np.inf, dtype=G.dtype)         # distance to cluster center (inf)
+    m = np.full(n, -1, dtype=np.int32)            # cluster membership or index (-1)
+    p = np.full(n, -1, dtype=np.int32)            # predecessor on the shortest path (-1)
+    pc = np.full(n, 0, dtype=np.int32)            # predecessor count (0)
+    s = np.full(num_clusters, 1, dtype=np.int32)  # cluster size (1)
+    d[centers] = 0                                # distance = 0 at centers
+    m[centers] = np.arange(num_clusters)          # number the membership
 
-    q = np.empty(maxsize, dtype=G.dtype)
-    d = np.empty(n, dtype=G.dtype)
-    m = np.empty(n, dtype=np.int32)
-    p = np.empty(n, dtype=np.int32)
-    pc = np.empty(n, dtype=np.int32)
-    s = np.empty(num_clusters, dtype=np.int32)
+    Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start of indices in C for each cluster
+    D = np.empty((maxsize, maxsize), dtype=G.dtype)  # FW distance array
+    P = np.empty((maxsize, maxsize), dtype=np.int32) # FW predecessor array
+    CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
+    L = np.empty(n, dtype=np.int32)                  # FW local index for current cluster
+    q = np.empty(maxsize, dtype=G.dtype)             # FW work array for d**2
 
-    amg_core.lloyd_cluster_balanced(n,
-                                    G.indptr, G.indices, G.data,
-                                    Cptr, D.ravel(), P.ravel(), CC, L,
-                                    q, centers, d, m, p,
-                                    pc, s,
-                                    True, maxiter)
+    it = 0
+    changed1 = True
+    changed2 = True
+    for riter in range(rebalance_iters+1):
 
-    for _riter in range(rebalance_iters):
+        # rebalance after round 0
+        if riter > 0:
+            # don't rebalance a single cluster
+            if num_clusters < 2:
+                break
 
-        # don't rebalance a single cluster
-        if num_clusters < 2:
-            break
+            centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
 
-        centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
+        # reinitialize
+        d.fill(np.inf)
+        m.fill(-1)
+        p.fill(-1)
+        pc.fill(0)
+        s.fill(1)
+        d[centers] = 0
+        m[centers] = np.arange(num_clusters)
 
-        amg_core.lloyd_cluster_balanced(n,
-                                        G.indptr, G.indices, G.data,
-                                        Cptr, D.ravel(), P.ravel(), CC, L,
-                                        q, centers, d, m, p,
-                                        pc, s,
-                                        True, maxiter)
+        # lloyd cluster balanced
+        while (changed1 or changed2) and (it < maxiter):
+            changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
+                                                      d, m, p, pc, s)                           # OUT
+
+            assert s.max() < maxsize, "maxsize (maximum cluster size) is too small"
+            assert m.min() >= 0, "Encountered a disconnected nodes from m."
+            assert d.min() >= 0, "Encountered a disconnected nodes from d."
+
+            changed2 = amg_core.center_nodes(n, G.indptr, G.indices, G.data,
+                                             Cptr, D.ravel(), P.ravel(), CC, L, q,
+                                             centers, d, m, p, s)
+
+            it += 1
 
     return m, centers
 
