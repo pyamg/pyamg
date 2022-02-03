@@ -272,8 +272,7 @@ void _bellman_ford(
        py::array_t<I> & c,
        py::array_t<T> & d,
        py::array_t<I> & m,
-       py::array_t<I> & p,
-    const bool initialize
+       py::array_t<I> & p
                    )
 {
     auto py_Ap = Ap.unchecked();
@@ -299,8 +298,7 @@ void _bellman_ford(
                        _c, c.shape(0),
                        _d, d.shape(0),
                        _m, m.shape(0),
-                       _p, p.shape(0),
-               initialize
+                       _p, p.shape(0)
                               );
 }
 
@@ -388,49 +386,6 @@ bool _most_interior_nodes(
                        _m, m.shape(0),
                        _p, p.shape(0)
                                      );
-}
-
-template<class I, class T>
-void _lloyd_cluster(
-        const I num_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-       py::array_t<I> & c,
-       py::array_t<T> & d,
-       py::array_t<I> & m,
-       py::array_t<I> & p,
-    const bool initialize,
-        const int maxiter
-                    )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_c = c.mutable_unchecked();
-    auto py_d = d.mutable_unchecked();
-    auto py_m = m.mutable_unchecked();
-    auto py_p = p.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    I *_c = py_c.mutable_data();
-    T *_d = py_d.mutable_data();
-    I *_m = py_m.mutable_data();
-    I *_p = py_p.mutable_data();
-
-    return lloyd_cluster<I, T>(
-                num_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                       _c, c.shape(0),
-                       _d, d.shape(0),
-                       _m, m.shape(0),
-                       _p, p.shape(0),
-               initialize,
-                  maxiter
-                               );
 }
 
 template<class I, class T, class R>
@@ -531,7 +486,6 @@ PYBIND11_MODULE(graph, m) {
     bellman_ford
     bellman_ford_balanced
     most_interior_nodes
-    lloyd_cluster
     maximal_independent_set_k_parallel
     breadth_first_search
     connected_components
@@ -733,11 +687,11 @@ Notes
 - N is the cluster size)pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"));
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
 Bellman-Ford on a distance graph stored in CSR format.
 
@@ -797,7 +751,6 @@ Bellman-Ford with a heuristic to balance cluster sizes
    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
    pc        : (INOUT) number of predecessors                          (num_nodes x 1)
    s         : (INOUT) cluster size                                    (num_clusters x 1)
- initialize  : (IN) flag whether the data should be (re)-initialized
 
  Notes
  -----
@@ -840,41 +793,6 @@ Notes
 -----
 - There are no checks within this kernel.
 - Ax is assumed to be positive)pbdoc");
-
-    m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"));
-    m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"));
-    m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("initialize"), py::arg("maxiter"),
-R"pbdoc(
-Perform Lloyd clustering on a distance graph
-
- Parameters
- ----------
- num_nodes : (IN)  number of nodes (number of rows in A)
- Ap[]      : (IN)  CSR row pointer for adjacency matrix A
- Aj[]      : (IN)  CSR index array
- Ax[]      : (IN)  CSR data array (edge lengths)
-  c[]      : (INOUT) cluster centers
-  d[]      : (OUT) distance to nearest seed
-  m[]      : (OUT) cluster index for each node
-  p[]      : (OUT) predecessors in the graph traversal
-
- Notes
- -----
-- There are no checks within this kernel.
-- Ax is assumed to be positive
-
- Initializations
- ---------------
- d[i] = 0 if i is a center, else inf
- m[i] = 0 .. num_clusters if in a cluster, else -1
- p[i] = -1
-
- References
- ----------
- Nathan Bell, Algebraic Multigrid for Discrete Differential Forms, PhD thesis (Illinois), August 2008)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),

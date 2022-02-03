@@ -165,8 +165,7 @@ def bellman_ford(G, centers, method='standard'):
 
     if method == 'standard':
         amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,  # IN
-                              distances, nearest, predecessors,         # OUT
-                              True)
+                              distances, nearest, predecessors)         # OUT
     elif method == 'balanced':
         amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
                                        distances, nearest, predecessors,         # OUT
@@ -231,14 +230,29 @@ def lloyd_cluster(G, centers, maxiter=5):
     if centers.max() >= n:
         raise ValueError(f'invalid center index {centers.max()}')
 
-    distances = np.empty(n, dtype=G.dtype)
-    clusters = np.empty(n, dtype=np.int32)
+    distances = np.full(n, np.inf, dtype=G.dtype)
+    clusters = np.full(n, -1, dtype=np.int32)
     predecessors = np.full(n, -1, dtype=np.int32)
+    distances[centers] = 0
+    clusters[centers] = np.arange(num_clusters)
+    changed = True
+    it = 0
 
-    amg_core.lloyd_cluster(n, G.indptr, G.indices, G.data,     # IN
-                           centers,                            # INOUT
-                           distances, clusters, predecessors,  # OUT
-                           True, maxiter)
+    while changed and it < maxiter:
+        if it > 0:
+            distances.fill(np.inf)
+            clusters.fill(-1)
+            predecessors.fill(-1)
+            distances[centers] = 0
+            clusters[centers] = np.arange(num_clusters)
+
+        amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,  # IN
+                              distances, clusters, predecessors)        # OUT
+
+        changed = amg_core.most_interior_nodes(n, G.indptr, G.indices, G.data, centers,
+                                               distances, clusters, predecessors)
+
+        it += 1
 
     return clusters, centers
 

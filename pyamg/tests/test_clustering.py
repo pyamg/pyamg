@@ -253,12 +253,14 @@ class TestClustering(TestCase):
                 centers = case['input']['centers']
                 n = G.shape[0]
 
-                d = np.empty(n, dtype=G.dtype)
-                m = np.empty(n, dtype=np.int32)
-                p = np.empty(n, dtype=np.int32)
+                d = np.full(n, np.inf, dtype=G.dtype)
+                m = np.full(n, -1, dtype=np.int32)
+                p = np.full(n, -1, dtype=np.int32)
+                d[centers] = 0
+                m[centers] = np.arange(len(centers))
 
                 amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,
-                                      d, m, p, True)
+                                      d, m, p)
 
             if 'output' in case:
                 d_ref = case['output']['d']

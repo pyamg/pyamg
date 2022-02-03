@@ -599,19 +599,8 @@ void bellman_ford(const I num_nodes,
                   const I c[],  const int c_size,
                         T d[],  const int d_size,
                         I m[],  const int m_size,
-                        I p[],  const int p_size,
-                  const bool initialize)
+                        I p[],  const int p_size)
 {
-  if(initialize){
-    std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
-    std::fill(m, m+m_size, -1);
-    std::fill(p, p+p_size, -1);
-    for(I a=0; a<c_size; a++){
-      d[c[a]] = 0;  // distance is zero
-      m[c[a]] = a;  // clusters is 0, ..., nclusters
-    }
-  }
-
   bool done = false;
 
   while (!done) {
@@ -650,7 +639,6 @@ void bellman_ford(const I num_nodes,
 //    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
 //    pc        : (INOUT) number of predecessors                          (num_nodes x 1)
 //    s         : (INOUT) cluster size                                    (num_clusters x 1)
-//  initialize  : (IN) flag whether the data should be (re)-initialized
 //
 //  Notes
 //  -----
@@ -791,7 +779,7 @@ bool most_interior_nodes(const I num_nodes,
   // c is unused
   // m should be invariant under this operation
   bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
-               d, d_size, m, m_size, p, p_size, false);
+               d, d_size, m, m_size, p, p_size);
 
   // determine the new centers: the node furthest from a boundary
   for(I i = 0; i < num_nodes; i++){
@@ -806,77 +794,6 @@ bool most_interior_nodes(const I num_nodes,
     }
   }
   return changed;
-}
-
-
-//  Perform Lloyd clustering on a distance graph
-//
-//  Parameters
-//  ----------
-//  num_nodes : (IN)  number of nodes (number of rows in A)
-//  Ap[]      : (IN)  CSR row pointer for adjacency matrix A
-//  Aj[]      : (IN)  CSR index array
-//  Ax[]      : (IN)  CSR data array (edge lengths)
-//   c[]      : (INOUT) cluster centers
-//   d[]      : (OUT) distance to nearest seed
-//   m[]      : (OUT) cluster index for each node
-//   p[]      : (OUT) predecessors in the graph traversal
-//
-//  Notes
-//  -----
-// - There are no checks within this kernel.
-// - Ax is assumed to be positive
-//
-//  Initializations
-//  ---------------
-//  d[i] = 0 if i is a center, else inf
-//  m[i] = 0 .. num_clusters if in a cluster, else -1
-//  p[i] = -1
-//
-//  References
-//  ----------
-//  Nathan Bell, Algebraic Multigrid for Discrete Differential Forms, PhD thesis (Illinois), August 2008
-template<class I, class T>
-void lloyd_cluster(const I num_nodes,
-                   const I Ap[], const int Ap_size,
-                   const I Aj[], const int Aj_size,
-                   const T Ax[], const int Ax_size,
-                         I  c[], const int  c_size,
-                         T  d[], const int  d_size,
-                         I  m[], const int  m_size,
-                         I  p[], const int  p_size,
-                   const bool initialize,
-                   const int maxiter)
-{
-    if(initialize){
-      std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
-      std::fill(m, m+m_size, -1);
-      std::fill(p, p+p_size, -1);
-      for(I i=0; i<c_size; i++){
-        d[c[i]] = 0;   // distance is zero
-        m[c[i]] = i;   // clusters is 0, ..., nclusters
-      }
-    }
-
-    bool done = false;    // done iterating
-    bool changed = false; // indicate a change for the return
-    int iter = 0;         // maximum number of iterations
-
-    while (!done) {
-        done = true;
-        // propagate distances outward
-        bellman_ford(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
-                     d, d_size, m, m_size, p, p_size, true);
-
-        changed = most_interior_nodes(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size, c, c_size,
-                                      d, d_size, m, m_size, p, p_size);
-
-        iter += 1;
-
-        if (changed && iter < maxiter) {
-          done = false;
-        }
-    }
 }
 
 /*
