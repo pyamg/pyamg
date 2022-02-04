@@ -4,7 +4,8 @@
 from warnings import warn
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
-    SparseEfficiencyWarning
+    csc_matrix, SparseEfficiencyWarning
+from scipy.sparse import eye as speye
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -21,6 +22,7 @@ from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
+from ..classical import split
 
 
 def rootnode_solver(A, B=None, BH=None,
@@ -357,7 +359,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
         C = eliminate_diag_dom_nodes(A, C, **kwargs)
-
+    
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
@@ -371,9 +373,54 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
+    elif fn == 'RS':
+        splitting = split.RS(C, **kwargs)
+    elif fn == 'PMIS':
+        splitting = split.PMIS(C, **kwargs)
+    elif fn == 'PMISc':
+        splitting = split.PMISc(C, **kwargs)
+    elif fn == 'CLJP':
+        splitting = split.CLJP(C, **kwargs)
+    elif fn == 'CLJPc':
+        splitting = split.CLJPc(C, **kwargs)
+    elif fn == 'CR':
+        # TODO: adaptive C/F splitting based on  abs(T Bc - Bf).  This could be
+        # incorporated as a new CR type splitting method, or be implemented around 
+        # line 1120 in energy_prolongation_smoothing, where filter_operator is used.
+        # It may belong better here, at least philosophically.
+        splitting = CR(C, **kwargs)
     else:
         raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
 
+    # If using classical splitting, construct needed Rootnode data structures: Cpt_params
+    classical_CF = False
+    if fn in ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc', 'CR']:
+        # TODO: Not sure how to (and if we want) BSR-supernode support for C/F splittings 
+        if isspmatrix_bsr(A):
+            if A.blocksize[0] > 1:
+                raise ValueError(f'Currently, BSR A and classical CF splittings are not supported') 
+
+        classical_CF = True
+        Cpts = (splitting == 1).nonzero()[0]
+        Fpts = (splitting == 0).nonzero()[0]
+        I_C = speye(A.shape[0], A.shape[1], format='csr')
+        I_F = I_C.copy()
+        I_F.data[Cpts] = 0.0
+        I_F.eliminate_zeros()
+        I_C = I_C - I_F
+        I_C.eliminate_zeros()
+        # construct P_I as in get_Cpt_params
+        indices = Cpts.copy()
+        indptr = np.arange(indices.shape[0]+1)
+        ncoarse = Cpts.shape[0] 
+        P_I = csc_matrix((I_C.data.copy(), indices, indptr),
+                          shape=(I_C.shape[0], ncoarse))
+        # not sure how to handle the BSR case, so just assume it doesn't exist
+        P_I = P_I.tobsr((1,1))
+        I_C = I_C.tobsr(blocksize=(1, 1))
+        I_F = I_F.tobsr(blocksize=(1, 1))
+        Cpt_params =  (True, {'P_I': P_I, 'I_F': I_F, 'I_C': I_C, 'Cpts': Cpts, 'Fpts': Fpts})
+    
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
@@ -383,22 +430,29 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         if A.symmetry == 'nonsymmetric':
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
             levels[-1].BH = BH
-
-    # Compute the tentative prolongator, T, which is a tentative interpolation
-    # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
-    # B_fine[:, 0:get_blocksize(A)] = T B_coarse[:, 0:get_blocksize(A)].
-    T, dummy = fit_candidates(AggOp, B[:, 0:get_blocksize(A)])
-    del dummy
-    if A.symmetry == 'nonsymmetric':
-        TH, dummyH = fit_candidates(AggOp, BH[:, 0:get_blocksize(A)])
-        del dummyH
-
-    # Create necessary root node matrices
-    Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
-    T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
-    if A.symmetry == 'nonsymmetric':
-        TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
-
+    
+    # Compute tentative T
+    if classical_CF:
+        # For classical C/F splittings, energy_prolongation_smoother below will enforce T Bc = B
+        T = Cpt_params[1]['P_I'].copy()
+        if A.symmetry == 'nonsymmetric':
+            TH = Cpt_params[1]['P_I'].copy()
+    else:
+        # Compute the tentative prolongator, T, which is a tentative interpolation
+        # matrix from the coarse-grid to the fine-grid.  T exactly interpolates
+        # B_fine[:, 0:get_blocksize(A)] = T B_coarse[:, 0:get_blocksize(A)].
+        T, dummy = fit_candidates(AggOp, B[:, 0:get_blocksize(A)])
+        del dummy
+        if A.symmetry == 'nonsymmetric':
+            TH, dummyH = fit_candidates(AggOp, BH[:, 0:get_blocksize(A)])
+            del dummyH
+        
+        # Create necessary root node matrices
+        Cpt_params = (True, get_Cpt_params(A, Cnodes, AggOp, T))
+        T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+        if A.symmetry == 'nonsymmetric':
+            TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+     
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
     B = Cpt_params[1]['P_I'].T*levels[-1].B
@@ -410,7 +464,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     fn, kwargs = unpack_arg(smooth[len(levels)-1])
     if fn == 'energy':
         P = energy_prolongation_smoother(A, T, C, B, levels[-1].B,
-                                         Cpt_params=Cpt_params, **kwargs)
+                                         Cpt_params=Cpt_params, 
+                                         force_fit_candidates=classical_CF, 
+                                         **kwargs)
     elif fn is None:
         P = T
     else:
@@ -437,7 +493,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     if keep:
         levels[-1].C = C                         # strength of connection matrix
-        levels[-1].AggOp = AggOp                 # aggregation operator
+        try: levels[-1].AggOp = AggOp            # aggregation operator, not available if using C/F
+        except: pass
         levels[-1].T = T                         # tentative prolongator
         levels[-1].Fpts = Cpt_params[1]['Fpts']  # Fpts
         levels[-1].P_I = Cpt_params[1]['P_I']    # Injection operator

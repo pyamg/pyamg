@@ -869,7 +869,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                  krylov='cg', maxiter=4, tol=1e-8,
                                  degree=1, weighting='local',
-                                 prefilter=None, postfilter=None):
+                                 prefilter=None, postfilter=None,
+                                 force_fit_candidates=False):
     """Minimize the energy of the coarse basis functions (columns of T).
 
     Both root-node and non-root-node style prolongation smoothing is available,
@@ -933,6 +934,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         :math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
+    force_fit_candidates : boolean
+        Use this option if the tentative T does not satisfy T B = Bf. 
+        Default is False.
 
     Returns
     -------
@@ -1116,7 +1120,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
     if ((Cpt_params[0] and (B.shape[1] > A.blocksize[0]))
-       or ('secondpass' in postfilter)):
+       or ('secondpass' in postfilter) or force_fit_candidates):
         T = filter_operator(T, pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
