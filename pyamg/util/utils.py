@@ -16,10 +16,11 @@ except ImportError:
 
 try:
     # scipy >=1.8
+    # pylint: disable=unused-import
     from scipy.sparse.linalg._isolve.utils import make_system
 except ImportError:
     # scipy <1.8
-    from scipy.sparse.linalg.isolve.utils import make_system
+    from scipy.sparse.linalg.isolve.utils import make_system  # noqa: F401
 
 try:
     # scipy >=1.8

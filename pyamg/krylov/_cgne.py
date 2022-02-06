@@ -8,6 +8,7 @@ from scipy.sparse.linalg import aslinearoperator
 from ..util.linalg import norm
 from ..util import make_system
 
+
 def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
          maxiter=None, M=None,
          callback=None, residuals=None):
