@@ -10,6 +10,7 @@ from ..util.utils import scale_rows, get_diagonal, get_block_diag, \
     unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
     truncate_rows
 from ..util.linalg import approximate_spectral_radius
+from ..util import upcast
 
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
@@ -699,7 +700,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                            shape=(pattern.shape))
 
     # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
-    xtype = sparse.sputils.upcast(A.dtype, T.dtype, B.dtype)
+    xtype = upcast(A.dtype, T.dtype, B.dtype)
     Q = []      # Givens Rotations
     V = []      # Krylov Space
     # vs = []     # vs store the pointers to each column of V for speed

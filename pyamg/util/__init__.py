@@ -4,7 +4,9 @@ from . import linalg
 from . import utils
 from . import params
 
-__all__ = ['linalg', 'utils', 'params']
+from .utils import make_system, upcast
+
+__all__ = ['linalg', 'utils', 'params', 'make_system', 'upcast']
 
 __doc__ += """
 linalg.py provides some linear algebra functionality not yet found in scipy.
