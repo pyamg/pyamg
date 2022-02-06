@@ -5,9 +5,9 @@ from warnings import warn
 
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def apply_givens(Q, v, k):
@@ -97,7 +97,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 

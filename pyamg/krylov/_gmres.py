@@ -63,7 +63,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 

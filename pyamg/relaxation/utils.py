@@ -1,7 +1,7 @@
 """Relaxation-centric utilities."""
 
 import numpy as np
-from scipy.sparse.linalg.interface import LinearOperator
+from scipy.sparse.linalg import LinearOperator
 from ..multilevel import MultilevelSolver
 from .. import relaxation
 
