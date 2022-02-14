@@ -1,3 +1,6 @@
+numpy
+scipy
+pytest
 pep8-naming
 flake8-quotes
 flake8-bugbear

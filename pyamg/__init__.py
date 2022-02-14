@@ -65,7 +65,10 @@ def test(verbose=False):
 
     """
     import sys     # pylint: disable=import-outside-toplevel
-    import pytest  # pylint: disable=import-outside-toplevel
+    try:
+        import pytest  # pylint: disable=import-outside-toplevel
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
 
     sysversion = sys.version.replace('\n', '')
     print(f'Python version: {sysversion}')
