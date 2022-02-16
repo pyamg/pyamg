@@ -1,6 +1,10 @@
+"""Test relaxation."""
+import warnings
 import numpy as np
+from numpy.testing import TestCase, assert_almost_equal
 import scipy
 from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
+from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
 from pyamg.gallery import poisson, sprand, elasticity
@@ -10,11 +14,7 @@ from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     gauss_seidel_nr
 from pyamg.util.utils import get_block_diag
 
-from numpy.testing import TestCase, assert_almost_equal
-
 # Ignore efficiency warnings
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 
@@ -24,7 +24,8 @@ def check_raises(error, f, *args, **kwargs):
     except error:
         pass
     else:
-        raise Exception("%s should throw an error" % f.__name__)
+        fname = f.__name__
+        raise Exception(f'{fname} should throw an error')
 
 
 class TestCommonRelaxation(TestCase):
@@ -57,8 +58,7 @@ class TestCommonRelaxation(TestCase):
             method(A, x, b, *args, **kwargs)
 
     def test_strided_x(self):
-        """non-contiguous x should raise errors"""
-
+        """Non-contiguous x should raise errors."""
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b = np.arange(A.shape[0], dtype='float64')
@@ -66,8 +66,7 @@ class TestCommonRelaxation(TestCase):
             check_raises(ValueError, method, A, x, b, *args, **kwargs)
 
     def test_mixed_precision(self):
-        """mixed precision arguments should raise errors"""
-
+        """Mixed precision arguments should raise errors."""
         for method, args, kwargs in self.cases:
             A32 = poisson((4,), format='csr').astype('float32')
             b32 = np.arange(A32.shape[0], dtype='float32')
@@ -85,8 +84,7 @@ class TestCommonRelaxation(TestCase):
             check_raises(TypeError, method, A64, x32, b64, *args, **kwargs)
 
     def test_vector_sizes(self):
-        """incorrect vector sizes should raise errors"""
-
+        """Incorrect vector sizes should raise errors."""
         for method, args, kwargs in self.cases:
             A = poisson((4,), format='csr').astype('float64')
             b4 = np.arange(4, dtype='float64')
@@ -265,7 +263,7 @@ class TestRelaxation(TestCase):
             D = np.diag(np.diag(A))
             U = np.triu(A, k=1)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = solve(L + D, (b - U.dot(x)))
                 elif sweep == 'backward':
@@ -356,7 +354,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.01 and resid2 < 0.01)
+        assert resid1 < 0.01
+        assert resid2 < 0.01
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_indexed(self):
@@ -495,7 +494,7 @@ class TestRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + A.T.dot(solve(L, (b - A.dot(x))))
                 elif sweep == 'backward':
@@ -594,7 +593,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        assert resid1 < 0.2
+        assert resid2 < 0.2
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_nr_bsr(self):
@@ -640,7 +640,7 @@ class TestRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + (solve(L, AH.dot(b - A.dot(x))))
                 elif sweep == 'backward':
@@ -673,7 +673,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N, format='csr')
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)],
+                    [0, -1, 1], N, N, format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')
@@ -681,7 +682,8 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.2 and resid2 < 0.2)
+        assert resid1 < 0.2
+        assert resid2 < 0.2
         assert_almost_equal(resid1, resid2)
 
     def test_schwarz_gold(self):
@@ -733,7 +735,7 @@ class TestRelaxation(TestCase):
                 indices = np.concatenate((indices1, indices2))
 
             # Multiplicative Schwarz iterations
-            for j in range(iterations):
+            for _j in range(iterations):
                 for i in indices:
                     si = subdomains[i]
                     x[si] = np.dot(subblocks[i], (b[si] - A[si, :]*x)) + x[si]
@@ -940,7 +942,7 @@ class TestComplexRelaxation(TestCase):
                 subblocks.append(blkAinv)
 
             # Multiplicative Schwarz iterations
-            for j in range(iterations):
+            for _j in range(iterations):
                 for i in range(len(subdomains)):
                     si = subdomains[i]
                     x[si] = np.dot(subblocks[i], (b[si] - A[si, :]*x)) + x[si]
@@ -980,7 +982,7 @@ class TestComplexRelaxation(TestCase):
             D = np.diag(np.diag(A))
             U = np.triu(A, k=1)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = solve(L + D, (b - U.dot(x)))
                 elif sweep == 'backward':
@@ -1111,7 +1113,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.03 and resid2 < 0.03)
+        assert resid1 < 0.03
+        assert resid2 < 0.03
         assert_almost_equal(resid1, resid2)
 
     def test_jacobi_ne(self):
@@ -1159,8 +1162,9 @@ class TestComplexRelaxation(TestCase):
         A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
                     format='csr')
         A.data = A.data + 1.0j*A.data
-        soln = np.array([11./15. + 1.0j/15., 11./15. +
-                      31.0j/15, 77./15. - 53.0j/15.])
+        soln = np.array([11./15. + 1.0j/15.,
+                         11./15. + 31.0j/15,
+                         77./15. - 53.0j/15.])
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
@@ -1175,8 +1179,9 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         b = np.array([10, 20, 30]).astype(A.dtype)
         x_copy = x.copy()
-        solnpart = np.array([11./15. + 1.0j/15., 11./15. +
-                          31.0j/15, 77./15. - 53.0j/15.])
+        solnpart = np.array([11./15. + 1.0j/15.,
+                             11./15. + 31.0j/15,
+                             77./15. - 53.0j/15.])
         soln = 2.0/3.0*x_copy + 1.0/3.0*solnpart
 
         jacobi_ne(A, x, b, omega=1.0/3.0)
@@ -1224,7 +1229,7 @@ class TestComplexRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + AH.dot(solve(L, (b - A.dot(x))))
                 elif sweep == 'backward':
@@ -1337,7 +1342,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_ne(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        assert resid1 < 0.3
+        assert resid2 < 0.3
         assert_almost_equal(resid1, resid2)
 
     def test_gauss_seidel_nr_bsr(self):
@@ -1386,7 +1392,7 @@ class TestComplexRelaxation(TestCase):
             L = np.tril(AA, k=0)
             U = np.triu(AA, k=0)
 
-            for i in range(iterations):
+            for _i in range(iterations):
                 if sweep == 'forward':
                     x = x + (solve(L, AH.dot(b - A.dot(x))))
                 elif sweep == 'backward':
@@ -1432,7 +1438,8 @@ class TestComplexRelaxation(TestCase):
         x = x + 1.0j*x
         gauss_seidel_nr(A, x, b, iterations=200, sweep='backward')
         resid2 = np.linalg.norm(A*x, 2)
-        self.assertTrue(resid1 < 0.3 and resid2 < 0.3)
+        assert resid1 < 0.3
+        assert resid2 < 0.3
         assert_almost_equal(resid1, resid2)
 
 
@@ -1466,11 +1473,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
-                   [18.2, 19.6, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1., 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2, 19.6, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1., 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1524,11 +1531,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
-                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1.0j, 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1.0j, 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1568,11 +1575,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1, 9.8, 9.6, 0., 3.6, 0.],
-                   [18.2, 19.6, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1., 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2, 19.6, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1., 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))
@@ -1668,11 +1675,11 @@ class TestBlockRelaxation(TestCase):
         cases.append((A, 2))
         cases.append((A, 4))
         A = np.array([[9.1j, 9.8j, 9.6, 0., 3.6, 0.],
-                   [18.2j, 19.6j, 0., 0., 1.7, 2.8],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 0., 0., 0.],
-                   [0., 0., 0., 4.2, 1.0j, 1.1],
-                   [0., 0., 9.1, 0., 0., 9.3]])
+                      [18.2j, 19.6j, 0., 0., 1.7, 2.8],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0.],
+                      [0., 0., 0., 4.2, 1.0j, 1.1],
+                      [0., 0., 9.1, 0., 0., 9.3]])
         A = csr_matrix(A)
         cases.append((A, 1))
         cases.append((A, 2))

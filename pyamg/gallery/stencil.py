@@ -1,10 +1,8 @@
 """Construct sparse matrix from a local stencil."""
-
+# pylint: disable=redefined-builtin
 
 import numpy as np
-import scipy.sparse as sparse
-
-__all__ = ['stencil_grid']
+from scipy import sparse
 
 
 def stencil_grid(S, grid, dtype=None, format=None):
@@ -44,25 +42,25 @@ def stencil_grid(S, grid, dtype=None, format=None):
     >>> grid = (5,)          # 1D grid with 5 vertices
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.,  0.],
-            [-1.,  2., -1.,  0.,  0.],
-            [ 0., -1.,  2., -1.,  0.],
-            [ 0.,  0., -1.,  2., -1.],
-            [ 0.,  0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.,  0.],
+           [-1.,  2., -1.,  0.,  0.],
+           [ 0., -1.,  2., -1.,  0.],
+           [ 0.,  0., -1.,  2., -1.],
+           [ 0.,  0.,  0., -1.,  2.]])
 
     >>> stencil = [[0,-1,0],[-1,4,-1],[0,-1,0]] # 2D Poisson stencil
     >>> grid = (3,3)                            # 2D grid with shape 3x3
     >>> A = stencil_grid(stencil, grid, dtype=float, format='csr')
     >>> A.toarray()
-    matrix([[ 4., -1.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
-            [-1.,  4., -1.,  0., -1.,  0.,  0.,  0.,  0.],
-            [ 0., -1.,  4.,  0.,  0., -1.,  0.,  0.,  0.],
-            [-1.,  0.,  0.,  4., -1.,  0., -1.,  0.,  0.],
-            [ 0., -1.,  0., -1.,  4., -1.,  0., -1.,  0.],
-            [ 0.,  0., -1.,  0., -1.,  4.,  0.,  0., -1.],
-            [ 0.,  0.,  0., -1.,  0.,  0.,  4., -1.,  0.],
-            [ 0.,  0.,  0.,  0., -1.,  0., -1.,  4., -1.],
-            [ 0.,  0.,  0.,  0.,  0., -1.,  0., -1.,  4.]])
+    array([[ 4., -1.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
+           [-1.,  4., -1.,  0., -1.,  0.,  0.,  0.,  0.],
+           [ 0., -1.,  4.,  0.,  0., -1.,  0.,  0.,  0.],
+           [-1.,  0.,  0.,  4., -1.,  0., -1.,  0.,  0.],
+           [ 0., -1.,  0., -1.,  4., -1.,  0., -1.,  0.],
+           [ 0.,  0., -1.,  0., -1.,  4.,  0.,  0., -1.],
+           [ 0.,  0.,  0., -1.,  0.,  0.,  4., -1.,  0.],
+           [ 0.,  0.,  0.,  0., -1.,  0., -1.,  4., -1.],
+           [ 0.,  0.,  0.,  0.,  0., -1.,  0., -1.,  4.]])
 
     """
     S = np.asarray(S, dtype=dtype)
@@ -135,38 +133,3 @@ def stencil_grid(S, grid, dtype=None, format=None):
 
     return sparse.dia_matrix((data, diags),
                              shape=(N_v, N_v)).asformat(format)
-
-
-if __name__ == '__main__':
-    D = 2
-
-    if D == 1:
-        # 1D Laplacian
-        S = np.array([-1, 2, -1])
-        grid = (4,)
-
-    if D == 2:
-        # 2D Laplacian
-        S = np.array([[0, -1, 0],
-                      [-1, 4, -1],
-                      [0, -1, 0]])
-        # S = array([[-1, -1, -1],
-        #            [-1, 8, -1],
-        #            [-1, -1, -1]])
-        grid = (2, 1)
-
-    if D == 3:
-        S = np.array([[[0, 0, 0],
-                       [0, -1, 0],
-                       [0, 0, 0]],
-                      [[0, -1, 0],
-                       [-1, 6, -1],
-                       [0, -1, 0]],
-                      [[0, 0, 0],
-                       [0, -1, 0],
-                       [0, 0, 0]]])
-        grid = (3, 4, 5)
-
-    A = stencil_grid(S, grid)
-
-    print(A.toarray())

@@ -1,11 +1,10 @@
+"""Minimum Residual projection method."""
+
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
-
-
-__all__ = ['minimal_residual']
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def minimal_residual(A, b, x0=None, tol=1e-5,
@@ -35,7 +34,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial preconditioned residual
+        preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual
 
     Returns
     -------
@@ -52,7 +52,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -77,8 +77,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = minimal_residual(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    7.26369350856
+    >>> print(f'{norm(b - A*x):.6}')
+    7.26369
 
     References
     ----------
@@ -129,7 +129,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         # (p, z) = (M A M r, M r) = (M A z, z)
         pz = np.inner(p.conjugate(), z)  # check curvature of M^-1 A
         if pz < 0.0:
-            warn("\nIndefinite matrix detected in minimal residual, stopping.\n")
+            warn('\nIndefinite matrix detected in minimal residual, stopping.\n')
             return (postprocess(x), -1)
 
         alpha = pz / np.inner(p.conjugate(), p)
@@ -156,38 +156,3 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
         if it == maxiter:
             return (postprocess(x), it)
-
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#
-#    from pyamg.gallery import stencil_grid
-#    from pyamg import smoothed_aggregation_solver
-#    from numpy.random import random
-#    from numpy import zeros_like, dot
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,
-#                     format='csr')
-#    x0 = random((A.shape[0],))
-#    b = zeros_like(x0)
-#
-#    # This function should always decrease (assuming zero RHS)
-#    fvals = []
-#    def callback(x):
-#        fvals.append( sqrt(dot( ravel(x), ravel(A*x.reshape(-1,1)) )) )
-#
-#    print '\n\nTesting minimal residual with %d x %d 2D Laplace Matrix' %\
-#          (A.shape[0],A.shape[0])
-#    resvec = []
-#    sa = smoothed_aggregation_solver(A)
-#    #(x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
-#    M=sa.aspreconditioner())
-#    (x,flag) = minimal_residual(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
-#    callback=callback)
-#    print 'Funcation values:  ' + str(fvals)
-#    print 'initial norm = %g'%(norm(b - A*x0))
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)

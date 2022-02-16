@@ -1,3 +1,4 @@
+"""Test adaptive SA."""
 import numpy as np
 
 from pyamg.gallery import poisson, linear_elasticity
@@ -80,8 +81,8 @@ class TestAdaptiveSA(TestCase):
             sa_new = adaptive_sa_solver(AA,
                                         initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
-            assert(abs(np.ravel(sa_old.levels[-1].A.toarray() -
-                                sa_new.levels[-1].A.toarray())).max() < 0.01)
+            assert(abs(np.ravel(sa_old.levels[-1].A.toarray()
+                   - sa_new.levels[-1].A.toarray())).max() < 0.01)
             sa_old = sa_new
 
 
@@ -113,8 +114,7 @@ class TestComplexAdaptiveSA(TestCase):
             # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
-            x0 = (np.random.rand(A.shape[0],)
-                  + 1.0j * np.random.rand(A.shape[0],))
+            x0 = np.random.rand(A.shape[0],) + 1.0j * np.random.rand(A.shape[0],)
 
             residuals0 = []
 

@@ -5,8 +5,6 @@ import numpy as np
 from scipy.sparse import isspmatrix_csr, bsr_matrix
 from pyamg import amg_core
 
-__all__ = ['fit_candidates']
-
 
 def fit_candidates(AggOp, B, tol=1e-10):
     """Fit near-nullspace candidates to form the tentative prolongator.
@@ -73,13 +71,13 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1]]
     >>> Q, R = fit_candidates(AggOp, B)
     >>> Q.toarray()
-    matrix([[ 0.70710678,  0.        ],
-            [ 0.70710678,  0.        ],
-            [ 0.        ,  0.70710678],
-            [ 0.        ,  0.70710678]])
+    array([[0.70710678, 0.        ],
+           [0.70710678, 0.        ],
+           [0.        , 0.70710678],
+           [0.        , 0.70710678]])
     >>> R
-    array([[ 1.41421356],
-           [ 1.41421356]])
+    array([[1.41421356],
+           [1.41421356]])
     >>> # Two candidates, the constant vector and a linear function
     ... B = [[1, 0],
     ...      [1, 1],
@@ -87,15 +85,15 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1, 3]]
     >>> Q, R = fit_candidates(AggOp, B)
     >>> Q.toarray()
-    matrix([[ 0.70710678, -0.70710678,  0.        ,  0.        ],
-            [ 0.70710678,  0.70710678,  0.        ,  0.        ],
-            [ 0.        ,  0.        ,  0.70710678, -0.70710678],
-            [ 0.        ,  0.        ,  0.70710678,  0.70710678]])
+    array([[ 0.70710678, -0.70710678,  0.        ,  0.        ],
+           [ 0.70710678,  0.70710678,  0.        ,  0.        ],
+           [ 0.        ,  0.        ,  0.70710678, -0.70710678],
+           [ 0.        ,  0.        ,  0.70710678,  0.70710678]])
     >>> R
-    array([[ 1.41421356,  0.70710678],
-           [ 0.        ,  0.70710678],
-           [ 1.41421356,  3.53553391],
-           [ 0.        ,  0.70710678]])
+    array([[1.41421356, 0.70710678],
+           [0.        , 0.70710678],
+           [1.41421356, 3.53553391],
+           [0.        , 0.70710678]])
     >>> # aggregation excludes the third node
     ... AggOp = csr_matrix( [[1, 0],
     ...                      [1, 0],
@@ -107,13 +105,13 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ...      [1]]
     >>> Q, R = fit_candidates(AggOp, B)
     >>> Q.toarray()
-    matrix([[ 0.70710678,  0.        ],
-            [ 0.70710678,  0.        ],
-            [ 0.        ,  0.        ],
-            [ 0.        ,  1.        ]])
+    array([[0.70710678, 0.        ],
+           [0.70710678, 0.        ],
+           [0.        , 0.        ],
+           [0.        , 1.        ]])
     >>> R
-    array([[ 1.41421356],
-           [ 1.        ]])
+    array([[1.41421356],
+           [1.        ]])
 
     """
     if not isspmatrix_csr(AggOp):
@@ -127,8 +125,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
         raise ValueError('expected 2d array for argument B')
 
     if B.shape[0] % AggOp.shape[0] != 0:
-        raise ValueError('dimensions of AggOp {} and B {} are \
-                          incompatible'.format(AggOp.shape, B.shape))
+        raise ValueError(f'Dimensions of AggOp {AggOp.shape} and B {B.shape} '
+                         'are incompatible')
 
     N_fine, N_coarse = AggOp.shape
 

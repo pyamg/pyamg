@@ -1,3 +1,4 @@
+"""Test simple iteration."""
 from pyamg.krylov import minimal_residual, steepest_descent
 import numpy as np
 from pyamg.util.linalg import norm
@@ -99,11 +100,14 @@ class TestSimpleIterations(TestCase):
             fvals = []
 
             def callback(x):
-                fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1)))) - np.dot(np.ravel(b), np.ravel(x)))
+                fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))
+                             - np.dot(np.ravel(b), np.ravel(x)))
 
-            (x, flag) = steepest_descent(A, b, x0=x0, tol=1e-16,
-                                         maxiter=maxiter, callback=callback)
-            actual_factor = (norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1)))) / norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1)))))
+            x, _ = steepest_descent(A, b, x0=x0, tol=1e-16,
+                                    maxiter=maxiter, callback=callback)
+            norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
+            norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
+            actual_factor = norm1 / norm2
             assert(actual_factor < reduction_factor)
 
             if A.dtype != complex:
@@ -117,13 +121,14 @@ class TestSimpleIterations(TestCase):
         fvals = []
 
         def callback(x):
-            fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1)))) - np.dot(np.ravel(b), np.ravel(x)))
+            fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))
+                         - np.dot(np.ravel(b), np.ravel(x)))
 
         resvec = []
         sa = pyamg.smoothed_aggregation_solver(A)
-        (x, flag) = steepest_descent(A, b, x0, tol=1e-8, maxiter=20,
-                                     residuals=resvec, M=sa.aspreconditioner(),
-                                     callback=callback)
+        x, _ = steepest_descent(A, b, x0, tol=1e-8, maxiter=20,
+                                residuals=resvec, M=sa.aspreconditioner(),
+                                callback=callback)
         assert(resvec[-1]/resvec[0] < 1e-8)
         for i in range(len(fvals)-1):
             assert(fvals[i+1] <= fvals[i])
@@ -146,12 +151,15 @@ class TestSimpleIterations(TestCase):
                 fvals = []
 
                 def callback(x):
-                    fvals.append(np.sqrt(np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))))
+                    fvals.append(np.sqrt(np.dot(np.ravel(x),
+                                         np.ravel(A.dot(x.reshape(-1, 1))))))
                 #
-                (x, flag) = minimal_residual(A, b, x0=x0,
-                                             tol=1e-16, maxiter=maxiter,
-                                             callback=callback)
-                actual_factor = (norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1)))) / norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1)))))
+                x, _ = minimal_residual(A, b, x0=x0,
+                                        tol=1e-16, maxiter=maxiter,
+                                        callback=callback)
+                norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
+                norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
+                actual_factor = norm1 / norm2
                 assert(actual_factor < reduction_factor)
                 if A.dtype != complex:
                     for i in range(len(fvals)-1):
@@ -168,9 +176,9 @@ class TestSimpleIterations(TestCase):
         #
         resvec = []
         sa = pyamg.smoothed_aggregation_solver(A)
-        (x, flag) = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,
-                                     residuals=resvec, M=sa.aspreconditioner(),
-                                     callback=callback)
+        x, _ = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,
+                                residuals=resvec, M=sa.aspreconditioner(),
+                                callback=callback)
         assert(resvec[-1]/resvec[0] < 1e-8)
         for i in range(len(fvals)-1):
             assert(fvals[i+1] <= fvals[i])

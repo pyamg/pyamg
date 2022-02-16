@@ -1,11 +1,9 @@
 """Basic PyAMG demo showing AMG standalone convergence versus preconditioned CG with AMG."""
 
-import scipy as sp
 import numpy as np
-from pyamg.gallery import poisson
-from pyamg.aggregation import smoothed_aggregation_solver
 
-__all__ = ['demo']
+from .laplacian import poisson
+from ..aggregation.aggregation import smoothed_aggregation_solver
 
 
 def demo():
@@ -28,30 +26,26 @@ def demo():
     del x
 
     # Compute relative residuals
-    standalone_residuals = \
-        np.array(standalone_residuals) / standalone_residuals[0]
-    accelerated_residuals = \
-        np.array(accelerated_residuals) / accelerated_residuals[0]
+    standalone_residuals = np.array(standalone_residuals) / standalone_residuals[0]
+    accelerated_residuals = np.array(accelerated_residuals) / accelerated_residuals[0]
 
     # Compute (geometric) convergence factors
     factor1 = standalone_residuals[-1]**(1.0/len(standalone_residuals))
     factor2 = accelerated_residuals[-1]**(1.0/len(accelerated_residuals))
 
-    print("                     MG convergence factor: %g" % (factor1))
-    print("MG with CG acceleration convergence factor: %g" % (factor2))
+    print(f'                     MG convergence factor: {factor1}')
+    print(f'MG with CG acceleration convergence factor: {factor2}')
 
     # Plot convergence history
     try:
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
         plt.figure()
         plt.title('Convergence History')
         plt.xlabel('Iteration')
         plt.ylabel('Relative Residual')
-        plt.semilogy(standalone_residuals, label='Standalone',
-                     linestyle='-', marker='o')
-        plt.semilogy(accelerated_residuals, label='Accelerated',
-                     linestyle='-', marker='s')
+        plt.semilogy(standalone_residuals, label='Standalone', linestyle='-', marker='o')
+        plt.semilogy(accelerated_residuals, label='Accelerated', linestyle='-', marker='s')
         plt.legend()
         plt.show()
     except ImportError:
-        print("\n\nNote: pylab not available on your system.")
+        print('\nNote: matplotlib is needed for plotting.')

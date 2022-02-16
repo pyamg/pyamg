@@ -1,12 +1,12 @@
+"""Conjugate Residual Krylov solver."""
+
 import warnings
 from warnings import warn
 
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
-
-__all__ = ['cr']
+from scipy import sparse
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def cr(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -58,21 +58,21 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cr import cr
+    >>> from pyamg.krylov import cr
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cr(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    10.9370700187
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -189,51 +189,8 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if zz == 0.0:
             # rz == 0.0 is an indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CR, ceasing iterations\n")
+            warn('\nSingular preconditioner detected in CR, ceasing iterations\n')
             return (postprocess(x), -1)
 
         if it == maxiter:
             return (postprocess(x), it)
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    import time
-    from pyamg.krylov._gmres import gmres
-
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (100, 100),
-                     dtype=float, format='csr')
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    print('\n\nTesting CR with %d x %d 2D Laplace Matrix' %
-          (A.shape[0], A.shape[0]))
-    t1 = time.time()
-    r = []
-    (x, flag) = cr(A, b, x0, tol=1e-8, maxiter=100, residuals=r)
-    t2 = time.time()
-    print('{} took {:0.3f} ms'.format('cr', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
-
-    t1 = time.time()
-    r2 = []
-    (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100, residuals=r2)
-    t2 = time.time()
-    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
-
-    # from scipy.sparse.linalg.isolve import cg as icg
-    # t1=time.time()
-    # (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
-    # t2=time.time()
-    # print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
-    # print 'norm = %g'%(norm(b - A*y))
-    # print 'info flag = %d'%(flag)

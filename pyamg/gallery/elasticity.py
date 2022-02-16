@@ -1,14 +1,13 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D."""
+# pylint: disable=redefined-builtin
 
 import numpy as np
 import scipy.linalg as sla
-import scipy.sparse as sparse
-
-__all__ = ['linear_elasticity', 'linear_elasticity_p1']
+from scipy import sparse
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
+    """Linear elasticity problem with Q1 finite elements on a regular rectangular grid.
 
     Parameters
     ----------
@@ -54,8 +53,8 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     """
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
-    else:
-        raise NotImplemented('no support for grid=%s' % str(grid))
+
+    raise NotImplementedError(f'No support for grid={grid}')
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
@@ -127,7 +126,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         indices = np.arange((X-1)*(Y-1))
         indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
         P = sparse.bsr_matrix((data, indices, indptr),
-                       shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
+                              shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
         A = P.T * A * P
 
@@ -170,19 +169,19 @@ def q12d_local(vertices, lame, mu):
     M = lame + 2*mu  # P-wave modulus
 
     R_11 = np.array([[2, -2, -1, 1],
-                      [-2, 2, 1, -1],
-                      [-1, 1, 2, -2],
-                      [1, -1, -2, 2]]) / 6.0
+                     [-2, 2, 1, -1],
+                     [-1, 1, 2, -2],
+                     [1, -1, -2, 2]]) / 6.0
 
     R_12 = np.array([[1, 1, -1, -1],
-                      [-1, -1, 1, 1],
-                      [-1, -1, 1, 1],
-                      [1, 1, -1, -1]]) / 4.0
+                     [-1, -1, 1, 1],
+                     [-1, -1, 1, 1],
+                     [1, 1, -1, -1]]) / 4.0
 
     R_22 = np.array([[2, 1, -1, -2],
-                      [1, 2, -2, -1],
-                      [-1, -2, 2, 1],
-                      [-2, -1, 1, 2]]) / 6.0
+                     [1, 2, -2, -1],
+                     [-1, -2, 2, 1],
+                     [-2, -1, 1, 2]]) / 6.0
 
     F = sla.inv(np.vstack((vertices[1] - vertices[0], vertices[3] - vertices[0])))
 
@@ -261,12 +260,13 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
+    if D not in (2, 3):
+        raise ValueError('only dimension 2 and 3 are supported')
+
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
-    else:
-        raise NotImplementedError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D
@@ -317,7 +317,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
 def p12d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 2d."""
-    assert(vertices.shape == (3, 2))
+    assert vertices.shape == (3, 2)
 
     A = np.vstack((np.ones((1, 3)), vertices.T))
     PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions
@@ -332,7 +332,7 @@ def p12d_local(vertices, lame, mu):
 
 def p13d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 3d."""
-    assert(vertices.shape == (4, 3))
+    assert vertices.shape == (4, 3)
 
     A = np.vstack((np.ones((1, 4)), vertices.T))
     PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions

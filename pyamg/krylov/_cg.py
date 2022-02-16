@@ -1,12 +1,11 @@
+"""Conjugate Gradient Krylov solver."""
+
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
-
-
-__all__ = ['cg']
+from scipy import sparse
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def cg(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -58,21 +57,21 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cg import cg
+    >>> from pyamg.krylov import cg
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    10.9370700187
+    >>> print(f'{norm(b - A*x):.6}')
+    10.9371
 
     References
     ----------
@@ -143,7 +142,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz_old = rz
         pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
-            warn("\nIndefinite matrix detected in CG, aborting\n")
+            warn('\nIndefinite matrix detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         alpha = rz/pAp                            # 3
@@ -158,7 +157,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                             # check curvature of M
-            warn("\nIndefinite preconditioner detected in CG, aborting\n")
+            warn('\nIndefinite preconditioner detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         beta = rz/rz_old                          # 7
@@ -192,97 +191,3 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if it == maxiter:
             return (postprocess(x), it)
-
-
-if __name__ == '__main__':
-    from pyamg.gallery import stencil_grid
-    from numpy.random import random
-    import time
-    from scipy.sparse.linalg.isolve import cg as icg
-    import numpy as np
-
-    nx = 100
-    ny = nx
-    A = stencil_grid([[0, -1, 0], [-1, 4, -1], [0, -1, 0]], (nx, ny), dtype=float, format='csr')
-    #b = random((A.shape[0],))
-    xstar = random((A.shape[0],))
-    b = A @ xstar
-    x0 = random((A.shape[0],))
-    print('initial residual: ', norm(b - A @ x0))
-    print('initial criteria 1: ', norm(b - A @ x0) / (norm(A.data)*norm(x0) + norm(b)))
-    print('initial criteria 2: ', norm(b - A @ x0) / norm(b))
-
-    print(f'\n\nTesting CG with {A.shape[0]} x {A.shape[0]} 2D Laplace Matrix')
-    x = x0.copy()
-    t1 = time.time()
-    res = []
-    (x, flag) = cg(A, b, x, tol=1e-8, normA=np.linalg.norm(A.data), maxiter=100, residuals=res)
-    t2 = time.time()
-    #print('res1: ', res)
-    print(f'cg took {(t2-t1)*1000.0} ms')
-    print(f'norm = {norm(b - A @ x)}')
-    print(f'info flag = {flag}')
-
-    res = []
-    def mycb(xk):
-        res.append(norm(b - A @ xk))
-
-    x = x0.copy()
-    t1 = time.time()
-    (y, flag) = icg(A, b, x, tol=1e-8, maxiter=100, callback=mycb)
-    t2 = time.time()
-    #print('res2: ', res)
-    print(f'\nscipy cg took {(t2-t1)*1000.0} ms')
-    print(f'norm = {norm(b - A @ y)}')
-    print(f'info flag = {flag}')
-
-    print('-------------')
-    norm = np.linalg.norm
-    criterion1 = []
-    criterion2 = []
-    criterion5 = []
-    error = []
-    errorA = []
-    rz = []
-    zz = []
-
-    def mycb2(xk, M):
-        r = b - A @ xk
-        z = M @ r
-        e = xstar - xk
-        normr = norm(r)
-        norme = norm(e)
-        criterion1.append(normr / (norm(A.data)*norm(xk) + norm(b)))
-        criterion2.append(normr / norm(b))
-        criterion5.append(normr / norm(b - A @ x0))
-        error.append(norme)
-        rz.append(np.sqrt(np.inner(r, z)))
-        zz.append(norm(z) / norm(M @ b))
-        errorA.append(np.sqrt(np.inner(A @ e, e)))
-
-    import pyamg
-    res = []
-    ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10, smooth=None)
-    M =  ml.aspreconditioner()
-    x = x0.copy()
-    t1 = time.time()
-    res = []
-    (x, flag) = cg(A, b, x, M=M, tol=1e-16, maxiter=100, callback=mycb2, residuals=res)
-    t2 = time.time()
-
-    import matplotlib.pyplot as plt
-    import matplotlib
-    matplotlib.rcParams['text.usetex'] = True
-    plt.semilogy(criterion1, label=r'$\frac{\|r_k\|}{\|b\| + \|A\|\|x_k\|}$')
-    plt.semilogy(criterion2, label=r'$\frac{\|r_k\|}{\|b\|}$')
-    plt.semilogy(criterion5, label=r'$\frac{\|r_k\|}{\|r_0\|}$')
-    plt.semilogy(error, label=r'$\|e_k\|$')
-    plt.semilogy(errorA, label=r'$\|e_k\|_A$')
-    plt.semilogy(rz, label=r'$\sqrt{<r, z>}$')
-    plt.semilogy(zz, label=r'$\|Mr\| / \|M b\|$')
-    plt.hlines(1e-8, 1, len(res), color='tab:gray', linestyle='dashed')
-    plt.xlabel('iterations')
-    plt.grid(True)
-    plt.legend()
-    plt.savefig('cg.png', dpi=300)
-    plt.show()

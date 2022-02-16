@@ -1,13 +1,14 @@
+"""Test graph routings."""
 import numpy as np
 import scipy.sparse as sparse
 
-from pyamg.gallery import poisson, load_example
-from pyamg.graph import maximal_independent_set, vertex_coloring,\
-    bellman_ford, lloyd_cluster, connected_components,\
-    bellman_ford_reference
-from pyamg import amg_core
-
 from numpy.testing import TestCase, assert_equal
+
+from pyamg.gallery import poisson, load_example
+from pyamg.graph import (maximal_independent_set, vertex_coloring,
+                         bellman_ford, lloyd_cluster, connected_components)
+from pyamg.graph_ref import bellman_ford_reference
+from pyamg import amg_core
 
 
 def canonical_graph(G):
@@ -48,7 +49,7 @@ class TestGraph(TestCase):
         cases = []
         np.random.seed(651978631)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -97,7 +98,6 @@ class TestGraph(TestCase):
 
     def test_bellman_ford(self):
         """Test pile of cases against reference implementation."""
-
         np.random.seed(1643502758)
 
         for G in self.cases:
@@ -140,7 +140,6 @@ class TestGraph(TestCase):
             distance, nearest = bellman_ford(G, [seed])
             assert_equal(distance, distances_FROM_seed[seed])
 
-
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
 
@@ -159,7 +158,7 @@ class TestComplexGraph(TestCase):
         cases = []
         np.random.seed(3084315563)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -339,7 +338,7 @@ def test_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()
@@ -416,7 +415,7 @@ def test_complex_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()

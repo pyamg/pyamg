@@ -1,21 +1,14 @@
 """Algorithms related to graphs."""
 
 
+from warnings import warn
 import numpy as np
-import scipy as sp
 from scipy import sparse
-
 from . import amg_core
-
-__all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
-           'lloyd_cluster', 'connected_components']
-
-from pyamg.graph_ref import bellman_ford_reference
-
-__all__ += ['bellman_ford_reference']
 
 
 def asgraph(G):
+    """Return (square) matrix as sparse."""
     if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):
         G = sparse.csr_matrix(G)
 
@@ -66,7 +59,7 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn = amg_core.maximal_independent_set_parallel
             fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
-            raise ValueError('unknown algorithm (%s)' % algo)
+            raise ValueError(f'Unknown algorithm ({algo})')
     else:
         fn = amg_core.maximal_independent_set_k_parallel
         fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
@@ -114,7 +107,7 @@ def vertex_coloring(G, method='MIS'):
         fn = amg_core.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
-        raise ValueError('unknown method (%s)' % method)
+        raise ValueError(f'Unknown method ({method})')
 
     return coloring
 
@@ -205,14 +198,14 @@ def lloyd_cluster(G, seeds, maxiter=10):
         raise ValueError('at least one seed is required')
 
     if seeds.min() < 0:
-        raise ValueError('invalid seed index (%d)' % seeds.min())
+        raise ValueError(f'Invalid seed index ({seeds.min()})')
     if seeds.max() >= N:
-        raise ValueError('invalid seed index (%d)' % seeds.max())
+        raise ValueError(f'Invalid seed index ({seeds.max()})')
 
     clusters = np.empty(N, dtype='intc')
     distances = np.empty(N, dtype=G.dtype)
 
-    for i in range(maxiter):
+    for _it in range(1, maxiter+1):
         last_seeds = seeds.copy()
 
         amg_core.lloyd_cluster(N, G.indptr, G.indices, G.data,
@@ -220,6 +213,9 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
         if (seeds == last_seeds).all():
             break
+
+    if _it == maxiter:
+        warn('Lloyd clustering reached maxiter (did not converge)')
 
     return (distances, clusters, seeds)
 
@@ -258,14 +254,14 @@ def breadth_first_search(G, seed):
     >>> import pyamg
     >>> import scipy.sparse as sparse
     >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
-                          [4,6], [4,7], [6,7], [7,8], [8,9]])
+    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
     >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
     >>> c, l = pyamg.graph.breadth_first_search(A, 0)
     >>> print(l)
-    >>> print(c)
     [0 1 1 2 2 3 3 3 4 5]
+    >>> print(c)
     [0 1 2 3 4 5 6 7 8 9]
 
     """
@@ -307,13 +303,13 @@ def connected_components(G):
     Examples
     --------
     >>> from pyamg.graph import connected_components
-    >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,1],[0,1,0]] ))
     [0 0 0]
-    >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,0],[0,0,0]] ))
     [0 0 1]
-    >>> print connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,0,0],[0,0,0],[0,0,0]] ))
     [0 1 2]
-    >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    >>> print(connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] ))
     [0 0 1 1]
 
     """
@@ -354,27 +350,23 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
-    >>> import matplotlib.pyplot as plt
-    >>> plt.figure()
-    >>> plt.subplot(121)
-    >>> plt.spy(S,marker='.')
-    >>> plt.subplot(122)
-    >>> plt.spy(symmetric_rcm(S),marker='.')
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.figure()
+    >>> # plt.subplot(121)
+    >>> # plt.spy(S,marker='.')
+    >>> # plt.subplot(122)
+    >>> # plt.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------
     pseudo_peripheral_node
 
     """
-    n = A.shape[0]
+    dummy_root, order, dummy_level = pseudo_peripheral_node(A)
 
-    root, order, level = pseudo_peripheral_node(A)
+    p = order[::-1]
 
-    Perm = sparse.identity(n, format='csr')
-    p = level.argsort()
-    Perm = Perm[p, :]
-
-    return Perm * A * Perm.T
+    return A[p, :][:, p]
 
 
 def pseudo_peripheral_node(A):
@@ -399,7 +391,6 @@ def pseudo_peripheral_node(A):
     Algorithm in Saad
 
     """
-    from pyamg.graph import breadth_first_search
     n = A.shape[0]
 
     valence = np.diff(A.indptr)

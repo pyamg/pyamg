@@ -1,11 +1,10 @@
+"""bicgstab Krylov solver."""
+
 import warnings
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-import scipy.sparse as sparse
-from pyamg.util.linalg import norm
-
-
-__all__ = ['bicgstab']
+from scipy import sparse
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -55,21 +54,21 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.bicgstab import bicgstab
+    >>> from pyamg.krylov import bicgstab
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = bicgstab(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    4.68163045309
+    >>> print(f'{norm(b - A*x):.6}')
+    4.68163
 
     References
     ----------
@@ -184,36 +183,3 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if it == maxiter:
             return (postprocess(x), it)
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#    # %timeit -n 15 (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    from pyamg.gallery import stencil_grid
-#    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),
-#                     dtype=float,format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    import time
-#    from scipy.sparse.linalg.isolve import bicgstab as ibicgstab
-#
-#    print '\n\nTesting BiCGStab with %d x %d 2D Laplace Matrix' % \
-#           (A.shape[0],A.shape[0])
-#    t1=time.time()
-#    (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '%s took %0.3f ms' % ('bicgstab', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)
-#
-#    t1=time.time()
-#    (y,flag) = ibicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '\n%s took %0.3f ms' % ('linalg bicgstab', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*y))
-#    print 'info flag = %d'%(flag)

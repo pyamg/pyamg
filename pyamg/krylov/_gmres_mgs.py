@@ -1,14 +1,13 @@
+"""GMRES Gram-Schmidt-based implementation."""
+
 import warnings
 from warnings import warn
 
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
-from pyamg.util.linalg import norm
-
-
-__all__ = ['gmres_mgs']
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def apply_givens(Q, v, k):
@@ -77,7 +76,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial preconditioned residual
+        preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
@@ -97,7 +97,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -116,8 +116,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8, orthog='mgs')
-    >>> print norm(b - A*x)
-    >>> 6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -201,7 +201,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):
+    for _outer in range(max_outer):
 
         # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(n*max_inner).
@@ -292,7 +292,6 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
                     update = np.ravel(V[:inner+1, :].T.dot(y.reshape(-1, 1)))
                     callback(x + update)
 
-
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
@@ -327,40 +326,3 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # end outer loop
 
     return (postprocess(x), niter)
-
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4,4))
-    # A = A*A.transpose() + diag([10,10,10,10])
-    # b = random((4,1))
-    # x0 = random((4,1))
-    # %timeit -n 15 (x,flag) = gmres(A,b,x0,tol=1e-8,maxiter=100)
-
-    from pyamg.gallery import poisson
-    from numpy.random import random
-    from pyamg.util.linalg import norm
-    A = poisson((125, 125), dtype=float, format='csr')
-    # A.data = A.data + 0.001j*rand(A.data.shape[0])
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import gmres as igmres
-
-    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %
-          (A.shape[0], A.shape[0]))
-    t1 = time.time()
-    (x, flag) = gmres_mgs(A, b, x0, tol=1e-8, maxiter=500)
-    t2 = time.time()
-    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
-
-    t1 = time.time()
-    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-    (y, flag) = igmres(A, b, x0, tol=1e-8)
-    t2 = time.time()
-    print('\n{} took {:0.3f} ms'.format('linalg gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*y)))
-    print('info flag = %d' % (flag))

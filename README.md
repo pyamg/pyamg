@@ -1,5 +1,6 @@
 [![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
+[![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC)](https://codecov.io/gh/pyamg/pyamg)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
@@ -8,11 +9,13 @@ PyAMG requires `numpy` and `scipy`
 pip install pyamg
 ```
 
-or
+or from source:
 
 ```
-python setup.py install
+pip install .
 ```
+
+(`python setup.py install` will no longer work)
 
 or with conda (see details below)
 

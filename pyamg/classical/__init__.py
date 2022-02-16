@@ -1,8 +1,16 @@
-"""Classical AMG"""
+"""Classical AMG."""
 
-from .classical import *
-from .split import *
-from .interpolate import *
-from .cr import *
+from . import classical
+from . import split
+from . import interpolate
+from . import cr
 
-__all__ = [s for s in dir() if not s.startswith('_')]
+from .classical import ruge_stuben_solver
+
+__all__ = [
+    'classical',
+    'split',
+    'interpolate',
+    'cr',
+    'ruge_stuben_solver',
+]

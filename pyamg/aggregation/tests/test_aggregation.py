@@ -1,3 +1,4 @@
+"""Test smoothed aggregation solver."""
 import numpy as np
 import scipy.sparse as sparse
 import scipy.linalg as sla
@@ -129,7 +130,8 @@ class TestComplexParameters(TestCase):
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
-        for smooth in ['jacobi', 'richardson', ('energy', {'krylov': 'cgnr'}),
+        for smooth in ['jacobi', 'richardson',
+                       ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'}),
                        ('energy', {'krylov': 'gmres'})]:
             self.run_cases({'smooth': smooth})
 
@@ -183,7 +185,8 @@ class TestSolverPerformance(TestCase):
         self.cases.append((A, None, 0.42, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, None, 0.42, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
 
         A, B = linear_elasticity((50, 50), format='bsr')
         self.cases.append((A, B, 0.32, 'symmetric',
@@ -191,14 +194,13 @@ class TestSolverPerformance(TestCase):
         self.cases.append((A, B, 0.22, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, B, 0.42, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
         self.cases.append((A, B, 0.42, 'symmetric',
                            ('energy', {'krylov': 'gmres'})))
-        # TODO add unstructured tests
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
@@ -432,16 +434,22 @@ class TestSolverPerformance(TestCase):
         sa_old = smoothed_aggregation_solver(A, max_coarse=10)
         for AA in cases:
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(sa_old.levels[-1].A.toarray() - sa_new.levels[-1].A.toarray())).max() < 0.01)
+            Ac_old = sa_old.levels[-1].A.toarray()
+            Ac_new = sa_new.levels[-1].A.toarray()
+            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
             sa_old = sa_new
 
 
 class TestComplexSolverPerformance(TestCase):
-    ''' Imaginary tests from
-        'Algebraic Multigrid Solvers for Complex-Valued Matrices",
+    """Test imaginary examples.
+
+    Notes
+    -----
+    Examples from
+        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
-    '''
+    """
 
     def setUp(self):
         self.cases = []
@@ -460,7 +468,7 @@ class TestComplexSolverPerformance(TestCase):
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 1e-3, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr', 'weighting': 'diagonal'})))
 
         # Test 3
         A = poisson((60, 60), format='csr')
@@ -468,9 +476,11 @@ class TestComplexSolverPerformance(TestCase):
         self.cases.append((Ai, None, 0.3, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 0.6, 'symmetric',
-                           ('energy', {'krylov': 'cgnr', 'maxiter': 8})))
+                           ('energy', {'krylov': 'cgnr', 'maxiter': 8,
+                                       'weighting': 'diagonal'})))
         self.cases.append((Ai, None, 0.6, 'symmetric',
-                           ('energy', {'krylov': 'gmres', 'maxiter': 8})))
+                           ('energy', {'krylov': 'gmres', 'maxiter': 8,
+                                       'weighting': 'diagonal'})))
 
         # Test 4
         # Use an "inherently" imaginary problem, the Gauge Laplacian in 2D from
@@ -482,8 +492,7 @@ class TestComplexSolverPerformance(TestCase):
                            ('energy', {'krylov': 'cg'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             A = sparse.csr_matrix(A)
 
@@ -570,12 +579,10 @@ class TestComplexSolverPerformance(TestCase):
                                       nonsymm_lvl.A.toarray())
 
     def test_precision(self):
-        """
-        Check single precision.
+        """Check single precision.
 
         Test that x_32 == x_64 up to single precision tolerance
         """
-
         np.random.seed(3158637515)  # make tests repeatable
         A = poisson((10, 10), dtype=np.float64, format='csr')
         b = np.random.rand(A.shape[0]).astype(A.dtype)

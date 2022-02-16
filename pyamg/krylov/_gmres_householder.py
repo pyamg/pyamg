@@ -1,17 +1,17 @@
+"""GMRES Housholder-based implementations."""
 import warnings
 from warnings import warn
 
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
-from pyamg.util.linalg import norm
-from pyamg import amg_core
+from ..util.linalg import norm
+from ..util import make_system
+from .. import amg_core
 
-__all__ = ['gmres_householder']
 
-
-def mysign(x):
+def _mysign(x):
+    """Return complex sign of x."""
     if x == 0.0:
         return 1.0
     # return the complex "sign"
@@ -56,7 +56,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        preconditioned residual history in the 2-norm, including the initial preconditioned residual
+        preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
@@ -76,7 +77,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -95,8 +96,8 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10, 10))
     >>> b = np.ones((A.shape[0],))
     >>> (x, flag) = gmres(A, b, maxiter=2, tol=1e-8, orthog='householder')
-    >>> print norm(b - A @ x)
-    6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -170,13 +171,13 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):
+    for _outer in range(max_outer):
 
         # Calculate vector w, which defines the Householder reflector
         #    Take shortcut in calculating,
         #    w = r + sign(r[1])*||r||_2*e_1
         w = r
-        beta = mysign(w[0]) * normr
+        beta = _mysign(w[0]) * normr
         w[0] = w[0] + beta
         w[:] = w / norm(w)
 
@@ -235,7 +236,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
                 vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
-                    alpha = mysign(vslice[0]) * alpha
+                    alpha = _mysign(vslice[0]) * alpha
                     # do not need the final reflector for future calculations
                     if inner < (max_inner-1):
                         w[inner+1:] = vslice
@@ -346,39 +347,3 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     # end outer loop
 
     return (postprocess(x), niter)
-
-
-if __name__ == '__main__':
-    # from numpy import diag
-    # A = random((4, 4))
-    # A = A*A.transpose() + diag([10, 10, 10, 10])
-    # b = random((4, 1))
-    # x0 = random((4, 1))
-    # %timeit -n 15 (x, flag) = gmres(A, b, x0, tol=1e-8, maxiter=100)
-
-    from numpy.random import random
-    from pyamg.gallery import poisson
-    A = poisson((125, 125), dtype=float, format='csr')
-    # A.data = A.data + 0.001j*rand(A.data.shape[0])
-    b = random((A.shape[0],))
-    x0 = random((A.shape[0],))
-
-    import time
-    from scipy.sparse.linalg.isolve import gmres as igmres
-
-    print('\n\nTesting GMRES with %d x %d 2D Laplace Matrix' %
-          (A.shape[0], A.shape[0]))
-    t1 = time.time()
-    (x, flag) = gmres_householder(A, b, x0, tol=1e-8, maxiter=500)
-    t2 = time.time()
-    print('{} took {:0.3f} ms'.format('gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*x)))
-    print('info flag = %d' % (flag))
-
-    t1 = time.time()
-    # DON"T Enforce a maxiter as scipy gmres can't handle it correctly
-    (y, flag) = igmres(A, b, x0, tol=1e-8)
-    t2 = time.time()
-    print('\n{} took {:0.3f} ms'.format('linalg gmres', (t2-t1)*1000.0))
-    print('norm = %g' % (norm(b - A*y)))
-    print('info flag = %d' % (flag))

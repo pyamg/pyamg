@@ -2,12 +2,10 @@
 
 
 import numpy as np
-import scipy as sp
 from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
-from pyamg import smoothed_aggregation_solver
-from pyamg.util.linalg import ishermitian
 
-__all__ = ['solve', 'solver', 'solver_configuration']
+from .aggregation import smoothed_aggregation_solver
+from .util.linalg import ishermitian
 
 
 def make_csr(A):
@@ -39,9 +37,9 @@ def make_csr(A):
         try:
             A = csr_matrix(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
-        except BaseException:
-            raise TypeError('Argument A must have type csr_matrix or\
-                    bsr_matrix, or be convertible to csr_matrix')
+        except BaseException as e:
+            raise TypeError('Argument A must have type csr_matrix or '
+                            'bsr_matrix, or be convertible to csr_matrix') from e
 
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
@@ -94,11 +92,11 @@ def solver_configuration(A, B=None, verb=True):
     if ishermitian(A, fast_check=True):
         config['symmetry'] = 'hermitian'
         if verb:
-            print("  Detected a Hermitian matrix")
+            print('  Detected a Hermitian matrix')
     else:
         config['symmetry'] = 'nonsymmetric'
         if verb:
-            print("  Detected a non-Hermitian matrix")
+            print('  Detected a non-Hermitian matrix')
 
     # Symmetry dependent parameters
     if config['symmetry'] == 'hermitian':
@@ -125,15 +123,14 @@ def solver_configuration(A, B=None, verb=True):
                                           dtype=A.dtype), np.eye(bsize))
         else:
             config['B'] = np.ones((A.shape[0], 1), dtype=A.dtype)
-    elif (isinstance(B, type(np.zeros((1,)))) or
-            isinstance(B, type(sp.mat(np.zeros((1,)))))):
+    elif isinstance(B, np.ndarray):
         if len(B.shape) == 1:
             B = B.reshape(-1, 1)
+
         if (B.shape[0] != A.shape[0]) or (B.shape[1] == 0):
-            raise TypeError('Invalid dimensions of B, B.shape[0] must equal \
-                             A.shape[0]')
-        else:
-            config['B'] = np.array(B, dtype=A.dtype)
+            raise TypeError('Invalid dimensions of B, B.shape[0] must equal A.shape[0]')
+
+        config['B'] = np.array(B, dtype=A.dtype)
     else:
         raise TypeError('Invalid B')
 
@@ -204,8 +201,8 @@ def solver(A, config):
                                         presmoother=config['presmoother'],
                                         postsmoother=config['postsmoother'],
                                         keep=config['keep'])
-    except BaseException:
-        raise TypeError('Failed generating smoothed_aggregation_solver')
+    except BaseException as e:
+        raise TypeError('Failed generating smoothed_aggregation_solver') from e
 
 
 def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
@@ -246,7 +243,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     -------
     x : array
         Solution to Ax = b
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Optional return of the multilevel structure used for the solve
 
     Notes
@@ -266,7 +263,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     >>> A = poisson((40,40),format='csr')
     >>> b = np.array(np.arange(A.shape[0]), dtype=float)
     >>> x = solve(A,b,verb=False)
-    >>> print "%1.2e"%(norm(b - A*x)/norm(b))
+    >>> print(f'{norm(b - A*x)/norm(b):1.2e}')
     6.28e-06
 
     """
@@ -299,11 +296,11 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     # Callback function to print iteration number
     if verb:
         iteration = np.zeros((1,))
-        print("    maxiter = %d" % maxiter)
+        print(f'    maxiter = {maxiter}')
 
-        def callback(x, iteration):
+        def callback(_x, iteration):
             iteration[0] = iteration[0] + 1
-            print("    iteration %d" % iteration[0])
+            print(f'    iteration {iteration[0]}')
 
         def callback2(x):
             return callback(x, iteration)
@@ -320,12 +317,11 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         M = existing_solver.aspreconditioner()
         nr0 = np.sqrt(np.inner(np.conjugate(M * r0), r0))
         nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
-        print(f"  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}")
+        print(f'  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}')
         if np.abs(nr0) > 1e-15:
-            print("  Residual reduction ||r_k||_M/||r_0||_M = %1.2e"
-                  % (nrk / nr0))
+            ratio = nrk / nr0
+            print(f'  Residual reduction ||r_k||_M/||r_0||_M = {ratio:1.2e}')
 
     if return_solver:
         return (x.reshape(b.shape), existing_solver)
-    else:
-        return x.reshape(b.shape)
+    return x.reshape(b.shape)

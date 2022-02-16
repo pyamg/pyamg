@@ -2,11 +2,9 @@
 
 
 import numpy as np
-import scipy.sparse as sparse
-from pyamg import amg_core
-from pyamg.graph import lloyd_cluster
-
-__all__ = ['standard_aggregation', 'naive_aggregation', 'lloyd_aggregation', 'balanced_lloyd_aggregation']
+from scipy import sparse
+from .. import amg_core
+from ..graph import lloyd_cluster
 
 
 def standard_aggregation(C):
@@ -32,24 +30,24 @@ def standard_aggregation(C):
     >>> from pyamg.aggregation.aggregate import standard_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> standard_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
-    matrix([[1, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
+    array([[1, 0, 0],
+           [0, 1, 1],
+           [0, 1, 1]])
     >>> standard_aggregation(A)[0].toarray() # one aggregate
-    matrix([[0],
-            [1],
-            [1]], dtype=int8)
+    array([[0],
+           [1],
+           [1]], dtype=int8)
 
     See Also
     --------
@@ -73,25 +71,26 @@ def standard_aggregation(C):
     num_aggregates = fn(num_rows, C.indptr, C.indices, Tj, Cpts)
     Cpts = Cpts[:num_aggregates]
 
+    # no nodes aggregated
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
         return sparse.csr_matrix((num_rows, 1), dtype='int8'),\
             np.array([], dtype=index_type)
-    else:
 
-        shape = (num_rows, num_aggregates)
-        if Tj.min() == -1:
-            # some nodes not aggregated
-            mask = Tj != -1
-            row = np.arange(num_rows, dtype=index_type)[mask]
-            col = Tj[mask]
-            data = np.ones(len(col), dtype='int8')
-            return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
-        else:
-            # all nodes aggregated
-            Tp = np.arange(num_rows+1, dtype=index_type)
-            Tx = np.ones(len(Tj), dtype='int8')
-            return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+    shape = (num_rows, num_aggregates)
+
+    # some nodes not aggregated
+    if Tj.min() == -1:
+        mask = Tj != -1
+        row = np.arange(num_rows, dtype=index_type)[mask]
+        col = Tj[mask]
+        data = np.ones(len(col), dtype='int8')
+        return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
+
+    # all nodes aggregated
+    Tp = np.arange(num_rows+1, dtype=index_type)
+    Tx = np.ones(len(Tj), dtype='int8')
+    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def naive_aggregation(C):
@@ -117,24 +116,24 @@ def naive_aggregation(C):
     >>> from pyamg.aggregation.aggregate import naive_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> naive_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
-    matrix([[1, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
+    array([[1, 0, 0],
+           [0, 1, 1],
+           [0, 1, 1]])
     >>> naive_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
 
     See Also
     --------
@@ -169,12 +168,12 @@ def naive_aggregation(C):
     if num_aggregates == 0:
         # all zero matrix
         return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
-    else:
-        shape = (num_rows, num_aggregates)
-        # all nodes aggregated
-        Tp = np.arange(num_rows+1, dtype=index_type)
-        Tx = np.ones(len(Tj), dtype='int8')
-        return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+
+    shape = (num_rows, num_aggregates)
+    # all nodes aggregated
+    Tp = np.arange(num_rows+1, dtype=index_type)
+    Tx = np.ones(len(Tj), dtype='int8')
+    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
@@ -221,15 +220,15 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> lloyd_aggregation(A)[0].toarray() # one aggregate
-    matrix([[1],
-            [1],
-            [1],
-            [1]], dtype=int8)
+    array([[1],
+           [1],
+           [1],
+           [1]], dtype=int8)
     >>> # more seeding for two aggregates
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
@@ -251,18 +250,18 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     elif distance == 'min':
         data = C.data - C.data.min()
     else:
-        raise ValueError('unrecognized value distance=%s' % distance)
+        raise ValueError(f'Unrecognized value distance={distance}')
 
     if C.dtype == complex:
         data = np.real(data)
 
-    assert(data.min() >= 0)
+    assert data.min() >= 0
 
     G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
 
     num_seeds = int(min(max(ratio * G.shape[0], 1), G.shape[0]))
 
-    distances, clusters, seeds = lloyd_cluster(G, num_seeds, maxiter=maxiter)
+    _, clusters, seeds = lloyd_cluster(G, num_seeds, maxiter=maxiter)
 
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
@@ -307,7 +306,6 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 
     """
-
     if num_clusters is None:
         num_clusters = int(C.shape[0] / 10)
 

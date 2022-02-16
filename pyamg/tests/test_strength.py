@@ -1,5 +1,8 @@
+"""Test strength of connection."""
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
+    assert_array_equal
+from scipy import sparse
 import scipy.linalg as sla
 
 from pyamg.gallery import poisson, linear_elasticity, load_example,\
@@ -9,10 +12,8 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
-from pyamg.util.utils import scale_rows, set_tol
-
-from numpy.testing import TestCase, assert_equal, assert_array_almost_equal,\
-    assert_array_equal
+from pyamg.util.utils import scale_rows
+from pyamg.util.params import set_tol
 
 classical_soc = classical_strength_of_connection
 symmetric_soc = symmetric_strength_of_connection
@@ -299,7 +300,7 @@ class TestStrengthOfConnection(TestCase):
         (A, B) = linear_elasticity((5, 5), format='bsr')
         np.random.seed(4055795935)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0,
-                                        k=2, proj_type="D_A",
+                                        k=2, proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
         D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
@@ -309,7 +310,7 @@ class TestStrengthOfConnection(TestCase):
         np.random.seed(3969802542)  # make results deterministic
         result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)),
                                       Dinv*B, epsilon=4.0, k=2,
-                                      proj_type="D_A",
+                                      proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
                                   result_unscaled.toarray(), decimal=2)
@@ -401,7 +402,7 @@ class TestComplexStrengthOfConnection(TestCase):
         B = 1.0j*np.arange(1, A.shape[0]+1, dtype=float).reshape(-1, 1)
         np.random.seed(1335104015)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
-                                        proj_type="D_A",
+                                        proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
         D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
@@ -410,7 +411,7 @@ class TestComplexStrengthOfConnection(TestCase):
                               [0], A.shape[0], A.shape[0], format='csr')
         np.random.seed(743434914)  # make results deterministic
         result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2,
-                                      proj_type="D_A",
+                                      proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
                                   result_unscaled.toarray(), decimal=2)
@@ -418,11 +419,11 @@ class TestComplexStrengthOfConnection(TestCase):
         # Test that the l2 and D_A are the same for the 1 candidate case
         np.random.seed(2417151167)  # make results deterministic
         resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
-                                 k=2, proj_type="D_A",
+                                 k=2, proj_type='D_A',
                                  symmetrize_measure=False)
         np.random.seed(2866319482)  # make results deterministic
         resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
-                                 k=2, proj_type="l2",
+                                 k=2, proj_type='l2',
                                  symmetrize_measure=False)
         assert_array_almost_equal(resultDA.toarray(), resultl2.toarray())
 
@@ -432,7 +433,7 @@ class TestComplexStrengthOfConnection(TestCase):
         B = 1.0j*B
         np.random.seed(3756761764)  # make results deterministic
         result_unscaled = evolution_soc(A, B, epsilon=4.0, k=2,
-                                        proj_type="D_A",
+                                        proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
         D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
@@ -441,7 +442,7 @@ class TestComplexStrengthOfConnection(TestCase):
                               [0], A.shape[0], A.shape[0], format='csr')
         np.random.seed(1944403548)  # make results deterministic
         result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B,
-                                      epsilon=4.0, k=2, proj_type="D_A",
+                                      epsilon=4.0, k=2, proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
                                   result_unscaled.toarray(), decimal=2)
@@ -449,7 +450,8 @@ class TestComplexStrengthOfConnection(TestCase):
 
 # reference implementations for unittests  #
 def reference_classical_soc(A, theta, norm='abs'):
-    """
+    """Construct reference implementation of classical SOC.
+
     This complex extension of the classic Ruge-Stuben
     strength-of-connection has some theoretical justification in
     "AMG Solvers for Complex-Valued Matrices", Scott MacClachlan,
@@ -487,7 +489,7 @@ def reference_classical_soc(A, theta, norm='abs'):
     S.data = S.data[mask]
 
     # Add back diagonal
-    D = sparse.eye(S.shape[0], S.shape[0], format="csr", dtype=A.dtype)
+    D = sparse.eye(S.shape[0], S.shape[0], format='csr', dtype=A.dtype)
     D.data[:] = sparse.csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
@@ -535,7 +537,7 @@ def reference_symmetric_soc(A, theta):
     S.data = S.data[mask]
 
     # Add back diagonal
-    D = sparse.eye(S.shape[0], S.shape[0], format="csr", dtype=A.dtype)
+    D = sparse.eye(S.shape[0], S.shape[0], format='csr', dtype=A.dtype)
     D.data[:] = sparse.csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
@@ -558,16 +560,13 @@ def reference_symmetric_soc(A, theta):
     return S
 
 
-def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
-    """
-    All python reference implementation for Evolution Strength of Connection
+def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
+    """All python reference implementation for Evolution Strength of Connection.
 
-    --> If doing imaginary test, both A and B should be imaginary type upon
-    entry
+    --> If doing imaginary test, both A and B should be imaginary type upon entry
 
     --> This does the "unsymmetrized" version of the ode measure
     """
-
     # number of PDEs per point is defined implicitly by block size
     csrflag = sparse.isspmatrix_csr(A)
     if csrflag:
@@ -595,10 +594,10 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
     # Calculate (Atilde^k) naively
-    S = (sparse.eye(dimen, dimen, format="csr") - (1.0/rho_DinvA)*Dinv_A)
-    Atilde = sparse.eye(dimen, dimen, format="csr")
-    for i in range(k):
-        Atilde = S*Atilde
+    S = (sparse.eye(dimen, dimen, format='csr') - (1.0/rho_DinvA)*Dinv_A)
+    Atilde = sparse.eye(dimen, dimen, format='csr')
+    for _i in range(k):
+        Atilde = S * Atilde
 
     # Strength Info should be row-based, so transpose Atilde
     Atilde = Atilde.T.tocsr()
@@ -644,7 +643,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
         # Local diagonal of A is used for scale invariant min problem
         D_A = np.eye(length, dtype=A.dtype)
-        if proj_type == "D_A":
+        if proj_type == 'D_A':
             for j in range(length):
                 D_A[j, j] = D[colindx[j]]
 
@@ -663,7 +662,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
             Bi = Bmat[colindx, :]
 
             # Construct constrained min problem
-            CC = D_A[iInRow, iInRow]
+            # CC = D_A[iInRow, iInRow]
             LHS[0:NullDim, 0:NullDim] = 2.0*Bi.conj().T.dot(D_A.dot(Bi))
             LHS[0:NullDim, NullDim] = D_A[iInRow, iInRow]*(Bi[iInRow, :].conj().T)
             LHS[NullDim, 0:NullDim] = Bi[iInRow, :]
@@ -717,7 +716,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
     Atilde.data = np.array(np.real(Atilde.data), dtype=float)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    Id = sparse.eye(dimen, dimen, format="csr")
+    Id = sparse.eye(dimen, dimen, format='csr')
     Id.data -= Atilde.diagonal()
     Atilde = Atilde + Id
 
@@ -757,10 +756,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type="l2"):
 
 
 def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
-    '''
-    Reference routine for distance based strength of connection
-    '''
-
+    """Construct reference distance based strength of connection."""
     # deal with the supernode case
     if sparse.isspmatrix_bsr(A):
         dimen = int(A.shape[0]/A.blocksize[0])

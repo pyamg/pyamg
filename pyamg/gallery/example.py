@@ -1,12 +1,9 @@
 """Examples stored in files."""
 
-
 import os
 from glob import glob
 
 from scipy.io import loadmat
-
-__all__ = ['load_example']
 
 base_dir = os.path.split(__file__)[0]
 example_dir = os.path.join(base_dir, 'example_data')
@@ -39,10 +36,9 @@ def load_example(name):
 
     """
     if name not in example_names:
-        raise ValueError('no example with name (%s)' % name)
-    else:
-        return loadmat(os.path.join(example_dir, name + '.mat'),
-                       struct_as_record=True)
+        raise ValueError(f'No example with name {name}')
+
+    return loadmat(os.path.join(example_dir, name + '.mat'), struct_as_record=True)
 
 
 # insert the example names into the docstring

@@ -1,17 +1,17 @@
+"""Flexible Generalized Minimum Residual Method (fGMRES) Krylov solver."""
+
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_lapack_funcs
 import scipy as sp
-from pyamg.util.linalg import norm
-from pyamg import amg_core
+from ..util.linalg import norm
+from ..util import make_system
+from .. import amg_core
 
 
-__all__ = ['fgmres']
-
-
-def mysign(x):
+def _mysign(x):
+    """Return complex sign of x."""
     if x == 0.0:
         return 1.0
     # return the complex "sign"
@@ -64,7 +64,7 @@ def fgmres(A, b, x0=None, tol=1e-5,
 
     Returns
     -------
-    (xk, info)
+    xk, info
     xk : an updated guess after k iterations to the solution of Ax = b
     info : halting status
 
@@ -77,7 +77,7 @@ def fgmres(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -91,15 +91,15 @@ def fgmres(A, b, x0=None, tol=1e-5,
 
     Examples
     --------
-    >>> from pyamg.krylov.fgmres import fgmres
+    >>> from pyamg.krylov import fgmres
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = fgmres(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -167,13 +167,13 @@ def fgmres(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin fGMRES
-    for outer in range(max_outer):
+    for _outer in range(max_outer):
 
         # Calculate vector w, which defines the Householder reflector
         #    Take shortcut in calculating,
         #    w = r + sign(r[1])*||r||_2*e_1
         w = r
-        beta = mysign(w[0]) * normr
+        beta = _mysign(w[0]) * normr
         w[0] += beta
         w /= norm(w)
 
@@ -235,7 +235,7 @@ def fgmres(A, b, x0=None, tol=1e-5,
                 vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
-                    alpha = mysign(vslice[0]) * alpha
+                    alpha = _mysign(vslice[0]) * alpha
                     # do not need the final reflector for future calculations
                     if inner < (max_inner-1):
                         w[inner+1:] = vslice

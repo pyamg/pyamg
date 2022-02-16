@@ -1,12 +1,11 @@
+"""Steepest Descent projection method."""
+
 import warnings
 from warnings import warn
 import numpy as np
-import scipy.sparse as sparse
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
-
-
-__all__ = ['steepest_descent']
+from scipy import sparse
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -58,7 +57,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -75,8 +74,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = steepest_descent(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
-    7.89436429704
+    >>> print(f'{norm(b - A*x):.6}')
+    7.89436
 
     References
     ----------
@@ -141,8 +140,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         q = A @ z
         zAz = np.inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
-            warn("\nIndefinite matrix detected in steepest descent,\
-                  aborting\n")
+            warn('\nIndefinite matrix detected in steepest descent, aborting\n')
             return (postprocess(x), -1)
 
         alpha = rz / zAz                            # step size
@@ -158,7 +156,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                                # check curvature of M
-            warn("\nIndefinite preconditioner detected in steepest descent, stopping.\n")
+            warn('\nIndefinite preconditioner detected in steepest descent, stopping.\n')
             return (postprocess(x), -1)
 
         normr = norm(r)
@@ -187,40 +185,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         if rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in steepest descent, stopping.\n")
+            warn('\nSingular preconditioner detected in steepest descent, stopping.\n')
             return (postprocess(x), -1)
 
         if it == maxiter:
             return (postprocess(x), it)
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#
-#    from pyamg.gallery import stencil_grid
-#    from pyamg import smoothed_aggregation_solver
-#    from numpy.random import random
-#    from numpy import ravel, inner
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),dtype=float,
-#    format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    fvals = []
-#    def callback(x):
-#        x = ravel(x)
-#        fvals.append( 0.5*inner(x, A*x) - inner(ravel(b),x) )
-#
-#    print '\n\nTesting steepest descent with %d x %d 2D Laplace Matrix'%\
-#    (A.shape[0],A.shape[0])
-#    resvec = []
-#    sa = smoothed_aggregation_solver(A)
-#    (x,flag) = steepest_descent(A,b,x0,tol=1e-8,maxiter=20,residuals=resvec,
-#    M=sa.aspreconditioner(), callback=callback)
-#    print 'Funcation values:  ' + str(fvals)
-#    print 'initial norm = %g'%(norm(b - A*x0))
-#    print 'final norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)

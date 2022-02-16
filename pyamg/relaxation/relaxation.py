@@ -5,15 +5,12 @@ from warnings import warn
 
 import numpy as np
 from scipy import sparse
-
-from pyamg.util.utils import type_prep, get_diagonal, get_block_diag, set_tol
-from pyamg import amg_core
 from scipy.linalg import lapack as la
 
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial',
-           'schwarz', 'schwarz_parameters',
-           'jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr',
-           'gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel']
+from ..util.utils import type_prep, get_diagonal, get_block_diag
+from ..util.params import set_tol
+from ..util.linalg import norm
+from .. import amg_core
 
 
 def make_system(A, x, b, formats=None):
@@ -51,11 +48,11 @@ def make_system(A, x, b, formats=None):
     >>> x = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
-    >>> print str(x.shape)
+    >>> print(x.shape)
     (100,)
-    >>> print str(b.shape)
+    >>> print(b.shape)
     (100,)
-    >>> print A.format
+    >>> print(A.format)
     csc
 
     """
@@ -139,8 +136,8 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print norm(b-A*x0)
-    3.03888724811
+    >>> print(f'{norm(b-A*x0):2.4}')
+    3.039
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -157,7 +154,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     x_old = np.empty_like(x)
 
-    for i in range(iterations):
+    for _i in range(iterations):
         x_old[:] = x
 
         gauss_seidel(A, x, b, iterations=1, sweep=sweep)
@@ -224,8 +221,8 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    0.126326160522
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.1263
     >>> #
     >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -242,7 +239,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     A.sort_indices()
 
     if subdomain is None and inv_subblock is not None:
-        raise ValueError("inv_subblock must be None if subdomain is None")
+        raise ValueError('inv_subblock must be None if subdomain is None')
 
     # If no subdomains are defined, default is to use the sparsity pattern of A
     # to define the overlapping regions
@@ -250,12 +247,15 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         schwarz_parameters(A, subdomain, subdomain_ptr,
                            inv_subblock, inv_subblock_ptr)
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, subdomain_ptr.shape[0]-1, 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = subdomain_ptr.shape[0]-2, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             schwarz(A, x, b, iterations=1, subdomain=subdomain,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='forward')
@@ -263,12 +263,9 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     # Call C code, need to make sure that subdomains are sorted and unique
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
                                          x, b, inv_subblock, inv_subblock_ptr,
                                          subdomain, subdomain_ptr,
@@ -307,8 +304,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    4.00733716236
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.007
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -331,25 +328,25 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             raise ValueError('BSR blocks must be square')
         blocksize = R
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
     else:
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
 
@@ -377,7 +374,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     Examples
     --------
     >>> # Use Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation.relaxation.relaxation import jacobi
+    >>> from pyamg.relaxation.relaxation import jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
@@ -385,8 +382,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    5.83475132751
+    >>> print(f'{norm(b-A*x0):2.4}')
+    5.835
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -413,7 +410,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
                             row_start, row_stop, row_step, omega)
     else:
@@ -422,7 +419,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
             raise ValueError('BSR blocks must be square')
         row_start = int(row_start / R)
         row_stop = int(row_stop / R)
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
                                 x, b, temp, row_start, row_stop,
                                 row_step, R, omega)
@@ -464,8 +461,8 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    4.66474230129
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.665
     >>> #
     >>> # Use block Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -500,7 +497,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.block_jacobi(A.indptr, A.indices, np.ravel(A.data),
                               x, b, np.ravel(Dinv), temp,
                               row_start, row_stop, row_step,
@@ -544,10 +541,9 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> A = poisson((10,10), format='csr')
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
-    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4,
-                           sweep='symmetric')
-    >>> print norm(b-A*x0)
-    0.958333817624
+    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.9583
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -571,22 +567,22 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             block_gauss_seidel(A, x, b, iterations=1, sweep='forward',
                                blocksize=blocksize, Dinv=Dinv)
             block_gauss_seidel(A, x, b, iterations=1, sweep='backward',
                                blocksize=blocksize, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                     x, b, np.ravel(Dinv),
                                     row_start, row_stop, row_step, blocksize)
@@ -654,8 +650,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     """
     A, x, b = make_system(A, x, b, formats=None)
 
-    for i in range(iterations):
-        from pyamg.util.linalg import norm
+    for _i in range(iterations):
 
         if norm(x) == 0:
             residual = b
@@ -722,22 +717,22 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     # if indices.max() >= A.shape[0]
     #     raise ValueError('row index (%d) is invalid' % indices.max())
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(indices), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = len(indices)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='forward')
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
                                       x, b, indices,
                                       row_start, row_stop, row_step)
@@ -789,8 +784,8 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print norm(b-A*x0)
-    49.3886046066
+    >>> print(f'{norm(b-A*x0):2.4}')
+    49.39
     >>> #
     >>> # Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -817,7 +812,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    for i in range(iterations):
+    for _i in range(iterations):
         delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
         amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                            x, b, delta, temp, row_start,
@@ -873,8 +868,8 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.47576806771
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.476
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -893,22 +888,22 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(x), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = len(x)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_ne(A, x, b, iterations=1, sweep='forward',
                             omega=omega, Dinv=Dinv)
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for i in range(iterations):
+    for _i in range(iterations):
         amg_core.gauss_seidel_ne(A.indptr, A.indices, A.data,
                                  x, b, row_start,
                                  row_stop, row_step, Dinv, omega)
@@ -958,8 +953,8 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.45044864352
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.45
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -978,25 +973,25 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=1, inv=True))
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         col_start, col_stop, col_step = 0, len(x), 1
     elif sweep == 'backward':
         col_start, col_stop, col_step = len(x)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_nr(A, x, b, iterations=1, sweep='forward',
                             omega=omega, Dinv=Dinv)
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     # Calculate initial residual
     r = b - A*x
 
-    for i in range(iterations):
+    for _i in range(iterations):
         amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,
                                  x, r, col_start,
                                  col_stop, col_step, Dinv, omega)
@@ -1081,6 +1076,3 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     A.schwarz_parameters = (subdomain, subdomain_ptr, inv_subblock,
                             inv_subblock_ptr)
     return A.schwarz_parameters
-
-# from pyamg.utils import dispatcher
-# dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )

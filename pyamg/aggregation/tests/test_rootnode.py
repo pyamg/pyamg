@@ -1,3 +1,4 @@
+"""Test rootnode solver."""
 import numpy as np
 import scipy.sparse as sparse
 import scipy.linalg as sla
@@ -128,7 +129,8 @@ class TestComplexParameters(TestCase):
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
-        for smooth in [('energy', {'krylov': 'cgnr'}),
+        for smooth in [('energy', {'krylov': 'cgnr',
+                                   'weighting': 'diagonal'}),
                        ('energy', {'krylov': 'gmres'})]:
             self.run_cases({'smooth': smooth})
 
@@ -178,20 +180,21 @@ class TestSolverPerformance(TestCase):
         self.cases.append((A, None, 0.26, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, None, 0.30, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
 
         A, B = linear_elasticity((50, 50), format='bsr')
         self.cases.append((A, B, 0.3, 'symmetric',
                            ('energy', {'krylov': 'cg'})))
         self.cases.append((A, B, 0.3, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
         self.cases.append((A, B, 0.3, 'symmetric',
                            ('energy', {'krylov': 'gmres'})))
         # TODO add unstructured tests
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth,
                                  max_coarse=10)
@@ -421,11 +424,15 @@ class TestSolverPerformance(TestCase):
 
 
 class TestComplexSolverPerformance(TestCase):
-    ''' Imaginary tests from
-        'Algebraic Multigrid Solvers for Complex-Valued Matrices",
+    """Test complex examples.
+
+    Notes
+    -----
+    Examples are from
+        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
-    '''
+    """
 
     def setUp(self):
         self.cases = []
@@ -441,13 +448,15 @@ class TestComplexSolverPerformance(TestCase):
         Ai = A + (0.625 / 0.01) * 1.0j *\
             sparse.eye(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
-                           ('energy', {'krylov': 'cgnr'})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal'})))
 
         # Test 3
         A = poisson((60, 60), format='csr')
         Ai = 1.0j * A
         self.cases.append((Ai, None, 0.35, 'symmetric',
-                           ('energy', {'krylov': 'cgnr', 'maxiter': 8})))
+                           ('energy', {'krylov': 'cgnr',
+                                       'weighting': 'diagonal', 'maxiter': 8})))
         self.cases.append((Ai, None, 0.35, 'symmetric',
                            ('energy', {'krylov': 'gmres', 'maxiter': 8})))
 
@@ -458,8 +467,7 @@ class TestComplexSolverPerformance(TestCase):
                            ('energy', {'krylov': 'cg'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             A = sparse.csr_matrix(A)
 
@@ -491,8 +499,7 @@ class TestComplexSolverPerformance(TestCase):
         B = data['B']
         np.random.seed(625)
         x0 = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-        b = (A * np.random.rand(A.shape[0])
-             + 1.0j * (A * np.random.rand(A.shape[0])))
+        b = A @ np.random.rand(A.shape[0]) + 1.0j * (A @ np.random.rand(A.shape[0]))
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',
