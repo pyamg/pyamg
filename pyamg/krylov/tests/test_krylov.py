@@ -255,9 +255,10 @@ class TestKrylov(TestCase):
 np.random.seed(751537155)
 A = pyamg.gallery.poisson((10,), format='csr')
 b = np.random.rand(A.shape[0])
+
+
 @pytest.mark.parametrize('method', [fgmres, gmres_mgs, gmres_householder, gmres,
-                                    bicgstab, cg, cgne, cgnr, cr,
-                                   ])
+                                    bicgstab, cg, cgne, cgnr, cr])
 def test_defaults(method):
     x, info = method(A, b)
     assert info == 0
