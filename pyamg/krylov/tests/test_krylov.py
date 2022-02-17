@@ -11,6 +11,8 @@ from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres, steepest_d
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
 
+import pytest
+
 
 class TestStoppingCriteria(TestCase):
     def setUp(self):
@@ -248,3 +250,15 @@ class TestKrylov(TestCase):
                 xNew = xNew.reshape(-1, 1)
                 assert_equal((norm(b - A.dot(xNew)) / norm(b - A.dot(x0))) < 0.35,
                              True, err_msg='Inexact Krylov Method Failed Test')
+
+
+np.random.seed(751537155)
+A = pyamg.gallery.poisson((10,), format='csr')
+b = np.random.rand(A.shape[0])
+@pytest.mark.parametrize('method', [fgmres, gmres_mgs, gmres_householder, gmres,
+                                    bicgstab, cg, cgne, cgnr, cr, steepest_descent,
+                                   ])
+def test_defaults(method):
+    x, info = method(A, b)
+    assert info == 0
+    assert np.linalg.norm(b - A @ x) < np.linalg.norm(b)
