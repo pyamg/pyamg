@@ -1,10 +1,8 @@
 """Test fem."""
-import pytest
-import numpy as np
-from pyamg.gallery import fem, regular_triangle_mesh
-import scipy.sparse.linalg as sla
-
 import os
+import numpy as np
+import scipy.sparse.linalg as sla
+from pyamg.gallery import fem, regular_triangle_mesh
 
 test_dir = os.path.split(__file__)[0]
 base_dir = os.path.split(test_dir)[0]
@@ -252,7 +250,8 @@ class TestGradGradFEM(np.testing.TestCase):
 
 
 def test_gradgrad_kappa():
-    """
+    """Test sympy example.
+
     This test is generated from:
     from sympy import pi, symbols, diff, Matrix, sin, cos
     x, y = symbols("x,y")
@@ -271,7 +270,6 @@ def test_gradgrad_kappa():
     + 4*pi**2*(2*x**2 + 1)*sin(2*pi*x)*sin(2*pi*y)
     + 4*pi**2*(3*x**2*y + 2)*sin(2*pi*x)*sin(2*pi*y)
     """
-
     V, E = regular_triangle_mesh(40, 40)
     mesh = fem.Mesh(V, E)
     A, b = fem.gradgradform(mesh)
@@ -296,7 +294,6 @@ def test_gradgrad_kappa():
     def uexact(x, y):
         pi = np.pi
         sin = np.sin
-        cos = np.cos
         return sin(2 * pi * x) * sin(2 * pi * y)
 
     tol = 1e-12
