@@ -134,11 +134,11 @@ def fgmres(A, b, x0=None, tol=1e-5,
         max_inner = restrt
     else:
         max_outer = 1
-        if maxiter > n:
+        if maxiter is None:
+            maxiter = min(n, 40)
+        elif maxiter > n:
             warn('Setting maxiter to maximum allowed, n.')
             maxiter = n
-        elif maxiter is None:
-            maxiter = min(n, 40)
         max_inner = maxiter
 
     # Is this a one dimensional matrix?
