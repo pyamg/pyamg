@@ -3,7 +3,7 @@
 from warnings import warn
 import numpy as np
 from scipy import sparse
-# from icecream import ic
+from icecream import ic
 
 from . import amg_core
 
@@ -238,6 +238,8 @@ def lloyd_cluster(G, centers, maxiter=5):
     changed = True
     it = 0
 
+    _dist, _near, _pred =  bellman_ford(G, centers, method='standard')
+
     while changed and it < maxiter:
         if it > 0:
             distances.fill(np.inf)
@@ -350,14 +352,15 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
 
             centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
 
-        # reinitialize
-        d.fill(np.inf)
-        m.fill(-1)
-        p.fill(-1)
-        pc.fill(0)
-        s.fill(1)
-        d[centers] = 0
-        m[centers] = np.arange(num_clusters)
+        if (changed1 or changed2) and (it < maxiter):
+            # reinitialize
+            d.fill(np.inf)
+            m.fill(-1)
+            p.fill(-1)
+            pc.fill(0)
+            s.fill(1)
+            d[centers] = 0
+            m[centers] = np.arange(num_clusters)
 
         # lloyd cluster balanced
         while (changed1 or changed2) and (it < maxiter):
