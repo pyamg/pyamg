@@ -439,16 +439,25 @@ Compute a maximal independent set for a graph stored in CSR format
  using a greedy serial algorithm
 
  Parameters
-     num_rows   - number of rows in A (number of vertices)
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     active     - value used for active vertices        (input)
-      C         - value used to mark non-MIS vertices   (output)
-      F         - value used to mark MIS vertices       (output)
-     x[]        - state of each vertex
+ ----------
+ num_rows : int
+   Number of rows in A (number of vertices)
+ Ap : array
+   CSR row pointer
+ Aj : array
+   CSR index array
+ active : float-like
+   Value used for active vertices
+  C : float-like
+   Value used to mark non-MIS vertices
+  F : float-like
+   Value used to mark MIS vertices
+  x : array, inplace output
+   State of each vertex
 
-
- Returns:
+ Returns
+ --------
+ N : int
      The number of nodes in the MIS.
 
  Notes:
@@ -619,6 +628,7 @@ Apply one iteration of Bellman-Ford iteration on a distance
 graph stored in CSR format.
 
  Parameters
+ ----------
      num_nodes - (IN)    number of nodes (number of rows in A)
      Ap[]      - (IN)    CSR row pointer
      Aj[]      - (IN)    CSR index array
@@ -626,7 +636,8 @@ graph stored in CSR format.
      d[]       - (INOUT) distance to nearest center
     cm[]       - (INOUT) cluster index for each node
 
- References:
+ References
+ ----------
      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,

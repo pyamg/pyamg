@@ -21,4 +21,5 @@ MANIFEST
 build/
 dist/
 var/
+generated/
 pyamg.egg-info/

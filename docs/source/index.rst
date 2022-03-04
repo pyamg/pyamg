@@ -13,4 +13,3 @@ Reference
     :maxdepth: 4
 
     ref
-    pyamg
