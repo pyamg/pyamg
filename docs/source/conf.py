@@ -28,7 +28,7 @@ version = pyamg.__version__
 release = version
 
 language = None
-exclude_patterns = ['README.md','bindthem.py']
+exclude_patterns = ['README.md']
 
 pygments_style = 'sphinx'
 
