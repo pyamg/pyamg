@@ -577,8 +577,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         - modepy is used to generate the quadrature points
           q = modepy.XiaoGimbutasSimplexQuadrature(4,2)
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from pyamg.gallery import fem
     >>> import scipy.sparse.linalg as sla
@@ -964,8 +964,8 @@ def model(num=0):
     num : int or string
         A tag for a particular problem.  See the notes below.
 
-    Return
-    ------
+    Returns
+    -------
     A
     b
     V
