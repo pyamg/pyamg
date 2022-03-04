@@ -13,7 +13,7 @@ Functions
     - cg
     - bicgstab
     - steepest descent, (simple iteration)
-    - minimial residual (MR), (simple iteration)
+    - minimal residual (MR), (simple iteration)
 
 
 References

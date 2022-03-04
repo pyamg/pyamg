@@ -57,7 +57,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         initial guess, default is a vector of zeros
     tol : float
         Tolerance for stopping criteria, let r=r_k
-           ||M r||     < tol ||M b||
+        ||M r|| < tol ||M b||
         if ||b||=0, then set ||M b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations

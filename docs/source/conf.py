@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-#
+"""Sphinx configuration."""
 import os
 import sys
+import pyamg
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
@@ -9,10 +10,16 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.autosummary',
               'sphinx.ext.mathjax',
+              'sphinx_automodapi.automodapi',
               'm2r2',
               'numpydoc']
 
-autodoc_default_flags = ['members', 'undoc-members', 'special-members', 'private-members']
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'special-members': True,
+    'private-members': True,
+}
 autosummary_generate = True
 
 templates_path = ['_templates']
@@ -20,10 +27,9 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 project = 'PyAMG'
-copyright = '2022, Luke Olson'
+copyright = '2022, Luke Olson'  # pylint: disable=redefined-builtin
 author = '2022, Luke Olson and Jacob Schroder'
 
-import pyamg
 version = pyamg.__version__
 release = version
 
@@ -66,12 +72,16 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-def autodoc_skip_member(app, what, name, obj, skip, options):
+
+def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
+    """Set skip member."""
     exclusions = ('__weakref__',  # special-members
                   '__doc__', '__module__', '__dict__',  # undoc-members
                   )
     exclude = name in exclusions
     return skip or exclude
 
+
 def setup(app):
+    """Define setup."""
     app.connect('autodoc-skip-member', autodoc_skip_member)

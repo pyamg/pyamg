@@ -5,3 +5,4 @@ scipy
 pytest
 pybind11
 pydata-sphinx-theme
+sphinx-automodapi
