@@ -20,8 +20,8 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 project = 'PyAMG'
-copyright = '2018, Luke Olson'
-author = '2018, Luke Olson and Jacob Schroder'
+copyright = '2022, Luke Olson'
+author = '2022, Luke Olson and Jacob Schroder'
 
 import pyamg
 version = pyamg.__version__
@@ -37,9 +37,8 @@ todo_include_todos = False
 # for debugging
 # keep_warnings=True
 
-#html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
-html_logo = '../logo/versions/logo_dropshadow_small.png'
+html_theme = 'pydata_sphinx_theme'
+html_logo = '../logo/pyamg_logo.png'
 html_static_path = ['_static']
 
 htmlhelp_basename = 'PyAMGdoc'
@@ -52,7 +51,7 @@ latex_elements = {
 }
 
 latex_documents = [
-    (master_doc, 'PyAMG.tex', 'PyAMG Documentation',
+    (master_doc, 'pyamg.tex', 'PyAMG Documentation',
      'Luke Olson', 'manual'),
 ]
 

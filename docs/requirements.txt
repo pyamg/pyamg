@@ -4,3 +4,4 @@ numpy
 scipy
 pytest
 pybind11
+pydata-sphinx-theme
