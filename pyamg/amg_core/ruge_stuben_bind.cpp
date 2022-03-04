@@ -463,8 +463,8 @@ R"pbdoc(
 Helper function for compatible relaxation to perform steps 3.1d - 3.1f
 in Falgout / Brannick (2010).
 
-Input:
-------
+Input
+-----
 A_rowptr : const {int array}
      Row pointer for sparse matrix in CSR format.
 A_colinds : const {int array}
@@ -484,8 +484,8 @@ gamma : {float array}
 thetacs : const {float}
      Threshold for coarse grid candidates from set measure.
 
-Returns:
---------
+Returns
+-------
 Nothing, updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
 }

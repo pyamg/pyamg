@@ -151,8 +151,8 @@ TransA : char
      'T' or 'F'.  Decides whether to transpose each nxn block
      of A before inverting.  If using Python array, should be 'T'.
 
-Return
-------
+Returns
+-------
 AA : {array}
      AA is modified in place with the pseduoinverse replacing each
      block of AA.  AA is returned in row-major form for Python
