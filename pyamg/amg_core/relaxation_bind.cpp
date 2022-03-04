@@ -855,22 +855,32 @@ Perform one iteration of block Jacobi relaxation on the linear
  row_start, row_stop, and row_step.
 
  Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array, blocks assumed square
-     x[]        - approximate solution
-     b[]        - right hand side
-     Tx[]       - Inverse of each diagonal block of A stored
-                  as a (n/blocksize, blocksize, blocksize) array
-     temp[]     - temporary vector the same size as x
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     omega      - damping parameter
-     blocksize  - dimension of sqare blocks in BSR matrix A
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+ ----------
+ Ap : array
+     BSR row pointer
+ Aj : array
+     BSR index array
+ Ax : array
+     BSR data array, blocks assumed square
+ x : array, inplace
+     approximate solution
+ b : array
+     right hand side
+ Tx : array
+     Inverse of each diagonal block of A stored
+              as a (n/blocksize, blocksize, blocksize) array
+ temp : array
+     temporary vector the same size as x
+ row_start : int
+     beginning of the sweep
+ row_stop : int
+     end of the sweep (i.e. one past the last unknown)
+ row_step : int
+     stride used during the sweep (may be negative)
+ omega : float
+     damping parameter
+ blocksize int
+     dimension of sqare blocks in BSR matrix A)pbdoc");
 
     m.def("block_gauss_seidel", &_block_gauss_seidel<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
@@ -889,20 +899,28 @@ Perform one iteration of block Gauss-Seidel relaxation on
  row_start, row_stop, and row_step.
 
  Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array, blocks assumed square
-     x[]        - approximate solution
-     b[]        - right hand side
-     Tx[]       - Inverse of each diagonal block of A stored
-                  as a (n/blocksize, blocksize, blocksize) array
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     blocksize  - dimension of square blocks in BSR matrix A
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+ ----------
+ Ap : array
+     BSR row pointer
+ Aj : array
+     BSR index array
+ Ax : array
+     BSR data array, blocks assumed square
+ x : array, inplace
+     approximate solution
+ b : array
+     right hand side
+ Tx : array
+     Inverse of each diagonal block of A stored
+     as a (n/blocksize, blocksize, blocksize) array
+ row_start : int
+     beginning of the sweep
+ row_stop : int
+     end of the sweep (i.e. one past the last unknown)
+ row_step : int
+     stride used during the sweep (may be negative)
+ blocksize : int
+     dimension of square blocks in BSR matrix A)pbdoc");
 
     m.def("extract_subblocks", &_extract_subblocks<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));

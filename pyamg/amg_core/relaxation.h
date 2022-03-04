@@ -632,23 +632,32 @@ void gauss_seidel_nr(const I Ap[], const int Ap_size,
  *  row_start, row_stop, and row_step.
  *
  *  Parameters
- *      Ap[]       - BSR row pointer
- *      Aj[]       - BSR index array
- *      Ax[]       - BSR data array, blocks assumed square
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      Tx[]       - Inverse of each diagonal block of A stored
- *                   as a (n/blocksize, blocksize, blocksize) array
- *      temp[]     - temporary vector the same size as x
- *      row_start  - beginning of the sweep
- *      row_stop   - end of the sweep (i.e. one past the last unknown)
- *      row_step   - stride used during the sweep (may be negative)
- *      omega      - damping parameter
- *      blocksize  - dimension of sqare blocks in BSR matrix A
- *
- *  Returns:
- *      Nothing, x will be modified in place
- *
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array, blocks assumed square
+ *  x : array, inplace
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  Tx : array
+ *      Inverse of each diagonal block of A stored
+ *               as a (n/blocksize, blocksize, blocksize) array
+ *  temp : array
+ *      temporary vector the same size as x
+ *  row_start : int
+ *      beginning of the sweep
+ *  row_stop : int
+ *      end of the sweep (i.e. one past the last unknown)
+ *  row_step : int
+ *      stride used during the sweep (may be negative)
+ *  omega : float
+ *      damping parameter
+ *  blocksize int
+ *      dimension of sqare blocks in BSR matrix A
  */
 template<class I, class T, class F>
 void block_jacobi(const I Ap[], const int Ap_size,
@@ -730,21 +739,28 @@ void block_jacobi(const I Ap[], const int Ap_size,
  *  row_start, row_stop, and row_step.
  *
  *  Parameters
- *      Ap[]       - BSR row pointer
- *      Aj[]       - BSR index array
- *      Ax[]       - BSR data array, blocks assumed square
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      Tx[]       - Inverse of each diagonal block of A stored
- *                   as a (n/blocksize, blocksize, blocksize) array
- *      row_start  - beginning of the sweep
- *      row_stop   - end of the sweep (i.e. one past the last unknown)
- *      row_step   - stride used during the sweep (may be negative)
- *      blocksize  - dimension of square blocks in BSR matrix A
- *
- *  Returns:
- *      Nothing, x will be modified in place
- *
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array, blocks assumed square
+ *  x : array, inplace
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  Tx : array
+ *      Inverse of each diagonal block of A stored
+ *      as a (n/blocksize, blocksize, blocksize) array
+ *  row_start : int
+ *      beginning of the sweep
+ *  row_stop : int
+ *      end of the sweep (i.e. one past the last unknown)
+ *  row_step : int
+ *      stride used during the sweep (may be negative)
+ *  blocksize : int
+ *      dimension of square blocks in BSR matrix A
  */
 template<class I, class T, class F>
 void block_gauss_seidel(const I Ap[], const int Ap_size,
