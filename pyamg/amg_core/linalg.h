@@ -505,7 +505,7 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  */
 
 template<class I, class T, class F>
-I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
+I svd_jacobi(const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 {
     // Not implemented for m < n matrices
     if( m < n)
@@ -853,8 +853,8 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  *      'T' or 'F'.  Decides whether to transpose each nxn block
  *      of A before inverting.  If using Python array, should be 'T'.
  *
- * Return
- * ------
+ * Returns
+ * -------
  * AA : {array}
  *      AA is modified in place with the pseduoinverse replacing each
  *      block of AA.  AA is returned in row-major form for Python
