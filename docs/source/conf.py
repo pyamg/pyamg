@@ -9,7 +9,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.autosummary',
               'sphinx.ext.mathjax',
-              'm2r',
+              'm2r2',
               'numpydoc']
 
 autodoc_default_flags = ['members', 'undoc-members', 'special-members', 'private-members']
@@ -28,7 +28,7 @@ version = pyamg.__version__
 release = version
 
 language = None
-exclude_patterns = ['README.md']
+exclude_patterns = ['README.md','bindthem.py']
 
 pygments_style = 'sphinx'
 
