@@ -28,7 +28,7 @@ conda install pyamg
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.
 
-![](./Docs/logo/pyamg_logo_withtext.png)
+![](https://raw.githubusercontent.com/pyamg/pyamg/main/docs/logo/pyamg_logo_withtext.png)
 
 PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
 
