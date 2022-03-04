@@ -463,8 +463,8 @@ R"pbdoc(
 Helper function for compatible relaxation to perform steps 3.1d - 3.1f
 in Falgout / Brannick (2010).
 
-Input
------
+Parameters
+----------
 A_rowptr : const {int array}
      Row pointer for sparse matrix in CSR format.
 A_colinds : const {int array}

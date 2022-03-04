@@ -499,8 +499,8 @@ x  : {float|complex array}
 Sp,Sj : {int array}
      BSR indptr and indices members for matrix, S
 
-Return
-------
+Returns
+-------
 BtB[i] = B_i.H*B_i in __column__ major format
 where B_i is B[colindices,:], colindices = all the nonzero
 column indices for block row i in S
