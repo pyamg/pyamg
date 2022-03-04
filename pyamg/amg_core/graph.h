@@ -21,30 +21,31 @@ inline void coreassert(const bool istrue, const std::string &errormsg){
  *  Parameters
  *  ----------
  *  num_rows : int
- *    Number of rows in A (number of vertices)
+ *      Number of rows in A (number of vertices)
  *  Ap : array
- *    CSR row pointer
+ *      CSR row pointer
  *  Aj : array
- *    CSR index array
+ *      CSR index array
  *  active : float-like
- *    Value used for active vertices
- *   C : float-like
- *    Value used to mark non-MIS vertices
- *   F : float-like
- *    Value used to mark MIS vertices
- *   x : array, inplace output
- *    State of each vertex
+ *      Value used for active vertices
+ *  C : float-like
+ *      Value used to mark non-MIS vertices
+ *  F : float-like
+ *      Value used to mark MIS vertices
+ *  x : array, inplace output
+ *      State of each vertex
  *
  *  Returns
  *  --------
  *  N : int
  *      The number of nodes in the MIS.
  *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ *  Notes
+ *  -----
+ *  Only the vertices with values with x[i] == active are considered
+ *  when determining the MIS.  Upon return, all active vertices will
+ *  be assigned the value C or F depending on whether they are in the
+ *  MIS or not.
  *
  */
 template<class I, class T>
@@ -81,26 +82,37 @@ I maximal_independent_set_serial(const I num_rows,
  *  using a variant of Luby's parallel MIS algorithm
  *
  *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
- *      y[]        - random values for each vertex
- *      max_iters  - maximum number of iterations
- *                   by default max_iters=-1 and no limit
- *                   is imposed
+ *  ----------
+ *  num_rows : int
+ *      number of rows in A (number of vertices)
+ *  Ap : array
+ *      CSR row pointer
+ *  Aj : array
+ *      CSR index array
+ *  active : float
+ *      value used for active vertices
+ *   C : float
+ *      value used to mark non-MIS vertices
+ *   F : float
+ *      value used to mark MIS vertices
+ *  x : array, output
+ *      state of each vertex
+ *  y : array
+ *      random values for each vertex
+ *  max_iters : int
+ *      maximum number of iterations By default max_iters=-1 and no limit is imposed
  *
- *  Returns:
+ *  Returns
+ *  -------
+ *  N : int
  *      The number of nodes in the MIS.
  *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ *  Notes
+ *  -----
+ *  Only the vertices with values with x[i] == active are considered
+ *  when determining the MIS.  Upon return, all active vertices will
+ *  be assigned the value C or F depending on whether they are in the
+ *  MIS or not.
  *
  */
 template<class I, class T, class R>
