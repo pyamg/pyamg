@@ -15,37 +15,37 @@ inline void coreassert(const bool istrue, const std::string &errormsg){
 }
 
 /*
- *  Compute a maximal independent set for a graph stored in CSR format
- *  using a greedy serial algorithm
+ * Compute a maximal independent set for a graph stored in CSR format
+ * using a greedy serial algorithm
  *
- *  Parameters
- *  ----------
- *  num_rows : int
- *      Number of rows in A (number of vertices)
- *  Ap : array
- *      CSR row pointer
- *  Aj : array
- *      CSR index array
- *  active : float-like
- *      Value used for active vertices
- *  C : float-like
- *      Value used to mark non-MIS vertices
- *  F : float-like
- *      Value used to mark MIS vertices
- *  x : array, inplace output
- *      State of each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     Number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * active : float-like
+ *     Value used for active vertices
+ * C : float-like
+ *     Value used to mark non-MIS vertices
+ * F : float-like
+ *     Value used to mark MIS vertices
+ * x : array, inplace output
+ *     State of each vertex
  *
- *  Returns
- *  --------
- *  N : int
- *      The number of nodes in the MIS.
+ * Returns
+ * -------
+ * N : int
+ *     The number of nodes in the MIS.
  *
- *  Notes
- *  -----
- *  Only the vertices with values with x[i] == active are considered
- *  when determining the MIS.  Upon return, all active vertices will
- *  be assigned the value C or F depending on whether they are in the
- *  MIS or not.
+ * Notes
+ * -----
+ * Only the vertices with values with x[i] == active are considered
+ * when determining the MIS.  Upon return, all active vertices will
+ * be assigned the value C or F depending on whether they are in the
+ * MIS or not.
  *
  */
 template<class I, class T>
