@@ -356,39 +356,44 @@ T vertex_coloring_LDF(const I num_rows,
 /*
  * Compute the incidence matrix for a clustering
  *
- *      I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of nodes
+ * num_clusters : int
+ *     number of clusters
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * ICp : arrayt, num_clusters+1, inplace
+ *     CSC column pointer array for I
+ * ICi : array, num_nodes, inplace
+ *     CSC column indexes for I
+ * L : array, num_nodes, inplace
+ *     Local index mapping
+ *
+ * Notes
+ * -----
+ * I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
  * I[i,a] = 1 if node i is in cluster a, otherwise 0
  *
- *     Cluster indexes: a,b,c in 1..num_clusters
+ * Cluster indexes: a,b,c in 1..num_clusters
  * Global node indexes: i,j,k in 1..num_rows
- *  Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
+ * Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
  *
  * We store I in both CSC and CSR formats because we want to be able
  * to map global <-> local node indexes. However, I in CSR format is
  * simply the cm array, so we only need to compute CSC format.
  *
- * IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's
- *                     always 1).
+ * IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's always 1).
  *
  * IR = (IRa) = (cm) = I in CSR format (don't store IRp because we
- *                     have exactly one nonzero entry per row, and
- *                     don't store IRx because it's always 1). This is
- *                     just the cm array.
+ * have exactly one nonzero entry per row, and don't store IRx because it's always 1). This is
+ * just the cm array.
  *
  * Converting local (a,m) -> global i:   i = ICi[ICp[a] + m]
- *
- * Converting global i -> local (a,m):   a = cm[i]
- *                                       m = L[i]
+ * Converting global i -> local (a,m):   a = cm[i], m = L[i]
  *
  * L is an additional vector (length num_rows) to store local indexes.
- *
- *  Parameters
- *      num_nodes         - (IN)  number of nodes
- *      num_clusters      - (IN)  number of clusters
- *     cm[num_nodes]      - (IN)  cluster index for each node
- *    ICp[num_clusters+1] - (OUT) CSC column pointer array for I
- *    ICi[num_nodes]      - (OUT) CSC column indexes for I
- *      L[num_nodes]      - (OUT) Local index mapping
  */
 template<class I>
 void cluster_node_incidence(const I num_nodes,
@@ -471,22 +476,36 @@ void cluster_node_incidence(const I num_nodes,
  * Apply Floyd–Warshall to cluster "a" and use the result to find the
  * cluster center
  *
- *  Parameters
- *      a                  - (IN) cluster index to find the center of
- *      num_nodes          - (IN) number of nodes
- *      num_clusters       - (IN) number of clusters
- *      Ap[]               - (IN) CSR row pointer
- *      Aj[]               - (IN) CSR index array
- *      Ax[]               - (IN) CSR data array (edge lengths)
- *      cm[num_nodes]      - (IN) cluster index for each node
- *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
- *     ICi[num_nodes]      - (IN) CSC column indexes for I
- *       L[num_nodes]      - (IN) Local index mapping
+ * Parameters
+ * ----------
+ * a : int
+ *     cluster index to find the center of
+ * num_nodes : int
+ *     number of nodes
+ * num_clusters : int
+ *     number of clusters
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * ICp : array, num_clusters+1
+ *     CSC column pointer array for I
+ * ICi : array, num_nodes
+ *     CSC column indexes for I
+ * L : array, num_nodes
+ *     Local index mapping
  *
- *  Returns
- *      i                  - global node index of center of cluster a
+ * Returns
+ * -------
+ * i : int
+ *     global node index of center of cluster a
  *
- *  References:
+ *  References
+ *  ----------
  *      https://en.wikipedia.org/wiki/Graph_center
  *      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
  *      https://en.wikipedia.org/wiki/Distance_(graph_theory)
@@ -703,20 +722,29 @@ void bellman_ford_balanced(const I num_nodes,
 /*
  * Perform one iteration of Lloyd clustering on a distance graph
  *
- *  Parameters
- *      num_nodes       - (IN)  number of nodes (number of rows in A)
- *      Ap[]            - (IN)  CSR row pointer for adjacency matrix A
- *      Aj[]            - (IN)  CSR index array
- *      Ax[]            - (IN)  CSR data array (edge lengths)
- *      num_clusters    - (IN)  number of clusters (seeds)
- *      d[num_nodes]    - (OUT) distance to nearest seed
- *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (INOUT)  cluster centers
+ * Parameters
+ * ----------
+ *      num_nodes : int
+ *          number of nodes (number of rows in A)
+ *      Ap : array
+ *          CSR row pointer for adjacency matrix A
+ *      Aj : array
+ *          CSR index array
+ *      Ax : array
+ *          CSR data array (edge lengths)
+ *      num_clusters : int
+ *          number of clusters (seeds)
+ *      d : array, num_nodes
+ *          distance to nearest seed
+ *      cm : array, num_nodes
+ *          cluster index for each node
+ *      c : array, num_clusters
+ *          cluster centers
  *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
+ * References
+ * ----------
+ * .. [Bell2008] Nathan Bell, Algebraic Multigrid for Discrete Differential Forms
+ *    PhD thesis (UIUC), August 2008
  *
  */
 template<class I, class T>
@@ -905,22 +933,33 @@ void csr_propagate_max(const IndexType  num_rows,
 }
 
 /*
- *  Compute a distance-k maximal independent set for a graph stored
- *  in CSR format using a parallel algorithm.  An MIS-k is a set of
- *  vertices such that all vertices in the MIS-k are separated by a
- *  path of at least K+1 edges and no additional vertex can be added
- *  to the set without destroying this property.  A standard MIS
- *  is therefore a MIS-1.
+ * Compute MIS-k.
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      k          - minimum separation between MIS vertices
- *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
- *      y[]        - random values used during parallel MIS algorithm
- *      max_iters  - maximum number of iterations to use (default, no limit)
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * k : int
+ *     minimum separation between MIS vertices
+ * x : array, inplace
+ *     state of each vertex (1 if in the MIS, 0 otherwise)
+ * y : array
+ *     random values used during parallel MIS algorithm
+ * max_iters : int
+ *     maximum number of iterations to use (default, no limit)
  *
+ * Notes
+ * -----
+ * Compute a distance-k maximal independent set for a graph stored
+ * in CSR format using a parallel algorithm.  An MIS-k is a set of
+ * vertices such that all vertices in the MIS-k are separated by a
+ * path of at least K+1 edges and no additional vertex can be added
+ * to the set without destroying this property.  A standard MIS
+ * is therefore a MIS-1.
  */
 template<class I, class T, class R>
 void maximal_independent_set_k_parallel(const I num_rows,
