@@ -37,7 +37,7 @@ def fgmres(A, b, x0=None, tol=1e-5,
         initial guess, default is a vector of zeros
     tol : float
         Tolerance for stopping criteria, let r=r_k
-           ||r||     < tol ||b||
+        ||r|| < tol ||b||
         if ||b||=0, then set ||b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations

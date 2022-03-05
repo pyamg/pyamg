@@ -13,8 +13,8 @@ def bellman_ford_reference(A, c):
     c : array_like
         list of cluster centers
 
-    Return
-    ------
+    Returns
+    -------
     m : ndarray
         cluster index
 

@@ -555,29 +555,41 @@ PYBIND11_MODULE(relaxation, m) {
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Perform one iteration of Gauss-Seidel relaxation on the linear
- system Ax = b, where A is stored in CSR format and x and b
- are column vectors.
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.
 
- The unknowns are swept through according to the slice defined
- by row_start, row_end, and row_step.  These options are used
- to implement standard forward and backward sweeps, or sweeping
- only a subset of the unknowns.  A forward sweep is implemented
- with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the
- number of rows in matrix A.  Similarly, a backward sweep is
- implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).
+Parameters
+----------
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+row_start : int
+    beginning of the sweep
+row_stop : int
+    end of the sweep (i.e. one past the last unknown)
+row_step : int
+    stride used during the sweep (may be negative)
 
- Parameters
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
+Returns
+-------
+Nothing, x will be modified inplace
 
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Notes
+-----
+The unknowns are swept through according to the slice defined
+by row_start, row_end, and row_step.  These options are used
+to implement standard forward and backward sweeps, or sweeping
+only a subset of the unknowns.  A forward sweep is implemented
+with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the
+number of rows in matrix A.  Similarly, a backward sweep is
+implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).)pbdoc");
 
     m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
@@ -589,26 +601,37 @@ Perform one iteration of Gauss-Seidel relaxation on the linear
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
 R"pbdoc(
 Perform one iteration of Gauss-Seidel relaxation on the linear
- system Ax = b, where A is stored in Block CSR format and x and b
- are column vectors.  This method applies point-wise relaxation
- to the BSR as opposed to \"block relaxation\".
+system Ax = b, where A is stored in Block CSR format and x and b
+are column vectors.  This method applies point-wise relaxation
+to the BSR as opposed to \"block relaxation\".
 
- Refer to gauss_seidel for additional information regarding
- row_start, row_stop, and row_step.
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     row_start  - beginning of the sweep (block row index)
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     blocksize  - BSR blocksize (blocks must be square)
+Parameters
+----------
+Ap : array
+    BSR row pointer
+Aj : array
+    BSR index array
+Ax : array
+    BSR data array
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+row_start : int
+    beginning of the sweep (block row index)
+row_stop : int
+    end of the sweep (i.e. one past the last unknown)
+row_step : int
+    stride used during the sweep (may be negative)
+blocksize : int
+    BSR blocksize (blocks must be square)
 
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Returns
+-------
+Nothing, x will be modified inplace)pbdoc");
 
     m.def("jacobi", &_jacobi<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
@@ -620,27 +643,39 @@ Perform one iteration of Gauss-Seidel relaxation on the linear
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
 R"pbdoc(
 Perform one iteration of Jacobi relaxation on the linear
- system Ax = b, where A is stored in CSR format and x and b
- are column vectors.  Damping is controlled by the omega
- parameter.
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.  Damping is controlled by the omega
+parameter.
 
- Refer to gauss_seidel for additional information regarding
- row_start, row_stop, and row_step.
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     temp[]     - temporary vector the same size as x
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     omega      - damping parameter
+Parameters
+----------
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+temp, array
+    temporary vector the same size as x
+row_start : int
+    beginning of the sweep
+row_stop : int
+    end of the sweep (i.e. one past the last unknown)
+row_step : int
+    stride used during the sweep (may be negative)
+omega : float
+    damping parameter
 
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Returns
+-------
+Nothing, x will be modified inplace)pbdoc");
 
     m.def("bsr_jacobi", &_bsr_jacobi<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
@@ -652,28 +687,41 @@ Perform one iteration of Jacobi relaxation on the linear
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert(),
 R"pbdoc(
 Perform one iteration of Jacobi relaxation on the linear
- system Ax = b, where A is stored in Block CSR format and x and b
- are column vectors.  This method applies point-wise relaxation
- to the BSR as opposed to \"block relaxation\".
+system Ax = b, where A is stored in Block CSR format and x and b
+are column vectors.  This method applies point-wise relaxation
+to the BSR as opposed to \"block relaxation\".
 
- Refer to jacobi for additional information regarding
- row_start, row_stop, and row_step.
+Refer to jacobi for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     temp[]     - temporary vector the same size as x
-     row_start  - beginning of the sweep (block row index)
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     blocksize  - BSR blocksize (blocks must be square)
-     omega      - damping parameter
+Parameters
+----------
+    Ap : array
+        BSR row pointer
+    Aj : array
+        BSR index array
+    Ax : array
+        BSR data array
+    x : array, inplace
+        approximate solution
+    b : array
+        right hand side
+    temp : array, inplace
+        temporary vector the same size as x
+    row_start : int
+        beginning of the sweep (block row index)
+    row_stop : int
+        end of the sweep (i.e. one past the last unknown)
+    row_step : int
+        stride used during the sweep (may be negative)
+    blocksize : int
+        BSR blocksize (blocks must be square)
+    omega : float
+        damping parameter
 
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Returns
+-------
+Nothing, x will be modified inplace)pbdoc");
 
     m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
@@ -685,32 +733,45 @@ Perform one iteration of Jacobi relaxation on the linear
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Perform one iteration of Gauss-Seidel relaxation on the linear
- system Ax = b, where A is stored in CSR format and x and b
- are column vectors.
+system Ax = b, where A is stored in CSR format and x and b
+are column vectors.
 
- Unlike gauss_seidel, which is restricted to updating a slice
- of the unknowns (defined by row_start, row_start, and row_step),
- this method updates unknowns according to the rows listed in
- an index array.  This allows and arbitrary set of the unknowns
- to be updated in an arbitrary order, as is necessary for the
- relaxation steps in the Compatible Relaxation method.
+Parameters
+----------
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+Id : array
+    index array representing the
+row_start : int
+    beginning of the sweep (in array Id)
+row_stop : int
+    end of the sweep (in array Id)
+row_step : int
+    stride used during the sweep (may be negative)
 
- In this method the slice arguments are used to define the subset
- of the index array Id which is to be considered.
+Returns
+-------
+Nothing, x will be modified inplace
 
- Parameters
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     Id[]       - index array representing the
-     row_start  - beginning of the sweep (in array Id)
-     row_stop   - end of the sweep (in array Id)
-     row_step   - stride used during the sweep (may be negative)
+Notes
+-----
+Unlike gauss_seidel, which is restricted to updating a slice
+of the unknowns (defined by row_start, row_start, and row_step),
+this method updates unknowns according to the rows listed in
+an index array.  This allows and arbitrary set of the unknowns
+to be updated in an arbitrary order, as is necessary for the
+relaxation steps in the Compatible Relaxation method.
 
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+In this method the slice arguments are used to define the subset
+of the index array Id which is to be considered.)pbdoc");
 
     m.def("jacobi_ne", &_jacobi_ne<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
@@ -727,31 +788,35 @@ This effectively carries out weighted-Jacobi on A A^T x = A^T b
 
 Parameters
 ----------
-Ap : {int array}
+Ap : array
  index pointer for CSR matrix A
-Aj : {int array}
+Aj : array
  column indices for CSR matrix A
-Ax : {array}
+Ax : array
  value array for CSR matrix A
-x : {array}
+x : array, inplace
  current guess to the linear system
-b : {array}
+b : array
  right hand side
-Tx : {array}
+Tx : array
  scaled residual
  D_A^{-1} (b - Ax)
-temp : {array}
+temp : array
  work space
-row_start,stop,step : {int}
+row_start : int
+ controls which rows to start on
+row_stop : int
+ controls which rows to stop on
+row_step : int
  controls which rows to iterate over
-omega : {array}
+omega : array
  size one array that contains the weighted-jacobi
  parameter.  An array must be used to pass in omega to
  account for the case where omega may be complex
 
 Returns
 -------
-x is modified in place in an additive, not overwriting fashion
+x is modified inplace in an additive, not overwriting fashion
 
 Notes
 -----
@@ -771,27 +836,27 @@ This effectively carries out Gauss-Seidel on A A.H x = b
 
 Parameters
 ----------
-Ap : {int array}
+Ap : array
  index pointer for CSR matrix A
-Aj : {int array}
+Aj : array
  column indices for CSR matrix A
-Ax : {array}
+Ax : array
  value array for CSR matrix A
-x : {array}
+x : array
  current guess to the linear system
-b : {array}
+b : array
  right hand side
-Tx : {array}
+Tx : array
  inverse(diag(A A.H))
-omega : {float}
+omega : float
  relaxation parameter
  (if not 1.0, then algorithm becomes SOR)
-row_start,stop,step : {int}
+row_start,stop,step : int
  controls which rows to iterate over
 
 Returns
 -------
-x is modified in place in an additive, not overwriting fashion
+x is modified inplace in an additive, not overwriting fashion
 
 Notes
 -----
@@ -811,27 +876,27 @@ This effectively carries out Gauss-Seidel on A.H A x = A.H b
 
 Parameters
 ----------
-Ap : {int array}
+Ap : array
  index pointer for CSC matrix A
-Aj : {int array}
+Aj : array
  row indices for CSC matrix A
-Ax : {array}
+Ax : array
  value array for CSC matrix A
-x : {array}
+x : array
  current guess to the linear system
-z : {array}
+z : array
  initial residual
-Tx : {array}
+Tx : array
  inverse(diag(A.H A))
-omega : {float}
+omega : float
  relaxation parameter
  (if not 1.0, then algorithm becomes SOR)
-col_start,stop,step : {int}
+col_start,stop,step : int
  controls which rows to iterate over
 
 Returns
 -------
-x is modified in place in an additive, not overwriting fashion
+x is modified inplace in an additive, not overwriting fashion
 
 Notes
 -----
@@ -847,30 +912,40 @@ Primary calling routine is gauss_seidel_nr in relaxation.py)pbdoc");
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"),
 R"pbdoc(
 Perform one iteration of block Jacobi relaxation on the linear
- system Ax = b, where A is stored in BSR format and x and b
- are column vectors.  Damping is controlled by the omega
- parameter.
+system Ax = b, where A is stored in BSR format and x and b
+are column vectors.  Damping is controlled by the omega
+parameter.
 
- Refer to gauss_seidel for additional information regarding
- row_start, row_stop, and row_step.
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array, blocks assumed square
-     x[]        - approximate solution
-     b[]        - right hand side
-     Tx[]       - Inverse of each diagonal block of A stored
-                  as a (n/blocksize, blocksize, blocksize) array
-     temp[]     - temporary vector the same size as x
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     omega      - damping parameter
-     blocksize  - dimension of sqare blocks in BSR matrix A
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Parameters
+----------
+Ap : array
+    BSR row pointer
+Aj : array
+    BSR index array
+Ax : array
+    BSR data array, blocks assumed square
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+Tx : array
+    Inverse of each diagonal block of A stored
+    as a (n/blocksize, blocksize, blocksize) array
+temp : array
+    temporary vector the same size as x
+row_start : int
+    beginning of the sweep
+row_stop : int
+    end of the sweep (i.e. one past the last unknown)
+row_step : int
+    stride used during the sweep (may be negative)
+omega : float
+    damping parameter
+blocksize int
+    dimension of sqare blocks in BSR matrix A)pbdoc");
 
     m.def("block_gauss_seidel", &_block_gauss_seidel<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
@@ -882,27 +957,35 @@ Perform one iteration of block Jacobi relaxation on the linear
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
 R"pbdoc(
 Perform one iteration of block Gauss-Seidel relaxation on
- the linear system Ax = b, where A is stored in BSR format
- and x and b are column vectors.
+the linear system Ax = b, where A is stored in BSR format
+and x and b are column vectors.
 
- Refer to gauss_seidel for additional information regarding
- row_start, row_stop, and row_step.
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array, blocks assumed square
-     x[]        - approximate solution
-     b[]        - right hand side
-     Tx[]       - Inverse of each diagonal block of A stored
-                  as a (n/blocksize, blocksize, blocksize) array
-     row_start  - beginning of the sweep
-     row_stop   - end of the sweep (i.e. one past the last unknown)
-     row_step   - stride used during the sweep (may be negative)
-     blocksize  - dimension of square blocks in BSR matrix A
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Parameters
+----------
+Ap : array
+    BSR row pointer
+Aj : array
+    BSR index array
+Ax : array
+    BSR data array, blocks assumed square
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+Tx : array
+    Inverse of each diagonal block of A stored
+    as a (n/blocksize, blocksize, blocksize) array
+row_start : int
+    beginning of the sweep
+row_stop : int
+    end of the sweep (i.e. one past the last unknown)
+row_step : int
+    stride used during the sweep (may be negative)
+blocksize : int
+    dimension of square blocks in BSR matrix A)pbdoc");
 
     m.def("extract_subblocks", &_extract_subblocks<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
@@ -914,26 +997,36 @@ Perform one iteration of block Gauss-Seidel relaxation on
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"),
 R"pbdoc(
 Extract diagonal blocks from A and insert into a linear array.
- This is a helper function for overlapping_schwarz_csr.
+This is a helper function for overlapping_schwarz_csr.
 
- Parameters
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-                  __must be sorted for each row__
-     Ax[]       - CSR data array, blocks assumed square
-     Tx[]       - Inverse of each diagonal block of A, stored in
-                  row major
-     Tp[]       - Pointer array into Tx indicating where the
-                  diagonal blocks start and stop
-     Sj[]       - Indices of each subdomain
-                  __must be sorted over each subdomain__
-     Sp[]       - Pointer array indicating where each subdomain
-                  starts and stops
-     nsdomains  - Number of subdomains
-     nrows      - Number of rows
+Parameters
+----------
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+    must be sorted for each row
+Ax : array
+    CSR data array, blocks assumed square
+Tx : array, inplace
+    Inverse of each diagonal block of A, stored in row major
+Tp : array
+    Pointer array into Tx indicating where the
+    diagonal blocks start and stop
+Sj : array
+    Indices of each subdomain
+    must be sorted over each subdomain
+Sp : array
+    Pointer array indicating where each subdomain
+    starts and stops
+nsdomains : int
+    Number of subdomains
+nrows : int
+    Number of rows
 
- Returns:
-     Nothing, Tx will be modified in place)pbdoc");
+Returns
+-------
+Nothing, Tx will be modified inplace)pbdoc");
 
     m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
@@ -945,35 +1038,47 @@ Extract diagonal blocks from A and insert into a linear array.
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Perform one iteration of an overlapping Schwarz relaxation on
- the linear system Ax = b, where A is stored in CSR format
- and x and b are column vectors.
+the linear system Ax = b, where A is stored in CSR format
+and x and b are column vectors.
 
- Refer to gauss_seidel for additional information regarding
- row_start, row_stop, and row_step.
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
 
- Parameters
-     Ap[]           - CSR row pointer
-     Aj[]           - CSR index array
-     Ax[]           - CSR data array, blocks assumed square
-     x[]            - approximate solution
-     b[]            - right hand side
-     Tx[]           - Inverse of each diagonal block of A, stored in
-                      row major
-     Tp[]           - Pointer array into Tx indicating where the
-                      diagonal blocks start and stop
-     Sj[]           - Indices of each subdomain
-                      __must be sorted over each subdomain__
-     Sp[]           - Pointer array indicating where each subdomain
-                      starts and stops
-     nsdomains      - Number of subdomains
-     nrows          - Number of rows
-     row_start      --- The subdomains are processed in this order,
-     row_stop       --- for(i = row_start, i != row_stop, i+=row_step)
-     row_step       --- {...computation...}
+Parameters
+----------
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array, blocks assumed square
+x : array, inplace
+    approximate solution
+b : array
+    right hand side
+Tx : array
+    Inverse of each diagonal block of A, stored in row major
+Tp : array
+    Pointer array into Tx indicating where the diagonal blocks start and stop
+Sj : array
+    Indices of each subdomain
+    must be sorted over each subdomain
+Sp : array
+    Pointer array indicating where each subdomain starts and stops
+nsdomains
+    Number of subdomains
+nrows
+    Number of rows
+row_start : int
+    The subdomains are processed in this order,
+row_stop : int
+    for(i = row_start, i != row_stop, i+=row_step)
+row_step : int
+    {...computation...}
 
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
+Returns
+-------
+Nothing, x will be modified inplace)pbdoc");
 
 }
 
