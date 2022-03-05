@@ -483,9 +483,9 @@ Compute a maximal independent set for a graph stored in CSR format
      CSR index array
  active : float
      value used for active vertices
-  C : float
+ C : float
      value used to mark non-MIS vertices
-  F : float
+ F : float
      value used to mark MIS vertices
  x : array, output
      state of each vertex
@@ -525,21 +525,29 @@ Compute a vertex coloring for a graph stored in CSR format.
 R"pbdoc(
 Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
 
- Parameters
-     num_rows   - number of rows in A (number of vertices)
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     x[]        - color of each vertex
-     y[]        - initial random values for each vertex
+Parameters
+----------
+num_rows : int
+    number of rows in A (number of vertices)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+x : array, inplace
+    color of each vertex
+y : array
+    initial random values for each vertex
 
- Notes:
-     Arrays x and y will be overwritten
+Notes
+-----
+    Arrays x and y will be overwritten
 
- References:
-     Mark T. Jones and Paul E. Plassmann
-     A Parallel Graph Coloring Heuristic
-     SIAM Journal on Scientific Computing 14:3 (1993) 654--669
-     http://citeseer.ist.psu.edu/jones92parallel.html)pbdoc");
+References
+----------
+.. [Jones92] Mark T. Jones and Paul E. Plassmann
+   A Parallel Graph Coloring Heuristic
+   SIAM Journal on Scientific Computing 14:3 (1993) 654--669
+   http://citeseer.ist.psu.edu/jones92parallel.html)pbdoc");
 
     m.def("vertex_coloring_LDF", &_vertex_coloring_LDF<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
@@ -547,18 +555,20 @@ R"pbdoc(
 Compute a vertex coloring of a graph using the parallel
 Largest-Degree-First (LDF) algorithm
 
- Parameters
-     num_rows   - number of rows in A (number of vertices)
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     x[]        - color of each vertex
-     y[]        - initial random values for each vertex
+Parameters
+----------
+    num_rows   - number of rows in A (number of vertices)
+    Ap[]       - CSR row pointer
+    Aj[]       - CSR index array
+    x[]        - color of each vertex
+    y[]        - initial random values for each vertex
 
-  References:
-    J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
-    A Comparison of Parallel Graph Coloring Algorithms
-    DRAFT SCCS-666
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650)pbdoc");
+References
+----------
+.. [LDF] J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
+   A Comparison of Parallel Graph Coloring Algorithms
+   DRAFT SCCS-666
+   http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650)pbdoc");
 
     m.def("cluster_node_incidence", &_cluster_node_incidence<int>,
         py::arg("num_nodes"), py::arg("num_clusters"), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
@@ -675,8 +685,7 @@ cm : array, inplace
 
 References
 ----------
-.. Bellman-Ford Wikipedia:
-    http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
+.. [1] Bellman-Ford Wikipedia: http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
@@ -689,22 +698,22 @@ Perform one iteration of Lloyd clustering on a distance graph
 
 Parameters
 ----------
-     num_nodes : int
-         number of nodes (number of rows in A)
-     Ap : array
-         CSR row pointer for adjacency matrix A
-     Aj : array
-         CSR index array
-     Ax : array
-         CSR data array (edge lengths)
-     num_clusters : int
-         number of clusters (seeds)
-     d : array, num_nodes
-         distance to nearest seed
-     cm : array, num_nodes
-         cluster index for each node
-     c : array, num_clusters
-         cluster centers
+num_nodes : int
+    number of nodes (number of rows in A)
+Ap : array
+    CSR row pointer for adjacency matrix A
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array (edge lengths)
+num_clusters : int
+    number of clusters (seeds)
+d : array, num_nodes
+    distance to nearest seed
+cm : array, num_nodes
+    cluster index for each node
+c : array, num_clusters
+    cluster centers
 
 References
 ----------
@@ -721,24 +730,30 @@ R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph using
 exact centers
 
+Parameters
+----------
+num_nodes : int
+    number of rows in A (number of vertices)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array (edge lengths)
+num_clusters : int
+    number of clusters = number of seeds
+d : array, num_nodes
+    distance to nearest seed
+cm : array, num_nodes
+    cluster index for each node
+c : array, num_clusters
+    cluster centers
+
+Notes
+-----
 This version computes exact cluster centers with Floyd-Warshall and
 also uses a balanced version of Bellman-Ford to try and find
-nearly-equal-sized clusters.
-
- Parameters
-     num_nodes       - (IN)  number of rows in A (number of vertices)
-     Ap[]            - (IN)  CSR row pointer
-     Aj[]            - (IN)  CSR index array
-     Ax[]            - (IN)  CSR data array (edge lengths)
-     num_clusters    - (IN)  number of clusters = number of seeds
-     d[num_nodes]    - (OUT) distance to nearest seed
-    cm[num_nodes]    - (OUT) cluster index for each node
-     c[num_clusters] - (IN)  cluster centers
-
- References
-     Nathan Bell
-     Algebraic Multigrid for Discrete Differential Forms
-     PhD thesis (UIUC), August 2008)pbdoc");
+nearly-equal-sized clusters.)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
@@ -775,31 +790,45 @@ is therefore a MIS-1.)pbdoc");
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("seed"), py::arg("order").noconvert(), py::arg("level").noconvert(),
 R"pbdoc(
 Compute a breadth first search of a graph in CSR format
- beginning at a given seed vertex.
+beginning at a given seed vertex.
 
- Parameters
-     num_rows         - number of rows in A (number of vertices)
-     Ap[]             - CSR row pointer
-     Aj[]             - CSR index array
-     order[num_rows]  - records the order in which vertices were searched
-     level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
+Parameters
+----------
+num_rows : int
+    number of rows in A (number of vertices)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+order : array, num_rows, inplace
+    records the order in which vertices were searched
+level : array, num_rows, inplace
+    records the level set of the searched vertices (i.e. the minimum distance to the seed)
 
- Notes:
-     The values of the level must be initialized to -1)pbdoc");
+Notes
+-----
+The values of the level must be initialized to -1)pbdoc");
 
     m.def("connected_components", &_connected_components<int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("components").noconvert(),
 R"pbdoc(
 Compute the connected components of a graph stored in CSR format.
 
- Vertices belonging to each component are marked with a unique integer
- in the range [0,K), where K is the number of components.
+Parameters
+----------
+num_rows : int
+    number of rows in A (number of vertices)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+components : array, num_rows
+    component labels
 
- Parameters
-     num_rows             - number of rows in A (number of vertices)
-     Ap[]                 - CSR row pointer
-     Aj[]                 - CSR index array
-     components[num_rows] - component labels)pbdoc");
+Notes
+-----
+Vertices belonging to each component are marked with a unique integer
+in the range [0,K), where K is the number of components.)pbdoc");
 
 }
 
