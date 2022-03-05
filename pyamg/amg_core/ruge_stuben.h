@@ -23,29 +23,39 @@
  *  matrices are stored in CSR format.  An off-diagonal nonzero entry
  *  A[i,j] is considered strong if:
  *
+ *  ..
  *      |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
  *
  * Otherwise, the connection is weak.
  *
- *  Parameters
- *      num_rows   - number of rows in A
- *      theta      - stength of connection tolerance
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *      Sp[]       - (output) CSR row pointer
- *      Sj[]       - (output) CSR index array
- *      Sx[]       - (output) CSR data array
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * theta : float
+ *     stength of connection tolerance
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
+ * Sp : array
+ *     CSR row pointer
+ * Sj : array
+ *     CSR index array
+ * Sx : array
+ *     CSR data array
  *
+ * Returns
+ * -------
+ * Nothing, S will be stored in Sp, Sj, Sx
  *
- *  Returns:
- *      Nothing, S will be stored in Sp, Sj, Sx
- *
- *  Notes:
- *      Storage for S must be preallocated.  Since S will consist of a subset
- *      of A's nonzero values, a conservative bound is to allocate the same
- *      storage for S as is used by A.
- *
+ * Notes
+ * -----
+ * Storage for S must be preallocated.  Since S will consist of a subset
+ * of A's nonzero values, a conservative bound is to allocate the same
+ * storage for S as is used by A.
  */
 template<class I, class T, class F>
 void classical_strength_of_connection_abs(const I n_row,
@@ -148,17 +158,24 @@ void classical_strength_of_connection_min(const I n_row,
 }
 
 /*
- *  Compute the maximum in magnitude row value for a CSR matrix
+ * Compute the maximum in magnitude row value for a CSR matrix
  *
- *  Parameters
- *      num_rows   - number of rows in A
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *       x[]       - num_rows array
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * x : array, inplace
+ *      num_rows array
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
  *
- *  Returns:
- *      Nothing, x[i] will hold row i's maximum magnitude entry
+ * Returns
+ * -------
+ * Nothing, x[i] will hold row i's maximum magnitude entry
  *
  */
 template<class I, class T, class F>
@@ -191,19 +208,27 @@ void maximum_row_value(const I n_row,
  * array will consist of zeros and ones, where C-nodes (coarse nodes) are
  * marked with the value 1 and F-nodes (fine nodes) with the value 0.
  *
- * Parameters:
- *   n_nodes   - number of rows in A
- *   C_rowptr[]      - CSR row pointer array for SOC matrix
- *   C_colinds[]      - CSR column index array for SOC matrix
- *   Tp[]      - CSR row pointer array for transpose of SOC matrix
- *   Tj[]      - CSR column index array for transpose of SOC matrix
- *   influence - array that influences splitting (values stored here are
- *               added to lambda for each point)
- *   splitting - array to store the C/F splitting
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     number of rows in A
+ * C_rowptr : array
+ *     CSR row pointer array for SOC matrix
+ * C_colinds : array
+ *     CSR column index array for SOC matrix
+ * Tp : array
+ *     CSR row pointer array for transpose of SOC matrix
+ * Tj : array
+ *     CSR column index array for transpose of SOC matrix
+ * influence : array
+ *     array that influences splitting (values stored here are
+ *     added to lambda for each point)
+ * splitting : array, inplace
+ *     array to store the C/F splitting
  *
- * Notes:
- *   The splitting array must be preallocated
- *
+ * Notes
+ * -----
+ * The splitting array must be preallocated
  */
 template<class I>
 void rs_cf_splitting(const I n_nodes,
@@ -267,7 +292,7 @@ void rs_cf_splitting(const I n_nodes,
 
     // Add elements to C and F, in descending order of lambda
     for (I top_index=(n_nodes - 1); top_index>-1; top_index--) {
-        
+
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];
 
@@ -315,7 +340,7 @@ void rs_cf_splitting(const I n_nodes,
                 if(splitting[j] == PRE_F_NODE)
                 {
                     splitting[j] = F_NODE;
-                    
+
                     // For each k in S_j /\ U, modify lambda value, lambda_k += 1
                     for (I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++){
                         I k = C_colinds[kk];
@@ -426,7 +451,7 @@ void rs_cf_splitting_pass2(const I n_nodes,
 
                     // Node j passed dependence test
                     if (dependence) {
-                        continue;   
+                        continue;
                     }
                     // Node j did not pass dependence test
                     else {
@@ -451,20 +476,29 @@ void rs_cf_splitting_pass2(const I n_nodes,
 
 
 /*
- *  Compute a CLJP splitting
+ * Compute a CLJP splitting
  *
- *  Parameters
- *      n          - number of rows in A (number of vertices)
- *      Sp[]       - CSR row pointer (strength matrix)
- *      Sj[]       - CSR index array
- *      Tp[]       - CSR row pointer (transpose of the strength matrix)
- *      Tj[]       - CSR index array
- *      splitting  - array to store the C/F splitting
- *      colorflag  - flag to indicate coloring
+ * Parameters
+ * ----------
+ * n : int
+ *     number of rows in A (number of vertices)
+ * Sp : array
+ *     CSR row pointer (strength matrix)
+ * Sj : array
+ *     CSR index array
+ * Tp : array
+ *     CSR row pointer (transpose of the strength matrix)
+ * Tj : array
+ *     CSR index array
+ * splitting : array, inplace
+ *     array to store the C/F splitting
+ * colorflag : int
+ *     flag to indicate coloring
  *
- *  Notes:
- *      The splitting array must be preallocated.
- *      CLJP naive since it requires the transpose.
+ * Notes
+ * -----
+ * The splitting array must be preallocated.
+ * CLJP naive since it requires the transpose.
  */
 
 template<class I>
@@ -635,16 +669,30 @@ void cljp_naive_splitting(const I n,
 
 
 /*
- *   Produce the Ruge-Stuben prolongator using "Direct Interpolation"
+ * Produce the Ruge-Stuben prolongator using "Direct Interpolation"
  *
  *
- *   The first pass uses the strength of connection matrix 'S'
- *   and C/F splitting to compute the row pointer for the prolongator.
+ * The first pass uses the strength of connection matrix 'S'
+ * and C/F splitting to compute the row pointer for the prolongator.
  *
- *   The second pass fills in the nonzero entries of the prolongator
+ * The second pass fills in the nonzero entries of the prolongator
  *
- *   Reference:
- *      Page 479 of "Multigrid"
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of nodes
+ * Sp : array
+ *     Strength matrix row pointer array
+ * Sj : array
+ *     Strength matrix column index array
+ * splitting : array
+ *     C/F splitting
+ * Bp : array, inplace
+ *     Row pointer array
+ *
+ * References
+ * ----------
+ * Page 479 of Multigrid
  *
  */
 template<class I>
@@ -767,23 +815,23 @@ void rs_standard_interpolation(const I n_nodes,
  *
  * Parameters
  * ----------
- * A_rowptr : const {int array}
+ * A_rowptr : array
  *      Row pointer for sparse matrix in CSR format.
- * A_colinds : const {int array}
+ * A_colinds : array
  *      Column indices for sparse matrix in CSR format.
- * B : const {float array}
+ * B : array
  *      Target near null space vector for computing candidate set measure.
- * e : {float array}
+ * e : array, inplace
  *      Relaxed vector for computing candidate set measure.
- * indices : {int array}
+ * indices : array, inplace
  *      Array of indices, where indices[0] = the number of F indices, nf,
  *      followed by F indices in elements 1:nf, and C indices in (nf+1):n.
- * splitting : {int array}
+ * splitting : array, inplace
  *      Integer array with current C/F splitting of nodes, 0 = C-point,
  *      1 = F-point.
- * gamma : {float array}
+ * gamma : array, inplace
  *      Preallocated vector to store candidate set measure.
- * thetacs : const {float}
+ * thetacs : float
  *      Threshold for coarse grid candidates from set measure.
  *
  * Returns
@@ -791,14 +839,14 @@ void rs_standard_interpolation(const I n_nodes,
  * Nothing, updated C/F-splitting and corresponding indices modified in place.
  */
 template<class I, class T>
-void cr_helper(const I A_rowptr[], const int A_rowptr_size,
+void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
                const I A_colinds[], const int A_colinds_size,
-               const T B[], const int B_size,
-               T e[], const int e_size,
-               I indices[], const int indices_size,
-               I splitting[], const int splitting_size,
-               T gamma[], const int gamma_size,
-               const T thetacs  )
+               const T B[],         const int B_size,
+               T e[],               const int e_size,
+               I indices[],         const int indices_size,
+               I splitting[],       const int splitting_size,
+               T gamma[],           const int gamma_size,
+               const T thetacs)
 {
     I n = splitting_size;
     I &num_Fpts = indices[0];
