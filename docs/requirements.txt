@@ -1,5 +1,5 @@
 numpydoc
-m2r
+m2r2
 numpy
 scipy
 pytest
