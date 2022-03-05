@@ -141,21 +141,22 @@ PYBIND11_MODULE(linalg, m) {
 R"pbdoc(
 Replace each block of A with a Moore-Penrose pseudoinverse of that block.
 Routine is designed to invert many small matrices at once.
+
 Parameters
 ----------
-AA : {float|complex array}
-     (m, n, n) array, assumed to be "raveled" and in row major form
+AA : array
+    (m, n, n) array, assumed to be "raveled" and in row major form
 m,n : int
-     dimensions of AA
+    dimensions of AA
 TransA : char
-     'T' or 'F'.  Decides whether to transpose each nxn block
-     of A before inverting.  If using Python array, should be 'T'.
+    'T' or 'F'.  Decides whether to transpose each nxn block
+    of A before inverting.  If using Python array, should be 'T'.
 
 Returns
 -------
-AA : {array}
-     AA is modified in place with the pseduoinverse replacing each
-     block of AA.  AA is returned in row-major form for Python
+AA : array
+    AA is modified in place with the pseduoinverse replacing each
+    block of AA.  AA is returned in row-major form for Python
 
 Notes
 -----
@@ -191,9 +192,11 @@ Examples
 R"pbdoc(
 Scale the columns of a CSC matrix *in place*
 
+..
   A[:,i] *= X[i]
 
-See:
+References
+----------
 https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc");
 
     m.def("csc_scale_rows", &_csc_scale_rows<int, int>,
@@ -205,9 +208,11 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
 R"pbdoc(
 Scale the rows of a CSC matrix *in place*
 
+..
   A[i,:] *= X[i]
 
-See:
+References
+----------
 https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc");
 
 }
