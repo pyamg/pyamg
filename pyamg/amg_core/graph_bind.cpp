@@ -642,11 +642,11 @@ Returns
 i : int
     global node index of center of cluster a
 
- References
- ----------
-     https://en.wikipedia.org/wiki/Graph_center
-     https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
-     https://en.wikipedia.org/wiki/Distance_(graph_theory))pbdoc");
+References
+----------
+.. [1] Graph Center:   https://en.wikipedia.org/wiki/Graph_center
+.. [2] Floyd-Warshall: https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
+.. [3] Graph Distance: https://en.wikipedia.org/wiki/Distance_(graph_theory))pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
@@ -658,18 +658,25 @@ R"pbdoc(
 Apply one iteration of Bellman-Ford iteration on a distance
 graph stored in CSR format.
 
- Parameters
- ----------
-     num_nodes - (IN)    number of nodes (number of rows in A)
-     Ap[]      - (IN)    CSR row pointer
-     Aj[]      - (IN)    CSR index array
-     Ax[]      - (IN)    CSR data array (edge lengths)
-     d[]       - (INOUT) distance to nearest center
-    cm[]       - (INOUT) cluster index for each node
+Parameters
+----------
+num_nodes : int
+    number of nodes (number of rows in A)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array (edge lengths)
+d : array, inplace
+    distance to nearest center
+cm : array, inplace
+    cluster index for each node
 
- References
- ----------
-     http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
+References
+----------
+.. Bellman-Ford Wikipedia:
+    http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
