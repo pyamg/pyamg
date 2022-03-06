@@ -203,9 +203,9 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
                 raise ValueError(f'cvdata array cannot be empty for key {key}')
 
     Ncells = 0
-    cell_ind = []
-    cell_offset = []  # np.zeros((Ncells,1),dtype=uint8) # zero indexed
-    cell_type = []    # np.zeros((Ncells,1),dtype=uint8)
+    cell_ind = np.empty((0,), dtype=np.int32)
+    cell_offset = np.empty((0,), dtype='uint8')      # np.zeros((Ncells,1),dtype=uint8) # zero indexed
+    cell_type = np.empty_like((0,), dtype='uint8')   # np.zeros((Ncells,1),dtype=uint8)
 
     cdata_all = None
     cvdata_all = None
