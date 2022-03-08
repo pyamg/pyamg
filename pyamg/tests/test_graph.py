@@ -2,12 +2,13 @@
 import numpy as np
 import scipy.sparse as sparse
 
-from numpy.testing import TestCase, assert_equal
+from numpy.testing import TestCase, assert_equal, assert_array_almost_equal
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import (maximal_independent_set, vertex_coloring,
                          bellman_ford, lloyd_cluster, connected_components)
 from pyamg.graph_ref import bellman_ford_reference
+from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 from pyamg import amg_core
 
 
@@ -113,8 +114,14 @@ class TestGraph(TestCase):
                 D_result, S_result = bellman_ford(G, seeds)
                 D_expected, S_expected = bellman_ford_reference(G, seeds)
 
-                assert_equal(D_result, D_expected)
-                assert_equal(S_result, S_expected)
+                assert_array_almost_equal(D_result, D_expected)
+                assert_array_almost_equal(S_result, S_expected)
+
+                # test only small matrices with scipy
+                if G.shape[0] < 15:
+                    D = bellman_ford_scipy(csgraph=G.T)
+                    D_scipy = D[:,seeds].min(axis=1).ravel()
+                    assert_array_almost_equal(D_result, D_scipy)
 
     def test_bellman_ford_reference(self):
         Edges = np.array([[1, 4],
