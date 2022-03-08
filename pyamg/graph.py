@@ -128,6 +128,19 @@ def bellman_ford(G, seeds):
         Distance of each point to the nearest seed
     nearest_seed : array
         Index of the nearest seed
+
+    Notes
+    -----
+    This should be viewed as the transpose of Bellman-Ford in
+    scipy.sparse.csgraph. Here, bellman_ford is used to find the shortest path
+    from any point *to* the seeds. In csgraph, bellman_ford is used to find
+    "the shortest distance from point i to point j".  So csgraph.bellman_ford
+    could be run `for seed in seeds`.  Also note that `test_graph.py` tests
+    against `csgraph.bellman_ford(G.T)`.
+
+    See Also
+    --------
+    scipy.sparse.csgraph.bellman_ford
     """
     G = asgraph(G)
     N = G.shape[0]
