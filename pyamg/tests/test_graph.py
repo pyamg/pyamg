@@ -120,7 +120,7 @@ class TestGraph(TestCase):
                 # test only small matrices with scipy
                 if G.shape[0] < 15:
                     D = bellman_ford_scipy(csgraph=G.T)
-                    D_scipy = D[:,seeds].min(axis=1).ravel()
+                    D_scipy = D[:, seeds].min(axis=1).ravel()
                     assert_array_almost_equal(D_result, D_scipy)
 
     def test_bellman_ford_reference(self):
