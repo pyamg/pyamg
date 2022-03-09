@@ -1039,7 +1039,7 @@ void filter_matrix_rows(const I n_row,
                         const I Ap[], const int Ap_size,
                         const I Aj[], const int Aj_size,
                               T Ax[], const int Ax_size,
-                        const I lump)
+                        const bool lump)
 {
     // Lump each row by setting A_ii += A_ij for all j s.t. |A_ij| < theta*|A_ii|,
     // and set A_ij = 0
@@ -1066,7 +1066,7 @@ void filter_matrix_rows(const I n_row,
                 F norm_jj = mynorm(Ax[jj]);
 
                 // Remove entry if below threshold
-                if(norm_jj < threshold){
+                if(norm_jj < threshold && Aj[jj] != i){
                     Ax[diag_ind] += Ax[jj];
                     Ax[jj] = 0.0;
                 }
