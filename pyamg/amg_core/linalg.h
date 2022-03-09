@@ -183,8 +183,6 @@ inline T dot_prod(const T x[], const T y[], const I n)
  *     n-vector
  * n : int
  *     size of x and y
- * normx : float
- *     output value
  *
  * Returns
  * -------
