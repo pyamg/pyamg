@@ -85,6 +85,33 @@ void _csc_scale_rows(
                                  );
 }
 
+template<class I, class T, class F>
+void _filter_matrix_rows(
+            const I n_row,
+            const F theta,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+             const I lump
+                         )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    T *_Ax = py_Ax.mutable_data();
+
+    return filter_matrix_rows<I, T, F>(
+                    n_row,
+                    theta,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                     lump
+                                       );
+}
+
 PYBIND11_MODULE(linalg, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for linalg.h
@@ -125,6 +152,7 @@ PYBIND11_MODULE(linalg, m) {
     pinv_array
     csc_scale_columns
     csc_scale_rows
+    filter_matrix_rows
     )pbdoc";
 
     py::options options;
@@ -214,6 +242,36 @@ Scale the rows of a CSC matrix *in place*
 References
 ----------
 https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc");
+
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int, float, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int, double, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"),
+R"pbdoc(
+Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+
+   |A_ij| < theta * |A_ii|
+
+Parameters
+----------
+num_rows : int
+    number of rows in A
+theta : float
+    stength of connection tolerance
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
+
+Returns
+-------
+Nothing, Ax is modified in place)pbdoc");
 
 }
 
