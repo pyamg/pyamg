@@ -32,6 +32,7 @@ except ImportError:
 from .. import amg_core
 from . import linalg
 
+
 def get_blocksize(A):
     """Return the block size of a matrix."""
     if isspmatrix_bsr(A):
@@ -1998,12 +1999,15 @@ def filter_matrix_columns(A, theta):
 
 
 def filter_matrix_rows(A, theta, diagonal=False, lump=False):
-    """
-    Filter each row of A with tol, i.e., drop all entries in row k where
+    """Filter each row of A with tol.
+
+    i.e., drop all entries in row k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
+
     Parameters
     ----------
     A : sparse_matrix
+
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
     diagonal : bool
@@ -2017,11 +2021,11 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     -------
     A_filter : sparse_matrix
         Each row has been filtered by dropping all entries where
-        abs(A[i,k]) < tol max( abs(A[:,k]) ).
+        abs(A[i,k]) < tol max( abs(A[:,k]) )
         If `diagonal == True`, then no return.
 
-    Example
-    -------
+    Examples
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
     >>> from numpy import array
@@ -2033,6 +2037,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     array([[ 0. , -0.5,  0. ,  0. ],
            [ 1. ,  1. ,  0. ,  0. ],
            [ 0. , -0.5,  1. , -0.5]])
+
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
@@ -2041,15 +2046,13 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     Aformat = A.format
     A = A.tocsr()
 
-    cost[0] += 2.0 * A.nnz
-
     if (theta < 0) or (theta >= 1.0):
         raise ValueError('theta must be in [0,1)')
 
     # Filter by diagonal entry, A_ij = 0 if |A_ij| < theta*|A_ii|
     if diagonal:
-        pyamg.amg_core.filter_matrix_rows(A.shape[0], theta, A.indptr,
-                                          A.indices, A.data, lump)
+        amg_core.filter_matrix_rows(A.shape[0], theta, A.indptr,
+                                    A.indices, A.data, lump)
         A.eliminate_zeros()
         if Aformat == 'bsr':
             A = A.tobsr(blocksize=blocksize)
@@ -2064,11 +2067,14 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     A_filter.indices += A.shape[0]
 
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
-                                                        A.indptr, A.indices,
-                                                        A.data, A_filter.indptr,
-                                                        A_filter.indices,
-                                                        A_filter.data)
+    amg_core.classical_strength_of_connection_abs(A.shape[0],
+                                                  theta,
+                                                  A.indptr,
+                                                  A.indices,
+                                                  A.data,
+                                                  A_filter.indptr,
+                                                  A_filter.indices,
+                                                  A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
