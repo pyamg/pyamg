@@ -30,6 +30,7 @@ instantiate:
     - maximum_row_value
     - evolution_strength_helper
     - incomplete_mat_mult_csr
+    - filter_matrix_rows
 
 - types:
     - [int,float]
