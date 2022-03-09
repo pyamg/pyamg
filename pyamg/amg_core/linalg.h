@@ -1044,34 +1044,33 @@ void csc_scale_rows(const I n_row,
  *
  * Parameters
  * ----------
- *        A : double array
- *            2d matrix A stored in 1d column- or row-major.
- *        m : &int
- *            Number of rows in A
- *        n : &int
- *            Number of columns in A
- *        is_col_major : bool
- *            True if A is stored in column-major, false
- *            if A is stored in row-major.
+ * A : double array
+ *     2d matrix A stored in 1d column- or row-major.
+ * m : int
+ *     Number of rows in A
+ * n : int
+ *     Number of columns in A
+ * is_col_major : bool
+ *     True if A is stored in column-major, false
+ *     if A is stored in row-major.
  *
  * Returns
  * -------
- *        Q : vector<double>
- *            Matrix Q stored in same format as A.
- *        R : in-place
- *            R is stored over A in place, in same format.
+ * Q : vector<double>
+ *     Matrix Q stored in same format as A.
+ * R : in-place
+ *     R is stored over A in place, in same format.
  *
  * Notes
- * ------
- * Currently only set up for real-valued matrices. May easily
- * generalize to complex, but haven't checked.
+ * -----
+ * Currently only set up for real-valued matrices.
  *
  */
 template<class I, class T>
-std::vector<T> QR(T A[],
+std::vector<T> qr(T A[],
                   const I &m,
                   const I &n,
-                  const I is_col_major)
+                  const bool is_col_major)
 {
     // Funciton pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
@@ -1166,23 +1165,23 @@ std::vector<T> QR(T A[],
  *
  * Parameters
  * ----------
- *        R : double array, length m*n
- *            Upper-triangular array stored in column- or row-major.
- *        rhs : double array, length m
- *            Right hand side of linear system
- *        x : double array, length n
- *            Preallocated array for solution
- *        m : &int
- *            Number of rows in R
- *        n : &int
- *            Number of columns in R
- *        is_col_major : bool
- *            True if R is stored in column-major, false
- *            if R is stored in row-major.
+ * R : double array, length m*n
+ *     Upper-triangular array stored in column- or row-major.
+ * rhs : double array, length m
+ *     Right hand side of linear system
+ * x : double array, length n
+ *     Preallocated array for solution
+ * m : int
+ *     Number of rows in R
+ * n : int
+ *     Number of columns in R
+ * is_col_major : bool
+ *     True if R is stored in column-major, false
+ *     if R is stored in row-major.
  *
  * Returns
  * -------
- *        Nothing, solution is stored in x[].
+ * Nothing, solution is stored in x[].
  *
  * Notes
  * -----
@@ -1198,7 +1197,7 @@ void upper_tri_solve(const T R[],
                      T x[],
                      const I m,
                      const I n,
-                     const I is_col_major)
+                     const bool is_col_major)
 {
     // Function pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
@@ -1239,23 +1238,23 @@ void upper_tri_solve(const T R[],
  *
  * Parameters
  * ----------
- *        L : double array, length m*n
- *            Lower-triangular array stored in column- or row-major.
- *        rhs : double array, length m
- *            Right hand side of linear system
- *        x : double array, length n
- *            Preallocated array for solution
- *        m : &int
- *            Number of rows in L
- *        n : &int
- *            Number of columns in L
- *        is_col_major : bool
- *            True if L is stored in column-major, false
- *            if L is stored in row-major.
+ * L : double array, length m*n
+ *     Lower-triangular array stored in column- or row-major.
+ * rhs : double array, length m
+ *     Right hand side of linear system
+ * x : double array, length n
+ *     Preallocated array for solution
+ * m : int
+ *     Number of rows in L
+ * n : int
+ *     Number of columns in L
+ * is_col_major : bool
+ *     True if L is stored in column-major, false
+ *     if L is stored in row-major.
  *
  * Returns
  * -------
- *        Nothing, solution is stored in x[].
+ * Nothing, solution is stored in x[].
  *
  * Notes
  * -----
@@ -1272,7 +1271,7 @@ void lower_tri_solve(const T L[],
                      T x[],
                      const I &m,
                      const I &n,
-                     const I is_col_major)
+                     const bool is_col_major)
 {
     // Function pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
@@ -1312,24 +1311,24 @@ void lower_tri_solve(const T L[],
  *
  * Parameters
  * ----------
- *        A : double array, length m*n
- *            2d array stored in column- or row-major.
- *        b : double array, length m
- *            Right hand side of unconstrained problem.
- *        x : double array, length n
- *            Container for solution
- *        m : &int
- *            Number of rows in A
- *        n : &int
- *            Number of columns in A
- *        is_col_major : bool
- *            True if A is stored in column-major, false
- *            if A is stored in row-major.
+ * A : double array, length m*n
+ *     2d array stored in column- or row-major.
+ * b : double array, length m
+ *     Right hand side of unconstrained problem.
+ * x : double array, length n
+ *     Container for solution
+ * m : &int
+ *     Number of rows in A
+ * n : &int
+ *     Number of columns in A
+ * is_col_major : bool
+ *     True if A is stored in column-major, false
+ *     if A is stored in row-major.
  *
  * Returns
  * -------
- *         x : vector<double>
- *            Solution to constrained least sqaures problem.
+ * x : vector<double>
+ *     Solution to constrained least sqaures problem.
  *
  * Notes
  * -----
@@ -1344,7 +1343,7 @@ void least_squares(T A[],
                    T x[],
                    const I &m,
                    const I &n,
-                   const I is_col_major=0)
+                   const bool is_col_major=false)
 {
     // Function pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
@@ -1372,19 +1371,26 @@ void least_squares(T A[],
 
 
 /*
- *  Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+ * Filter matrix rows by diagonal entry, that is set A_ij = 0 if
  *
- *     |A_ij| < theta * |A_ii|
+ *    |A_ij| < theta * |A_ii|
  *
- *  Parameters
- *      num_rows   - number of rows in A
- *      theta      - stength of connection tolerance
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * theta : float
+ *     stength of connection tolerance
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
  *
- *  Returns:
- *      Nothing, Ax is modified in place
+ * Returns
+ * -------
+ * Nothing, Ax is modified in place
  */
 template<class I, class T, class F>
 void filter_matrix_rows(const I n_row,
