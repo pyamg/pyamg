@@ -32,7 +32,6 @@ except ImportError:
 from .. import amg_core
 from . import linalg
 
-
 def get_blocksize(A):
     """Return the block size of a matrix."""
     if isspmatrix_bsr(A):
@@ -1998,27 +1997,34 @@ def filter_matrix_columns(A, theta):
     return A_filter
 
 
-def filter_matrix_rows(A, theta):
-    """Filter each row of A with tol.
-
-    i.e., drop all entries in row k where
+def filter_matrix_rows(A, theta, diagonal=False, lump=False, cost=[0.0]):
+    """
+    Filter each row of A with tol, i.e., drop all entries in row k where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
-
     Parameters
     ----------
     A : sparse_matrix
-
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
-
+    diagonal : bool
+        If True, filter by diagonal entry. Otherwise, filter by maximum absolute
+        value in row.
+        ----------------------------------------------------------
+        ** diagonal = True filters in place, i.e. A is modified **
+        ----------------------------------------------------------
+    lump : bool
+        If True, instead of removing entries, lump them to diagonal. Preserves
+        row sum of matrix.
+    cost : {list containing one scalar}
+        cost[0] is incremented to reflect a FLOP estimate for this function
     Returns
     -------
-    A_filter : sparse_matrix
+    A_filter : sparse_matrix (*only if diagonal=False*)
         Each row has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
-    Examples
-    --------
+    Example
+    -------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
     >>> from numpy import array
@@ -2030,7 +2036,6 @@ def filter_matrix_rows(A, theta):
     array([[ 0. , -0.5,  0. ,  0. ],
            [ 1. ,  1. ,  0. ,  0. ],
            [ 0. , -0.5,  1. , -0.5]])
-
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
@@ -2039,37 +2044,47 @@ def filter_matrix_rows(A, theta):
     Aformat = A.format
     A = A.tocsr()
 
+    cost[0] += 2.0 * A.nnz
+
     if (theta < 0) or (theta >= 1.0):
         raise ValueError('theta must be in [0,1)')
 
-    # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
-    # amg_core.classical_strength_of_connection(), which ignores diagonal
-    # entries, thus necessitating the trick where we add A.shape[0] to each of
-    # the row indices
-    A_filter = A.copy()
-    A.indices += A.shape[0]
-    A_filter.indices += A.shape[0]
-    # classical_strength_of_connection takes an absolute value internally
-    amg_core.classical_strength_of_connection_abs(A.shape[0],
-                                                  theta,
-                                                  A.indptr,
-                                                  A.indices,
-                                                  A.data,
-                                                  A_filter.indptr,
-                                                  A_filter.indices,
-                                                  A_filter.data)
-    A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
-    A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
-                           A_filter.indices[:A_filter.indptr[-1]],
-                           A_filter.indptr), shape=A_filter.shape)
-
-    if Aformat == 'bsr':
-        A_filter = A_filter.tobsr(blocksize)
+    # Filter by diagonal entry, A_ij = 0 if |A_ij| < theta*|A_ii|
+    if diagonal:
+        pyamg.amg_core.filter_matrix_rows(A.shape[0], theta, A.indptr,
+                                          A.indices, A.data, lump)
+        A.eliminate_zeros()
+        if Aformat == 'bsr':
+            A = A.tobsr(blocksize=blocksize)
+    # Filter by maximum absolute value in row, A_ij = 0 if
+    # |A_ij| < theta * max_{j!=i} |A_{ij}|
     else:
-        A_filter = A_filter.asformat(Aformat)
+        # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
+        # amg_core.classical_strength_of_connection_abs(), which ignores diagonal
+        # entries, thus necessitating the trick where we add A.shape[0] to each of
+        # the row indices
+        A_filter = A.copy()
+        A.indices += A.shape[0]
+        A_filter.indices += A.shape[0]
 
-    A.indices -= A.shape[0]
-    return A_filter
+        # classical_strength_of_connection takes an absolute value internally
+        pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
+                                                            A.indptr, A.indices,
+                                                            A.data, A_filter.indptr,
+                                                            A_filter.indices,
+                                                            A_filter.data)
+        A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
+        A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
+                               A_filter.indices[:A_filter.indptr[-1]],
+                               A_filter.indptr), shape=A_filter.shape)
+
+        if Aformat == 'bsr':
+            A_filter = A_filter.tobsr(blocksize)
+        else:
+            A_filter = A_filter.asformat(Aformat)
+
+        A.indices -= A.shape[0]
+        return A_filter
 
 
 def truncate_rows(A, nz_per_row):
