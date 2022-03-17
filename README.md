@@ -46,11 +46,22 @@ PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and 
 
 # Getting Help
 
-For documentation see [http://pyamg.readthedocs.io/en/latest/](http://pyamg.readthedocs.io/en/latest/).
+- For documentation see [http://pyamg.readthedocs.io/en/latest/](http://pyamg.readthedocs.io/en/latest/).
 
-Create an [issue](https://github.com/pyamg/pyamg/issues).
+- Create an [issue](https://github.com/pyamg/pyamg/issues).
 
-Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [examples](https://github.com/pyamg/pyamg-examples) (for instance  the [0_start_here](https://github.com/pyamg/pyamg-examples/blob/main/0_start_here/demo.py) example).
+- Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [examples](https://github.com/pyamg/pyamg-examples) (for instance  the [0_start_here](https://github.com/pyamg/pyamg-examples/blob/main/0_start_here/demo.py) example).
+
+- Run the unit tests (`pip install pytest`):
+  - With PyAMG installed and from a non-source directory:
+  ```python
+  import pyamg
+  pyamg.test()
+  ```
+  - From the PyAMG source directory and installed (e.g. with `pip install -e .`):
+  ```python
+  pytest .
+  ```
 
 # What is AMG?
 
