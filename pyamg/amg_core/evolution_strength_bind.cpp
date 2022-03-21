@@ -400,8 +400,8 @@ tol : {float}
 
 Returns
 -------
-  Sx is written in place and holds strength
-  values reflecting the above minimization problem
+Sx is written in place and holds strength
+values reflecting the above minimization problem
 
 Notes
 -----

@@ -31,10 +31,8 @@ __doc__ += """
 
 Utility tools
 -------------
-
-  test        --- Run pyamg unittests (requires pytest)
-  __version__ --- pyamg version string
-
+test         Run pyamg unittests (requires pytest)
+__version__  pyamg version string
 """
 
 # Warn on old numpy or scipy.  Two digits.

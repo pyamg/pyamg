@@ -36,7 +36,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
 
     Returns
     -------
-     writes a .vtu file for use in Paraview
+    writes a .vtu file for use in Paraview
 
     Notes
     -----
