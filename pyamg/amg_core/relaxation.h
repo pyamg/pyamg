@@ -278,28 +278,28 @@ void jacobi(const I Ap[], const int Ap_size,
  *
  * Parameters
  * ----------
- *     Ap : array
- *         BSR row pointer
- *     Aj : array
- *         BSR index array
- *     Ax : array
- *         BSR data array
- *     x : array, inplace
- *         approximate solution
- *     b : array
- *         right hand side
- *     temp : array, inplace
- *         temporary vector the same size as x
- *     row_start : int
- *         beginning of the sweep (block row index)
- *     row_stop : int
- *         end of the sweep (i.e. one past the last unknown)
- *     row_step : int
- *         stride used during the sweep (may be negative)
- *     blocksize : int
- *         BSR blocksize (blocks must be square)
- *     omega : float
- *         damping parameter
+ * Ap : array
+ *     BSR row pointer
+ * Aj : array
+ *     BSR index array
+ * Ax : array
+ *     BSR data array
+ * x : array, inplace
+ *     approximate solution
+ * b : array
+ *     right hand side
+ * temp : array, inplace
+ *     temporary vector the same size as x
+ * row_start : int
+ *     beginning of the sweep (block row index)
+ * row_stop : int
+ *     end of the sweep (i.e. one past the last unknown)
+ * row_step : int
+ *     stride used during the sweep (may be negative)
+ * blocksize : int
+ *     BSR blocksize (blocks must be square)
+ * omega : float
+ *     damping parameter
  *
  * Returns
  * -------
@@ -484,30 +484,29 @@ void gauss_seidel_indexed(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *  index pointer for CSR matrix A
+ *     index pointer for CSR matrix A
  * Aj : array
- *  column indices for CSR matrix A
+ *     column indices for CSR matrix A
  * Ax : array
- *  value array for CSR matrix A
+ *     value array for CSR matrix A
  * x : array, inplace
- *  current guess to the linear system
+ *     current guess to the linear system
  * b : array
- *  right hand side
+ *     right hand side
  * Tx : array
- *  scaled residual
- *  D_A^{-1} (b - Ax)
+ *     scaled residual D_A^{-1} (b - Ax)
  * temp : array
- *  work space
+ *     work space
  * row_start : int
- *  controls which rows to start on
+ *     controls which rows to start on
  * row_stop : int
- *  controls which rows to stop on
+ *     controls which rows to stop on
  * row_step : int
- *  controls which rows to iterate over
+ *     controls which rows to iterate over
  * omega : array
- *  size one array that contains the weighted-jacobi
- *  parameter.  An array must be used to pass in omega to
- *  account for the case where omega may be complex
+ *     size one array that contains the weighted-jacobi
+ *     parameter.  An array must be used to pass in omega to
+ *     account for the case where omega may be complex
  *
  * Returns
  * -------
@@ -556,22 +555,21 @@ void jacobi_ne(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *  index pointer for CSR matrix A
+ *     index pointer for CSR matrix A
  * Aj : array
- *  column indices for CSR matrix A
+ *     column indices for CSR matrix A
  * Ax : array
- *  value array for CSR matrix A
+ *     value array for CSR matrix A
  * x : array
- *  current guess to the linear system
+ *     current guess to the linear system
  * b : array
- *  right hand side
+ *     right hand side
  * Tx : array
- *  inverse(diag(A A.H))
+ *     inverse(diag(A A.H))
  * omega : float
- *  relaxation parameter
- *  (if not 1.0, then algorithm becomes SOR)
+ *     relaxation parameter (if not 1.0, then algorithm becomes SOR)
  * row_start,stop,step : int
- *  controls which rows to iterate over
+ *     controls which rows to iterate over
  *
  * Returns
  * -------
@@ -621,22 +619,21 @@ void gauss_seidel_ne(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *  index pointer for CSC matrix A
+ *     index pointer for CSC matrix A
  * Aj : array
- *  row indices for CSC matrix A
+ *     row indices for CSC matrix A
  * Ax : array
- *  value array for CSC matrix A
+ *     value array for CSC matrix A
  * x : array
- *  current guess to the linear system
+ *     current guess to the linear system
  * z : array
- *  initial residual
+ *     initial residual
  * Tx : array
- *  inverse(diag(A.H A))
+ *     inverse(diag(A.H A))
  * omega : float
- *  relaxation parameter
- *  (if not 1.0, then algorithm becomes SOR)
+ *     relaxation parameter (if not 1.0, then algorithm becomes SOR)
  * col_start,stop,step : int
- *  controls which rows to iterate over
+ *     controls which rows to iterate over
  *
  * Returns
  * -------

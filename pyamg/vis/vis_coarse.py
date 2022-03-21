@@ -35,14 +35,14 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
 
     Returns
     -------
-        - Writes data to .vtu file for use in paraview (xml 0.1 format) or
-          displays to screen using matplotlib
+    Writes data to .vtu file for use in paraview (xml 0.1 format) or
+    displays to screen using matplotlib
 
     Notes
     -----
-        - Works for both 2d and 3d elements.  Element groupings are colored
-          with data equal to 2.0 and stringy edges in the aggregate are colored
-          with 3.0
+    Works for both 2d and 3d elements.  Element groupings are colored
+    with data equal to 2.0 and stringy edges in the aggregate are colored
+    with 3.0
 
     Examples
     --------
@@ -155,8 +155,8 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
 
     Returns
     -------
-        - Displays in screen or writes data to .vtu file for use in paraview
-          (xml 0.1 format)
+    Displays in screen or writes data to .vtu file for use in paraview
+    (xml 0.1 format)
 
     Notes
     -----

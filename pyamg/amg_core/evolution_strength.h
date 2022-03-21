@@ -293,8 +293,8 @@ void min_blocks(const I n_blocks,
  *
  * Returns
  * -------
- *   Sx is written in place and holds strength
- *   values reflecting the above minimization problem
+ * Sx is written in place and holds strength
+ * values reflecting the above minimization problem
  *
  * Notes
  * -----
