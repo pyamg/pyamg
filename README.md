@@ -176,3 +176,9 @@ It is possible to list all of the versions of `pyamg` available on your platform
 ```
 conda search pyamg --channel conda-forge
 ```
+
+# OpenMP
+
+To enable OpenMP on macOS, `brew install libomp`
+
+Then `setup.py` will attempt to add `-Xclang -fopenmp` to the compiler and `-lomp` to the linker.
