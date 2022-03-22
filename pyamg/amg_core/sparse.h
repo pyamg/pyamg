@@ -1,4 +1,5 @@
 #include <complex>
+#include <omp.h>
 //
 // Threaded SpMV
 //
@@ -35,7 +36,17 @@ void csr_matvec(const I n_row,
 {
     I i, jj;
     T sum;
-    #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj)
+    int tid;
+    #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj, tid)
+    {
+        id = omp_get_thread_num();
+        printf("Hello World from thread = %d\n", tid);
+
+        if (tid == 0)
+        {
+            nthreads = omp_get_num_threads();
+            printf("Number of threads = %d\n", nthreads);
+        }
     for(i = 0; i < n_row; i++){
         sum = Yx[i];
         #pragma GCC ivdep
@@ -43,5 +54,6 @@ void csr_matvec(const I n_row,
             sum += Ax[jj] * Xx[Aj[jj]];
         }
         Yx[i] = sum;
+    }
     }
 }
