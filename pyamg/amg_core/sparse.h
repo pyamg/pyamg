@@ -1,4 +1,5 @@
 #include <complex>
+#include <iostream>
 #include <omp.h>
 //
 // Threaded SpMV
@@ -36,24 +37,17 @@ void csr_matvec(const I n_row,
 {
     I i, jj;
     T sum;
-    int tid;
-    #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj, tid)
-    {
-        id = omp_get_thread_num();
-        printf("Hello World from thread = %d\n", tid);
-
-        if (tid == 0)
-        {
-            nthreads = omp_get_num_threads();
-            printf("Number of threads = %d\n", nthreads);
-        }
+    int nthreads, tid;
+    #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj, nthreads, tid)
     for(i = 0; i < n_row; i++){
+        nthreads = omp_get_num_threads();
+        tid = omp_get_thread_num();
+        std::cout << "thread " << tid << " of " << nthreads << std::endl;
         sum = Yx[i];
         #pragma GCC ivdep
         for(jj = Ap[i]; jj < Ap[i+1]; jj++){
             sum += Ax[jj] * Xx[Aj[jj]];
         }
         Yx[i] = sum;
-    }
     }
 }
