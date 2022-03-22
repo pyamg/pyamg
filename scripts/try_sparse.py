@@ -3,7 +3,7 @@ import numpy as np
 import sparse
 import os
 
-n = 16
+n = 32
 
 A = pyamg.gallery.poisson((n,), format='csr')
 
