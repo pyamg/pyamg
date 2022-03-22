@@ -1,3 +1,4 @@
+#include <complex>
 //
 // Threaded SpMV
 //

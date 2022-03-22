@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse import csr_matrix, _sparsetools
+import scipy.sparse
 from scipy.sparse.sputils import upcast_char
 import pyamg.amg_core
 
@@ -21,8 +22,8 @@ class csr(csr_matrix):
         result = np.zeros(M, dtype=upcast_char(self.dtype.char,
                                                other.dtype.char))
 
-        # csr_matvec or csc_matvec
-        sparse.csr_matvec(M, N, self.indptr, self.indices, self.data, other, result)
+        #scipy.sparse._sparsetools.csr_matvec(M, N, self.indptr, self.indices, self.data, other, result)
+        pyamg.amg_core.sparse.csr_matvec(M, N, self.indptr, self.indices, self.data, other, result)
 
         return result
 
