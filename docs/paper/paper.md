@@ -8,6 +8,8 @@ tags:
   - Krylov
   - iterative methods
 authors:
+  - name: Nathan Bell
+    affiliation: 0
   - name: Luke N. Olson
     orcid: 0000-0002-5283-6104
     affiliation: 1
@@ -15,6 +17,8 @@ authors:
     orcid: 0000-0002-1076-9206
     affiliation: 2
 affiliations:
+ - name: Google, Mountain View, CA, USA
+   index: 0
  - name: Department of Computer Science, University of Illinois at Urbana-Champaign, Urbana, IL USA 61801
    index: 1
  - name: Department of Mathematics and Statistics, University of New Mexico, Albuquerque, NM USA 87131
