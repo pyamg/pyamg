@@ -18,11 +18,11 @@ authors:
     affiliation: 2
 affiliations:
  - name: Google, Mountain View, CA, USA
-   index: 0
- - name: Department of Computer Science, University of Illinois at Urbana-Champaign, Urbana, IL USA 61801
    index: 1
- - name: Department of Mathematics and Statistics, University of New Mexico, Albuquerque, NM USA 87131
+ - name: Department of Computer Science, University of Illinois at Urbana-Champaign, Urbana, IL USA 61801
    index: 2
+ - name: Department of Mathematics and Statistics, University of New Mexico, Albuquerque, NM USA 87131
+   index: 3
 software_repository_url:
  - https://github.com/pyamg/pyamg
 date: 22 January 2022
