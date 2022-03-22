@@ -38,11 +38,27 @@ void csr_matvec(const I n_row,
     I i, jj;
     T sum;
     int nthreads, tid;
+
+    #pragma omp parallel private(nthreads, tid)
+      {
+
+      /* Obtain thread number */
+      tid = omp_get_thread_num();
+      std::cout << "Hello World from thread = " << tid << std::endl;
+
+      /* Only master thread does this */
+      if (tid == 0)
+        {
+        nthreads = omp_get_num_threads();
+        std::cout << "Number of threads = " << nthreads << std::endl;
+        }
+
+      }
     #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj, nthreads, tid)
     for(i = 0; i < n_row; i++){
         nthreads = omp_get_num_threads();
         tid = omp_get_thread_num();
-        std::cout << "thread " << tid << " of " << nthreads << std::endl;
+        std::cout << "thread " << tid+1 << " of " << nthreads << std::endl;
         sum = Yx[i];
         #pragma GCC ivdep
         for(jj = Ap[i]; jj < Ap[i+1]; jj++){
