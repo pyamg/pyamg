@@ -9,13 +9,13 @@ tags:
   - iterative methods
 authors:
   - name: Nathan Bell
-    affiliation: 0
+    affiliation: 1
   - name: Luke N. Olson
     orcid: 0000-0002-5283-6104
-    affiliation: 1
+    affiliation: 2
   - name: Jacob Schroder
     orcid: 0000-0002-1076-9206
-    affiliation: 2
+    affiliation: 3
 affiliations:
  - name: Google, Mountain View, CA, USA
    index: 1
