@@ -1,3 +1,4 @@
+"""Test sparse matrix operations."""
 import numpy as np
 import pyamg.gallery
 import pyamg.util
@@ -5,7 +6,10 @@ import scipy.sparse
 
 from numpy.testing import TestCase, assert_array_almost_equal
 
+
 class TestScipy(TestCase):
+    """Test sparse matrix operations against scipy."""
+
     def test_matvec(self):
 
         # initialize a seed
