@@ -1,6 +1,6 @@
+"""Sparse matrix interface to internal sparse matrix operations."""
 import numpy as np
-from scipy.sparse import csr_matrix, _sparsetools
-import scipy.sparse
+from scipy.sparse import csr_matrix
 
 try:
     # scipy >=1.8
@@ -12,14 +12,15 @@ except ImportError:
 import pyamg.amg_core
 
 
-class csr(csr_matrix):
-    """
-    New CSR class
+class csr(csr_matrix):  # noqa: N801
+    """CSR class to redefine operations.
 
     The purpose of this class is to redefine the matvec in scipy.sparse
     """
+
     def _mul_vector(self, other):
-        """
+        """Matrix-vector multiplication.
+
         Identical to scipy.sparse with an in internal call to
         pyamg.amg_core.sparse.csr_matvec
         """
@@ -29,8 +30,8 @@ class csr(csr_matrix):
         result = np.zeros(M, dtype=upcast_char(self.dtype.char,
                                                other.dtype.char))
 
-        #scipy.sparse._sparsetools.csr_matvec(M, N, self.indptr, self.indices, self.data, other, result)
-        pyamg.amg_core.sparse.csr_matvec(M, N, self.indptr, self.indices, self.data, other, result)
+        pyamg.amg_core.sparse.csr_matvec(M, N, self.indptr, self.indices, self.data,
+                                         other, result)
 
         return result
 
