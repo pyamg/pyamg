@@ -64,7 +64,7 @@ interface and error handling is implemented directly in Python (more in the next
 
 In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers,
 and performant execution of AMG methods.  The extensive PyAMG 
-[Examples](https://github.com/pyamg/pyamg/wiki/Examples) page highlights many of the package's
+[Examples](https://github.com/pyamg/pyamg-examples) page highlights many of the package's
 advanced AMG capabilities, e.g., for Hermitian, complex, nonsymmetric, and other challenging system types. 
 It is important to note that many other AMG packages exist, mainly with a focus on parallelism and performance, rather than quick access and rapid prototyping.
 This includes BoomerAMG in hypre [@henson2002155;@hypre], MueLu in Trilinos [@muelu-website;@trilinos-website], and GAMG within PETSc [@petsc-web-page], along with other packages focused on accelerators [@amggpu], such as AmgX [@amgx], CUSP [@cusp], and AMGCL [@amgcl].
