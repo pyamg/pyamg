@@ -1,7 +1,14 @@
 import numpy as np
 from scipy.sparse import csr_matrix, _sparsetools
 import scipy.sparse
-from scipy.sparse.sputils import upcast_char
+
+try:
+    # scipy >=1.8
+    from scipy.sparse._sputils import upcast_char
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.sputils import upcast_char
+
 import pyamg.amg_core
 
 
