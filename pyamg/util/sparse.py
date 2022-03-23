@@ -9,7 +9,7 @@ except ImportError:
     # scipy <1.8
     from scipy.sparse.sputils import upcast_char
 
-import pyamg.amg_core
+from .. import amg_core
 
 
 class csr(csr_matrix):  # noqa: N801
@@ -30,8 +30,8 @@ class csr(csr_matrix):  # noqa: N801
         result = np.zeros(M, dtype=upcast_char(self.dtype.char,
                                                other.dtype.char))
 
-        pyamg.amg_core.sparse.csr_matvec(M, N, self.indptr, self.indices, self.data,
-                                         other, result)
+        amg_core.csr_matvec(M, N, self.indptr, self.indices, self.data,
+                            other, result)
 
         return result
 
