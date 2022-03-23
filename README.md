@@ -179,6 +179,18 @@ conda search pyamg --channel conda-forge
 
 # OpenMP
 
-To enable OpenMP on macOS, `brew install libomp`
+- To enable OpenMP on macOS, `brew install libomp`
 
-Then `setup.py` will attempt to add `-Xclang -fopenmp` to the compiler and `-lomp` to the linker.
+- Then set environment variables, following https://scikit-learn.org/dev/developers/advanced_installation.html#macos-compilers-from-homebrew :
+```
+export CC=/usr/bin/clang
+export CXX=/usr/bin/clang++
+export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
+export CFLAGS="$CFLAGS -I$(brew --prefix libomp)/include"
+export CXXFLAGS="$CXXFLAGS -I$(brew --prefix libomp)/include"
+export LDFLAGS="$LDFLAGS -Wl,-rpath,$(brew --prefix libomp)/lib -L$(brew --prefix libomp)/lib -lomp"
+```
+
+- Then `setup.py` will attempt to add `-Xpreprocessor -fopenmp` to the compiler and `-lomp` to the linker.
+
+- To test, try `export OMP_NUM_THREADS=4; python test_omp.py` in `scripts/`

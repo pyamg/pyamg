@@ -23,8 +23,7 @@ extra_compile_args = []
 extra_link_args = []
 
 for cflag, lflag in [('-fopenmp', '-fopenmp'),
-                     ('-Xclang -fopenmp', '-lomp'),
-                     ('-Xpreprocessor -fopenmp -lomp', '-lomp')] :
+                     ('-Xpreprocessor -fopenmp', '-lomp')] :
     try:
         openmp = has_flag(build_ext.compiler, cflag)
         extra_compile_args.append(cflag)

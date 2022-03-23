@@ -14,13 +14,13 @@ A = pyamg.gallery.stencil_grid(stencil, (nx, ny), format='csr')
 u = np.random.rand(A.shape[0])
 
 t0 = timer()
-v = A * u
+v = A @ u
 t1 = timer()
 print('time {}'.format(t1-t0))
 
 A2 = pyamg.util.sparse.csr(A)
 
 t0 = timer()
-v = A * u
+v = A2 @ u
 t1 = timer()
 print('time {}'.format(t1-t0))

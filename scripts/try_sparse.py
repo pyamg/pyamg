@@ -1,6 +1,6 @@
 import pyamg
 import numpy as np
-import sparse
+from pyamg.amg_core import sparse
 import os
 
 n = 32
