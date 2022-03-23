@@ -16,11 +16,11 @@ u = np.random.rand(A.shape[0])
 t0 = timer()
 v = A @ u
 t1 = timer()
-print('time {}'.format(t1-t0))
+print('reg time {}'.format(t1-t0))
 
 A2 = pyamg.util.sparse.csr(A)
 
 t0 = timer()
 v = A2 @ u
 t1 = timer()
-print('time {}'.format(t1-t0))
+print('omp time {}'.format(t1-t0))

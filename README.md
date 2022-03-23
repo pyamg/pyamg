@@ -204,3 +204,7 @@ PyAMG handles OpenMP in the following way
 
     - Then `setup.py` will attempt to add `-Xpreprocessor -fopenmp` to the compiler and `-lomp` to the linker.
 
+#### Tips
+    - The build directory may need to be removed, in order force PyAMG to re-build an OMP-enabled version 
+
+
