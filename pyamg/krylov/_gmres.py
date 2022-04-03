@@ -5,7 +5,7 @@ from ._gmres_householder import gmres_householder
 
 
 def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
-          M=None, callback=None, residuals=None, orthog='householder',
+          M=None, H=None, callback=None, residuals=None, orthog='householder',
           **kwargs):
     """Generalized Minimum Residual Method (GMRES).
 
@@ -37,6 +37,8 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
+    H : array, matrix, sparse matrix, LinearOperator
+        n x n, Hermitian positive definite matrix induced by the H-norm GMRES.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
@@ -98,13 +100,17 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
     """
     # pass along **kwargs
     if orthog == 'householder':
-        (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
-                                      maxiter=maxiter, M=M,
-                                      callback=callback, residuals=residuals,
-                                      **kwargs)
+        if H is None:
+            (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
+                                          maxiter=maxiter, M=M, H=H,
+                                          callback=callback, residuals=residuals,
+                                          **kwargs)
+        else:
+            raise NotImplementedError('Householder based H-GMRES not implemented yet')
+
     elif orthog == 'mgs':
         (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restrt=restrt,
-                              maxiter=maxiter, M=M,
+                              maxiter=maxiter, M=M, H=H,
                               callback=callback, residuals=residuals, **kwargs)
 
     return (x, flag)
