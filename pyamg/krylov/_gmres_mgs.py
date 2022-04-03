@@ -232,11 +232,11 @@ def gmres_mgs(
         # Space required is O(n*max_inner).
         # NOTE:  We are dealing with row-major matrices, so we traverse in a
         #        row-major fashion,
-        #        i.e., H and V's transpose is what we store.
+        #        i.e., Hess and V's transpose is what we store.
         Q = []  # Givens Rotations
         # Upper Hessenberg matrix, which is then
         #   converted to upper tri with Givens Rots
-        H = np.zeros((max_inner + 1, max_inner + 1), dtype=x.dtype)
+        Hess = np.zeros((max_inner + 1, max_inner + 1), dtype=x.dtype)
         V = np.zeros((max_inner + 1, n), dtype=x.dtype)  # Krylov Space
         # vs store the pointers to each column of V.
         #   This saves a considerable amount of time.
@@ -261,34 +261,34 @@ def gmres_mgs(
             for k in range(inner + 1):
                 vk = vs[k]
                 alpha = dotcH(vk, v)
-                H[inner, k] = alpha
+                Hess[inner, k] = alpha
                 v[:] = axpy(vk, v, n, -alpha)
 
             normv = normH(v)
-            H[inner, inner + 1] = normv
+            Hess[inner, inner + 1] = normv
 
             # Re-orthogonalize
             if (reorth is True) and (normv_old == normv_old + 0.001 * normv):
                 for k in range(inner + 1):
                     vk = vs[k]
                     alpha = dotcH(vk, v)
-                    H[inner, k] = H[inner, k] + alpha
+                    Hess[inner, k] = Hess[inner, k] + alpha
                     v[:] = axpy(vk, v, n, -alpha)
 
             # Check for breakdown
-            if H[inner, inner + 1] != 0.0:
-                v[:] = scal(1.0 / H[inner, inner + 1], v)
+            if Hess[inner, inner + 1] != 0.0:
+                v[:] = scal(1.0 / Hess[inner, inner + 1], v)
 
-            # Apply previous Givens rotations to H
+            # Apply previous Givens rotations to Hess
             if inner > 0:
-                apply_givens(Q, H[inner, :], inner)
+                apply_givens(Q, Hess[inner, :], inner)
 
             # Calculate and apply next complex-valued Givens Rotation
             # for the last inner iteration, when inner = n-1.
             # ==> Note that if max_inner = n, then this is unnecessary
             if inner != n - 1:
-                if H[inner, inner + 1] != 0:
-                    [c, s, r] = lartg(H[inner, inner], H[inner, inner + 1])
+                if Hess[inner, inner + 1] != 0:
+                    [c, s, r] = lartg(Hess[inner, inner], Hess[inner, inner + 1])
                     Qblock = np.array([[c, s], [-np.conjugate(s), c]], dtype=x.dtype)
                     Q.append(Qblock)
 
@@ -296,9 +296,11 @@ def gmres_mgs(
                     #   the RHS for the linear system in the Krylov Subspace.
                     g[inner : inner + 2] = np.dot(Qblock, g[inner : inner + 2])
 
-                    # Apply effect of Givens Rotation to H
-                    H[inner, inner] = dotu(Qblock[0, :], H[inner, inner : inner + 2])
-                    H[inner, inner + 1] = 0.0
+                    # Apply effect of Givens Rotation to Hess
+                    Hess[inner, inner] = dotu(
+                        Qblock[0, :], Hess[inner, inner : inner + 2]
+                    )
+                    Hess[inner, inner + 1] = 0.0
 
             niter += 1
 
@@ -314,7 +316,7 @@ def gmres_mgs(
 
                 if callback is not None:
                     y = sp.linalg.solve(
-                        H[0 : inner + 1, 0 : inner + 1].T, g[0 : inner + 1]
+                        Hess[0 : inner + 1, 0 : inner + 1].T, g[0 : inner + 1]
                     )
                     update = np.ravel(V[: inner + 1, :].T.dot(y.reshape(-1, 1)))
                     callback(x + update)
@@ -322,7 +324,7 @@ def gmres_mgs(
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
-        y = sp.linalg.solve(H[0 : inner + 1, 0 : inner + 1].T, g[0 : inner + 1])
+        y = sp.linalg.solve(Hess[0 : inner + 1, 0 : inner + 1].T, g[0 : inner + 1])
         update = np.ravel(V[: inner + 1, :].T.dot(y.reshape(-1, 1)))
         x = x + update
         r = b - A @ x

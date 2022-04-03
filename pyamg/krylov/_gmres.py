@@ -120,7 +120,6 @@ def gmres(
                 restrt=restrt,
                 maxiter=maxiter,
                 M=M,
-                H=H,
                 callback=callback,
                 residuals=residuals,
                 **kwargs
