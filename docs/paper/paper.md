@@ -30,7 +30,7 @@ bibliography: paper.bib
 ---
 \fvset{frame=lines}
 
-# Summary
+# Statement of need
 
 `PyAMG` is a Python package of algebraic multigrid (AMG) solvers and supporting
 tools for approximating the solution to large, sparse linear systems of
@@ -50,6 +50,8 @@ are both dramatically improved.
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
 solvers can be found in [@encmg;@encamg;@amgintro]; a detailed description can be found
 in [@mgtutorial;@mgbook].
+
+# Summary
 
 The overarching goals of `PyAMG` include both readability and performance.
 This includes readable implementations of popular variations of AMG (see the
