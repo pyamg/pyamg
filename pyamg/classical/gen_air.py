@@ -231,6 +231,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
         DeltaMinv = eye(nf, format='csr')
         DeltaMinv.data[:] = (1.0 / C0.diagonal())[Fpts]
     elif interp['Minv'] == 'ilu':
+        print("Warning: ILU is  not going to work, need approx inverse as sparse matrix")
         DeltaMinv = spilu(C0, fill_factor=1)
     else:
         raise ValueError("Invalid choice of interp[Minv]!")
