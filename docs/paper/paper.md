@@ -48,8 +48,8 @@ conditioning of the linear system and convergence rate of the iterative method
 are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
-solvers can be found in [@encmg;@encamg;@amgintro]; a detailed description can be found
-in [@mgtutorial;@mgbook].
+solvers can be found in @encmg, @encamg, and @amgintro; a detailed description can be found
+in @mgtutorial and @mgbook.
 
 # Summary
 
