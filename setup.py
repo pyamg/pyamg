@@ -78,3 +78,10 @@ setup(
     ext_modules=ext_modules,
     cmdclass={'build_ext': build_ext},
 )
+
+if openmpworks:
+    print('+++++++++++++++++\n   OpenMP enabled\n+++++++++++++++++')
+else:
+    print('-----------------\n   OpenMP not enabled\n-----------------')
+print(extra_compile_args)
+print(extra_link_args)
