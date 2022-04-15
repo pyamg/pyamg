@@ -1,11 +1,12 @@
 Release Steps:
+- suppose the current tag is 4.2.2 and the next is 4.2.3
 - with no staged commits and a clean status...
-- meld a summary of `git log 7a74ef7..HEAD --oneline` with whatever hash with `[unreleased]` in changelog
+- meld a summary of `git log $(git tag --sort version:refname | tail -n 1)..HEAD --oneline` (all commits since last tag) with whatever hash with `[4.2.3]` in changelog
 - commit, push
 - `mkvirtualenv releasetest`
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
 - remove untracked files `git clean -xdf`
-- the following can be done with a pre-release, `v4.2.1-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease`
+- the following can be done with a pre-release, `v4.2.3-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease` (below)
 - mark `fallback_version` in `pyproject.toml`
 - `git tag -a v3.2.0 -m "version 3.2.0"`
 - `git push`
