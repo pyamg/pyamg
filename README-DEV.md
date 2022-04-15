@@ -9,10 +9,10 @@ Release Steps:
 - the following can be done with a pre-release, `v4.2.3-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease` (below)
 - mark `fallback_version` in `pyproject.toml`
 - commit, push
-- `git tag -a v3.2.0 -m "version 3.2.0"`
+- `git tag -a v4.2.3 -m "version 4.2.3"`
 - `git push`
 - `git push --tags`
-- then release the version on Github: `gh release create v1.2.3 --notes "see changelog.md"`
+- then release the version on Github: `gh release create v4.2.3 --notes "see changelog.md"`
   - This will trigger the GHA `.github/workflows/wheels.yml` which builds wheels and a source distribution, and publishes to pypi
 
 Testing notes:
