@@ -1,6 +1,7 @@
 [![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC)](https://codecov.io/gh/pyamg/pyamg)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.04142/status.svg)](https://doi.org/10.21105/joss.04142)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
@@ -30,18 +31,25 @@ PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Py
 
 ![](https://raw.githubusercontent.com/pyamg/pyamg/main/docs/logo/pyamg_logo_withtext.png)
 
-PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
+PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu) and [Jacob Schroder](http://people.llnl.gov/schroder2).
 
 # Citing
 
+If you use PyAMG in your work, please consider using the following citation:
+
 <pre>
-@MISC{OlSc2018,
-      author = "Olson, L. N. and Schroder, J. B.",
-      title = "{PyAMG}: Algebraic Multigrid Solvers in {Python} v4.0",
-      year = "2018",
-      url = "https://github.com/pyamg/pyamg",
-      note = "Release 4.0"
-      }
+@article{BeOlSc2022,
+  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder},
+  title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
+  journal   = {Journal of Open Source Software},
+  year      = {2022},
+  publisher = {The Open Journal},
+  volume    = {7},
+  number    = {72},
+  pages     = {4142},
+  doi       = {10.21105/joss.04142},
+  url       = {https://doi.org/10.21105/joss.04142},
+}
 </pre>
 
 # Getting Help
