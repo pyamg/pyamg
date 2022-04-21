@@ -18,17 +18,9 @@ def _mysign(x):
     return x / np.abs(x)
 
 
-def gmres_householder(
-    A,
-    b,
-    x0=None,
-    tol=1e-5,
-    restrt=None,
-    maxiter=None,
-    M=None,
-    callback=None,
-    residuals=None,
-):
+def gmres_householder(A, b, x0=None, tol=1e-5,
+                      restrt=None, maxiter=None,
+                      M=None, callback=None, residuals=None):
     """Generalized Minimum Residual Method (GMRES) based on Housholder.
 
     GMRES iteratively refines the initial solution guess to the
