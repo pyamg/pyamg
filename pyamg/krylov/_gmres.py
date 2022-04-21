@@ -4,20 +4,9 @@ from ._gmres_mgs import gmres_mgs
 from ._gmres_householder import gmres_householder
 
 
-def gmres(
-    A,
-    b,
-    x0=None,
-    tol=1e-5,
-    restrt=None,
-    maxiter=None,
-    M=None,
-    H=None,
-    callback=None,
-    residuals=None,
-    orthog="householder",
-    **kwargs
-):
+def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
+          M=None, H=None, callback=None, residuals=None, orthog='householder',
+          **kwargs):
     """Generalized Minimum Residual Method (GMRES).
 
     GMRES iteratively refines the initial solution guess to the
@@ -110,36 +99,18 @@ def gmres(
 
     """
     # pass along **kwargs
-    if orthog == "householder":
+    if orthog == 'householder':
         if H is None:
-            (x, flag) = gmres_householder(
-                A,
-                b,
-                x0=x0,
-                tol=tol,
-                restrt=restrt,
-                maxiter=maxiter,
-                M=M,
-                callback=callback,
-                residuals=residuals,
-                **kwargs
-            )
-        else:
-            raise NotImplementedError("Householder based H-GMRES not implemented yet")
+            raise NotImplementedError('Householder based H-GMRES not implemented.')
 
-    elif orthog == "mgs":
-        (x, flag) = gmres_mgs(
-            A,
-            b,
-            x0=x0,
-            tol=tol,
-            restrt=restrt,
-            maxiter=maxiter,
-            M=M,
-            H=H,
-            callback=callback,
-            residuals=residuals,
-            **kwargs
-        )
+        (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
+                                      maxiter=maxiter, M=M,
+                                      callback=callback, residuals=residuals,
+                                      **kwargs)
+
+    elif orthog == 'mgs':
+        (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restrt=restrt,
+                              maxiter=maxiter, M=M, H=H,
+                              callback=callback, residuals=residuals, **kwargs)
 
     return (x, flag)
