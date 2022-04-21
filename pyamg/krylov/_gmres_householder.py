@@ -119,10 +119,10 @@ def gmres_householder(
     n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
-    warnings.filterwarnings("always", module="pyamg.krylov._gmres_householder")
+    warnings.filterwarnings('always', module='pyamg.krylov._gmres_householder')
 
     # Get fast access to underlying LAPACK routine
-    [lartg] = get_lapack_funcs(["lartg"], [x])
+    [lartg] = get_lapack_funcs(['lartg'], [x])
 
     # Set number of outer and inner iterations
     # If no restarts,
@@ -135,7 +135,7 @@ def gmres_householder(
         else:
             max_outer = 1
         if restrt > n:
-            warn("Setting restrt to maximum allowed, n.")
+            warn('Setting restrt to maximum allowed, n.')
             restrt = n
         max_inner = restrt
     else:
@@ -143,14 +143,14 @@ def gmres_householder(
         if maxiter is None:
             maxiter = min(n, 40)
         elif maxiter > n:
-            warn("Setting maxiter to maximum allowed, n.")
+            warn('Setting maxiter to maximum allowed, n.')
             maxiter = n
         max_inner = maxiter
 
     # Is this a one dimensional matrix?
     if n == 1:
         entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
-        return (postprocess(b / entry), 0)
+        return (postprocess(b/entry), 0)
 
     # Prep for method
     r = b - A @ x
@@ -197,7 +197,7 @@ def gmres_householder(
         # upper Hessenberg matrix (made upper tri with Givens Rotations)
         H = np.zeros((max_inner, max_inner), dtype=x.dtype)
         # Householder reflectors
-        W = np.zeros((max_inner + 1, n), dtype=x.dtype)
+        W = np.zeros((max_inner+1, n), dtype=x.dtype)
         W[0, :] = w
 
         # Multiply r with (I - 2*w*w.T), i.e. apply the Householder reflector
@@ -213,7 +213,7 @@ def gmres_householder(
             # (2) Calculate the rest, v = P_1*P_2*P_3...P_{j-1}*ej.
             # for j in range(inner-1,-1,-1):
             #    v -= 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), n, inner - 1, -1, -1)
+            amg_core.apply_householders(v, np.ravel(W), n, inner-1, -1, -1)
 
             # Calculate new search direction
             v = A @ v
@@ -229,7 +229,7 @@ def gmres_householder(
             # direction
             # for j in range(inner+1):
             #    v -= 2.0*dot(conjugate(W[j,:]), v)*W[j,:]
-            amg_core.apply_householders(v, np.ravel(W), n, 0, inner + 1, 1)
+            amg_core.apply_householders(v, np.ravel(W), n, 0, inner+1, 1)
 
             # Calculate next Householder reflector, w
             #  w = v[inner+1:] + sign(v[inner+1])*||v[inner+1:]||_2*e_{inner+1)
@@ -238,23 +238,23 @@ def gmres_householder(
             #  to calculate a Householder reflector or Givens rotation because
             #  nnz(v) is already the desired length, i.e. we do not need to
             #  zero anything out.
-            if inner != n - 1:
-                if inner < (max_inner - 1):
-                    w = W[inner + 1, :]
-                vslice = v[inner + 1 :]
+            if inner != n-1:
+                if inner < (max_inner-1):
+                    w = W[inner+1, :]
+                vslice = v[inner+1:]
                 alpha = norm(vslice)
                 if alpha != 0:
                     alpha = _mysign(vslice[0]) * alpha
                     # do not need the final reflector for future calculations
-                    if inner < (max_inner - 1):
-                        w[inner + 1 :] = vslice
-                        w[inner + 1] += alpha
+                    if inner < (max_inner-1):
+                        w[inner+1:] = vslice
+                        w[inner+1] += alpha
                         w[:] = w / norm(w)
 
                     # Apply new reflector to v
                     #  v = v - 2.0*w*(w.T*v)
-                    v[inner + 1] = -alpha
-                    v[inner + 2 :] = 0.0
+                    v[inner+1] = -alpha
+                    v[inner+2:] = 0.0
 
             if inner > 0:
                 # Apply all previous Givens Rotations to v
@@ -266,21 +266,22 @@ def gmres_householder(
             # calculate a Householder reflector or Givens rotation because
             # nnz(v) is already the desired length, i.e. we do not need to zero
             # anything out.
-            if inner != n - 1:
-                if v[inner + 1] != 0:
-                    [c, s, r] = lartg(v[inner], v[inner + 1])
-                    Qblock = np.array([[c, s], [-np.conjugate(s), c]], dtype=x.dtype)
-                    Q[(inner * 4) : ((inner + 1) * 4)] = np.ravel(Qblock).copy()
+            if inner != n-1:
+                if v[inner+1] != 0:
+                    [c, s, r] = lartg(v[inner], v[inner+1])
+                    Qblock = np.array([[c, s], [-np.conjugate(s), c]],
+                                      dtype=x.dtype)
+                    Q[(inner * 4): ((inner+1) * 4)] = np.ravel(Qblock).copy()
 
                     # Apply Givens Rotation to g, the RHS for the linear system
                     # in the Krylov Subspace.  Note that this dot does a matrix
                     # multiply, not an actual dot product where a conjugate
                     # transpose is taken
-                    g[inner : inner + 2] = np.dot(Qblock, g[inner : inner + 2])
+                    g[inner:inner+2] = np.dot(Qblock, g[inner:inner+2])
 
                     # Apply effect of Givens Rotation to v
-                    v[inner] = np.dot(Qblock[0, :], v[inner : inner + 2])
-                    v[inner + 1] = 0.0
+                    v[inner] = np.dot(Qblock[0, :], v[inner:inner+2])
+                    v[inner+1] = 0.0
 
             # Write to upper Hessenberg Matrix,
             #   the LHS for the linear system in the Krylov Subspace
@@ -290,8 +291,8 @@ def gmres_householder(
 
             # Don't update normr if last inner iteration, because
             # normr is calculated directly after this loop ends.
-            if inner < max_inner - 1:
-                normr = np.abs(g[inner + 1])
+            if inner < max_inner-1:
+                normr = np.abs(g[inner+1])
                 if normr < tol * normMb:
                     break
 
@@ -299,13 +300,10 @@ def gmres_householder(
                     residuals.append(normr)
 
                 if callback is not None:
-                    y = sp.linalg.solve(
-                        H[0 : (inner + 1), 0 : (inner + 1)], g[0 : (inner + 1)]
-                    )
+                    y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
                     update = np.zeros(x.shape, dtype=x.dtype)
-                    amg_core.householder_hornerscheme(
-                        update, np.ravel(W), np.ravel(y), n, inner, -1, -1
-                    )
+                    amg_core.householder_hornerscheme(update, np.ravel(W), np.ravel(y),
+                                                      n, inner, -1, -1)
                     callback(x + update)
 
         # end inner loop, back to outer loop
@@ -316,7 +314,7 @@ def gmres_householder(
         # piv = arange(inner+1)
         # y = lu_solve((H[0:(inner+1), 0:(inner+1)], piv), g[0:(inner+1)],
         #             trans=0)
-        y = sp.linalg.solve(H[0 : (inner + 1), 0 : (inner + 1)], g[0 : (inner + 1)])
+        y = sp.linalg.solve(H[0:(inner+1), 0:(inner+1)], g[0:(inner+1)])
 
         # Use Horner like Scheme to map solution, y, back to original space.
         # Note that we do not use the last reflector.
@@ -325,9 +323,8 @@ def gmres_householder(
         #    update[j] += y[j]
         #    # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
         #    update -= 2.0*dot(conjugate(W[j,:]), update)*W[j,:]
-        amg_core.householder_hornerscheme(
-            update, np.ravel(W), np.ravel(y), n, inner, -1, -1
-        )
+        amg_core.householder_hornerscheme(update, np.ravel(W), np.ravel(y),
+                                          n, inner, -1, -1)
 
         x[:] = x + update
         r = b - A @ x
@@ -344,7 +341,7 @@ def gmres_householder(
             residuals.append(normr)
 
         # Has GMRES stagnated?
-        indices = x != 0
+        indices = (x != 0)
         if indices.any():
             change = np.max(np.abs(update[indices] / x[indices]))
             if change < 1e-12:
