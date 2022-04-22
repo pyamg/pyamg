@@ -7,7 +7,7 @@ import numpy as np
 import scipy as sp
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from ..util.linalg import norm
-from ..util import make_system
+from ..util import make_system, IdentityOperator
 
 
 def apply_givens(Q, v, k):
@@ -131,8 +131,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     """
     # Convert inputs to linear system, with error checking
-    if D is not None:
-        D = make_system(A, D, x0, b)[1]
+    D = make_system(A, D, x0, b)[1]  # D=I if None
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     n = A.shape[0]
 
@@ -150,17 +149,9 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         [axpy, dotu, dotc, scal] =\
             get_blas_funcs(['axpy', 'dot', 'dot', 'scal'], [x])
 
-    if D is not None:
-        # Define the D-norm and D-inner product
-        def dotcD(x, y):
-            temp = D @ y
-            return dotc(x, temp)
-
-        def normD(x):
-            return np.sqrt(dotcD(x, x).real)
-    else:
-        dotcD = dotc
-        normD = norm
+    def _normD(x):
+        """Compute D-norm of x."""
+        return np.sqrt(dotc(D @ x, x).real)
 
     # Set number of outer and inner iterations
     # If no restarts,
@@ -196,16 +187,16 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # Apply preconditioner
     r = M @ r
 
-    normr = normD(r)
+    normr = _normD(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
-    normb = normD(b)
+    normb = _normD(b)
     if normb == 0.0:
-        normMb = 1.0  # reset so that tol is unscaled
+        normMb = 1.0   # reset so that tol is unscaled
     else:
-        normMb = normD(M @ b)
+        normMb = _normD(M @ b)
 
     # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
@@ -246,29 +237,29 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
             v = V[inner+1, :]
             v[:] = np.ravel(M @ (A @ vs[-1]))
             vs.append(v)
-            normv_old = normD(v)
+            normv_old = _normD(v)
 
             #  Modified Gram Schmidt
             for k in range(inner+1):
                 vk = vs[k]
-                alpha = dotcD(vk, v)
+                alpha = dotc(D @ vk, v)
                 H[inner, k] = alpha
                 v[:] = axpy(vk, v, n, -alpha)
 
-            normv = normD(v)
+            normv = _normD(v)
             H[inner, inner+1] = normv
 
             # Re-orthogonalize
             if (reorth is True) and (normv_old == normv_old + 0.001 * normv):
                 for k in range(inner+1):
                     vk = vs[k]
-                    alpha = dotcD(vk, v)
+                    alpha = dotc(D @ vk, v)
                     H[inner, k] = H[inner, k] + alpha
                     v[:] = axpy(vk, v, n, -alpha)
 
             # Check for breakdown
             if H[inner, inner+1] != 0.0:
-                v[:] = scal(1.0 / H[inner, inner+1], v)
+                v[:] = scal(1.0/H[inner, inner+1], v)
 
             # Apply previous Givens rotations to H
             if inner > 0:
@@ -318,7 +309,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
         # Apply preconditioner
         r = M @ r
-        normr = normD(r)
+        normr = _normD(r)
 
         # Allow user access to the iterates
         if callback is not None:
