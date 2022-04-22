@@ -100,7 +100,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
     """
     # pass along **kwargs
     if orthog == 'householder':
-        if D is None:
+        if D is not None:
             raise NotImplementedError('Householder based D-GMRES not implemented.')
 
         (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
