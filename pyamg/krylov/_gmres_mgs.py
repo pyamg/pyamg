@@ -40,7 +40,7 @@ def apply_givens(Q, v, k):
 
 def gmres_mgs(A, b, x0=None, tol=1e-5,
               restrt=None, maxiter=None,
-              M=None, H=None, callback=None, residuals=None, reorth=False):
+              M=None, D=None, callback=None, residuals=None, reorth=False):
     """Generalized Minimum Residual Method (GMRES) based on MGS.
 
     GMRES iteratively refines the initial solution guess to the system
@@ -72,8 +72,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
-    H : array, matrix, sparse matrix, LinearOperator
-        n x n, Hermitian positive definite matrix induced by the H-norm GMRES.
+    D : array, matrix, sparse matrix, LinearOperator
+        n x n, Hermitian positive definite matrix induced by the D-norm GMRES.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
@@ -131,8 +131,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     """
     # Convert inputs to linear system, with error checking
-    if H is not None:
-        H = make_system(A, H, x0, b)[1]
+    if D is not None:
+        D = make_system(A, D, x0, b)[1]
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     n = A.shape[0]
 
@@ -150,17 +150,17 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         [axpy, dotu, dotc, scal] =\
             get_blas_funcs(['axpy', 'dot', 'dot', 'scal'], [x])
 
-    if H is not None:
-        # Define the H-norm and H-inner product
-        def dotcH(x, y):
-            temp = H @ y
+    if D is not None:
+        # Define the D-norm and D-inner product
+        def dotcD(x, y):
+            temp = D @ y
             return dotc(x, temp)
 
-        def normH(x):
-            return np.sqrt(dotcH(x, x).real)
+        def normD(x):
+            return np.sqrt(dotcD(x, x).real)
     else:
-        dotcH = dotc
-        normH = norm
+        dotcD = dotc
+        normD = norm
 
     # Set number of outer and inner iterations
     # If no restarts,
@@ -196,16 +196,16 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # Apply preconditioner
     r = M @ r
 
-    normr = normH(r)
+    normr = normD(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
-    normb = normH(b)
+    normb = normD(b)
     if normb == 0.0:
         normMb = 1.0  # reset so that tol is unscaled
     else:
-        normMb = normH(M @ b)
+        normMb = normD(M @ b)
 
     # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
@@ -223,11 +223,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         # Space required is O(n*max_inner).
         # NOTE:  We are dealing with row-major matrices, so we traverse in a
         #        row-major fashion,
-        #        i.e., Hess and V's transpose is what we store.
+        #        i.e., H and V's transpose is what we store.
         Q = []  # Givens Rotations
         # Upper Hessenberg matrix, which is then
         #   converted to upper tri with Givens Rots
-        Hess = np.zeros((max_inner+1, max_inner+1), dtype=x.dtype)
+        H = np.zeros((max_inner+1, max_inner+1), dtype=x.dtype)
         V = np.zeros((max_inner+1, n), dtype=x.dtype)  # Krylov Space
         # vs store the pointers to each column of V.
         #   This saves a considerable amount of time.
@@ -246,40 +246,40 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
             v = V[inner+1, :]
             v[:] = np.ravel(M @ (A @ vs[-1]))
             vs.append(v)
-            normv_old = normH(v)
+            normv_old = normD(v)
 
             #  Modified Gram Schmidt
             for k in range(inner+1):
                 vk = vs[k]
-                alpha = dotcH(vk, v)
-                Hess[inner, k] = alpha
+                alpha = dotcD(vk, v)
+                H[inner, k] = alpha
                 v[:] = axpy(vk, v, n, -alpha)
 
-            normv = normH(v)
-            Hess[inner, inner+1] = normv
+            normv = normD(v)
+            H[inner, inner+1] = normv
 
             # Re-orthogonalize
             if (reorth is True) and (normv_old == normv_old + 0.001 * normv):
                 for k in range(inner+1):
                     vk = vs[k]
-                    alpha = dotcH(vk, v)
-                    Hess[inner, k] = Hess[inner, k] + alpha
+                    alpha = dotcD(vk, v)
+                    H[inner, k] = H[inner, k] + alpha
                     v[:] = axpy(vk, v, n, -alpha)
 
             # Check for breakdown
-            if Hess[inner, inner+1] != 0.0:
-                v[:] = scal(1.0 / Hess[inner, inner+1], v)
+            if H[inner, inner+1] != 0.0:
+                v[:] = scal(1.0 / H[inner, inner+1], v)
 
-            # Apply previous Givens rotations to Hess
+            # Apply previous Givens rotations to H
             if inner > 0:
-                apply_givens(Q, Hess[inner, :], inner)
+                apply_givens(Q, H[inner, :], inner)
 
             # Calculate and apply next complex-valued Givens Rotation
             # for the last inner iteration, when inner = n-1.
             # ==> Note that if max_inner = n, then this is unnecessary
             if inner != n-1:
-                if Hess[inner, inner+1] != 0:
-                    [c, s, r] = lartg(Hess[inner, inner], Hess[inner, inner+1])
+                if H[inner, inner+1] != 0:
+                    [c, s, r] = lartg(H[inner, inner], H[inner, inner+1])
                     Qblock = np.array([[c, s], [-np.conjugate(s), c]], dtype=x.dtype)
                     Q.append(Qblock)
 
@@ -287,9 +287,9 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
                     #   the RHS for the linear system in the Krylov Subspace.
                     g[inner:inner+2] = np.dot(Qblock, g[inner:inner+2])
 
-                    # Apply effect of Givens Rotation to Hess
-                    Hess[inner, inner] = dotu(Qblock[0, :], Hess[inner, inner:inner+2])
-                    Hess[inner, inner+1] = 0.0
+                    # Apply effect of Givens Rotation to H
+                    H[inner, inner] = dotu(Qblock[0, :], H[inner, inner:inner+2])
+                    H[inner, inner+1] = 0.0
 
             niter += 1
 
@@ -304,21 +304,21 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
                     residuals.append(normr)
 
                 if callback is not None:
-                    y = sp.linalg.solve(Hess[0:inner+1, 0:inner+1].T, g[0:inner+1])
+                    y = sp.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
                     update = np.ravel(V[:inner+1, :].T.dot(y.reshape(-1, 1)))
                     callback(x + update)
 
         # end inner loop, back to outer loop
 
         # Find best update to x in Krylov Space V.  Solve inner x inner system.
-        y = sp.linalg.solve(Hess[0:inner+1, 0:inner+1].T, g[0:inner+1])
+        y = sp.linalg.solve(H[0:inner+1, 0:inner+1].T, g[0:inner+1])
         update = np.ravel(V[:inner+1, :].T.dot(y.reshape(-1, 1)))
         x = x + update
         r = b - A @ x
 
         # Apply preconditioner
         r = M @ r
-        normr = normH(r)
+        normr = normD(r)
 
         # Allow user access to the iterates
         if callback is not None:
