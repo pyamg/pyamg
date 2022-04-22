@@ -7,7 +7,7 @@ import numpy as np
 import scipy as sp
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from ..util.linalg import norm
-from ..util import make_system, IdentityOperator
+from ..util import make_system
 
 
 def apply_givens(Q, v, k):
