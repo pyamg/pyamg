@@ -9,7 +9,7 @@ from .version import git_revision as __git_revision__
 from .version import version as __version__
 
 from .multilevel import coarse_grid_solver, multilevel_solver
-from .classical import ruge_stuben_solver, AIR_solver
+from .classical import ruge_stuben_solver, AIR_solver, AIR_pert_solver
 from .aggregation import smoothed_aggregation_solver, rootnode_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
