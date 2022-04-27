@@ -84,7 +84,6 @@ class multilevel_solver:
             self.smoothers = {}
             self.smoothers['presmoother'] = [None, {}]
             self.smoothers['postsmoother'] = [None, {}]
-            self.auxiliary = None
             self.SC = None
 
     def __init__(self, levels, coarse_solver='pinv2'):
@@ -171,9 +170,6 @@ class multilevel_solver:
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
                 level.R = level.P.H
-            if not hasattr(level, 'auxiliary'):
-                level.auxiliary = None
-
 
     def __repr__(self):
         """Print basic statistics about the multigrid hierarchy."""
@@ -628,12 +624,6 @@ class multilevel_solver:
         else:
             return x
 
-    def __auxiliary_solve(self, lvl, bc):
-        """ Auxiliary solve using CG for Gen-AIR
-        """
-        xc = sp.sparse.linalg.cg(levels[lvl].auxiliary['M_aux'], bc, tol=1e-05, maxiter=10)
-        return xc
-
     def __solve(self, lvl, x, b, cycle, cyclesPerLevel=1):
         """Multigrid cycling.
 
@@ -660,12 +650,7 @@ class multilevel_solver:
 
         residual = b - A * x
 
-        # Auxiliary coarse-grid solve for gen-AIR
-        if lvl.auxiliary is not None:
-            coarse_b0 = self.levels[lvl].R * residual
-            coarse_b = self.__auxiliary_solve(lvl, coarse_b0)
-        else:
-            coarse_b = self.levels[lvl].R * residual
+        coarse_b = self.levels[lvl].R * residual
         coarse_x = np.zeros_like(coarse_b)
 
         if lvl == len(self.levels) - 2:
@@ -713,10 +698,6 @@ class multilevel_solver:
                 raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
-
-        # Auxiliary coarse-grid correction for gen-AIR
-        if lvl.auxiliary is not None:
-            x += self.levels[lvl].auxiliary['P_aux'] * coarse_b
 
         self.levels[lvl].postsmoother(A, x, b)
 
