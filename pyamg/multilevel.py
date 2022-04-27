@@ -631,7 +631,7 @@ class multilevel_solver:
     def __auxiliary_solve(self, lvl, bc):
         """ Auxiliary solve using CG for Gen-AIR
         """
-        xc = sp.sparse.linalg.cg(levels[lvl].auxiliary['M_aux'], bc, tol=1e-05, maxiter=10)
+        xc = sp.sparse.linalg.cg(self.levels[lvl].auxiliary['M_aux'], bc, tol=1e-05, maxiter=10)[0]
         return xc
 
     def __solve(self, lvl, x, b, cycle, cyclesPerLevel=1):

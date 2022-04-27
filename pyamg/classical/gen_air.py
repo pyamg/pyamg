@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning, block_diag, vstack
+    SparseEfficiencyWarning, block_diag, vstack, eye
 from scipy.sparse.linalg import spilu
 import numpy as np
 from copy import deepcopy
@@ -17,7 +17,7 @@ from pyamg.strength import classical_strength_of_connection, \
     distance_strength_of_connection, algebraic_distance, affinity_distance, \
     energy_based_strength_of_connection
 from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
-    filter_matrix_rows
+    filter_matrix_rows, get_block_diag
 from pyamg.classical.interpolate import direct_interpolation, \
     standard_interpolation, distance_two_interpolation, injection_interpolation, \
     one_point_interpolation, neumann_AIR, local_AIR
@@ -221,6 +221,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     # -------------- Form interpolation and DeltaM^{-1} -------------- #
     C0 = csr_matrix(A, copy=True)
+    # TODO : this is probably not what we want for BSR;
     if interp['P_theta'] > 0.0:
         filter_matrix_rows(C0, interp['P_theta'], diagonal=True, lump=True)
     C0.data[np.abs(C0.data)<1e-16] = 0
@@ -228,8 +229,15 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     Afc = C0[Fpts,:][:,Cpts]
     if interp['Minv'] == 'diag':
-        DeltaMinv = eye(nf, format='csr')
-        DeltaMinv.data[:] = (1.0 / C0.diagonal())[Fpts]
+        if isspmatrix_bsr(A):
+            bsize = A.blocksize[0]
+            nblock = nf // bsize
+            dinv = get_block_diag(A=C0[Fpts,:][:,Fpts], blocksize=bsize, inv_flag=True)
+            DeltaMinv = bsr_matrix((dinv, np.arange(0,nblock), np.arange(0,nblock+1)), \
+                        blocksize=[bsize,bsize], shape=[nf,nf])
+        else:
+            DeltaMinv = eye(nf, format='csr')
+            DeltaMinv.data[:] = (1.0 / C0.diagonal())[Fpts]
     elif interp['Minv'] == 'ilu':
         print("Warning: ILU is  not going to work, need approx inverse as sparse matrix")
         DeltaMinv = spilu(C0, fill_factor=1)
@@ -238,7 +246,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     # Get sizes and permutation matrix from [F, C] block
     # ordering to natural matrix ordering.
-    permute = eye(n,format='csr')
+    permute = eye(A.shape[0],format='csr')
     permute.indices = np.concatenate((Fpts,Cpts))
 
     # Form P = [-\DeltaM^{-1}*Afc; I] and reorder rows
@@ -267,6 +275,15 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     levels[-1].R = R                  # restriction operator
     levels[-1].splitting = splitting  # C/F splitting
 
+    # Compute RAP = R*(A*P); store F-block of R*A in the process,
+    # denoted deltaR = Acf + Z*Aff
+    A = R * A
+    if isspmatrix_csr(A): # CSR matrix, easy to access submatrices
+        deltaR = A[:,Fpts]
+    else:
+        deltaR = A.tocsr()[:,Fpts]
+    A = A * P
+
     # Build auxiliary coarse-grid solves:
     #   G = deltaR*DeltaMinv = (Acf + Z*Aff)*DeltaM^{-1}
     G = deltaR*DeltaMinv
@@ -283,15 +300,6 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     levels[-1].auxiliary = {}
     levels[-1].auxiliary['P_aux'] = P_aux
     levels[-1].auxiliary['M_aux'] = M_aux
-
-    # Compute RAP = R*(A*P); store F-block of R*A in the process,
-    # denoted deltaR = Acf + Z*Aff
-    A = R * A
-    if isspmatrix_csr(A): # CSR matrix, easy to access submatrices
-        deltaR = A[:,Fpts]
-    else:
-        deltaR = A.tocsr()[:,Fpts]
-    A = A * P
 
     # Make sure coarse-grid operator is in correct sparse format
     if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):
