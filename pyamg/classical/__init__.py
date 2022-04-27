@@ -1,6 +1,7 @@
 """Classical AMG"""
 from __future__ import absolute_import
 
+from .gen_air import *
 from .air import *
 from .air_pert import *
 from .gen_air import *
