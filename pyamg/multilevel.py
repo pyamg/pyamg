@@ -661,7 +661,7 @@ class multilevel_solver:
         residual = b - A * x
 
         # Auxiliary coarse-grid solve for gen-AIR
-        if lvl.auxiliary is not None:
+        if self.levels[lvl].auxiliary is not None:
             coarse_b0 = self.levels[lvl].R * residual
             coarse_b = self.__auxiliary_solve(lvl, coarse_b0)
         else:
@@ -715,7 +715,7 @@ class multilevel_solver:
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
         # Auxiliary coarse-grid correction for gen-AIR
-        if lvl.auxiliary is not None:
+        if self.levels[lvl].auxiliary is not None:
             x += self.levels[lvl].auxiliary['P_aux'] * coarse_b
 
         self.levels[lvl].postsmoother(A, x, b)
