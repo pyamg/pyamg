@@ -1,7 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg.isolve.utils import make_system
+try:
+    from scipy.sparse.linalg._isolve.utils import make_system
+except ImportError:
+    from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.sparse.sputils import upcast
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
 from warnings import warn

@@ -5,7 +5,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning, block_diag
+    SparseEfficiencyWarning, block_diag, vstack
+from scipy.sparse.linalg import spilu
 import numpy as np
 from copy import deepcopy
 
@@ -23,12 +24,12 @@ from pyamg.classical.interpolate import direct_interpolation, \
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
-__all__ = ['AIR_pert_solver']
+__all__ = ['gAIR_solver']
 
-def AIR_pert_solver(A0, S, gamma=1.0,
+def gAIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
-               interp='one_point',
+               interp={'P_theta': 0.0, 'Minv': 'diag'},
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
                postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
@@ -41,11 +42,8 @@ def AIR_pert_solver(A0, S, gamma=1.0,
 
     Parameters
     ----------
-    A0 : csr_matrix
+    A : csr_matrix
         Square nonsymmetric matrix in CSR format
-    S : csr_matrix
-        Perturbation matrix in CSR format
-    gamma : float, where A = A0 + gamma*S
     strength : ['symmetric', 'classical', 'evolution', 'distance',
                 'algebraic_distance','affinity', 'energy_based', None]
         Method used to determine the strength of connection between unknowns
@@ -55,8 +53,10 @@ def AIR_pert_solver(A0, S, gamma=1.0,
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interp : {string} : default 'one-point'
-        Options include 'direct', 'standard', 'inject' and 'one-point'.
+    interp : dictionary with interpolation options:
+        ~ P_theta : {float} default 0.0; Filter tolerance for "strong"
+        connections in Afc for forming P
+        ~ Minv : {string} approximation to Aff^{-1}, options diag and ilu
     restrict : {string} : default distance-2 AIR, with theta = 0.05.
         Options include 'air' for local approximate ideal restriction (lAIR)
         and 'neumann' for Neumann approximate ideal restriction (nAIR).
@@ -112,23 +112,16 @@ def AIR_pert_solver(A0, S, gamma=1.0,
     """
 
     # preprocess A
-    A0 = A0.asfptype()
-    if A0.shape[0] != A0.shape[1]:
-        raise ValueError('expected square matrix')
-    S = S.asfptype()
-    if S.shape[0] != S.shape[1]:
+    A = A.asfptype()
+    if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    A = A0 + gamma*S
     levels = [multilevel_solver.level()]
     levels[-1].A = A
 
-    A0c = deepcopy(A0)
-    Sc = deepcopy(S)
-
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        bottom, A0c, Sc = extend_hierarchy(A0c, Sc, gamma, levels, strength, CF, \
-            interp, restrict, filter_operator, keep)
+        bottom = extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
+                                  keep)
         if bottom:
             break
 
@@ -138,30 +131,41 @@ def AIR_pert_solver(A0, S, gamma=1.0,
 
 
 # internal function
-def extend_hierarchy(A0, S, gamma, levels, strength, CF, interp, restrict, filter_operator, keep):
+def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, keep):
     """ helper function for local methods """
 
+    # Filter operator. Need to keep original matrix on finest level for
+    # computing residuals
+    if (filter_operator is not None) and (filter_operator[1] != 0): 
+        if len(levels) == 1:
+            A = deepcopy(levels[-1].A)
+        else:
+            A = levels[-1].A
+        filter_matrix_rows(A, filter_operator[1], diagonal=True, lump=filter_operator[0])
+    else:
+        A = levels[-1].A
+
     # Check if matrix was filtered to be diagonal --> coarsest grid
-    if A0.nnz == A0.shape[0]:
+    if A.nnz == A.shape[0]:
         return 1
 
     # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
     fn, kwargs = unpack_arg(strength)
     if fn == 'symmetric':
-        C = symmetric_strength_of_connection(A0, **kwargs)
+        C = symmetric_strength_of_connection(A, **kwargs)
     elif fn == 'classical':
-        C = classical_strength_of_connection(A0, **kwargs)
+        C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
-        C = distance_strength_of_connection(A0, **kwargs)
+        C = distance_strength_of_connection(A, **kwargs)
     elif (fn == 'ode') or (fn == 'evolution'):
-        C = evolution_strength_of_connection(A0, **kwargs)
+        C = evolution_strength_of_connection(A, **kwargs)
     elif fn == 'energy_based':
-        C = energy_based_strength_of_connection(A0, **kwargs)
+        C = energy_based_strength_of_connection(A, **kwargs)
     elif fn == 'algebraic_distance':
-        C = algebraic_distance(A0, **kwargs)
+        C = algebraic_distance(A, **kwargs)
     elif fn == 'affinity':
-        C = affinity_distance(A0, **kwargs)
+        C = affinity_distance(A, **kwargs)
     elif fn is None:
         C = A
     else:
@@ -192,32 +196,66 @@ def extend_hierarchy(A0, S, gamma, levels, strength, CF, interp, restrict, filte
     # BS - have run into cases where no C-points are designated, and it
     # throws off the next routines. If everything is an F-point, return here
     if np.sum(splitting) == len(splitting):
-        return 1, -1, -1
+        return 1
 
-    # Generate the interpolation matrix that maps from the coarse-grid to the
-    # fine-grid
-    fn, kwargs = unpack_arg(interp)
-    if fn == 'standard':
-        P = standard_interpolation(A0, C, splitting, **kwargs)
-    elif fn == 'distance_two':
-        P = distance_two_interpolation(A0, C, splitting, **kwargs)
-    elif fn == 'direct':
-        P = direct_interpolation(A0, C, splitting, **kwargs)
-    elif fn == 'one_point':
-        P = one_point_interpolation(A0, C, splitting, **kwargs)
-    elif fn == 'inject':
-        P = injection_interpolation(A0, splitting, **kwargs)
+    # Get Cpts and Fpts
+    Cpts = np.array(np.where(splitting == 1)[0], dtype='int32')
+    Fpts = np.array(np.where(splitting == 0)[0], dtype='int32')
+    if isspmatrix_bsr(A):
+        # Convert block CF-splitting into scalar CF-splitting so that we can access
+        # submatrices of BSR matrix A
+        bsize = A.blocksize[0]
+        Cpts *= bsize
+        Fpts *= bsize
+        Cpts0 = Cpts
+        Fpts0 = Fpts
+        for i in range(1,bsize):
+            Cpts = np.hstack([Cpts,Cpts0+i])
+            Fpts = np.hstack([Fpts,Fpts0+i])
+        Cpts.sort()
+        Fpts.sort()
     else:
-        raise ValueError('unknown interpolation method (%s)' % interp)
+        Cpts = np.where(splitting == 0)[0].sort()
+    nc = Cpts.shape[0]
+    nf = Fpts.shape[0]
+
+    # -------------- Form interpolation and DeltaM^{-1} -------------- #
+    C0 = csr_matrix(A, copy=True)
+    if interp['P_theta'] > 0.0:
+        filter_matrix_rows(C0, interp['P_theta'], diagonal=True, lump=True)
+    C0.data[np.abs(C0.data)<1e-16] = 0
+    C0.eliminate_zeros()
+
+    Afc = C0[Fpts,:][:,Cpts]
+    if interp['Minv'] == 'diag':
+        DeltaMinv = eye(nf, format='csr')
+        DeltaMinv.data[:] = (1.0 / C0.diagonal())[Fpts]
+    elif interp['Minv'] == 'ilu':
+        print("Warning: ILU is  not going to work, need approx inverse as sparse matrix")
+        DeltaMinv = spilu(C0, fill_factor=1)
+    else:
+        raise ValueError("Invalid choice of interp[Minv]!")
+
+    # Get sizes and permutation matrix from [F, C] block
+    # ordering to natural matrix ordering.
+    permute = eye(n,format='csr')
+    permute.indices = np.concatenate((Fpts,Cpts))
+
+    # Form P = [-\DeltaM^{-1}*Afc; I] and reorder rows
+    P = vstack([-DeltaMinv*Afc, eye(nc, format='csr')])
+    if isspmatrix_bsr(A):
+        P = bsr_matrix(permute.T * P, blocksize=[bsize,bsize])
+    else:
+        P = csr_matrix(permute.T * P)
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
     if fn is None:
-        R = P.T.tocsr()
+        R = P.T
     elif fn == 'air':
-        R = local_AIR(A0, splitting, **kwargs)
+        R = local_AIR(A, splitting, **kwargs)
     elif fn == 'nair':
-        R = neumann_AIR(A0, splitting, **kwargs)
+        R = neumann_AIR(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
 
@@ -229,10 +267,31 @@ def extend_hierarchy(A0, S, gamma, levels, strength, CF, interp, restrict, filte
     levels[-1].R = R                  # restriction operator
     levels[-1].splitting = splitting  # C/F splitting
 
-    # RAP = R*(A*P)
-    A0 = R * A0 * P
-    S = R * S * P
-    A = A0 + gamma*S
+    # Build auxiliary coarse-grid solves:
+    #   G = deltaR*DeltaMinv = (Acf + Z*Aff)*DeltaM^{-1}
+    G = deltaR*DeltaMinv
+    Gt = G.transpose()
+    M_aux = eye(nc) + G*Gt
+
+    # Form P_aux = [-\DeltaM^{-1}*G^T; 0] and reorder rows
+    P_aux = vstack([-DeltaMinv*Gt, csr_matrix((nc,nc))])
+    if isspmatrix_bsr(A):
+        P_aux = bsr_matrix(permute.T * P_aux, blocksize=[bsize,bsize])
+    else:
+        P_aux = csr_matrix(permute.T * P_aux)
+
+    levels[-1].auxiliary = {}
+    levels[-1].auxiliary['P_aux'] = P_aux
+    levels[-1].auxiliary['M_aux'] = M_aux
+
+    # Compute RAP = R*(A*P); store F-block of R*A in the process,
+    # denoted deltaR = Acf + Z*Aff
+    A = R * A
+    if isspmatrix_csr(A): # CSR matrix, easy to access submatrices
+        deltaR = A[:,Fpts]
+    else:
+        deltaR = A.tocsr()[:,Fpts]
+    A = A * P
 
     # Make sure coarse-grid operator is in correct sparse format
     if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):
@@ -242,5 +301,6 @@ def extend_hierarchy(A0, S, gamma, levels, strength, CF, interp, restrict, filte
 
     levels.append(multilevel_solver.level())
     levels[-1].A = A
-    return 0, A0, S
+
+    return 0
 

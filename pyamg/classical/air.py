@@ -215,9 +215,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     fn, kwargs = unpack_arg(restrict)
     if fn is None:
         R = P.T
-    elif fn == 'lAIR':
+    elif fn == 'air':
         R = local_AIR(A, splitting, **kwargs)
-    elif fn == 'nAIR':
+    elif fn == 'nair':
         R = neumann_AIR(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
