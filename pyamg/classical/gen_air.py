@@ -24,12 +24,12 @@ from pyamg.classical.interpolate import direct_interpolation, \
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
-__all__ = ['AIR_solver']
+__all__ = ['gAIR_solver']
 
-def AIR_solver(A,
+def gAIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
-               interp={'P_theta': 0.0, 'Minv' = 'diag'},
+               interp={'P_theta': 0.0, 'Minv': 'diag'},
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
                postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
@@ -252,9 +252,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     fn, kwargs = unpack_arg(restrict)
     if fn is None:
         R = P.T
-    elif fn == 'lAIR':
+    elif fn == 'air':
         R = local_AIR(A, splitting, **kwargs)
-    elif fn == 'nAIR':
+    elif fn == 'nair':
         R = neumann_AIR(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
@@ -281,15 +281,15 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
         P_aux = csr_matrix(permute.T * P_aux)
 
     levels[-1].auxiliary = {}
-    levels[-1].auxiliary{'P_aux'} = P_aux
-    levels[-1].auxiliary{'M_aux'} = M_aux
+    levels[-1].auxiliary['P_aux'] = P_aux
+    levels[-1].auxiliary['M_aux'] = M_aux
 
     # Compute RAP = R*(A*P); store F-block of R*A in the process,
     # denoted deltaR = Acf + Z*Aff
     A = R * A
     if isspmatrix_csr(A): # CSR matrix, easy to access submatrices
         deltaR = A[:,Fpts]
-    else 
+    else:
         deltaR = A.tocsr()[:,Fpts]
     A = A * P
 
