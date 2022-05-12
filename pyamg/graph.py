@@ -333,11 +333,15 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     m[centers] = np.arange(num_clusters)          # number the membership
 
     Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start of indices in C for each cluster
+    CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
+
     D = np.empty((maxsize, maxsize), dtype=G.dtype)  # FW distance array
     P = np.empty((maxsize, maxsize), dtype=np.int32) # FW predecessor array
-    CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
     L = np.empty(n, dtype=np.int32)                  # FW local index for current cluster
     q = np.empty(maxsize, dtype=G.dtype)             # FW work array for d**2
+
+    # global work array for distances
+    dist_all = np.empty((num_clusters, maxsize, maxsize), dtype=G.dtype, order='C')
 
     it = 0
     changed1 = True
@@ -350,7 +354,20 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
             if num_clusters < 2:
                 break
 
-            centers = _rebalance(G, centers, m, d, num_clusters, Cptr, CC, L)
+            # calculate distances
+            dist_all.fill(np.inf)
+            for a in range(num_clusters):
+                N = s[a]  # cluster size
+                _N = Cptr[a]+N
+                if _N >= G.shape[0]:
+                    _N = None
+                P.fill(-1)
+                amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
+                                        dist_all[a,:,:].ravel(), P.ravel(), CC[Cptr[a]:_N], L,
+                                        #D.ravel(), P.ravel(), CC[Cptr[a]:_N], L,
+                                        m, a, N)
+            # rebalance
+            centers = _rebalance(G, centers, m, d, dist_all, num_clusters)
 
         if (changed1 or changed2) and (it < maxiter):
             # reinitialize
@@ -380,7 +397,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     return m, centers
 
 
-def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
+def _rebalance(G, c, m, d, dist_all, num_clusters):
     """
     Parameters
     ----------
@@ -388,18 +405,14 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
         Sparse graph
     c : array
         List of centers
-    d : array
-        Distance to cluster center
     m : array
         Cluster membership
+    d : array
+        Distance to cluster center
+    dist_all : array
+        Node-to-node distance for every node in each cluster
     num_clusters : int
         Number of clusters (= number centers)
-    Cptr : array
-        Work array that points to the start of the nodes in C in a cluster
-    C : array
-        Work array of clusters, sorted by cluster
-    L : array
-        Work array of local ids for each cluster
 
     Return
     ------
@@ -412,8 +425,9 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
     Agg2Agg = AggOp.T @ G @ AggOp
     Agg2Agg = Agg2Agg.tocsr()
 
-    E = _elimination_penalty(G, m, d, num_clusters, Cptr, C, L)
-    S, I, J = _split_improvement(G, m, d, num_clusters, Cptr, C, L)
+    E = _elimination_penalty(G, m, d, dist_all, num_clusters)
+    S, I, J = _split_improvement(G, m, d, dist_all, num_clusters)
+
     M = np.ones(num_clusters, dtype=bool)
     Elist = np.argsort(E)
     Slist = np.argsort(S)
@@ -464,7 +478,7 @@ def _rebalance(G, c, m, d, num_clusters, Cptr, C, L):
     return newc
 
 
-def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
+def _elimination_penalty(A, m, d, dist_all, num_clusters):
     """
     see _rebalance()
     """
@@ -474,28 +488,19 @@ def _elimination_penalty(A, m, d, num_clusters, Cptr, C, L):
         E[a] = 0
         Va = np.int32(np.where(m == a)[0])
 
-        N = len(Va)
-        D = np.zeros((N, N))
-        P = np.zeros((N, N), dtype=np.int32)
-        _N = Cptr[a]+N
-        if _N >= A.shape[0]:
-            _N = None
-        amg_core.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
-                                D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
-                                m, a, N)
         for _i, i in enumerate(Va):  # pylint: disable=unused-variable
             dmin = np.inf
             for _j, j in enumerate(Va):
                 for k in A.getrow(j).indices:
                     if m[k] != m[j]:
-                        if (d[k] + D[_i, _j] + A[j, k]) < dmin:
-                            dmin = d[k] + D[_i, _j] + A[j, k]
+                        if (d[k] + dist_all[a, _i, _j] + A[j, k]) < dmin:
+                            dmin = d[k] + dist_all[a, _i, _j] + A[j, k]
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
 
 
-def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
+def _split_improvement(A, m, d, dist_all, num_clusters):
     """
     see _rebalance()
     """
@@ -506,23 +511,14 @@ def _split_improvement(A, m, d, num_clusters, Cptr, C, L):
         S[a] = np.inf
         Va = np.int32(np.where(m == a)[0])
 
-        N = len(Va)
-        D = np.zeros((N, N))
-        P = np.zeros((N, N), dtype=np.int32)
-        _N = Cptr[a]+N
-        if _N >= A.shape[0]:
-            _N = None
-        amg_core.floyd_warshall(A.shape[0], A.indptr, A.indices, A.data,
-                                D.ravel(), P.ravel(), C[Cptr[a]:_N], L,
-                                m, a, N)
         for _i, i in enumerate(Va):
             for _j, j in enumerate(Va):
                 Snew = 0
                 for _k, k in enumerate(Va):  # pylint: disable=unused-variable
-                    if D[_k, _i] < D[_k, _j]:
-                        Snew = Snew + D[_k, _i]**2
+                    if dist_all[a, _k, _i] < dist_all[a, _k, _j]:
+                        Snew = Snew + dist_all[a, _k, _i]**2
                     else:
-                        Snew = Snew + D[_k, _j]**2
+                        Snew = Snew + dist_all[a, _k, _j]**2
                 if Snew < S[a]:
                     S[a] = Snew
                     I[a] = i

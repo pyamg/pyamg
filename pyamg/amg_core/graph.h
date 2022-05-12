@@ -369,6 +369,7 @@ T vertex_coloring_LDF(const I num_rows,
 // Notes
 // -----
 // - There are no checks within this kernel
+// - There is no initialization within this kernel
 // - Ax > 0 is assumed
 // - Only a slice of C is passed to Floyd–Warshall.  See center_nodes.
 // - C[i] is the global index of i for i=0, ..., N in the current cluster
@@ -389,10 +390,6 @@ void floyd_warshall(const I num_nodes,
                     const I N
                     )
 {
-  // initialize distance
-  std::fill(D, D+D_size, std::numeric_limits<T>::infinity());
-  std::fill(P, P+P_size, -1);
-
   // initialize D and P
   for(I _i = 0; _i < N; _i++){              // each node in the cluster, local index
     I i = C[_i];                            // global index
@@ -524,6 +521,10 @@ bool center_nodes(const I num_nodes,
     // P: (max_N, max_N)
     // C: (max_N,)
     // L: (num_nodes,)
+    // initialize
+    std::fill(D, D+D_size, std::numeric_limits<T>::infinity());
+    std::fill(P, P+P_size, -1);
+
     I N = s[a];
     floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                    D,  D_size, P,  P_size, C+Cptr[a], s[a], L,  L_size,
