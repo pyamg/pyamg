@@ -335,13 +335,13 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start of indices in C for each cluster
     CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
 
-    D = np.empty((maxsize, maxsize), dtype=G.dtype)  # FW distance array
-    P = np.empty((maxsize, maxsize), dtype=np.int32) # FW predecessor array
+    D = np.empty(maxsize*maxsize, dtype=G.dtype)     # FW distance array
+    P = np.empty(maxsize*maxsize, dtype=np.int32)    # FW predecessor array
     L = np.empty(n, dtype=np.int32)                  # FW local index for current cluster
     q = np.empty(maxsize, dtype=G.dtype)             # FW work array for d**2
 
     # global work array for distances
-    dist_all = np.empty((num_clusters, maxsize, maxsize), dtype=G.dtype, order='C')
+    dist_all = np.empty((num_clusters, maxsize*maxsize), dtype=G.dtype, order='C')
 
     it = 0
     changed1 = True
@@ -363,8 +363,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
                     _N = None
                 P.fill(-1)
                 amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
-                                        dist_all[a,:,:].ravel(), P.ravel(), CC[Cptr[a]:_N], L,
-                                        #D.ravel(), P.ravel(), CC[Cptr[a]:_N], L,
+                                        dist_all[a,:].ravel(), P, CC[Cptr[a]:_N], L,
                                         m, a, N)
             # rebalance
             centers = _rebalance(G, centers, m, d, dist_all, num_clusters)
@@ -389,7 +388,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
             assert d.min() >= 0, "Encountered a disconnected nodes from d."
 
             changed2 = amg_core.center_nodes(n, G.indptr, G.indices, G.data,
-                                             Cptr, D.ravel(), P.ravel(), CC, L, q,
+                                             Cptr, D, P, CC, L, q,
                                              centers, d, m, p, s)
 
             it += 1
@@ -421,60 +420,59 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
     """
     newc = c.copy()
 
+    # aggregate-to-aggregate neighbors
     AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)), m))).tocsr()
     Agg2Agg = AggOp.T @ G @ AggOp
     Agg2Agg = Agg2Agg.tocsr()
 
+    # calculate elimination and split measures
     E = _elimination_penalty(G, m, d, dist_all, num_clusters)
     S, I, J = _split_improvement(G, m, d, dist_all, num_clusters)
 
+    # sort both ascending
     M = np.ones(num_clusters, dtype=bool)
     Elist = np.argsort(E)
     Slist = np.argsort(S)
+
     i_e = 0  # elimination index
     i_s = 0  # splitting index
     a_e = Elist[i_e]
     a_s = Slist[-1-i_s]
+
+    # if initial indices are the same, bump up the split index
     if a_e == a_s:
         i_s += 1
         a_s = Slist[-1-i_s]
 
-    # show eliminated and split aggregates
-    # run one bellman_ford to get new clusters
-    gamma = 1.0
-    stopsplitting = False
-    while E[a_e] < gamma * S[a_s] or stopsplitting:
+    ic(Elist)
+    ic(E[Elist])
+    ic(Slist)
+    ic(S[Slist])
+    ic(i_e, a_e, c[a_e])
+    ic(i_s, a_s, c[a_s])
+
+    ic(E[a_e], S[a_s], newc[a_e], newc[a_s])
+    while E[a_e] < S[a_s]:
         newc[a_e] = I[a_s]   # redefine centers
         newc[a_s] = J[a_s]   # redefine centers
-        M[Agg2Agg.getrow(a_e).indices] = False  # cannot eliminate neighbors agg
-        M[Agg2Agg.getrow(a_s).indices] = False  # cannot split neighbors agg
-        if len(np.where(np.logical_not(M))[0]) == num_clusters:
-            break
-        findanother = True                          # should we find another aggregate pair?
-        stopsplitting = False                       # should we stop?
-        pushtie = False                             # tie breaker
-        while findanother:
-            if not M[Elist[i_e]]:                   # if we have an invalid aggregate
-                while i_e < num_clusters-1:         # increment elimination counter
-                    i_e += 1
-                    if M[Elist[i_e]]:               # if a valid aggregate is encountered
-                        break
-            if not M[Slist[-1-i_s]] or pushtie:     # if invalid aggregate or need a new one
-                if pushtie:
-                    pushtie = False
-                while i_s < num_clusters-1:         # increment elimination counter
-                    i_s += 1
-                    if M[Slist[-1-i_s]]:            # if a valid aggregate is encountered
-                        break
-            if i_s == num_clusters-1 or i_e == num_clusters-1:
-                stopsplitting = True                # if we've looped through, stop
-                break
-            a_e = Elist[i_e]
-            a_s = Slist[-1-i_s]
-            if a_e != a_s:                          # if new pair found, then done
-                findanother = False
-            else:
-                pushtie = True                      # otherwise push the tie breaker
+        ic(E[a_e], S[a_s], newc[a_e], newc[a_s])
+        M[Agg2Agg.getrow(a_e).indices] = False  # neighbors of a_e
+        M[Agg2Agg.getrow(a_s).indices] = False  # neighbors of a_s
+
+        # get the next smallest E[a_e], with M[a_e]=True
+        nextidx = np.where(M[Elist])[0]
+        if nextidx.size == 0:
+            return newc
+        i_e = nextidx[0]
+        a_e = Elist[i_e]
+
+        # get the next largest S, with M[a_s]=True and a_s!=a_e
+        nextidx = np.where(M[Slist])[0]
+        if nextidx.size == 0:
+            return newc
+        i_s = nextidx[-1]
+        a_s = Slist[-1-i_s]
+
     return newc
 
 
@@ -487,14 +485,16 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
     for a in range(num_clusters):
         E[a] = 0
         Va = np.int32(np.where(m == a)[0])
+        N = len(Va)
 
         for _i, i in enumerate(Va):  # pylint: disable=unused-variable
             dmin = np.inf
             for _j, j in enumerate(Va):
                 for k in A.getrow(j).indices:
                     if m[k] != m[j]:
-                        if (d[k] + dist_all[a, _i, _j] + A[j, k]) < dmin:
-                            dmin = d[k] + dist_all[a, _i, _j] + A[j, k]
+                        _ij = _i * N + _j
+                        if (d[k] + dist_all[a, _ij] + A[j, k]) < dmin:
+                            dmin = d[k] + dist_all[a, _ij] + A[j, k]
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
@@ -510,15 +510,18 @@ def _split_improvement(A, m, d, dist_all, num_clusters):
     for a in range(num_clusters):
         S[a] = np.inf
         Va = np.int32(np.where(m == a)[0])
+        N = len(Va)
 
         for _i, i in enumerate(Va):
             for _j, j in enumerate(Va):
                 Snew = 0
                 for _k, k in enumerate(Va):  # pylint: disable=unused-variable
-                    if dist_all[a, _k, _i] < dist_all[a, _k, _j]:
-                        Snew = Snew + dist_all[a, _k, _i]**2
+                    _ki = _k * N + _i
+                    _kj = _k * N + _j
+                    if dist_all[a, _ki] < dist_all[a, _kj]:
+                        Snew = Snew + dist_all[a, _ki]**2
                     else:
-                        Snew = Snew + dist_all[a, _k, _j]**2
+                        Snew = Snew + dist_all[a, _kj]**2
                 if Snew < S[a]:
                     S[a] = Snew
                     I[a] = i
