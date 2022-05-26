@@ -3,7 +3,6 @@
 from warnings import warn
 import numpy as np
 from scipy import sparse
-from icecream import ic
 
 from . import amg_core
 
@@ -291,6 +290,10 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     - This version computes improved cluster centers with Floyd-Warshall and
       also uses a balanced version of Bellman-Ford to try and find
       nearly-equal-sized clusters.
+    - Repeated calls to bellman_ford_balanced() in the rebalance loop can result
+      in different centers.  This is due to the tie-breaker based on aggregate
+      size in bellman_ford_balanced().  Alternatively, the graph can be seeded
+      with a small random number to make the edge lengths (and distances) unique.
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -343,42 +346,20 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     # global work array for distances
     dist_all = np.empty((num_clusters, maxsize*maxsize), dtype=G.dtype, order='C')
 
-    it = 0
-    changed1 = True
-    changed2 = True
     for riter in range(rebalance_iters+1):
 
-        # rebalance after round 0
-        if riter > 0:
-            # don't rebalance a single cluster
-            if num_clusters < 2:
-                break
-
-            # calculate distances
-            dist_all.fill(np.inf)
-            for a in range(num_clusters):
-                N = s[a]  # cluster size
-                _N = Cptr[a]+N
-                if _N >= G.shape[0]:
-                    _N = None
-                P.fill(-1)
-                amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
-                                        dist_all[a,:].ravel(), P, CC[Cptr[a]:_N], L,
-                                        m, a, N)
-            # rebalance
-            centers = _rebalance(G, centers, m, d, dist_all, num_clusters)
-
-        if (changed1 or changed2) and (it < maxiter):
-            # reinitialize
-            d.fill(np.inf)
-            m.fill(-1)
-            p.fill(-1)
-            pc.fill(0)
-            s.fill(1)
-            d[centers] = 0
-            m[centers] = np.arange(num_clusters)
-
         # lloyd cluster balanced
+        it = 0
+        changed1 = True
+        changed2 = True
+        # reinitialize
+        d.fill(np.inf)
+        m.fill(-1)
+        p.fill(-1)
+        pc.fill(0)
+        s.fill(1)
+        d[centers] = 0
+        m[centers] = np.arange(num_clusters)
         while (changed1 or changed2) and (it < maxiter):
             changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
                                                       d, m, p, pc, s)                           # OUT
@@ -392,6 +373,32 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
                                              centers, d, m, p, s)
 
             it += 1
+
+        # don't rebalance on last pass
+        if riter == rebalance_iters:
+            break
+
+        # don't rebalance a single cluster
+        if num_clusters < 2:
+            break
+
+        # calculate distances
+        dist_all.fill(np.inf)
+        for a in range(num_clusters):
+            N = s[a]  # cluster size
+            _N = Cptr[a]+N
+            if _N >= G.shape[0]:
+                _N = None
+            P.fill(-1)
+            amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
+                                    dist_all[a,:].ravel(), P, CC[Cptr[a]:_N], L,
+                                    m, a, N)
+        # rebalance
+        centers, rebalance_change = _rebalance(G, centers, m, d, dist_all, num_clusters)
+
+        # rebalance did nothing
+        if not rebalance_change:
+            break
 
     return m, centers
 
@@ -417,6 +424,8 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
     ------
     centers : array
         List of new centers
+    rebalance_change : bool
+        Indicate whether centers has changed
     """
     newc = c.copy()
 
@@ -427,53 +436,40 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
 
     # calculate elimination and split measures
     E = _elimination_penalty(G, m, d, dist_all, num_clusters)
-    S, I, J = _split_improvement(G, m, d, dist_all, num_clusters)
+    S, c1, c2 = _split_improvement(G, m, d, dist_all, num_clusters)
 
     # sort both ascending
     M = np.ones(num_clusters, dtype=bool)
-    Elist = np.argsort(E)
-    Slist = np.argsort(S)
+    Esortidx = np.argsort(E)
+    Ssortidx = np.argsort(S)
 
-    i_e = 0  # elimination index
-    i_s = 0  # splitting index
-    a_e = Elist[i_e]
-    a_s = Slist[-1-i_s]
+    i_e = 0               # elimination index
+    i_s = num_clusters-1  # splitting index
 
-    # if initial indices are the same, bump up the split index
-    if a_e == a_s:
-        i_s += 1
-        a_s = Slist[-1-i_s]
+    rebalance_change = False
+    # 0, 1, ..., num_clusters-1
+    while i_e <= (num_clusters-1) and i_s >= 0:
+        a_e = Esortidx[i_e]
+        a_s = Ssortidx[i_s]
 
-    ic(Elist)
-    ic(E[Elist])
-    ic(Slist)
-    ic(S[Slist])
-    ic(i_e, a_e, c[a_e])
-    ic(i_s, a_s, c[a_s])
+        if not M[a_e] or a_e == a_s:          # is cluster a_e modifiable and distinct from a_s?
+            i_e += 1
+            continue
 
-    ic(E[a_e], S[a_s], newc[a_e], newc[a_s])
-    while E[a_e] < S[a_s]:
-        newc[a_e] = I[a_s]   # redefine centers
-        newc[a_s] = J[a_s]   # redefine centers
-        ic(E[a_e], S[a_s], newc[a_e], newc[a_s])
+        if not M[a_s]:                        # is cluster a_s modifiable?
+            i_s -= 1
+            continue
+
+        if E[a_e] > S[a_s]:
+            break
+
         M[Agg2Agg.getrow(a_e).indices] = False  # neighbors of a_e
         M[Agg2Agg.getrow(a_s).indices] = False  # neighbors of a_s
+        newc[a_e] = c1[a_s]   # redefine centers
+        newc[a_s] = c2[a_s]   # redefine centers
+        rebalance_change = True
 
-        # get the next smallest E[a_e], with M[a_e]=True
-        nextidx = np.where(M[Elist])[0]
-        if nextidx.size == 0:
-            return newc
-        i_e = nextidx[0]
-        a_e = Elist[i_e]
-
-        # get the next largest S, with M[a_s]=True and a_s!=a_e
-        nextidx = np.where(M[Slist])[0]
-        if nextidx.size == 0:
-            return newc
-        i_s = nextidx[-1]
-        a_s = Slist[-1-i_s]
-
-    return newc
+    return newc, rebalance_change
 
 
 def _elimination_penalty(A, m, d, dist_all, num_clusters):
