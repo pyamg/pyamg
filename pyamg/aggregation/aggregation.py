@@ -15,7 +15,7 @@ from pyamg.strength import classical_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
-    lloyd_aggregation, balanced_lloyd_aggregation
+    lloyd_aggregation, balanced_lloyd_aggregation, metis_aggregation
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
@@ -352,6 +352,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         if 'pad' in kwargs:
             kwargs['A'] = A
         AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
+    elif fn == 'metis':
+        AggOp = metis_aggregation(C, **kwargs)
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:

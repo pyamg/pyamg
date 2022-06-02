@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from scipy import sparse
 from .. import amg_core
-from ..graph import lloyd_cluster, balanced_lloyd_cluster
+from ..graph import lloyd_cluster, balanced_lloyd_cluster, metis_partition
 
 
 def standard_aggregation(C):
@@ -195,7 +195,6 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
         None     G[i,j] = C[i,j]
         'abs'    G[i,j] = abs(C[i,j])
         'inv'    G[i,j] = 1.0/abs(C[i,j])
-        'inv+'    G[i,j] = 1.0/abs(C[i,j])
         'unit'   G[i,j] = 1
         'sub'    G[i,j] = C[i,j] - min(C)
         =======  ===========================
@@ -364,7 +363,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
 
     naggs = int(min(max(ratio * n, 1), n))
 
-    if pad is not None:
+    if pad is not None and measure == 'inv':
         if A is None:
             raise ValueError('Matrix A is required if pad is used')
 
@@ -412,3 +411,81 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
 
     return AggOp, centers
+
+
+def metis_aggregation(C, ratio=0.1, measure=None):
+    """Aggregate nodes using a METIS partition.
+
+    Parameters
+    ----------
+    C : csr_matrix
+        strength of connection matrix
+    ratio : scalar
+        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
+        a coarsening by 10
+    measure : ['unit','abs','inv',None]
+        Distance measure to use and assigned to each edge graph.  METIS
+        requires integer weights.  None, simply convert to integer (rounding up).
+        `range` maps to integers on the range [1,10], and `unit` gives each unit length.
+
+        For each nonzero value C[i,j]:
+        =======  ===========================
+        None     G[i,j] = ceil(C[i,j])
+        'range'  G[i,j] = np.round(9 * C[i,j])+1
+        'unit'   G[i,j] = 1
+        =======  ===========================
+    maxiter : int
+        Maximum number of iterations to perform
+
+    Returns
+    -------
+    AggOp : csr_matrix
+        aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
+
+    See Also
+    --------
+    amg_core.standard_aggregation
+
+    """
+    C = sparse.csr_matrix(C)
+
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('graph should be a square matrix.')
+
+    n = C.shape[0]
+
+    if ratio <= 0 or ratio > 1:
+        raise ValueError('ratio must be > 0.0 and <= 1.0')
+
+    naggs = int(min(max(ratio * n, 1), n))
+
+    if measure is None:
+        data = np.ceil(C.data).astype(np.int32)
+    elif measure == 'range':
+        data = (np.round(9 * C.data) + 1).astype(np.int32)
+    elif measure == 'unit':
+        data = np.ones_like(C.data).astype(np.int32)
+    else:
+        raise ValueError(f'Unrecognized value measure={measure}')
+
+    if data.min() <= 0:
+        raise ValueError('positive edge weights required')
+
+    if len(data) > 0:
+        if data.min() < 1:
+            raise ValueError('METIS aggregation requires a positive integers.')
+
+    G = C.__class__((data, C.indices, C.indptr), shape=C.shape)
+
+    parts = metis_partition(G, nparts=naggs, seed=None)
+
+    if len(parts) != n:
+        warnings.warn('METIS aggregation encountered a point that is unaggregated.')
+
+    row = (parts >= 0).nonzero()[0]
+    col = parts[row]
+    data = np.ones(len(row), dtype=np.int32)
+    AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
+
+    return AggOp

@@ -852,7 +852,7 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
         dirichlet[idx] = True
 
     # write identity (2 of 2)
-    # mark dirichlet in the data array
+    # mark Dirichlet in the data array
     dirichlet_idx = np.logical_or(dirichlet[A.row], dirichlet[A.col])
     A.data[dirichlet_idx] = 0.0
     if not remove_dirichlet:

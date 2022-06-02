@@ -90,13 +90,16 @@ def plotaggs(AggOp, V, G, ax,
         todraw = todraw.buffer(buffer[0])                  # expand to smooth
         todraw = todraw.buffer(buffer[1])                  # then contract
 
+        if not hasattr(todraw, 'geoms'):
+            todraw = sg.MultiPolygon([todraw])
         try:
             # pylint: disable=no-member
-            xs, ys = todraw.exterior.xy                    # get all of the exterior points
-            if aggvals is not None:
-                kwargs['color'] = aggcolor[aggnum]
-            ax.fill(xs, ys,
-                    clip_on=False,
+            for poly in todraw.geoms:
+                xs, ys = poly.exterior.xy                    # get all of the exterior points
+                if aggvals is not None:
+                    kwargs['color'] = aggcolor[aggnum]
+                ax.fill(xs, ys,
+                        clip_on=False,
                     **kwargs)                         # fill with a color
         except Exception:  # pylint: disable=broad-except
             print('Problem drawing exterior points')

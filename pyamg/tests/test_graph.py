@@ -5,7 +5,8 @@ from numpy.testing import TestCase, assert_equal
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import (maximal_independent_set, vertex_coloring,
-                         bellman_ford, lloyd_cluster, connected_components)
+                         bellman_ford, lloyd_cluster, connected_components,
+                         metis_partition)
 from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
 from pyamg import amg_core
 
@@ -457,3 +458,70 @@ def reference_connected_components(G):
             components.add(frozenset(component))
 
     return components
+
+def test_metis():
+    # 0        4
+    # | \    / |
+    # 1--2--3--5
+    # target [0, 0, 0, 1, 1, 1] or [1, 1, 1, 0, 0, 0]
+    Edges = np.array([[0, 1],
+                      [0, 2],
+                      [1, 2],
+                      [2, 3],
+                      [3, 4],
+                      [3, 5],
+                      [4, 5]])
+    w = np.ones(Edges.shape[0], dtype=int)
+    G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])), shape=(6,6))
+    G = G + G.T  # undirected
+    G = G.tocoo()
+
+    # set fake diagonal (which gets zeroed)
+    G.setdiag(4.4)
+    G = G.tocsr()
+
+    parts = metis_partition(G, nparts=2)
+
+    # check left part
+    assert_equal(parts[:3], parts[0]*np.ones(3, dtype=int))
+
+    # check right part
+    assert_equal(parts[3:], parts[3]*np.ones(3, dtype=int))
+
+    # 0 -- 1 -- 2
+    # |    +    +
+    # 3 ++ 4 -- 5
+    # |    |    |
+    # 6 ++ 7 -- 8
+    # make edges ++ small ~1
+    # make edges -- large ~10
+    # target [0, 0, 0, 0, 1, 1, 0, 1, 1]
+    #     or [1, 1, 1, 1, 0, 0, 1, 0, 0]
+    Edges = np.array([[0, 1], [0, 3],
+                      [1, 0], [1, 4], [1, 2],
+                      [2, 1], [2, 5],
+                      [3, 0], [3, 4], [3, 6],
+                      [4, 1], [4, 3], [4, 5], [4, 7],
+                      [5, 2], [5, 4], [5, 8],
+                      [6, 3], [6, 7],
+                      [7, 4], [7, 6], [7, 8],
+                      [8, 5], [8, 7]])
+    w = 10*np.ones(Edges.shape[0], dtype=int)
+    for i, e in enumerate(Edges):
+        if np.array_equal(np.sort([1, 4]), np.sort(e)) or \
+           np.array_equal(np.sort([2, 5]), np.sort(e)) or \
+           np.array_equal(np.sort([3, 4]), np.sort(e)) or \
+           np.array_equal(np.sort([6, 7]), np.sort(e)):
+            w[i] = 1
+    G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])), shape=(9, 9))
+    G = G.tocsr()
+
+    parts = metis_partition(G, nparts=2)
+
+    # check first part
+    I = [0, 1, 2, 3, 6]
+    assert_equal(parts[I], parts[I[0]]*np.ones(5, dtype=int))
+
+    # check second part
+    I = [4, 5, 7, 8]
+    assert_equal(parts[I], parts[I[0]]*np.ones(4, dtype=int))

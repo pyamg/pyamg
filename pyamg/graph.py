@@ -787,3 +787,55 @@ def pseudo_peripheral_node(A):
             delta = level[y]
         else:
             return x, order, level
+
+
+def metis_partition(G, nparts=5, seed=None):
+    """Perform partitioning of graph with weighted edges using METIS.
+
+    Parameters
+    ----------
+    G : csr_matrix
+        A sparse n x n matrix where each nonzero entry G[i,j] is the distance
+        between nodes i and j.  G[i,j] is required to be integer.
+    nparts : int
+        Number of parts in the resulting partition.
+    seed : int
+        Random seed for METIS.
+
+    Returns
+    -------
+    parts : int array
+        Array of n x 1 indices from 0 ... nparts-1.
+    """
+    G = sparse.csr_matrix(G)
+    n = G.shape[0]
+
+    if G.dtype.kind != 'i':
+        raise ValueError('METIS partitioning requires integer weights')
+
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('METIS partitioning is defined only for positive integer weights.')
+
+    if not isinstance(nparts, int) or nparts < 1:
+        raise ValueError('nparts should be a positive integer')
+
+    try:
+        import pymetis
+    except ImportError:
+        raise ImportError('pymetis required for METIS partitioning')
+
+    # set diagonal to zero and force reallocation
+    G = G.tocoo()
+    G.setdiag(0)
+    G = G.tocsr()
+
+    # metis options
+    opt = pymetis.Options()
+    opt.contig = 1
+    if seed:
+        opt.seed = seed
+    n_cuts, parts = pymetis.part_graph(nparts, xadj=G.indptr, adjncy=G.indices, eweights=G.data,
+                                       options=opt)
+
+    return np.array(parts)
