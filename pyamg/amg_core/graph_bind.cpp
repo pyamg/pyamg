@@ -212,6 +212,7 @@ bool _center_nodes(
        py::array_t<T> & d,
        py::array_t<I> & m,
        py::array_t<I> & p,
+      py::array_t<I> & pc,
        py::array_t<I> & s
                    )
 {
@@ -228,6 +229,7 @@ bool _center_nodes(
     auto py_d = d.mutable_unchecked();
     auto py_m = m.mutable_unchecked();
     auto py_p = p.mutable_unchecked();
+    auto py_pc = pc.mutable_unchecked();
     auto py_s = s.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
@@ -242,6 +244,7 @@ bool _center_nodes(
     T *_d = py_d.mutable_data();
     I *_m = py_m.mutable_data();
     I *_p = py_p.mutable_data();
+    I *_pc = py_pc.mutable_data();
     I *_s = py_s.mutable_data();
 
     return center_nodes<I, T>(
@@ -259,6 +262,7 @@ bool _center_nodes(
                        _d, d.shape(0),
                        _m, m.shape(0),
                        _p, p.shape(0),
+                      _pc, pc.shape(0),
                        _s, s.shape(0)
                               );
 }
@@ -629,6 +633,7 @@ Parameters
 Notes
 -----
 - There are no checks within this kernel
+- There is no initialization within this kernel
 - Ax > 0 is assumed
 - Only a slice of C is passed to Floyd–Warshall.  See center_nodes.
 - C[i] is the global index of i for i=0, ..., N in the current cluster
@@ -637,11 +642,11 @@ Notes
 - assumes a fully connected (directed) graph)pbdoc");
 
     m.def("center_nodes", &_center_nodes<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
     m.def("center_nodes", &_center_nodes<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
     m.def("center_nodes", &_center_nodes<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("s").noconvert(),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(),
 R"pbdoc(
 Update center nodes for a cluster
 
@@ -661,6 +666,7 @@ Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clus
    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
    m         : (INOUT) cluster index                                   (num_nodes x 1)
    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   pc        : (INOUT) predecessor count                               (num_nodes x 1)
    s         : (INOUT) cluster size                                    (num_clusters x 1)
 
 Returns

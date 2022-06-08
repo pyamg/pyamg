@@ -444,6 +444,7 @@ void floyd_warshall(const I num_nodes,
 //    d         : (INOUT) distance to cluster center                      (num_nodes x 1)
 //    m         : (INOUT) cluster index                                   (num_nodes x 1)
 //    p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+//    pc        : (INOUT) predecessor count                               (num_nodes x 1)
 //    s         : (INOUT) cluster size                                    (num_clusters x 1)
 //
 // Returns
@@ -483,6 +484,7 @@ bool center_nodes(const I num_nodes,
                          T d[],  const int d_size,  // from BF
                          I m[],  const int m_size,  // from BF
                          I p[],  const int p_size,  // from BF
+                         I pc[], const int pc_size, // from BF
                          I s[],  const int s_size)  // from BF
 {
   I num_clusters = c_size;
@@ -552,7 +554,9 @@ bool center_nodes(const I num_nodes,
         I j = C[Cptr[a] + _j];    // global index of every node in the cluster
         I _ij = _i * N + _j;
         d[j] = D[_ij];
-        p[j] = P[_ij];
+        pc[p[j]]--;               // update predecessor count
+        p[j] = P[_ij];            // set predecessor
+        pc[p[j]]++;               // update predecessor count
         changed = true;
       }
     }
@@ -662,7 +666,7 @@ bool bellman_ford_balanced(const I num_nodes,
                            const I Ap[], const int Ap_size,
                            const I Aj[], const int Aj_size,
                            const T Ax[], const int Ax_size,
-                           const I  c[],  const int c_size,
+                           const I  c[], const int c_size,
                                  T  d[], const int  d_size,
                                  I  m[], const int  m_size,
                                  I  p[], const int  p_size,

@@ -96,7 +96,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s)
+                                    centers, d, m, p, pc, s)
 
     # >>Check Pass 0 center_nodes
     assert_array_equal(centers, [1, 5, 8])
@@ -127,7 +127,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s)
+                                    centers, d, m, p, pc, s)
 
     # >>Check Pass 1 center_nodes
     assert_array_equal(centers, [1, 5, 8])
@@ -202,7 +202,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     changed = amg_core.center_nodes(n, Ap, Aj, Ax,
                                     Cptr,
                                     D.ravel(), P.ravel(), CC, L, q,
-                                    centers, d, m, p, s)
+                                    centers, d, m, p, pc, s)
 
     # >>Check Pass 0 center_nodes
     assert_array_equal(centers, [1, 5])
