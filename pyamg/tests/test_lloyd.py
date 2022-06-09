@@ -28,6 +28,12 @@ def construct_graph_laplacian():
     return G
 
 
+def _check_pc(p):
+    p = np.array(p)
+    c = np.bincount(p[p>-1], minlength=len(p))
+    return c
+
+
 def test_balanced_lloyd_1d(construct_1dfd_graph):
     G = construct_1dfd_graph
 
@@ -89,6 +95,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     assert_array_equal(d, [1, 0, 1, 2, 3, 2, 1, 0, 0])
     assert_array_equal(p, [1, -1, 1, 2, 5, 6, 7, -1, -1])
     assert_array_equal(pc, [0, 2, 1, 0, 0, 1, 1, 1, 0])
+    assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4, 1])
     assert changed
 
@@ -105,7 +112,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     # tareq: assert_array_equal(p, [1, -1, 1, 2, 5, -1, 5, 6, -1])
     assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 6, -1])
     # tareq: assert_array_equal(pc, [0, 2, 1, 0, 0, 2, 1, 0, 0])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 1, 1, 1, 0])
+    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 1, 0, 0])
+    assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4, 1])
     assert changed
 
@@ -119,7 +127,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     # tareq: assert_array_equal(p, [1, -1, 1, 2, 5, -1, 5, 8, -1])
     assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 8, -1])
     # tareq: assert_array_equal(pc, [0, 2, 1, 0, 0, 2, 0, 0, 1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 1, 0, 1, 1])
+    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 0, 0, 1])
+    assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 3, 2])
     assert changed
 
@@ -136,7 +145,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     # tareq: assert_array_equal(p, [1, -1, 1, 2, 5, -1, 5, 8, -1])
     assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 8, -1])
     # tareq: assert_array_equal(pc, [0, 2, 1, 0, 0, 2, 0, 0, 1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 1, 0, 1, 1])
+    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 0, 0, 1])
+    assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 3, 2])
     assert not changed
 
@@ -195,6 +205,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     assert_array_equal(d, [1, 0, 1, 2, 1, 0, 1, 2])
     assert_array_equal(p, [1, -1, 1, 2, 5, -1, 5, 6])
     assert_array_equal(pc, [0, 2, 1, 0, 0, 2, 1, 0])
+    assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4])
     assert changed
 
