@@ -489,6 +489,7 @@ bool center_nodes(const I num_nodes,
 {
   I num_clusters = c_size;
   bool changed = false; // return a change on d or p
+  const double tol = 1e-14; // precision tolerance
 
   // point the first empty slot in cluster block of C
   I Clast = 0;
@@ -543,7 +544,7 @@ bool center_nodes(const I num_nodes,
 
     I i = c[a];                   // global index of the cluster center
     for(I _j=0; _j<N; _j++){
-      if(q[_j] < q[L[i]]) {       // is j (strictly) better?
+      if(q[_j] < q[L[i]] - tol) {       // is j (strictly) better?
         i = C[Cptr[a] + _j];      // global index of every node in the cluster
       }
     }
