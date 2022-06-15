@@ -390,6 +390,7 @@ void floyd_warshall(const I num_nodes,
                     const I N
                     )
 {
+  const double tol = 1e-14; // precision tolerance
   // initialize D and P
   for(I _i = 0; _i < N; _i++){              // each node in the cluster, local index
     I i = C[_i];                            // global index
@@ -417,7 +418,7 @@ void floyd_warshall(const I num_nodes,
         I ij = i * N + j;
         I ik = i * N + k;
         I kj = k * N + j;
-        if(D[ij] > (D[ik] + D[kj])){
+        if(D[ij] > (D[ik] + D[kj] + tol)){
           D[ij] = D[ik] + D[kj];
           P[ij] = P[kj];
         }
