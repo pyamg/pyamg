@@ -76,8 +76,8 @@ class TestAllPairs(TestCase):
         for A, D_ref, P_ref in self.cases:
             num_nodes = A.shape[0]
             N = num_nodes
-            D = np.zeros((N, N))
-            P = np.zeros((N, N), dtype=np.int32)
+            D = np.full((N, N), np.inf, dtype=A.dtype)
+            P = np.full((N, N), -1, dtype=np.int32)
             C = np.arange(0, N, dtype=np.int32)
             L = np.arange(0, N, dtype=np.int32)
             m = np.ones((N,), dtype=np.int32)
