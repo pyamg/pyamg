@@ -72,7 +72,9 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     m = np.full(n, -1, dtype=np.int32)
     d = np.full(n, np.inf, dtype=G.dtype)
     p = np.full(n, -1, dtype=np.int32)
+    p[centers] = centers
     pc = np.zeros(n, dtype=np.int32)
+    pc[centers] = 1
     s = np.full(num_clusters, 1, dtype=np.int32)
 
     for a in range(centers.shape[0]):
@@ -93,8 +95,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     # >>Check Pass 0 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1, 2])
     assert_array_equal(d, [1, 0, 1, 2, 3, 2, 1, 0, 0])
-    assert_array_equal(p, [1, -1, 1, 2, 5, 6, 7, -1, -1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 1, 1, 1, 0])
+    assert_array_equal(p, [1, 1, 1, 2, 5, 6, 7, 7, 8])
+    assert_array_equal(pc, [0, 3, 1, 0, 0, 1, 1, 2, 1])
     assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4, 1])
     assert changed
@@ -109,8 +111,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     assert_array_equal(centers, [1, 5, 8])
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1, 2])
     assert_array_equal(d, [1, 0, 1, 2, 1, 0, 1, 2, 0])
-    assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 6, -1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 1, 0, 0])
+    assert_array_equal(p, [1, 1, 1, 2, 5, 5, 5, 6, 8])
+    assert_array_equal(pc, [0, 3, 1, 0, 0, 3, 1, 0, 1])
     assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4, 1])
     assert changed
@@ -120,10 +122,11 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
                                              d,  m, p, pc, s)
 
     # >>Check Pass 1 bellman_ford_balanced
+    assert_array_equal(centers, [1, 5, 8])
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 2, 2])
     assert_array_equal(d, [1, 0, 1, 2, 1, 0, 1, 1, 0])
-    assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 8, -1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 0, 0, 1])
+    assert_array_equal(p, [1, 1, 1, 2, 5, 5, 5, 8, 8])
+    assert_array_equal(pc, [0, 3, 1, 0, 0, 3, 0, 0, 2])
     assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 3, 2])
     assert changed
@@ -138,8 +141,8 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     assert_array_equal(centers, [1, 5, 8])
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 2, 2])
     assert_array_equal(d, [1, 0, 1, 2, 1, 0, 1, 1, 0])
-    assert_array_equal(p, [1, -1, 1, 2, 5, 5, 5, 8, -1])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 3, 0, 0, 1])
+    assert_array_equal(p, [1, 1, 1, 2, 5, 5, 5, 8, 8])
+    assert_array_equal(pc, [0, 3, 1, 0, 0, 3, 0, 0, 2])
     assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 3, 2])
     assert not changed
@@ -176,7 +179,9 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     m = np.full(n, -1, dtype=np.int32)
     d = np.full(n, np.inf, dtype=G.dtype)
     p = np.full(n, -1, dtype=np.int32)
+    p[centers] = centers
     pc = np.zeros(n, dtype=np.int32)
+    pc[centers] = 1
     s = np.full(num_clusters, 1, dtype=np.int32)
 
     for a in range(centers.shape[0]):
@@ -197,8 +202,8 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     # >>Check Pass 0 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(d, [1, 0, 1, 2, 1, 0, 1, 2])
-    assert_array_equal(p, [1, -1, 1, 2, 5, -1, 5, 6])
-    assert_array_equal(pc, [0, 2, 1, 0, 0, 2, 1, 0])
+    assert_array_equal(p, [1, 1, 1, 2, 5, 5, 5, 6])
+    assert_array_equal(pc, [0, 3, 1, 0, 0, 3, 1, 0])
     assert_array_equal(_check_pc(p), pc)
     assert_array_equal(s, [4, 4])
     assert changed
