@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.sparse as sparse
 
+import pytest
+
 from numpy.testing import TestCase, assert_equal
 
 from pyamg.gallery import poisson, load_example
@@ -460,6 +462,9 @@ def reference_connected_components(G):
     return components
 
 def test_metis():
+    # check if pymetis is available before testing
+    metis = pytest.importorskip('pymetis')
+
     # 0        4
     # | \    / |
     # 1--2--3--5
