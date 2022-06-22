@@ -368,15 +368,25 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
             assert m.min() >= 0, "Encountered a disconnected nodes from m."
             assert d.min() >= 0, "Encountered a disconnected nodes from d."
 
+            truepc = np.bincount(p[p > -1], minlength=len(p))
+            print(f'{it=}', np.count_nonzero(truepc - pc))
+
             changed2 = amg_core.center_nodes(n, G.indptr, G.indices, G.data,
                                              Cptr, D, P, CC, L, q,
                                              centers, d, m, p, pc, s)
 
+            truepc = np.bincount(p[p > -1], minlength=len(p))
+            print(f'{it=}', np.count_nonzero(truepc - pc))
             it += 1
 
         # slow list version: [len(np.where(p==i)[0]) for i in range(len(p))]
         truepc = np.bincount(p[p>-1], minlength=len(p))
         if np.count_nonzero(truepc - pc):
+            print('uhoh: ', np.count_nonzero(truepc - pc))
+            I = np.where(truepc - pc)[0]
+            print(I)
+            print(truepc[I])
+            print(pc[I])
             raise ValueError('Predecessor count is incorrect.')
 
         # don't rebalance on last pass

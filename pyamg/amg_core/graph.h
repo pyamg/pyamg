@@ -545,20 +545,23 @@ bool center_nodes(const I num_nodes,
 
     I i = c[a];                   // global index of the cluster center
     for(I _j=0; _j<N; _j++){
-      if(q[_j] < q[L[i]] - tol) {       // is j (strictly) better?
+      if(q[_j] < q[L[i]] - tol) { // is j (strictly) better?
         i = C[Cptr[a] + _j];      // global index of every node in the cluster
       }
     }
     if(i != c[a]){                // if we've found a new center, then...
-      c[a] = i;
+      c[a] = i;                   // i is the new center
       I _i = L[i];
-      for(I _j=0; _j<N; _j++){
+      for(I _j=0; _j<N; _j++){    // update metrics for all nodes in the cluster
         I j = C[Cptr[a] + _j];    // global index of every node in the cluster
         I _ij = _i * N + _j;
-        d[j] = D[_ij];
-        pc[p[j]]--;               // update predecessor count
+
+        d[j] = D[_ij];            // new distance from i->j
+
+        pc[p[j]]--;               // update predecessor count (old j)
         p[j] = P[_ij];            // set predecessor
-        pc[p[j]]++;               // update predecessor count
+        pc[p[j]]++;               // update predecessor count (new j)
+
         changed = true;
       }
     }
