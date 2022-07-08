@@ -227,7 +227,6 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     C0.data[np.abs(C0.data)<1e-16] = 0
     C0.eliminate_zeros()
 
-    Afc = C0[Fpts,:][:,Cpts]
     if interp['Minv'] == 'diag':
         if isspmatrix_bsr(A):
             bsize = A.blocksize[0]
@@ -250,11 +249,14 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     permute.indices = np.concatenate((Fpts,Cpts))
 
     # Form P = [-\DeltaM^{-1}*Afc; I] and reorder rows
+    Afc = C0[Fpts,:][:,Cpts]
     P = vstack([-DeltaMinv*Afc, eye(nc, format='csr')])
     if isspmatrix_bsr(A):
         P = bsr_matrix(permute.T * P, blocksize=[bsize,bsize])
     else:
         P = csr_matrix(permute.T * P)
+    ### DEBUG, just testing forcing 1-point interp
+    # P = one_point_interpolation(A, C, splitting)
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
