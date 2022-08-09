@@ -546,7 +546,7 @@ class MultilevelSolver:
 
         residual = b - A @ x
 
-        coarse_b = self.levels[lvl].R * residual
+        coarse_b = self.levels[lvl].R @ residual
         coarse_x = np.zeros_like(coarse_b)
 
         if lvl == len(self.levels) - 2:
@@ -592,7 +592,7 @@ class MultilevelSolver:
             else:
                 raise TypeError(f'Unrecognized cycle type ({cycle})')
 
-        x += self.levels[lvl].P * coarse_x   # coarse grid correction
+        x += self.levels[lvl].P @ coarse_x   # coarse grid correction
 
         self.levels[lvl].postsmoother(A, x, b)
 
