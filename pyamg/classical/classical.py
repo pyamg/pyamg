@@ -1,11 +1,10 @@
 """Classical AMG (Ruge-Stuben AMG)."""
-from __future__ import absolute_import
 
 
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection, \
@@ -17,8 +16,6 @@ from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
 import numpy as np
-
-__all__ = ['ruge_stuben_solver']
 
 
 def ruge_stuben_solver(A,
@@ -34,8 +31,9 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance',
-                'algebraic_distance','affinity', 'energy_based', None]
+    strength : string
+        Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
+        'algebraic_distance','affinity', 'energy_based', None].
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -62,7 +60,7 @@ def ruge_stuben_solver(A,
 
     Returns
     -------
-    ml : multilevel_solver
+    ml : MultilevelSolver
         Multigrid hierarchy of matrices and prolongation operators
 
     Examples
@@ -90,21 +88,20 @@ def ruge_stuben_solver(A,
 
     See Also
     --------
-    aggregation.smoothed_aggregation_solver, multilevel_solver,
+    aggregation.smoothed_aggregation_solver, MultilevelSolver,
     aggregation.rootnode_solver
-
     """
-    levels = [multilevel_solver.level()]
+    levels = [MultilevelSolver.Level()]
 
     # convert A to csr
     if not isspmatrix_csr(A):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR",
+            warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
-        except BaseException:
-            raise TypeError('Argument A must have type csr_matrix, \
-                             or be convertible to csr_matrix')
+        except BaseException as e:
+            raise TypeError('Argument A must have type csr_matrix, '
+                            'or be convertible to csr_matrix') from e
     # preprocess A
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
@@ -113,21 +110,20 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, interpolation, keep)
+        _extend_hierarchy(levels, strength, CF, interpolation, keep)
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, interpolation, keep):
+def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]
-        else:
-            return v, {}
+        return v, {}
 
     A = levels[-1].A
     
@@ -144,7 +140,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, keep):
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         C = evolution_strength_of_connection(A, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
@@ -155,8 +151,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, keep):
     elif fn is None:
         C = A
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized strength of connection method: {fn}')
 
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -173,7 +168,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, keep):
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
-        raise ValueError('unknown C/F splitting method (%s)' % CF)
+        raise ValueError(f'Unknown C/F splitting method {CF}')
 
     # Make sure at least one point was declared C-point
     if np.sum(splitting) == len(splitting):
@@ -203,8 +198,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, keep):
     levels[-1].R = R                  # restriction operator
     levels[-1].splitting = splitting  # C/F splitting
 
-
     # Form next level through Galerkin product
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.Level())
     A = R * A * P
     levels[-1].A = A

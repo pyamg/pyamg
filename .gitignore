@@ -1,21 +1,25 @@
+# files
 *.pyc
 *.bak
 *.so
 *.swp
-build/*
-dist/*
+*.dSYM
+*.whl
+
+# individual files
 pyamg/version.py
 MANIFEST
 .coverage
 .DS_Store
-pyamg.egg-info/*
 .eggs
 .cache
-*.dSYM
 .ipynb_checkpoints
-./var/
 .pytest_cache
+.python-version
+
+# directories
 build/
+dist/
 var/
 generated/
-*.whl
+pyamg.egg-info/

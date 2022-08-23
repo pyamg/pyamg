@@ -1,5 +1,4 @@
-""" Try creating a point and primal aggregate view for a C/F splitting and
-simple aggregation, respectively."""
+"""Test C/F splitting and simple aggregation vis."""
 
 import tempfile
 import os
@@ -7,9 +6,9 @@ import os
 from scipy.sparse import csr_matrix
 from numpy import array, ones, uint32
 
-from pyamg.vis import vis_aggregate_groups
-
 from numpy.testing import TestCase
+
+from pyamg.vis import vis_aggregate_groups
 
 
 class TestVis(TestCase):
@@ -20,18 +19,18 @@ class TestVis(TestCase):
         os.remove(self.file_name)
 
     def test_1(self):
-        Verts = array([[0.0, 0.0],
-                       [1.0, 0.0],
-                       [2.0, 0.0],
-                       [0.0, 1.0],
-                       [1.0, 1.0],
-                       [2.0, 1.0],
-                       [0.0, 2.0],
-                       [1.0, 2.0],
-                       [2.0, 2.0],
-                       [0.0, 3.0],
-                       [1.0, 3.0],
-                       [2.0, 3.0]])
+        V = array([[0.0, 0.0],
+                   [1.0, 0.0],
+                   [2.0, 0.0],
+                   [0.0, 1.0],
+                   [1.0, 1.0],
+                   [2.0, 1.0],
+                   [0.0, 2.0],
+                   [1.0, 2.0],
+                   [2.0, 2.0],
+                   [0.0, 3.0],
+                   [1.0, 3.0],
+                   [2.0, 3.0]])
 
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
@@ -50,30 +49,30 @@ class TestVis(TestCase):
         col = array([1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1])
         data = ones((1, 12), dtype=uint32).ravel()
 
-        Agg = csr_matrix((data, (row, col)), shape=(12, 2))
+        AggOp = csr_matrix((data, (row, col)), shape=(12, 2))
 
-        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri',
+        vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tri',
                              fname=self.file_name)
 
     def test_2(self):
-        Verts = array([[0.0, 0.0],
-                       [1.0, 0.0],
-                       [2.0, 0.0],
-                       [0.0, 1.0],
-                       [1.0, 1.0],
-                       [2.0, 1.0],
-                       [3.0, 1.0],
-                       [0.0, 2.0],
-                       [1.0, 2.0],
-                       [2.0, 2.0],
-                       [3.0, 2.0],
-                       [4.0, 2.0],
-                       [0.0, 3.0],
-                       [1.0, 3.0],
-                       [2.0, 3.0],
-                       [3.0, 3.0],
-                       [4.0, 3.0],
-                       [5.0, 3.0]])
+        V = array([[0.0, 0.0],
+                   [1.0, 0.0],
+                   [2.0, 0.0],
+                   [0.0, 1.0],
+                   [1.0, 1.0],
+                   [2.0, 1.0],
+                   [3.0, 1.0],
+                   [0.0, 2.0],
+                   [1.0, 2.0],
+                   [2.0, 2.0],
+                   [3.0, 2.0],
+                   [4.0, 2.0],
+                   [0.0, 3.0],
+                   [1.0, 3.0],
+                   [2.0, 3.0],
+                   [3.0, 3.0],
+                   [4.0, 3.0],
+                   [5.0, 3.0]])
 
         E2V = array([[0, 4, 3],
                      [0, 1, 4],
@@ -103,7 +102,7 @@ class TestVis(TestCase):
                      1, 3, 4, 0, 0, 0, 2, 4, 4])
         data = ones((1, 18), dtype=uint32).ravel()
 
-        Agg = csr_matrix((data, (row, col)), shape=(18, 5))
+        AggOp = csr_matrix((data, (row, col)), shape=(18, 5))
 
-        vis_aggregate_groups(Verts=Verts, E2V=E2V, Agg=Agg, mesh_type='tri',
+        vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tri',
                              fname=self.file_name)

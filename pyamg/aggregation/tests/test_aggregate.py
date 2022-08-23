@@ -1,5 +1,6 @@
+"""Test aggregation methods."""
 import numpy as np
-from scipy.sparse import csr_matrix, spdiags
+import scipy.sparse as sparse
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
@@ -13,9 +14,9 @@ class TestAggregate(TestCase):
         self.cases = []
 
         # random matrices
-        np.random.seed(0)
+        np.random.seed(2006482792)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(np.random.rand(N, N)))
+            self.cases.append(sparse.csr_matrix(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -39,10 +40,10 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = standard_aggregation(S)
         expected = np.array([[0], [0], [0], [0]])
-        assert_equal(result.todense(), expected)
+        assert_equal(result.toarray(), expected)
         assert_equal(Cpts.shape[0], 0)
 
     def test_naive_aggregation(self):
@@ -57,10 +58,10 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
         (result, Cpts) = naive_aggregation(S)
         expected = np.eye(4)
-        assert_equal(result.todense(), expected)
+        assert_equal(result.toarray(), expected)
         assert_equal(Cpts.shape[0], 4)
 
 
@@ -114,7 +115,7 @@ def reference_standard_aggregation(C):
 
     # Pass #1
     for i, row in enumerate(S):
-        Ni = set(row) | set([i])
+        Ni = set(row) | {i}
 
         if Ni.issubset(R):
             Cpts.append(i)
@@ -139,7 +140,7 @@ def reference_standard_aggregation(C):
     for i, row in enumerate(S):
         if i not in R:
             continue
-        Ni = set(row) | set([i])
+        Ni = set(row) | {i}
         Cpts.append(i)
 
         for x in Ni:
@@ -153,7 +154,7 @@ def reference_standard_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_naive_aggregation(C):
@@ -186,4 +187,4 @@ def reference_naive_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)

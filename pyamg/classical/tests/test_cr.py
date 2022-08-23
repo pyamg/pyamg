@@ -1,3 +1,4 @@
+"""Test compatible relaxation."""
 import numpy as np
 from scipy.sparse import csr_matrix
 from pyamg.gallery import poisson, load_example
@@ -37,7 +38,6 @@ class TestCR(TestCase):
 
     def test_cr(self):
         A = self.cases[6]
-        splitting = CR(A)
 
         # 1d-tests, should be alternating aggregates
         #       (n-1)/2 < = sum <= (n+1)/2.
