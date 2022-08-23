@@ -210,18 +210,18 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
         S_indices = np.empty_like(A.indices)
         S_data = np.empty_like(data)
 
-        if norm == 'abs' or norm == 'fro':
+        if norm in ('abs','fro'):
             amg_core.classical_strength_of_connection_abs(N, theta, A.indptr, A.indices, data,
                                                           S_indptr, S_indices, S_data)
         elif norm == 'min':
             amg_core.classical_strength_of_connection_min(N, theta, A.indptr, A.indices, data,
-                                                          S_indptr, S_indices, S_data)
-        else:  
+                                             S_indptr, S_indices, S_data)
+        else:
             raise ValueError("Unrecognized option for norm.")
-    
+
         # One pass through nnz to find largest entry, one to filter
         S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=[N, N])
-        
+
         # Take magnitude and scale by largest entry
         S.data = np.abs(S.data)
         S = scale_rows_by_largest_entry(S)
