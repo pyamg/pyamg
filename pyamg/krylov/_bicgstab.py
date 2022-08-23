@@ -1,12 +1,14 @@
+"""bicgstab Krylov solver."""
+
+import warnings
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
+from scipy import sparse
+from ..util.linalg import norm
+from ..util import make_system
 
 
-__all__ = ['bicgstab']
-
-
-def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
+             maxiter=None, M=None,
              callback=None, residuals=None):
     """Biconjugate Gradient Algorithm with Stabilization.
 
@@ -21,51 +23,52 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A A.H x = M b.
+        n x n, inverted preconditioner, i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of bicgstab
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
-            ==  ======================================
+            ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
                 return iteration count instead.
             <0  numerical breakdown, or illegal input
-            ==  ======================================
+            ==  =======================================
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.bicgstab import bicgstab
+    >>> from pyamg.krylov import bicgstab
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = bicgstab(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
-    4.68163045309
+    >>> print(f'{norm(b - A*x):.6}')
+    4.68163
 
     References
     ----------
@@ -78,8 +81,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._bicgstab')
+    warnings.filterwarnings('always', module='pyamg.krylov._bicgstab')
 
     # Check iteration numbers
     if maxiter is None:
@@ -88,27 +90,39 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # Prep for method
-    r = b - A*x
+    r = b - A @ x
     normr = norm(r)
 
     if residuals is not None:
         residuals[:] = [normr]
 
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
+    # Check initial guess, if b != 0,
+    normb = norm(b)
     normb = norm(b)
     if normb == 0.0:
-        normb = 1.0
-    if normr < tol*normb:
+        normb = 1.0  # reset so that tol is unscaled
+
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    else:
+        raise ValueError('Invalid stopping criteria.')
+
+    if normr < rtol:
         return (postprocess(x), 0)
 
-    # Scale tol by ||r_0||_2
-    if normr != 0.0:
-        tol = tol*normr
-
-    # Is this a one dimensional matrix?
+    # Is thisAa one dimensional matrix?
+    # Use a matvec to access A[0,0]
     if A.shape[0] == 1:
-        entry = np.ravel(A*np.array([1.0], dtype=xtype))
+        entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
         return (postprocess(b/entry), 0)
 
     rstar = r.copy()
@@ -116,29 +130,29 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     rrstarOld = np.inner(rstar.conjugate(), r)
 
-    iter = 0
+    it = 0
 
     # Begin BiCGStab
     while True:
-        Mp = M*p
-        AMp = A*Mp
+        Mp = M @ p
+        AMp = A @ Mp
 
         # alpha = (r_j, rstar) / (A*M*p_j, rstar)
         alpha = rrstarOld/np.inner(rstar.conjugate(), AMp)
 
         # s_j = r_j - alpha*A*M*p_j
-        s = r - alpha*AMp
-        Ms = M*s
-        AMs = A*Ms
+        s = r - alpha * AMp
+        Ms = M @ s
+        AMs = A @ Ms
 
         # omega = (A*M*s_j, s_j)/(A*M*s_j, A*M*s_j)
         omega = np.inner(AMs.conjugate(), s)/np.inner(AMs.conjugate(), AMs)
 
         # x_{j+1} = x_j +  alpha*M*p_j + omega*M*s_j
-        x = x + alpha*Mp + omega*Ms
+        x = x + alpha * Mp + omega * Ms
 
         # r_{j+1} = s_j - omega*A*M*s
-        r = s - omega*AMs
+        r = s - omega * AMs
 
         # beta_j = (r_{j+1}, rstar)/(r_j, rstar) * (alpha/omega)
         rrstarNew = np.inner(rstar.conjugate(), r)
@@ -146,9 +160,9 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         rrstarOld = rrstarNew
 
         # p_{j+1} = r_{j+1} + beta*(p_j - omega*A*M*p)
-        p = r + beta*(p - omega*AMp)
+        p = r + beta * (p - omega * AMp)
 
-        iter += 1
+        it += 1
 
         normr = norm(r)
 
@@ -158,41 +172,14 @@ def bicgstab(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         if callback is not None:
             callback(x)
 
-        if normr < tol:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
+            rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+
+        if normr < rtol:
             return (postprocess(x), 0)
 
-        if iter == maxiter:
-            return (postprocess(x), iter)
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#    # %timeit -n 15 (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    from pyamg.gallery import stencil_grid
-#    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(100,100),
-#                     dtype=float,format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    import time
-#    from scipy.sparse.linalg.isolve import bicgstab as ibicgstab
-#
-#    print '\n\nTesting BiCGStab with %d x %d 2D Laplace Matrix' % \
-#           (A.shape[0],A.shape[0])
-#    t1=time.time()
-#    (x,flag) = bicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '%s took %0.3f ms' % ('bicgstab', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)
-#
-#    t1=time.time()
-#    (y,flag) = ibicgstab(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '\n%s took %0.3f ms' % ('linalg bicgstab', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*y))
-#    print 'info flag = %d'%(flag)
+        if it == maxiter:
+            return (postprocess(x), it)

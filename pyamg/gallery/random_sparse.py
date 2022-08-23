@@ -1,14 +1,11 @@
 """Random sparse matrices."""
+# pylint: disable=redefined-builtin
 
 import numpy as np
 import scipy as sp
 
-__all__ = ['sprand']
 
-# TODO add sprandn
-
-
-def _rand_sparse(m, n, density, format='csr'):
+def _rand_sparse(m, n, density):
     """Construct base function for sprand, sprandn."""
     nnz = max(min(int(m*n*density), m*n), 0)
 
@@ -32,8 +29,8 @@ def sprand(m, n, density, format='csr'):
     format : string
         sparse matrix format to return, e.g. 'csr', 'coo', etc.
 
-    Return
-    ------
+    Returns
+    -------
     A : sparse matrix
         m x n sparse matrix
 
@@ -46,10 +43,10 @@ def sprand(m, n, density, format='csr'):
     m, n = int(m), int(n)
 
     # get sparsity pattern
-    A = _rand_sparse(m, n, density, format='csr')
+    A = _rand_sparse(m, n, density)
 
     # replace data with random values
-    A.data = sp.rand(A.nnz)
+    A.data = np.random.rand(A.nnz)
 
     return A.asformat(format)
 
@@ -85,7 +82,7 @@ def sprand(m, n, density, format='csr'):
 #    # get sparsity pattern
 #    A = _rand_sparse(n, n, density, format='csr')
 #
-#    A.data = sp.rand(A.nnz)
+#    A.data = np.random.rand(A.nnz)
 #
 #    A = sp.sparse.tril(A, -1)
 #

@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-from __future__ import print_function
 import yaml
 import os
 
@@ -43,7 +42,7 @@ def find_comments(fname, ch):
 
     Then, take off the first three spaces
     """
-    with open(fname, 'r') as inf:
+    with open(fname) as inf:
         fdata = inf.readlines()
 
     comments = {}
@@ -117,7 +116,7 @@ def build_function(func):
             if p['constant']:
                 const = 'const '
 
-            param = 'py::array_t<{}> &'.format(paramtype) + ' ' + p['name']
+            param = f'py::array_t<{paramtype}> &' + ' ' + p['name']
             arraylist.append((const, paramtype, p['name']))
             needsize = True
         elif '_size' not in p['name'] and needsize:
@@ -133,9 +132,9 @@ def build_function(func):
             # if not a pointer, just copy it
             param = p['type'] + ' ' + p['name']
 
-        fdef += '{:>25},\n'.format(param)    # set width to 25
-
-    fdef = fdef.strip()[:-1]  # trim comma and newline
+        fdef += f'{param:>25}'    # set width to 25
+        fdef += ',\n'
+    fdef = fdef[:-2]  # remove trailing comma and newline
     fdef += '\n' + ' ' * len(newcall) + ')'
     fdef += '\n{\n'
 
@@ -171,21 +170,21 @@ def build_function(func):
     fdef += newcall + '\n'
 
     # function parameters
-    for p in func['parameters']:
+    for i, p in enumerate(func['parameters']):
         if '_size' in p['name']:
             fdef = fdef.strip()
             name, s = p['name'].split('_size')
             if s == '':
                 s = '0'
-            fdef += " {}.shape({})".format(name, s)
+            fdef += f" {name}.shape({s})"
         else:
             if p['pointer'] or p['array']:
                 name = '_' + p['name']
             else:
                 name = p['name']
-            fdef += '{:>25}'.format(name)
-        fdef += ',\n'
-    fdef = fdef.strip()[:-1]
+            fdef += f'{name:>25}'
+        if i < len(func['parameters'])-1:
+            fdef += ',\n'
     fdef += '\n' + ' ' * len(newcall) + ');\n}'
     return fdef
 
@@ -212,15 +211,19 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
 
     # plugin += '#define NC py::arg().noconvert()\n'
     # plugin += '#define YC py::arg()\n'
-    plugin += 'PYBIND11_MODULE({}, m) {{\n'.format(headerfilename)
+    plugin += f'PYBIND11_MODULE({headerfilename}, m) {{\n'
     plugin += indent + 'm.doc() = R"pbdoc(\n'
-    plugin += indent + 'Pybind11 bindings for {}\n\n'.format(headerfile)
+    plugin += indent + f'Pybind11 bindings for {headerfile}\n\n'
     plugin += indent + 'Methods\n'
     plugin += indent + '-------\n'
     for f in ch.functions:
-        for func in inst:
-            if f['name'] in func['functions']:
-                plugin += indent + f['name'] + '\n'
+        templated = bool(f['template'])
+        if not templated:
+            plugin += indent + f['name'] + '\n'
+        if templated:
+            for func in inst:
+                if f['name'] in func['functions']:
+                    plugin += indent + f['name'] + '\n'
     plugin += indent + ')pbdoc";\n\n'
 
     plugin += indent + 'py::options options;\n'
@@ -230,22 +233,38 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
     bound = []
     for f in ch.functions:
         # for each function:
-        #   - find the entry in the instantiation list
-        #   - note any array parameters to the function
-        #   - for each type, instantiate
+        #   1 determine if the function is templated
+        #   2 if templated:
+        #       - find the entry in the instantiation list
+        #   3 note any array parameters to the function
+        #   4 if templated:
+        #       - for each type, instantiate and bind
+        #   5 if not templated:
+        #       - bind
+
+        # 1
+        templated = bool(f['template'])
+
+        # 2
         found = False
-        for func in inst:
-            if f['name'] in func['functions']:
-                found = True
-                types = func['types']
+        if templated:
+            for func in inst:
+                if f['name'] in func['functions']:
+                    found = True
+                    types = func['types']
 
-        if not found:
-            # print('Could not find {}'.format(f['name']))
-            unbound.append(f['name'])
-            continue
+            if not found:
+                # print('Could not find an instantiation for {}'.format(f['name']))
+                unbound.append(f['name'])
+                continue
+            else:
+                bound.append(f['name'])
         else:
-            bound.append(f['name'])
+            unbound.append(f['name'])
+            types = [None]
+            continue
 
+        # 3
         # find all parameter names and mark if array
         argnames = []
         for p in f['parameters']:
@@ -279,7 +298,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 typestr = ''
 
             plugin += indent + \
-                'm.def("{}", &_{}{},\n'.format(instname, f['name'], typestr)
+                'm.def("{}", &_{}{}'.format(instname, f['name'], typestr)
 
             # name the arguments
             pyargnames = []
@@ -287,10 +306,12 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
                 convert = ''
                 if array:
                     convert = '.noconvert()'
-                pyargnames.append('py::arg("{}"){}'.format(p, convert))
+                pyargnames.append(f'py::arg("{p}"){convert}')
 
-            argstring = indent + ', '.join(pyargnames)
-            plugin += indent + argstring
+            argstring = indent + indent + ', '.join(pyargnames)
+            if len(pyargnames) > 0:
+                argstring = ',\n' + argstring
+            plugin += argstring
 
             # add the docstring to the last
             if i == ntypes - 1:
@@ -301,8 +322,7 @@ def build_plugin(headerfile, ch, comments, inst, remaps):
         plugin += '\n'
 
     plugin += '}\n'
-    # plugin += '#undef NC\n'
-    # plugin += '#undef YC\n'
+
     return plugin, bound, unbound
 
 
@@ -323,31 +343,53 @@ def main():
 
     args = parser.parse_args()
 
-    print('[Generating binding for {}]'.format(args.input_file))
+    #
+    # Parse the header file
+    #
+    print(f'[Generating binding for {args.input_file}]')
     ch = CppHeaderParser.CppHeader(args.input_file)
     comments = find_comments(args.input_file, ch)
 
+    #
+    # load the instantiate file
+    #
     if args.input_file == 'bind_examples.h':
-        data = yaml.load(open('instantiate-test.yml', 'r'))
+        data = yaml.safe_load(open('instantiate-test.yml'))
     else:
-        data = yaml.load(open('instantiate.yml', 'r'))
-
+        try:
+            data = yaml.safe_load(open('instantiate.yml'))
+        except:
+            data = {'instantiate': None}
     inst = data['instantiate']
+
+    #
+    # remap functions
+    #
     if 'remaps' in data:
         remaps = data['remaps']
     else:
         remaps = []
+
+    #
+    # build the plugin
+    #
     plugin, bound, unbound = build_plugin(
         args.input_file, ch, comments, inst, remaps)
 
-    chfuncs = {f['name']: f for f in ch.functions}
+    #
+    # build each function
+    #
     print('\t[unbound functions: {}]'.format(' '.join(unbound)))
     flist = []
-    for fname in bound:
-        print('\t[building {}]'.format(fname))
-        fdef = build_function(chfuncs[fname])
-        flist.append(fdef)
+    for f in ch.functions:
+        if f['name'] in bound:
+            print('\t[building {}]'.format(f['name']))
+            fdef = build_function(f)
+            flist.append(fdef)
 
+    #
+    # write to _bind.cpp
+    #
     if args.output_file is not None:
         outf = args.output_file
     else:
