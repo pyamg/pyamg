@@ -85,7 +85,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
 
 def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
-    """Create prolongator using standard interpolation
+    """Create prolongator using distance-1 standard/classical interpolation
 
     Parameters
     ----------

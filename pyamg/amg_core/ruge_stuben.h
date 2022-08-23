@@ -993,7 +993,7 @@ void rs_standard_interpolation_pass1(const I n_nodes,
 /* Produce the classical "standard" AMG interpolation operator. The first pass
  * uses the strength of connection matrix and C/F splitting to compute the row
  * pointer for the prolongator. The second pass fills in the nonzero entries of
- * the prolongator. Formula can be found in Eq. (3.7) in [1].
+ * the prolongator. Formula can be found in Eq. (3.8) in [1].
  *
  * Parameters:
  * -----------
@@ -1026,12 +1026,12 @@ void rs_standard_interpolation_pass1(const I n_nodes,
  *
  * References:
  * -----------
- * [0] J. W. Ruge and K. Stu ̈ben, Algebraic multigrid (AMG), in : S. F.
+ * [0] J. W. Ruge and K. Stüben, Algebraic multigrid (AMG), in : S. F.
  *      McCormick, ed., Multigrid Methods, vol. 3 of Frontiers in Applied
  *      Mathematics (SIAM, Philadelphia, 1987) 73–130.
  *
  * [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  */
 template<class I, class T>
 void rs_standard_interpolation_pass2(const I n_nodes,
@@ -1232,7 +1232,7 @@ void remove_strong_FF_connections(const I n_nodes,
 
 /* Produce a modified "standard" AMG interpolation operator for the case in which
  * two strongly connected F -points do NOT have a common C-neighbor. Formula can
- * be found in Eq. (3.8) of [1].
+ * be found in Eq. (3.9) of [1].
  *
  * Parameters:
  * -----------
@@ -1273,7 +1273,7 @@ void remove_strong_FF_connections(const I n_nodes,
  *      solver and preconditioner, Applied Numerical Mathematics 41 (2002).
  *
  * [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  */
 template<class I, class T>
 void mod_standard_interpolation_pass2(const I n_nodes,
@@ -1478,7 +1478,7 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
 
 /* Compute distance-two "Extended+i" classical AMG interpolation from [0]. Uses
  * neighbors within distance two for interpolation weights. Formula can be found
- * in Eqs. (4.10-4.11) in [0].
+ * in Eqs. (4.19-4.20) in [0].
  *
  * Parameters:
  * -----------
@@ -1515,7 +1515,7 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
  * References:
  * -----------
  * [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  */
 template<class I, class T>
 void extended_plusi_interpolation_pass2(const I n_nodes,
@@ -1942,7 +1942,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
 
 /* Compute distance-two "Extended" classical AMG interpolation from [0]. Uses
  * neighbors within distance two for interpolation weights. Formula can be found
- * in Eq. (4.6) in [0].
+ * in Eq. (4.15) in [0].
  *
  * Parameters:
  * -----------
@@ -1974,7 +1974,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
  * References:
  * -----------
  * [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  */
 template<class I, class T>
 void extended_interpolation_pass2(const I n_nodes,
