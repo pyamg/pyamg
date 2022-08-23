@@ -1,25 +1,14 @@
 """Algorithms related to graphs."""
-from __future__ import absolute_import
 
 
+from warnings import warn
 import numpy as np
-import scipy as sp
 from scipy import sparse
-
 from . import amg_core
-
-__all__ = ['maximal_independent_set', 'vertex_coloring', 'bellman_ford',
-           'lloyd_cluster', 'connected_components']
-
-
-def max_value(datatype):
-    try:
-        return np.iinfo(datatype).max
-    except BaseException:
-        return np.finfo(datatype).max
 
 
 def asgraph(G):
+    """Return (square) matrix as sparse."""
     if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):
         G = sparse.csr_matrix(G)
 
@@ -68,12 +57,12 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn(N, G.indptr, G.indices, -1, 1, 0, mis)
         elif algo == 'parallel':
             fn = amg_core.maximal_independent_set_parallel
-            fn(N, G.indptr, G.indices, -1, 1, 0, mis, sp.rand(N), -1)
+            fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
-            raise ValueError('unknown algorithm (%s)' % algo)
+            raise ValueError(f'Unknown algorithm ({algo})')
     else:
         fn = amg_core.maximal_independent_set_k_parallel
-        fn(N, G.indptr, G.indices, k, mis, sp.rand(N), -1)
+        fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
 
     return mis
 
@@ -113,63 +102,64 @@ def vertex_coloring(G, method='MIS'):
         fn(N, G.indptr, G.indices, coloring)
     elif method == 'JP':
         fn = amg_core.vertex_coloring_jones_plassmann
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     elif method == 'LDF':
         fn = amg_core.vertex_coloring_LDF
-        fn(N, G.indptr, G.indices, coloring, sp.rand(N))
+        fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
-        raise ValueError('unknown method (%s)' % method)
+        raise ValueError(f'Unknown method ({method})')
 
     return coloring
 
 
-def bellman_ford(G, seeds, maxiter=None):
+def bellman_ford(G, seeds):
     """Bellman-Ford iteration.
 
     Parameters
     ----------
     G : sparse matrix
+        Directed graph with positive weights.
+    seeds : list
+        Starting seeds
 
     Returns
     -------
     distances : array
+        Distance of each point to the nearest seed
     nearest_seed : array
+        Index of the nearest seed
 
-    References
-    ----------
-    CLR
+    Notes
+    -----
+    This should be viewed as the transpose of Bellman-Ford in
+    scipy.sparse.csgraph. Here, bellman_ford is used to find the shortest path
+    from any point *to* the seeds. In csgraph, bellman_ford is used to find
+    "the shortest distance from point i to point j".  So csgraph.bellman_ford
+    could be run `for seed in seeds`.  Also note that `test_graph.py` tests
+    against `csgraph.bellman_ford(G.T)`.
 
+    See Also
+    --------
+    scipy.sparse.csgraph.bellman_ford
     """
     G = asgraph(G)
     N = G.shape[0]
 
-    if maxiter is not None and maxiter < 0:
-        raise ValueError('maxiter must be positive')
+    if G.nnz > 0:
+        if G.data.min() < 0:
+            raise ValueError('Bellman-Ford is defined only for positive weights.')
     if G.dtype == complex:
-        raise ValueError('Bellman-Ford algorithm only defined for real\
-                          weights')
+        raise ValueError('Bellman-Ford is defined only for real weights.')
 
     seeds = np.asarray(seeds, dtype='intc')
 
-    distances = np.empty(N, dtype=G.dtype)
-    distances[:] = max_value(G.dtype)
+    distances = np.full(N, np.inf, dtype=G.dtype)
     distances[seeds] = 0
 
-    nearest_seed = np.empty(N, dtype='intc')
-    nearest_seed[:] = -1
+    nearest_seed = np.full(N, -1, dtype='intc')
     nearest_seed[seeds] = seeds
 
-    old_distances = np.empty_like(distances)
-
-    iter = 0
-    while maxiter is None or iter < maxiter:
-        old_distances[:] = distances
-
-        amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances,
-                              nearest_seed)
-
-        if (old_distances == distances).all():
-            break
+    amg_core.bellman_ford(N, G.indptr, G.indices, G.data, distances, nearest_seed)
 
     return (distances, nearest_seed)
 
@@ -221,14 +211,14 @@ def lloyd_cluster(G, seeds, maxiter=10):
         raise ValueError('at least one seed is required')
 
     if seeds.min() < 0:
-        raise ValueError('invalid seed index (%d)' % seeds.min())
+        raise ValueError(f'Invalid seed index ({seeds.min()})')
     if seeds.max() >= N:
-        raise ValueError('invalid seed index (%d)' % seeds.max())
+        raise ValueError(f'Invalid seed index ({seeds.max()})')
 
     clusters = np.empty(N, dtype='intc')
     distances = np.empty(N, dtype=G.dtype)
 
-    for i in range(maxiter):
+    for _it in range(1, maxiter+1):
         last_seeds = seeds.copy()
 
         amg_core.lloyd_cluster(N, G.indptr, G.indices, G.data,
@@ -236,6 +226,9 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
         if (seeds == last_seeds).all():
             break
+
+    if _it == maxiter:
+        warn('Lloyd clustering reached maxiter (did not converge)')
 
     return (distances, clusters, seeds)
 
@@ -274,14 +267,14 @@ def breadth_first_search(G, seed):
     >>> import pyamg
     >>> import scipy.sparse as sparse
     >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
-                          [4,6], [4,7], [6,7], [7,8], [8,9]])
+    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
     >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
     >>> c, l = pyamg.graph.breadth_first_search(A, 0)
     >>> print(l)
-    >>> print(c)
     [0 1 1 2 2 3 3 3 4 5]
+    >>> print(c)
     [0 1 2 3 4 5 6 7 8 9]
 
     """
@@ -323,13 +316,13 @@ def connected_components(G):
     Examples
     --------
     >>> from pyamg.graph import connected_components
-    >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,1],[0,1,0]] ))
     [0 0 0]
-    >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,0],[0,0,0]] ))
     [0 0 1]
-    >>> print connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,0,0],[0,0,0],[0,0,0]] ))
     [0 1 2]
-    >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    >>> print(connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] ))
     [0 0 1 1]
 
     """
@@ -370,27 +363,23 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
-    >>> import matplotlib.pyplot as plt
-    >>> plt.figure()
-    >>> plt.subplot(121)
-    >>> plt.spy(S,marker='.')
-    >>> plt.subplot(122)
-    >>> plt.spy(symmetric_rcm(S),marker='.')
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.figure()
+    >>> # plt.subplot(121)
+    >>> # plt.spy(S,marker='.')
+    >>> # plt.subplot(122)
+    >>> # plt.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------
     pseudo_peripheral_node
 
     """
-    n = A.shape[0]
+    dummy_root, order, dummy_level = pseudo_peripheral_node(A)
 
-    root, order, level = pseudo_peripheral_node(A)
+    p = order[::-1]
 
-    Perm = sparse.identity(n, format='csr')
-    p = level.argsort()
-    Perm = Perm[p, :]
-
-    return Perm * A * Perm.T
+    return A[p, :][:, p]
 
 
 def pseudo_peripheral_node(A):
@@ -415,7 +404,6 @@ def pseudo_peripheral_node(A):
     Algorithm in Saad
 
     """
-    from pyamg.graph import breadth_first_search
     n = A.shape[0]
 
     valence = np.diff(A.indptr)

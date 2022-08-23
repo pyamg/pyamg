@@ -13,34 +13,41 @@
 
 
 /*
- *  Compute a strength of connection matrix using the standard symmetric
- *  Smoothed Aggregation heuristic.  Both the input and output matrices
- *  are stored in CSR format.  A nonzero connection A[i,j] is considered
- *  strong if:
+ * Compute a strength of connection matrix using the standard symmetric
+ * Smoothed Aggregation heuristic.  Both the input and output matrices
+ * are stored in CSR format.  A nonzero connection A[i,j] is considered
+ * strong if:
  *
- *      abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
+ * ..
+ *     abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
  *
- *  The strength of connection matrix S is simply the set of nonzero entries
- *  of A that qualify as strong connections.
+ * The strength of connection matrix S is simply the set of nonzero entries
+ * of A that qualify as strong connections.
  *
- *  Parameters
- *      num_rows   - number of rows in A
- *      theta      - stength of connection tolerance
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *      Sp[]       - (output) CSR row pointer
- *      Sj[]       - (output) CSR index array
- *      Sx[]       - (output) CSR data array
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * theta : float
+ *     stength of connection tolerance
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
+ * Sp : array, inplace
+ *     CSR row pointer
+ * Sj : array, inplace
+ *     CSR index array
+ * Sx : array, inplace
+ *     CSR data array
  *
- *
- *  Returns:
- *      Nothing, S will be stored in Sp, Sj, Sx
- *
- *  Notes:
- *      Storage for S must be preallocated.  Since S will consist of a subset
- *      of A's nonzero values, a conservative bound is to allocate the same
- *      storage for S as is used by A.
+ * Notes
+ * -----
+ * Storage for S must be preallocated.  Since S will consist of a subset
+ * of A's nonzero values, a conservative bound is to allocate the same
+ * storage for S as is used by A.
  *
  */
 template<class I, class T, class F>
@@ -100,20 +107,29 @@ void symmetric_strength_of_connection(const I n_row,
 /*
  * Compute aggregates for a matrix A stored in CSR format
  *
- * Parameters:
- *   n_row         - number of rows in A
- *   Ap[n_row + 1] - CSR row pointer
- *   Aj[nnz]       - CSR column indices
- *    x[n_row]     - aggregate numbers for each node
- *    y[n_row]     - will hold Cpts upon return
+ * Parameters
+ * ----------
+ * n_row : int
+ *     number of rows in A
+ * Ap : array, n_row + 1
+ *     CSR row pointer
+ * Aj : array, nnz
+ *     CSR column indices
+ * x : array, n_row, inplace
+ *     aggregate numbers for each node
+ * y : array, n_row, inplace
+ *     will hold Cpts upon return
  *
- * Returns:
- *  The number of aggregates (== max(x[:]) + 1 )
+ * Returns
+ * -------
+ * int
+ *     The number of aggregates (``== max(x[:]) + 1``)
  *
- * Notes:
- *    It is assumed that A is symmetric.
- *    A may contain diagonal entries (self loops)
- *    Unaggregated nodes are marked with a -1
+ * Notes
+ * -----
+ * - It is assumed that A is symmetric.
+ * - A may contain diagonal entries (self loops)
+ * - Unaggregated nodes are marked with a -1
  *
  */
 template <class I>
@@ -214,7 +230,6 @@ I standard_aggregation(const I n_row,
         next_aggregate++;
     }
 
-
     return next_aggregate; //number of aggregates
 }
 
@@ -223,17 +238,26 @@ I standard_aggregation(const I n_row,
 /*
  * Compute aggregates for a matrix A stored in CSR format
  *
- * Parameters:
- *   n_row         - number of rows in A
- *   Ap[n_row + 1] - CSR row pointer
- *   Aj[nnz]       - CSR column indices
- *    x[n_row]     - aggregate numbers for each node
- *    y[n_row]     - will hold Cpts upon return
+ * Parameters
+ * ----------
+ * n_row : int
+ *     number of rows in A
+ * Ap : array, n_row + 1
+ *     CSR row pointer
+ * Aj : array, nnz
+ *     CSR column indices
+ * x : array, n_row, inplace
+ *     aggregate numbers for each node
+ * y : array, n_row, inplace
+ *     will hold Cpts upon return
  *
- * Returns:
- *  The number of aggregates (== max(x[:]) + 1 )
+ * Returns
+ * -------
+ * int
+ *     The number of aggregates (``== max(x[:]) + 1``)
  *
- * Notes:
+ * Notes
+ * -----
  * Differs from standard aggregation.  Each dof is considered.
  * If it has been aggregated, skip over.  Otherwise, put dof
  * and any unaggregated neighbors in an aggregate.  Results
@@ -276,45 +300,52 @@ I naive_aggregation(const I n_row,
 
 
 /*
- *  Given a set of near-nullspace candidates stored in the columns of B, and
- *  an aggregation operator stored in A using BSR format, this method computes
- *      Ax : the data array of the tentative prolongator in BSR format
- *      R : the coarse level near-nullspace candidates
+ * Given a set of near-nullspace candidates stored in the columns of B, and
+ * an aggregation operator stored in A using BSR format, this method computes
+ * Ax, the data array of the tentative prolongator in BSR format, and
+ * R, the coarse level near-nullspace candidates.
  *
- *  The tentative prolongator A and coarse near-nullspaces candidates satisfy
- *  the following relationships:
- *      B = A * R        and      transpose(A) * A = identity
+ * The tentative prolongator A and coarse near-nullspaces candidates satisfy
+ * the following relationships:
+ * - ``B = A @ R``
+ * - ``transpose(A) @ A = identity``
  *
- *  Parameters
- *      num_rows   - number of rows in A
- *      num_cols   - number of columns in A
- *      K1         - BSR row blocksize
- *      K2         - BSR column blocksize
- *      Ap[]       - BSR row pointer
- *      Aj[]       - BSR index array
- *      Ax[]       - BSR data array
- *      B[]        - fine-level near-nullspace candidates (n_row x K2)
- *      R[]        - coarse-level near-nullspace candidates (n_coarse x K2)
- *      tol        - tolerance used to drop numerically linearly dependent vectors
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * num_cols : int
+ *     number of columns in A
+ * K1 : int
+ *     BSR row blocksize
+ * K2 : int
+ *     BSR column blocksize
+ * Ap : array
+ *     BSR row pointer
+ * Aj : array
+ *     BSR index array
+ * Ax : array, inplace
+ *     BSR data array
+ * B : array
+ *     fine-level near-nullspace candidates (n_row x K2)
+ * R : array, inplace
+ *     coarse-level near-nullspace candidates (n_coarse x K2)
+ * tol :float
+ *     tolerance used to drop numerically linearly dependent vectors
  *
- *
- *  Returns:
- *      Nothing, Ax and R will be modified in places.
- *
- *  Notes:
- *      - Storage for Ax and R must be preallocated.
- *      - The tol parameter is applied to the candidates restricted to each
- *      aggregate to discard (redundant) numerically linear dependencies.
- *      For instance, if the restriction of two different fine-level candidates
- *      to a single aggregate are equal, then the second candidate will not
- *      contribute to the range of A.
- *      - When the aggregation operator does not aggregate all fine-level
- *      nodes, the corresponding rows of A will simply be zero.  In this case,
- *      the two relationships mentioned above do not hold.  Instead the following
- *      relationships are maintained:
- *             B[i,:] = A[i,:] * R     where  A[i,:] is nonzero
- *         and
- *             transpose(A[i,:]) * A[i,:] = 1   where A[i,:] is nonzero
+ * Notes
+ * -----
+ * - Storage for Ax and R must be preallocated.
+ * - The tol parameter is applied to the candidates restricted to each
+ * aggregate to discard (redundant) numerically linear dependencies.
+ * For instance, if the restriction of two different fine-level candidates
+ * to a single aggregate are equal, then the second candidate will not
+ * contribute to the range of A.
+ * - When the aggregation operator does not aggregate all fine-level
+ * nodes, the corresponding rows of A will simply be zero.  In this case,
+ * the two relationships mentioned above do not hold.  Instead the following
+ * relationships are maintained: ``B[i,:] = A[i,:] @ R`` where ``A[i,:]`` is nonzero
+ * and ``transpose(A[i,:]) * A[i,:] = 1`` where ``A[i,:]``is nonzero
  *
  */
 template <class I, class S, class T, class DOT, class NORM>
@@ -498,45 +529,30 @@ void fit_candidates_complex(const I n_row,
 
 /*
  * Helper routine for satisfy_constraints routine called
- *     by energy_prolongation_smoother(...) in smooth.py
- * This implements the python code:
- *
- *   # U is a BSR matrix, B is num_block_rows x ColsPerBlock x ColsPerBlock
- *   # UB is num_block_rows x RowsPerBlock x ColsPerBlock,  BtBinv is
- *        num_block_rows x ColsPerBlock x ColsPerBlock
- *   B  = asarray(B).reshape(-1,ColsPerBlock,B.shape[1])
- *   UB = asarray(UB).reshape(-1,RowsPerBlock,UB.shape[1])
- *
- *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
- *           shape=(U.shape[0]/RowsPerBlock,U.shape[1]/ColsPerBlock)).tocoo(copy=False).row
- *   for n,j in enumerate(U.indices):
- *      i = rows[n]
- *      Bi  = mat(B[j])
- *      UBi = UB[i]
- *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.H))
+ * by energy_prolongation_smoother(...) in smooth.py
  *
  * Parameters
  * ----------
- * RowsPerBlock : {int}
+ * rows_per_block : int
  *      rows per block in the BSR matrix, S
- * ColsPerBlock : {int}
+ * cols_per_block : int
  *      cols per block in the BSR matrix, S
- * num_block_rows : {int}
- *      Number of block rows, S.shape[0]/RowsPerBlock
- * NullDim : {int}
+ * num_block_rows : int
+ *      Number of block rows, S.shape[0]/rows_per_block
+ * NullDim : int
  *      Null-space dimension, i.e., the number of columns in B
- * x : {float|complex array}
+ * x : array
  *      Conjugate of near-nullspace vectors, B, in row major
- * y : {float|complex array}
+ * y : array
  *      S*B, in row major
- * z : {float|complex array}
+ * z : array
  *      BtBinv, in row major, i.e. z[i] = pinv(B_i.H Bi), where
  *      B_i is B restricted to the neighborhood of dof of i.
- * Sp : {int array}
+ * Sp : array
  *      Row pointer array for BSR matrix S
- * Sj : {int array}
+ * Sj : array
  *      Col index array for BSR matrix S
- * Sx : {float|complex array}
+ * Sx : array
  *      Value array for BSR matrix S
  *
  * Return
@@ -548,11 +564,26 @@ void fit_candidates_complex(const I n_row,
  * -----
  * Principle calling routine is energy_prolongation_smoother(...) in smooth.py.
  *
+ * This implements the python code:
+ *
+ * .. code-block:: python
+ *
+ *   # U is a BSR matrix, B is num_block_rows x cols_per_block x cols_per_block
+ *   # UB is num_block_rows x rows_per_block x cols_per_block,  BtBinv is
+ *        num_block_rows x cols_per_block x cols_per_block
+ *   B  = asarray(B).reshape(-1,cols_per_block,B.shape[1])
+ *   UB = asarray(UB).reshape(-1,rows_per_block,UB.shape[1])
+ *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
+ *           shape=(U.shape[0]/rows_per_block,U.shape[1]/cols_per_block)).tocoo(copy=False).row
+ *   for n,j in enumerate(U.indices):
+ *      i = rows[n]
+ *      Bi  = mat(B[j])
+ *      UBi = UB[i]
+ *      U.data[n] -= dot(UBi,dot(BtBinv[i],Bi.H))
  */
-
 template<class I, class T, class F>
-void satisfy_constraints_helper(const I RowsPerBlock,
-                                const I ColsPerBlock,
+void satisfy_constraints_helper(const I rows_per_block,
+                                const I cols_per_block,
                                  const I num_block_rows,
                                  const I NullDim,
                                  const T x[], const int x_size,
@@ -568,10 +599,10 @@ void satisfy_constraints_helper(const I RowsPerBlock,
     const T * BtBinv = z;
 
     //Declare
-    I BlockSize = RowsPerBlock*ColsPerBlock;
+    I BlockSize = rows_per_block*cols_per_block;
     I NullDimSq = NullDim*NullDim;
-    I NullDim_Cols = NullDim*ColsPerBlock;
-    I NullDim_Rows = NullDim*RowsPerBlock;
+    I NullDim_Cols = NullDim*cols_per_block;
+    I NullDim_Rows = NullDim*rows_per_block;
 
     //C will store an intermediate mat-mat product
     std::vector<T> Update(BlockSize,0);
@@ -589,11 +620,11 @@ void satisfy_constraints_helper(const I RowsPerBlock,
         {
             // Calculate C = BtBinv[i*NullDimSq => (i+1)*NullDimSq]  *  B[ Sj[j]*blocksize => (Sj[j]+1)*blocksize ]^H
             // Implicit transpose of conjugate(B_i) is done through gemm assuming Bt is in column major
-            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, ColsPerBlock, 'F', &(C[0]), NullDim, ColsPerBlock, 'T', 'T');
+            gemm(&(BtBinv[i*NullDimSq]), NullDim, NullDim, 'F', &(Bt[Sj[j]*NullDim_Cols]), NullDim, cols_per_block, 'F', &(C[0]), NullDim, cols_per_block, 'T', 'T');
 
             // Calculate Sx[ j*BlockSize => (j+1)*blocksize ] =  UB[ i*BlockSize => (i+1)*blocksize ] * C
             // Note that C actually stores C^T in row major, or C in col major.  gemm assumes C is in col major, so we're OK
-            gemm(&(UB[i*NullDim_Rows]), RowsPerBlock, NullDim, 'F', &(C[0]), NullDim, ColsPerBlock, 'F', &(Update[0]), RowsPerBlock, ColsPerBlock, 'F', 'T');
+            gemm(&(UB[i*NullDim_Rows]), rows_per_block, NullDim, 'F', &(C[0]), NullDim, cols_per_block, 'F', &(Update[0]), rows_per_block, cols_per_block, 'F', 'T');
 
             //Update Sx
             for(I k = 0; k < BlockSize; k++)
@@ -605,43 +636,39 @@ void satisfy_constraints_helper(const I RowsPerBlock,
 
 /*
  * Helper routine for energy_prolongation_smoother
- * Calculates the following python code:
- *
- *   RowsPerBlock = Sparsity_Pattern.blocksize[0]
- *   BtB = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
- *   S2 = Sparsity_Pattern.tocsr()
- *   for i in range(Nnodes):
- *       Bi = mat( B[S2.indices[S2.indptr[i*RowsPerBlock]:S2.indptr[i*RowsPerBlock + 1]],:] )
- *       BtB[i,:,:] = Bi.H*Bi
  *
  * Parameters
  * ----------
- * NullDim : {int}
+ * NullDim : int
  *      Number of near nullspace vectors
- * Nnodes : {int}
+ * Nnodes : int
  *      Number of nodes, i.e. number of block rows in BSR matrix, S
- * ColsPerBlock : {int}
+ * cols_per_block : int
  *      Columns per block in S
- * b : {float|complex array}
+ * b : array
  *      Nnodes x BsqCols array, in row-major form.
  *      This is B-squared, i.e. it is each column of B
  *      multiplied against each other column of B.  For a Nx3 B,
- *      b[:,0] = conjugate(B[:,0])*B[:,0]
- *      b[:,1] = conjugate(B[:,0])*B[:,1]
- *      b[:,2] = conjugate(B[:,0])*B[:,2]
- *      b[:,3] = conjugate(B[:,1])*B[:,1]
- *      b[:,4] = conjugate(B[:,1])*B[:,2]
- *      b[:,5] = conjugate(B[:,2])*B[:,2]
- * BsqCols : {int}
+ *
+ *      .. code-block:: python
+ *
+ *          b[:,0] = conjugate(B[:,0])*B[:,0]
+ *          b[:,1] = conjugate(B[:,0])*B[:,1]
+ *          b[:,2] = conjugate(B[:,0])*B[:,2]
+ *          b[:,3] = conjugate(B[:,1])*B[:,1]
+ *          b[:,4] = conjugate(B[:,1])*B[:,2]
+ *          b[:,5] = conjugate(B[:,2])*B[:,2]
+ *
+ * BsqCols : int
  *      sum(range(NullDim+1)), i.e. number of columns in b
  * x  : {float|complex array}
  *      Modified inplace for output.  Should be zeros upon entry
- * Sp,Sj : {int array}
+ * Sp,Sj : int array
  *      BSR indptr and indices members for matrix, S
  *
- * Return
- * ------
- * BtB[i] = B_i.H*B_i in __column__ major format
+ * Returns
+ * -------
+ * ``BtB[i] = B_i.H*B_i`` in column major format
  * where B_i is B[colindices,:], colindices = all the nonzero
  * column indices for block row i in S
  *
@@ -649,11 +676,22 @@ void satisfy_constraints_helper(const I RowsPerBlock,
  * -----
  * Principle calling routine is energy_prolongation_smoother(...) in smooth.py.
  *
+ * Calculates the following python code:
+ *
+ * .. code-block:: python
+ *
+ *     rows_per_block = Sparsity_Pattern.blocksize[0]
+ *     BtB = zeros((Nnodes,NullDim,NullDim), dtype=B.dtype)
+ *     S2 = Sparsity_Pattern.tocsr()
+ *     for i in range(Nnodes):
+ *         Bi = mat( B[S2.indices[S2.indptr[i*rows_per_block]:S2.indptr[i*rows_per_block + 1]],:] )
+ *         BtB[i,:,:] = Bi.H*Bi
+ *
  */
 template<class I, class T, class F>
 void calc_BtB(const I NullDim,
               const I Nnodes,
-              const I ColsPerBlock,
+              const I cols_per_block,
               const T  b[], const int  b_size,
               const I BsqCols,
                     T  x[], const int  x_size,
@@ -686,8 +724,8 @@ void calc_BtB(const I NullDim,
         {
             // Calculate absolute column index start and stop
             //  for block column j of BSR matrix, S
-            const I colstart = Sj[j]*ColsPerBlock;
-            const I colend   = colstart + ColsPerBlock;
+            const I colstart = Sj[j]*cols_per_block;
+            const I colend   = colstart + cols_per_block;
 
             //Loop over each absolute column index, k, of block column, j
             for(I k = colstart; k < colend; k++)
@@ -737,9 +775,9 @@ void calc_BtB(const I NullDim,
  *
  * A, B and S must all be in BSR, may be rectangular, but the
  * indices need not be sorted.
- * Also, A.blocksize[0] must equal S.blocksize[0]
- *       A.blocksize[1] must equal B.blocksize[0]
- *       B.blocksize[1] must equal S.blocksize[1]
+ * Also, A.blocksize[0] must equal S.blocksize[0],
+ * A.blocksize[1] must equal B.blocksize[0], and
+ * B.blocksize[1] must equal S.blocksize[1]
  *
  * Parameters
  * ----------
@@ -884,9 +922,9 @@ inline void swap(T x[], I y[], I i, I j )
    y[j]   = temp_i;
 }
 
-/* Apply quicksort to the array x, while simultaneously shuffling 
- * the array y to mirror the swapping of entries done in x.   Then 
- * aftwards x[i] and y[i] correspond to some x[k] and y[k] 
+/* Apply quicksort to the array x, while simultaneously shuffling
+ * the array y to mirror the swapping of entries done in x.   Then
+ * aftwards x[i] and y[i] correspond to some x[k] and y[k]
  * before the sort.
  *
  * This function is particularly useful for sorting the rows (or columns)
@@ -907,31 +945,31 @@ void qsort_twoarrays( T x[], I y[], I left, I right )
        {    swap(x, y, ++last, i); }
     }
     swap(x, y, left, last);
-    
+
     /* Recursive calls */
     qsort_twoarrays(x, y, left, last-1);
     qsort_twoarrays(x, y, last+1, right);
 }
 
 /*
- *  Truncate the entries in A, such that only the largest (in magnitude) 
- *  k entries per row are left.   Smaller entries are zeroed out. 
+ *  Truncate the entries in A, such that only the largest (in magnitude)
+ *  k entries per row are left.   Smaller entries are zeroed out.
  *
  *  Parameters
- *      n_row      - number of rows in A 
+ *      n_row      - number of rows in A
  *      k          - number of entries per row to keep
  *      Sp[]       - CSR row pointer
  *      Sj[]       - CSR index array
  *      Sx[]       - CSR data array
  *
- *  
+ *
  *  Returns:
  *      Nothing, A will be stored in Sp, Sj, Sx with some entries zeroed out
  *
  */
 template<class I, class T, class F>
-void truncate_rows_csr(const I n_row, 
-                       const I k, 
+void truncate_rows_csr(const I n_row,
+                       const I k,
                        const I Sp[],  const int Sp_size,
                              I Sj[],  const int Sj_size,
                              T Sx[],  const int Sx_size)

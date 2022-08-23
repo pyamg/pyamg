@@ -1,51 +1,43 @@
 """General utility functions for pyamg."""
-from __future__ import print_function
 
 from warnings import warn
 
 import numpy as np
-import scipy as sp
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
-from scipy.sparse.sputils import upcast
-from pyamg.util.linalg import norm, cond, pinv_array
 from scipy.linalg import eigvals
-import pyamg.amg_core
-
-__all__ = ['unpack_arg', 'blocksize', 'diag_sparse', 'profile_solver',
-           'to_type', 'type_prep', 'get_diagonal', 'UnAmal', 'Coord2RBM',
-           'hierarchy_spectrum', 'print_table', 'get_block_diag', 'amalgamate',
-           'scale_rows', 'scale_columns',
-           'symmetric_rescaling', 'symmetric_rescaling_sa',
-           'relaxation_as_linear_operator', 'filter_operator', 'scale_T',
-           'get_Cpt_params', 'compute_BtBinv', 'eliminate_diag_dom_nodes',
-           'levelize_strength_or_aggregation',
-           'levelize_smooth_or_improve_candidates', 'filter_matrix_columns',
-           'filter_matrix_rows', 'truncate_rows']
 
 try:
-    from scipy.sparse._sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse._sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
+                                           csr_scale_columns, bsr_scale_columns)
 except ImportError:
-    from scipy.sparse.sparsetools import csr_scale_rows, bsr_scale_rows
-    from scipy.sparse.sparsetools import csr_scale_columns, bsr_scale_columns
+    from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
+                                          csr_scale_columns, bsr_scale_columns)
+
+try:
+    # scipy >=1.8
+    # pylint: disable=unused-import
+    from scipy.sparse.linalg._isolve.utils import make_system
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.linalg.isolve.utils import make_system  # noqa: F401
+
+try:
+    # scipy >=1.8
+    from scipy.sparse._sputils import upcast
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.sputils import upcast
+
+from .. import amg_core
+from . import linalg
 
 
-def unpack_arg(v):
-    # Helper function for unpacking a function name and parameter
-    # dictionary tuple
-    if isinstance(v, tuple):
-        return v[0], v[1]
-    else:
-        return v, {}
-
-
-def blocksize(A):
+def get_blocksize(A):
     """Return the block size of a matrix."""
     if isspmatrix_bsr(A):
         return A.blocksize[0]
-    else:
-        return 1
+    return 1
 
 
 def profile_solver(ml, accel=None, **kwargs):
@@ -84,14 +76,14 @@ def profile_solver(ml, accel=None, **kwargs):
 
     """
     A = ml.levels[0].A
-    b = A * sp.rand(A.shape[0], 1)
+    b = A * np.random.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:
         ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
-            residuals.append(norm(np.ravel(b) - np.ravel(A*x)))
+            residuals.append(linalg.norm(np.ravel(b) - np.ravel(A*x)))
         M = ml.aspreconditioner(cycle=kwargs.get('cycle', 'V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
@@ -123,19 +115,20 @@ def diag_sparse(A):
     >>> import numpy as np
     >>> from pyamg.util.utils import diag_sparse
     >>> d = 2.0*np.ones((3,)).ravel()
-    >>> print diag_sparse(d).todense()
-    [[ 2.  0.  0.]
-     [ 0.  2.  0.]
-     [ 0.  0.  2.]]
+    >>> print(diag_sparse(d).toarray())
+    [[2. 0. 0.]
+     [0. 2. 0.]
+     [0. 0. 2.]]
 
     """
     if isspmatrix(A):
         return A.diagonal()
-    else:
-        if(np.ndim(A) != 1):
-            raise ValueError('input diagonal array expected to be 1d')
-        return csr_matrix((np.asarray(A), np.arange(len(A)),
-                           np.arange(len(A)+1)), (len(A), len(A)))
+
+    if np.ndim(A) != 1:
+        raise ValueError('input diagonal array expected to be 1d')
+
+    return csr_matrix((np.asarray(A), np.arange(len(A)),
+                       np.arange(len(A)+1)), (len(A), len(A)))
 
 
 def scale_rows(A, v, copy=True):
@@ -203,7 +196,7 @@ def scale_rows(A, v, copy=True):
         bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                        np.ravel(A.data), v)
     elif isspmatrix_csc(A):
-        pyamg.amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
+        amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
         A = scale_rows(csr_matrix(A), v).asformat(fmt)
@@ -250,12 +243,12 @@ def scale_columns(A, v, copy=True):
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).todense()
-    [[ 10.  -5.   0.   0.]
-     [ -5.  10.  -5.   0.]
-     [  0.  -5.  10.  -5.]
-     [  0.   0.  -5.  10.]
-     [  0.   0.   0.  -5.]]
+    >>> print(scale_columns(A,5*np.ones((A.shape[1],1))).toarray())
+    [[10. -5.  0.  0.]
+     [-5. 10. -5.  0.]
+     [ 0. -5. 10. -5.]
+     [ 0.  0. -5. 10.]
+     [ 0.  0.  0. -5.]]
 
     """
     v = np.ravel(v)
@@ -281,7 +274,7 @@ def scale_columns(A, v, copy=True):
         bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                           np.ravel(A.data), v)
     elif isspmatrix_csc(A):
-        pyamg.amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
+        amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
         A = scale_columns(csr_matrix(A), v).asformat(fmt)
@@ -332,7 +325,7 @@ def symmetric_rescaling(A, copy=True):
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
-    >>> print DAD.todense()
+    >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -361,8 +354,7 @@ def symmetric_rescaling(A, copy=True):
 
         return D_sqrt, D_sqrt_inv, DAD
 
-    else:
-        return symmetric_rescaling(csr_matrix(A))
+    return symmetric_rescaling(csr_matrix(A))
 
 
 def symmetric_rescaling_sa(A, B, BH=None):
@@ -408,22 +400,23 @@ def symmetric_rescaling_sa(A, B, BH=None):
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
-    >>> print DAD.todense()
+    >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
      [ 0.   0.  -0.5  1.  -0.5]
      [ 0.   0.   0.  -0.5  1. ]]
-    >>> print DB
-    [[ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]]
+    >>> print(DB)
+    [[1.41421356]
+     [1.41421356]
+     [1.41421356]
+     [1.41421356]
+     [1.41421356]]
 
     """
     # rescale A
-    [D_sqrt, D_sqrt_inv, A] = symmetric_rescaling(A, copy=False)
+    D_sqrt, _, A = symmetric_rescaling(A, copy=False)
+
     # scale candidates
     for i in range(B.shape[1]):
         B[:, i] = np.ravel(B[:, i])*np.ravel(D_sqrt)
@@ -431,10 +424,10 @@ def symmetric_rescaling_sa(A, B, BH=None):
     if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
             if BH is None:
-                raise ValueError("BH should be an n x m array")
-            else:
-                for i in range(BH.shape[1]):
-                    BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
+                raise ValueError('BH should be an n x m array')
+
+            for i in range(BH.shape[1]):
+                BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
 
     return [A, B, BH]
 
@@ -477,7 +470,8 @@ def type_prep(upcast_type, varlist):
 
     """
     varlist = to_type(upcast_type, varlist)
-    for i in range(len(varlist)):
+    nv = len(varlist)
+    for i in range(nv):
         if np.isscalar(varlist[i]):
             varlist[i] = np.array([varlist[i]])
 
@@ -516,7 +510,8 @@ def to_type(upcast_type, varlist):
     """
     # convert_type = type(np.array([0], upcast_type)[0])
 
-    for i in range(len(varlist)):
+    nv = len(varlist)
+    for i in range(nv):
 
         # convert scalars to complex
         if np.isscalar(varlist[i]):
@@ -528,7 +523,6 @@ def to_type(upcast_type, varlist):
                     varlist[i] = varlist[i].astype(upcast_type)
             except AttributeError:
                 warn('Failed to cast in to_type')
-                pass
 
     return varlist
 
@@ -563,11 +557,11 @@ def get_diagonal(A, norm_eq=False, inv=False):
     >>> from pyamg.gallery import poisson
     >>> A = poisson( (5,), format='csr' )
     >>> D = get_diagonal(A)
-    >>> print D
-    [ 2.  2.  2.  2.  2.]
+    >>> print(D)
+    [2. 2. 2. 2. 2.]
     >>> D = get_diagonal(A, norm_eq=1, inv=True)
-    >>> print D
-    [ 0.2         0.16666667  0.16666667  0.16666667  0.2       ]
+    >>> print(D)
+    [0.2        0.16666667 0.16666667 0.16666667 0.2       ]
 
     """
     # if not isspmatrix(A):
@@ -592,8 +586,8 @@ def get_diagonal(A, norm_eq=False, inv=False):
         mask = (D != 0.0)
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
-    else:
-        return D
+
+    return D
 
 
 def get_block_diag(A, blocksize, inv_flag=True):
@@ -616,29 +610,29 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
     Examples
     --------
-    >>> from scipy import arange
+    >>> from numpy import arange
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg.util import get_block_diag
+    >>> from pyamg.util.utils import get_block_diag
     >>> A = csr_matrix(arange(36).reshape(6,6))
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
-    >>> print block_diag_inv
-    [[[  0.   1.]
-      [  6.   7.]]
+    >>> print(block_diag_inv)
+    [[[ 0.  1.]
+      [ 6.  7.]]
     <BLANKLINE>
-     [[ 14.  15.]
-      [ 20.  21.]]
+     [[14. 15.]
+      [20. 21.]]
     <BLANKLINE>
-     [[ 28.  29.]
-      [ 34.  35.]]]
+     [[28. 29.]
+      [34. 35.]]]
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
 
     """
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
-        raise ValueError("Expected square matrix")
-    if sp.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("blocksize and A.shape must be compatible")
+        raise ValueError('Expected square matrix')
+    if np.mod(A.shape[0], blocksize) != 0:
+        raise ValueError('blocksize and A.shape must be compatible')
 
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
@@ -661,10 +655,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
     A = A.asfptype()
-    block_diag = sp.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
+    block_diag = np.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
-    AAIJ = (sp.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
+    AAIJ = (np.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
@@ -677,10 +671,10 @@ def get_block_diag(A, blocksize, inv_flag=True):
         # Invert each block
         if block_diag.shape[1] < 7:
             # This specialized routine lacks robustness for large matrices
-            pyamg.amg_core.pinv_array(block_diag.ravel(), block_diag.shape[0],
-                                      block_diag.shape[1], 'T')
+            amg_core.pinv_array(block_diag.ravel(), block_diag.shape[0],
+                                block_diag.shape[1], 'T')
         else:
-            pinv_array(block_diag)
+            linalg.pinv_array(block_diag)
         A.block_D_inv = block_diag
     else:
         A.block_D = block_diag
@@ -707,7 +701,7 @@ def amalgamate(A, blocksize):
 
     Notes
     -----
-    inverse operation of UnAmal for square matrices
+    inverse operation of unamal for square matrices
 
     Examples
     --------
@@ -718,20 +712,21 @@ def amalgamate(A, blocksize):
     >>> col = array([0,2,1])
     >>> data = array([1,2,3])
     >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
-    >>> A.todense()
-    matrix([[1, 0, 2, 0],
-            [0, 3, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]])
-    >>> amalgamate(A,2).todense()
-    matrix([[ 1.,  1.],
-            [ 0.,  0.]])
+    >>> A.toarray()
+    array([[1, 0, 2, 0],
+           [0, 3, 0, 0],
+           [0, 0, 0, 0],
+           [0, 0, 0, 0]])
+    >>> amalgamate(A,2).toarray()
+    array([[1., 1.],
+           [0., 0.]])
 
     """
     if blocksize == 1:
         return A
-    elif sp.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("Incompatible blocksize")
+
+    if np.mod(A.shape[0], blocksize) != 0:
+        raise ValueError('Incompatible blocksize')
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
@@ -741,54 +736,54 @@ def amalgamate(A, blocksize):
     return csr_matrix(subI, shape=shape)
 
 
-def UnAmal(A, RowsPerBlock, ColsPerBlock):
+def unamal(A, rows_per_block, cols_per_block):
     """Unamalgamate a CSR A with blocks of 1's.
 
     This operation is equivalent to
-    replacing each entry of A with ones(RowsPerBlock, ColsPerBlock), i.e., this
+    replacing each entry of A with ones(rows_per_block, cols_per_block), i.e., this
     is equivalent to setting all of A's nonzeros to 1 and then doing a
-    Kronecker product between A and ones(RowsPerBlock, ColsPerBlock).
+    Kronecker product between A and ones(rows_per_block, cols_per_block).
 
     Parameters
     ----------
     A : csr_matrix
         Amalgamted matrix
-    RowsPerBlock : int
-        Give A blocks of size (RowsPerBlock, ColsPerBlock)
-    ColsPerBlock : int
-        Give A blocks of size (RowsPerBlock, ColsPerBlock)
+    rows_per_block : int
+        Give A blocks of size (rows_per_block, cols_per_block)
+    cols_per_block : int
+        Give A blocks of size (rows_per_block, cols_per_block)
 
     Returns
     -------
     A : bsr_matrix
         Returns A.data[:] = 1, followed by a Kronecker product of A and
-        ones(RowsPerBlock, ColsPerBlock)
+        ones(rows_per_block, cols_per_block)
 
     Examples
     --------
     >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg.util.utils import UnAmal
+    >>> from pyamg.util.utils import unamal
     >>> row = array([0,0,1,2,2,2])
     >>> col = array([0,2,2,0,1,2])
     >>> data = array([1,2,3,4,5,6])
     >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
-    >>> A.todense()
-    matrix([[1, 0, 2],
-            [0, 0, 3],
-            [4, 5, 6]])
-    >>> UnAmal(A,2,2).todense()
-    matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
-            [ 1.,  1.,  0.,  0.,  1.,  1.],
-            [ 0.,  0.,  0.,  0.,  1.,  1.],
-            [ 0.,  0.,  0.,  0.,  1.,  1.],
-            [ 1.,  1.,  1.,  1.,  1.,  1.],
-            [ 1.,  1.,  1.,  1.,  1.,  1.]])
+    >>> A.toarray()
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
+    >>> unamal(A,2,2).toarray()
+    array([[1., 1., 0., 0., 1., 1.],
+           [1., 1., 0., 0., 1., 1.],
+           [0., 0., 0., 0., 1., 1.],
+           [0., 0., 0., 0., 1., 1.],
+           [1., 1., 1., 1., 1., 1.],
+           [1., 1., 1., 1., 1., 1.]])
 
     """
-    data = np.ones((A.indices.shape[0], RowsPerBlock, ColsPerBlock))
+    data = np.ones((A.indices.shape[0], rows_per_block, cols_per_block))
     blockI = (data, A.indices, A.indptr)
-    shape = (RowsPerBlock*A.shape[0], ColsPerBlock*A.shape[1])
+    shape = (rows_per_block*A.shape[0], cols_per_block*A.shape[1])
     return bsr_matrix(blockI, shape=shape)
 
 
@@ -845,18 +840,18 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     # Calculate each column's width
     colwidths = []
-    for i in range(len(table)):
+    for row in table:
         # extend colwidths for row i
-        for k in range(len(table[i]) - len(colwidths)):
+        for _ in range(len(row) - len(colwidths)):
             colwidths.append(-1)
 
-        # Update colwidths if table[i][j] is wider than colwidth[j]
-        for j in range(len(table[i])):
-            if len(table[i][j]) > colwidths[j]:
-                colwidths[j] = len(table[i][j])
+        # Update colwidths if row[j] is wider than colwidth[j]
+        for j, r in enumerate(row):
+            if len(r) > colwidths[j]:
+                colwidths[j] = len(r)
 
     # Factor in extra column padding
-    for i in range(len(colwidths)):
+    for i, _ in enumerate(colwidths):
         colwidths[i] += col_padding
 
     # Total table width
@@ -864,10 +859,10 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     # Print Title
     if len(title) > 0:
-        title = title.split("\n")
-        for i in range(len(title)):
-            table_str += str.center(title[i], ttwidth) + '\n'
-        table_str += "\n"
+        title = title.split('\n')
+        for t in title:
+            table_str += str.center(t, ttwidth) + '\n'
+        table_str += '\n'
 
     # Choose centering scheme
     centering = centering.lower()
@@ -883,14 +878,14 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         for elmt, elmtwidth in zip(table[0], colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if table[0] != []:
-            table_str = table_str[:-len(delim)] + '\n'
+            table_str = table_str[:-len(delim)].rstrip() + '\n'
 
         # Append Header Separator
         #              Total Column Width            Total Col Delimiter Widths
         if len(headerchar) == 0:
             headerchar = ' '
         table_str += headerchar *\
-            int(sp.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
+            int(np.ceil(float(ttwidth)/float(len(headerchar)))) + '\n'
 
         table = table[1:]
 
@@ -898,14 +893,14 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         for elmt, elmtwidth in zip(row, colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if row != []:
-            table_str = table_str[:-len(delim)] + '\n'
+            table_str = table_str[:-len(delim)].rstrip() + '\n'
         else:
             table_str += '\n'
 
     return table_str
 
 
-def hierarchy_spectrum(mg, filter=True, plot=False):
+def hierarchy_spectrum(mg, filter_entries=True):
     """Examine a multilevel hierarchy's spectrum.
 
     Parameters
@@ -916,14 +911,15 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
 
     Returns
     -------
-    (1) table to standard out detailing the spectrum of each level in mg
-    (2) if plot==True, a sequence of plots in the complex plane of the
-        spectrum at each level
+    leveleigs : list
+        List of eigenvalues per level
 
     Notes
     -----
     This can be useful for troubleshooting and when examining how your
     problem's nature changes from level to level
+
+    A table is printed to standard out detailing the spectrum of each level in mg
 
     Examples
     --------
@@ -932,16 +928,16 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     >>> from pyamg.util.utils import hierarchy_spectrum
     >>> A = poisson( (1,), format='csr' )
     >>> ml = smoothed_aggregation_solver(A)
-    >>> hierarchy_spectrum(ml)
+    >>> leveleigs = hierarchy_spectrum(ml)
     <BLANKLINE>
-     Level min(re(eig)) max(re(eig)) num re(eig) < 0 num re(eig) > 0 cond_2(A)
-    ---------------------------------------------------------------------------
-       0      2.000        2.000            0               1         1.00e+00
+     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A)
+    -------------------------------------------------------------------------------------
+       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00
     <BLANKLINE>
     <BLANKLINE>
-     Level min(im(eig)) max(im(eig)) num im(eig) < 0 num im(eig) > 0 cond_2(A)
-    ---------------------------------------------------------------------------
-       0      0.000        0.000            0               0         1.00e+00
+     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A)
+    -------------------------------------------------------------------------------------
+       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00
     <BLANKLINE>
 
     """
@@ -950,10 +946,11 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
     imag_table = [['Level', 'min(im(eig))', 'max(im(eig))', 'num im(eig) < 0',
                    'num im(eig) > 0', 'cond_2(A)']]
 
-    for i in range(len(mg.levels)):
-        A = mg.levels[i].A.tocsr()
+    leveleigs = []
+    for i, level in enumerate(mg.levels):
+        A = level.A.tocsr()
 
-        if filter is True:
+        if filter_entries is True:
             # Filter out any zero rows and columns of A
             A.eliminate_zeros()
             nnz_per_row = A.indptr[0:-1] - A.indptr[1:]
@@ -961,149 +958,137 @@ def hierarchy_spectrum(mg, filter=True, plot=False):
             A = A.tocsc()
             nnz_per_col = A.indptr[0:-1] - A.indptr[1:]
             nonzero_cols = (nnz_per_col != 0).nonzero()[0]
-            nonzero_rowcols = sp.union1d(nonzero_rows, nonzero_cols)
-            A = np.mat(A.todense())
+            nonzero_rowcols = np.union1d(nonzero_rows, nonzero_cols)
+            A = A.toarray()
             A = A[nonzero_rowcols, :][:, nonzero_rowcols]
         else:
-            A = np.mat(A.todense())
+            A = A.toarray()
 
         e = eigvals(A)
-        c = cond(A)
-        lambda_min = min(sp.real(e))
-        lambda_max = max(sp.real(e))
-        num_neg = max(e[sp.real(e) < 0.0].shape)
-        num_pos = max(e[sp.real(e) > 0.0].shape)
-        real_table.append([str(i), ('%1.3f' % lambda_min),
-                           ('%1.3f' % lambda_max),
-                           str(num_neg), str(num_pos), ('%1.2e' % c)])
+        c = linalg.cond(A)
+        lambda_min = min(np.real(e))
+        lambda_max = max(np.real(e))
+        num_neg = max(e[np.real(e) < 0.0].shape)
+        num_pos = max(e[np.real(e) > 0.0].shape)
+        real_table.append([str(i), f'{lambda_min:1.3f}', f'{lambda_max:1.3f}',
+                           str(num_neg), str(num_pos), f'{c:1.2e}'])
 
-        lambda_min = min(sp.imag(e))
-        lambda_max = max(sp.imag(e))
-        num_neg = max(e[sp.imag(e) < 0.0].shape)
-        num_pos = max(e[sp.imag(e) > 0.0].shape)
-        imag_table.append([str(i), ('%1.3f' % lambda_min),
-                           ('%1.3f' % lambda_max),
-                           str(num_neg), str(num_pos), ('%1.2e' % c)])
+        lambda_min = min(np.imag(e))
+        lambda_max = max(np.imag(e))
+        num_neg = max(e[np.imag(e) < 0.0].shape)
+        num_pos = max(e[np.imag(e) > 0.0].shape)
+        imag_table.append([str(i), f'{lambda_min:1.3f}', f'{lambda_max:1.3f}',
+                           str(num_neg), str(num_pos), f'{c:1.2e}'])
 
-        if plot:
-            import pylab
-            pylab.figure(i+1)
-            pylab.plot(sp.real(e), sp.imag(e), 'kx')
-            handle = pylab.title('Level %d Spectrum' % i)
-            handle.set_fontsize(19)
-            handle = pylab.xlabel('real(eig)')
-            handle.set_fontsize(17)
-            handle = pylab.ylabel('imag(eig)')
-            handle.set_fontsize(17)
+        leveleigs.append(e)
 
     print(print_table(real_table))
     print(print_table(imag_table))
 
-    if plot:
-        pylab.show()
+    return leveleigs
 
 
-def Coord2RBM(numNodes, numPDEs, x, y, z):
+def coord_to_rbm(nnodes, ndof, x, y, z):
     """Convert 2D or 3D coordinates into Rigid body modes.
 
     For use as near nullspace modes in elasticity AMG solvers.
 
     Parameters
     ----------
-    numNodes : int
+    nnodes : int
         Number of nodes
-    numPDEs :
+    ndof :
         Number of dofs per node
     x,y,z : array_like
         Coordinate vectors
 
     Returns
     -------
-    rbm : matrix
-        A matrix of size (numNodes*numPDEs) x (1 | 6) containing the 6 rigid
+    rbm : array
+        An array of size (nnodes*ndof) x (1 | 6) containing the 6 rigid
         body modes
 
     Examples
     --------
     >>> import numpy as np
-    >>> from pyamg.util.utils import Coord2RBM
+    >>> from pyamg.util.utils import coord_to_rbm
     >>> a = np.array([0,1,2])
-    >>> Coord2RBM(3,6,a,a,a)
-    matrix([[ 1.,  0.,  0.,  0.,  0., -0.],
-            [ 0.,  1.,  0., -0.,  0.,  0.],
-            [ 0.,  0.,  1.,  0., -0.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  1., -1.],
-            [ 0.,  1.,  0., -1.,  0.,  1.],
-            [ 0.,  0.,  1.,  1., -1.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.],
-            [ 1.,  0.,  0.,  0.,  2., -2.],
-            [ 0.,  1.,  0., -2.,  0.,  2.],
-            [ 0.,  0.,  1.,  2., -2.,  0.],
-            [ 0.,  0.,  0.,  1.,  0.,  0.],
-            [ 0.,  0.,  0.,  0.,  1.,  0.],
-            [ 0.,  0.,  0.,  0.,  0.,  1.]])
+    >>> coord_to_rbm(3,6,a,a,a)
+    array([[ 1.,  0.,  0.,  0.,  0., -0.],
+           [ 0.,  1.,  0., -0.,  0.,  0.],
+           [ 0.,  0.,  1.,  0., -0.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  1., -1.],
+           [ 0.,  1.,  0., -1.,  0.,  1.],
+           [ 0.,  0.,  1.,  1., -1.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.],
+           [ 1.,  0.,  0.,  0.,  2., -2.],
+           [ 0.,  1.,  0., -2.,  0.,  2.],
+           [ 0.,  0.,  1.,  2., -2.,  0.],
+           [ 0.,  0.,  0.,  1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  1.]])
 
     """
     # check inputs
-    if(numPDEs == 1):
+    if ndof == 1:
         numcols = 1
-    elif((numPDEs == 3) or (numPDEs == 6)):
+    elif ndof in (3, 6):
         numcols = 6
     else:
-        raise ValueError("Coord2RBM(...) only supports 1, 3 or 6 PDEs per\
-                          spatial location,i.e. numPDEs = [1 | 3 | 6].\
-                          You've entered " + str(numPDEs) + ".")
+        raise ValueError('coord_to_rbm(...) only supports 1, 3 or 6 PDEs per '
+                         'spatial location,i.e. ndof = [1 | 3 | 6]. '
+                         f'You have entered {ndof}.')
 
-    if((max(x.shape) != numNodes) or
-       (max(y.shape) != numNodes) or
-       (max(z.shape) != numNodes)):
-        raise ValueError("Coord2RBM(...) requires coordinate vectors of equal\
-                          length.  Length must be numNodes = " + str(numNodes))
+    if((max(x.shape) != nnodes)
+       or (max(y.shape) != nnodes)
+       or (max(z.shape) != nnodes)):
+        raise ValueError('coord_to_rbm(...) requires coordinate vectors of equal '
+                         f'length.  Length must be nnodes = {nnodes}')
 
     # if( (min(x.shape) != 1) or (min(y.shape) != 1) or (min(z.shape) != 1) ):
-    #    raise ValueError("Coord2RBM(...) requires coordinate vectors that are
-    #    (numNodes x 1) or (1 x numNodes).")
+    #    raise ValueError("coord_to_rbm(...) requires coordinate vectors that are
+    #    (nnodes x 1) or (1 x nnodes).")
 
     # preallocate rbm
-    rbm = np.mat(np.zeros((numNodes*numPDEs, numcols)))
+    rbm = np.array(np.zeros((nnodes*ndof, numcols)))
 
-    for node in range(numNodes):
-        dof = node*numPDEs
+    for node in range(nnodes):  # pylint: disable=too-many-nested-blocks
+        dof = node * ndof
 
-        if(numPDEs == 1):
+        if ndof == 1:
             rbm[node] = 1.0
 
-        if(numPDEs == 6):
+        if ndof == 6:
             for ii in range(3, 6):  # lower half = [ 0 I ]
                 for jj in range(0, 6):
-                    if(ii == jj):
+                    if ii == jj:
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
-        if((numPDEs == 3) or (numPDEs == 6)):
+        if ndof in (3, 6):
             for ii in range(0, 3):  # upper left = [ I ]
                 for jj in range(0, 3):
-                    if(ii == jj):
+                    if ii == jj:
                         rbm[dof+ii, jj] = 1.0
                     else:
                         rbm[dof+ii, jj] = 0.0
 
             for ii in range(0, 3):  # upper right = [ Q ]
                 for jj in range(3, 6):
-                    if(ii == (jj-3)):
+                    if ii == (jj-3):
                         rbm[dof+ii, jj] = 0.0
                     else:
-                        if((ii+jj) == 4):
+                        if (ii+jj) == 4:
                             rbm[dof+ii, jj] = z[node]
-                        elif((ii+jj) == 5):
+                        elif (ii+jj) == 5:
                             rbm[dof+ii, jj] = y[node]
-                        elif((ii+jj) == 6):
+                        elif (ii+jj) == 6:
                             rbm[dof+ii, jj] = x[node]
                         else:
                             rbm[dof+ii, jj] = 0.0
@@ -1121,81 +1106,6 @@ def Coord2RBM(numNodes, numPDEs, x, y, z):
             rbm[dof+ii, jj] *= -1.0
 
     return rbm
-
-
-def relaxation_as_linear_operator(method, A, b):
-    """Create a linear operator that applies a relaxation method for the given right-hand-side.
-
-    Parameters
-    ----------
-    methods : {tuple or string}
-        Relaxation descriptor: Each tuple must be of the form ('method','opts')
-        where 'method' is the name of a supported smoother, e.g., gauss_seidel,
-        and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
-        {'sweep':symmetric}.  If string, must be that of a supported smoother,
-        e.g., gauss_seidel.
-
-    Returns
-    -------
-    linear operator that applies the relaxation method to a vector for a
-    fixed right-hand-side, b.
-
-    Notes
-    -----
-    This method is primarily used to improve B during the aggregation setup
-    phase.  Here b = 0, and each relaxation call can improve the quality of B,
-    especially near the boundaries.
-
-    Examples
-    --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.util.utils import relaxation_as_linear_operator
-    >>> import numpy as np
-    >>> A = poisson((100,100), format='csr')           # matrix
-    >>> B = np.ones((A.shape[0],1))                 # Candidate vector
-    >>> b = np.zeros((A.shape[0]))                  # RHS
-    >>> relax = relaxation_as_linear_operator('gauss_seidel', A, b)
-    >>> B = relax*B
-
-    """
-    from pyamg import relaxation
-    from scipy.sparse.linalg.interface import LinearOperator
-    import pyamg.multilevel
-
-    def unpack_arg(v):
-        if isinstance(v, tuple):
-            return v[0], v[1]
-        else:
-            return v, {}
-
-    # setup variables
-    accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
-                        'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
-                        'block_jacobi', 'richardson', 'schwarz',
-                        'strength_based_schwarz', 'jacobi_ne']
-
-    b = np.array(b, dtype=A.dtype)
-    fn, kwargs = unpack_arg(method)
-    lvl = pyamg.multilevel_solver.level()
-    lvl.A = A
-
-    # Retrieve setup call from relaxation.smoothing for this relaxation method
-    if not accepted_methods.__contains__(fn):
-        raise NameError("invalid relaxation method: ", fn)
-    try:
-        setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
-    except NameError:
-        raise NameError("invalid presmoother method: ", fn)
-    # Get relaxation routine that takes only (A, x, b) as parameters
-    relax = setup_smoother(lvl, **kwargs)
-
-    # Define matvec
-    def matvec(x):
-        xcopy = x.copy()
-        relax(A, xcopy, b)
-        return xcopy
-
-    return LinearOperator(A.shape, matvec, dtype=A.dtype)
 
 
 def filter_operator(A, C, B, Bf, BtBinv=None):
@@ -1251,13 +1161,13 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     >>> C = array([ [1.,1,0],[1,1,0],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
     >>> B = ones((3,1))
     >>> Bf = ones((6,1))
-    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).todense()
-    matrix([[ 0.5,  0.5,  0. ],
-            [ 0.5,  0.5,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  0. ,  1. ],
-            [ 0. ,  0. ,  1. ]])
+    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).toarray()
+    array([[0.5, 0.5, 0. ],
+           [0.5, 0.5, 0. ],
+           [0. , 1. , 0. ],
+           [0. , 1. , 0. ],
+           [0. , 0. , 1. ],
+           [0. , 0. , 1. ]])
 
     """
     # First preprocess the parameters
@@ -1269,19 +1179,20 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     if isspmatrix_bsr(C):
         isBSR = True
-        ColsPerBlock = C.blocksize[1]
-        RowsPerBlock = C.blocksize[0]
-        Nnodes = int(Nfine/RowsPerBlock)
+        cols_per_block = C.blocksize[1]
+        rows_per_block = C.blocksize[0]
+        Nnodes = int(Nfine/rows_per_block)
         if not isspmatrix_bsr(A):
             raise ValueError('A and C must either both be CSR or BSR')
-        elif (ColsPerBlock != A.blocksize[1]) or\
-             (RowsPerBlock != A.blocksize[0]):
+
+        if (cols_per_block != A.blocksize[1]) or (rows_per_block != A.blocksize[0]):
             raise ValueError('A and C must have same BSR blocksizes')
+
     elif isspmatrix_csr(C):
         isBSR = False
-        ColsPerBlock = 1
-        RowsPerBlock = 1
-        Nnodes = int(Nfine/RowsPerBlock)
+        cols_per_block = 1
+        rows_per_block = 1
+        Nnodes = int(Nfine/rows_per_block)
         if not isspmatrix_csr(A):
             raise ValueError('A and C must either both be CSR or BSR')
     else:
@@ -1301,8 +1212,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if B.shape[1] != Bf.shape[1]:
         raise ValueError('B and Bf must have the same second\
                           dimension')
-    else:
-        NullDim = B.shape[1]
+
+    NullDim = B.shape[1]
 
     if A.dtype == int:
         A.data = np.array(A.data, dtype=float)
@@ -1315,7 +1226,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     # First, preprocess some values for filtering.  Construct array of
     # inv(Bi'Bi), where Bi is B restricted to row i's sparsity pattern in
-    # C. This array is used multiple times in Satisfy_Constraints(...).
+    # C. This array is used multiple times in satisfy_constraints(...).
     if BtBinv is None:
         BtBinv = compute_BtBinv(B, C)
 
@@ -1330,7 +1241,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     A.row = np.hstack((C.row, A.row))
     A.col = np.hstack((C.col, A.col))
     if isBSR:
-        A = A.tobsr((RowsPerBlock, ColsPerBlock))
+        A = A.tobsr((rows_per_block, cols_per_block))
     else:
         A = A.tocsr()
 
@@ -1342,12 +1253,12 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
-    pyamg.amg_core.satisfy_constraints_helper(RowsPerBlock, ColsPerBlock,
-                                              Nnodes, NullDim,
-                                              np.conjugate(np.ravel(B)),
-                                              np.ravel(diff),
-                                              np.ravel(BtBinv), A.indptr,
-                                              A.indices, np.ravel(A.data))
+    amg_core.satisfy_constraints_helper(rows_per_block, cols_per_block,
+                                        Nnodes, NullDim,
+                                        np.conjugate(np.ravel(B)),
+                                        np.ravel(diff),
+                                        np.ravel(BtBinv), A.indptr,
+                                        A.indices, np.ravel(A.data))
 
     A.eliminate_zeros()
     return A
@@ -1379,33 +1290,33 @@ def scale_T(T, P_I, I_F):
     Examples
     --------
     >>> from scipy.sparse import csr_matrix, bsr_matrix
-    >>> from scipy import matrix, array
+    >>> import numpy as np
     >>> from pyamg.util.utils import scale_T
-    >>> T = matrix([[ 1.0,  0.,   0. ],
-    ...             [ 0.5,  0.,   0. ],
-    ...             [ 0. ,  1.,   0. ],
-    ...             [ 0. ,  0.5,  0. ],
-    ...             [ 0. ,  0.,   1. ],
-    ...             [ 0. ,  0.,   0.25 ]])
-    >>> P_I = matrix([[ 0.,  0.,   0. ],
-    ...               [ 1.,  0.,   0. ],
-    ...               [ 0.,  1.,   0. ],
-    ...               [ 0.,  0.,   0. ],
-    ...               [ 0.,  0.,   0. ],
-    ...               [ 0.,  0.,   1. ]])
-    >>> I_F = matrix([[ 1.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  1.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  1.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.]])
-    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).todense()
-    matrix([[ 2. ,  0. ,  0. ],
-            [ 1. ,  0. ,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  0.5,  0. ],
-            [ 0. ,  0. ,  4. ],
-            [ 0. ,  0. ,  1. ]])
+    >>> T = np.array([[ 1.0,  0.,   0. ],
+    ...               [ 0.5,  0.,   0. ],
+    ...               [ 0. ,  1.,   0. ],
+    ...               [ 0. ,  0.5,  0. ],
+    ...               [ 0. ,  0.,   1. ],
+    ...               [ 0. ,  0.,   0.25 ]])
+    >>> P_I = np.array([[ 0.,  0.,   0. ],
+    ...                 [ 1.,  0.,   0. ],
+    ...                 [ 0.,  1.,   0. ],
+    ...                 [ 0.,  0.,   0. ],
+    ...                 [ 0.,  0.,   0. ],
+    ...                 [ 0.,  0.,   1. ]])
+    >>> I_F = np.array([[ 1.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  1.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  1.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).toarray()
+    array([[2. , 0. , 0. ],
+           [1. , 0. , 0. ],
+           [0. , 1. , 0. ],
+           [0. , 0.5, 0. ],
+           [0. , 0. , 4. ],
+           [0. , 0. , 1. ]])
 
     Notes
     -----
@@ -1425,16 +1336,22 @@ def scale_T(T, P_I, I_F):
     """
     if not isspmatrix_bsr(T):
         raise TypeError('Expected BSR matrix T')
-    elif T.blocksize[0] != T.blocksize[1]:
+
+    if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected BSR matrix T with square blocks')
+
     if not isspmatrix_bsr(P_I):
         raise TypeError('Expected BSR matrix P_I')
-    elif P_I.blocksize[0] != P_I.blocksize[1]:
+
+    if P_I.blocksize[0] != P_I.blocksize[1]:
         raise TypeError('Expected BSR matrix P_I with square blocks')
+
     if not isspmatrix_bsr(I_F):
         raise TypeError('Expected BSR matrix I_F')
-    elif I_F.blocksize[0] != I_F.blocksize[1]:
+
+    if I_F.blocksize[0] != I_F.blocksize[1]:
         raise TypeError('Expected BSR matrix I_F with square blocks')
+
     if (I_F.blocksize[0] != P_I.blocksize[0]) or\
        (I_F.blocksize[0] != T.blocksize[0]):
         raise TypeError('Expected identical blocksize in I_F, P_I and T')
@@ -1445,7 +1362,7 @@ def scale_T(T, P_I, I_F):
         D = P_I.T*T
         if D.nnz > 0:
             # changes D in place
-            pinv_array(D.data)
+            linalg.pinv_array(D.data)
 
         # Scale T to be identity at root-nodes
         T = T*D
@@ -1509,17 +1426,17 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     >>> AggOp = csr_matrix(AggOp)
     >>> T = AggOp.copy().tobsr()
     >>> params = get_Cpt_params(A, Cpts, AggOp, T)
-    >>> params['P_I'].todense()
-    matrix([[ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 1.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  1.],
-            [ 0.,  0.],
-            [ 0.,  0.]])
+    >>> params['P_I'].toarray()
+    array([[0., 0.],
+           [0., 0.],
+           [0., 0.],
+           [1., 0.],
+           [0., 0.],
+           [0., 0.],
+           [0., 0.],
+           [0., 1.],
+           [0., 0.],
+           [0., 0.]])
 
     Notes
     -----
@@ -1637,13 +1554,13 @@ def compute_BtBinv(B, C):
     >>> T = bsr_matrix(T)
     >>> B = array([[1.],[2.]])
     >>> compute_BtBinv(B, T)
-    array([[[ 1.  ]],
+    array([[[1.  ]],
     <BLANKLINE>
-           [[ 1.  ]],
+           [[1.  ]],
     <BLANKLINE>
-           [[ 0.25]],
+           [[0.25]],
     <BLANKLINE>
-           [[ 0.25]]])
+           [[0.25]]])
 
     Notes
     -----
@@ -1663,15 +1580,15 @@ def compute_BtBinv(B, C):
 
     # Problem parameters
     if isspmatrix_bsr(C):
-        ColsPerBlock = C.blocksize[1]
-        RowsPerBlock = C.blocksize[0]
+        cols_per_block = C.blocksize[1]
+        rows_per_block = C.blocksize[0]
     else:
-        ColsPerBlock = 1
-        RowsPerBlock = 1
+        cols_per_block = 1
+        rows_per_block = 1
     Ncoarse = C.shape[1]
     Nfine = C.shape[0]
     NullDim = B.shape[1]
-    Nnodes = int(Nfine/RowsPerBlock)
+    Nnodes = int(Nfine/rows_per_block)
 
     # Construct BtB
     BtBinv = np.zeros((Nnodes, NullDim, NullDim), dtype=B.dtype)
@@ -1684,17 +1601,17 @@ def compute_BtBinv(B, C):
                 np.ravel(np.asarray(B[:, j]))
             counter = counter + 1
     # This specialized C-routine calculates (B.T B) for each row using Bsq
-    pyamg.amg_core.calc_BtB(NullDim, Nnodes, ColsPerBlock,
-                            np.ravel(np.asarray(Bsq)),
-                            BsqCols, np.ravel(np.asarray(BtBinv)),
-                            C.indptr, C.indices)
+    amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
+                      np.ravel(np.asarray(Bsq)),
+                      BsqCols, np.ravel(np.asarray(BtBinv)),
+                      C.indptr, C.indices)
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
     #   This is the old call to a specialized routine, but lacks robustness
-    #   pyamg.amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
+    #   amg_core.pinv_array(np.ravel(BtBinv), Nnodes, NullDim, 'F')
     BtBinv = BtBinv.transpose((0, 2, 1)).copy()
-    pinv_array(BtBinv)
+    linalg.pinv_array(BtBinv)
 
     return BtBinv
 
@@ -1737,11 +1654,11 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     >>> from pyamg.util.utils import eliminate_diag_dom_nodes
     >>> A = poisson( (4,), format='csr' )
     >>> C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
-    >>> C.todense()
-    matrix([[ 1.,  0.,  0.,  0.],
-            [ 0.,  2., -1.,  0.],
-            [ 0., -1.,  2.,  0.],
-            [ 0.,  0.,  0.,  1.]])
+    >>> C.toarray()
+    array([[ 1.,  0.,  0.,  0.],
+           [ 0.,  2., -1.,  0.],
+           [ 0., -1.,  2.,  0.],
+           [ 0.,  0.,  0.,  1.]])
 
     """
     # Find the diagonally dominant rows in A.
@@ -1752,7 +1669,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
                                                    dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
-    bsize = blocksize(A_abs)
+    bsize = get_blocksize(A_abs)
     if bsize > 1:
         diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
@@ -1796,18 +1713,18 @@ def remove_diagonal(S):
     >>> from pyamg.util.utils import remove_diagonal
     >>> A = poisson( (4,), format='csr' )
     >>> C = remove_diagonal(A)
-    >>> C.todense()
-    matrix([[ 0., -1.,  0.,  0.],
-            [-1.,  0., -1.,  0.],
-            [ 0., -1.,  0., -1.],
-            [ 0.,  0., -1.,  0.]])
+    >>> C.toarray()
+    array([[ 0., -1.,  0.,  0.],
+           [-1.,  0., -1.,  0.],
+           [ 0., -1.,  0., -1.],
+           [ 0.,  0., -1.,  0.]])
 
     """
     if not isspmatrix_csr(S):
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
+        raise ValueError(f'expected square matrix, shape={S.shape}')
 
     S = coo_matrix(S)
     mask = S.row != S.col
@@ -1837,11 +1754,11 @@ def scale_rows_by_largest_entry(S):
     >>> A = poisson( (4,), format='csr' )
     >>> A.data[1] = 5.0
     >>> A = scale_rows_by_largest_entry(A)
-    >>> A.todense()
-    matrix([[ 0.4,  1. ,  0. ,  0. ],
-            [-0.5,  1. , -0.5,  0. ],
-            [ 0. , -0.5,  1. , -0.5],
-            [ 0. ,  0. , -0.5,  1. ]])
+    >>> A.toarray()
+    array([[ 0.4,  1. ,  0. ,  0. ],
+           [-0.5,  1. , -0.5,  0. ],
+           [ 0. , -0.5,  1. , -0.5],
+           [ 0. ,  0. , -0.5,  1. ]])
 
     """
     if not isspmatrix_csr(S):
@@ -1849,8 +1766,8 @@ def scale_rows_by_largest_entry(S):
 
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
-    pyamg.amg_core.maximum_row_value(S.shape[0], largest_row_entry,
-                                     S.indptr, S.indices, S.data)
+    amg_core.maximum_row_value(S.shape[0], largest_row_entry,
+                               S.indptr, S.indices, S.data)
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
@@ -1885,7 +1802,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         change these values.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
@@ -1916,11 +1833,10 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
 
     elif isinstance(to_levelize, str):
         if to_levelize == 'predefined':
-            raise ValueError('predefined to_levelize requires a user-provided\
-                              CSR matrix representing strength or aggregation\
-                              i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
-        else:
-            to_levelize = [to_levelize for i in range(max_levels-1)]
+            raise ValueError('predefined to_levelize requires a user-provided '
+                             'CSR matrix representing strength or aggregation '
+                             'i.e., ("predefined", {"C" : CSR_MAT}).')  # noqa: FS003
+        to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
         if isinstance(to_levelize[-1], tuple) and\
@@ -1964,7 +1880,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
         at level i.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
@@ -1984,7 +1900,16 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     ['gauss_seidel', None, None, None]
 
     """
-    if isinstance(to_levelize, tuple) or isinstance(to_levelize, str):
+    # handle default value (mutable)
+    # improve_candidates=(('block_gauss_seidel',
+    #                      {'sweep': 'symmetric', 'iterations': 4}),
+    #                     None)
+    # -> make it a list
+    if isinstance(to_levelize, tuple):
+        if isinstance(to_levelize[0], tuple):
+            to_levelize = list(to_levelize)
+
+    if isinstance(to_levelize, (str, tuple)):
         to_levelize = [to_levelize for i in range(max_levels)]
     elif isinstance(to_levelize, list):
         if len(to_levelize) < max_levels:
@@ -2021,27 +1946,27 @@ def filter_matrix_columns(A, theta):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_columns
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[ 0.24,  1.  ,  0.  ],
     ...                        [-0.5 ,  1.  , -0.5 ],
     ...                        [ 0.  ,  0.49,  1.  ],
     ...                        [ 0.  ,  0.  , -0.5 ]]) )
-    >>> filter_matrix_columns(A, 0.5).todense()
-    matrix([[ 0. ,  1. ,  0. ],
-            [-0.5,  1. , -0.5],
-            [ 0. ,  0. ,  1. ],
-            [ 0. ,  0. , -0.5]])
+    >>> filter_matrix_columns(A, 0.5).toarray()
+    array([[ 0. ,  1. ,  0. ],
+           [-0.5,  1. , -0.5],
+           [ 0. ,  0. ,  1. ],
+           [ 0. ,  0. , -0.5]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each column of A, which is most easily
     # accessed by converting to CSC.  We apply the drop-tolerance with
@@ -2053,15 +1978,14 @@ def filter_matrix_columns(A, theta):
     A.indices += A.shape[1]
     A_filter.indices += A.shape[1]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(
-        A.shape[1],
-        theta,
-        A.indptr,
-        A.indices,
-        A.data,
-        A_filter.indptr,
-        A_filter.indices,
-        A_filter.data)
+    amg_core.classical_strength_of_connection_abs(A.shape[1],
+                                                  theta,
+                                                  A.indptr,
+                                                  A.indices,
+                                                  A.data,
+                                                  A_filter.indptr,
+                                                  A_filter.indices,
+                                                  A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
     A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2099,26 +2023,26 @@ def filter_matrix_rows(A, theta):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
     ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
-    >>> filter_matrix_rows(A, 0.5).todense()
-    matrix([[ 0. , -0.5,  0. ,  0. ],
-            [ 1. ,  1. ,  0. ,  0. ],
-            [ 0. , -0.5,  1. , -0.5]])
+    >>> filter_matrix_rows(A, 0.5).toarray()
+    array([[ 0. , -0.5,  0. ,  0. ],
+           [ 1. ,  1. ,  0. ,  0. ],
+           [ 0. , -0.5,  1. , -0.5]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
     A = A.tocsr()
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
     # amg_core.classical_strength_of_connection(), which ignores diagonal
@@ -2128,15 +2052,14 @@ def filter_matrix_rows(A, theta):
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
     # classical_strength_of_connection takes an absolute value internally
-    pyamg.amg_core.classical_strength_of_connection_abs(
-        A.shape[0],
-        theta,
-        A.indptr,
-        A.indices,
-        A.data,
-        A_filter.indptr,
-        A_filter.indices,
-        A_filter.data)
+    amg_core.classical_strength_of_connection_abs(A.shape[0],
+                                                  theta,
+                                                  A.indptr,
+                                                  A.indices,
+                                                  A.data,
+                                                  A_filter.indptr,
+                                                  A_filter.indices,
+                                                  A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
     A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
@@ -2170,19 +2093,19 @@ def truncate_rows(A, nz_per_row):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import truncate_rows
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
     ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
-    >>> truncate_rows(A, 2).todense()
-    matrix([[-0.24, -0.5 ,  0.  ,  0.  ],
-            [ 1.  , -1.1 ,  0.  ,  0.  ],
-            [ 0.  ,  0.  ,  1.  ,  0.5 ]])
+    >>> truncate_rows(A, 2).toarray()
+    array([[-0.24, -0.5 ,  0.  ,  0.  ],
+           [ 1.  , -1.1 ,  0.  ,  0.  ],
+           [ 0.  ,  0.  ,  1.  ,  0.5 ]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     if isspmatrix_csr(A):
@@ -2192,8 +2115,8 @@ def truncate_rows(A, nz_per_row):
     nz_per_row = int(nz_per_row)
 
     # Truncate rows of A, and then convert A back to original format
-    pyamg.amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr,
-                                     A.indices, A.data)
+    amg_core.truncate_rows_csr(A.shape[0], nz_per_row, A.indptr,
+                               A.indices, A.data)
 
     A.eliminate_zeros()
     if Aformat == 'bsr':

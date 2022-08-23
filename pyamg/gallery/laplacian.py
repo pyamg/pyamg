@@ -1,20 +1,21 @@
 """Discretizations of the Poisson problem."""
-from __future__ import absolute_import
+# pylint: disable=redefined-builtin
 
 import numpy as np
 import scipy as sp
 
 from .stencil import stencil_grid
 
-__all__ = ['poisson', 'gauge_laplacian']
 
-
-def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
+def poisson(grid, dtype=float, format=None, type='FD'):
     """Return a sparse matrix for the N-dimensional Poisson problem.
 
     The matrix represents a finite Difference approximation to the
     Poisson problem on a regular n-dimensional grid with unit grid
     spacing and Dirichlet boundary conditions.
+
+    The last dimension is iterated over first: z, then y, then x.
+    This should be used with np.mgrid() or np.ndenumerate.
 
     Parameters
     ----------
@@ -29,28 +30,27 @@ def poisson(grid, spacing=None, dtype=float, format=None, type='FD'):
     --------
     >>> from pyamg.gallery import poisson
     >>> # 4 nodes in one dimension
-    >>> poisson( (4,) ).todense()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    >>> poisson((4,)).toarray()
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
 
     >>> # rectangular two dimensional grid
-    >>> poisson( (2,3) ).todense()
-    matrix([[ 4., -1.,  0., -1.,  0.,  0.],
-            [-1.,  4., -1.,  0., -1.,  0.],
-            [ 0., -1.,  4.,  0.,  0., -1.],
-            [-1.,  0.,  0.,  4., -1.,  0.],
-            [ 0., -1.,  0., -1.,  4., -1.],
-            [ 0.,  0., -1.,  0., -1.,  4.]])
-
+    >>> poisson((2,3)).toarray()
+    array([[ 4., -1.,  0., -1.,  0.,  0.],
+           [-1.,  4., -1.,  0., -1.,  0.],
+           [ 0., -1.,  4.,  0.,  0., -1.],
+           [-1.,  0.,  0.,  4., -1.,  0.],
+           [ 0., -1.,  0., -1.,  4., -1.],
+           [ 0.,  0., -1.,  0., -1.,  4.]])
     """
     grid = tuple(grid)
 
     N = len(grid)  # grid dimension
 
     if N < 1 or min(grid) < 1:
-        raise ValueError('invalid grid shape: %s' % str(grid))
+        raise ValueError(f'Invalid grid shape: {grid}')
 
     # create N-dimension Laplacian stencil
     if type == 'FD':
@@ -159,9 +159,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
         new_c.append(i - N + 1)
         new_diff.append(1)
 
-    for i in range(len(new_r)):
-        r = new_r[i]
-        c = new_c[i]
+    for i, (r, c) in enumerate(zip(new_r, new_c)):
         diff = new_diff[i]
         index = min(r, c)
         if r > c:

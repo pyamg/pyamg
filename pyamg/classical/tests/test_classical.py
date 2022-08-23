@@ -1,17 +1,18 @@
-import numpy as np
-import scipy as sp
+"""Test classical AMG."""
+import warnings
 
-from scipy.sparse import csr_matrix, coo_matrix
+import numpy as np
+
+from numpy.testing import TestCase, assert_equal, assert_almost_equal
+
+from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
 
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
-from pyamg.classical.interpolate import direct_interpolation, \
-    standard_interpolation
-
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
+from pyamg.classical.interpolate import direct_interpolation
 
 
 class TestRugeStubenFunctions(TestCase):
@@ -21,7 +22,7 @@ class TestRugeStubenFunctions(TestCase):
         # random matrices
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(sp.rand(N, N)))
+            self.cases.append(csr_matrix(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -111,28 +112,7 @@ class TestRugeStubenFunctions(TestCase):
             result = direct_interpolation(A, S, splitting)
             expected = reference_direct_interpolation(A, S, splitting)
 
-            assert_almost_equal(result.todense(), expected.todense())
-
-    def test_standard_interpolation(self):
-        for A in self.cases:
-            # the reference code is very slow, so just take a small block of A 
-            mini = min(100, A.shape[0])
-            A = ((A.tocsr()[0:mini, :])[:,0:mini]).tocsr()
-
-            S = classical_strength_of_connection(A, 0.0)
-            splitting = split.RS(S, second_pass=True)
-
-            result = standard_interpolation(A, S, splitting, modified=True)
-            expected = reference_standard_interpolation(A, S, splitting)
-            
-            # elasticity produces large entries, so normalize
-            Diff = result - expected
-            Diff.data = abs(Diff.data)
-            expected.data = 1./abs(expected.data)
-            Diff = Diff.multiply(expected)
-            Diff.data[ Diff.data < 1e-7] = 0.0
-            Diff.eliminate_zeros()
-            assert( Diff.nnz == 0)
+            assert_almost_equal(result.toarray(), expected.toarray())
 
 
 class TestSolverPerformance(TestCase):
@@ -146,37 +126,37 @@ class TestSolverPerformance(TestCase):
         for case in cases:
             A = poisson(case, format='csr')
 
-            for interp in ['direct', 'standard']:
+            np.random.seed(0)  # make tests repeatable
 
-                np.random.seed(0)  # make tests repeatable
+            x = np.random.rand(A.shape[0])
+            b = A*np.random.rand(A.shape[0])  # zeros_like(x)
 
-                x = sp.rand(A.shape[0])
-                b = A*sp.rand(A.shape[0])  # zeros_like(x)
+            ml = ruge_stuben_solver(A, max_coarse=50)
 
-                ml = ruge_stuben_solver(A, interpolation=interp, max_coarse=50)
+            res = []
+            x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
+                             residuals=res)
+            del x_sol
 
-                res = []
-                x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
-                                 residuals=res)
-                del x_sol
+            avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
 
-                avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
-
-                assert(avg_convergence_ratio < 0.20)
+            assert(avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
+        warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
+        cases.append(A.toarray())
 
         rs_old = ruge_stuben_solver(A, max_coarse=10)
         for AA in cases:
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
-            assert(np.abs(np.ravel(rs_old.levels[-1].A.todense() -
-                                   rs_new.levels[-1].A.todense())).max() < 0.01)
+            Ac_old = rs_old.levels[-1].A.toarray()
+            Ac_new = rs_new.levels[-1].A.toarray()
+            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
             rs_old = rs_new
 
 
@@ -259,81 +239,3 @@ def reference_direct_interpolation(A, S, splitting):
                    shape=(P.shape[0], map[-1]))
 
     return P
-
-
-# strength has zero diagonal...?
-def reference_standard_interpolation(A, S, splitting):
-
-    # this routine only tests the computation of the "weights" the computation
-    # of the sparsity pattern is the same as for direct interpolation, and is
-    # tested through the reference_direct_interpolation routine.
-    from pyamg import amg_core
-    S = S.copy()
-    S.data[:] = 1.0
-    S = S.multiply(A)
-    Pp = np.empty_like(A.indptr)
-    amg_core.rs_direct_interpolation_pass1(A.shape[0],
-                     S.indptr, S.indices, splitting, Pp)
-    nnz = Pp[-1]
-    Pj = np.empty(nnz, dtype=Pp.dtype)
-    Px = np.empty(nnz, dtype=A.dtype)
-    SD = S.diagonal()
-    F_NODE = 0
-    C_NODE = 1
-
-    # Now, we implement the second pass in Python to double check the C++ code 
-    for i in range(A.shape[0]):
-        # If node is is a C-point, do injection 
-        if(splitting[i] == C_NODE):
-            Pj[Pp[i]] = i
-            Px[Pp[i]] = 1
-        
-        # Else compute standard interpolation weight
-        else:
-            rowstartA = A.indptr[i]
-            rowendA   = A.indptr[i+1]
-            rowstartS = S.indptr[i]
-            rowendS   = S.indptr[i+1]
-
-            # Denominator = a_ii + sum_{m in weak connections} a_im
-            denominator = sum(A.data[rowstartA:rowendA])
-            denominator -= sum(S.data[rowstartS:rowendS])
-            denominator += SD[i]
-
-            # Compute interpolation weights from strongly connected C-points
-            nnz = Pp[i]
-            for jj in range(rowstartS, rowendS): 
-                Sj = S.indices[jj]
-                if (splitting[Sj] == C_NODE) and (Sj != i):
-                    Pj[nnz] = Sj
-                    numerator = S.data[jj]
-                    for kk in range(rowstartS, rowendS):
-                        Sk = S.indices[kk]
-                        if (splitting[Sk] == F_NODE) and (Sk != i):
-                            inner_denominator = 0.0
-                            for ll in range(rowstartS, rowendS):
-                                Sl = S.indices[ll]
-                                if (splitting[Sl] == C_NODE) and (Sl != i):
-                                    for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
-                                        if ( A.indices[search_ind] == Sl ):
-                                            inner_denominator += A.data[search_ind]
-                            
-                            for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
-                                if (A.indices[search_ind] == Sj) and (inner_denominator != 0.0):
-                                    numerator += (S.data[kk]*A.data[search_ind]/inner_denominator)
-                    
-                    Px[nnz] = -numerator/denominator
-                    nnz += 1
-    
-    reorder = np.zeros((A.shape[0],))
-    cumulative = 0
-    for i in range(A.shape[0]):
-        reorder[i]  = cumulative
-        cumulative += splitting[i]
-    
-    for i in range(Pp[A.shape[0]]):
-        Pj[i] = reorder[Pj[i]]
-    
-
-    return  csr_matrix((Px, Pj, Pp)) 
-

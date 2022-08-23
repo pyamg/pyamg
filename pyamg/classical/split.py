@@ -89,18 +89,15 @@ References
 
 """
 import numpy as np
-import scipy as sp
 from scipy.sparse import csr_matrix, isspmatrix_csr
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
 from pyamg.util.utils import remove_diagonal
 
-__all__ = ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc', 'MIS']
-
 
 def RS(S, second_pass=False):
-    """Compute a C/F splitting using Ruge-Stuben coarsening
+    """Compute a C/F splitting using Ruge-Stuben coarsening.
 
     Parameters
     ----------
@@ -119,7 +116,7 @@ def RS(S, second_pass=False):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import RS
+    >>> from pyamg.classical.split import RS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = RS(S)
 
@@ -172,7 +169,7 @@ def PMIS(S):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import PMIS
+    >>> from pyamg.classical.split import PMIS
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMIS(S)
 
@@ -188,7 +185,8 @@ def PMIS(S):
 
     """
     S = remove_diagonal(S)
-    weights, G, S, T = preprocess(S)
+    weights, G, S, T = _preprocess(S)
+    del S, T
     return MIS(G, weights)
 
 
@@ -217,7 +215,7 @@ def PMISc(S, method='JP'):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import PMISc
+    >>> from pyamg.classical.split import PMISc
     >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> splitting = PMISc(S)
 
@@ -233,7 +231,8 @@ def PMISc(S, method='JP'):
 
     """
     S = remove_diagonal(S)
-    weights, G, S, T = preprocess(S, coloring_method=method)
+    weights, G, S, T = _preprocess(S, coloring_method=method)
+    del S, T
     return MIS(G, weights)
 
 
@@ -350,7 +349,7 @@ def MIS(G, weights, maxiter=None):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import MIS
+    >>> from pyamg.classical.split import MIS
     >>> import numpy as np
     >>> G = poisson((7,), format='csr') # 1D mesh with 7 vertices
     >>> w = np.ones((G.shape[0],1)).ravel()
@@ -382,7 +381,7 @@ def MIS(G, weights, maxiter=None):
 
 
 # internal function
-def preprocess(S, coloring_method=None):
+def _preprocess(S, coloring_method=None):
     """Preprocess splitting functions.
 
     Parameters
@@ -421,7 +420,7 @@ def preprocess(S, coloring_method=None):
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
-        raise ValueError('expected square matrix, shape=%s' % (S.shape,))
+        raise ValueError(f'expected square matrix, shape={S.shape}')
 
     N = S.shape[0]
     S = csr_matrix((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
@@ -435,10 +434,11 @@ def preprocess(S, coloring_method=None):
     # weights -= T.diagonal()          # discount self loops
 
     if coloring_method is None:
-        weights = weights + sp.rand(len(weights))
+        weights = weights + np.random.rand(len(weights))
     else:
         coloring = vertex_coloring(G, coloring_method)
         num_colors = coloring.max() + 1
-        weights = weights + (sp.rand(len(weights)) + coloring)/num_colors
+        weights = (weights + (np.random.rand(len(weights)) + coloring)
+                   / num_colors)
 
     return (weights, G, S, T)

@@ -1,0 +1,8 @@
+numpydoc
+m2r2
+numpy
+scipy
+pytest
+pybind11
+pydata-sphinx-theme
+sphinx-automodapi

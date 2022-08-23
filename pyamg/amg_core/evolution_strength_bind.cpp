@@ -310,7 +310,7 @@ Tx : {float|complex array}
      modified in place for output
 
 Returns
-------
+-------
 Tx[i] modified in place, it holds
 the minimum nonzero value of block i of S
 
@@ -400,8 +400,8 @@ tol : {float}
 
 Returns
 -------
-  Sx is written in place and holds strength
-  values reflecting the above minimization problem
+Sx is written in place and holds strength
+values reflecting the above minimization problem
 
 Notes
 -----

@@ -1,6 +1,7 @@
-[![Build Status](https://img.shields.io/travis/pyamg/pyamg/master.svg?style=flat-square)](https://travis-ci.org/pyamg/pyamg)
-[![Coverage Status](https://img.shields.io/codecov/c/github/pyamg/pyamg/master.svg?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
+[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
+[![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC)](https://codecov.io/gh/pyamg/pyamg)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.04142/status.svg)](https://doi.org/10.21105/joss.04142)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
@@ -9,11 +10,13 @@ PyAMG requires `numpy` and `scipy`
 pip install pyamg
 ```
 
-or
+or from source:
 
 ```
-python setup.py install
+pip install .
 ```
+
+(`python setup.py install` will no longer work)
 
 or with conda (see details below)
 
@@ -26,29 +29,47 @@ conda install pyamg
 
 PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Python interface.
 
-![](./Docs/logo/PyAMG_logo.png)
+![](https://raw.githubusercontent.com/pyamg/pyamg/main/docs/logo/pyamg_logo_withtext.png)
 
-PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu), and [Jacob Schroder](http://people.llnl.gov/schroder2).
+PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu) and [Jacob Schroder](http://people.llnl.gov/schroder2).
 
 # Citing
 
+If you use PyAMG in your work, please consider using the following citation:
+
 <pre>
-@MISC{OlSc2018,
-      author = "Olson, L. N. and Schroder, J. B.",
-      title = "{PyAMG}: Algebraic Multigrid Solvers in {Python} v4.0",
-      year = "2018",
-      url = "https://github.com/pyamg/pyamg",
-      note = "Release 4.0"
-      }
+@article{BeOlSc2022,
+  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder},
+  title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
+  journal   = {Journal of Open Source Software},
+  year      = {2022},
+  publisher = {The Open Journal},
+  volume    = {7},
+  number    = {72},
+  pages     = {4142},
+  doi       = {10.21105/joss.04142},
+  url       = {https://doi.org/10.21105/joss.04142},
+}
 </pre>
 
 # Getting Help
 
-For documentation see [http://pyamg.readthedocs.io/en/latest/](http://pyamg.readthedocs.io/en/latest/).
+- For documentation see [http://pyamg.readthedocs.io/en/latest/](http://pyamg.readthedocs.io/en/latest/).
 
-Create an [issue](https://github.com/pyamg/pyamg/issues).
+- Create an [issue](https://github.com/pyamg/pyamg/issues).
 
-Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [Examples](https://github.com/pyamg/pyamg/wiki/Examples) (for instance  the [0STARTHERE](https://github.com/pyamg/pyamg-examples/blob/master/0STARTHERE/demo.py) example).
+- Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [examples](https://github.com/pyamg/pyamg-examples) (for instance  the [0_start_here](https://github.com/pyamg/pyamg-examples/blob/main/0_start_here/demo.py) example).
+
+- Run the unit tests (`pip install pytest`):
+  - With PyAMG installed and from a non-source directory:
+  ```python
+  import pyamg
+  pyamg.test()
+  ```
+  - From the PyAMG source directory and installed (e.g. with `pip install -e .`):
+  ```python
+  pytest .
+  ```
 
 # What is AMG?
 

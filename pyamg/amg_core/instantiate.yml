@@ -45,11 +45,6 @@ instantiate:
     - apply_absolute_distance_filter
     - min_blocks
     - classical_strength_of_connection_min
-    - rs_standard_interpolation_pass2
-    - remove_strong_FF_connections
-    - mod_standard_interpolation_pass2
-    - extended_plusi_interpolation_pass2
-    - extended_interpolation_pass2
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -62,10 +57,13 @@ instantiate:
     - [int, float]
     - [int, double]
   functions:
-    - bellman_ford
-    - lloyd_cluster
     - csc_scale_rows
     - csc_scale_columns
+    - cluster_center
+    - bellman_ford
+    - lloyd_cluster
+    - lloyd_cluster_adv
+    - lloyd_cluster_exact
 
 - types:
     - [int, int]
@@ -92,8 +90,8 @@ instantiate:
     - rs_cf_splitting_pass2
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
-    - rs_standard_interpolation_pass1
-    - distance_two_amg_interpolation_pass1
+    - cluster_node_incidence
+    - print_it
 
 - types:
     - [int, float]

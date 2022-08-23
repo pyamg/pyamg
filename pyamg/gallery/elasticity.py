@@ -1,14 +1,13 @@
 """Constructs linear elasticity problems for first-order elements in 2D and 3D."""
+# pylint: disable=redefined-builtin
 
 import numpy as np
-from scipy.linalg import inv, det
-from scipy.sparse import coo_matrix, bsr_matrix
-
-__all__ = ['linear_elasticity', 'linear_elasticity_p1']
+import scipy.linalg as sla
+from scipy import sparse
 
 
 def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
-    """Linear elasticity problem discretizes with Q1 finite elements on a regular rectangular grid.
+    """Linear elasticity problem with Q1 finite elements on a regular rectangular grid.
 
     Parameters
     ----------
@@ -54,8 +53,8 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     """
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
-    else:
-        raise NotImplemented('no support for grid=%s' % str(grid))
+
+    raise NotImplementedError(f'No support for grid={grid}')
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
@@ -87,8 +86,8 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         pts *= [DX, DY]
 
     # compute local stiffness matrix
-    lame = E * nu / ((1 + nu) * (1 - 2*nu))  # Lame's first parameter
-    mu = E / (2 + 2*nu)                   # shear modulus
+    lame = E * nu / ((1 + nu) * (1 - 2 * nu))  # Lame's first parameter
+    mu = E / (2 + 2 * nu)                   # shear modulus
 
     vertices = np.array([[0, 0], [DX, 0], [DX, DY], [0, DY]])
     K = q12d_local(vertices, lame, mu)
@@ -106,7 +105,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     V = np.ravel(V)
 
     # sum duplicates
-    A = coo_matrix((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
+    A = sparse.coo_matrix((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
     A = A.tobsr(blocksize=(2, 2))
 
     del Id, J, V, LL, nodes
@@ -126,8 +125,8 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         data[:, 1, 1] = 1
         indices = np.arange((X-1)*(Y-1))
         indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
-        P = bsr_matrix((data, indices, indptr),
-                       shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
+        P = sparse.bsr_matrix((data, indices, indptr),
+                              shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
         A = P.T * A * P
 
@@ -169,41 +168,40 @@ def q12d_local(vertices, lame, mu):
     """
     M = lame + 2*mu  # P-wave modulus
 
-    R_11 = np.matrix([[2, -2, -1, 1],
-                      [-2, 2, 1, -1],
-                      [-1, 1, 2, -2],
-                      [1, -1, -2, 2]]) / 6.0
+    R_11 = np.array([[2, -2, -1, 1],
+                     [-2, 2, 1, -1],
+                     [-1, 1, 2, -2],
+                     [1, -1, -2, 2]]) / 6.0
 
-    R_12 = np.matrix([[1, 1, -1, -1],
-                      [-1, -1, 1, 1],
-                      [-1, -1, 1, 1],
-                      [1, 1, -1, -1]]) / 4.0
+    R_12 = np.array([[1, 1, -1, -1],
+                     [-1, -1, 1, 1],
+                     [-1, -1, 1, 1],
+                     [1, 1, -1, -1]]) / 4.0
 
-    R_22 = np.matrix([[2, 1, -1, -2],
-                      [1, 2, -2, -1],
-                      [-1, -2, 2, 1],
-                      [-2, -1, 1, 2]]) / 6.0
+    R_22 = np.array([[2, 1, -1, -2],
+                     [1, 2, -2, -1],
+                     [-1, -2, 2, 1],
+                     [-2, -1, 1, 2]]) / 6.0
 
-    F = inv(np.vstack((vertices[1] - vertices[0], vertices[3] - vertices[0])))
+    F = sla.inv(np.vstack((vertices[1] - vertices[0], vertices[3] - vertices[0])))
 
     K = np.zeros((8, 8))  # stiffness matrix
 
-    E = F.T * np.matrix([[M, 0], [0, mu]]) * F
+    E = F.T.dot(np.array([[M, 0], [0, mu]])).dot(F)
     K[0::2, 0::2] = E[0, 0] * R_11 + E[0, 1] * R_12 +\
         E[1, 0] * R_12.T + E[1, 1] * R_22
 
-    E = F.T * np.matrix([[mu, 0], [0, M]]) * F
+    E = F.T.dot(np.array([[mu, 0], [0, M]])).dot(F)
     K[1::2, 1::2] = E[0, 0] * R_11 + E[0, 1] * R_12 +\
         E[1, 0] * R_12.T + E[1, 1] * R_22
 
-    E = F.T * np.matrix([[0, mu], [lame, 0]]) * F
+    E = F.T.dot(np.array([[0, mu], [lame, 0]])).dot(F)
     K[1::2, 0::2] = E[0, 0] * R_11 + E[0, 1] * R_12 +\
         E[1, 0] * R_12.T + E[1, 1] * R_22
 
     K[0::2, 1::2] = K[1::2, 0::2].T
 
-    K /= det(F)
-
+    K /= sla.det(F)
     return K
 
 
@@ -262,12 +260,13 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
+    if D not in (2, 3):
+        raise ValueError('only dimension 2 and 3 are supported')
+
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
-    else:
-        raise NotImplementedError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D
@@ -289,7 +288,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     data = data.ravel()
 
     # sum duplicates
-    A = coo_matrix((data, (row, col)), shape=(DoF, DoF)).tocsr()
+    A = sparse.coo_matrix((data, (row, col)), shape=(DoF, DoF)).tocsr()
     A = A.tobsr(blocksize=(D, D))
 
     # compute rigid body modes
@@ -318,25 +317,25 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
 def p12d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 2d."""
-    assert(vertices.shape == (3, 2))
+    assert vertices.shape == (3, 2)
 
     A = np.vstack((np.ones((1, 3)), vertices.T))
-    PhiGrad = inv(A)[:, 1:]  # gradients of basis functions
+    PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions
     R = np.zeros((3, 6))
     R[[[0], [2]], [0, 2, 4]] = PhiGrad.T
     R[[[2], [1]], [1, 3, 5]] = PhiGrad.T
     C = mu*np.array([[2, 0, 0], [0, 2, 0], [0, 0, 1]]) +\
         lame*np.array([[1, 1, 0], [1, 1, 0], [0, 0, 0]])
-    K = det(A)/2.0*np.dot(np.dot(R.T, C), R)
+    K = sla.det(A)/2.0*np.dot(np.dot(R.T, C), R)
     return K
 
 
 def p13d_local(vertices, lame, mu):
     """Local stiffness matrix for P1 elements in 3d."""
-    assert(vertices.shape == (4, 3))
+    assert vertices.shape == (4, 3)
 
     A = np.vstack((np.ones((1, 4)), vertices.T))
-    PhiGrad = inv(A)[:, 1:]  # gradients of basis functions
+    PhiGrad = sla.inv(A)[:, 1:]  # gradients of basis functions
 
     R = np.zeros((6, 12))
     R[[0, 3, 4], 0::3] = PhiGrad.T
@@ -347,5 +346,5 @@ def p13d_local(vertices, lame, mu):
     C[0:3, 0:3] = lame + 2*mu*np.eye(3)
     C[3:6, 3:6] = mu*np.eye(3)
 
-    K = det(A)/6*np.dot(np.dot(R.T, C), R)
+    K = sla.det(A)/6*np.dot(np.dot(R.T, C), R)
     return K
