@@ -31,10 +31,19 @@ PyAMG is a library of **Algebraic Multigrid (AMG)** solvers with a convenient Py
 
 ![](https://raw.githubusercontent.com/pyamg/pyamg/main/docs/logo/pyamg_logo_withtext.png)
 
-PyAMG is currently developed by [Luke Olson](http://lukeo.cs.illinois.edu),
-[Jacob Schroder](http://people.llnl.gov/schroder2), and Ben Southworth.
-The organization of the project can be found in `organization.md`;
-PyAMG was created by Nathan Bell, Luke Olson, and Jacob Schroder.
+PyAMG was created by
+[Nathan Bell](http://wnbell.com/),
+[Luke Olson](http://lukeo.cs.illinois.edu)
+, and
+[Jacob Schroder](http://people.llnl.gov/schroder2)
+; it is currently developed by
+[Luke Olson](http://lukeo.cs.illinois.edu)
+,
+[Jacob Schroder](http://people.llnl.gov/schroder2)
+, and
+[Ben Southworth](https://arxiv.org/pdf/2203.14881.pdf)
+.
+The organization of the project can be found in [`organization.md`](organization.md).
 
 # Citing
 
