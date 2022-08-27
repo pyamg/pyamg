@@ -46,7 +46,7 @@ def bsr_getrow(A, i):
     indys = A.data[rowstart:rowend, localRowIndx, :].nonzero()
     z = A.data[rowstart:rowend, localRowIndx, :][indys[0], indys[1]]
 
-    colindx = np.zeros((1, z.__len__()), dtype=np.int32)
+    colindx = np.zeros((1, len(z)), dtype=np.int32)
     counter = 0
 
     for j in range(rowstart, rowend):
