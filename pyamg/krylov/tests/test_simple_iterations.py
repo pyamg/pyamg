@@ -1,10 +1,10 @@
 """Test simple iteration."""
-from pyamg.krylov import minimal_residual, steepest_descent
 import numpy as np
-from pyamg.util.linalg import norm
-import pyamg
-
 from numpy.testing import TestCase
+
+import pyamg
+from pyamg.krylov import minimal_residual, steepest_descent
+from pyamg.util.linalg import norm
 
 
 class TestSimpleIterations(TestCase):
@@ -108,11 +108,11 @@ class TestSimpleIterations(TestCase):
             norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
             norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
             actual_factor = norm1 / norm2
-            assert(actual_factor < reduction_factor)
+            assert actual_factor < reduction_factor
 
             if A.dtype != complex:
                 for i in range(len(fvals)-1):
-                    assert(fvals[i+1] <= fvals[i])
+                    assert fvals[i+1] <= fvals[i]
 
         # Test preconditioning
         A = pyamg.gallery.poisson((10, 10), format='csr')
@@ -129,9 +129,9 @@ class TestSimpleIterations(TestCase):
         x, _ = steepest_descent(A, b, x0, tol=1e-8, maxiter=20,
                                 residuals=resvec, M=sa.aspreconditioner(),
                                 callback=callback)
-        assert(resvec[-1]/resvec[0] < 1e-8)
+        assert resvec[-1]/resvec[0] < 1e-8
         for i in range(len(fvals)-1):
-            assert(fvals[i+1] <= fvals[i])
+            assert fvals[i+1] <= fvals[i]
 
     def test_minimal_residual(self):
         # Ensure repeatability
@@ -160,10 +160,10 @@ class TestSimpleIterations(TestCase):
                 norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
                 norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
                 actual_factor = norm1 / norm2
-                assert(actual_factor < reduction_factor)
+                assert actual_factor < reduction_factor
                 if A.dtype != complex:
                     for i in range(len(fvals)-1):
-                        assert(fvals[i+1] <= fvals[i])
+                        assert fvals[i+1] <= fvals[i]
 
         # Test preconditioning
         A = pyamg.gallery.poisson((10, 10), format='csr')
@@ -179,6 +179,6 @@ class TestSimpleIterations(TestCase):
         x, _ = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,
                                 residuals=resvec, M=sa.aspreconditioner(),
                                 callback=callback)
-        assert(resvec[-1]/resvec[0] < 1e-8)
+        assert resvec[-1]/resvec[0] < 1e-8
         for i in range(len(fvals)-1):
-            assert(fvals[i+1] <= fvals[i])
+            assert fvals[i+1] <= fvals[i]
