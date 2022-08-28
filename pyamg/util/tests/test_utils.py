@@ -1179,7 +1179,7 @@ class TestComplexUtils(TestCase):
 
         out = to_type(complex, inlist)
         for i in range(len(out)):
-            assert(out[i].dtype == complex)
+            assert out[i].dtype == complex
             if isspmatrix(out[i]):
                 diff = np.ravel(out[i].data - inlist[i].data)
             else:
@@ -1195,8 +1195,8 @@ class TestComplexUtils(TestCase):
 
         out = type_prep(complex, inlist)
         for i in range(len(out)):
-            assert(out[i].dtype == complex)
-            assert(not np.isscalar(out[i]))
+            assert out[i].dtype == complex
+            assert not np.isscalar(out[i])
             if isspmatrix(out[i]):
                 diff = np.ravel(out[i].data - inlist[i].data)
             else:
