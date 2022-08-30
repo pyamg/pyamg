@@ -178,6 +178,8 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
 
     """
     if sparse.isspmatrix_bsr(A):
+        if (A.blocksize[0] != A.blocksize[1]) or (A.blocksize[0] < 1):
+            raise ValueError('Matrix must have square blocks')
         blocksize = A.blocksize[0]
     else:
         blocksize = 1
@@ -187,11 +189,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
 
     # Block structure considered before computing SOC
     if (block == 'block') or sparse.isspmatrix_bsr(A):
-        R, C = A.blocksize
-        if (R != C) or (R < 1):
-            raise ValueError('Matrix must have square blocks')
-
-        N = int(A.shape[0] / R)
+        N = int(A.shape[0] / blocksize)
 
         # SOC based on maximum absolute value element in each block
         if norm == 'abs':
@@ -201,7 +199,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             data = np.min(np.min(A.data,axis=1),axis=1)
         # SOC based on Frobenius norms of blocks
         elif norm == 'fro':
-            data = (np.conjugate(A.data) * A.data).reshape(-1, R*C).sum(axis=1)
+            data = (np.conjugate(A.data) * A.data).reshape(-1, blocksize*blocksize).sum(axis=1)
         else:
             raise ValueError("Invalid choice of norm.")
 
