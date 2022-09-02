@@ -15,27 +15,37 @@ inline void coreassert(const bool istrue, const std::string &errormsg){
 }
 
 /*
- *  Compute a maximal independent set for a graph stored in CSR format
- *  using a greedy serial algorithm
+ * Compute a maximal independent set for a graph stored in CSR format
+ * using a greedy serial algorithm
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     Number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * active : float-like
+ *     Value used for active vertices
+ * C : float-like
+ *     Value used to mark non-MIS vertices
+ * F : float-like
+ *     Value used to mark MIS vertices
+ * x : array, inplace output
+ *     State of each vertex
  *
+ * Returns
+ * -------
+ * N : int
+ *     The number of nodes in the MIS.
  *
- *  Returns:
- *      The number of nodes in the MIS.
- *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ * Notes
+ * -----
+ * Only the vertices with values with x[i] == active are considered
+ * when determining the MIS.  Upon return, all active vertices will
+ * be assigned the value C or F depending on whether they are in the
+ * MIS or not.
  *
  */
 template<class I, class T>
@@ -72,26 +82,37 @@ I maximal_independent_set_serial(const I num_rows,
  *  using a variant of Luby's parallel MIS algorithm
  *
  *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
- *      y[]        - random values for each vertex
- *      max_iters  - maximum number of iterations
- *                   by default max_iters=-1 and no limit
- *                   is imposed
+ *  ----------
+ *  num_rows : int
+ *      number of rows in A (number of vertices)
+ *  Ap : array
+ *      CSR row pointer
+ *  Aj : array
+ *      CSR index array
+ *  active : float
+ *      value used for active vertices
+ *  C : float
+ *      value used to mark non-MIS vertices
+ *  F : float
+ *      value used to mark MIS vertices
+ *  x : array, output
+ *      state of each vertex
+ *  y : array
+ *      random values for each vertex
+ *  max_iters : int
+ *      maximum number of iterations By default max_iters=-1 and no limit is imposed
  *
- *  Returns:
+ *  Returns
+ *  -------
+ *  N : int
  *      The number of nodes in the MIS.
  *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ *  Notes
+ *  -----
+ *  Only the vertices with values with x[i] == active are considered
+ *  when determining the MIS.  Upon return, all active vertices will
+ *  be assigned the value C or F depending on whether they are in the
+ *  MIS or not.
  *
  */
 template<class I, class T, class R>
@@ -227,22 +248,29 @@ void vertex_coloring_first_fit(const I num_rows,
 /*
  * Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * x : array, inplace
+ *     color of each vertex
+ * y : array
+ *     initial random values for each vertex
  *
- *  Notes:
- *      Arrays x and y will be overwritten
+ * Notes
+ * -----
+ *     Arrays x and y will be overwritten
  *
- *  References:
- *      Mark T. Jones and Paul E. Plassmann
- *      A Parallel Graph Coloring Heuristic
- *      SIAM Journal on Scientific Computing 14:3 (1993) 654--669
- *      http://citeseer.ist.psu.edu/jones92parallel.html
- *
+ * References
+ * ----------
+ * .. [Jones92] Mark T. Jones and Paul E. Plassmann
+ *    A Parallel Graph Coloring Heuristic
+ *    SIAM Journal on Scientific Computing 14:3 (1993) 654--669
+ *    http://citeseer.ist.psu.edu/jones92parallel.html
  */
 template<class I, class T, class R>
 T vertex_coloring_jones_plassmann(const I num_rows,
@@ -278,18 +306,20 @@ T vertex_coloring_jones_plassmann(const I num_rows,
  * Compute a vertex coloring of a graph using the parallel
  * Largest-Degree-First (LDF) algorithm
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
+ * Parameters
+ * ----------
+ *     num_rows   - number of rows in A (number of vertices)
+ *     Ap[]       - CSR row pointer
+ *     Aj[]       - CSR index array
+ *     x[]        - color of each vertex
+ *     y[]        - initial random values for each vertex
  *
- *   References:
- *     J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
- *     A Comparison of Parallel Graph Coloring Algorithms
- *     DRAFT SCCS-666
- *     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
+ * References
+ * ----------
+ * .. [LDF] J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
+ *    A Comparison of Parallel Graph Coloring Algorithms
+ *    DRAFT SCCS-666
+ *    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
  *
  */
 template<class I, class T, class R>
@@ -335,39 +365,44 @@ T vertex_coloring_LDF(const I num_rows,
 /*
  * Compute the incidence matrix for a clustering
  *
- *      I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of nodes
+ * num_clusters : int
+ *     number of clusters
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * ICp : arrayt, num_clusters+1, inplace
+ *     CSC column pointer array for I
+ * ICi : array, num_nodes, inplace
+ *     CSC column indexes for I
+ * L : array, num_nodes, inplace
+ *     Local index mapping
+ *
+ * Notes
+ * -----
+ * I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
  * I[i,a] = 1 if node i is in cluster a, otherwise 0
  *
- *     Cluster indexes: a,b,c in 1..num_clusters
+ * Cluster indexes: a,b,c in 1..num_clusters
  * Global node indexes: i,j,k in 1..num_rows
- *  Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
+ * Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
  *
  * We store I in both CSC and CSR formats because we want to be able
  * to map global <-> local node indexes. However, I in CSR format is
  * simply the cm array, so we only need to compute CSC format.
  *
- * IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's
- *                     always 1).
+ * IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's always 1).
  *
  * IR = (IRa) = (cm) = I in CSR format (don't store IRp because we
- *                     have exactly one nonzero entry per row, and
- *                     don't store IRx because it's always 1). This is
- *                     just the cm array.
+ * have exactly one nonzero entry per row, and don't store IRx because it's always 1). This is
+ * just the cm array.
  *
  * Converting local (a,m) -> global i:   i = ICi[ICp[a] + m]
- *
- * Converting global i -> local (a,m):   a = cm[i]
- *                                       m = L[i]
+ * Converting global i -> local (a,m):   a = cm[i], m = L[i]
  *
  * L is an additional vector (length num_rows) to store local indexes.
- *
- *  Parameters
- *      num_nodes         - (IN)  number of nodes
- *      num_clusters      - (IN)  number of clusters
- *     cm[num_nodes]      - (IN)  cluster index for each node
- *    ICp[num_clusters+1] - (OUT) CSC column pointer array for I
- *    ICi[num_nodes]      - (OUT) CSC column indexes for I
- *      L[num_nodes]      - (OUT) Local index mapping
  */
 template<class I>
 void cluster_node_incidence(const I num_nodes,
@@ -450,25 +485,39 @@ void cluster_node_incidence(const I num_nodes,
  * Apply Floyd–Warshall to cluster "a" and use the result to find the
  * cluster center
  *
- *  Parameters
- *      a                  - (IN) cluster index to find the center of
- *      num_nodes          - (IN) number of nodes
- *      num_clusters       - (IN) number of clusters
- *      Ap[]               - (IN) CSR row pointer
- *      Aj[]               - (IN) CSR index array
- *      Ax[]               - (IN) CSR data array (edge lengths)
- *      cm[num_nodes]      - (IN) cluster index for each node
- *     ICp[num_clusters+1] - (IN) CSC column pointer array for I
- *     ICi[num_nodes]      - (IN) CSC column indexes for I
- *       L[num_nodes]      - (IN) Local index mapping
+ * Parameters
+ * ----------
+ * a : int
+ *     cluster index to find the center of
+ * num_nodes : int
+ *     number of nodes
+ * num_clusters : int
+ *     number of clusters
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * ICp : array, num_clusters+1
+ *     CSC column pointer array for I
+ * ICi : array, num_nodes
+ *     CSC column indexes for I
+ * L : array, num_nodes
+ *     Local index mapping
  *
- *  Returns
- *      i                  - global node index of center of cluster a
+ * Returns
+ * -------
+ * i : int
+ *     global node index of center of cluster a
  *
- *  References:
- *      https://en.wikipedia.org/wiki/Graph_center
- *      https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
- *      https://en.wikipedia.org/wiki/Distance_(graph_theory)
+ * References
+ * ----------
+ * .. [1] Graph Center:   https://en.wikipedia.org/wiki/Graph_center
+ * .. [2] Floyd-Warshall: https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
+ * .. [3] Graph Distance: https://en.wikipedia.org/wiki/Distance_(graph_theory)
  */
 template<class I, class T>
 I cluster_center(const I a,
@@ -549,16 +598,24 @@ I cluster_center(const I a,
  * Apply one iteration of Bellman-Ford iteration on a distance
  * graph stored in CSR format.
  *
- *  Parameters
- *      num_nodes - (IN)    number of nodes (number of rows in A)
- *      Ap[]      - (IN)    CSR row pointer
- *      Aj[]      - (IN)    CSR index array
- *      Ax[]      - (IN)    CSR data array (edge lengths)
- *      d[]       - (INOUT) distance to nearest center
- *     cm[]       - (INOUT) cluster index for each node
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of nodes (number of rows in A)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * d : array, inplace
+ *     distance to nearest center
+ * cm : array, inplace
+ *     cluster index for each node
  *
- *  References:
- *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ * References
+ * ----------
+ * .. [1] Bellman-Ford Wikipedia: http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
  */
 template<class I, class T>
 void bellman_ford(const I num_nodes,
@@ -594,17 +651,26 @@ void bellman_ford(const I num_nodes,
  * connectivity. This will hopefully result in more balanced cluster
  * sizes.
  *
- *  Parameters
- *     num_nodes    - (IN)    number of nodes (vertices)
- *     num_clusters - (IN)    number of clusters
- *     Ap[]         - (IN)    CSR row pointer for adjacency matrix A
- *     Aj[]         - (IN)    CSR index array
- *     Ax[]         - (IN)    CSR data array (edge lengths)
- *      d[]         - (INOUT) distance to nearest center
- *     cm[]         - (INOUT) cluster index for each node
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of nodes (vertices)
+ * num_clusters : int
+ *     number of clusters
+ * Ap : array
+ *     CSR row pointer for adjacency matrix A
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * d : array, inplace
+ *     distance to nearest center
+ * cm : array, inplace
+ *     cluster index for each node
  *
- *  References:
- *      http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
+ * References
+ * ----------
+ * .. [1] Bellman-Ford: http://en.wikipedia.org/wiki/Bellman-Ford_algorithm
  */
 template<class I, class T>
 void bellman_ford_balanced(const I num_nodes,
@@ -680,20 +746,29 @@ void bellman_ford_balanced(const I num_nodes,
 /*
  * Perform one iteration of Lloyd clustering on a distance graph
  *
- *  Parameters
- *      num_nodes       - (IN)  number of nodes (number of rows in A)
- *      Ap[]            - (IN)  CSR row pointer for adjacency matrix A
- *      Aj[]            - (IN)  CSR index array
- *      Ax[]            - (IN)  CSR data array (edge lengths)
- *      num_clusters    - (IN)  number of clusters (seeds)
- *      d[num_nodes]    - (OUT) distance to nearest seed
- *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (INOUT)  cluster centers
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of nodes (number of rows in A)
+ * Ap : array
+ *     CSR row pointer for adjacency matrix A
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * num_clusters : int
+ *     number of clusters (seeds)
+ * d : array, num_nodes
+ *     distance to nearest seed
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * c : array, num_clusters
+ *     cluster centers
  *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
+ * References
+ * ----------
+ * .. [Bell2008] Nathan Bell, Algebraic Multigrid for Discrete Differential Forms
+ *    PhD thesis (UIUC), August 2008
  *
  */
 template<class I, class T>
@@ -765,24 +840,31 @@ void lloyd_cluster(const I num_nodes,
  * Perform one iteration of Lloyd clustering on a distance graph using
  * exact centers
  *
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array (edge lengths)
+ * num_clusters : int
+ *     number of clusters = number of seeds
+ * d : array, num_nodes
+ *     distance to nearest seed
+ * cm : array, num_nodes
+ *     cluster index for each node
+ * c : array, num_clusters
+ *     cluster centers
+ *
+ * Notes
+ * -----
  * This version computes exact cluster centers with Floyd-Warshall and
  * also uses a balanced version of Bellman-Ford to try and find
  * nearly-equal-sized clusters.
  *
- *  Parameters
- *      num_nodes       - (IN)  number of rows in A (number of vertices)
- *      Ap[]            - (IN)  CSR row pointer
- *      Aj[]            - (IN)  CSR index array
- *      Ax[]            - (IN)  CSR data array (edge lengths)
- *      num_clusters    - (IN)  number of clusters = number of seeds
- *      d[num_nodes]    - (OUT) distance to nearest seed
- *     cm[num_nodes]    - (OUT) cluster index for each node
- *      c[num_clusters] - (IN)  cluster centers
- *
- *  References
- *      Nathan Bell
- *      Algebraic Multigrid for Discrete Differential Forms
- *      PhD thesis (UIUC), August 2008
  */
 template<class I, class T>
 void lloyd_cluster_exact(const I num_nodes,
@@ -882,22 +964,33 @@ void csr_propagate_max(const IndexType  num_rows,
 }
 
 /*
- *  Compute a distance-k maximal independent set for a graph stored
- *  in CSR format using a parallel algorithm.  An MIS-k is a set of
- *  vertices such that all vertices in the MIS-k are separated by a
- *  path of at least K+1 edges and no additional vertex can be added
- *  to the set without destroying this property.  A standard MIS
- *  is therefore a MIS-1.
+ * Compute MIS-k.
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      k          - minimum separation between MIS vertices
- *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
- *      y[]        - random values used during parallel MIS algorithm
- *      max_iters  - maximum number of iterations to use (default, no limit)
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * k : int
+ *     minimum separation between MIS vertices
+ * x : array, inplace
+ *     state of each vertex (1 if in the MIS, 0 otherwise)
+ * y : array
+ *     random values used during parallel MIS algorithm
+ * max_iters : int
+ *     maximum number of iterations to use (default, no limit)
  *
+ * Notes
+ * -----
+ * Compute a distance-k maximal independent set for a graph stored
+ * in CSR format using a parallel algorithm.  An MIS-k is a set of
+ * vertices such that all vertices in the MIS-k are separated by a
+ * path of at least K+1 edges and no additional vertex can be added
+ * to the set without destroying this property.  A standard MIS
+ * is therefore a MIS-1.
  */
 template<class I, class T, class R>
 void maximal_independent_set_k_parallel(const I num_rows,
@@ -972,18 +1065,25 @@ void maximal_independent_set_k_parallel(const I num_rows,
 }
 
 /*
- *  Compute a breadth first search of a graph in CSR format
- *  beginning at a given seed vertex.
+ * Compute a breadth first search of a graph in CSR format
+ * beginning at a given seed vertex.
  *
- *  Parameters
- *      num_rows         - number of rows in A (number of vertices)
- *      Ap[]             - CSR row pointer
- *      Aj[]             - CSR index array
- *      order[num_rows]  - records the order in which vertices were searched
- *      level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * order : array, num_rows, inplace
+ *     records the order in which vertices were searched
+ * level : array, num_rows, inplace
+ *     records the level set of the searched vertices (i.e. the minimum distance to the seed)
  *
- *  Notes:
- *      The values of the level must be initialized to -1
+ * Notes
+ * -----
+ * The values of the level must be initialized to -1
  *
  */
 template <class I>
@@ -1028,17 +1128,23 @@ void breadth_first_search(const I Ap[], const int Ap_size,
 
 
 /*
- *  Compute the connected components of a graph stored in CSR format.
+ * Compute the connected components of a graph stored in CSR format.
  *
- *  Vertices belonging to each component are marked with a unique integer
- *  in the range [0,K), where K is the number of components.
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * components : array, num_rows
+ *     component labels
  *
- *  Parameters
- *      num_rows             - number of rows in A (number of vertices)
- *      Ap[]                 - CSR row pointer
- *      Aj[]                 - CSR index array
- *      components[num_rows] - component labels
- *
+ * Notes
+ * -----
+ * Vertices belonging to each component are marked with a unique integer
+ * in the range [0,K), where K is the number of components.
  */
 template <class I>
 I connected_components(const I num_nodes,

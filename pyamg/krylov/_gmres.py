@@ -22,7 +22,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         initial guess, default is a vector of zeros
     tol : float
         Tolerance for stopping criteria, let r=r_k
-           ||M r||     < tol ||M b||
+        ||M r|| < tol ||M b||
         if ||b||=0, then set ||M b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
@@ -63,7 +63,7 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 

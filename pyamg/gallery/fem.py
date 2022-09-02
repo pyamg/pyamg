@@ -522,6 +522,25 @@ class Mesh:
         return _it
 
 
+def _compute_diffusion_matrix(kappa_lmbda, x, y):
+    """Standardize diffusion tensor/scalar.
+
+    This will return an ndarray or a scalar, depending on input.
+    """
+    kappa = kappa_lmbda(x, y)
+
+    if isinstance(kappa, (int, float)):
+        return np.eye(2) * kappa
+
+    if isinstance(kappa, np.ndarray):
+        if kappa.shape == (2, 2):
+            return kappa
+        raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), '
+                         f'received ndarray of shape {kappa.shape}')
+    raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), '
+                     f'received type {type(kappa)}')
+
+
 def gradgradform(mesh, kappa=None, f=None, degree=1):
     """Finite element discretization of a Poisson problem.
 
@@ -537,6 +556,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
+        can either return a scalar value or a 2x2 matrix that transforms <grad u>
 
     f : function
         right hand side, f(x,y) with vector input
@@ -557,8 +577,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         - modepy is used to generate the quadrature points
           q = modepy.XiaoGimbutasSimplexQuadrature(4,2)
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> from pyamg.gallery import fem
     >>> import scipy.sparse.linalg as sla
@@ -681,7 +701,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
             dphi = invJ.dot(dbasis)
 
             # Step 5, 1-point gauss quadrature
-            Aelem = kappa(X[K].mean(), Y[K].mean()) * (detJ / 2.0) * (dphi.T).dot(dphi)
+            kappaelem = _compute_diffusion_matrix(kappa, X[K].mean(), Y[K].mean())
+            Aelem = (detJ / 2.0) * dphi.T @ kappaelem @ dphi
 
             # Step 6, 1-point gauss quadrature
             belem = f(X[K].mean(), Y[K].mean()) * (detJ / 6.0) * np.ones((3,))
@@ -720,7 +741,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
                 # Step 5
                 xt, yt = J.dot(np.array([x, y])) + np.array([x0, y0])
-                Aelem += (detJ / 2) * w * kappa(xt, yt) * dphi.T.dot(dphi)
+                kappaelem = _compute_diffusion_matrix(kappa, xt, yt)
+                Aelem += (detJ / 2) * w * dphi.T @ kappaelem @ dphi
 
                 # Step 6
                 belem += (detJ / 2) * w * f(xt, yt) * basis
@@ -942,8 +964,8 @@ def model(num=0):
     num : int or string
         A tag for a particular problem.  See the notes below.
 
-    Return
-    ------
+    Returns
+    -------
     A
     b
     V

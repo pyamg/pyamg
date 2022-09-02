@@ -5,7 +5,6 @@ from warnings import warn
 import numpy as np
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
-from scipy.sparse.sputils import upcast
 from scipy.linalg import eigvals
 
 try:
@@ -14,6 +13,21 @@ try:
 except ImportError:
     from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
                                           csr_scale_columns, bsr_scale_columns)
+
+try:
+    # scipy >=1.8
+    # pylint: disable=unused-import
+    from scipy.sparse.linalg._isolve.utils import make_system
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.linalg.isolve.utils import make_system  # noqa: F401
+
+try:
+    # scipy >=1.8
+    from scipy.sparse._sputils import upcast
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.sputils import upcast
 
 from .. import amg_core
 from . import linalg

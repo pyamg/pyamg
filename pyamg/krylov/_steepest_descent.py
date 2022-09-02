@@ -4,8 +4,8 @@ import warnings
 from warnings import warn
 import numpy as np
 from scipy import sparse
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -57,7 +57,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 

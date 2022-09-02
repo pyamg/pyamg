@@ -3,8 +3,8 @@
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def minimal_residual(A, b, x0=None, tol=1e-5,
@@ -24,7 +24,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         initial guess, default is a vector of zeros
     tol : float
         Tolerance for stopping criteria, let r=r_k
-           ||M r||     < tol ||M b||
+        ||M r|| < tol ||M b||
         if ||b||=0, then set ||M b||=1 for these tests.
     maxiter : int
         maximum number of iterations allowed
@@ -52,17 +52,18 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
-    minimal residual algorithm:      Preconditioned version:
-    r = b - A x                      r = b - A x, z = M r
-    while not converged:             while not converged:
-        p = A r                          p = M A z
-        alpha = (p,r) / (p,p)            alpha = (p, z) / (p, p)
-        x = x + alpha r                  x = x + alpha z
-        r = r - alpha p                  z = z - alpha p
+    ..
+        minimal residual algorithm:      Preconditioned version:
+        r = b - A x                      r = b - A x, z = M r
+        while not converged:             while not converged:
+            p = A r                          p = M A z
+            alpha = (p,r) / (p,p)            alpha = (p, z) / (p, p)
+            x = x + alpha r                  x = x + alpha z
+            r = r - alpha p                  z = z - alpha p
 
     See Also
     --------
