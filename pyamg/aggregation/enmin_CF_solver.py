@@ -24,8 +24,7 @@ from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
 from ..classical import split
 
-
-def rootnode_solver(A, B=None, BH=None,
+def enmin_CF_solver(A, B=None, BH=None,
                     symmetry='hermitian', strength='symmetric',
                     aggregate='standard', smooth='energy',
                     presmoother=('block_gauss_seidel',
@@ -37,7 +36,7 @@ def rootnode_solver(A, B=None, BH=None,
                                          'iterations': 4}),
                     max_levels=10, max_coarse=10,
                     diagonal_dominance=False, keep=False, **kwargs):
-    """Create a multilevel solver using root-node based Smoothed Aggregation (SA).
+    """Create a multilevel solver using energy-min AMG
 
     See the notes below, for the major differences with the classical-style
     smoothed aggregation solver in aggregation.smoothed_aggregation_solver.
@@ -140,18 +139,14 @@ def rootnode_solver(A, B=None, BH=None,
     MultilevelSolver, aggregation.smoothed_aggregation_solver,
     classical.ruge_stuben_solver
 
-    Notes
+    Notes 
     -----
-         - Root-node style SA differs from classical SA primarily by preserving
-           and identity block in the interpolation operator, P.  Each aggregate
-           has a 'root-node' or 'center-node' associated with it, and this
-           root-node is injected from the coarse grid to the fine grid.  The
-           injection corresponds to the identity block.
+         - Here, AMG is "classial" in that it preserves an identity block
+           in the interpolation operator, P.  This identity block can represent
+           root-nodes of aggregates, or be some other arbitrary CF splitting.
 
          - Only smooth={'energy', None} is supported for prolongation
-           smoothing.  See reference [2011OlScTu]_ below for more details on why the
-           'energy' prolongation smoother is the natural counterpart to
-           root-node style SA.
+           smoothing.  
 
          - The additional parameters are passed through as arguments to
            MultilevelSolver.  Refer to pyamg.MultilevelSolver for additional
@@ -201,20 +196,20 @@ def rootnode_solver(A, B=None, BH=None,
            A.shape[0] and Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a
            csr_matrix.
 
-           Because this is a root-nodes solver, if a member of the predefined
+           Because this is solver needs a CF splitting, if a member of the predefined
            aggregation list is predefined, it must be of the form
            ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
 
     Examples
     --------
-    >>> from pyamg import rootnode_solver
+    >>> from pyamg import enmin_CF_solver
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
     >>> import numpy as np
     >>> A = poisson((100, 100), format='csr')           # matrix
-    >>> b = np.ones((A.shape[0]))                   # RHS
-    >>> ml = rootnode_solver(A)                     # AMG solver
-    >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
+    >>> b = np.ones((A.shape[0]))                       # RHS
+    >>> ml = enmin_CF_solver(A)                      # AMG solver
+    >>> M = ml.aspreconditioner(cycle='V')              # preconditioner
     >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
 
     References
