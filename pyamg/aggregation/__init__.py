@@ -8,7 +8,7 @@ from .tentative import fit_candidates
 from .smooth import (jacobi_prolongation_smoother, richardson_prolongation_smoother,
                      energy_prolongation_smoother)
 from .rootnode import rootnode_solver
-from .enmin_CF_solver import enmin_CF_solver
+from .energymin_cf_solver import energymin_cf_solver
 
 __all__ = ['adaptive_sa_solver',
            'standard_aggregation', 'naive_aggregation',
@@ -18,4 +18,4 @@ __all__ = ['adaptive_sa_solver',
            'jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
            'energy_prolongation_smoother',
            'rootnode_solver', 
-           'enmin_CF_solver']
+           'energymin_cf_solver']

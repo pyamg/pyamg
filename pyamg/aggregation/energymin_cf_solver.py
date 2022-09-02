@@ -24,18 +24,18 @@ from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother
 from ..classical import split
 
-def enmin_CF_solver(A, B=None, BH=None,
-                    symmetry='hermitian', strength='symmetric',
-                    aggregate='standard', smooth='energy',
-                    presmoother=('block_gauss_seidel',
-                                 {'sweep': 'symmetric'}),
-                    postsmoother=('block_gauss_seidel',
-                                  {'sweep': 'symmetric'}),
-                    improve_candidates=('block_gauss_seidel',
-                                        {'sweep': 'symmetric',
-                                         'iterations': 4}),
-                    max_levels=10, max_coarse=10,
-                    diagonal_dominance=False, keep=False, **kwargs):
+def energymin_cf_solver(A, B=None, BH=None,
+                        symmetry='hermitian', strength='symmetric',
+                        aggregate='standard', smooth='energy',
+                        presmoother=('block_gauss_seidel',
+                                     {'sweep': 'symmetric'}),
+                        postsmoother=('block_gauss_seidel',
+                                      {'sweep': 'symmetric'}),
+                        improve_candidates=('block_gauss_seidel',
+                                            {'sweep': 'symmetric',
+                                             'iterations': 4}),
+                        max_levels=10, max_coarse=10,
+                        diagonal_dominance=False, keep=False, **kwargs):
     """Create a multilevel solver using energy-min AMG
 
     See the notes below, for the major differences with the classical-style
@@ -202,13 +202,13 @@ def enmin_CF_solver(A, B=None, BH=None,
 
     Examples
     --------
-    >>> from pyamg import enmin_CF_solver
+    >>> from pyamg import energymin_cf_solver
     >>> from pyamg.gallery import poisson
     >>> from scipy.sparse.linalg import cg
     >>> import numpy as np
     >>> A = poisson((100, 100), format='csr')           # matrix
     >>> b = np.ones((A.shape[0]))                       # RHS
-    >>> ml = enmin_CF_solver(A)                      # AMG solver
+    >>> ml = energymin_cf_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')              # preconditioner
     >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
 
