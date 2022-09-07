@@ -204,23 +204,21 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             raise ValueError("Invalid choice of norm.")
 
         data[np.abs(data) < 1e-16] = 0.0
-        S_indptr = np.empty_like(A.indptr)
-        S_indices = np.empty_like(A.indices)
-        S_data = np.empty_like(data)
+        Sp = np.empty_like(A.indptr)
+        Sj = np.empty_like(A.indices)
+        Sx = np.empty_like(data)
 
         if norm in ('abs', 'fro'):
             amg_core.classical_strength_of_connection_abs(
-                N, theta, A.indptr, A.indices, data, S_indptr, S_indices,
-                S_data)
+                N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
         elif norm == 'min':
             amg_core.classical_strength_of_connection_min(
-                N, theta, A.indptr, A.indices, data, S_indptr, S_indices,
-                S_data)
+                N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
         else:
             raise ValueError("Unrecognized option for norm.")
 
         # One pass through nnz to find largest entry, one to filter
-        S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=[N, N])
+        S = sparse.csr_matrix((Sx, Sj, Sp), shape=[N, N])
 
         # Take magnitude and scale by largest entry
         S.data = np.abs(S.data)
@@ -234,22 +232,22 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
                  sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
 
-        S_indptr = np.empty_like(A.indptr)
-        S_indices = np.empty_like(A.indices)
-        S_data = np.empty_like(A.data)
+        Sp = np.empty_like(A.indptr)
+        Sj = np.empty_like(A.indices)
+        Sx = np.empty_like(A.data)
 
         if norm == 'abs':
             amg_core.classical_strength_of_connection_abs(
                 A.shape[0], theta, A.indptr, A.indices, A.data, \
-                S_indptr, S_indices, S_data)
+                Sp, Sj, Sx)
         elif norm == 'min':
             amg_core.classical_strength_of_connection_min(
                 A.shape[0], theta, A.indptr, A.indices, A.data, \
-                S_indptr, S_indices, S_data)
+                Sp, Sj, Sx)
         else:
             raise ValueError('Unknown norm')
 
-        S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=A.shape)
+        S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
         if blocksize > 1:
             S = amalgamate(S, blocksize)
@@ -335,15 +333,15 @@ def symmetric_strength_of_connection(A, theta=0):
         # if theta == 0:
         #     return A
 
-        S_indptr = np.empty_like(A.indptr)
-        S_indices = np.empty_like(A.indices)
-        S_data = np.empty_like(A.data)
+        Sp = np.empty_like(A.indptr)
+        Sj = np.empty_like(A.indices)
+        Sx = np.empty_like(A.data)
 
         fn = amg_core.symmetric_strength_of_connection
-        fn(A.shape[0], theta, A.indptr, A.indices, A.data, S_indptr, S_indices,
-           S_data)
+        fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj,
+           Sx)
 
-        S = sparse.csr_matrix((S_data, S_indices, S_indptr), shape=A.shape)
+        S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
     elif sparse.isspmatrix_bsr(A):
         M, N = A.shape
@@ -503,7 +501,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     # Put ones on the diagonal
     Atilde = Atilde + Id.tocsr()
-    Atilde.sort_indices()
+    Atilde.sortj()
 
     # Amalgamate Atilde for the BSR case, using ones for all strong connections
     if bsr_flag:
@@ -637,7 +635,7 @@ def evolution_strength_of_connection(A,
         Dinv_A = scale_rows(A, Dinv, copy=True)
 
     A.eliminate_zeros()
-    A.sort_indices()
+    A.sortj()
 
     # Handle preliminaries for the algorithm
     dimen = A.shape[1]
@@ -703,7 +701,7 @@ def evolution_strength_of_connection(A,
         mask.data[:] = 1.0
         Atilde = Atilde.multiply(mask)
         Atilde.eliminate_zeros()
-        Atilde.sort_indices()
+        Atilde.sortj()
 
     elif nsquare == 0:
         if numPDEs > 1:
@@ -712,7 +710,7 @@ def evolution_strength_of_connection(A,
             mask.data[:] = 1.0
             Atilde = Atilde.multiply(mask)
             Atilde.eliminate_zeros()
-            Atilde.sort_indices()
+            Atilde.sortj()
 
     else:
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
@@ -722,9 +720,9 @@ def evolution_strength_of_connection(A,
 
         # Call incomplete mat-mat mult
         AtildeCSC = Atilde.tocsc()
-        AtildeCSC.sort_indices()
-        mask.sort_indices()
-        Atilde.sort_indices()
+        AtildeCSC.sortj()
+        mask.sortj()
+        Atilde.sortj()
         amg_core.incomplete_mat_mult_csr(Atilde.indptr, Atilde.indices,
                                          Atilde.data, AtildeCSC.indptr,
                                          AtildeCSC.indices, AtildeCSC.data,
@@ -734,7 +732,7 @@ def evolution_strength_of_connection(A,
         del AtildeCSC, Atilde
         Atilde = mask
         Atilde.eliminate_zeros()
-        Atilde.sort_indices()
+        Atilde.sortj()
 
     del Dinv, Dinv_A, mask
 
