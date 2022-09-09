@@ -2,11 +2,12 @@
 
 from . import vtk_writer
 from . import vis_coarse
+from . import aggviz
 
 from .vtk_writer import write_vtu, write_basic_mesh
 from .vis_coarse import vis_aggregate_groups
 
-__all__ = ['vtk_writer', 'vis_coarse',
+__all__ = ['vtk_writer', 'vis_coarse', 'aggviz',
            'vis_aggregate_groups', 'write_vtu', 'write_basic_mesh']
 
 __doc__ += """Basic vtk support.
