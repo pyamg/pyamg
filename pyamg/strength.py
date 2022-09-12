@@ -502,7 +502,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     # Put ones on the diagonal
     Atilde = Atilde + Id.tocsr()
-    Atilde.sortj()
+    Atilde.sort_indices()
 
     # Amalgamate Atilde for the BSR case, using ones for all strong connections
     if bsr_flag:
@@ -636,7 +636,7 @@ def evolution_strength_of_connection(A,
         Dinv_A = scale_rows(A, Dinv, copy=True)
 
     A.eliminate_zeros()
-    A.sortj()
+    A.sort_indices()
 
     # Handle preliminaries for the algorithm
     dimen = A.shape[1]
@@ -702,7 +702,7 @@ def evolution_strength_of_connection(A,
         mask.data[:] = 1.0
         Atilde = Atilde.multiply(mask)
         Atilde.eliminate_zeros()
-        Atilde.sortj()
+        Atilde.sort_indices()
 
     elif nsquare == 0:
         if numPDEs > 1:
@@ -711,7 +711,7 @@ def evolution_strength_of_connection(A,
             mask.data[:] = 1.0
             Atilde = Atilde.multiply(mask)
             Atilde.eliminate_zeros()
-            Atilde.sortj()
+            Atilde.sort_indices()
 
     else:
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
@@ -721,9 +721,9 @@ def evolution_strength_of_connection(A,
 
         # Call incomplete mat-mat mult
         AtildeCSC = Atilde.tocsc()
-        AtildeCSC.sortj()
-        mask.sortj()
-        Atilde.sortj()
+        AtildeCSC.sort_indices()
+        mask.sort_indices()
+        Atilde.sort_indices()
         amg_core.incomplete_mat_mult_csr(Atilde.indptr, Atilde.indices,
                                          Atilde.data, AtildeCSC.indptr,
                                          AtildeCSC.indices, AtildeCSC.data,
@@ -733,7 +733,7 @@ def evolution_strength_of_connection(A,
         del AtildeCSC, Atilde
         Atilde = mask
         Atilde.eliminate_zeros()
-        Atilde.sortj()
+        Atilde.sort_indices()
 
     del Dinv, Dinv_A, mask
 
