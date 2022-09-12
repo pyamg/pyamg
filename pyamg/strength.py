@@ -109,7 +109,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
 
 def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
-    """
+    """Classical strength of connection measure.
+
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
              |A[i,j]| >= theta * max(|A[i,k]|), where k != i     (norm='abs')
@@ -126,9 +127,9 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             None         : Compute SOC based on A as CSR matrix.
             'block'      : Compute SOC based on norm of blocks of A.
             'amalgamate' : Compute SOC based on A as CSR matrix, then compute
-                           norm of blocks in SOC matrix for a block SOC. 
+                           norm of blocks in SOC matrix for a block SOC.
     norm : 'string', default 'abs'
-        Option to compute SOC between elements or blocks: 
+        Option to compute SOC between elements or blocks:
             'abs'  : C_ij = k, where k is the maximum absolute value in block C_ij
             'min'  : C_ij = k, where k is the minimum (negative) value in block C_ij
             'fro'  : C_ij = k, where k is the Frobenius norm of block C_ij
@@ -201,7 +202,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             data = (np.conjugate(A.data) * A.data).reshape(
                 -1, blocksize * blocksize).sum(axis=1)
         else:
-            raise ValueError("Invalid choice of norm.")
+            raise ValueError('Invalid choice of norm.')
 
         data[np.abs(data) < 1e-16] = 0.0
         Sp = np.empty_like(A.indptr)
@@ -215,7 +216,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             amg_core.classical_strength_of_connection_min(
                 N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
         else:
-            raise ValueError("Unrecognized option for norm.")
+            raise ValueError('Unrecognized option for norm.')
 
         # One pass through nnz to find largest entry, one to filter
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=[N, N])
@@ -238,11 +239,11 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
 
         if norm == 'abs':
             amg_core.classical_strength_of_connection_abs(
-                A.shape[0], theta, A.indptr, A.indices, A.data, \
+                A.shape[0], theta, A.indptr, A.indices, A.data,
                 Sp, Sj, Sx)
         elif norm == 'min':
             amg_core.classical_strength_of_connection_min(
-                A.shape[0], theta, A.indptr, A.indices, A.data, \
+                A.shape[0], theta, A.indptr, A.indices, A.data,
                 Sp, Sj, Sx)
         else:
             raise ValueError('Unknown norm')
