@@ -3,9 +3,9 @@
 import warnings
 from warnings import warn
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy import sparse
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def cg(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -57,21 +57,21 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cg import cg
+    >>> from pyamg.krylov import cg
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    10.9370700187
+    >>> print(f'{norm(b - A*x):.6}')
+    10.9371
 
     References
     ----------
@@ -142,7 +142,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz_old = rz
         pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
-            warn("\nIndefinite matrix detected in CG, aborting\n")
+            warn('\nIndefinite matrix detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         alpha = rz/pAp                            # 3
@@ -157,7 +157,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         rz = np.inner(r.conjugate(), z)
 
         if rz < 0.0:                             # check curvature of M
-            warn("\nIndefinite preconditioner detected in CG, aborting\n")
+            warn('\nIndefinite preconditioner detected in CG, aborting\n')
             return (postprocess(x), -1)
 
         beta = rz/rz_old                          # 7

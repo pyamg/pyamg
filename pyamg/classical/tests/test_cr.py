@@ -1,3 +1,4 @@
+"""Test compatible relaxation."""
 import numpy as np
 from scipy.sparse import csr_matrix
 from pyamg.gallery import poisson, load_example

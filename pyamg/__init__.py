@@ -1,4 +1,4 @@
-"""PyAMG: Algebraic Multigrid Solvers in Python"""
+"""PyAMG: Algebraic Multigrid Solvers in Python."""
 
 import re
 import warnings
@@ -31,10 +31,8 @@ __doc__ += """
 
 Utility tools
 -------------
-
-  test        --- Run pyamg unittests (requires pytest)
-  __version__ --- pyamg version string
-
+test         Run pyamg unittests (requires pytest)
+__version__  pyamg version string
 """
 
 # Warn on old numpy or scipy.  Two digits.
@@ -44,7 +42,7 @@ m = re.match(r'(\d+)\.(\d+).*', np.__version__)
 npver = [int(m.group(1)), int(m.group(2))]
 if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
     warnings.warn(f'Numpy {npmin} or above is recommended for this version of'
-                  'PyAMG (detected version {npver})', UserWarning)
+                  f'PyAMG (detected version {npver})', UserWarning)
 
 spreq = '0.11'
 spmin = [int(j) for j in spreq.split('.')]
@@ -52,7 +50,7 @@ m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
 spver = [int(m.group(1)), int(m.group(2))]
 if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
     warnings.warn(f'SciPy {spmin} or above is recommended for this version of'
-                  'PyAMG (detected version {spver})', UserWarning)
+                  f'PyAMG (detected version {spver})', UserWarning)
 
 
 def test(verbose=False):
@@ -65,7 +63,10 @@ def test(verbose=False):
 
     """
     import sys     # pylint: disable=import-outside-toplevel
-    import pytest  # pylint: disable=import-outside-toplevel
+    try:
+        import pytest  # pylint: disable=import-outside-toplevel
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
 
     sysversion = sys.version.replace('\n', '')
     print(f'Python version: {sysversion}')

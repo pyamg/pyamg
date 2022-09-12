@@ -1,3 +1,4 @@
+"""Test graph routings."""
 import numpy as np
 import scipy.sparse as sparse
 
@@ -51,7 +52,7 @@ class TestGraph(TestCase):
         cases = []
         np.random.seed(651978631)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -100,7 +101,6 @@ class TestGraph(TestCase):
 
     def test_bellman_ford(self):
         """Test pile of cases against reference implementation."""
-
         np.random.seed(1643502758)
 
         for G in self.cases:
@@ -168,7 +168,7 @@ class TestComplexGraph(TestCase):
         cases = []
         np.random.seed(3084315563)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -348,7 +348,7 @@ def test_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()
@@ -425,7 +425,7 @@ def test_complex_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()

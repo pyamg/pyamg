@@ -10,6 +10,6 @@ Reference
 * :ref:`modindex`
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
 
     ref

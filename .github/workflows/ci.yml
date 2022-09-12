@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
         os: [ubuntu-latest, macos-latest]
 
     steps:
@@ -29,6 +29,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
+        python -m pip install pytest-cov
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements-optional.txt ]; then pip install -r requirements.txt; fi
 
@@ -37,4 +38,7 @@ jobs:
 
     - name: Test
       run: |
-        pytest .
+        pytest --cov=./ --cov-report=xml .
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v2

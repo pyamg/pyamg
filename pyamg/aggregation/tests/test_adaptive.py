@@ -1,3 +1,4 @@
+"""Test adaptive SA."""
 import numpy as np
 
 from pyamg.gallery import poisson, linear_elasticity

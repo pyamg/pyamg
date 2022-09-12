@@ -1,3 +1,4 @@
+"""Test simple iteration."""
 from pyamg.krylov import minimal_residual, steepest_descent
 import numpy as np
 from pyamg.util.linalg import norm

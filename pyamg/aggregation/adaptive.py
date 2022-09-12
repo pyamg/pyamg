@@ -30,7 +30,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     on a per aggregate basis.
 
     Parameters
-    ---------
+    ----------
     x : array
         n x 1 vector of new candidate
     AggOp : CSR or CSC sparse matrix
@@ -219,7 +219,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR", SparseEfficiencyWarning)
+            warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix or '
                             'bsr_matrix, or be convertible to csr_matrix') from e
@@ -295,7 +295,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     # Improve candidates
     if B.shape[1] > 1 and improvement_iters > 0:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        for i in range(improvement_iters):
+        for _i in range(improvement_iters):
             for j in range(B.shape[1]):
                 # Run a V-cycle built on everything except candidate j, while
                 # using candidate j as the initial guess
@@ -335,7 +335,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         # Special case for improving a single candidate
         max_levels = len(aggregate) + 1
         max_coarse = 0
-        for i in range(improvement_iters):
+        for _i in range(improvement_iters):
             B, aggregate, strength =\
                 initial_setup_stage(A, symmetry, pdef, candidate_iters,
                                     epsilon, max_levels, max_coarse,
@@ -359,7 +359,6 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
                         max_levels, max_coarse, aggregate, prepostsmoother,
                         smooth, strength, work, initial_candidate=None):
     """Compute aggregation and the first near-nullspace candidate.
-
 
     Parameters
     ----------

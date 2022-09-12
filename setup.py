@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-PyAMG: Algebraic Multigrid Solvers in Python
+"""PyAMG: Algebraic Multigrid Solvers in Python.
 
 PyAMG is a library of Algebraic Multigrid (AMG)
 solvers with a convenient Python interface.

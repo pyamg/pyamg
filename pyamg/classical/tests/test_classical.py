@@ -1,3 +1,4 @@
+"""Test classical AMG."""
 import warnings
 
 import numpy as np
