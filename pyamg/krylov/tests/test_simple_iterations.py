@@ -1,9 +1,11 @@
-from pyamg.krylov import minimal_residual, steepest_descent
+"""Test simple iteration."""
+from functools import partial
 import numpy as np
-from pyamg.util.linalg import norm
-import pyamg
-
 from numpy.testing import TestCase
+
+import pyamg
+from pyamg.krylov import minimal_residual, steepest_descent
+from pyamg.util.linalg import norm
 
 
 class TestSimpleIterations(TestCase):
@@ -88,6 +90,10 @@ class TestSimpleIterations(TestCase):
         # Ensure repeatability
         np.random.seed(0)
 
+        def cb(x, A, b):
+            fvals.append(0.5*np.dot(x.ravel(), np.ravel(A @ x))
+                         - np.dot(b.ravel(), x.ravel()))
+
         for case in self.spd_cases:
             A = case['A']
             b = case['b']
@@ -98,20 +104,18 @@ class TestSimpleIterations(TestCase):
             # This function should always decrease
             fvals = []
 
-            def callback(x):
-                fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))
-                             - np.dot(np.ravel(b), np.ravel(x)))
+            callback = partial(cb, A=A, b=b)
 
             x, _ = steepest_descent(A, b, x0=x0, tol=1e-16,
                                     maxiter=maxiter, callback=callback)
             norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
             norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
             actual_factor = norm1 / norm2
-            assert(actual_factor < reduction_factor)
+            assert actual_factor < reduction_factor
 
             if A.dtype != complex:
                 for i in range(len(fvals)-1):
-                    assert(fvals[i+1] <= fvals[i])
+                    assert fvals[i+1] <= fvals[i]
 
         # Test preconditioning
         A = pyamg.gallery.poisson((10, 10), format='csr')
@@ -119,24 +123,25 @@ class TestSimpleIterations(TestCase):
         x0 = np.random.rand(A.shape[0], 1)
         fvals = []
 
-        def callback(x):
-            fvals.append(0.5*np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))
-                         - np.dot(np.ravel(b), np.ravel(x)))
+        callback = partial(cb, A=A, b=b)
 
         resvec = []
         sa = pyamg.smoothed_aggregation_solver(A)
         x, _ = steepest_descent(A, b, x0, tol=1e-8, maxiter=20,
                                 residuals=resvec, M=sa.aspreconditioner(),
                                 callback=callback)
-        assert(resvec[-1]/resvec[0] < 1e-8)
+        assert resvec[-1]/resvec[0] < 1e-8
         for i in range(len(fvals)-1):
-            assert(fvals[i+1] <= fvals[i])
+            assert fvals[i+1] <= fvals[i]
 
     def test_minimal_residual(self):
         # Ensure repeatability
         np.random.seed(0)
 
         self.definite_cases.extend(self.spd_cases)
+
+        def cb(x, A):
+            fvals.append(np.sqrt(np.dot(x.ravel(), np.ravel(A @ x))))
 
         for case in self.definite_cases:
             A = case['A']
@@ -149,9 +154,7 @@ class TestSimpleIterations(TestCase):
                 # This function should always decrease (assuming zero RHS)
                 fvals = []
 
-                def callback(x):
-                    fvals.append(np.sqrt(np.dot(np.ravel(x),
-                                         np.ravel(A.dot(x.reshape(-1, 1))))))
+                callback = partial(cb, A=A)
                 #
                 x, _ = minimal_residual(A, b, x0=x0,
                                         tol=1e-16, maxiter=maxiter,
@@ -159,10 +162,10 @@ class TestSimpleIterations(TestCase):
                 norm1 = norm(np.ravel(b) - np.ravel(A.dot(x.reshape(-1, 1))))
                 norm2 = norm(np.ravel(b) - np.ravel(A.dot(x0.reshape(-1, 1))))
                 actual_factor = norm1 / norm2
-                assert(actual_factor < reduction_factor)
+                assert actual_factor < reduction_factor
                 if A.dtype != complex:
                     for i in range(len(fvals)-1):
-                        assert(fvals[i+1] <= fvals[i])
+                        assert fvals[i+1] <= fvals[i]
 
         # Test preconditioning
         A = pyamg.gallery.poisson((10, 10), format='csr')
@@ -170,14 +173,13 @@ class TestSimpleIterations(TestCase):
         b = np.zeros_like(x0)
         fvals = []
 
-        def callback(x):
-            fvals.append(np.sqrt(np.dot(np.ravel(x), np.ravel(A.dot(x.reshape(-1, 1))))))
+        callback = partial(cb, A=A)
         #
         resvec = []
         sa = pyamg.smoothed_aggregation_solver(A)
         x, _ = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,
                                 residuals=resvec, M=sa.aspreconditioner(),
                                 callback=callback)
-        assert(resvec[-1]/resvec[0] < 1e-8)
+        assert resvec[-1]/resvec[0] < 1e-8
         for i in range(len(fvals)-1):
-            assert(fvals[i+1] <= fvals[i])
+            assert fvals[i+1] <= fvals[i]

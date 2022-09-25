@@ -1,11 +1,10 @@
 """Generic AMG solver."""
 
-
 from warnings import warn
 
 import scipy as sp
-from scipy.sparse.linalg import LinearOperator, isolve
-from scipy.sparse.sputils import upcast
+import scipy.sparse.linalg as sla
+from scipy.sparse.linalg import LinearOperator
 import numpy as np
 
 from pkg_resources import parse_version  # included with setuptools
@@ -14,11 +13,12 @@ from . import krylov
 from .util.utils import to_type
 from .util.params import set_tol
 from .relaxation import smoothing
+from .util import upcast
 
 if parse_version(sp.__version__) >= parse_version('1.7'):
     from scipy.linalg import pinv           # pylint: disable=ungrouped-imports
 else:
-    from scipy.linalg import pinv2 as pinv  # pylint: disable=ungrouped-imports
+    from scipy.linalg import pinv2 as pinv  # pylint: disable=no-name-in-module
 
 
 class MultilevelSolver:
@@ -83,10 +83,11 @@ class MultilevelSolver:
 
     class level(Level):  # noqa: N801
         """Deprecated level class."""
-        # only raise deprecation warning on use, not import
+
         def __init__(self):
+            """Raise deprecation warning on use, not import."""
             super().__init__()
-            warn("level() is deprectated.  use Level()",
+            warn('level() is deprectated.  use Level()',
                  category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
@@ -112,7 +113,7 @@ class MultilevelSolver:
 
             Sparse iterative methods:
 
-            * any method in scipy.sparse.linalg.isolve or pyamg.krylov (e.g. 'cg').
+            * any method in scipy.sparse.linalg or pyamg.krylov (e.g. 'cg').
             * Methods in pyamg.krylov take precedence.
             * relaxation method, such as 'gauss_seidel' or 'jacobi',
 
@@ -133,7 +134,7 @@ class MultilevelSolver:
         >>> from pyamg.gallery import poisson
         >>> from pyamg.multilevel import MultilevelSolver
         >>> from pyamg.strength import classical_strength_of_connection
-        >>> from pyamg.classical import direct_interpolation
+        >>> from pyamg.classical.interpolate import direct_interpolation
         >>> from pyamg.classical.split import RS
         >>> # compute necessary operators
         >>> A = poisson((100, 100), format='csr')
@@ -154,15 +155,15 @@ class MultilevelSolver:
         >>> levels[1].A = R @ A @ P                      # coarse-level matrix
         >>> # create MultilevelSolver
         >>> ml = MultilevelSolver(levels, coarse_solver='splu')
-        >>> print ml
+        >>> print(ml)
         MultilevelSolver
         Number of Levels:     2
         Operator Complexity:  1.891
         Grid Complexity:      1.500
         Coarse Solver:        'splu'
           level   unknowns     nonzeros
-            0        10000        49600 [52.88%]
-            1         5000        44202 [47.12%]
+             0       10000        49600 [52.88%]
+             1        5000        44202 [47.12%]
         <BLANKLINE>
 
         """
@@ -179,8 +180,8 @@ class MultilevelSolver:
         """Print basic statistics about the multigrid hierarchy."""
         output = 'MultilevelSolver\n'
         output += f'Number of Levels:     {len(self.levels)}\n'
-        output += f'Operator Complexity:  {self.operator_complexity():6.3f}\n'
-        output += f'Grid Complexity:      {self.grid_complexity():6.3f}\n'
+        output += f'Operator Complexity: {self.operator_complexity():6.3f}\n'
+        output += f'Grid Complexity:     {self.grid_complexity():6.3f}\n'
         output += f'Coarse Solver:        {self.coarse_solver.name()}\n'
 
         total_nnz = sum(level.A.nnz for level in self.levels)
@@ -191,7 +192,7 @@ class MultilevelSolver:
         for n, level in enumerate(self.levels):
             A = level.A
             ratio = 100 * A.nnz / total_nnz
-            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [%{ratio:2.2}]\n'
+            output += f'{n:>6} {A.shape[1]:>11} {A.nnz:>12} [{ratio:2.2f}%]\n'
 
         return output
 
@@ -329,7 +330,6 @@ class MultilevelSolver:
         >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
 
         """
-
         shape = self.levels[0].A.shape
         dtype = self.levels[0].A.dtype
 
@@ -358,7 +358,7 @@ class MultilevelSolver:
         accel : string, function
             Defines acceleration method.  Can be a string such as 'cg'
             or 'gmres' which is the name of an iterative solver in
-            pyamg.krylov (preferred) or scipy.sparse.linalg.isolve.
+            pyamg.krylov (preferred) or scipy.sparse.linalg.
             If accel is not a string, it will be treated like a function
             with the same interface provided by the iterative solvers in SciPy.
         callback : function
@@ -403,7 +403,6 @@ class MultilevelSolver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
-
         if x0 is None:
             x = np.zeros_like(b)
         else:
@@ -439,7 +438,7 @@ class MultilevelSolver:
                 if hasattr(krylov, accel):
                     accel = getattr(krylov, accel)
                 else:
-                    accel = getattr(isolve, accel)
+                    accel = getattr(sla, accel)
                     kwargs['atol'] = 'legacy'
 
             M = self.aspreconditioner(cycle=cycle)
@@ -451,7 +450,7 @@ class MultilevelSolver:
                     return x, info
                 return x
             except TypeError:
-                # try the scipy.sparse.linalg.isolve style interface,
+                # try the scipy.sparse.linalg style interface,
                 # which requires a callback function if a residual
                 # history is desired
 
@@ -561,7 +560,7 @@ class MultilevelSolver:
             elif cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
-            elif cycle == "AMLI":
+            elif cycle == 'AMLI':
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
                 nAMLI = 2
@@ -616,7 +615,7 @@ def coarse_grid_solver(solver):
             - Sparse direct methods:
                 + splu : sparse LU solver
             - Sparse iterative methods:
-                + the name of any method in scipy.sparse.linalg.isolve or
+                + the name of any method in scipy.sparse.linalg or
                   pyamg.krylov (e.g. 'cg').
                   Methods in pyamg.krylov take precedence.
                 + relaxation method, such as 'gauss_seidel' or 'jacobi',
@@ -690,7 +689,7 @@ def coarse_grid_solver(solver):
         if hasattr(krylov, solver):
             fn = getattr(krylov, solver)
         else:
-            fn = getattr(sp.sparse.linalg.isolve, solver)
+            fn = getattr(sla, solver)
 
         def solve(_, A, b):
             if 'tol' not in kwargs:
@@ -730,6 +729,7 @@ def coarse_grid_solver(solver):
 
     class GenericSolver:
         """Generic solver class."""
+
         def __call__(self, A, b):
             # make sure x is same dimensions and type as b
             b = np.asanyarray(b)
@@ -764,8 +764,9 @@ def coarse_grid_solver(solver):
 
 class multilevel_solver(MultilevelSolver):  # noqa: N801
     """Deprecated level class."""
-    # only raise deprecation warning on use, not import
+
     def __init__(self, *args, **kwargs):
+        """Raise deprecation warning on use, not import."""
         super().__init__(*args, **kwargs)
-        warn("multilevel_solver is deprectated.  use MultilevelSolver()",
+        warn('multilevel_solver is deprectated.  use MultilevelSolver()',
              category=DeprecationWarning, stacklevel=2)

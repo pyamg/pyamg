@@ -59,7 +59,7 @@ def maximal_independent_set(G, algo='serial', k=None):
             fn = amg_core.maximal_independent_set_parallel
             fn(N, G.indptr, G.indices, -1, 1, 0, mis, np.random.rand(N), -1)
         else:
-            raise ValueError('Unknown algorithm ({algo})')
+            raise ValueError(f'Unknown algorithm ({algo})')
     else:
         fn = amg_core.maximal_independent_set_k_parallel
         fn(N, G.indptr, G.indices, k, mis, np.random.rand(N), -1)
@@ -107,7 +107,7 @@ def vertex_coloring(G, method='MIS'):
         fn = amg_core.vertex_coloring_LDF
         fn(N, G.indptr, G.indices, coloring, np.random.rand(N))
     else:
-        raise ValueError('Unknown method ({method})')
+        raise ValueError(f'Unknown method ({method})')
 
     return coloring
 
@@ -136,8 +136,16 @@ def bellman_ford(G, centers, method='standard'):
 
     See Also
     --------
-    pyamg.amg_core.bellman_ford
-    scipy.sparse.csgraph.bellman_ford
+    pyamg.amg_core.bellman_ford, scipy.sparse.csgraph.bellman_ford
+
+    Notes
+    -----
+    This should be viewed as the transpose of Bellman-Ford in
+    scipy.sparse.csgraph. Here, bellman_ford is used to find the shortest path
+    from any point *to* the seeds. In csgraph, bellman_ford is used to find
+    "the shortest distance from point i to point j".  So csgraph.bellman_ford
+    could be run `for seed in seeds`.  Also note that `test_graph.py` tests
+    against `csgraph.bellman_ford(G.T)`.
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -630,14 +638,14 @@ def breadth_first_search(G, seed):
     >>> import pyamg
     >>> import scipy.sparse as sparse
     >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
-                          [4,6], [4,7], [6,7], [7,8], [8,9]])
+    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
     >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
     >>> c, l = pyamg.graph.breadth_first_search(A, 0)
     >>> print(l)
-    >>> print(c)
     [0 1 1 2 2 3 3 3 4 5]
+    >>> print(c)
     [0 1 2 3 4 5 6 7 8 9]
 
     """
@@ -679,13 +687,13 @@ def connected_components(G):
     Examples
     --------
     >>> from pyamg.graph import connected_components
-    >>> print connected_components( [[0,1,0],[1,0,1],[0,1,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,1],[0,1,0]] ))
     [0 0 0]
-    >>> print connected_components( [[0,1,0],[1,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,1,0],[1,0,0],[0,0,0]] ))
     [0 0 1]
-    >>> print connected_components( [[0,0,0],[0,0,0],[0,0,0]] )
+    >>> print(connected_components( [[0,0,0],[0,0,0],[0,0,0]] ))
     [0 1 2]
-    >>> print connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] )
+    >>> print(connected_components( [[0,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,0]] ))
     [0 0 1 1]
 
     """
@@ -726,19 +734,18 @@ def symmetric_rcm(A):
     >>> A = gallery.sprand(n, n, density, format='csr')
     >>> S = A + A.T
     >>> # try the visualizations
-    >>> import matplotlib.pyplot as plt
-    >>> plt.figure()
-    >>> plt.subplot(121)
-    >>> plt.spy(S,marker='.')
-    >>> plt.subplot(122)
-    >>> plt.spy(symmetric_rcm(S),marker='.')
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.figure()
+    >>> # plt.subplot(121)
+    >>> # plt.spy(S,marker='.')
+    >>> # plt.subplot(122)
+    >>> # plt.spy(symmetric_rcm(S),marker='.')
 
     See Also
     --------
     pseudo_peripheral_node
 
     """
-
     dummy_root, order, dummy_level = pseudo_peripheral_node(A)
 
     p = order[::-1]

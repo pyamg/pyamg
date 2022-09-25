@@ -27,34 +27,42 @@ void printv(T *v, int n, char* name)
 // Internal assert
 inline void coreassert(const bool istrue, const std::string &errormsg){
     if (!istrue){
-        throw std::runtime_error("Hey! pyamg error in amg_core -- " + errormsg);
+        throw std::runtime_error("pyamg-error (amg_core) -- " + errormsg);
     }
 }
 
 /*
- *  Compute a maximal independent set for a graph stored in CSR format
- *  using a greedy serial algorithm
+ * Compute a maximal independent set for a graph stored in CSR format
+ * using a greedy serial algorithm
  *
- *  Parameters
- *  ----------
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     Number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * active : float-like
+ *     Value used for active vertices
+ * C : float-like
+ *     Value used to mark non-MIS vertices
+ * F : float-like
+ *     Value used to mark MIS vertices
+ * x : array, inplace output
+ *     State of each vertex
  *
+ * Returns
+ * -------
+ * N : int
+ *     The number of nodes in the MIS.
  *
- *  Returns
- *      The number of nodes in the MIS.
- *
- *  Notes
- *  -----
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ * Notes
+ * -----
+ * Only the vertices with values with x[i] == active are considered
+ * when determining the MIS.  Upon return, all active vertices will
+ * be assigned the value C or F depending on whether they are in the
+ * MIS or not.
  *
  */
 template<class I, class T>
@@ -91,26 +99,37 @@ I maximal_independent_set_serial(const I num_rows,
  *  using a variant of Luby's parallel MIS algorithm
  *
  *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      active     - value used for active vertices        (input)
- *       C         - value used to mark non-MIS vertices   (output)
- *       F         - value used to mark MIS vertices       (output)
- *      x[]        - state of each vertex
- *      y[]        - random values for each vertex
- *      max_iters  - maximum number of iterations
- *                   by default max_iters=-1 and no limit
- *                   is imposed
+ *  ----------
+ *  num_rows : int
+ *      number of rows in A (number of vertices)
+ *  Ap : array
+ *      CSR row pointer
+ *  Aj : array
+ *      CSR index array
+ *  active : float
+ *      value used for active vertices
+ *  C : float
+ *      value used to mark non-MIS vertices
+ *  F : float
+ *      value used to mark MIS vertices
+ *  x : array, output
+ *      state of each vertex
+ *  y : array
+ *      random values for each vertex
+ *  max_iters : int
+ *      maximum number of iterations By default max_iters=-1 and no limit is imposed
  *
- *  Returns:
+ *  Returns
+ *  -------
+ *  N : int
  *      The number of nodes in the MIS.
  *
- *  Notes:
- *      Only the vertices with values with x[i] == active are considered
- *      when determining the MIS.  Upon return, all active vertices will
- *      be assigned the value C or F depending on whether they are in the
- *      MIS or not.
+ *  Notes
+ *  -----
+ *  Only the vertices with values with x[i] == active are considered
+ *  when determining the MIS.  Upon return, all active vertices will
+ *  be assigned the value C or F depending on whether they are in the
+ *  MIS or not.
  *
  */
 template<class I, class T, class R>
@@ -246,22 +265,29 @@ void vertex_coloring_first_fit(const I num_rows,
 /*
  * Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * x : array, inplace
+ *     color of each vertex
+ * y : array
+ *     initial random values for each vertex
  *
- *  Notes:
- *      Arrays x and y will be overwritten
+ * Notes
+ * -----
+ *     Arrays x and y will be overwritten
  *
- *  References:
- *      Mark T. Jones and Paul E. Plassmann
- *      A Parallel Graph Coloring Heuristic
- *      SIAM Journal on Scientific Computing 14:3 (1993) 654--669
- *      http://citeseer.ist.psu.edu/jones92parallel.html
- *
+ * References
+ * ----------
+ * .. [Jones92] Mark T. Jones and Paul E. Plassmann
+ *    A Parallel Graph Coloring Heuristic
+ *    SIAM Journal on Scientific Computing 14:3 (1993) 654--669
+ *    http://citeseer.ist.psu.edu/jones92parallel.html
  */
 template<class I, class T, class R>
 T vertex_coloring_jones_plassmann(const I num_rows,
@@ -297,18 +323,25 @@ T vertex_coloring_jones_plassmann(const I num_rows,
  * Compute a vertex coloring of a graph using the parallel
  * Largest-Degree-First (LDF) algorithm
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      x[]        - color of each vertex
- *      y[]        - initial random values for each vertex
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * x : array
+ *     color of each vertex
+ * y : array
+ *     initial random values for each vertex
  *
- *   References:
- *     J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
- *     A Comparison of Parallel Graph Coloring Algorithms
- *     DRAFT SCCS-666
- *     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
+ * References
+ * ----------
+ * .. [LDF] J. R. Allwright and R. Bordawekar and P. D. Coddington and K. Dincer and C. L. Martin
+ *    A Comparison of Parallel Graph Coloring Algorithms
+ *    DRAFT SCCS-666
+ *    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650
  *
  */
 template<class I, class T, class R>
@@ -692,6 +725,7 @@ bool bellman_ford_balanced(const I num_nodes,
         if(m[i] < 0){ // if i is unassigned, continue
           continue;
         }
+    }
 
         const I j = Aj[jj];
         const T Aij = Ax[jj];
@@ -711,6 +745,12 @@ bool bellman_ford_balanced(const I num_nodes,
             }
           }
         }
+        // safety check, regular unweighted BF is actually O(|V|.|E|)
+        if (++iteration > num_nodes*num_nodes){
+            throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
+        }
+    } while(change);
+}
 
         if(swap){
           if(m[j] >= 0){     // if part of a cluster
@@ -806,6 +846,7 @@ bool most_interior_nodes(const I num_nodes,
   return changed;
 }
 
+
 /*
  * Propagate (key,value) pairs across a graph in CSR format.
  *
@@ -853,22 +894,33 @@ void csr_propagate_max(const IndexType  num_rows,
 }
 
 /*
- *  Compute a distance-k maximal independent set for a graph stored
- *  in CSR format using a parallel algorithm.  An MIS-k is a set of
- *  vertices such that all vertices in the MIS-k are separated by a
- *  path of at least K+1 edges and no additional vertex can be added
- *  to the set without destroying this property.  A standard MIS
- *  is therefore a MIS-1.
+ * Compute MIS-k.
  *
- *  Parameters
- *      num_rows   - number of rows in A (number of vertices)
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      k          - minimum separation between MIS vertices
- *      x[]        - state of each vertex (1 if in the MIS, 0 otherwise)
- *      y[]        - random values used during parallel MIS algorithm
- *      max_iters  - maximum number of iterations to use (default, no limit)
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * k : int
+ *     minimum separation between MIS vertices
+ * x : array, inplace
+ *     state of each vertex (1 if in the MIS, 0 otherwise)
+ * y : array
+ *     random values used during parallel MIS algorithm
+ * max_iters : int
+ *     maximum number of iterations to use (default, no limit)
  *
+ * Notes
+ * -----
+ * Compute a distance-k maximal independent set for a graph stored
+ * in CSR format using a parallel algorithm.  An MIS-k is a set of
+ * vertices such that all vertices in the MIS-k are separated by a
+ * path of at least K+1 edges and no additional vertex can be added
+ * to the set without destroying this property.  A standard MIS
+ * is therefore a MIS-1.
  */
 template<class I, class T, class R>
 void maximal_independent_set_k_parallel(const I num_rows,
@@ -943,18 +995,25 @@ void maximal_independent_set_k_parallel(const I num_rows,
 }
 
 /*
- *  Compute a breadth first search of a graph in CSR format
- *  beginning at a given seed vertex.
+ * Compute a breadth first search of a graph in CSR format
+ * beginning at a given seed vertex.
  *
- *  Parameters
- *      num_rows         - number of rows in A (number of vertices)
- *      Ap[]             - CSR row pointer
- *      Aj[]             - CSR index array
- *      order[num_rows]  - records the order in which vertices were searched
- *      level[num_rows]  - records the level set of the searched vertices (i.e. the minimum distance to the seed)
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * order : array, num_rows, inplace
+ *     records the order in which vertices were searched
+ * level : array, num_rows, inplace
+ *     records the level set of the searched vertices (i.e. the minimum distance to the seed)
  *
- *  Notes:
- *      The values of the level must be initialized to -1
+ * Notes
+ * -----
+ * The values of the level must be initialized to -1
  *
  */
 template <class I>
@@ -999,17 +1058,23 @@ void breadth_first_search(const I Ap[], const int Ap_size,
 
 
 /*
- *  Compute the connected components of a graph stored in CSR format.
+ * Compute the connected components of a graph stored in CSR format.
  *
- *  Vertices belonging to each component are marked with a unique integer
- *  in the range [0,K), where K is the number of components.
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A (number of vertices)
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * components : array, num_rows
+ *     component labels
  *
- *  Parameters
- *      num_rows             - number of rows in A (number of vertices)
- *      Ap[]                 - CSR row pointer
- *      Aj[]                 - CSR index array
- *      components[num_rows] - component labels
- *
+ * Notes
+ * -----
+ * Vertices belonging to each component are marked with a unique integer
+ * in the range [0,K), where K is the number of components.
  */
 template <class I>
 I connected_components(const I num_nodes,

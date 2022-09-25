@@ -67,7 +67,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
 
     if not sparse.isspmatrix_csr(A):
-        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     dim = V.shape[1]
@@ -176,7 +176,7 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
         blocksize = 1
 
     if not sparse.isspmatrix_csr(A):
-        warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         A = sparse.csr_matrix(A)
 
     if (theta < 0 or theta > 1):
@@ -186,14 +186,15 @@ def classical_strength_of_connection(A, theta=0.0, norm='abs'):
     Sj = np.empty_like(A.indices)
     Sx = np.empty_like(A.data)
 
+    if norm not in ('abs', 'min'):
+        raise ValueError('Unknown norm')
+
     if norm == 'abs':
         amg_core.classical_strength_of_connection_abs(
             A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     elif norm == 'min':
         amg_core.classical_strength_of_connection_min(
             A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
-    else:
-        raise ValueError('Unknown norm')
 
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
@@ -275,6 +276,9 @@ def symmetric_strength_of_connection(A, theta=0):
     if theta < 0:
         raise ValueError('expected a positive theta')
 
+    if not sparse.isspmatrix_csr(A) and not sparse.isspmatrix_bsr(A):
+        raise TypeError('expected csr_matrix or bsr_matrix')
+
     if sparse.isspmatrix_csr(A):
         # if theta == 0:
         #     return A
@@ -307,8 +311,6 @@ def symmetric_strength_of_connection(A, theta=0):
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
-    else:
-        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
@@ -371,8 +373,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     >>> from pyamg.strength import energy_based_strength_of_connection
     >>> n=3
     >>> stencil =  np.array([[-1.0,-1.0,-1.0],
-    ...                        [-1.0, 8.0,-1.0],
-    ...                        [-1.0,-1.0,-1.0]])
+    ...                      [-1.0, 8.0,-1.0],
+    ...                      [-1.0,-1.0,-1.0]])
     >>> A = stencil_grid(stencil, (n,n), format='csr')
     >>> S = energy_based_strength_of_connection(A, 0.0)
 
@@ -416,22 +418,23 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
     S = sparse.csc_matrix(A.shape, dtype=A.dtype)  # empty matrix
     Id = sparse.eye(A.shape[0], A.shape[1], format='csc')
-    for i in range(k + 1):
+    for _i in range(k + 1):
         S = S + omega * (Dinv * (Id - A * S))
 
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
         v = S[:, i].toarray()
-        Av = A.dot(v)
-        denom = np.sqrt(np.dot(v.conj(), Av))
+        v = v.ravel()
+        Av = A @ v
+        denom = np.sqrt(np.inner(v.conj(), Av))
         # replace entries in row i with strength values
         for j in range(Atilde.indptr[i], Atilde.indptr[i + 1]):
             col = Atilde.indices[j]
             vj = v[col].copy()
             v[col] = 0.0
             #   =  (||v_j||_A - ||v||_A) / ||v||_A
-            val = np.sqrt(np.dot(v.conj(), A.dot(v))) / denom - 1.0
+            val = np.sqrt(np.inner(v.conj(), A @ v)) / denom - 1.0
 
             # Negative values generally imply a weak connection
             if val > -0.01:
@@ -466,15 +469,15 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 @np.deprecate
-def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type="l2",
+def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
                                block_flag=False, symmetrize_measure=True):
-    """(deprecated) Use evolution_strength_of_connection instead."""
+    """Use evolution_strength_of_connection instead (deprecated)."""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 
 
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
-                                     proj_type="l2", block_flag=False,
+                                     proj_type='l2', block_flag=False,
                                      symmetrize_measure=True):
     """Evolution Strength Measure.
 
@@ -526,13 +529,13 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # ====================================================================
     # Check inputs
     if epsilon < 1.0:
-        raise ValueError("expected epsilon > 1.0")
+        raise ValueError('expected epsilon > 1.0')
     if k <= 0:
-        raise ValueError("number of time steps must be > 0")
+        raise ValueError('number of time steps must be > 0')
     if proj_type not in ['l2', 'D_A']:
-        raise ValueError("proj_type must be 'l2' or 'D_A'")
+        raise ValueError('proj_type must be "l2" or "D_A"')
     if (not sparse.isspmatrix_csr(A)) and (not sparse.isspmatrix_bsr(A)):
-        raise TypeError("expected csr_matrix or bsr_matrix")
+        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # ====================================================================
     # Format A and B correctly.
@@ -584,10 +587,10 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
     # Calculate D_A for later use in the minimization problem
-    if proj_type == "D_A":
+    if proj_type == 'D_A':
         D_A = sparse.spdiags([D], [0], dimen, dimen, format='csr')
     else:
-        D_A = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
+        D_A = sparse.eye(dimen, dimen, format='csr', dtype=A.dtype)
 
     # Calculate (I - delta_t Dinv A)^k
     #      In order to later access columns, we calculate the transpose in
@@ -598,7 +601,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     ninc = k - 2**nsquare
 
     # Calculate one time step
-    Id = sparse.eye(dimen, dimen, format="csr", dtype=A.dtype)
+    Id = sparse.eye(dimen, dimen, format='csr', dtype=A.dtype)
     Atilde = (Id - (1.0 / rho_DinvA) * Dinv_A)
     Atilde = Atilde.T.tocsr()
 
@@ -620,15 +623,15 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     # a very efficient computational short-cut.  Otherwise, we support
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0:
-        warn("The most efficient time stepping for the Evolution Strength "
-             "Method is done in powers of two.\nYou have chosen " + str(k) + " time steps.")
+        warn('The most efficient time stepping for the Evolution Strength '
+             f'Method is done in powers of two.\nYou have chosen {k} time steps.')
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
-        for i in range(nsquare):
+        for _i in range(nsquare):
             Atilde = Atilde * Atilde
 
         JacobiStep = (Id - (1.0 / rho_DinvA) * Dinv_A).T.tocsr()
-        for i in range(ninc):
+        for _i in range(ninc):
             Atilde = Atilde * JacobiStep
         del JacobiStep
 
@@ -651,7 +654,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     else:
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
         # Calculate Atilde^k only at the sparsity pattern of mask.
-        for i in range(nsquare - 1):
+        for _i in range(nsquare - 1):
             Atilde = Atilde * Atilde
 
         # Call incomplete mat-mat mult
@@ -784,7 +787,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde = 0.5 * (Atilde + Atilde.T)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    Id = sparse.eye(dimen, dimen, format="csr")
+    Id = sparse.eye(dimen, dimen, format='csr')
     Id.data -= Atilde.diagonal()
     Atilde = Atilde + Id
 

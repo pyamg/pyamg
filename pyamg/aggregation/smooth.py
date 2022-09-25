@@ -10,6 +10,7 @@ from ..util.utils import scale_rows, get_diagonal, get_block_diag, \
     unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
     truncate_rows
 from ..util.linalg import approximate_spectral_radius
+from ..util import upcast
 
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
@@ -110,21 +111,21 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
-    matrix([[ 1.,  0.],
-            [ 1.,  0.],
-            [ 1.,  0.],
-            [ 0.,  1.],
-            [ 0.,  1.],
-            [ 0.,  1.]])
+    array([[1., 0.],
+           [1., 0.],
+           [1., 0.],
+           [0., 1.],
+           [0., 1.],
+           [0., 1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = jacobi_prolongation_smoother(A,T,A,np.ones((2,1)))
     >>> P.toarray()
-    matrix([[ 0.64930164,  0.        ],
-            [ 1.        ,  0.        ],
-            [ 0.64930164,  0.35069836],
-            [ 0.35069836,  0.64930164],
-            [ 0.        ,  1.        ],
-            [ 0.        ,  0.64930164]])
+    array([[0.64930164, 0.        ],
+           [1.        , 0.        ],
+           [0.64930164, 0.35069836],
+           [0.35069836, 0.64930164],
+           [0.        , 1.        ],
+           [0.        , 0.64930164]])
 
     """
     # preprocess weighting
@@ -240,21 +241,21 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
-    matrix([[ 1.,  0.],
-            [ 1.,  0.],
-            [ 1.,  0.],
-            [ 0.,  1.],
-            [ 0.,  1.],
-            [ 0.,  1.]])
+    array([[1., 0.],
+           [1., 0.],
+           [1., 0.],
+           [0., 1.],
+           [0., 1.],
+           [0., 1.]])
     >>> A = poisson((6,),format='csr')
     >>> P = richardson_prolongation_smoother(A,T)
     >>> P.toarray()
-    matrix([[ 0.64930164,  0.        ],
-            [ 1.        ,  0.        ],
-            [ 0.64930164,  0.35069836],
-            [ 0.35069836,  0.64930164],
-            [ 0.        ,  1.        ],
-            [ 0.        ,  0.64930164]])
+    array([[0.64930164, 0.        ],
+           [1.        , 0.        ],
+           [0.64930164, 0.35069836],
+           [0.35069836, 0.64930164],
+           [0.        , 1.        ],
+           [0.        , 0.64930164]])
 
     """
     weight = omega/approximate_spectral_radius(S)
@@ -529,8 +530,8 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
-        print("Error in sa_energy_min(..).  Initial R no nonzeros on a level. \
-               Returning tentative prolongator\n")
+        print('Error in sa_energy_min(..).  Initial R no nonzeros on a level. '
+              'Returning tentative prolongator')
         return T
 
     # Calculate Frobenius norm of the residual
@@ -699,7 +700,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                            shape=(pattern.shape))
 
     # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
-    xtype = sparse.sputils.upcast(A.dtype, T.dtype, B.dtype)
+    xtype = upcast(A.dtype, T.dtype, B.dtype)
     Q = []      # Givens Rotations
     V = []      # Krylov Space
     # vs = []     # vs store the pointers to each column of V for speed
@@ -965,23 +966,23 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
     >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
-    >>> print T.toarray()
-    [[ 1.  0.]
-     [ 1.  0.]
-     [ 1.  0.]
-     [ 0.  1.]
-     [ 0.  1.]
-     [ 0.  1.]]
+    >>> print(T.toarray())
+    [[1. 0.]
+     [1. 0.]
+     [1. 0.]
+     [0. 1.]
+     [0. 1.]
+     [0. 1.]]
     >>> A = poisson((6,),format='csr')
     >>> B = np.ones((2,1),dtype=float)
     >>> P = energy_prolongation_smoother(A,T,A,B, None, (False,{}))
-    >>> print P.toarray()
-    [[ 1.          0.        ]
-     [ 1.          0.        ]
-     [ 0.66666667  0.33333333]
-     [ 0.33333333  0.66666667]
-     [ 0.          1.        ]
-     [ 0.          1.        ]]
+    >>> print(P.toarray())
+    [[1.         0.        ]
+     [1.         0.        ]
+     [0.66666667 0.33333333]
+     [0.33333333 0.66666667]
+     [0.         1.        ]
+     [0.         1.        ]]
 
     References
     ----------
@@ -1008,27 +1009,27 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     elif sparse.isspmatrix_bsr(A):
         pass
     else:
-        raise TypeError("A must be csr_matrix or bsr_matrix")
+        raise TypeError('A must be csr_matrix or bsr_matrix')
 
     if sparse.isspmatrix_csr(T):
         T = T.tobsr(blocksize=(1, 1), copy=False)
     elif sparse.isspmatrix_bsr(T):
         pass
     else:
-        raise TypeError("T must be csr_matrix or bsr_matrix")
+        raise TypeError('T must be csr_matrix or bsr_matrix')
 
     if T.blocksize[0] != A.blocksize[0]:
-        raise ValueError("T row-blocksize should be the same as A blocksize")
+        raise ValueError('T row-blocksize should be the same as A blocksize')
 
     if B.shape[0] != T.shape[1]:
-        raise ValueError("B is the candidates for the coarse grid. \
-                            num_rows(b) = num_cols(T)")
+        raise ValueError('B is the candidates for the coarse grid. '
+                         '  num_rows(b) = num_cols(T)')
 
     if min(T.nnz, A.nnz) == 0:
         return T
 
     if not sparse.isspmatrix_csr(Atilde):
-        raise TypeError("Atilde must be csr_matrix")
+        raise TypeError('Atilde must be csr_matrix')
 
     if prefilter is None:
         prefilter = {}
@@ -1078,7 +1079,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         elif 'theta' in prefilter:
             pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
-            raise ValueError("Unrecognized prefilter option")
+            raise ValueError('Unrecognized prefilter option')
 
         # unamal returns a BSR matrix with 1's in the nonzero locations
         pattern = unamal(pattern, T.blocksize[0], T.blocksize[1])
@@ -1097,7 +1098,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         elif 'theta' in prefilter:
             pattern = filter_matrix_rows(pattern, prefilter['theta'])
         elif len(prefilter) > 0:
-            raise ValueError("Unrecognized prefilter option")
+            raise ValueError('Unrecognized prefilter option')
 
         pattern.data[:] = 1.0
         pattern.sort_indices()
@@ -1160,7 +1161,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     elif 'theta' in postfilter:
         T_filter = filter_matrix_rows(T, postfilter['theta'])
     else:
-        raise ValueError("Unrecognized postfilter option")
+        raise ValueError('Unrecognized postfilter option')
 
     # Re-smooth T_filter and re-fit the modes B into the span.
     # Note, we set 'secondpass', because this is the second

@@ -31,24 +31,24 @@ def standard_aggregation(C):
     >>> from pyamg.aggregation.aggregate import standard_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> standard_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
-    matrix([[1, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
+    array([[1, 0, 0],
+           [0, 1, 1],
+           [0, 1, 1]])
     >>> standard_aggregation(A)[0].toarray() # one aggregate
-    matrix([[0],
-            [1],
-            [1]], dtype=int8)
+    array([[0],
+           [1],
+           [1]], dtype=int8)
 
     See Also
     --------
@@ -117,24 +117,24 @@ def naive_aggregation(C):
     >>> from pyamg.aggregation.aggregate import naive_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> naive_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
     >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
-    matrix([[1, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
+    array([[1, 0, 0],
+           [0, 1, 1],
+           [0, 1, 1]])
     >>> naive_aggregation(A)[0].toarray() # two aggregates
-    matrix([[1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
+    array([[1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
 
     See Also
     --------
@@ -220,15 +220,17 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
     >>> A.toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
     >>> lloyd_aggregation(A)[0].toarray() # one aggregate
-    matrix([[1],
-            [1],
-            [1],
-            [1]], dtype=int8)
+    array([[1],
+           [1],
+           [1],
+           [1]], dtype=int8)
+    >>> # more seeding for two aggregates
+    >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
     """
     C = sparse.csr_matrix(C)

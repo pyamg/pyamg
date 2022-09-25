@@ -1,8 +1,8 @@
+"""Test Laplacian example."""
 import numpy as np
+from numpy.testing import TestCase, assert_equal, assert_almost_equal
 from scipy.linalg import eigvals
 from pyamg.gallery.laplacian import poisson, gauge_laplacian
-
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
 
 
 class TestPoisson(TestCase):
@@ -88,4 +88,4 @@ class TestGaugeLaplacian(TestCase):
                 # zero imaginary part
                 assert_almost_equal(min(np.abs(np.imag(e))), 0.0)
                 # positive real part
-                assert(min(np.real(e)) > 0.0)
+                assert min(np.real(e)) > 0.0

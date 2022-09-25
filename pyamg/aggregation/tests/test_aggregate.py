@@ -1,11 +1,11 @@
+"""Test aggregation methods."""
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_equal
+from scipy import sparse
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import symmetric_strength_of_connection
 from pyamg.aggregation.aggregate import standard_aggregation, naive_aggregation
-
-from numpy.testing import TestCase, assert_equal
 
 
 class TestAggregate(TestCase):
@@ -147,7 +147,7 @@ def reference_standard_aggregation(C):
                 aggregates[x] = j
             j += 1
 
-    assert(len(R) == 0)
+    assert len(R) == 0
 
     Pj = aggregates
     Pp = np.arange(n+1)
@@ -180,7 +180,7 @@ def reference_naive_aggregation(C):
         else:
             pass
 
-    assert(np.unique(R).shape[0] == n)
+    assert np.unique(R).shape[0] == n
 
     Pj = aggregates
     Pp = np.arange(n+1)

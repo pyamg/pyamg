@@ -4,9 +4,9 @@ import warnings
 from warnings import warn
 import numpy as np
 from scipy import sparse
-from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.linalg.interface import aslinearoperator
-from pyamg.util.linalg import norm
+from scipy.sparse.linalg import aslinearoperator
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -60,21 +60,21 @@ def cgne(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cgne import cgne
+    >>> from pyamg.krylov import cgne
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cgne(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    46.1547104367
+    >>> print(f'{norm(b - A*x):.6}')
+    46.1547
 
     References
     ----------

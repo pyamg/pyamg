@@ -26,10 +26,8 @@ def demo():
     del x
 
     # Compute relative residuals
-    standalone_residuals = \
-        np.array(standalone_residuals) / standalone_residuals[0]
-    accelerated_residuals = \
-        np.array(accelerated_residuals) / accelerated_residuals[0]
+    standalone_residuals = np.array(standalone_residuals) / standalone_residuals[0]
+    accelerated_residuals = np.array(accelerated_residuals) / accelerated_residuals[0]
 
     # Compute (geometric) convergence factors
     factor1 = standalone_residuals[-1]**(1.0/len(standalone_residuals))
@@ -45,11 +43,9 @@ def demo():
         plt.title('Convergence History')
         plt.xlabel('Iteration')
         plt.ylabel('Relative Residual')
-        plt.semilogy(standalone_residuals, label='Standalone',
-                     linestyle='-', marker='o')
-        plt.semilogy(accelerated_residuals, label='Accelerated',
-                     linestyle='-', marker='s')
+        plt.semilogy(standalone_residuals, label='Standalone', linestyle='-', marker='o')
+        plt.semilogy(accelerated_residuals, label='Accelerated', linestyle='-', marker='s')
         plt.legend()
         plt.show()
     except ImportError:
-        print("\nNote: matplotlib is needed for plotting.")
+        print('\nNote: matplotlib is needed for plotting.')

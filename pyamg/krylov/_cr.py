@@ -4,9 +4,9 @@ import warnings
 from warnings import warn
 
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy import sparse
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def cr(A, b, x0=None, tol=1e-5, criteria='rr',
@@ -58,21 +58,21 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cr import cr
+    >>> from pyamg.krylov import cr
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cr(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A @ x)
-    10.9370700187
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -189,7 +189,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if zz == 0.0:
             # rz == 0.0 is an indicator of convergence when r = 0.0
-            warn("\nSingular preconditioner detected in CR, ceasing iterations\n")
+            warn('\nSingular preconditioner detected in CR, ceasing iterations\n')
             return (postprocess(x), -1)
 
         if it == maxiter:

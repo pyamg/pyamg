@@ -54,10 +54,36 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     >>> import scipy as sp
     >>> from pyamg.gallery.diffusion import diffusion_stencil_2d
     >>> sten = diffusion_stencil_2d(epsilon=0.0001,theta=sp.pi/6,type='FD')
-    >>> print sten
+    >>> print(sten)
     [[-0.2164847 -0.750025   0.2164847]
      [-0.250075   2.0002    -0.250075 ]
      [ 0.2164847 -0.750025  -0.2164847]]
+
+    Considered a 2 x 4 grid
+    x--x--x
+    |  |  |
+    x--x--x
+    |  |  |
+    x--x--x
+    |  |  |
+    x--x--x
+    The first dimension of the stencil defines
+    >>> nx, ny = (2, 4)
+    >>> sten = pyamg.gallery.diffusion_stencil_2d(epsilon=0.1, type='FD')
+    >>> A = pyamg.gallery.stencil_grid(sten, (nx, ny)).toarray()
+    >>> print(sten)
+        [[-0.  -1.   0. ]
+         [-0.1  2.2 -0.1]
+         [ 0.  -1.  -0. ]]
+    >>> print(A)
+        [[ 2.2 -0.1  0.   0.  -1.   0.   0.   0. ]
+         [-0.1  2.2 -0.1  0.   0.  -1.   0.   0. ]
+         [ 0.  -0.1  2.2 -0.1  0.   0.  -1.   0. ]
+         [ 0.   0.  -0.1  2.2  0.   0.   0.  -1. ]
+         [-1.   0.   0.   0.   2.2 -0.1  0.   0. ]
+         [ 0.  -1.   0.   0.  -0.1  2.2 -0.1  0. ]
+         [ 0.   0.  -1.   0.   0.  -0.1  2.2 -0.1]
+         [ 0.   0.   0.  -1.   0.   0.  -0.1  2.2]]
 
     """
     eps = float(epsilon)  # for brevity
@@ -252,7 +278,7 @@ def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,
     >>> import scipy as sp
     >>> from pyamg.gallery.diffusion import diffusion_stencil_2d
     >>> sten = diffusion_stencil_2d(epsilon=0.0001,theta=sp.pi/6,type='FD')
-    >>> print sten
+    >>> print(sten)
     [[-0.2164847 -0.750025   0.2164847]
      [-0.250075   2.0002    -0.250075 ]
      [ 0.2164847 -0.750025  -0.2164847]]

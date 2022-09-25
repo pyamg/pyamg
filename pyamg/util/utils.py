@@ -5,7 +5,6 @@ from warnings import warn
 import numpy as np
 from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
-from scipy.sparse.sputils import upcast
 from scipy.linalg import eigvals
 
 try:
@@ -14,6 +13,21 @@ try:
 except ImportError:
     from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
                                           csr_scale_columns, bsr_scale_columns)
+
+try:
+    # scipy >=1.8
+    # pylint: disable=unused-import
+    from scipy.sparse.linalg._isolve.utils import make_system
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.linalg.isolve.utils import make_system  # noqa: F401
+
+try:
+    # scipy >=1.8
+    from scipy.sparse._sputils import upcast
+except ImportError:
+    # scipy <1.8
+    from scipy.sparse.sputils import upcast
 
 from .. import amg_core
 from . import linalg
@@ -101,10 +115,10 @@ def diag_sparse(A):
     >>> import numpy as np
     >>> from pyamg.util.utils import diag_sparse
     >>> d = 2.0*np.ones((3,)).ravel()
-    >>> print diag_sparse(d).toarray()
-    [[ 2.  0.  0.]
-     [ 0.  2.  0.]
-     [ 0.  0.  2.]]
+    >>> print(diag_sparse(d).toarray())
+    [[2. 0. 0.]
+     [0. 2. 0.]
+     [0. 0. 2.]]
 
     """
     if isspmatrix(A):
@@ -229,12 +243,12 @@ def scale_columns(A, v, copy=True):
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print scale_columns(A,5*np.ones((A.shape[1],1))).toarray()
-    [[ 10.  -5.   0.   0.]
-     [ -5.  10.  -5.   0.]
-     [  0.  -5.  10.  -5.]
-     [  0.   0.  -5.  10.]
-     [  0.   0.   0.  -5.]]
+    >>> print(scale_columns(A,5*np.ones((A.shape[1],1))).toarray())
+    [[10. -5.  0.  0.]
+     [-5. 10. -5.  0.]
+     [ 0. -5. 10. -5.]
+     [ 0.  0. -5. 10.]
+     [ 0.  0.  0. -5.]]
 
     """
     v = np.ravel(v)
@@ -311,7 +325,7 @@ def symmetric_rescaling(A, copy=True):
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
-    >>> print DAD.toarray()
+    >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
@@ -386,18 +400,18 @@ def symmetric_rescaling_sa(A, B, BH=None):
     >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
-    >>> print DAD.toarray()
+    >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
      [-0.5  1.  -0.5  0.   0. ]
      [ 0.  -0.5  1.  -0.5  0. ]
      [ 0.   0.  -0.5  1.  -0.5]
      [ 0.   0.   0.  -0.5  1. ]]
-    >>> print DB
-    [[ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]
-     [ 1.41421356]]
+    >>> print(DB)
+    [[1.41421356]
+     [1.41421356]
+     [1.41421356]
+     [1.41421356]
+     [1.41421356]]
 
     """
     # rescale A
@@ -410,7 +424,7 @@ def symmetric_rescaling_sa(A, B, BH=None):
     if hasattr(A, 'symmetry'):
         if A.symmetry == 'nonsymmetric':
             if BH is None:
-                raise ValueError("BH should be an n x m array")
+                raise ValueError('BH should be an n x m array')
 
             for i in range(BH.shape[1]):
                 BH[:, i] = np.ravel(BH[:, i])*np.ravel(D_sqrt)
@@ -543,11 +557,11 @@ def get_diagonal(A, norm_eq=False, inv=False):
     >>> from pyamg.gallery import poisson
     >>> A = poisson( (5,), format='csr' )
     >>> D = get_diagonal(A)
-    >>> print D
-    [ 2.  2.  2.  2.  2.]
+    >>> print(D)
+    [2. 2. 2. 2. 2.]
     >>> D = get_diagonal(A, norm_eq=1, inv=True)
-    >>> print D
-    [ 0.2         0.16666667  0.16666667  0.16666667  0.2       ]
+    >>> print(D)
+    [0.2        0.16666667 0.16666667 0.16666667 0.2       ]
 
     """
     # if not isspmatrix(A):
@@ -596,29 +610,29 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
     Examples
     --------
-    >>> from scipy import arange
+    >>> from numpy import arange
     >>> from scipy.sparse import csr_matrix
-    >>> from pyamg.util import get_block_diag
+    >>> from pyamg.util.utils import get_block_diag
     >>> A = csr_matrix(arange(36).reshape(6,6))
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
-    >>> print block_diag_inv
-    [[[  0.   1.]
-      [  6.   7.]]
+    >>> print(block_diag_inv)
+    [[[ 0.  1.]
+      [ 6.  7.]]
     <BLANKLINE>
-     [[ 14.  15.]
-      [ 20.  21.]]
+     [[14. 15.]
+      [20. 21.]]
     <BLANKLINE>
-     [[ 28.  29.]
-      [ 34.  35.]]]
+     [[28. 29.]
+      [34. 35.]]]
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
 
     """
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
-        raise ValueError("Expected square matrix")
+        raise ValueError('Expected square matrix')
     if np.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("blocksize and A.shape must be compatible")
+        raise ValueError('blocksize and A.shape must be compatible')
 
     # If the block diagonal of A already exists, return that
     if hasattr(A, 'block_D_inv') and inv_flag:
@@ -699,20 +713,20 @@ def amalgamate(A, blocksize):
     >>> data = array([1,2,3])
     >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
     >>> A.toarray()
-    matrix([[1, 0, 2, 0],
-            [0, 3, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]])
+    array([[1, 0, 2, 0],
+           [0, 3, 0, 0],
+           [0, 0, 0, 0],
+           [0, 0, 0, 0]])
     >>> amalgamate(A,2).toarray()
-    matrix([[ 1.,  1.],
-            [ 0.,  0.]])
+    array([[1., 1.],
+           [0., 0.]])
 
     """
     if blocksize == 1:
         return A
 
     if np.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("Incompatible blocksize")
+        raise ValueError('Incompatible blocksize')
 
     A = A.tobsr(blocksize=(blocksize, blocksize))
     A.sort_indices()
@@ -755,16 +769,16 @@ def unamal(A, rows_per_block, cols_per_block):
     >>> data = array([1,2,3,4,5,6])
     >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
     >>> A.toarray()
-    matrix([[1, 0, 2],
-            [0, 0, 3],
-            [4, 5, 6]])
+    array([[1, 0, 2],
+           [0, 0, 3],
+           [4, 5, 6]])
     >>> unamal(A,2,2).toarray()
-    matrix([[ 1.,  1.,  0.,  0.,  1.,  1.],
-            [ 1.,  1.,  0.,  0.,  1.,  1.],
-            [ 0.,  0.,  0.,  0.,  1.,  1.],
-            [ 0.,  0.,  0.,  0.,  1.,  1.],
-            [ 1.,  1.,  1.,  1.,  1.,  1.],
-            [ 1.,  1.,  1.,  1.,  1.,  1.]])
+    array([[1., 1., 0., 0., 1., 1.],
+           [1., 1., 0., 0., 1., 1.],
+           [0., 0., 0., 0., 1., 1.],
+           [0., 0., 0., 0., 1., 1.],
+           [1., 1., 1., 1., 1., 1.],
+           [1., 1., 1., 1., 1., 1.]])
 
     """
     data = np.ones((A.indices.shape[0], rows_per_block, cols_per_block))
@@ -845,10 +859,10 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     # Print Title
     if len(title) > 0:
-        title = title.split("\n")
+        title = title.split('\n')
         for t in title:
             table_str += str.center(t, ttwidth) + '\n'
-        table_str += "\n"
+        table_str += '\n'
 
     # Choose centering scheme
     centering = centering.lower()
@@ -864,7 +878,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         for elmt, elmtwidth in zip(table[0], colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if table[0] != []:
-            table_str = table_str[:-len(delim)] + '\n'
+            table_str = table_str[:-len(delim)].rstrip() + '\n'
 
         # Append Header Separator
         #              Total Column Width            Total Col Delimiter Widths
@@ -879,7 +893,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         for elmt, elmtwidth in zip(row, colwidths):
             table_str += centering(str(elmt), elmtwidth) + delim
         if row != []:
-            table_str = table_str[:-len(delim)] + '\n'
+            table_str = table_str[:-len(delim)].rstrip() + '\n'
         else:
             table_str += '\n'
 
@@ -914,16 +928,16 @@ def hierarchy_spectrum(mg, filter_entries=True):
     >>> from pyamg.util.utils import hierarchy_spectrum
     >>> A = poisson( (1,), format='csr' )
     >>> ml = smoothed_aggregation_solver(A)
-    >>> hierarchy_spectrum(ml)
+    >>> leveleigs = hierarchy_spectrum(ml)
     <BLANKLINE>
-     Level min(re(eig)) max(re(eig)) num re(eig) < 0 num re(eig) > 0 cond_2(A)
-    ---------------------------------------------------------------------------
-       0      2.000        2.000            0               1         1.00e+00
+     Level | min(re(eig)) | max(re(eig)) | num re(eig) < 0 | num re(eig) > 0 | cond_2(A)
+    -------------------------------------------------------------------------------------
+       0   |    2.000     |    2.000     |        0        |        1        |  1.00e+00
     <BLANKLINE>
     <BLANKLINE>
-     Level min(im(eig)) max(im(eig)) num im(eig) < 0 num im(eig) > 0 cond_2(A)
-    ---------------------------------------------------------------------------
-       0      0.000        0.000            0               0         1.00e+00
+     Level | min(im(eig)) | max(im(eig)) | num im(eig) < 0 | num im(eig) > 0 | cond_2(A)
+    -------------------------------------------------------------------------------------
+       0   |    0.000     |    0.000     |        0        |        0        |  1.00e+00
     <BLANKLINE>
 
     """
@@ -1030,9 +1044,7 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
                          'spatial location,i.e. ndof = [1 | 3 | 6]. '
                          f'You have entered {ndof}.')
 
-    if((max(x.shape) != nnodes)
-       or (max(y.shape) != nnodes)
-       or (max(z.shape) != nnodes)):
+    if (max(x.shape) != nnodes) or (max(y.shape) != nnodes) or (max(z.shape) != nnodes):
         raise ValueError('coord_to_rbm(...) requires coordinate vectors of equal '
                          f'length.  Length must be nnodes = {nnodes}')
 
@@ -1148,12 +1160,12 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     >>> B = ones((3,1))
     >>> Bf = ones((6,1))
     >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).toarray()
-    matrix([[ 0.5,  0.5,  0. ],
-            [ 0.5,  0.5,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  0. ,  1. ],
-            [ 0. ,  0. ,  1. ]])
+    array([[0.5, 0.5, 0. ],
+           [0.5, 0.5, 0. ],
+           [0. , 1. , 0. ],
+           [0. , 1. , 0. ],
+           [0. , 0. , 1. ],
+           [0. , 0. , 1. ]])
 
     """
     # First preprocess the parameters
@@ -1276,33 +1288,33 @@ def scale_T(T, P_I, I_F):
     Examples
     --------
     >>> from scipy.sparse import csr_matrix, bsr_matrix
-    >>> from scipy import matrix, array
+    >>> import numpy as np
     >>> from pyamg.util.utils import scale_T
-    >>> T = matrix([[ 1.0,  0.,   0. ],
-    ...             [ 0.5,  0.,   0. ],
-    ...             [ 0. ,  1.,   0. ],
-    ...             [ 0. ,  0.5,  0. ],
-    ...             [ 0. ,  0.,   1. ],
-    ...             [ 0. ,  0.,   0.25 ]])
-    >>> P_I = matrix([[ 0.,  0.,   0. ],
-    ...               [ 1.,  0.,   0. ],
-    ...               [ 0.,  1.,   0. ],
-    ...               [ 0.,  0.,   0. ],
-    ...               [ 0.,  0.,   0. ],
-    ...               [ 0.,  0.,   1. ]])
-    >>> I_F = matrix([[ 1.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  1.,  0.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  1.,  0.],
-    ...               [ 0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> T = np.array([[ 1.0,  0.,   0. ],
+    ...               [ 0.5,  0.,   0. ],
+    ...               [ 0. ,  1.,   0. ],
+    ...               [ 0. ,  0.5,  0. ],
+    ...               [ 0. ,  0.,   1. ],
+    ...               [ 0. ,  0.,   0.25 ]])
+    >>> P_I = np.array([[ 0.,  0.,   0. ],
+    ...                 [ 1.,  0.,   0. ],
+    ...                 [ 0.,  1.,   0. ],
+    ...                 [ 0.,  0.,   0. ],
+    ...                 [ 0.,  0.,   0. ],
+    ...                 [ 0.,  0.,   1. ]])
+    >>> I_F = np.array([[ 1.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  1.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  1.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.]])
     >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).toarray()
-    matrix([[ 2. ,  0. ,  0. ],
-            [ 1. ,  0. ,  0. ],
-            [ 0. ,  1. ,  0. ],
-            [ 0. ,  0.5,  0. ],
-            [ 0. ,  0. ,  4. ],
-            [ 0. ,  0. ,  1. ]])
+    array([[2. , 0. , 0. ],
+           [1. , 0. , 0. ],
+           [0. , 1. , 0. ],
+           [0. , 0.5, 0. ],
+           [0. , 0. , 4. ],
+           [0. , 0. , 1. ]])
 
     Notes
     -----
@@ -1413,16 +1425,16 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     >>> T = AggOp.copy().tobsr()
     >>> params = get_Cpt_params(A, Cpts, AggOp, T)
     >>> params['P_I'].toarray()
-    matrix([[ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 1.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  0.],
-            [ 0.,  1.],
-            [ 0.,  0.],
-            [ 0.,  0.]])
+    array([[0., 0.],
+           [0., 0.],
+           [0., 0.],
+           [1., 0.],
+           [0., 0.],
+           [0., 0.],
+           [0., 0.],
+           [0., 1.],
+           [0., 0.],
+           [0., 0.]])
 
     Notes
     -----
@@ -1540,13 +1552,13 @@ def compute_BtBinv(B, C):
     >>> T = bsr_matrix(T)
     >>> B = array([[1.],[2.]])
     >>> compute_BtBinv(B, T)
-    array([[[ 1.  ]],
+    array([[[1.  ]],
     <BLANKLINE>
-           [[ 1.  ]],
+           [[1.  ]],
     <BLANKLINE>
-           [[ 0.25]],
+           [[0.25]],
     <BLANKLINE>
-           [[ 0.25]]])
+           [[0.25]]])
 
     Notes
     -----
@@ -1641,10 +1653,10 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     >>> A = poisson( (4,), format='csr' )
     >>> C = eliminate_diag_dom_nodes(A, A.copy(), 1.1)
     >>> C.toarray()
-    matrix([[ 1.,  0.,  0.,  0.],
-            [ 0.,  2., -1.,  0.],
-            [ 0., -1.,  2.,  0.],
-            [ 0.,  0.,  0.,  1.]])
+    array([[ 1.,  0.,  0.,  0.],
+           [ 0.,  2., -1.,  0.],
+           [ 0., -1.,  2.,  0.],
+           [ 0.,  0.,  0.,  1.]])
 
     """
     # Find the diagonally dominant rows in A.
@@ -1700,10 +1712,10 @@ def remove_diagonal(S):
     >>> A = poisson( (4,), format='csr' )
     >>> C = remove_diagonal(A)
     >>> C.toarray()
-    matrix([[ 0., -1.,  0.,  0.],
-            [-1.,  0., -1.,  0.],
-            [ 0., -1.,  0., -1.],
-            [ 0.,  0., -1.,  0.]])
+    array([[ 0., -1.,  0.,  0.],
+           [-1.,  0., -1.,  0.],
+           [ 0., -1.,  0., -1.],
+           [ 0.,  0., -1.,  0.]])
 
     """
     if not isspmatrix_csr(S):
@@ -1741,10 +1753,10 @@ def scale_rows_by_largest_entry(S):
     >>> A.data[1] = 5.0
     >>> A = scale_rows_by_largest_entry(A)
     >>> A.toarray()
-    matrix([[ 0.4,  1. ,  0. ,  0. ],
-            [-0.5,  1. , -0.5,  0. ],
-            [ 0. , -0.5,  1. , -0.5],
-            [ 0. ,  0. , -0.5,  1. ]])
+    array([[ 0.4,  1. ,  0. ,  0. ],
+           [-0.5,  1. , -0.5,  0. ],
+           [ 0. , -0.5,  1. , -0.5],
+           [ 0. ,  0. , -0.5,  1. ]])
 
     """
     if not isspmatrix_csr(S):
@@ -1788,7 +1800,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         change these values.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
@@ -1821,7 +1833,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         if to_levelize == 'predefined':
             raise ValueError('predefined to_levelize requires a user-provided '
                              'CSR matrix representing strength or aggregation '
-                             'i.e., (\'predefined\', {\'C\' : CSR_MAT}).')
+                             'i.e., ("predefined", {"C" : CSR_MAT}).')  # noqa: FS003
         to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
@@ -1866,7 +1878,7 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
         at level i.
 
     Notes
-    --------
+    -----
     This routine is needed because the user will pass in a parameter option
     such as smooth='jacobi', or smooth=['jacobi', None], and this option must
     be "levelized", or converted to a list of length max_levels such that entry
@@ -1932,27 +1944,27 @@ def filter_matrix_columns(A, theta):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_columns
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[ 0.24,  1.  ,  0.  ],
     ...                        [-0.5 ,  1.  , -0.5 ],
     ...                        [ 0.  ,  0.49,  1.  ],
     ...                        [ 0.  ,  0.  , -0.5 ]]) )
     >>> filter_matrix_columns(A, 0.5).toarray()
-    matrix([[ 0. ,  1. ,  0. ],
-            [-0.5,  1. , -0.5],
-            [ 0. ,  0. ,  1. ],
-            [ 0. ,  0. , -0.5]])
+    array([[ 0. ,  1. ,  0. ],
+           [-0.5,  1. , -0.5],
+           [ 0. ,  0. ,  1. ],
+           [ 0. ,  0. , -0.5]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each column of A, which is most easily
     # accessed by converting to CSC.  We apply the drop-tolerance with
@@ -2009,26 +2021,26 @@ def filter_matrix_rows(A, theta):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
     ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
     >>> filter_matrix_rows(A, 0.5).toarray()
-    matrix([[ 0. , -0.5,  0. ,  0. ],
-            [ 1. ,  1. ,  0. ,  0. ],
-            [ 0. , -0.5,  1. , -0.5]])
+    array([[ 0. , -0.5,  0. ,  0. ],
+           [ 1. ,  1. ,  0. ,  0. ],
+           [ 0. , -0.5,  1. , -0.5]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
     A = A.tocsr()
 
     if (theta < 0) or (theta >= 1.0):
-        raise ValueError("theta must be in [0,1)")
+        raise ValueError('theta must be in [0,1)')
 
     # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
     # amg_core.classical_strength_of_connection(), which ignores diagonal
@@ -2079,19 +2091,19 @@ def truncate_rows(A, nz_per_row):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import truncate_rows
-    >>> from scipy import array
+    >>> from numpy import array
     >>> from scipy.sparse import csr_matrix
     >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
     ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
     >>> truncate_rows(A, 2).toarray()
-    matrix([[-0.24, -0.5 ,  0.  ,  0.  ],
-            [ 1.  , -1.1 ,  0.  ,  0.  ],
-            [ 0.  ,  0.  ,  1.  ,  0.5 ]])
+    array([[-0.24, -0.5 ,  0.  ,  0.  ],
+           [ 1.  , -1.1 ,  0.  ,  0.  ],
+           [ 0.  ,  0.  ,  1.  ,  0.5 ]])
 
     """
     if not isspmatrix(A):
-        raise ValueError("Sparse matrix input needed")
+        raise ValueError('Sparse matrix input needed')
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     if isspmatrix_csr(A):
