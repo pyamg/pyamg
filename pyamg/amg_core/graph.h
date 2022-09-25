@@ -725,7 +725,6 @@ bool bellman_ford_balanced(const I num_nodes,
         if(m[i] < 0){ // if i is unassigned, continue
           continue;
         }
-    }
 
         const I j = Aj[jj];
         const T Aij = Ax[jj];
@@ -745,12 +744,6 @@ bool bellman_ford_balanced(const I num_nodes,
             }
           }
         }
-        // safety check, regular unweighted BF is actually O(|V|.|E|)
-        if (++iteration > num_nodes*num_nodes){
-            throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
-        }
-    } while(change);
-}
 
         if(swap){
           if(m[j] >= 0){     // if part of a cluster

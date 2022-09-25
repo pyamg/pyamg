@@ -489,8 +489,6 @@ PYBIND11_MODULE(graph, m) {
     center_nodes
     bellman_ford
     bellman_ford_balanced
-    if
-    while
     most_interior_nodes
     maximal_independent_set_k_parallel
     breadth_first_search
