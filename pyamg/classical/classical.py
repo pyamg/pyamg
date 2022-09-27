@@ -28,8 +28,9 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance',
-                'algebraic_distance','affinity', 'energy_based', None]
+    strength : string
+        Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
+        'algebraic_distance','affinity', 'energy_based', None].
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -84,7 +85,6 @@ def ruge_stuben_solver(A,
     --------
     aggregation.smoothed_aggregation_solver, MultilevelSolver,
     aggregation.rootnode_solver
-
     """
     levels = [MultilevelSolver.Level()]
 
@@ -92,7 +92,7 @@ def ruge_stuben_solver(A,
     if not isspmatrix_csr(A):
         try:
             A = csr_matrix(A)
-            warn("Implicit conversion of A to CSR",
+            warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Argument A must have type csr_matrix, '
@@ -142,7 +142,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn is None:
         C = A
     else:
-        raise ValueError('Unrecognized strength of connection method: {str(fn)}')
+        raise ValueError(f'Unrecognized strength of connection method: {fn}')
 
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -159,7 +159,7 @@ def _extend_hierarchy(levels, strength, CF, keep):
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
-        raise ValueError('Unknown C/F splitting method {CF}')
+        raise ValueError(f'Unknown C/F splitting method {CF}')
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid

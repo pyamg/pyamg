@@ -1,5 +1,4 @@
-""" Try creating a point and primal aggregate view for a C/F splitting and
-simple aggregation, respectively."""
+"""Test C/F splitting and simple aggregation vis."""
 
 import tempfile
 import os

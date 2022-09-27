@@ -1,4 +1,4 @@
-"""Aggregation-based AMG"""
+"""Aggregation-based AMG."""
 
 from .adaptive import adaptive_sa_solver
 from .aggregate import (standard_aggregation, naive_aggregation,

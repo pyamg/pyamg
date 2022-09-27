@@ -36,7 +36,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
 
     Returns
     -------
-     writes a .vtu file for use in Paraview
+    writes a .vtu file for use in Paraview
 
     Notes
     -----
@@ -101,8 +101,7 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     >>> pdata=np.ones((12,2))
     >>> pvdata=np.ones((12*3,2))
     >>> cdata={5:np.ones((12,2)),3:np.ones((1,2)),1:np.ones((4,2))}
-    >>> cvdata={5:np.ones((3*12,2)),3:np.ones((3*1,2)),
-                1:np.ones((3*4,2))}
+    >>> cvdata={5:np.ones((3*12,2)),3:np.ones((3*1,2)), 1:np.ones((3*4,2))}
     >>> write_vtu(V=V, cells=cells, fname='test.vtu')
 
     See Also
@@ -204,9 +203,10 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
                 raise ValueError(f'cvdata array cannot be empty for key {key}')
 
     Ncells = 0
-    cell_ind = []
-    cell_offset = []  # np.zeros((Ncells,1),dtype=uint8) # zero indexed
-    cell_type = []    # np.zeros((Ncells,1),dtype=uint8)
+    cell_ind = np.empty((0,), dtype=np.int32)
+    # zero indexed
+    cell_offset = np.empty((0,), dtype='uint8')  # np.zeros((Ncells,1),dtype=uint8)
+    cell_type = np.empty((0,), dtype='uint8')    # np.zeros((Ncells,1),dtype=uint8)
 
     cdata_all = None
     cvdata_all = None
@@ -431,8 +431,8 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     >>> cdata=np.ones((12,2))
     >>> cvdata=np.ones((3*12,2))
     >>> write_basic_mesh(V, E2V=E2V, mesh_type='tri',pdata=pdata,
-                         pvdata=pvdata, cdata=cdata, cvdata=cvdata,
-                         fname='test.vtu')
+    ...                  pvdata=pvdata, cdata=cdata, cvdata=cvdata,
+    ...                  fname='test.vtu')
 
     See Also
     --------
@@ -445,7 +445,7 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     map_type_to_key = {'vertex': 1, 'tri': 5, 'quad': 9, 'tet': 10, 'hex': 12}
 
     if mesh_type not in map_type_to_key:
-        raise ValueError('Unknown mesh_type={mesh_type}')
+        raise ValueError(f'Unknown mesh_type={mesh_type}')
 
     key = map_type_to_key[mesh_type]
 

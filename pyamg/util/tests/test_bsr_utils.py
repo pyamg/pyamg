@@ -1,3 +1,4 @@
+"""Test BSR functions."""
 import numpy as np
 from scipy.sparse import bsr_matrix
 from pyamg.util.bsr_utils import bsr_getrow, bsr_row_setscalar, bsr_row_setvector

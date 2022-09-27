@@ -5,9 +5,9 @@ from warnings import warn
 
 import numpy as np
 import scipy as sp
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import get_blas_funcs, get_lapack_funcs
-from pyamg.util.linalg import norm
+from ..util.linalg import norm
+from ..util import make_system
 
 
 def apply_givens(Q, v, k):
@@ -57,7 +57,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         initial guess, default is a vector of zeros
     tol : float
         Tolerance for stopping criteria, let r=r_k
-           ||M r||     < tol ||M b||
+        ||M r|| < tol ||M b||
         if ||b||=0, then set ||M b||=1 for these tests.
     restrt : None, int
         - if int, restrt is max number of inner iterations
@@ -97,7 +97,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
@@ -116,8 +116,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8, orthog='mgs')
-    >>> print norm(b - A*x)
-    >>> 6.5428213057
+    >>> print(f'{norm(b - A*x):.6}')
+    6.54282
 
     References
     ----------
@@ -162,11 +162,11 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         max_inner = restrt
     else:
         max_outer = 1
-        if maxiter > n:
+        if maxiter is None:
+            maxiter = min(n, 40)
+        elif maxiter > n:
             warn('Setting maxiter to maximum allowed, n.')
             maxiter = n
-        elif maxiter is None:
-            maxiter = min(n, 40)
         max_inner = maxiter
 
     # Is this a one dimensional matrix?
@@ -201,7 +201,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     niter = 0
 
     # Begin GMRES
-    for outer in range(max_outer):  # pylint: disable=unused-variable
+    for _outer in range(max_outer):
 
         # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
         # Space required is O(n*max_inner).

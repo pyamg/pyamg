@@ -1,12 +1,10 @@
-"""Poisson problem with finite elements
-"""
+"""Poisson problem with finite elements."""
 import numpy as np
 from scipy import sparse
 
 
 def check_mesh(V, E):
-    """Check the ccw orientation of each simplex in the mesh
-    """
+    """Check the ccw orientation of each simplex in the mesh."""
     E01 = np.vstack((V[E[:, 1], 0] - V[E[:, 0], 0],
                      V[E[:, 1], 1] - V[E[:, 0], 1],
                      np.zeros(E.shape[0]))).T
@@ -19,7 +17,7 @@ def check_mesh(V, E):
 
 
 def generate_quadratic(V, E, return_edges=False):
-    """Generate a quadratic element list by adding midpoints to each edge
+    """Generate a quadratic element list by adding midpoints to each edge.
 
     Parameters
     ----------
@@ -51,23 +49,24 @@ def generate_quadratic(V, E, return_edges=False):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> V = np.array([[0.,0.], [1.,0.], [0.,1.], [1.,1.]])
     >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> import fem
     >>> V2, E2 = fem.generate_quadratic(V, E)
-    array([[0. , 0. ],
-           [1. , 0. ],
-           [0. , 1. ],
-           [1. , 1. ],
-           [0.5, 0. ],
-           [0.5, 0.5],
-           [0. , 0.5],
-           [0.5, 1. ],
-           [1. , 0.5]])
-    array([[0, 1, 2, 4, 5, 6],
-           [2, 3, 1, 7, 8, 5]])
+    >>> print(V2)
+    [[0.  0. ]
+     [1.  0. ]
+     [0.  1. ]
+     [1.  1. ]
+     [0.5 0. ]
+     [0.5 0.5]
+     [0.  0.5]
+     [0.5 1. ]
+     [1.  0.5]]
+    >>> print(E2)
+    [[0 1 2 4 5 6]
+     [2 3 1 7 8 5]]
     """
-
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
 
@@ -107,7 +106,7 @@ def generate_quadratic(V, E, return_edges=False):
 
 
 def diameter(V, E):
-    """Compute the diameter of a mesh
+    """Compute the diameter of a mesh.
 
     Parameters
     ----------
@@ -149,7 +148,7 @@ def diameter(V, E):
 
 
 def refine2dtri(V, E, marked_elements=None):
-    r"""Refine a triangular mesh
+    r"""Refine a triangular mesh.
 
     Parameters
     ----------
@@ -278,7 +277,7 @@ def refine2dtri(V, E, marked_elements=None):
 
 
 def l2norm(u, mesh):
-    """Calculate the L2 norm of a funciton on mesh (V,E)
+    """Calculate the L2 norm of a funciton on mesh (V,E).
 
     Parameters
     ----------
@@ -301,17 +300,21 @@ def l2norm(u, mesh):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> V = np.array([[0,0], [1,0], [0,1], [1,1]])
-    >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> X, Y = V[:, 0], V[:, 1]
-    >>> import fem
-    >>> I = fem.l2norm(X+Y, V, E, degree=1)
-    >>> print(I)
-    >>> V2, E2 = fem.generate_quadratic(V, E)
-    >>> X, Y = V2[:, 0], V2[:, 1]
-    >>> I = fem.l2norm(X+Y, V2, E2, degree=2)
-    >>> print(I)
-    >>> # actual (from sympy): 1.08012344973464
+    >>> E = np.array([[0,1,2], [1,3,2]])
+    >>> mesh = Mesh(V, E, degree=1)
+    >>> X, Y = mesh.V[:, 0], mesh.V[:, 1]
+    >>> u = X + Y
+    >>> unorm = fem.l2norm(u, mesh)
+    >>> print(f'{unorm:2.6}')
+    1.08012
+    >>> mesh = Mesh(V, E, degree=2)
+    >>> X, Y = mesh.V2[:, 0], mesh.V2[:, 1]
+    >>> u = X + Y
+    >>> unorm = fem.l2norm(u, mesh)
+    >>> print(f'{unorm:2.6}')
+    1.08012
     """
     if mesh.degree == 1:
         V = mesh.V
@@ -387,14 +390,22 @@ def l2norm(u, mesh):
 
 
 class Mesh:
-    """Simple mesh object that holds vertices and mesh functions
-    """
+    """Simple mesh object that holds vertices and mesh functions."""
 
     # pylint: disable=too-many-instance-attributes
     # This is reasonble for this class
 
     def __init__(self, V, E, degree=1):
+        """Initialize mesh.
 
+        Parameters
+        ----------
+        V : ndarray
+            nv x 2 list of coordinates
+
+        E : ndarray
+            ne x 3 list of vertices
+        """
         # check to see if E is numbered 0 ... nv
         ids = np.full((E.max()+1,), False)
         ids[E.ravel()] = True
@@ -430,8 +441,7 @@ class Mesh:
             self.generate_quadratic()
 
     def generate_quadratic(self):
-        """generate a quadratic mesh
-        """
+        """Generate a quadratic mesh."""
         if self.V2 is None:
             self.V2, self.E2, self.Edges = generate_quadratic(self.V, self.E,
                                                               return_edges=True)
@@ -440,7 +450,12 @@ class Mesh:
             self.newID = self.nv + np.arange(self.Edges.shape[0])
 
     def refine(self, levels):
-        """refine the mesh
+        """Refine the mesh.
+
+        Parameters
+        ----------
+        levels : int
+            Number of refinement levels.
         """
         self.V2 = None
         self.E2 = None
@@ -492,7 +507,7 @@ class Mesh:
                      (Vnew[edge0, 1] - Vnew[edge1, 1])**2
 
         maxit = 100
-        for it in range(maxit):
+        for _it in range(maxit):
             Vnew = G @ Vnew
             Vnew /= W[:, None]  # scale the columns by 1/W
             Vnew[bid, :] = self.V[bid, :]
@@ -504,7 +519,26 @@ class Mesh:
                 break
 
         self.V = Vnew
-        return it
+        return _it
+
+
+def _compute_diffusion_matrix(kappa_lmbda, x, y):
+    """Standardize diffusion tensor/scalar.
+
+    This will return an ndarray or a scalar, depending on input.
+    """
+    kappa = kappa_lmbda(x, y)
+
+    if isinstance(kappa, (int, float)):
+        return np.eye(2) * kappa
+
+    if isinstance(kappa, np.ndarray):
+        if kappa.shape == (2, 2):
+            return kappa
+        raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), '
+                         f'received ndarray of shape {kappa.shape}')
+    raise ValueError(f'kappa must return a scalar or ndarray of shape (2,2), '
+                     f'received type {type(kappa)}')
 
 
 def gradgradform(mesh, kappa=None, f=None, degree=1):
@@ -522,8 +556,9 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
+        can either return a scalar value or a 2x2 matrix that transforms <grad u>
 
-    fa : function
+    f : function
         right hand side, f(x,y) with vector input
 
     degree : 1 or 2
@@ -542,52 +577,71 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         - modepy is used to generate the quadrature points
           q = modepy.XiaoGimbutasSimplexQuadrature(4,2)
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
-    >>> import fem
+    >>> from pyamg.gallery import fem
     >>> import scipy.sparse.linalg as sla
     >>> V = np.array(
-        [[  0,  0],
-         [  1,  0],
-         [2*1,  0],
-         [  0,  1],
-         [  1,  1],
-         [2*1,  1],
-         [  0,2*1],
-         [  1,2*1],
-         [2*1,2*1],
-        ])
+    ... [[  0,  0],
+    ...  [  1,  0],
+    ...  [2*1,  0],
+    ...  [  0,  1],
+    ...  [  1,  1],
+    ...  [2*1,  1],
+    ...  [  0,2*1],
+    ...  [  1,2*1],
+    ...  [2*1,2*1]])
     >>> E = np.array(
-        [[0,1,3],
-         [1,2,4],
-         [1,4,3],
-         [2,5,4],
-         [3,4,6],
-         [4,5,7],
-         [4,7,6],
-         [5,8,7]])
-    >>> A, b = fem.poissonfem(V, E)
+    ... [[0, 1, 3],
+    ...  [1, 2, 4],
+    ...  [1, 4, 3],
+    ...  [2, 5, 4],
+    ...  [3, 4, 6],
+    ...  [4, 5, 7],
+    ...  [4, 7, 6],
+    ...  [5, 8, 7]])
+    >>> mesh = Mesh(V, E)
+    >>> A, b = fem.gradgradform(mesh)
     >>> print(A.toarray())
+    [[ 1.  -0.5  0.  -0.5  0.   0.   0.   0.   0. ]
+     [-0.5  2.  -0.5  0.  -1.   0.   0.   0.   0. ]
+     [ 0.  -0.5  1.   0.   0.  -0.5  0.   0.   0. ]
+     [-0.5  0.   0.   2.  -1.   0.  -0.5  0.   0. ]
+     [ 0.  -1.   0.  -1.   4.  -1.   0.  -1.   0. ]
+     [ 0.   0.  -0.5  0.  -1.   2.   0.   0.  -0.5]
+     [ 0.   0.   0.  -0.5  0.   0.   1.  -0.5  0. ]
+     [ 0.   0.   0.   0.  -1.   0.  -0.5  2.  -0.5]
+     [ 0.   0.   0.   0.   0.  -0.5  0.  -0.5  1. ]]
     >>> print(b)
+    [0. 0. 0. 0. 0. 0. 0. 0. 0.]
     >>> f = lambda x, y : 0*x + 1.0
     >>> g = lambda x, y : 0*x + 0.0
     >>> g1 = lambda x, y : 0*x + 1.0
     >>> tol = 1e-12
     >>> X, Y = V[:,0], V[:,1]
-    >>> id1 = np.where(abs(Y) < tol)[0]
-    >>> id2 = np.where(abs(Y-2) < tol)[0]
-    >>> id3 = np.where(abs(X) < tol)[0]
-    >>> id4 = np.where(abs(X-2) < tol)[0]
+    >>> id1 = np.where(abs(Y) < tol)[0]    # north
+    >>> id2 = np.where(abs(Y-2) < tol)[0]  # south
     >>> bc = [{'id': id1, 'g': g},
-              {'id': id2, 'g': g},
-              {'id': id3, 'g': g1},
-              {'id': id4, 'g': g}]
-    >>> A, b = fem.poissonfem(V, E, f=f, bc=bc)
+    ...       {'id': id2, 'g': g}]
+    >>> A, b = fem.gradgradform(mesh, f=f)
+    >>> A, b = fem.applybc(A, b, mesh, bc)
+    >>> A = A.tocsr()
     >>> u = sla.spsolve(A, b)
     >>> print(A.toarray())
+    [[ 1.  0.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  1.  0.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  1.  0.  0.  0.  0.  0.  0.]
+     [ 0.  0.  0.  2. -1.  0.  0.  0.  0.]
+     [ 0.  0.  0. -1.  4. -1.  0.  0.  0.]
+     [ 0.  0.  0.  0. -1.  2.  0.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  1.  0.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  1.  0.]
+     [ 0.  0.  0.  0.  0.  0.  0.  0.  1.]]
     >>> print(b)
+    [0.  0.  0.  0.5 1.  0.5 0.  0.  0. ]
     >>> print(u)
+    [0.  0.  0.  0.5 0.5 0.5 0.  0.  0. ]
     """
     if degree not in [1, 2]:
         raise ValueError('degree = 1 or 2 supported')
@@ -647,7 +701,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
             dphi = invJ.dot(dbasis)
 
             # Step 5, 1-point gauss quadrature
-            Aelem = kappa(X[K].mean(), Y[K].mean()) * (detJ / 2.0) * (dphi.T).dot(dphi)
+            kappaelem = _compute_diffusion_matrix(kappa, X[K].mean(), Y[K].mean())
+            Aelem = (detJ / 2.0) * dphi.T @ kappaelem @ dphi
 
             # Step 6, 1-point gauss quadrature
             belem = f(X[K].mean(), Y[K].mean()) * (detJ / 6.0) * np.ones((3,))
@@ -686,7 +741,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
                 # Step 5
                 xt, yt = J.dot(np.array([x, y])) + np.array([x0, y0])
-                Aelem += (detJ / 2) * w * kappa(xt, yt) * dphi.T.dot(dphi)
+                kappaelem = _compute_diffusion_matrix(kappa, xt, yt)
+                Aelem += (detJ / 2) * w * dphi.T @ kappaelem @ dphi
 
                 # Step 6
                 belem += (detJ / 2) * w * f(xt, yt) * basis
@@ -709,8 +765,17 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
 
 def divform(mesh):
-    """Calculate the (div u , p) form that arises in Stokes
-       assumes P2-P1 elements
+    """Calculate the (div u , p) form that arises in Stokes assumes P2-P1 elements.
+
+    Parameters
+    ----------
+    mesh : Mesh
+        Mesh object
+
+    Returns
+    -------
+    BX, BY : ndarray
+        div block B = [BX, BY].T in [[A, B], [B.T 0]]
     """
     if mesh.V2 is None:
         mesh.generate_quadratic()
@@ -791,7 +856,16 @@ def divform(mesh):
 
 
 def applybc(A, b, mesh, bc, remove_dirichlet=False):
-    """
+    """Apply boundary conditions.
+
+    Parameters
+    ----------
+    A : sparse matrix
+        Fully assembled sparse matrix
+    b : ndarray
+        Fully assembled right-hand side
+    mesh : Mesh
+        Mesh object
     bc : list
        list of boundary conditions
        bc = [bc1, bc2, ..., bck]
@@ -800,8 +874,14 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
                    'var': var    the variable, given as a start in the dof list
                 'degree': degree degree of the variable, either 1 or 2
                    }
-    """
 
+    Returns
+    -------
+    A : sparse matrix
+        Modified, assembled sparse matrix
+    b : ndarray
+        Modified, assembled right-hand side
+    """
     for c in bc:
         if not callable(c['g']):
             raise ValueError('each bc g must be callable functions')
@@ -870,8 +950,7 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
 
 
 def stokes(mesh, fu, fv):
-    """Stokes Flow
-    """
+    """Stokes Flow."""
     mesh.generate_quadratic()
     Au, bu = gradgradform(mesh, f=fu, degree=2)
     Av, bv = gradgradform(mesh, f=fv, degree=2)
@@ -886,15 +965,15 @@ def stokes(mesh, fu, fv):
 
 
 def model(num=0):
-    """A list of model (elliptic) problems
+    """Construct model elliptic problem.
 
     Parameters
     ----------
     num : int or string
         A tag for a particular problem.  See the notes below.
 
-    Return
-    ------
+    Returns
+    -------
     A
     b
     V
@@ -909,5 +988,4 @@ def model(num=0):
     Notes
     -----
     """
-    print(num)
-    raise NotImplementedError('model is unimplemented')
+    raise NotImplementedError(f'model (num={num}) is unimplemented')

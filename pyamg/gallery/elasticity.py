@@ -54,7 +54,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     if len(grid) == 2:
         return q12d(grid, spacing=spacing, E=E, nu=nu, format=format)
 
-    raise NotImplementedError('No support for grid={grid}')
+    raise NotImplementedError(f'No support for grid={grid}')
 
 
 def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
@@ -260,12 +260,13 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
+    if D not in (2, 3):
+        raise ValueError('only dimension 2 and 3 are supported')
+
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
-    else:
-        raise NotImplementedError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D

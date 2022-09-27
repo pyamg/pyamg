@@ -1,18 +1,16 @@
+"""Test smoothed aggregation solver."""
+import warnings
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_approx_equal,\
+    assert_array_almost_equal
+from scipy import sparse
 import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
 from pyamg.gallery import poisson, linear_elasticity,\
     gauge_laplacian, load_example
-
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
-
-from numpy.testing import TestCase, assert_approx_equal,\
-    assert_array_almost_equal
-
-import warnings
 
 
 class TestParameters(TestCase):
@@ -38,7 +36,7 @@ class TestParameters(TestCase):
             del x_sol
             convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-            assert(convergence_ratio < 0.9)
+            assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
         for strength in ['symmetric', 'evolution']:
@@ -117,7 +115,7 @@ class TestComplexParameters(TestCase):
             del x_sol
             convergence_ratio =\
                 (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-            assert(convergence_ratio < 0.9)
+            assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
         warnings.simplefilter('ignore', SparseEfficiencyWarning)
@@ -199,8 +197,7 @@ class TestSolverPerformance(TestCase):
                            ('energy', {'krylov': 'gmres'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
@@ -221,7 +218,7 @@ class TestSolverPerformance(TestCase):
             #   (avg_convergence_ratio, c_factor, len(ml.levels),
             #    ml.operator_complexity())
 
-            assert(avg_convergence_ratio < c_factor)
+            assert avg_convergence_ratio < c_factor
 
     def test_DAD(self):
         A = poisson((50, 50), format='csr')
@@ -251,7 +248,7 @@ class TestSolverPerformance(TestCase):
 
         # print "Diagonal Scaling Test:   %1.3e,  %1.3e" %
         # (avg_convergence_ratio, 0.25)
-        assert(avg_convergence_ratio < 0.25)
+        assert avg_convergence_ratio < 0.25
 
     def test_improve_candidates(self):
 
@@ -289,7 +286,7 @@ class TestSolverPerformance(TestCase):
                     # improvement on the previous print "\nimprove_candidates
                     # Test: %1.3e, %1.3e,
                     # %d\n"%(rho,rho_scale*last_rho,A.shape[0])
-                    assert(rho < rho_scale * last_rho)
+                    assert rho < rho_scale * last_rho
                     last_rho = rho
 
     def test_symmetry(self):
@@ -354,7 +351,7 @@ class TestSolverPerformance(TestCase):
         residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-        assert(avg_convergence_ratio < 0.65)
+        assert avg_convergence_ratio < 0.65
         # accelerated solve
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
@@ -363,7 +360,7 @@ class TestSolverPerformance(TestCase):
         residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-        assert(avg_convergence_ratio < 0.45)
+        assert avg_convergence_ratio < 0.45
 
         # test that nonsymmetric parameters give the same result as symmetric
         # parameters for Poisson problem
@@ -420,7 +417,7 @@ class TestSolverPerformance(TestCase):
             x1 = sa1.solve(b, residuals=r1)
             x2 = sa2.solve(b, residuals=r2)
             del x1, x2
-            assert((len(r1) + 5) < len(r2))
+            assert (len(r1) + 5) < len(r2)
 
     def test_matrix_formats(self):
         warnings.simplefilter('ignore', SparseEfficiencyWarning)
@@ -436,16 +433,20 @@ class TestSolverPerformance(TestCase):
             sa_new = smoothed_aggregation_solver(AA, max_coarse=10)
             Ac_old = sa_old.levels[-1].A.toarray()
             Ac_new = sa_new.levels[-1].A.toarray()
-            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
+            assert np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01
             sa_old = sa_new
 
 
 class TestComplexSolverPerformance(TestCase):
-    ''' Imaginary tests from
-        'Algebraic Multigrid Solvers for Complex-Valued Matrices",
+    """Test imaginary examples.
+
+    Notes
+    -----
+    Examples from
+        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
-    '''
+    """
 
     def setUp(self):
         self.cases = []
@@ -488,8 +489,7 @@ class TestComplexSolverPerformance(TestCase):
                            ('energy', {'krylov': 'cg'})))
 
     def test_basic(self):
-        """check that method converges at a reasonable rate"""
-
+        """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
             A = sparse.csr_matrix(A)
 
@@ -512,7 +512,7 @@ class TestComplexSolverPerformance(TestCase):
             # print "Complex Test:   %1.3e,  %1.3e,  %d,  %1.3e" % \
             #    (avg_convergence_ratio, c_factor,
             #     len(ml.levels), ml.operator_complexity())
-            assert(avg_convergence_ratio < c_factor)
+            assert avg_convergence_ratio < c_factor
 
     def test_nonhermitian(self):
         # problem data
@@ -541,7 +541,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-        assert(avg_convergence_ratio < 0.85)
+        assert avg_convergence_ratio < 0.85
         # accelerated solve
         residuals = []
         x = sa.solve(b, x0=x0, residuals=residuals, accel='gmres',
@@ -550,7 +550,7 @@ class TestComplexSolverPerformance(TestCase):
         residuals = np.array(residuals)
         avg_convergence_ratio =\
             (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
-        assert(avg_convergence_ratio < 0.7)
+        assert avg_convergence_ratio < 0.7
 
         # test that nonsymmetric parameters give the same result as symmetric
         # parameters for the complex-symmetric matrix A
@@ -576,12 +576,10 @@ class TestComplexSolverPerformance(TestCase):
                                       nonsymm_lvl.A.toarray())
 
     def test_precision(self):
-        """
-        Check single precision.
+        """Check single precision.
 
         Test that x_32 == x_64 up to single precision tolerance
         """
-
         np.random.seed(3158637515)  # make tests repeatable
         A = poisson((10, 10), dtype=np.float64, format='csr')
         b = np.random.rand(A.shape[0]).astype(A.dtype)

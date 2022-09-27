@@ -7,12 +7,13 @@ Contributing
 ---
 
 Contributing code to this project assumes that
-    - your contributions are not significant enough to claim copyright or
-      that you implicitly transfer the copyright of your contribution to
-      the PyAMG Developers
-    - you agree to the Developer Certificate of Origin for
-      your contributing portion as described here (and below):
-      http://developercertificate.org/
+
+- your contributions are not significant enough to claim copyright or
+  that you implicitly transfer the copyright of your contribution to
+  the PyAMG Developers
+- you agree to the Developer Certificate of Origin for
+  your contributing portion as described here (and below):
+  http://developercertificate.org/
 
 Certificate of Origin
 ---

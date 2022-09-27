@@ -1,3 +1,4 @@
+"""Test basic mesh construction."""
 from pyamg.gallery.mesh import regular_triangle_mesh
 
 from numpy.testing import TestCase, assert_equal
@@ -10,7 +11,7 @@ class TestRegularTriangleMesh(TestCase):
         except ValueError:
             pass
         else:
-            raise Exception("regular_triangle_mesh(1,0) should throw an error")
+            raise Exception('regular_triangle_mesh(1,0) should throw an error')
 
     def test_2x2(self):
         Vert, E2V = regular_triangle_mesh(2, 2)

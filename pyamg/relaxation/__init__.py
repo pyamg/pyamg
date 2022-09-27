@@ -1,13 +1,4 @@
-"""Relaxation methods"""
-
-from . import chebyshev
-from . import relaxation
-from . import smoothing
-# from . import utils
-
-__all__ = ['chebyshev', 'relaxation', 'smoothing', 'utils']
-
-__doc__ += """Relaxation methods.
+"""Relaxation methods.
 
 The multigrid cycle is formed by two complementary procedures: relaxation and
 coarse-grid correction.  The role of relaxation is to rapidly damp oscillatory
@@ -33,5 +24,11 @@ PyAMG implements relaxation methods of the following varieties:
     7. No pre- or postsmoother
 
 Refer to the docstrings of the individual methods for additional information.
-
 """
+
+from . import chebyshev
+from . import relaxation
+from . import smoothing
+# from . import utils
+
+__all__ = ['chebyshev', 'relaxation', 'smoothing', 'utils']

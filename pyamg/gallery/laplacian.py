@@ -14,6 +14,9 @@ def poisson(grid, dtype=float, format=None, type='FD'):
     Poisson problem on a regular n-dimensional grid with unit grid
     spacing and Dirichlet boundary conditions.
 
+    The last dimension is iterated over first: z, then y, then x.
+    This should be used with np.mgrid() or np.ndenumerate.
+
     Parameters
     ----------
     grid : tuple of integers
@@ -27,21 +30,20 @@ def poisson(grid, dtype=float, format=None, type='FD'):
     --------
     >>> from pyamg.gallery import poisson
     >>> # 4 nodes in one dimension
-    >>> poisson( (4,) ).toarray()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
+    >>> poisson((4,)).toarray()
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
 
     >>> # rectangular two dimensional grid
-    >>> poisson( (2,3) )toarray()
-    matrix([[ 4., -1.,  0., -1.,  0.,  0.],
-            [-1.,  4., -1.,  0., -1.,  0.],
-            [ 0., -1.,  4.,  0.,  0., -1.],
-            [-1.,  0.,  0.,  4., -1.,  0.],
-            [ 0., -1.,  0., -1.,  4., -1.],
-            [ 0.,  0., -1.,  0., -1.,  4.]])
-
+    >>> poisson((2,3)).toarray()
+    array([[ 4., -1.,  0., -1.,  0.,  0.],
+           [-1.,  4., -1.,  0., -1.,  0.],
+           [ 0., -1.,  4.,  0.,  0., -1.],
+           [-1.,  0.,  0.,  4., -1.,  0.],
+           [ 0., -1.,  0., -1.,  4., -1.],
+           [ 0.,  0., -1.,  0., -1.,  4.]])
     """
     grid = tuple(grid)
 

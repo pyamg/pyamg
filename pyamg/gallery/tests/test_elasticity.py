@@ -1,3 +1,4 @@
+"""Test elasticity example."""
 import numpy as np
 from scipy.sparse import coo_matrix
 from pyamg.gallery.elasticity import linear_elasticity, \
@@ -29,8 +30,7 @@ class TestLinearElasticityP1(TestCase):
         self.cases = cases
 
     def test_rigid_body_modes(self):
-        """check that rigid body modes lie in nullspace"""
-
+        """Check that rigid body modes lie in nullspace."""
         for V, E in self.cases:
             A, B = linear_elasticity_p1(V, E)
             assert_almost_equal(A*B, 0*B)

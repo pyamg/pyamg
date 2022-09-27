@@ -63,3 +63,13 @@ Gallery Problems
     :toctree: generated/
 
     gallery
+
+amg\_core
+----------------
+
+.. currentmodule:: pyamg
+
+.. autosummary::
+    :toctree: generated/
+
+    amg_core

@@ -1,5 +1,7 @@
+"""Test graph routings."""
 import numpy as np
-import scipy.sparse as sparse
+from scipy import sparse
+from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 
 import pytest
 
@@ -32,18 +34,18 @@ def assert_is_mis(G, mis):
 
     # no MIS vertices joined by an edge
     if G.nnz > 0:
-        assert((mis[G.row] + mis[G.col]).max() <= 1)
+        assert (mis[G.row] + mis[G.col]).max() <= 1
     # all non-set vertices have set neighbor
-    assert((mis + G*mis).min() == 1)
+    assert (mis + G*mis).min() == 1
 
 
 def assert_is_vertex_coloring(G, c):
     G = canonical_graph(G)
 
     # no colors joined by an edge
-    assert((c[G.row] != c[G.col]).all())
+    assert (c[G.row] != c[G.col]).all()
     # all colors up to K occur at least once
-    assert((np.bincount(c) > 0).all())
+    assert (np.bincount(c) > 0).all()
 
 
 class TestGraph(TestCase):
@@ -51,7 +53,7 @@ class TestGraph(TestCase):
         cases = []
         np.random.seed(651978631)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -100,7 +102,6 @@ class TestGraph(TestCase):
 
     def test_bellman_ford(self):
         """Test pile of cases against reference implementation."""
-
         np.random.seed(1643502758)
 
         for G in self.cases:
@@ -168,7 +169,7 @@ class TestComplexGraph(TestCase):
         cases = []
         np.random.seed(3084315563)
 
-        for i in range(5):
+        for _i in range(5):
             A = np.random.rand(8, 8) > 0.5
             cases.append(canonical_graph(A + A.T).astype(float))
 
@@ -348,7 +349,7 @@ def test_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()
@@ -425,7 +426,7 @@ def test_complex_connected_components():
         assert_equal(result.min(), 0)
 
         def array_to_set_of_sets(arr):
-            """convert array to set of sets format"""
+            """Convert array to set of sets format."""
             D = {}
             for i in set(arr):
                 D[i] = set()

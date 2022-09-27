@@ -92,11 +92,11 @@ def solver_configuration(A, B=None, verb=True):
     if ishermitian(A, fast_check=True):
         config['symmetry'] = 'hermitian'
         if verb:
-            print("  Detected a Hermitian matrix")
+            print('  Detected a Hermitian matrix')
     else:
         config['symmetry'] = 'nonsymmetric'
         if verb:
-            print("  Detected a non-Hermitian matrix")
+            print('  Detected a non-Hermitian matrix')
 
     # Symmetry dependent parameters
     if config['symmetry'] == 'hermitian':
@@ -263,7 +263,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     >>> A = poisson((40,40),format='csr')
     >>> b = np.array(np.arange(A.shape[0]), dtype=float)
     >>> x = solve(A,b,verb=False)
-    >>> print "%1.2e"%(norm(b - A*x)/norm(b))
+    >>> print(f'{norm(b - A*x)/norm(b):1.2e}')
     6.28e-06
 
     """
@@ -300,7 +300,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
         def callback(_x, iteration):
             iteration[0] = iteration[0] + 1
-            print('    iteration {iteration[0]}')
+            print(f'    iteration {iteration[0]}')
 
         def callback2(x):
             return callback(x, iteration)

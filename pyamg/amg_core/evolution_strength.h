@@ -183,7 +183,7 @@ void apply_distance_filter(const I n_row,
  *      modified in place for output
  *
  * Returns
- * ------
+ * -------
  * Tx[i] modified in place, it holds
  * the minimum nonzero value of block i of S
  *
@@ -293,8 +293,8 @@ void min_blocks(const I n_blocks,
  *
  * Returns
  * -------
- *   Sx is written in place and holds strength
- *   values reflecting the above minimization problem
+ * Sx is written in place and holds strength
+ * values reflecting the above minimization problem
  *
  * Notes
  * -----

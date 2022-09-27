@@ -106,24 +106,26 @@ PYBIND11_MODULE(krylov, m) {
     m.def("apply_householders", &_apply_householders<int, std::complex<double>, double>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"),
 R"pbdoc(
-Apply |start-stop| Householder reflectors in B to z
+Apply Householder reflectors in B to z
 
 Implements the below python
 
-for j in range(start,stop,step):
-  z = z - 2.0*dot(conjugate(B[j,:]), v)*B[j,:]
+.. code-block:: python
+
+    for j in range(start,stop,step):
+      z = z - 2.0*dot(conjugate(B[j,:]), v)*B[j,:]
 
 Parameters
 ----------
-z : {float array}
- length n vector to be operated on
-B : {float array}
- n x m matrix of householder reflectors
- must be in row major form
-n : {int}
- dimensionality of z
-start, stop, step : {int}
- control the choice of vectors in B to use
+z : array
+    length n vector to be operated on
+B : array
+    n x m matrix of householder reflectors
+    must be in row major form
+n : int
+    dimensionality of z
+start, stop, step : int
+    control the choice of vectors in B to use
 
 Returns
 -------
@@ -147,31 +149,33 @@ For use after gmres is finished iterating and the least squares
 solution has been found.  This routine maps the solution back to
 the original space via the Householder reflectors.
 
-Apply |start-stop| Householder reflectors in B to z
+Apply Householder reflectors in B to z
 while also adding in the appropriate value from y, so
 that we follow the Horner-like scheme to map our least squares
 solution in y back to the original space
 
 Implements the below python
 
-for j in range(inner,-1,-1):
- z[j] += y[j]
- # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*update
- z = z - 2.0*dot(conjugate(B[j,:]), update)*B[j,:]
+.. code-block:: python
+
+    for j in range(inner,-1,-1):
+      z[j] += y[j]
+      # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*update
+      z = z - 2.0*dot(conjugate(B[j,:]), update)*B[j,:]
 
 Parameters
 ----------
-z : {float array}
- length n vector to be operated on
-B : {float array}
- n x m matrix of householder reflectors
- must be in row major form
-y : {float array}
- solution to the reduced system at the end of GMRES
-n : {int}
- dimensionality of z
-start, stop, step : {int}
- control the choice of vectors in B to use
+z : array
+    length n vector to be operated on
+B : array
+    n x m matrix of householder reflectors
+    must be in row major form
+y : array
+    solution to the reduced system at the end of GMRES
+n : int
+    dimensionality of z
+start, stop, step : int
+    control the choice of vectors in B to use
 
 Returns
 -------
@@ -183,6 +187,8 @@ Notes
 -----
 Principle calling routine is gmres(...) and fgmres(...) in krylov.py
 
+References
+----------
 See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems")pbdoc");
 
     m.def("apply_givens", &_apply_givens<int, float, float>,
@@ -198,15 +204,15 @@ Apply the first nrot Givens rotations in B to x
 
 Parameters
 ----------
-x : {float array}
- n-vector to be operated on
-B : {float array}
- Each 4 entries represent a Givens rotation
- length nrot*4
-n : {int}
- dimensionality of x
-nrot : {int}
- number of rotations in B
+x : array
+    n-vector to be operated on
+B : array
+    Each 4 entries represent a Givens rotation
+    length nrot*4
+n : int
+    dimensionality of x
+nrot : int
+    number of rotations in B
 
 Returns
 -------

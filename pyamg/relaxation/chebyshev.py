@@ -27,7 +27,7 @@ def chebyshev_polynomial_coefficients(a, b, degree):
     Examples
     --------
     >>> from pyamg.relaxation.chebyshev import chebyshev_polynomial_coefficients
-    >>> print chebyshev_polynomial_coefficients(1.0,2.0, 3)
+    >>> print(chebyshev_polynomial_coefficients(1.0,2.0, 3))
     [-0.32323232  1.45454545 -2.12121212  1.        ]
 
     """
@@ -77,10 +77,10 @@ def mls_polynomial_coefficients(rho, degree):
     --------
     >>> from pyamg.relaxation.chebyshev import mls_polynomial_coefficients
     >>> mls = mls_polynomial_coefficients(2.0, 2)
-    >>> print mls[0] # coefficients
+    >>> print(mls[0])  # coefficients
     [   6.4  -48.   144.  -220.   180.   -75.8   14.5]
-    >>> print mls[1] # roots
-    [ 1.4472136  0.5527864]
+    >>> print(mls[1])  # roots
+    [1.4472136 0.5527864]
 
     """
     # std_roots = np.cos(np.pi * (np.arange(degree) + 0.5)/ degree)

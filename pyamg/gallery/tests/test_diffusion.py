@@ -1,3 +1,4 @@
+"""Test diffusion example."""
 import numpy as np
 from pyamg.gallery.diffusion import diffusion_stencil_2d
 
@@ -44,7 +45,7 @@ class TestDiffusionStencil2D(TestCase):
         # type='FE'), stencil)
 
     def test_zero_sum(self):
-        """test that stencil entries sum to zero"""
+        """Test that stencil entries sum to zero."""
         for type in ['FD', 'FE']:
             for theta in [np.pi/8, np.pi/5, np.pi/4, np.pi/3, np.pi/2, np.pi]:
                 for epsilon in [0.001, 0.01, 1.0]:
@@ -53,8 +54,7 @@ class TestDiffusionStencil2D(TestCase):
                     assert_almost_equal(stencil.sum(), 0.0)
 
     def test_rotation_invariance(self):
-        """test invariance to theta when epsilon=1.0"""
-
+        """Test invariance to theta when epsilon=1.0."""
         for type in ['FD', 'FE']:
             expected = diffusion_stencil_2d(epsilon=1.0, theta=0.0, type=type)
             for theta in [np.pi/8, np.pi/4, np.pi/3, np.pi/2, np.pi]:

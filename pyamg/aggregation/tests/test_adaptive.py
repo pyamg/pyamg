@@ -1,13 +1,12 @@
+"""Test adaptive SA."""
+import warnings
 import numpy as np
+from numpy.testing import TestCase
+from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, linear_elasticity
 from pyamg.aggregation import smoothed_aggregation_solver
 from pyamg.aggregation.adaptive import adaptive_sa_solver
-
-from numpy.testing import TestCase
-
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
 
 
 class TestAdaptiveSA(TestCase):
@@ -34,7 +33,7 @@ class TestAdaptiveSA(TestCase):
 
         # print "ASA convergence (Poisson)",conv_asa
         # print "SA convergence (Poisson)",conv_sa
-        assert(conv_asa < 1.2 * conv_sa)
+        assert conv_asa < 1.2 * conv_sa
 
     def test_elasticity(self):
         warnings.filterwarnings('ignore', category=UserWarning,
@@ -61,7 +60,7 @@ class TestAdaptiveSA(TestCase):
 
         # print "ASA convergence (Elasticity) %1.2e" % (conv_asa)
         # print "SA convergence (Elasticity) %1.2e" % (conv_sa)
-        assert(conv_asa < 1.3 * conv_sa)
+        assert conv_asa < 1.3 * conv_sa
 
     def test_matrix_formats(self):
         warnings.filterwarnings('ignore', category=SparseEfficiencyWarning)
@@ -80,8 +79,8 @@ class TestAdaptiveSA(TestCase):
             sa_new = adaptive_sa_solver(AA,
                                         initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
-            assert(abs(np.ravel(sa_old.levels[-1].A.toarray()
-                   - sa_new.levels[-1].A.toarray())).max() < 0.01)
+            assert (abs(np.ravel(sa_old.levels[-1].A.toarray()
+                    - sa_new.levels[-1].A.toarray())).max()) < 0.01
             sa_old = sa_new
 
 
@@ -108,8 +107,7 @@ class TestComplexAdaptiveSA(TestCase):
         # cases.append((Ai,0.8))
 
         for A, rratio in cases:
-            [asa, work] = adaptive_sa_solver(A, num_candidates=1,
-                                             symmetry='symmetric')
+            [asa, work] = adaptive_sa_solver(A, num_candidates=1, symmetry='symmetric')
             # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
@@ -124,7 +122,7 @@ class TestComplexAdaptiveSA(TestCase):
             conv_asa = \
                 (residuals0[-1] / residuals0[0]) ** (1.0 / len(residuals0))
 
-            assert(conv_asa < rratio)
+            assert conv_asa < rratio
 
 # class TestAugmentCandidates(TestCase):
 #    def setUp(self):

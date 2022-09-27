@@ -49,14 +49,14 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     it = 0
 
     while True:
+        if method not in ('habituated', 'concurrent'):
+            raise NotImplementedError('method not recognized: need habituated '
+                                      'or concurrent')
         if method == 'habituated':
             gauss_seidel(A, e, z, iterations=1)
             e[Cindex] = 0.0
         elif method == 'concurrent':
             gauss_seidel_indexed(A, e, z, indices=Findex, iterations=1)
-        else:
-            raise NotImplementedError('method not recognized: need habituated '
-                                      'or concurrent')
 
         enorm_old = enorm
         enorm = norm(e)
@@ -124,7 +124,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from cr import CR
+    >>> from pyamg.classical.cr import CR
     >>> A = poisson((20,20),format='csr')
     >>> splitting = CR(A)
 
@@ -140,10 +140,10 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
             thetacs = list(thetacs)
 
         if (np.max(thetacs) >= 1) or (np.min(thetacs) <= 0):
-            raise ValueError("Must have 0 < thetacs < 1")
+            raise ValueError('Must have 0 < thetacs < 1')
 
     if (thetacr >= 1) or (thetacr <= 0):
-        raise ValueError("Must have 0 < thetacr < 1")
+        raise ValueError('Must have 0 < thetacr < 1')
 
     if not isspmatrix_csr(A):
         raise TypeError('expecting csr sparse matrix A')
@@ -205,8 +205,8 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
         # Print details on current iteration
         if verbose:
-            print("CR Iteration ", it, ", CF = ", rho,
-                  ", Coarsening factor = ", float(n-indices[0])/n)
+            print(f'CR Iteration {it} CF = {rho}'
+                  f', Coarsening factor = {(n-indices[0])/n}')
 
         # If convergence factor satisfactory, break loop
         if rho < thetacr:
@@ -245,7 +245,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import binormalize
+    >>> from pyamg.classical.cr import binormalize
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
 

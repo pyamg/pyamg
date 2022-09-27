@@ -1,14 +1,14 @@
+"""Test MultilevelSolver class."""
 import numpy as np
-import scipy.sparse as sparse
+from numpy.testing import TestCase, assert_almost_equal, assert_equal
+from scipy import sparse
 
 from pyamg.gallery import poisson
 from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
 
-from numpy.testing import TestCase, assert_almost_equal, assert_equal
-
 
 def precon_norm(v, ml):
-    ''' helper function to calculate preconditioner norm of v '''
+    """Calculate preconditioner norm of v."""
     v = np.ravel(v)
     w = ml.aspreconditioner()*v
     return np.sqrt(np.dot(v.conjugate(), w))
@@ -57,14 +57,14 @@ class TestMultilevel(TestCase):
             M = ml.aspreconditioner(cycle=cycle)
             x, info = cg(A, b, tol=1e-8, maxiter=30, M=M, atol='legacy')
             # cg satisfies convergence in the preconditioner norm
-            assert(precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml))
+            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
             res = []
             x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
-            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
+            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
@@ -79,22 +79,22 @@ class TestMultilevel(TestCase):
         # cg halts based on the preconditioner norm
         for accel in ['cg', cg]:
             x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert(precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml))
+            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
                          accel=accel)
-            assert(precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml))
+            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
             # print residuals
             assert_almost_equal(precon_norm(b - A*x, ml), residuals[-1])
 
         # cgs and bicgstab use the Euclidean norm
         for accel in ['bicgstab', 'cgs', bicgstab]:
             x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
+            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
                          accel=accel)
-            assert(np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b))
+            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
             # print residuals
             assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
 

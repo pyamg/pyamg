@@ -1,3 +1,6 @@
+"""Test scipy methods."""
+from functools import partial
+
 import numpy as np
 import scipy.sparse.linalg as sla
 
@@ -25,6 +28,9 @@ class TestScipy(TestCase):
         self.cases.append({'A': A, 'b': b, 'x0': x0, 'tol': 1e-16})
 
     def test_gmres(self):
+        def cb(x, normb):
+            scipyres.append(x*normb)
+
         for case in self.cases:
             A = case['A']
             b = case['b']
@@ -41,12 +47,10 @@ class TestScipy(TestCase):
 
             scipyres = []
             normb = np.linalg.norm(b)
+            callback = partial(cb, normb=normb)
 
-            def cb(x):
-                scipyres.append(x*normb)
-
-            _ = sla.iterative.gmres(A, b, x0, callback=cb, callback_type='pr_norm',
-                                    tol=tol, atol=0, restrt=3, maxiter=2)
+            _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm',
+                          tol=tol, atol=0, restrt=3, maxiter=2)
 
             assert_array_almost_equal(mgsres[1:], scipyres)
             assert_array_almost_equal(hhres[1:], scipyres)

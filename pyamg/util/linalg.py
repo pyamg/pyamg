@@ -82,7 +82,7 @@ def infinity_norm(A):
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
     >>> A = spdiags(data,[-1,0,1],n,n)
-    >>> print infinity_norm(A)
+    >>> print(infinity_norm(A))
     4.0
 
     """
@@ -121,7 +121,6 @@ def axpy(x, y, a=1.0):
     call.
 
     """
-
     fn = get_blas_funcs(['axpy'], [x, y])[0]
     fn(x, y, a)
 
@@ -154,8 +153,7 @@ def axpy(x, y, a=1.0):
 #    return_eigenvectors=False) )
 
 
-def _approximate_eigenvalues(A, maxiter, symmetric=None,
-                             initial_guess=None):
+def _approximate_eigenvalues(A, maxiter, symmetric=None, initial_guess=None):
     """Apprixmate eigenvalues.
 
     Used by approximate_spectral_radius and condest.
@@ -166,8 +164,8 @@ def _approximate_eigenvalues(A, maxiter, symmetric=None,
     breakdown.  E is therefore the approximate eigenvalues of A.
 
     To obtain approximate eigenvectors of A, compute V*W.
-    """
 
+    """
     A = aslinearoperator(A)  # A could be dense or sparse, or something weird
 
     # Choose tolerance for deciding if break-down has occurred
@@ -243,13 +241,13 @@ def _approximate_eigenvalues(A, maxiter, symmetric=None,
             # then switch to symmetric Lanczos algorithm
             # if symmetric is not False and j == 1:
             #    if abs(H[1,0] - H[0,1]) < 1e-12:
-            #        #print "using symmetric mode"
+            #        #print("using symmetric mode")
             #        symmetric = True
             #        V = V[1:]
             #        H[1,0] = H[0,1]
             #        beta = H[2,1]
 
-    # print "Approximated spectral radius in %d iterations" % (j + 1)
+    # print("Approximated spectral radius in %d iterations" % (j + 1))
 
     Eigs, Vects = eig(H[:j+1, :j+1], left=False, right=True)
 
@@ -312,9 +310,10 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     >>> import numpy as np
     >>> from scipy.linalg import eigvals, norm
     >>> A = np.array([[1.,0.],[0.,1.]])
-    >>> print approximate_spectral_radius(A,maxiter=3)
+    >>> sr = approximate_spectral_radius(A,maxiter=3)
+    >>> print(f'{sr:2.6}')
     1.0
-    >>> print max([norm(x) for x in eigvals(A)])
+    >>> print(max([norm(x) for x in eigvals(A)]))
     1.0
 
     """
@@ -361,7 +360,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             #           sp.eye(A.shape[0],A.shape[1])) )*\
             #           ( sp.mat(sp.hstack(V[:-1]))*\
             #           evect[:,max_index].reshape(-1,1) )
-            # print str(error) + "    " + str(sp.linalg.norm(e2))
+            # print(str(error) + "    " + str(sp.linalg.norm(e2)))
 
             v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
 
@@ -419,7 +418,7 @@ def condest(A, maxiter=25, symmetric=False):
     >>> import numpy as np
     >>> from pyamg.util.linalg import condest
     >>> c = condest(np.array([[1.,0.],[0.,2.]]))
-    >>> print c
+    >>> print(f'{c:2.6}')
     2.0
 
     """
@@ -464,7 +463,7 @@ def cond(A):
     >>> import numpy as np
     >>> from pyamg.util.linalg import condest
     >>> c = condest(np.array([[1.0,0.],[0.,2.0]]))
-    >>> print c
+    >>> print(f'{c:2.6}')
     2.0
 
     """
@@ -589,7 +588,6 @@ def pinv_array(a, tol=None):
     >>> pinv_array(a)
 
     """
-
     n = a.shape[0]
     m = a.shape[1]
 

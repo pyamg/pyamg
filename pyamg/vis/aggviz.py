@@ -1,11 +1,6 @@
 """Plot aggregates."""
 
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-
-import shapely.geometry as sg
-from shapely.ops import unary_union
 
 
 def plotaggs(AggOp, V, G, ax,
@@ -42,6 +37,11 @@ def plotaggs(AggOp, V, G, ax,
         Mappable object for use with colorbar: plt.colorbar(mappable, ax=ax).
         None if aggval is None
     """
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    import shapely.geometry as sg
+    from shapely.ops import unary_union
 
     cmap = plt.get_cmap(cmapname)
     if aggvals is not None:

@@ -29,8 +29,8 @@ def sprand(m, n, density, format='csr'):
     format : string
         sparse matrix format to return, e.g. 'csr', 'coo', etc.
 
-    Return
-    ------
+    Returns
+    -------
     A : sparse matrix
         m x n sparse matrix
 
