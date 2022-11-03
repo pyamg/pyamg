@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning, block_diag
+    SparseEfficiencyWarning, block_diag, csc_matrix
 import numpy as np
 from copy import deepcopy
 
@@ -22,8 +22,52 @@ from pyamg.classical.interpolate import direct_interpolation, \
     one_point_interpolation, neumann_AIR, local_AIR
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
+from pyamg.aggregation import energy_prolongation_smoother
+from scipy.sparse import eye as speye
+from pyamg.util import truncate_rows, scale_rows
 
 __all__ = ['AIR_solver']
+
+def rootnode_helper(A, C, Bf, splitting, **kwargs):
+    ''' Helper function to construct a root-node P '''
+    
+    # Expand splitting if BSR 
+    blocksize = 1
+    if isspmatrix_bsr(A):
+        blocksize = A.blocksize[0]
+    splittingBSR = splitting.repeat(blocksize)
+    
+    # Construct C-point parameters (used to construct rootnode P)
+    Cpts = (splittingBSR == 1).nonzero()[0]
+    Fpts = (splittingBSR == 0).nonzero()[0]
+    I_C = speye(A.shape[0], A.shape[1], format='csr')
+    I_F = I_C.copy()
+    I_F.data[Cpts] = 0.0
+    I_F.eliminate_zeros()
+    I_C = I_C - I_F
+    I_C.eliminate_zeros()
+    # construct P_I as in get_Cpt_params
+    indices = Cpts.copy()
+    indptr = np.arange(indices.shape[0]+1)
+    ncoarse = Cpts.shape[0] 
+    P_I = csc_matrix((I_C.data.copy(), indices, indptr),
+                      shape=(I_C.shape[0], ncoarse))
+    P_I = P_I.tobsr(blocksize=(blocksize,blocksize))
+    I_C = I_C.tobsr(blocksize=(blocksize,blocksize))
+    I_F = I_F.tobsr(blocksize=(blocksize,blocksize))
+    Cpt_params =  (True, {'P_I': P_I, 'I_F': I_F, 'I_C': I_C, 'Cpts': Cpts, 'Fpts': Fpts})
+
+    # Construct tentative P (just injection for now)
+    T = Cpt_params[1]['P_I'].copy()
+
+    # Construct rootnode P
+    classical_CF = True # this forces energy prolongation smoother to accept a classical CF T
+    Bc = Bf[Cpts,:]
+    PT = energy_prolongation_smoother(A, T, C, Bc, Bf, 
+                                     Cpt_params=Cpt_params, 
+                                     force_fit_candidates=classical_CF, 
+                                     **kwargs)
+    return PT, Bc
 
 def AIR_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
@@ -208,6 +252,10 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
         P = one_point_interpolation(A, C, splitting, **kwargs)
     elif fn == 'inject':
         P = injection_interpolation(A, splitting, **kwargs)
+    elif fn == 'rootnode':
+        # Eventually have to look at accepting these B vectors as parameters, and setting Bc = Bf[Cpts,:]
+        Bf = np.ones((A.shape[0],1))
+        P, Bc = rootnode_helper(A, C, Bf, splitting, **kwargs)    
     else:
         raise ValueError('unknown interpolation method (%s)' % interp)
 
