@@ -767,19 +767,6 @@ class MultilevelSolver:
 
         self.levels[lvl].postsmoother(A, x, b)
 
-    def visualize_coarse_grids(self, directory):
-        # Dump a visualization of the coarse grids in the given directory.
-        # If called for, output a visualization of the C/F splitting
-        if (self.levels[0].verts.any()):
-            for i in range(len(self.levels) - 1):
-                filename = directory + '/cf_' + str(i) + '.vtu'
-                vis_splitting(self.levels[i].verts, self.levels[i].splitting, fname=filename)
-        else:
-            print('Cannot visulize coarse grids: missing dof locations or \
-                   splittings in multilevel instance. Pass in parameters \
-                   verts = [nx2 array of dof locations] and keep = True when \
-                   creating multilevel object.')
-
 
 def coarse_grid_solver(solver):
     """Return a coarse grid solver suitable for MultilevelSolver.
