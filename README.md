@@ -39,9 +39,8 @@ The organization of the project can be found in [`organization.md`](organization
 examples of use can be found in [`pyamg-examples`](https://github.com/pyamg/pyamg-examples).
 
 **Acknowledgements:**
-
 PyAMG was created by
-[Nathan Bell](http://wnbell.com/),
+[Nathan Bell](http://wnbell.com/),t
 [Luke Olson](http://lukeo.cs.illinois.edu), and
 [Jacob Schroder](https://www.unm.edu/~jbschroder).
 Portions of the project were partially supported by the NSF under award DMS-0612448.
