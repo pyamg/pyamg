@@ -235,8 +235,6 @@ def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
 
     if blocksize > 1 and not block:
         S = amalgamate(S, blocksize)
-        warn('Implicit conversion of A to bsr', sparse.SparseEfficiencyWarning)
-        A = A.tobsr(blocksize=[blocksize,blocksize])
 
     return S
 
