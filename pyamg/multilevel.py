@@ -218,7 +218,7 @@ class MultilevelSolver:
 
         return output
 
-    def cycle_complexity(self, cycle='V', cyclesPerLevel=1, init_level=0, recompute=False):
+    def cycle_complexity(self, cycle='V', cycles_per_level=1, init_level=0, recompute=False):
         """Cycle complexity of this multigrid hierarchy.
 
         Cycle complexity is an approximate measure of the number of
@@ -229,6 +229,8 @@ class MultilevelSolver:
         ----------
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
+        cycles_per_level : int, default 1
+            Number of cycles per level
         init_level : int : Default 0
             Compute CC for levels init_level,...,end. Used primarily
             for tracking SC in adaptive methods.
@@ -399,11 +401,11 @@ class MultilevelSolver:
                     level_cycles * V(level+1, level_cycles=1)
 
         if cycle == 'V':
-            flops = V(init_level, cyclesPerLevel)
+            flops = V(init_level, cycles_per_level)
         elif (cycle == 'W') or (cycle == 'AMLI'):
-            flops = W(init_level, cyclesPerLevel)
+            flops = W(init_level, cycles_per_level)
         elif cycle == 'F':
-            flops = F(init_level, cyclesPerLevel)
+            flops = F(init_level, cycles_per_level)
         else:
             raise TypeError(f'Unrecognized cycle type ({cycle})')
 
@@ -505,7 +507,7 @@ class MultilevelSolver:
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
-              callback=None, residuals=None, cyclesPerLevel=1, return_info=False):
+              callback=None, residuals=None, cycles_per_level=1, return_info=False):
         """Execute multigrid cycling.
 
         Parameters
@@ -535,8 +537,8 @@ class MultilevelSolver:
             will be the residuals from the Krylov iteration -- see the `accel`
             method to see verify whether this ||r|| or ||Mr|| (as in the case of
             GMRES).
-        cyclesPerLevel: int
-            number of V-cycles on each level of an F-cycle
+        cycles_per_level: int, default 1
+            Number of V-cycles on each level of an F-cycle
         return_info : bool
             If true, will return (x, info)
             If false, will return x (default)
@@ -667,7 +669,7 @@ class MultilevelSolver:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
-                self.__solve(0, x, b, cycle, cyclesPerLevel)
+                self.__solve(0, x, b, cycle, cycles_per_level)
 
             it += 1
 
@@ -688,7 +690,7 @@ class MultilevelSolver:
                     return x, it
                 return x
 
-    def __solve(self, lvl, x, b, cycle, cyclesPerLevel=1):
+    def __solve(self, lvl, x, b, cycle, cycles_per_level=1):
         """Multigrid cycling.
 
         Parameters
@@ -706,7 +708,8 @@ class MultilevelSolver:
             cycle = 'W',    W-cycle
             cycle = 'F',    F-cycle
             cycle = 'AMLI', AMLI-cycle
-        cyclesPerLevel: number of V-cycles on each level of an F-cycle
+        cycles_per_level : int, default 1
+            Number of V-cycles on each level of an F-cycle
         """
         A = self.levels[lvl].A
 
@@ -726,8 +729,8 @@ class MultilevelSolver:
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
             elif cycle == 'F':
-                self.__solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
-                for ci in range(0,cyclesPerLevel):
+                self.__solve(lvl + 1, coarse_x, coarse_b, cycle, cycles_per_level)
+                for ci in range(0,cycles_per_level):
                     self.__solve(lvl + 1, coarse_x, coarse_b, 'V', 1)
             elif cycle == 'AMLI':
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
