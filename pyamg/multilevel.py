@@ -20,7 +20,7 @@ from .util import upcast
 if parse_version(sp.__version__) >= parse_version('1.7'):
     from scipy.linalg import pinv           # pylint: disable=ungrouped-imports
 else:
-    from scipy.linalg import pinv2 as pinv  # pylint: disable=ungrouped-imports
+    from scipy.linalg import pinv2 as pinv  # pylint: disable=no-name-in-module
 
 
 class MultilevelSolver:
