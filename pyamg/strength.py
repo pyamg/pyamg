@@ -108,7 +108,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
+def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     """Classical strength of connection measure.
 
     Return a strength of connection matrix using the classical AMG measure
@@ -121,25 +121,24 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
     A : csr_matrix or bsr_matrix
         Square, sparse matrix in CSR or BSR format
     theta : float
-        Threshold parameter in [0,1].
-    block : string, default None for CSR matrix and 'block' for BSR matrix
-        How to treat block structure of A:
-            None         : Compute SOC based on A as CSR matrix.
-            'block'      : Compute SOC based on norm of blocks of A.
-            'amalgamate' : Compute SOC based on A as CSR matrix, then compute
-                           norm of blocks in SOC matrix for a block SOC.
+        Threshold parameter in [0,1]
+    block : bool, default True
+        Compute strength of connection block-wise
     norm : 'string', default 'abs'
-        Option to compute SOC between elements or blocks:
-            'abs'  : C_ij = k, where k is the maximum absolute value in block C_ij
-            'min'  : C_ij = k, where k is the minimum (negative) value in block C_ij
-            'fro'  : C_ij = k, where k is the Frobenius norm of block C_ij
-                - Only valid for block matrices, block='block'
+        Measure used in computing the strength:
+            'abs' : |C[i,j]| >= theta * max(|C[i,k]|), where k != i
+            'min' : -C[i,j]  >= theta * max(-C[i,k]),  where k != i
+        where C = A for non-block-wise computations.  For block-wise:
+            'abs'  : C[i, j] is the maximum absolute value in block A[i, j]
+            'min'  : C[i, j] is the minimum (negative) value in block A[i, j]
+            'fro'  : C[i, j] is the Frobenius norm of block A[i, j]
 
     Returns
     -------
     S : csr_matrix
-        Matrix graph defining strong connections.  S[i,j]=1 if vertex i
-        is strongly influenced by vertex j.
+        Matrix graph defining strong connections.  S[i,j] ~ 1.0 if vertex i
+        is strongly influenced by vertex j, or block i is strongly influenced
+        by block j if block=True.
 
     See Also
     --------
@@ -188,7 +187,7 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
         raise ValueError('expected theta in [0,1]')
 
     # Block structure considered before computing SOC
-    if (block == 'block') or sparse.isspmatrix_bsr(A):
+    if block and sparse.isspmatrix_bsr(A):
         N = int(A.shape[0] / blocksize)
 
         # SOC based on maximum absolute value element in each block
@@ -199,64 +198,42 @@ def classical_strength_of_connection(A, theta=0.1, block=None, norm='abs'):
             data = np.min(np.min(A.data, axis=1), axis=1)
         # SOC based on Frobenius norms of blocks
         elif norm == 'fro':
-            data = (np.conjugate(A.data) * A.data).reshape(
-                -1, blocksize * blocksize).sum(axis=1)
+            data = np.conjugate(A.data) * A.data
+            data = np.sum(np.sum(data, axis=1), axis=1)
         else:
             raise ValueError('Invalid choice of norm.')
 
+        # drop small numbers
         data[np.abs(data) < 1e-16] = 0.0
-        Sp = np.empty_like(A.indptr)
-        Sj = np.empty_like(A.indices)
-        Sx = np.empty_like(data)
-
-        if norm in ('abs', 'fro'):
-            amg_core.classical_strength_of_connection_abs(
-                N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
-        elif norm == 'min':
-            amg_core.classical_strength_of_connection_min(
-                N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
-        else:
-            raise ValueError('Unrecognized option for norm.')
-
-        # One pass through nnz to find largest entry, one to filter
-        S = sparse.csr_matrix((Sx, Sj, Sp), shape=[N, N])
-
-        # Take magnitude and scale by largest entry
-        S.data = np.abs(S.data)
-        S = scale_rows_by_largest_entry(S)
-        S.eliminate_zeros()
-
-    # SOC computed based on A as CSR
     else:
-        if not sparse.isspmatrix_csr(A):
-            warn('Implicit conversion of A to csr',
-                 sparse.SparseEfficiencyWarning)
+        if (not sparse.isspmatrix_csr(A)):
+            warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
+        data = A.data
+        N = A.shape[0]
 
-        Sp = np.empty_like(A.indptr)
-        Sj = np.empty_like(A.indices)
-        Sx = np.empty_like(A.data)
+    Sp = np.empty_like(A.indptr)
+    Sj = np.empty_like(A.indices)
+    Sx = np.empty_like(data)
 
-        if norm == 'abs':
-            amg_core.classical_strength_of_connection_abs(
-                A.shape[0], theta, A.indptr, A.indices, A.data,
-                Sp, Sj, Sx)
-        elif norm == 'min':
-            amg_core.classical_strength_of_connection_min(
-                A.shape[0], theta, A.indptr, A.indices, A.data,
-                Sp, Sj, Sx)
-        else:
-            raise ValueError('Unknown norm')
+    if norm in ('abs', 'fro'):
+        amg_core.classical_strength_of_connection_abs(
+            N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
+    elif norm == 'min':
+        amg_core.classical_strength_of_connection_min(
+            N, theta, A.indptr, A.indices, data, Sp, Sj, Sx)
+    else:
+        raise ValueError('Unrecognized option for norm for strength.')
 
-        S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+    S = sparse.csr_matrix((Sx, Sj, Sp), shape=[N, N])
 
-        if blocksize > 1:
-            S = amalgamate(S, blocksize)
+    # Take magnitude and scale by largest entry
+    S.data = np.abs(S.data)
+    S = scale_rows_by_largest_entry(S)
+    S.eliminate_zeros()
 
-            # Take magnitude and scale by largest entry
-            S.data = np.abs(S.data)
-            S = scale_rows_by_largest_entry(S)
-            S.eliminate_zeros()
+    if blocksize > 1 and not block:
+        S = amalgamate(S, blocksize)
 
     return S
 
