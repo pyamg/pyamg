@@ -368,33 +368,33 @@ class MultilevelSolver:
         def V(level, level_cycles):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
-                return smoother_cost[level] + correction_cost[level] + \
-                    schwarz_work[level]
-            else:
-                return smoother_cost[level] + correction_cost[level] + \
-                    schwarz_work[level] + level_cycles * V(level+1, level_cycles=level_cycles)
+
+            if level == len(self.levels) - 2:
+                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+
+            return smoother_cost[level] + correction_cost[level] + \
+                schwarz_work[level] + level_cycles * V(level+1, level_cycles=level_cycles)
 
         def W(level, level_cycles):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
-                return smoother_cost[level] +  correction_cost[level] + \
-                    schwarz_work[level]
-            else:
-                return smoother_cost[level] + correction_cost[level] + \
-                    schwarz_work[level] + 2*level_cycles*W(level+1, level_cycles)
+
+            if level == len(self.levels) - 2:
+                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+
+            return smoother_cost[level] + correction_cost[level] + \
+                schwarz_work[level] + 2 * level_cycles * W(level+1, level_cycles)
 
         def F(level, level_cycles):
             if len(self.levels) == 1:
                 return rel_nnz_A[0]
-            elif level == len(self.levels) - 2:
-                return smoother_cost[level] + correction_cost[level] + \
-                    schwarz_work[level]
-            else:
-                return smoother_cost[level] + correction_cost[level] + \
-                    schwarz_work[level] + F(level+1, level_cycles) + \
-                    level_cycles * V(level+1, level_cycles=1)
+
+            if level == len(self.levels) - 2:
+                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+
+            return smoother_cost[level] + correction_cost[level] + \
+                schwarz_work[level] + F(level+1, level_cycles) + \
+                level_cycles * V(level+1, level_cycles=1)
 
         if cycle == 'V':
             flops = V(init_level, cycles_per_level)
