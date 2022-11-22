@@ -453,19 +453,19 @@ class MultilevelSolver:
         # Rebuild presmoother
         try:
             setup_presmoother = smoothing._setup_call(str(fn1).lower())
-        except NameError as e:
-            raise NameError(f'Invalid presmoother method: {fn1}') from e
+        except NameError as exc:
+            raise NameError(f'Invalid presmoother method: {fn1}') from exc
         self.levels[0].presmoother = setup_presmoother(self.levels[0], **kwargs1)
 
         # Rebuild postsmoother
         try:
             setup_postsmoother = smoothing._setup_call(str(fn2).lower())
-        except NameError:
-            raise NameError("Invalid presmoother method: ", fn2)
+        except NameError as exc:
+            raise NameError(f'Invalid presmoother method: {fn2}') from exc
         self.levels[0].postsmoother = setup_postsmoother(self.levels[0], **kwargs2)
 
     def psolve(self, b):
-        """Lagacy solve interface."""
+        """Legacy solve interface."""
         return self.solve(b, maxiter=1)
 
     def aspreconditioner(self, cycle='V'):
