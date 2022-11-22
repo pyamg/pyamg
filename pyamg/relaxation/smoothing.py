@@ -93,7 +93,7 @@ def change_smoothers(ml, presmoother, postsmoother):
     ml.level[i].smoothers['presmoother']   <===  presmoother[i]
     ml.level[i].smoothers['postsmoother']  <===  postsmoother[i]
     ml.symmetric_smoothing is marked True/False depending on whether
-        the smoothing scheme is symmetric. 
+        the smoothing scheme is symmetric.
 
     Notes
     -----
@@ -297,7 +297,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                 if (fn1,fn2) in (('CF_jacobi','FC_jacobi'),
                                  ('FC_jacobi','CF_jacobi'),
                                  ('CF_block_jacobi','FC_block_jacobi'),
-                                 ('FC_block_jacobi','CF_block_jacobi'))
+                                 ('FC_block_jacobi','CF_block_jacobi')):
                     if fit1 in kwargs1:
                         fit1 = kwargs1['F_iterations']
                     else:
@@ -370,10 +370,10 @@ def change_smoothers(ml, presmoother, postsmoother):
             if (it1 != it2):
                 ml.symmetric_smoothing = False
             elif (fn1 != fn2):
-                if (fn1,fn2) in (('CF_jacobi','FC_jacobi'),
-                                 ('FC_jacobi','CF_jacobi'),
-                                 ('CF_block_jacobi','FC_block_jacobi'),
-                                 ('FC_block_jacobi','CF_block_jacobi'))
+                if (fn1, fn2) in (('CF_jacobi', 'FC_jacobi'),
+                                  ('FC_jacobi', 'CF_jacobi'),
+                                  ('CF_block_jacobi', 'FC_block_jacobi'),
+                                  ('FC_block_jacobi', 'CF_block_jacobi')):
                     if fit1 in kwargs1:
                         fit1 = kwargs1['F_iterations']
                     else:
@@ -413,7 +413,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                                                 ('backward', 'forward'),
                                                 ('symmetric', 'symmetric')):
                         ml.symmetric_smoothing = False
-    else:  
+    else:
         mid_len = min_len
 
     # Fill in remaining levels
@@ -732,7 +732,7 @@ def setup_CF_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
     # Get C-points and F-points from splitting
     try:
         Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32') 
+        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
         lvl.nf = len(Fpts)
         lvl.nc = len(Cpts)
     except:
@@ -753,7 +753,7 @@ def setup_FC_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
     # Get C-points and F-points from splitting
     try:
         Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32') 
+        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
         lvl.nf = len(Fpts)
         lvl.nc = len(Cpts)
     except:
@@ -797,7 +797,7 @@ def setup_CF_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
             Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
             Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
             lvl.nf = len(Fpts)
-            lvl.nc = len(Cpts) 
+            lvl.nc = len(Cpts)
         except:
             raise ValueError("CF-splitting array needs to be stored in hierarchy.")
 
@@ -843,7 +843,7 @@ def setup_FC_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
         # Get C-points and F-points from splitting
         try:
             Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-            Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32') 
+            Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
             lvl.nf = len(Fpts)
             lvl.nc = len(Cpts)
         except:
