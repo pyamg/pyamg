@@ -52,12 +52,11 @@ class MultilevelSolver:
         A measure of the size of the multigrid hierarchy.
     solve()
         Iteratively solves a linear system for the right hand side.
-    change_solve_matrix(A0)
-        Change matrix on the finest level that we are solving/
-        preconditioning and reconstruct corresponding relaxation
-        routines. Used, for example, to construct a hierarchy using
-        linear basis functions on a refined mesh, but to precondition
-        a matrix built from quadratic basis functions.
+    change_solve_matrix(A)
+        Change matrix solve/preconditioning matrix.
+        This also changes the corresponding relaxation routines on the fine
+        grid.  This can be used, for example, to precondition a
+        quadratic finite element discretization with linears.
     visualize_coarse_grids()
         Dump a visualization of the coarse grids in the given directory.
     """
@@ -398,7 +397,7 @@ class MultilevelSolver:
 
         if cycle == 'V':
             flops = V(init_level, cycles_per_level)
-        elif (cycle == 'W') or (cycle == 'AMLI'):
+        elif cycle in ('W', 'AMLI'):
             flops = W(init_level, cycles_per_level)
         elif cycle == 'F':
             flops = F(init_level, cycles_per_level)
@@ -433,13 +432,21 @@ class MultilevelSolver:
         return sum(level.A.shape[0] for level in self.levels) /\
             float(self.levels[0].A.shape[0])
 
-    def change_solve_matrix(self, A0):
-        """ Change matrix that we are solving/preconditioning
-        as well as corresponding relaxation routines on finest
-        grid in hierarchy. Used, for example, to precondition a
+    def change_solve_matrix(self, A):
+        """Change matrix solve/preconditioning matrix.
+
+        Parameters
+        ----------
+        A : csr_matrix
+            Target solution matrix
+
+        Notes
+        -----
+        This also changes the corresponding relaxation routines on the fine
+        grid.  This can be used, for example, to precondition a
         quadratic finite element discretization with linears.
         """
-        self.levels[0].A = A0
+        self.levels[0].A = A
         fn1, kwargs1 = self.levels[0].smoothers['presmoother']
         fn2, kwargs2 = self.levels[0].smoothers['postsmoother']
 
