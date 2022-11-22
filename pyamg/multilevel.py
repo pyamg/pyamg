@@ -102,7 +102,7 @@ class MultilevelSolver:
             self.smoothers['postsmoother'] = [None, {}]
             self.A = None
 
-    class level(Level):  # noqa: N801
+    class level(Level):  # noqa: N801 disable=too-few-public-methods
         """Deprecated level class."""
 
         def __init__(self):
