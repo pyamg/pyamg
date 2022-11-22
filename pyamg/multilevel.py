@@ -57,8 +57,6 @@ class MultilevelSolver:
         This also changes the corresponding relaxation routines on the fine
         grid.  This can be used, for example, to precondition a
         quadratic finite element discretization with linears.
-    visualize_coarse_grids()
-        Dump a visualization of the coarse grids in the given directory.
     """
 
     class Level:  # pylint: disable=too-few-public-methods
@@ -85,8 +83,6 @@ class MultilevelSolver:
         complexity : {dict}
             Dictionary to store complexity for each step in setup process,
             such as constructing P or computing strength-of-connection
-        verts : n x 2 array
-            degree of freedom locations
 
         Notes
         -----
