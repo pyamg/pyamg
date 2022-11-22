@@ -81,7 +81,7 @@ class MultilevelSolver:
             Prolongation or Interpolation matrix.
         smoothers : {dict}
             Dictionary with keys 'presmoother' and 'postsmoother', giving
-            the relaxation schemes used on this level. Used to compute 
+            the relaxation schemes used on this level. Used to compute
             cycle complexity.
         complexity : {dict}
             Dictionary to store complexity for each step in setup process,
@@ -231,7 +231,7 @@ class MultilevelSolver:
             Type of multigrid cycle to perform in each iteration.
         init_level : int : Default 0
             Compute CC for levels init_level,...,end. Used primarily
-            for tracking SC in adaptive methods. 
+            for tracking SC in adaptive methods.
         recompute : bool : Default False
             Recompute CC if already stored. Used if matrices or
             options in hierarchy have changed between computing CC.
@@ -285,7 +285,7 @@ class MultilevelSolver:
                 if 'maxiter' in presmoother[1]:
                     pre_factor *= presmoother[1]['maxiter']
                 if 'degree' in presmoother[1]:
-                    pre_factor *= presmoother[1]['degree']                    
+                    pre_factor *= presmoother[1]['degree']
                 if presmoother[0].startswith(('CF','FC')):
                     temp = 0
                     if 'F_iterations' in presmoother[1]:
@@ -296,7 +296,7 @@ class MultilevelSolver:
                         temp += presmoother[1]['C_iterations'] * lvl.nc / float(lvl.A.shape[0])
                     else:
                         temp += lvl.nc / float(lvl.A.shape[0])
-                    pre_factor *= temp                  
+                    pre_factor *= temp
             else:
                 pre_factor = 0
 
@@ -324,7 +324,7 @@ class MultilevelSolver:
                         temp += postsmoother[1]['C_iterations'] * lvl.nc / float(lvl.A.shape[0])
                     else:
                         temp += lvl.nc / float(lvl.A.shape[0])
-                    post_factor *= temp 
+                    post_factor *= temp
             else:
                 post_factor = 0
 
@@ -382,7 +382,7 @@ class MultilevelSolver:
                 return rel_nnz_A[0]
             elif level == len(self.levels) - 2:
                 return smoother_cost[level] +  correction_cost[level] + \
-                    schwarz_work[level] 
+                    schwarz_work[level]
             else:
                 return smoother_cost[level] + correction_cost[level] + \
                     schwarz_work[level] + 2*level_cycles*W(level+1, level_cycles)
