@@ -206,7 +206,7 @@ def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
         # drop small numbers
         data[np.abs(data) < 1e-16] = 0.0
     else:
-        if (not sparse.isspmatrix_csr(A)) or block:
+        if (not sparse.isspmatrix_csr(A)):
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
         data = A.data
