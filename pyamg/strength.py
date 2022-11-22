@@ -108,7 +108,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
+def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     """Classical strength of connection measure.
 
     Return a strength of connection matrix using the classical AMG measure
@@ -122,7 +122,7 @@ def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
         Square, sparse matrix in CSR or BSR format
     theta : float
         Threshold parameter in [0,1]
-    block : bool, default False
+    block : bool, default True
         Compute strength of connection block-wise
     norm : 'string', default 'abs'
         Measure used in computing the strength:
