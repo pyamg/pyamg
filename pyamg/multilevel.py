@@ -261,7 +261,7 @@ class MultilevelSolver:
             return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
-        nnz = np.arary([float(level.A.nnz) for level in self.levels])
+        nnz = np.array([float(level.A.nnz) for level in self.levels])
         rel_nnz_A = np.array([level.A.nnz/nnz[0] for level in self.levels])
         rel_nnz_P = np.array([level.P.nnz/nnz[0] for level in self.levels[:-1]])
         rel_nnz_R = np.array([level.R.nnz/nnz[0] for level in self.levels[:-1]])
