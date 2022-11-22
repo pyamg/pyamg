@@ -1,8 +1,6 @@
 """Generic AMG solver."""
 
 from warnings import warn
-from pyamg.util.utils import unpack_arg
-from pyamg.vis.vis_coarse import vis_splitting
 
 import scipy as sp
 import scipy.sparse.linalg as sla
