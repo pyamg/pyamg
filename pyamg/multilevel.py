@@ -509,6 +509,7 @@ class MultilevelSolver:
 
         return LinearOperator(shape, matvec, dtype=dtype)
 
+    # pylint: disable-next=too-many-return-statements
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
               callback=None, residuals=None, cycles_per_level=1, return_info=False):
         """Execute multigrid cycling.
@@ -733,7 +734,7 @@ class MultilevelSolver:
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
             elif cycle == 'F':
                 self.__solve(lvl + 1, coarse_x, coarse_b, cycle, cycles_per_level)
-                for ci in range(0,cycles_per_level):
+                for _ in range(0, cycles_per_level):
                     self.__solve(lvl + 1, coarse_x, coarse_b, 'V', 1)
             elif cycle == 'AMLI':
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
