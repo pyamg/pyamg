@@ -450,8 +450,8 @@ class MultilevelSolver:
         # Rebuild presmoother
         try:
             setup_presmoother = smoothing._setup_call(str(fn1).lower())
-            except NameError as e:
-                raise NameError(f'Invalid presmoother method: {fn1}') from e
+        except NameError as e:
+            raise NameError(f'Invalid presmoother method: {fn1}') from e
         self.levels[0].presmoother = setup_presmoother(self.levels[0], **kwargs1)
 
         # Rebuild postsmoother
