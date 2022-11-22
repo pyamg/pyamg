@@ -186,12 +186,8 @@ def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
     if (theta < 0 or theta > 1):
         raise ValueError('expected theta in [0,1]')
 
-    if not sparse.isspmatrix_csr(A) and not block:
-        warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
-        A = sparse.csr_matrix(A)
-
     # Block structure considered before computing SOC
-    if block:
+    if block and sparse.isspmatrix_bsr(A):
         N = int(A.shape[0] / blocksize)
 
         # SOC based on maximum absolute value element in each block
@@ -210,6 +206,9 @@ def classical_strength_of_connection(A, theta=0.1, block=False, norm='abs'):
         # drop small numbers
         data[np.abs(data) < 1e-16] = 0.0
     else:
+        if (not sparse.isspmatrix_csr(A)) or block:
+            warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
+            A = sparse.csr_matrix(A)
         data = A.data
         N = A.shape[0]
 
