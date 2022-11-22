@@ -253,11 +253,12 @@ class MultilevelSolver:
 
         """
         if init_level > len(self.levels)-1:
-            raise ValueError("Initial CC level must be in the range [0, %i]"%len(self.levels))
+            raise ValueError(f'Initial CC level must be in the range'
+                             f'[0, {len(self.levels)}]')
 
         # Return if already stored
         cycle = str(cycle).upper()
-        if cycle in self.CC and not recompute and init_level==0:
+        if cycle in self.CC and not recompute and init_level == 0:
             return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
@@ -270,7 +271,7 @@ class MultilevelSolver:
         # Note: It is assumed that the default parameters in smoothing.py for each
         # relaxation scheme corresponds to a single workunit operation.
         smoother_cost = []
-        for i in range(0,len(self.levels)-1):
+        for i in range(0, len(self.levels)-1):
             lvl = self.levels[i]
             presmoother = lvl.smoothers['presmoother']
             postsmoother = lvl.smoothers['postsmoother']
@@ -289,7 +290,7 @@ class MultilevelSolver:
                     pre_factor *= presmoother[1]['maxiter']
                 if 'degree' in presmoother[1]:
                     pre_factor *= presmoother[1]['degree']
-                if presmoother[0].startswith(('CF','FC')):
+                if presmoother[0].startswith(('CF', 'FC')):
                     temp = 0
                     if 'F_iterations' in presmoother[1]:
                         temp += presmoother[1]['F_iterations'] * lvl.nf / float(lvl.A.shape[0])
