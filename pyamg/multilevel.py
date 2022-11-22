@@ -231,10 +231,10 @@ class MultilevelSolver:
             Type of multigrid cycle to perform in each iteration.
         cycles_per_level : int, default 1
             Number of cycles per level
-        init_level : int : Default 0
+        init_level : int, default 0
             Compute CC for levels init_level,...,end. Used primarily
             for tracking SC in adaptive methods.
-        recompute : bool : Default False
+        recompute : bool, default False
             Recompute CC if already stored. Used if matrices or
             options in hierarchy have changed between computing CC.
 
