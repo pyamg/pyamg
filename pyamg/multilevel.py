@@ -62,7 +62,7 @@ class MultilevelSolver:
         Dump a visualization of the coarse grids in the given directory.
     """
 
-    class Level:
+    class Level:  # pylint: disable=too-few-public-methods
         """Stores one level of the multigrid hierarchy.
 
         All level objects will have an 'A' attribute referencing the matrix
@@ -102,7 +102,7 @@ class MultilevelSolver:
             self.smoothers['postsmoother'] = [None, {}]
             self.A = None
 
-    class level(Level):  # noqa: N801 disable=too-few-public-methods
+    class level(Level):  # noqa: N801 pylint: disable=too-few-public-methods
         """Deprecated level class."""
 
         def __init__(self):
@@ -218,7 +218,8 @@ class MultilevelSolver:
 
         return output
 
-    def cycle_complexity(self, cycle='V', cycles_per_level=1, init_level=0, recompute=False):
+    def cycle_complexity(self, cycle='V', cycles_per_level=1, init_level=0,
+                         recompute=False):
         """Cycle complexity of this multigrid hierarchy.
 
         Cycle complexity is an approximate measure of the number of
