@@ -262,10 +262,10 @@ class MultilevelSolver:
             return self.CC[cycle]
 
         # Get nonzeros per level and nonzeros per level relative to finest
-        nnz = [float(level.A.nnz) for level in self.levels]
-        rel_nnz_A = [level.A.nnz/nnz[0] for level in self.levels]
-        rel_nnz_P = [level.P.nnz/nnz[0] for level in self.levels[0:-1]]
-        rel_nnz_R = [level.R.nnz/nnz[0] for level in self.levels[0:-1]]
+        nnz = np.arary([float(level.A.nnz) for level in self.levels])
+        rel_nnz_A = np.array([level.A.nnz/nnz[0] for level in self.levels])
+        rel_nnz_P = np.array([level.P.nnz/nnz[0] for level in self.levels[:-1]])
+        rel_nnz_R = np.array([level.R.nnz/nnz[0] for level in self.levels[:-1]])
 
         # Determine cost per nnz for smoothing on each level
         # Note: It is assumed that the default parameters in smoothing.py for each
@@ -361,13 +361,7 @@ class MultilevelSolver:
 
         # Compute work for computing residual, restricting to coarse grid,
         # and coarse grid correction
-        correction_cost = []
-        for i in range(len(rel_nnz_P)):
-            cost = 0
-            cost += rel_nnz_A[i]    # Computing residual
-            cost += rel_nnz_R[i]    # Restricting residual
-            cost += rel_nnz_P[i]    # Coarse grid correction
-            correction_cost.append(cost)
+        correction_cost = rel_nnz_A[:-1] + rel_nnz_R + rel_nnz_P
 
         # Recursive functions to sum cost of given cycle type over all levels.
         # Note, ignores coarse grid direct solve.
