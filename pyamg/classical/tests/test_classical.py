@@ -41,13 +41,13 @@ class TestRugeStubenFunctions(TestCase):
 
             splitting = split.RS(S)
 
-            assert(splitting.min() >= 0)     # could be all 1s
+            assert splitting.min() >= 0     # could be all 1s
             assert_equal(splitting.max(), 1)
 
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert((splitting + S*splitting).min() > 0)
+            assert (splitting + S*splitting).min() > 0
 
             # THIS IS NOT STRICTLY ENFORCED!
             # check that all strong connections S[i, j] satisfy either:
@@ -82,13 +82,13 @@ class TestRugeStubenFunctions(TestCase):
 
             splitting = split.CLJP(S)
 
-            assert(splitting.min() >= 0)     # could be all 1s
+            assert splitting.min() >= 0     # could be all 1s
             assert_equal(splitting.max(), 1)
 
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert((splitting + S*splitting).min() > 0)
+            assert (splitting + S*splitting).min() > 0
 
     def test_cljpc_splitting(self):
         for A in self.cases:
@@ -96,13 +96,13 @@ class TestRugeStubenFunctions(TestCase):
 
             splitting = split.CLJPc(S)
 
-            assert(splitting.min() >= 0)     # could be all 1s
+            assert splitting.min() >= 0     # could be all 1s
             assert_equal(splitting.max(), 1)
 
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert((splitting + S*splitting).min() > 0)
+            assert (splitting + S*splitting).min() > 0
 
     def test_direct_interpolation(self):
         for A in self.cases:
@@ -162,7 +162,6 @@ class TestSolverPerformance(TestCase):
                 del x_sol
 
                 avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
-
                 assert(avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
@@ -179,7 +178,7 @@ class TestSolverPerformance(TestCase):
             rs_new = ruge_stuben_solver(AA, max_coarse=10)
             Ac_old = rs_old.levels[-1].A.toarray()
             Ac_new = rs_new.levels[-1].A.toarray()
-            assert(np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01)
+            assert np.abs(np.ravel(Ac_old - Ac_new)).max() < 0.01
             rs_old = rs_new
 
 
@@ -257,9 +256,9 @@ def reference_direct_interpolation(A, S, splitting):
 
     P = C_s_neg.tocsr() + C_s_pos.tocsr() + C_inject.tocsr()
 
-    map = np.concatenate(([0], np.cumsum(splitting)))
-    P = csr_matrix((P.data, map[P.indices], P.indptr),
-                   shape=(P.shape[0], map[-1]))
+    splitting_map = np.concatenate(([0], np.cumsum(splitting)))
+    P = csr_matrix((P.data, splitting_map[P.indices], P.indptr),
+                   shape=(P.shape[0], splitting_map[-1]))
 
     return P
 

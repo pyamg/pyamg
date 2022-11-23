@@ -1,6 +1,7 @@
 """Test graph routings."""
 import numpy as np
-import scipy.sparse as sparse
+from scipy import sparse
+from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 
 from numpy.testing import TestCase, assert_equal, assert_array_almost_equal
 
@@ -8,7 +9,6 @@ from pyamg.gallery import poisson, load_example
 from pyamg.graph import (maximal_independent_set, vertex_coloring,
                          bellman_ford, lloyd_cluster, connected_components)
 from pyamg.graph_ref import bellman_ford_reference
-from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 from pyamg import amg_core
 
 
@@ -31,18 +31,18 @@ def assert_is_mis(G, mis):
 
     # no MIS vertices joined by an edge
     if G.nnz > 0:
-        assert((mis[G.row] + mis[G.col]).max() <= 1)
+        assert (mis[G.row] + mis[G.col]).max() <= 1
     # all non-set vertices have set neighbor
-    assert((mis + G*mis).min() == 1)
+    assert (mis + G*mis).min() == 1
 
 
 def assert_is_vertex_coloring(G, c):
     G = canonical_graph(G)
 
     # no colors joined by an edge
-    assert((c[G.row] != c[G.col]).all())
+    assert (c[G.row] != c[G.col]).all()
     # all colors up to K occur at least once
-    assert((np.bincount(c) > 0).all())
+    assert (np.bincount(c) > 0).all()
 
 
 class TestGraph(TestCase):

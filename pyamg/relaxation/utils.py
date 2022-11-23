@@ -59,7 +59,7 @@ def relaxation_as_linear_operator(method, A, b):
     lvl.A = A
 
     # Retrieve setup call from relaxation.smoothing for this relaxation method
-    if not accepted_methods.__contains__(fn):
+    if fn not in accepted_methods:
         raise NameError(f'invalid relaxation method: {fn}')
     try:
         setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)

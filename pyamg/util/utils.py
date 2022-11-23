@@ -1044,9 +1044,7 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
                          'spatial location,i.e. ndof = [1 | 3 | 6]. '
                          f'You have entered {ndof}.')
 
-    if((max(x.shape) != nnodes)
-       or (max(y.shape) != nnodes)
-       or (max(z.shape) != nnodes)):
+    if (max(x.shape) != nnodes) or (max(y.shape) != nnodes) or (max(z.shape) != nnodes):
         raise ValueError('coord_to_rbm(...) requires coordinate vectors of equal '
                          f'length.  Length must be nnodes = {nnodes}')
 
