@@ -656,20 +656,30 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     return smoother
 
 
+def _extract_splitting(lvl):
+    """Check and extract splitting."""
+    # Get C-points and F-points from splitting
+    try:
+        splitting = lvl.splitting
+    except AttributeError as exc:
+        raise AttributeError('CF splitting is required in hierarchy.') from exc
+
+    if splitting.dtype != bool:
+        raise ValueError('CF splitting is required to be boolean.')
+
+    Fpts = np.array(np.where(not splitting)[0], dtype=int)
+    Cpts = np.array(np.where(splitting)[0], dtype=int)
+
+    return Fpts, Cpts
+
+
 def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                     iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     """Set up coarse-fine Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
-    # Get C-points and F-points from splitting
-    try:
-        Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
-        lvl.nf = len(Fpts)
-        lvl.nc = len(Cpts)
-    except:
-        raise ValueError("CF-splitting array needs to be stored in hierarchy.")
+    Fpts, Cpts = _extract_splitting(lvl)
 
     def smoother(A, x, b):
         relaxation.cf_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
@@ -684,14 +694,7 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
-    # Get C-points and F-points from splitting
-    try:
-        Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-        Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
-        lvl.nf = len(Fpts)
-        lvl.nc = len(Cpts)
-    except:
-        raise ValueError("CF-splitting array needs to be stored in hierarchy.")
+    Fpts, Cpts = _extract_splitting(lvl)
 
     def smoother(A, x, b):
         relaxation.fc_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
@@ -726,14 +729,7 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
         return setup_cf_jacobi(lvl, iterations=iterations, omega=omega,
                             withrho=withrho)
     else:
-        # Get C-points and F-points from splitting
-        try:
-            Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-            Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
-            lvl.nf = len(Fpts)
-            lvl.nc = len(Cpts)
-        except:
-            raise ValueError("CF-splitting array needs to be stored in hierarchy.")
+        Fpts, Cpts = _extract_splitting(lvl)
 
         # Use Block Jacobi
         if Dinv is None:
@@ -774,14 +770,7 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
         return setup_fc_jacobi(lvl, iterations=iterations, omega=omega,
                             withrho=withrho)
     else:
-        # Get C-points and F-points from splitting
-        try:
-            Fpts = np.array(np.where(lvl.splitting == 0)[0], dtype='int32')
-            Cpts = np.array(np.where(lvl.splitting == 1)[0], dtype='int32')
-            lvl.nf = len(Fpts)
-            lvl.nc = len(Cpts)
-        except:
-            raise ValueError("CF-splitting array needs to be stored in hierarchy.")
+        Fpts, Cpts = _extract_splitting(lvl)
 
         # Use Block Jacobi
         if Dinv is None:
