@@ -90,8 +90,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     Returns
     -------
     ml changed in place
-    ml.level[i].presmoother   <===  presmoother[i]
-    ml.level[i].postsmoother  <===  postsmoother[i]
+    ml.levels[i].presmoother   <===  presmoother[i]
+    ml.levels[i].postsmoother  <===  postsmoother[i]
     ml.symmetric_smoothing is marked True/False depending on whether
         the smoothing scheme is symmetric.
 
