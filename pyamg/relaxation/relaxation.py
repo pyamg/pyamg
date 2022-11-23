@@ -820,8 +820,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
 def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
-    """Perform Gauss-Seidel iterations on the linear system A A.H y = b,
-    where x = A.h y. 
+    """Perform Gauss-Seidel iterations on the linear system A A.H y = b, where x = A.H y.
 
     Also known as Kaczmarz relaxation
 
@@ -911,7 +910,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
 def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
-    """Perform Gauss-Seidel iterations on the normal equations, A.H A x = A.H b.
+    """Perform Gauss-Seidel iterations on the linear system A.H A x = A.H b.
 
     Parameters
     ----------
