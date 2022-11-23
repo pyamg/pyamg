@@ -52,6 +52,23 @@ def _unpack_arg(v):
     return v, {}
 
 
+def _extract_splitting(lvl):
+    """Check and extract splitting."""
+    # Get C-points and F-points from splitting
+    try:
+        splitting = lvl.splitting
+    except AttributeError as exc:
+        raise AttributeError('CF splitting is required in hierarchy.') from exc
+
+    if splitting.dtype != bool:
+        raise ValueError('CF splitting is required to be boolean.')
+
+    Fpts = np.array(np.where(not splitting)[0], dtype=int)
+    Cpts = np.array(np.where(splitting)[0], dtype=int)
+
+    return Fpts, Cpts
+
+
 def change_smoothers(ml, presmoother, postsmoother):
     """Initialize pre and post smoothers.
 
@@ -654,23 +671,6 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
         relaxation.gauss_seidel_nr(lvl.Acsc, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
     return smoother
-
-
-def _extract_splitting(lvl):
-    """Check and extract splitting."""
-    # Get C-points and F-points from splitting
-    try:
-        splitting = lvl.splitting
-    except AttributeError as exc:
-        raise AttributeError('CF splitting is required in hierarchy.') from exc
-
-    if splitting.dtype != bool:
-        raise ValueError('CF splitting is required to be boolean.')
-
-    Fpts = np.array(np.where(not splitting)[0], dtype=int)
-    Cpts = np.array(np.where(splitting)[0], dtype=int)
-
-    return Fpts, Cpts
 
 
 def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
