@@ -37,8 +37,6 @@ class MultilevelSolver:
         Array of level objects that contain A, R, and P.
     coarse_solver : string
         String passed to coarse_grid_solver indicating the solve type
-    CC : {dict}
-        Dictionary storing cycle complexity with key as cycle type.
 
     Methods
     -------
@@ -76,13 +74,6 @@ class MultilevelSolver:
             Restriction matrix between levels (often R = P.T)
         P : csr_matrix
             Prolongation or Interpolation matrix.
-        smoothers : {dict}
-            Dictionary with keys 'presmoother' and 'postsmoother', giving
-            the relaxation schemes used on this level. Used to compute
-            cycle complexity.
-        complexity : {dict}
-            Dictionary to store complexity for each step in setup process,
-            such as constructing P or computing strength-of-connection
 
         Notes
         -----
@@ -92,9 +83,6 @@ class MultilevelSolver:
 
         def __init__(self):
             """Level construct (empty)."""
-            self.smoothers = {}
-            self.smoothers['presmoother'] = [None, {}]
-            self.smoothers['postsmoother'] = [None, {}]
             self.A = None
 
     class level(Level):  # noqa: N801 pylint: disable=too-few-public-methods
@@ -186,7 +174,6 @@ class MultilevelSolver:
         self.symmetric_smoothing = False  # force change_smoothers to set to True
         self.levels = levels
         self.coarse_solver = coarse_grid_solver(coarse_solver)
-        self.CC = {}
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
@@ -198,7 +185,6 @@ class MultilevelSolver:
         output += f'Number of Levels:     {len(self.levels)}\n'
         output += f'Operator Complexity:  {self.operator_complexity():6.3f}\n'
         output += f'Grid Complexity:      {self.grid_complexity():6.3f}\n'
-        output += f'Cycle Complexity:     {self.cycle_complexity():6.3f}\n'
         output += f'Coarse Solver:        {self.coarse_solver.name()}\n'
 
         total_nnz = sum(level.A.nnz for level in self.levels)
@@ -213,9 +199,8 @@ class MultilevelSolver:
 
         return output
 
-    def cycle_complexity(self, cycle='V', cycles_per_level=1, init_level=0,
-                         recompute=False):
-        """Cycle complexity of this multigrid hierarchy.
+    def cycle_complexity(self, cycle='V'):
+        """Cycle complexity of V, W, AMLI, and F(1,1) cycle with simple relaxation.
 
         Cycle complexity is an approximate measure of the number of
         floating point operations (FLOPs) required to perform a single
@@ -225,186 +210,69 @@ class MultilevelSolver:
         ----------
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
-        cycles_per_level : int, default 1
-            Number of cycles per level
-        init_level : int, default 0
-            Compute CC for levels init_level,...,end. Used primarily
-            for tracking SC in adaptive methods.
-        recompute : bool, default False
-            Recompute CC if already stored. Used if matrices or
-            options in hierarchy have changed between computing CC.
 
         Returns
         -------
         cc : float
-            Complexity of a single multigrid iteration in work units.
-            A 'work unit' is defined as the number of FLOPs required
-            to perform a matrix-vector multiply on the finest grid.
+            Defined as F_sum / F_0, where
+            F_sum is the total number of nonzeros in the matrix on all
+            levels encountered during a cycle and F_0 is the number of
+            nonzeros in the matrix on the finest level.
 
         Notes
         -----
-        Once computed, CC is stored in dictionary self.CC, with a key
-        given by the cycle type. Note, this is only for init_level=0.
+        This is only a rough estimate of the true cycle complexity. The
+        estimate assumes that the cost of pre and post-smoothing are
+        (each) equal to the number of nonzeros in the matrix on that level.
+        This assumption holds for smoothers like Jacobi and Gauss-Seidel.
+        However, the true cycle complexity of cycle using more expensive
+        methods, like block Gauss-Seidel will be underestimated.
+
+        Additionally, if the cycle used in practice isn't a (1,1)-cycle,
+        then this cost estimate will be off.
 
         """
-        if init_level > len(self.levels)-1:
-            raise ValueError(f'Initial CC level must be in the range'
-                             f'[0, {len(self.levels)}]')
-
-        # Return if already stored
         cycle = str(cycle).upper()
-        if cycle in self.CC and not recompute and init_level == 0:
-            return self.CC[cycle]
 
-        # Get nonzeros per level and nonzeros per level relative to finest
-        nnz = np.array([float(level.A.nnz) for level in self.levels])
-        rel_nnz_A = np.array([level.A.nnz/nnz[0] for level in self.levels])
-        rel_nnz_P = np.array([level.P.nnz/nnz[0] for level in self.levels[:-1]])
-        rel_nnz_R = np.array([level.R.nnz/nnz[0] for level in self.levels[:-1]])
+        nnz = [level.A.nnz for level in self.levels]
 
-        # Determine cost per nnz for smoothing on each level
-        # Note: It is assumed that the default parameters in smoothing.py for each
-        # relaxation scheme corresponds to a single workunit operation.
-        smoother_cost = []
-        for i in range(0, len(self.levels)-1):
-            lvl = self.levels[i]
-            presmoother = lvl.smoothers['presmoother']
-            postsmoother = lvl.smoothers['postsmoother']
-
-            # Presmoother
-            if presmoother[0] is not None:
-                pre_factor = 1
-                if presmoother[0].endswith(('nr', 'ne')):
-                    pre_factor *= 2
-                if 'sweep' in presmoother[1]:
-                    if presmoother[1]['sweep'] == 'symmetric':
-                        pre_factor *= 2
-                if 'iterations' in presmoother[1]:
-                    pre_factor *= presmoother[1]['iterations']
-                if 'maxiter' in presmoother[1]:
-                    pre_factor *= presmoother[1]['maxiter']
-                if 'degree' in presmoother[1]:
-                    pre_factor *= presmoother[1]['degree']
-                if presmoother[0].startswith(('CF', 'FC')):
-                    temp = 0
-                    if 'F_iterations' in presmoother[1]:
-                        temp += presmoother[1]['F_iterations'] * lvl.nf / lvl.A.shape[0]
-                    else:
-                        temp += lvl.nf / lvl.A.shape[0]
-                    if 'C_iterations' in presmoother[1]:
-                        temp += presmoother[1]['C_iterations'] * lvl.nc / lvl.A.shape[0]
-                    else:
-                        temp += lvl.nc / lvl.A.shape[0]
-                    pre_factor *= temp
-            else:
-                pre_factor = 0
-
-            # Postsmoother
-            if postsmoother[0] is not None:
-                post_factor = 1
-                if postsmoother[0].endswith(('nr', 'ne')):
-                    post_factor *= 2
-                if 'sweep' in postsmoother[1]:
-                    if postsmoother[1]['sweep'] == 'symmetric':
-                        post_factor *= 2
-                if 'iterations' in postsmoother[1]:
-                    post_factor *= postsmoother[1]['iterations']
-                if 'maxiter' in postsmoother[1]:
-                    post_factor *= postsmoother[1]['maxiter']
-                if 'degree' in postsmoother[1]:
-                    post_factor *= postsmoother[1]['degree']
-                if postsmoother[0].startswith(('CF', 'FC')):
-                    temp = 0
-                    if 'F_iterations' in postsmoother[1]:
-                        temp += postsmoother[1]['F_iterations'] * lvl.nf / lvl.A.shape[0]
-                    else:
-                        temp += lvl.nf / lvl.A.shape[0]
-                    if 'C_iterations' in postsmoother[1]:
-                        temp += postsmoother[1]['C_iterations'] * lvl.nc / lvl.A.shape[0]
-                    else:
-                        temp += lvl.nc / lvl.A.shape[0]
-                    post_factor *= temp
-            else:
-                post_factor = 0
-
-            # Smoothing cost scaled by A_i.nnz / A_0.nnz
-            smoother_cost.append((pre_factor + post_factor)*rel_nnz_A[i])
-
-        # Compute work for any Schwarz relaxation
-        #   - The multiplier is the average row length, which is how many times
-        #     the residual (on average) must be computed for each row.
-        #   - schwarz_work is the cost of multiplying with the
-        #     A[region_i, region_i]^{-1}
-        schwarz_multiplier = np.zeros((len(self.levels)-1,))
-        schwarz_work = np.zeros((len(self.levels)-1,))
-        for i, lvl in enumerate(self.levels[:-1]):
-            presmoother = lvl.smoothers['presmoother'][0]
-            postsmoother = lvl.smoothers['postsmoother'][0]
-            if (presmoother == 'schwarz') or (postsmoother == 'schwarz'):
-                S = lvl.A
-            if (presmoother == 'strength_based_schwarz') or \
-               (postsmoother == 'strength_based_schwarz'):
-                S = lvl.C
-            if (presmoother is not None and presmoother.find('schwarz') > 0) or \
-               (postsmoother is not None and postsmoother.find('schwarz') > 0):
-                rowlen = S.indptr[1:] - S.indptr[:-1]
-                schwarz_work[i] = np.sum(rowlen**2)
-                schwarz_multiplier[i] = np.mean(rowlen)
-                # Note this scaling only applies to multiplicative
-                # Schwarz, which is what is currently available.
-                smoother_cost[i] *= schwarz_multiplier[i]
-
-        # Compute work for computing residual, restricting to coarse grid,
-        # and coarse grid correction
-        correction_cost = rel_nnz_A[:-1] + rel_nnz_R + rel_nnz_P
-
-        # Recursive functions to sum cost of given cycle type over all levels.
-        # Note, ignores coarse grid direct solve.
-        def V(level, level_cycles):
+        def V(level):
             if len(self.levels) == 1:
-                return rel_nnz_A[0]
+                return nnz[0]
 
             if level == len(self.levels) - 2:
-                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+                return 2 * nnz[level] + nnz[level + 1]
 
-            return smoother_cost[level] + correction_cost[level] + \
-                schwarz_work[level] + level_cycles * V(level+1, level_cycles=level_cycles)
+            return 2 * nnz[level] + V(level + 1)
 
-        def W(level, level_cycles):
+        def W(level):
             if len(self.levels) == 1:
-                return rel_nnz_A[0]
+                return nnz[0]
 
             if level == len(self.levels) - 2:
-                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+                return 2 * nnz[level] + nnz[level + 1]
 
-            return smoother_cost[level] + correction_cost[level] + \
-                schwarz_work[level] + 2 * level_cycles * W(level+1, level_cycles)
+            return 2 * nnz[level] + 2 * W(level + 1)
 
-        def F(level, level_cycles):
+        def F(level):
             if len(self.levels) == 1:
-                return rel_nnz_A[0]
+                return nnz[0]
 
             if level == len(self.levels) - 2:
-                return smoother_cost[level] + correction_cost[level] + schwarz_work[level]
+                return 2 * nnz[level] + nnz[level + 1]
 
-            return smoother_cost[level] + correction_cost[level] + \
-                schwarz_work[level] + F(level+1, level_cycles) + \
-                level_cycles * V(level+1, level_cycles=1)
+            return 2 * nnz[level] + F(level + 1) + V(level + 1)
 
         if cycle == 'V':
-            flops = V(init_level, cycles_per_level)
+            flops = V(0)
         elif cycle in ('W', 'AMLI'):
-            flops = W(init_level, cycles_per_level)
+            flops = W(0)
         elif cycle == 'F':
-            flops = F(init_level, cycles_per_level)
+            flops = F(0)
         else:
             raise TypeError(f'Unrecognized cycle type ({cycle})')
 
-        # Only save CC if computed for all levels to avoid confusion
-        if init_level == 0:
-            self.CC[cycle] = float(flops)
-
-        return float(flops)
+        return float(flops) / float(nnz[0])
 
     def operator_complexity(self):
         """Operator complexity of this multigrid hierarchy.
@@ -443,22 +311,22 @@ class MultilevelSolver:
         quadratic finite element discretization with linears.
         """
         self.levels[0].A = A
-        fn1, kwargs1 = self.levels[0].smoothers['presmoother']
-        fn2, kwargs2 = self.levels[0].smoothers['postsmoother']
+        fn1 = self.levels[0].presmoother
+        fn2 = self.levels[0].postsmoother
 
         # Rebuild presmoother
         try:
             setup_presmoother = smoothing._setup_call(str(fn1).lower())
         except NameError as exc:
             raise NameError(f'Invalid presmoother method: {fn1}') from exc
-        self.levels[0].presmoother = setup_presmoother(self.levels[0], **kwargs1)
+        self.levels[0].presmoother = setup_presmoother(self.levels[0])
 
         # Rebuild postsmoother
         try:
             setup_postsmoother = smoothing._setup_call(str(fn2).lower())
         except NameError as exc:
             raise NameError(f'Invalid presmoother method: {fn2}') from exc
-        self.levels[0].postsmoother = setup_postsmoother(self.levels[0], **kwargs2)
+        self.levels[0].postsmoother = setup_postsmoother(self.levels[0])
 
     def psolve(self, b):
         """Legacy solve interface."""

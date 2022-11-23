@@ -33,24 +33,24 @@ from ..krylov import gmres, cgne, cgnr, cg
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 
-__all__ = ['change_smoothers']
-
 
 # Default relaxation parameters
-# Note:  multilevel.cycle_complexity() assumes these default parameters
-# correspond to a single workunit operation.
 DEFAULT_SWEEP = 'forward'
 DEFAULT_NITER = 1
+
 # List of by-definition symmetric relaxation schemes, e.g. Jacobi.
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
                         'jacobi_ne', 'chebyshev', None]
+
 # List of supported Krylov relaxation schemes
 KRYLOV_RELAXATION = ['cg', 'cgne', 'cgnr', 'gmres']
+
 
 def _unpack_arg(v):
     if isinstance(v, tuple):
         return v[0], v[1]
     return v, {}
+
 
 def change_smoothers(ml, presmoother, postsmoother):
     """Initialize pre and post smoothers.
@@ -90,8 +90,8 @@ def change_smoothers(ml, presmoother, postsmoother):
     Returns
     -------
     ml changed in place
-    ml.level[i].smoothers['presmoother']   <===  presmoother[i]
-    ml.level[i].smoothers['postsmoother']  <===  postsmoother[i]
+    ml.level[i].presmoother   <===  presmoother[i]
+    ml.level[i].postsmoother  <===  postsmoother[i]
     ml.symmetric_smoothing is marked True/False depending on whether
         the smoothing scheme is symmetric.
 
@@ -200,10 +200,6 @@ def change_smoothers(ml, presmoother, postsmoother):
 
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
-        # Save tuples in ml to check cycle complexity
-        ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
-        ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
-
         # Check if symmetric smoothing scheme
         if 'iterations' in kwargs1:
             it1 = kwargs1['iterations']
@@ -214,34 +210,21 @@ def change_smoothers(ml, presmoother, postsmoother):
             it2 = kwargs2['iterations']
         else:
             it2 = DEFAULT_NITER
-        if (it1 != it2):
-            ml.symmetric_smoothing = False
-        elif (fn1 != fn2):
-            if ((fn1 == 'CF_jacobi' and fn2 == 'FC_jacobi') or \
-                (fn1 == 'FC_jacobi' and fn2 == 'CF_jacobi') or \
-                (fn1 == 'CF_block_jacobi' and fn2 == 'FC_block_jacobi') or \
-                (fn1 == 'FC_block_jacobi' and fn2 == 'CF_block_jacobi')):
-                try:
-                    fit1 = kwargs1['F_iterations']
-                except:
-                    fit1 = DEFAULT_NITER
-                try:
-                    fit2 = kwargs2['F_iterations']
-                except:
-                    fit2 = DEFAULT_NITER
-                try:
-                    cit1 = kwargs1['C_iterations']
-                except:
-                    cit1 = DEFAULT_NITER
-                try:
-                    cit2 = kwargs2['C_iterations']
-                except:
-                    cit2 = DEFAULT_NITER
-                if ((fit1 == fit2) and (cit1 == cit2)):
-                    pass
-                else:
-                    ml.symmetric_smoothing = False
 
+        if it1 != it2:
+            ml.symmetric_smoothing = False
+        elif fn1 != fn2 and (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
+                                           ('FC_jacobi', 'CF_jacobi'),
+                                           ('CF_block_jacobi', 'FC_block_jacobi'),
+                                           ('FC_block_jacobi', 'CF_block_jacobi')]:
+
+            fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
+            fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
+            cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
+            cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+
+            if not ((fit1 == fit2) and (cit1 == cit2)):
+                ml.symmetric_smoothing = False
         elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
