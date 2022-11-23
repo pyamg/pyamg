@@ -213,35 +213,29 @@ def change_smoothers(ml, presmoother, postsmoother):
 
         if it1 != it2:
             ml.symmetric_smoothing = False
-        elif fn1 != fn2 and (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
-                                           ('FC_jacobi', 'CF_jacobi'),
-                                           ('CF_block_jacobi', 'FC_block_jacobi'),
-                                           ('FC_block_jacobi', 'CF_block_jacobi')]:
+        elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
+                            ('FC_jacobi', 'CF_jacobi'),
+                            ('CF_block_jacobi', 'FC_block_jacobi'),
+                            ('FC_block_jacobi', 'CF_block_jacobi')]:
 
             fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
             fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
             cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
             cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
 
-            if not ((fit1 == fit2) and (cit1 == cit2)):
+            if not (fit1 == fit2 and cit1 == cit2):
                 ml.symmetric_smoothing = False
         elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
-            if ('CF' in fn1) or ('FC' in fn1):
+            if fn1 in ('CF', 'FC'):
                 ml.symmetric_smoothing = False
             else:
-                if 'sweep' in kwargs1:
-                    sweep1 = kwargs1['sweep']
-                else:
-                    sweep1 = DEFAULT_SWEEP
-                if 'sweep' in kwargs2:
-                    sweep2 = kwargs2['sweep']
-                else:
-                    sweep2 = DEFAULT_SWEEP
-                if (sweep1, sweep2) not in (('forward', 'backward'),
+                sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
+                if (sweep1, sweep2) not in [('forward', 'backward'),
                                             ('backward', 'forward'),
-                                            ('symmetric', 'symmetric')):
+                                            ('symmetric', 'symmetric')]:
                     ml.symmetric_smoothing = False
 
     if len(presmoother) < len(postsmoother):
@@ -260,10 +254,6 @@ def change_smoothers(ml, presmoother, postsmoother):
 
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
-            # Save tuples in ml to check cycle complexity
-            ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
-            ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
-
             # Check if symmetric smoothing scheme
             if 'iterations' in kwargs1:
                 it1 = kwargs1['iterations']
@@ -271,51 +261,33 @@ def change_smoothers(ml, presmoother, postsmoother):
                 it1 = DEFAULT_NITER
             if 'iterations' in kwargs2:
                 it2 = kwargs2['iterations']
+
             else:
                 it2 = DEFAULT_NITER
 
-            if (it1 != it2):
+            if it1 != it2:
                 ml.symmetric_smoothing = False
-            elif (fn1 != fn2):
-                if (fn1,fn2) in (('CF_jacobi','FC_jacobi'),
-                                 ('FC_jacobi','CF_jacobi'),
-                                 ('CF_block_jacobi','FC_block_jacobi'),
-                                 ('FC_block_jacobi','CF_block_jacobi')):
-                    if fit1 in kwargs1:
-                        fit1 = kwargs1['F_iterations']
-                    else:
-                        fit1 = DEFAULT_NITER
-                    if fit2 in kwargs2:
-                        fit2 = kwargs2['F_iterations']
-                    else:
-                        fit2 = DEFAULT_NITER
-                    if cit1 in kwargs1:
-                        cit1 = kwargs1['C_iterations']
-                    else:
-                        cit1 = DEFAULT_NITER
-                    if cit2 in kwargs2:
-                        cit2 = kwargs2['C_iterations']
-                    else:
-                        cit2 = DEFAULT_NITER
-                    if ((fit1 == fit2) and (cit1 == cit2)):
-                        pass
-                    else:
-                        ml.symmetric_smoothing = False
+            elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
+                                ('FC_jacobi', 'CF_jacobi'),
+                                ('CF_block_jacobi', 'FC_block_jacobi'),
+                                ('FC_block_jacobi', 'CF_block_jacobi')]:
+                fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+
+                if not (fit1 == fit2 and cit1 == cit2):
+                    ml.symmetric_smoothing = False
 
             elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
+
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if ('CF' in fn1) or ('FC' in fn1):
+                if fn1 in ('CF', 'FC'):
                     ml.symmetric_smoothing = False
                 else:
-                    if 'sweep' in kwargs1:
-                        sweep1 = kwargs1['sweep']
-                    else:
-                        sweep1 = DEFAULT_SWEEP
-                    if 'sweep' in kwargs2:
-                        sweep2 = kwargs2['sweep']
-                    else:
-                        sweep2 = DEFAULT_SWEEP
+                    sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                    sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
                     if (sweep1, sweep2) not in (('forward', 'backward'),
                                                 ('backward', 'forward'),
                                                 ('symmetric', 'symmetric')):
@@ -331,14 +303,11 @@ def change_smoothers(ml, presmoother, postsmoother):
                 setup_presmoother = _setup_call(str(fn1).lower())
             except NameError as e:
                 raise NameError(f'Invalid presmoother method: {fn1}') from e
+
             ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
             # Set up postsmoother
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
-
-            # Save tuples in ml to check cycle complexity
-            ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
-            ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
 
             # Check if symmetric smoothing scheme
             if 'iterations' in kwargs1:
@@ -350,51 +319,33 @@ def change_smoothers(ml, presmoother, postsmoother):
                 it2 = kwargs2['iterations']
             else:
                 it2 = DEFAULT_NITER
-            if (it1 != it2):
+
+            if it1 != it2:
                 ml.symmetric_smoothing = False
-            elif (fn1 != fn2):
-                if (fn1, fn2) in (('CF_jacobi', 'FC_jacobi'),
-                                  ('FC_jacobi', 'CF_jacobi'),
-                                  ('CF_block_jacobi', 'FC_block_jacobi'),
-                                  ('FC_block_jacobi', 'CF_block_jacobi')):
-                    if fit1 in kwargs1:
-                        fit1 = kwargs1['F_iterations']
-                    else:
-                        fit1 = DEFAULT_NITER
-                    if fit2 in kwargs2:
-                        fit2 = kwargs2['F_iterations']
-                    else:
-                        fit2 = DEFAULT_NITER
-                    if cit1 in kwargs1:
-                        cit1 = kwargs1['C_iterations']
-                    else:
-                        cit1 = DEFAULT_NITER
-                    if cit2 in kwargs2:
-                        cit2 = kwargs2['C_iterations']
-                    else:
-                        cit2 = DEFAULT_NITER
-                    if ((fit1 == fit2) and (cit1 == cit2)):
-                        pass
-                    else:
-                        ml.symmetric_smoothing = False
+            elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
+                                ('FC_jacobi', 'CF_jacobi'),
+                                ('CF_block_jacobi', 'FC_block_jacobi'),
+                                ('FC_block_jacobi', 'CF_block_jacobi')]:
+
+                fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+
+                if not (fit1 == fit2 and cit1 == cit2):
+                    ml.symmetric_smoothing = False
 
             elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if ('CF' in fn1) or ('FC' in fn1):
+                if fn1 in ('CF', 'FC'):
                     ml.symmetric_smoothing = False
                 else:
-                    if 'sweep' in kwargs1:
-                        sweep1 = kwargs1['sweep']
-                    else:
-                        sweep1 = DEFAULT_SWEEP
-                    if 'sweep' in kwargs2:
-                        sweep2 = kwargs2['sweep']
-                    else:
-                        sweep2 = DEFAULT_SWEEP
-                    if (sweep1, sweep2) not in (('forward', 'backward'),
+                    sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                    sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
+                    if (sweep1, sweep2) not in [('forward', 'backward'),
                                                 ('backward', 'forward'),
-                                                ('symmetric', 'symmetric')):
+                                                ('symmetric', 'symmetric')]:
                         ml.symmetric_smoothing = False
     else:
         mid_len = min_len
@@ -403,8 +354,6 @@ def change_smoothers(ml, presmoother, postsmoother):
     for i in range(mid_len, len(ml.levels[:-1])):
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
-        ml.levels[i].smoothers['presmoother'] = [fn1, kwargs1]
-        ml.levels[i].smoothers['postsmoother'] = [fn2, kwargs2]
 
 
 def rho_D_inv_A(A):
