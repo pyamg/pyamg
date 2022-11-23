@@ -706,6 +706,7 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
+    """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -720,33 +721,33 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
 
     # Check for compatible dimensions
     if (lvl.A.shape[0] % blocksize) != 0:
-        raise ValueError("Blocksize does not divide size of matrix.")
-    elif (len(lvl.splitting)*blocksize != lvl.A.shape[0]):
-        raise ValueError("Blocksize not compatible with CF-splitting and matrix size.")
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_cf_jacobi(lvl, iterations=iterations, omega=omega,
-                            withrho=withrho)
-    else:
-        Fpts, Cpts = _extract_splitting(lvl)
+        return setup_cf_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
 
-        # Use Block Jacobi
-        if Dinv is None:
-            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-        if withrho:
-            omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+    Fpts, Cpts = _extract_splitting(lvl)
 
-        def smoother(A, x, b):
-            relaxation.cf_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                       f_iterations=f_iterations,  c_iterations=c_iterations,
-                                       omega=omega, Dinv=Dinv, blocksize=blocksize)
-        return smoother
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+
+    def smoother(A, x, b):
+        relaxation.cf_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
+                                   f_iterations=f_iterations,  c_iterations=c_iterations,
+                                   omega=omega, Dinv=Dinv, blocksize=blocksize)
+    return smoother
 
 
 def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
+    """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
         if sparse.isspmatrix_csr(lvl.A):
@@ -761,28 +762,27 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
 
     # Check for compatible dimensions
     if (lvl.A.shape[0] % blocksize) != 0:
-        raise ValueError("Blocksize does not divide size of matrix.")
-    elif (len(lvl.splitting)*blocksize != lvl.A.shape[0]):
-        raise ValueError("Blocksize not compatible with CF-splitting and matrix size.")
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_fc_jacobi(lvl, iterations=iterations, omega=omega,
-                            withrho=withrho)
-    else:
-        Fpts, Cpts = _extract_splitting(lvl)
+        return setup_fc_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
 
-        # Use Block Jacobi
-        if Dinv is None:
-            Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
-        if withrho:
-            omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+    Fpts, Cpts = _extract_splitting(lvl)
 
-        def smoother(A, x, b):
-            relaxation.fc_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                       f_iterations=f_iterations,  c_iterations=c_iterations,
-                                       omega=omega, Dinv=Dinv, blocksize=blocksize)
-        return smoother
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+
+    def smoother(A, x, b):
+        relaxation.fc_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
+                                   f_iterations=f_iterations,  c_iterations=c_iterations,
+                                   omega=omega, Dinv=Dinv, blocksize=blocksize)
+    return smoother
 
 
 def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
