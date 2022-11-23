@@ -5,16 +5,11 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 from scipy.linalg import lapack as la
+
 from ..util.utils import type_prep, get_diagonal, get_block_diag
 from ..util.params import set_tol
 from ..util.linalg import norm
 from .. import amg_core
-
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'schwarz', \
-           'schwarz_parameters', 'jacobi_ne', 'gauss_seidel_ne', \
-           'gauss_seidel_nr', 'gauss_seidel_indexed', 'block_jacobi', \
-           'block_gauss_seidel',  'cf_jacobi', 'fc_jacobi', \
-           'cf_block_jacobi', 'fc_block_jacobi']
 
 
 def make_system(A, x, b, formats=None):
@@ -916,8 +911,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
 def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
-    """Perform Gauss-Seidel iterations on the normal equations, 
-    A.H A x = A.H b.
+    """Perform Gauss-Seidel iterations on the normal equations, A.H A x = A.H b.
 
     Parameters
     ----------
