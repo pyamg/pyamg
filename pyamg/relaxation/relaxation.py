@@ -13,8 +13,8 @@ from .. import amg_core
 __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'schwarz', \
            'schwarz_parameters', 'jacobi_ne', 'gauss_seidel_ne', \
            'gauss_seidel_nr', 'gauss_seidel_indexed', 'block_jacobi', \
-           'block_gauss_seidel',  'CF_jacobi', 'FC_jacobi', \
-           'CF_block_jacobi', 'FC_block_jacobi']
+           'block_gauss_seidel',  'cf_jacobi', 'fc_jacobi', \
+           'cf_block_jacobi', 'fc_block_jacobi']
 
 
 def make_system(A, x, b, formats=None):
@@ -1083,7 +1083,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                             inv_subblock_ptr)
     return A.schwarz_parameters
 
-def CF_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
+def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
               C_iterations=1, omega=1.0):
     """Perform CF Jacobi iteration on the linear system Ax=b, that is
 
@@ -1142,7 +1142,7 @@ def CF_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
                                             x, b, Fpts, R, omega)
 
 
-def FC_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
+def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
               C_iterations=1, omega=1.0):
     """Perform FC Jacobi iteration on the linear system Ax=b, that is
 
@@ -1201,7 +1201,7 @@ def FC_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
                                             x, b, Cpts, R, omega)
 
 
-def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     F_iterations=1, C_iterations=1, omega=1.0):
     """Perform CF block Jacobi iteration on the linear system Ax=b, that is
 
@@ -1267,7 +1267,7 @@ def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                                           blocksize)
 
 
-def FC_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     F_iterations=1, C_iterations=1, omega=1.0):
     """Perform FC block Jacobi iteration on the linear system Ax=b, that is
 

@@ -112,10 +112,10 @@ def change_smoothers(ml, presmoother, postsmoother):
         block_gauss_seidel
         jacobi
         block_jacobi
-        CF_jacobi
-        FC_jacobi
-        CF_block_jacobi
-        FC_block_jacobi
+        cf_jacobi
+        fc_jacobi
+        cf_block_jacobi
+        fc_block_jacobi
         richardson
         sor
         chebyshev
@@ -213,10 +213,10 @@ def change_smoothers(ml, presmoother, postsmoother):
 
         if it1 != it2:
             ml.symmetric_smoothing = False
-        elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
-                            ('FC_jacobi', 'CF_jacobi'),
-                            ('CF_block_jacobi', 'FC_block_jacobi'),
-                            ('FC_block_jacobi', 'CF_block_jacobi')]:
+        elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                            ('fc_jacobi', 'cf_jacobi'),
+                            ('cf_block_jacobi', 'fc_block_jacobi'),
+                            ('fc_block_jacobi', 'cf_block_jacobi')]:
 
             fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
             fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
@@ -267,10 +267,10 @@ def change_smoothers(ml, presmoother, postsmoother):
 
             if it1 != it2:
                 ml.symmetric_smoothing = False
-            elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
-                                ('FC_jacobi', 'CF_jacobi'),
-                                ('CF_block_jacobi', 'FC_block_jacobi'),
-                                ('FC_block_jacobi', 'CF_block_jacobi')]:
+            elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                                ('fc_jacobi', 'cf_jacobi'),
+                                ('cf_block_jacobi', 'fc_block_jacobi'),
+                                ('fc_block_jacobi', 'cf_block_jacobi')]:
                 fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
                 fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
                 cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
@@ -322,10 +322,10 @@ def change_smoothers(ml, presmoother, postsmoother):
 
             if it1 != it2:
                 ml.symmetric_smoothing = False
-            elif (fn1, fn2) in [('CF_jacobi', 'FC_jacobi'),
-                                ('FC_jacobi', 'CF_jacobi'),
-                                ('CF_block_jacobi', 'FC_block_jacobi'),
-                                ('FC_block_jacobi', 'CF_block_jacobi')]:
+            elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                                ('fc_jacobi', 'cf_jacobi'),
+                                ('cf_block_jacobi', 'fc_block_jacobi'),
+                                ('fc_block_jacobi', 'cf_block_jacobi')]:
 
                 fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
                 fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
@@ -656,7 +656,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     return smoother
 
 
-def setup_CF_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_cf_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
                     iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
@@ -671,13 +671,13 @@ def setup_CF_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
         raise ValueError("CF-splitting array needs to be stored in hierarchy.")
 
     def smoother(A, x, b):
-        relaxation.CF_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
+        relaxation.cf_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
                              C_iterations=C_iterations, iterations=DEFAULT_NITER,
                              omega=omega)
     return smoother
 
 
-def setup_FC_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_fc_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
                     iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
@@ -692,13 +692,13 @@ def setup_FC_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
         raise ValueError("CF-splitting array needs to be stored in hierarchy.")
 
     def smoother(A, x, b):
-        relaxation.FC_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
+        relaxation.fc_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
                              C_iterations=C_iterations, iterations=DEFAULT_NITER,
                              omega=omega)
     return smoother
 
 
-def setup_CF_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_cf_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
     # Determine Blocksize
@@ -721,7 +721,7 @@ def setup_CF_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_CF_jacobi(lvl, iterations=iterations, omega=omega,
+        return setup_cf_jacobi(lvl, iterations=iterations, omega=omega,
                             withrho=withrho)
     else:
         # Get C-points and F-points from splitting
@@ -740,13 +740,13 @@ def setup_CF_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
             omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
         def smoother(A, x, b):
-            relaxation.CF_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
+            relaxation.cf_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
                                        F_iterations=F_iterations,  C_iterations=C_iterations,
                                        omega=omega, Dinv=Dinv, blocksize=blocksize)
         return smoother
 
 
-def setup_FC_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_fc_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
     # Determine Blocksize
@@ -769,7 +769,7 @@ def setup_FC_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_FC_jacobi(lvl, iterations=iterations, omega=omega,
+        return setup_fc_jacobi(lvl, iterations=iterations, omega=omega,
                             withrho=withrho)
     else:
         # Get C-points and F-points from splitting
@@ -788,7 +788,7 @@ def setup_FC_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
             omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
         def smoother(A, x, b):
-            relaxation.FC_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
+            relaxation.fc_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
                                        F_iterations=F_iterations,  C_iterations=C_iterations,
                                        omega=omega, Dinv=Dinv, blocksize=blocksize)
         return smoother
@@ -854,10 +854,10 @@ def _setup_call(fn):
         'jacobi_ne':              setup_jacobi_ne,
         'gauss_seidel_ne':        setup_gauss_seidel_ne,
         'gauss_seidel_nr':        setup_gauss_seidel_nr,
-        'cf_jacobi':              setup_CF_jacobi,
-        'fc_jacobi':              setup_FC_jacobi,
-        'cf_block_jacobi':        setup_CF_block_jacobi,
-        'fc_block_jacobi':        setup_FC_block_jacobi,
+        'cf_jacobi':              setup_cf_jacobi,
+        'fc_jacobi':              setup_fc_jacobi,
+        'cf_block_jacobi':        setup_cf_block_jacobi,
+        'fc_block_jacobi':        setup_fc_block_jacobi,
         'gmres':                  setup_gmres,
         'cg':                     setup_cg,
         'cgne':                   setup_cgne,
