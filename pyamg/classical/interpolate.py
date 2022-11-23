@@ -55,27 +55,23 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
         raise TypeError('expected csr_matrix for C')
     
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
-    C0.eliminate_zeros()
+        C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to the
     # sparsity pattern of C.  So, copy the entries of A into sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
+    C.data[:] = 1.0
+    C = C.multiply(A)
 
     P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_direct_interpolation_pass1(A.shape[0], C0.indptr, C0.indices, 
+    amg_core.rs_direct_interpolation_pass1(A.shape[0], C.indptr, C.indices, 
                                            splitting, P_indptr)
     nnz = P_indptr[-1]
     P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
 
     amg_core.rs_direct_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                           A.data, C0.indptr, C0.indices, C0.data,
+                                           A.data, C.indptr, C.indices, C.data,
                                            splitting, P_indptr, P_colinds, P_data)
 
     nc = np.sum(splitting)
@@ -139,40 +135,36 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     n = A.shape[0]
 
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
+        C = classical_strength_of_connection(A, theta=theta, norm=norm)
 
     # Use modified standard interpolation by ignoring strong F-connections that do
     # not have a common C-point.
     if modified:
-        amg_core.remove_strong_FF_connections(A.shape[0], C0.indptr, C0.indices, C0.data, splitting)
-    C0.eliminate_zeros()
+        amg_core.remove_strong_FF_connections(A.shape[0], C.indptr, C.indices, C.data, splitting)
+    C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
     # sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
+    C.data[:] = 1.0
+    C = C.multiply(A)
 
     P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_standard_interpolation_pass1(A.shape[0], C0.indptr,
-                                             C0.indices, splitting, P_indptr)
+    amg_core.rs_standard_interpolation_pass1(A.shape[0], C.indptr,
+                                             C.indices, splitting, P_indptr)
     nnz = P_indptr[-1]
     P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
 
     if modified:
         amg_core.mod_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                  A.data, C0.indptr, C0.indices,
-                                                  C0.data, splitting, P_indptr,
+                                                  A.data, C.indptr, C.indices,
+                                                  C.data, splitting, P_indptr,
                                                   P_colinds, P_data)
     else:
         amg_core.rs_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                 A.data, C0.indptr, C0.indices,
-                                                 C0.data, splitting, P_indptr,
+                                                 A.data, C.indptr, C.indices,
+                                                 C.data, splitting, P_indptr,
                                                  P_colinds, P_data)
 
     return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
@@ -225,34 +217,30 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
     n = A.shape[0]
 
     if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
-    C0.eliminate_zeros()
+        C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
     # sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
+    C.data[:] = 1.0
+    C = C.multiply(A)
 
     P_indptr = np.empty_like(A.indptr)
-    amg_core.distance_two_amg_interpolation_pass1(A.shape[0], C0.indptr,
-                                                  C0.indices, splitting, P_indptr)
+    amg_core.distance_two_amg_interpolation_pass1(A.shape[0], C.indptr,
+                                                  C.indices, splitting, P_indptr)
     nnz = P_indptr[-1]
     P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
     if plus_i:
         amg_core.extended_plusi_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                    A.data, C0.indptr, C0.indices,
-                                                    C0.data, splitting, P_indptr,
+                                                    A.data, C.indptr, C.indices,
+                                                    C.data, splitting, P_indptr,
                                                     P_colinds, P_data)
     else:
         amg_core.extended_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                              A.data, C0.indptr, C0.indices,
-                                              C0.data, splitting, P_indptr,
+                                              A.data, C.indptr, C.indices,
+                                              C.data, splitting, P_indptr,
                                               P_colinds, P_data)
 
     return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
