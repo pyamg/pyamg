@@ -179,7 +179,7 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
 
 
 
-def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=True):
+def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=False):
     """Create prolongator using distance-two AMG interpolation (extended+i interpolaton).
 
     Parameters
@@ -200,7 +200,7 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=T
         'abs' for CSR matrices. See strength.py for more information.
     plus_i : bool, default True
         Use "Extended+i" interpolation from [0] as opposed to "Extended"
-        interpolation. Typically gives better interpolation with minimal
+        interpolation. Can give better interpolation with minimal
         added expense.
 
     Returns

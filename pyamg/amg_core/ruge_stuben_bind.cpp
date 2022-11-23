@@ -643,28 +643,39 @@ Compute a strength of connection matrix using the classical strength
  matrices are stored in CSR format.  An off-diagonal nonzero entry
  A[i,j] is considered strong if:
 
+ ..
      |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
 
 Otherwise, the connection is weak.
 
- Parameters
-     num_rows   - number of rows in A
-     theta      - stength of connection tolerance
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-     Sp[]       - (output) CSR row pointer
-     Sj[]       - (output) CSR index array
-     Sx[]       - (output) CSR data array
+Parameters
+----------
+num_rows : int
+    number of rows in A
+theta : float
+    stength of connection tolerance
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
+Sp : array
+    CSR row pointer
+Sj : array
+    CSR index array
+Sx : array
+    CSR data array
 
+Returns
+-------
+Nothing, S will be stored in Sp, Sj, Sx
 
- Returns:
-     Nothing, S will be stored in Sp, Sj, Sx
-
- Notes:
-     Storage for S must be preallocated.  Since S will consist of a subset
-     of A's nonzero values, a conservative bound is to allocate the same
-     storage for S as is used by A.)pbdoc");
+Notes
+-----
+Storage for S must be preallocated.  Since S will consist of a subset
+of A's nonzero values, a conservative bound is to allocate the same
+storage for S as is used by A.)pbdoc");
 
     m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
@@ -684,23 +695,53 @@ R"pbdoc(
 R"pbdoc(
 Compute the maximum in magnitude row value for a CSR matrix
 
- Parameters
-     num_rows   - number of rows in A
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-      x[]       - num_rows array
+Parameters
+----------
+num_rows : int
+    number of rows in A
+x : array, inplace
+     num_rows array
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+Ax : array
+    CSR data array
 
- Returns:
-     Nothing, x[i] will hold row i's maximum magnitude entry)pbdoc");
+Returns
+-------
+Nothing, x[i] will hold row i's maximum magnitude entry)pbdoc");
 
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
-splitting - array to store the C/F splitting
+Compute a C/F (coarse-fine) splitting using the classical coarse grid
+selection method of Ruge and Stuben.  The strength of connection matrix S,
+and its transpose T, are stored in CSR format.  Upon return, the  splitting
+array will consist of zeros and ones, where C-nodes (coarse nodes) are
+marked with the value 1 and F-nodes (fine nodes) with the value 0.
 
-Notes:
-  The splitting array must be preallocated)pbdoc");
+Parameters
+----------
+n_nodes : int
+    number of rows in A
+C_rowptr : array
+    CSR row pointer array for SOC matrix
+C_colinds : array
+    CSR column index array for SOC matrix
+Tp : array
+    CSR row pointer array for transpose of SOC matrix
+Tj : array
+    CSR column index array for transpose of SOC matrix
+influence : array
+    array that influences splitting (values stored here are
+    added to lambda for each point)
+splitting : array, inplace
+    array to store the C/F splitting
+
+Notes
+-----
+The splitting array must be preallocated)pbdoc");
 
     m.def("rs_cf_splitting_pass2", &_rs_cf_splitting_pass2<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(),
@@ -718,13 +759,27 @@ R"pbdoc(
 Produce the Ruge-Stuben prolongator using "Direct Interpolation"
 
 
-  The first pass uses the strength of connection matrix 'S'
-  and C/F splitting to compute the row pointer for the prolongator.
+The first pass uses the strength of connection matrix 'S'
+and C/F splitting to compute the row pointer for the prolongator.
 
-  The second pass fills in the nonzero entries of the prolongator
+The second pass fills in the nonzero entries of the prolongator
 
-  Reference:
-     Page 479 of "Multigrid")pbdoc");
+Parameters
+----------
+n_nodes : int
+    Number of nodes
+Sp : array
+    Strength matrix row pointer array
+Sj : array
+    Strength matrix column index array
+splitting : array
+    C/F splitting
+Bp : array, inplace
+    Row pointer array
+
+References
+----------
+Page 479 of Multigrid)pbdoc");
 
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, float>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
@@ -747,23 +802,23 @@ Ap : const {int array}
      Row pointer for sparse matrix in CSR format.
 Aj : const {int array}
      Column indices for sparse matrix in CSR format.
-B : const {float array}
+B : array
      Target near null space vector for computing candidate set measure.
-e : {float array}
+e : array, inplace
      Relaxed vector for computing candidate set measure.
-indices : {int array}
+indices : array, inplace
      Array of indices, where indices[0] = the number of F indices, nf,
      followed by F indices in elements 1:nf, and C indices in (nf+1):n.
-splitting : {int array}
+splitting : array, inplace
      Integer array with current C/F splitting of nodes, 0 = C-point,
      1 = F-point.
-gamma : {float array}
+gamma : array, inplace
      Preallocated vector to store candidate set measure.
-thetacs : const {float}
+thetacs : float
      Threshold for coarse grid candidates from set measure.
 
-Returns:
---------
+Returns
+-------
 Nothing, updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
     m.def("rs_standard_interpolation_pass1", &_rs_standard_interpolation_pass1<int>,
@@ -798,7 +853,7 @@ R"pbdoc(
 Produce the classical "standard" AMG interpolation operator. The first pass
 uses the strength of connection matrix and C/F splitting to compute the row
 pointer for the prolongator. The second pass fills in the nonzero entries of
-the prolongator. Formula can be found in Eq. (3.7) in [1].
+the prolongator. Formula can be found in Eq. (3.8) in [1].
 
 Parameters:
 -----------
@@ -831,12 +886,12 @@ Nothing, Pj[] and Px[] modified in place.
 
 References:
 -----------
-[0] J. W. Ruge and K. Stu ̈ben, Algebraic multigrid (AMG), in : S. F.
+[0] J. W. Ruge and K. Stüben, Algebraic multigrid (AMG), in : S. F.
      McCormick, ed., Multigrid Methods, vol. 3 of Frontiers in Applied
      Mathematics (SIAM, Philadelphia, 1987) 73–130.
 
 [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
-     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).)pbdoc");
+     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
     m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int, float>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert());
@@ -872,7 +927,7 @@ Returns:
 R"pbdoc(
 Produce a modified "standard" AMG interpolation operator for the case in which
 two strongly connected F -points do NOT have a common C-neighbor. Formula can
-be found in Eq. (3.8) of [1].
+be found in Eq. (3.9) of [1].
 
 Parameters:
 -----------
@@ -913,7 +968,7 @@ References:
      solver and preconditioner, Applied Numerical Mathematics 41 (2002).
 
 [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
-     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).)pbdoc");
+     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
     m.def("distance_two_amg_interpolation_pass1", &_distance_two_amg_interpolation_pass1<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
@@ -947,7 +1002,7 @@ Nothing, Pp is modified in place.)pbdoc");
 R"pbdoc(
 Compute distance-two "Extended+i" classical AMG interpolation from [0]. Uses
 neighbors within distance two for interpolation weights. Formula can be found
-in Eqs. (4.10-4.11) in [0].
+in Eqs. (4.19-4.20) in [0].
 
 Parameters:
 -----------
@@ -984,7 +1039,7 @@ to improve interpolation.
 References:
 -----------
 [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
-     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).)pbdoc");
+     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
     m.def("extended_interpolation_pass2", &_extended_interpolation_pass2<int, float>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
@@ -993,7 +1048,7 @@ References:
 R"pbdoc(
 Compute distance-two "Extended" classical AMG interpolation from [0]. Uses
 neighbors within distance two for interpolation weights. Formula can be found
-in Eq. (4.6) in [0].
+in Eq. (4.15) in [0].
 
 Parameters:
 -----------
@@ -1025,7 +1080,7 @@ Nothing, Pj[] and Px[] modified in place.
 References:
 -----------
 [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
-     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).)pbdoc");
+     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
 }
 
