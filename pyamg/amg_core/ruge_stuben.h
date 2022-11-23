@@ -1813,9 +1813,6 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                             T numerator = a_ij;
 
                             // Sum over strongly connected F points
-                            // TODO : does this seem strange looping over strong F connections to i, when
-                            //        we are looking at distance two connections? We don't look at strong
-                            //        F connections to the new C-point (neighbor2)??
                             for (I kk = Sp[i]; kk < Sp[i+1]; kk++) {
                                 if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ) {
                                     
