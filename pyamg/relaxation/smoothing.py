@@ -218,10 +218,10 @@ def change_smoothers(ml, presmoother, postsmoother):
                             ('cf_block_jacobi', 'fc_block_jacobi'),
                             ('fc_block_jacobi', 'cf_block_jacobi')]:
 
-            fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
-            fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
-            cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
-            cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+            fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+            fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+            cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+            cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
 
             if not (fit1 == fit2 and cit1 == cit2):
                 ml.symmetric_smoothing = False
@@ -271,10 +271,10 @@ def change_smoothers(ml, presmoother, postsmoother):
                                 ('fc_jacobi', 'cf_jacobi'),
                                 ('cf_block_jacobi', 'fc_block_jacobi'),
                                 ('fc_block_jacobi', 'cf_block_jacobi')]:
-                fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
-                fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
-                cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
-                cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+                fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
 
                 if not (fit1 == fit2 and cit1 == cit2):
                     ml.symmetric_smoothing = False
@@ -327,10 +327,10 @@ def change_smoothers(ml, presmoother, postsmoother):
                                 ('cf_block_jacobi', 'fc_block_jacobi'),
                                 ('fc_block_jacobi', 'cf_block_jacobi')]:
 
-                fit1 = kwargs1.get('F_iterations', DEFAULT_NITER)
-                fit2 = kwargs2.get('F_iterations', DEFAULT_NITER)
-                cit1 = kwargs1.get('C_iterations', DEFAULT_NITER)
-                cit2 = kwargs2.get('C_iterations', DEFAULT_NITER)
+                fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
 
                 if not (fit1 == fit2 and cit1 == cit2):
                     ml.symmetric_smoothing = False
@@ -656,8 +656,9 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     return smoother
 
 
-def setup_cf_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                     iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+    """Set up coarse-fine Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
@@ -671,14 +672,15 @@ def setup_cf_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
         raise ValueError("CF-splitting array needs to be stored in hierarchy.")
 
     def smoother(A, x, b):
-        relaxation.cf_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
-                             C_iterations=C_iterations, iterations=DEFAULT_NITER,
+        relaxation.cf_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
+                             c_iterations=c_iterations, iterations=DEFAULT_NITER,
                              omega=omega)
     return smoother
 
 
-def setup_fc_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                     iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+    """Set up fine-coarse Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
@@ -692,13 +694,13 @@ def setup_fc_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
         raise ValueError("CF-splitting array needs to be stored in hierarchy.")
 
     def smoother(A, x, b):
-        relaxation.fc_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, F_iterations=F_iterations,
-                             C_iterations=C_iterations, iterations=DEFAULT_NITER,
+        relaxation.fc_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
+                             c_iterations=c_iterations, iterations=DEFAULT_NITER,
                              omega=omega)
     return smoother
 
 
-def setup_cf_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
     # Determine Blocksize
@@ -741,12 +743,12 @@ def setup_cf_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
 
         def smoother(A, x, b):
             relaxation.cf_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                       F_iterations=F_iterations,  C_iterations=C_iterations,
+                                       f_iterations=f_iterations,  c_iterations=c_iterations,
                                        omega=omega, Dinv=Dinv, blocksize=blocksize)
         return smoother
 
 
-def setup_fc_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_NITER,
+def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
     # Determine Blocksize
@@ -789,7 +791,7 @@ def setup_fc_block_jacobi(lvl, F_iterations=DEFAULT_NITER, C_iterations=DEFAULT_
 
         def smoother(A, x, b):
             relaxation.fc_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                       F_iterations=F_iterations,  C_iterations=C_iterations,
+                                       f_iterations=f_iterations,  c_iterations=c_iterations,
                                        omega=omega, Dinv=Dinv, blocksize=blocksize)
         return smoother
 
