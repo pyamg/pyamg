@@ -1130,6 +1130,8 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
+        if indices.max() > A.shape[0]/R - 1:
+            raise ValueError('Indices must range from 0, ..., numrows/blocksize - 1)')
         for _iter in range(iterations):
             amg_core.bsr_jacobi_indexed(A.indptr, A.indices, A.data.ravel(), x, b,
                                         indices, R, omega)

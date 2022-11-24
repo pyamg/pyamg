@@ -1793,14 +1793,14 @@ class TestJacobiIndexed(TestCase):
         assert_almost_equal(x_j, x_ji)
 
         # test blocks
-        A = poisson((8, 8)).tobsr(blocksize=(2, 2))
+        A = poisson((8, )).tobsr(blocksize=(2, 2))
         n = A.shape[0]
-        np.random.seed(2519371657)
+        np.random.seed(25371657)
         x0 = np.random.rand(n)
         b = np.random.rand(n)
         x_j = x0.copy()
         x_ji = x0.copy()
-        indices = np.arange(n, dtype=np.int32)
-        jacobi(A, x_j, b, omega=0.3)
-        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        indices = np.arange(4, dtype=np.int32)
+        jacobi(A, x_j, b)
+        jacobi_indexed(A, x_ji, b, indices)
         assert_almost_equal(x_j, x_ji)
