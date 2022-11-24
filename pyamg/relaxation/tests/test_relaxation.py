@@ -11,7 +11,8 @@ from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
     gauss_seidel_indexed, polynomial, gauss_seidel_ne,\
-    gauss_seidel_nr
+    gauss_seidel_nr,\
+    jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
 
 # Ignore efficiency warnings
@@ -40,6 +41,7 @@ class TestCommonRelaxation(TestCase):
         self.cases.append((sor, (0.5,), {}))
         self.cases.append((gauss_seidel_indexed, ([1, 0],), {}))
         self.cases.append((polynomial, ([0.6, 0.1],), {}))
+        self.cases.append((jacobi_indexed, ([1, 0],), {}))
 
     def test_single_precision(self):
 
@@ -405,6 +407,47 @@ class TestRelaxation(TestCase):
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 0])
+        assert_almost_equal(x, np.array([1.0/2.0, 1.0, 1.0, 1.0]))
+
+    def test_jacobi_indexed(self):
+        N = 1
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0])
+        assert_almost_equal(x, np.array([0]))
+
+        N = 3
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 1, 2])
+        assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
+
+        N = 3
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [2, 1, 0])
+        assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
+
+        N = 4
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.ones(N)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 3])
+        assert_almost_equal(x, np.array([0.5, 1.0, 1.0, 0.5]))
+
+        N = 4
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
+                    format='csr')
+        x = np.ones(N)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 0])
         assert_almost_equal(x, np.array([1.0/2.0, 1.0, 1.0, 1.0]))
 
     def test_jacobi_ne(self):

@@ -1077,6 +1077,64 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     return A.schwarz_parameters
 
 
+def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
+    """Perform indexed Jacobi iteration on the linear system Ax=b.
+
+    The indexed method may be used to implement
+    specialized smoothers, like F-smoothing in classical AMG.
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    indices : ndarray
+        Row indices to relax.
+    iterations : int
+        Number of iterations to perform
+    omega : scalar
+        Damping parameter
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.relaxation.relaxation import jacobi_indexed
+    >>> import numpy as np
+    >>> A = poisson((4,), format='csr')
+    >>> x = np.array([0.0, 0.0, 0.0, 0.0])
+    >>> b = np.array([0.0, 1.0, 2.0, 3.0])
+    >>> jacobi_indexed(A, x, b, [0,1,2,3])  # relax all rows in order
+    >>> jacobi_indexed(A, x, b, [0,1])      # relax first two rows
+    >>> jacobi_indexed(A, x, b, [2,0])      # relax row 2, then row 0
+    >>> jacobi_indexed(A, x, b, [2,3])      # relax 2 and 3
+
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    indices = np.asarray(indices, dtype='intc')
+
+    # Create uniform type, convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
+
+    if sparse.isspmatrix_csr(A):
+        for _iter in range(iterations):
+            amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, indices, omega)
+    else:
+        R, C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        for _iter in range(iterations):
+            amg_core.bsr_jacobi_indexed(A.indptr, A.indices, A.data.ravel(), x, b,
+                                        indices, omega)
+
+
 def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
     """Perform CF Jacobi iteration on the linear system Ax=b.
