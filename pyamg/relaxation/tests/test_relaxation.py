@@ -196,7 +196,6 @@ class TestRelaxation(TestCase):
 
     def test_jacobi_bsr(self):
         cases = []
-        # JBS: remove some N
         for N in [1, 2, 3, 4, 5, 6, 10]:
             cases.append(spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)],
                                  [0, -1, 1], N, N).tocsr())
@@ -502,7 +501,6 @@ class TestRelaxation(TestCase):
         assert_almost_equal(x, xtrue)
 
     def test_gauss_seidel_ne_bsr(self):
-        # JBS: remove some N
         for N in [1, 2, 3, 4, 5, 6, 10]:
             A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
                         N, N).tocsr()
@@ -1751,17 +1749,3 @@ class TestBlockRelaxation(TestCase):
                                blocksize=blocksize)
             assert_almost_equal(x, gold(A, x_copy, b, blocksize, 'symmetric'),
                                 decimal=4)
-
-# class TestDispatch(TestCase):
-#     def test_string(self):
-#         from pyamg.relaxation import dispatch
-#
-#         A = poisson( (4,), format='csr')
-#
-#         cases = []
-#         cases.append( 'gauss_seidel' )
-#         cases.append( ('gauss_seidel',{'iterations':3}) )
-#
-#         for case in cases:
-#             fn = dispatch(case)
-#             fn(A, np.ones(4), np.zeros(4))
