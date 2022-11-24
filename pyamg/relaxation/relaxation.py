@@ -1132,7 +1132,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
             raise ValueError('BSR blocks must be square')
         for _iter in range(iterations):
             amg_core.bsr_jacobi_indexed(A.indptr, A.indices, A.data.ravel(), x, b,
-                                        indices, omega)
+                                        indices, R, omega)
 
 
 def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,

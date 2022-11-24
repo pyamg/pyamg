@@ -1749,3 +1749,58 @@ class TestBlockRelaxation(TestCase):
                                blocksize=blocksize)
             assert_almost_equal(x, gold(A, x_copy, b, blocksize, 'symmetric'),
                                 decimal=4)
+
+
+class TestJacobiIndexed(TestCase):
+    """Test indexed Jacobi routines against other routines."""
+
+    def test_compare_jacobi_indexed_to_jacobi(self):
+        A = poisson((8, 8), format='csr')
+        n = A.shape[0]
+        np.random.seed(336671267)
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+
+        # test all indices
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j, x_ji)
+
+        # test last 5 indices
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(n-5, n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j[-5:], x_ji[-5:])
+
+        # test complex
+        np.random.seed(635353774)
+        A = A.astype(np.complex128)
+        b = b.astype(np.complex128)
+        x0 = np.random.rand(n)
+        x_j = x0.copy().astype(np.complex128)
+        x_ji = x0.copy().astype(np.complex128)
+
+        A.data[:] += 0.1 * np.random.randn(len(A.data))
+        A.data[:] += 0.1 * 1j * np.random.randn(len(A.data))
+        indices = np.arange(n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j, x_ji)
+
+        # test blocks
+        A = poisson((8, 8)).tobsr(blocksize=(2, 2))
+        n = A.shape[0]
+        np.random.seed(2519371657)
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(n, dtype=np.int32)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j, x_ji)
