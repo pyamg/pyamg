@@ -242,6 +242,8 @@ def change_smoothers(ml, presmoother, postsmoother):
 
             if not (fit1 == fit2 and cit1 == cit2):
                 ml.symmetric_smoothing = False
+        elif fn1 != fn2:
+            ml.symmetric_smoothing = False
         elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
@@ -295,10 +297,10 @@ def change_smoothers(ml, presmoother, postsmoother):
 
                 if not (fit1 == fit2 and cit1 == cit2):
                     ml.symmetric_smoothing = False
-
+            elif fn1 != fn2:
+                ml.symmetric_smoothing = False
             elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
-
             elif fn1 not in SYMMETRIC_RELAXATION:
                 if fn1.startswith(('cf_', 'fc_')):
                     ml.symmetric_smoothing = False
@@ -351,7 +353,8 @@ def change_smoothers(ml, presmoother, postsmoother):
 
                 if not (fit1 == fit2 and cit1 == cit2):
                     ml.symmetric_smoothing = False
-
+            elif fn1 != fn2:
+                ml.symmetric_smoothing = False
             elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
