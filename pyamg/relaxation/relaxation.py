@@ -1078,7 +1078,9 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
 def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
-    """Perform CF Jacobi iteration on the linear system Ax=b, that is
+    """Perform CF Jacobi iteration on the linear system Ax=b.
+
+    CF Jacobi executes
 
         x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
         x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
@@ -1137,7 +1139,9 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
 def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
-    """Perform FC Jacobi iteration on the linear system Ax=b, that is
+    """Perform FC Jacobi iteration on the linear system Ax=b.
+
+    FC Jacobi executes
 
         x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
         x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
@@ -1196,7 +1200,9 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
 def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
-    """Perform CF block Jacobi iteration on the linear system Ax=b, that is
+    """Perform CF block Jacobi iteration on the linear system Ax=b.
+
+    CF block Jacobi executes
 
         x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
         x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
@@ -1262,7 +1268,9 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
 def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
-    """Perform FC block Jacobi iteration on the linear system Ax=b, that is
+    """Perform FC block Jacobi iteration on the linear system Ax=b.
+
+    FC block Jacobi executes
 
         x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
         x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
