@@ -57,7 +57,7 @@ class MultilevelSolver:
         quadratic finite element discretization with linears.
     """
 
-    class Level:  # pylint: disable=too-few-public-methods
+    class Level:
         """Stores one level of the multigrid hierarchy.
 
         All level objects will have an 'A' attribute referencing the matrix
@@ -85,7 +85,7 @@ class MultilevelSolver:
             """Level construct (empty)."""
             self.A = None
 
-    class level(Level):  # noqa: N801 pylint: disable=too-few-public-methods
+    class level(Level):  # noqa: N801
         """Deprecated level class."""
 
         def __init__(self):
@@ -373,7 +373,6 @@ class MultilevelSolver:
 
         return LinearOperator(shape, matvec, dtype=dtype)
 
-    # pylint: disable-next=too-many-return-statements
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
               callback=None, residuals=None, cycles_per_level=1, return_info=False):
         """Execute multigrid cycling.
