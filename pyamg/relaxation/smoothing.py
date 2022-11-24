@@ -245,7 +245,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
-            if fn1 in ('CF', 'FC'):
+            if fn1.startswith(('cf_', 'fc_')):
                 ml.symmetric_smoothing = False
             else:
                 sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
@@ -300,7 +300,7 @@ def change_smoothers(ml, presmoother, postsmoother):
                 ml.symmetric_smoothing = False
 
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if fn1 in ('CF', 'FC'):
+                if fn1.startswith(('cf_', 'fc_')):
                     ml.symmetric_smoothing = False
                 else:
                     sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
@@ -355,7 +355,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if fn1 in ('CF', 'FC'):
+                if fn1.startswith(('cf_', 'fc_')):
                     ml.symmetric_smoothing = False
                 else:
                     sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
