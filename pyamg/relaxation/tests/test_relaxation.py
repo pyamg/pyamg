@@ -7,6 +7,7 @@ from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
 from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
+from pyamg.classical.split import RS
 from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
@@ -1804,3 +1805,38 @@ class TestJacobiIndexed(TestCase):
         jacobi(A, x_j, b)
         jacobi_indexed(A, x_ji, b, indices)
         assert_almost_equal(x_j, x_ji)
+
+    def test_compare_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to indexed."""
+        A = poisson((10, 10), format='csr')
+        splitting = RS(A)
+        f_pts = np.where(splitting == 0)[0]
+        c_pts = np.where(splitting == 1)[0]
+
+        np.random.seed(1479923306)
+        n = A.shape[0]
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        x_cf = x0.copy()
+        x_fc = x0.copy()
+        x_ji = x0.copy()
+
+        # first check F-points zeroed
+        x_cf[f_pts] = 0
+        x_fc[f_pts] = 0
+        x_ji[f_pts] = 0
+        jacobi_indexed(A, x_ji, b, c_pts, omega=0.7)
+        cf_jacobi(A, x_cf, b, c_pts, f_pts, omega=0.7)
+        assert_almost_equal(x_ji[c_pts], x_cf[c_pts])
+
+        # then check C-points zeroed
+        x_cf[c_pts] = 0
+        x_fc[c_pts] = 0
+        x_ji[c_pts] = 0
+        jacobi_indexed(A, x_ji, b, f_pts, omega=0.7)
+        fc_jacobi(A, x_fc, b, c_pts, f_pts, omega=0.7)
+        assert_almost_equal(x_ji[f_pts], x_fc[f_pts])
+
+    def test_integrated_cf_fc_relaxation(self):
+        """Test CF/FC relaxation within a hierarchy."""
+        pass

@@ -1175,6 +1175,9 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
@@ -1235,6 +1238,9 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Nothing, x will be modified in place.
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
 
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
