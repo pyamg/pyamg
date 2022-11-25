@@ -62,7 +62,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     # Amalgamate for the supernode case
     if sparse.isspmatrix_bsr(A):
         sn = int(A.shape[0] / A.blocksize[0])
-        u = np.ones((A.data.shape[0], ))
+        u = np.ones((A.data.shape[0],))
         A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
 
     if not sparse.isspmatrix_csr(A):
@@ -206,7 +206,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
         # drop small numbers
         data[np.abs(data) < 1e-16] = 0.0
     else:
-        if (not sparse.isspmatrix_csr(A)):
+        if not sparse.isspmatrix_csr(A):
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
         data = A.data
@@ -485,7 +485,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     if bsr_flag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
         nblocks = Atilde.indices.shape[0]
-        uone = np.ones((nblocks, ))
+        uone = np.ones((nblocks,))
         Atilde = sparse.csr_matrix((uone, Atilde.indices, Atilde.indptr),
                                    shape=(int(Atilde.shape[0] / numPDEs),
                                           int(Atilde.shape[1] / numPDEs)))
@@ -497,25 +497,15 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
 
 @np.deprecate
-def ode_strength_of_connection(A,
-                               B=None,
-                               epsilon=4.0,
-                               k=2,
-                               proj_type='l2',
-                               block_flag=False,
-                               symmetrize_measure=True):
+def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
+                               block_flag=False, symmetrize_measure=True):
     """Use evolution_strength_of_connection instead (deprecated)."""
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 
 
-def evolution_strength_of_connection(A,
-                                     B=None,
-                                     epsilon=4.0,
-                                     k=2,
-                                     proj_type='l2',
-                                     block_flag=False,
-                                     symmetrize_measure=True):
+def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
+                                     block_flag=False, symmetrize_measure=True):
     """Evolution Strength Measure.
 
     Construct strength of connection matrix using an Evolution-based measure
@@ -591,9 +581,9 @@ def evolution_strength_of_connection(A,
         # Calculate Dinv*A
         if block_flag:
             Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
-            Dinv = sparse.bsr_matrix(
-                (Dinv, np.arange(Dinv.shape[0]), np.arange(Dinv.shape[0] + 1)),
-                shape=A.shape)
+            Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
+                                      np.arange(Dinv.shape[0] + 1)),
+                                     shape=A.shape)
             Dinv_A = (Dinv * A).tocsr()
         else:
             Dinv = np.zeros_like(D)
@@ -660,10 +650,8 @@ def evolution_strength_of_connection(A,
     # a very efficient computational short-cut.  Otherwise, we support
     # other numbers of time steps, through an inefficient algorithm.
     if ninc > 0:
-        warn(
-            'The most efficient time stepping for the Evolution Strength '
-            f'Method is done in powers of two.\nYou have chosen {k} time steps.'
-        )
+        warn('The most efficient time stepping for the Evolution Strength '
+             f'Method is done in powers of two.\nYou have chosen {k} time steps.')
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for _i in range(nsquare):
@@ -800,12 +788,14 @@ def evolution_strength_of_connection(A,
         tol = set_tol(Atilde.dtype)
 
         # Use constrained min problem to define strength
-        amg_core.evolution_strength_helper(Atilde.data, Atilde.indptr,
-                                           Atilde.indices, Atilde.shape[0],
+        amg_core.evolution_strength_helper(Atilde.data,
+                                           Atilde.indptr,
+                                           Atilde.indices,
+                                           Atilde.shape[0],
                                            np.ravel(Bmat),
                                            np.ravel((D_A * B.conj()).T),
-                                           np.ravel(BDB), BDBCols, NullDim,
-                                           tol)
+                                           np.ravel(BDB),
+                                           BDBCols, NullDim, tol)
 
         Atilde.eliminate_zeros()
 
@@ -835,7 +825,7 @@ def evolution_strength_of_connection(A,
 
         n_blocks = Atilde.indices.shape[0]
         blocksize = Atilde.blocksize[0] * Atilde.blocksize[1]
-        CSRdata = np.zeros((n_blocks, ))
+        CSRdata = np.zeros((n_blocks,))
         amg_core.min_blocks(n_blocks, blocksize,
                             np.ravel(np.asarray(Atilde.data)), CSRdata)
         # Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
@@ -1029,8 +1019,8 @@ def distance_measure_common(A, func, alpha, R, k, epsilon):
 
     # remove weak connections
     # removes entry e from a row if e > theta * min of all entries in the row
-    amg_core.apply_distance_filter(C.shape[0], epsilon, C.indptr, C.indices,
-                                   C.data)
+    amg_core.apply_distance_filter(C.shape[0], epsilon, C.indptr,
+                                   C.indices, C.data)
     C.eliminate_zeros()
 
     # Standardized strength values require small values be weak and large
