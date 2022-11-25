@@ -1311,6 +1311,9 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != int(A.shape[0]/blocksize):
@@ -1378,6 +1381,9 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
 
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)

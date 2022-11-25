@@ -1837,8 +1837,8 @@ class TestJacobiIndexed(TestCase):
         fc_jacobi(A, x_fc, b, c_pts, f_pts, omega=0.7)
         assert_almost_equal(x_ji[f_pts], x_fc[f_pts])
 
-    def test_compare_cf_fc_block_jacobi(self):
-        """Compare CF/FC relaxation to indexed."""
+    def test_compare_bsr_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to indexed in bsr."""
         A = poisson((10,)).tobsr(blocksize=(2, 2))
 
         splitting = np.array([1, 0, 1, 0, 1], dtype=np.int32)
@@ -1872,6 +1872,42 @@ class TestJacobiIndexed(TestCase):
         fc_jacobi(A, x, b, c_pts, f_pts, omega=0.7)
         for i in range(A.blocksize[0]):
             assert_almost_equal(x_ji[f_pts*bs+i], x[f_pts*bs+i])
+
+    def test_compare_block_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to block Jacobi."""
+        A = poisson((10,)).tobsr(blocksize=(2, 2))
+
+        splitting = np.array([1, 0, 1, 0, 1], dtype=np.int32)
+        f_pts = np.where(splitting == 0)[0]
+        c_pts = np.where(splitting == 1)[0]
+
+        np.random.seed(1479923306)
+        n = A.shape[0]
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        bs = A.blocksize[0]
+
+        # first check F-points zeroed
+        x = x0.copy()
+        x_j = x0.copy()
+        for i in range(bs):
+            x[f_pts*bs+i] = 0
+            x_j[f_pts*bs+i] = 0
+        block_jacobi(A, x_j, b, blocksize=2, omega=0.7)
+        cf_block_jacobi(A, x, b, c_pts, f_pts, blocksize=2, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_j[c_pts*bs+i], x[c_pts*bs+i])
+
+        # then check C-points zeroed
+        x = x0.copy()
+        x_j = x0.copy()
+        for i in range(bs):
+            x[c_pts*bs+i] = 0
+            x_j[c_pts*bs+i] = 0
+        block_jacobi(A, x_j, b, blocksize=2, omega=0.7)
+        fc_block_jacobi(A, x, b, c_pts, f_pts, blocksize=2, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_j[f_pts*bs+i], x[f_pts*bs+i])
 
     def test_integrated_cf_fc_relaxation(self):
         """Test CF/FC relaxation within a hierarchy."""
