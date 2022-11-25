@@ -484,7 +484,7 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
  *      x[]        - approximate solution
  *      b[]        - right hand side
  *      indices[]  - list of row indices to perform Jacobi on, e.g., F-points.
- *                   Note, it is assumed that indices correspond to blocks in A. 
+ *                   Note, it is assumed that indices correspond to blocks in A.
  *      blocksize  - BSR blocksize (blocks must be square)
  *      omega      - damping parameter
  *
@@ -986,7 +986,7 @@ void block_jacobi(const I Ap[], const int Ap_size,
  *      b[]        - right hand side
  *      Tx[]       - Inverse of each diagonal block of A stored
  *                   as a (n/blocksize, blocksize, blocksize) array
- *      indices[]  - 
+ *      indices[]  -
  *      omega      - damping parameter
  *      blocksize  - dimension of sqare blocks in BSR matrix A
  *
