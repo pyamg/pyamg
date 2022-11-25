@@ -1839,8 +1839,6 @@ class TestJacobiIndexed(TestCase):
 
     def test_compare_cf_fc_block_jacobi(self):
         """Compare CF/FC relaxation to indexed."""
-        from scipy.sparse import spdiags
-        A = spdiags(np.arange(1, 11).astype(np.float64), [0], m=10, n=10, format='csr').tobsr(blocksize=(2, 2))
         A = poisson((10,)).tobsr(blocksize=(2, 2))
 
         splitting = np.array([1, 0, 1, 0, 1], dtype=np.int32)
