@@ -863,3 +863,34 @@ def _setup_call(fn):
         raise ValueError(f'Function {fn} does not have a setup')
 
     return setup_register[fn]
+
+
+def rebuild_smoother(lvl):
+    """Rebuild the pre/post smoother on a level.
+
+    Parameters
+    ----------
+    lvl : Level object
+
+    Notes
+    -----
+    This rebuilds a smoother on level lvl using the existing pre
+    and post smoothers.  If different methods are needed, see
+    `change_smoothers`.
+    """
+    fn1 = lvl.presmoother
+    fn2 = lvl.postsmoother
+
+    # Rebuild presmoother
+    try:
+        setup_presmoother = _setup_call(str(fn1).lower())
+    except NameError as exc:
+        raise NameError(f'Invalid presmoother method: {fn1}') from exc
+    lvl.presmoother = setup_presmoother(lvl)
+
+    # Rebuild postsmoother
+    try:
+        setup_postsmoother = _setup_call(str(fn2).lower())
+    except NameError as exc:
+        raise NameError(f'Invalid presmoother method: {fn2}') from exc
+    lvl.postsmoother = setup_postsmoother(lvl)

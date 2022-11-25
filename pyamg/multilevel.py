@@ -12,7 +12,7 @@ from pkg_resources import parse_version  # included with setuptools
 from . import krylov
 from .util.utils import to_type
 from .util.params import set_tol
-from .relaxation import smoothing
+from .relaxation import smoothing, rebuild_smoother
 from .util import upcast
 
 if parse_version(sp.__version__) >= parse_version('1.7'):
@@ -311,22 +311,8 @@ class MultilevelSolver:
         quadratic finite element discretization with linears.
         """
         self.levels[0].A = A
-        fn1 = self.levels[0].presmoother
-        fn2 = self.levels[0].postsmoother
 
-        # Rebuild presmoother
-        try:
-            setup_presmoother = smoothing._setup_call(str(fn1).lower())
-        except NameError as exc:
-            raise NameError(f'Invalid presmoother method: {fn1}') from exc
-        self.levels[0].presmoother = setup_presmoother(self.levels[0])
-
-        # Rebuild postsmoother
-        try:
-            setup_postsmoother = smoothing._setup_call(str(fn2).lower())
-        except NameError as exc:
-            raise NameError(f'Invalid presmoother method: {fn2}') from exc
-        self.levels[0].postsmoother = setup_postsmoother(self.levels[0])
+        rebuild_smoother(self.levels[0])
 
     def psolve(self, b):
         """Legacy solve interface."""
