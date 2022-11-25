@@ -41,7 +41,7 @@ class TestStrengthOfConnection(TestCase):
             self.cases.append(ex['A'].tocsr())
 
     def test_classical_strength_of_connection(self):
-        
+
         for A in self.cases:
             for theta in [0.0, 0.05, 0.25, 0.50, 0.90]:
                 result = classical_soc(A, theta)
@@ -53,17 +53,19 @@ class TestStrengthOfConnection(TestCase):
         # Test BSR capabilities
         import warnings
         warnings.filterwarnings(action='ignore', message='Implicit conversion*')
-        CSRtest = sparse.csr_matrix( np.array([[4.0, -1.0, -1.1,  1.0, 0.0, 0.0],
-                                               [-0.9, -1.1, -1.0,  0.0, 9.5, 0.0],
-                                               [-1.9,  4.1,  5.0, -4.0, 0.0, 0.0],
-                                               [ 0.0, -0.1, -1.0,  0.0, 0.0, 5.0],
-                                               [ 0.0,  0.0,  1.0,  0.0,-9.5, 1.0],
-                                               [ 0.0,  0.0,  0.0, -1.0,-1.0, 1.0]]) )
+        CSRtest = sparse.csr_matrix(np.array([[4.0,  -1.0, -1.1,  1.0,  0.0, 0.0],
+                                              [-0.9, -1.1, -1.0,  0.0,  9.5, 0.0],
+                                              [-1.9,  4.1,  5.0, -4.0,  0.0, 0.0],
+                                              [0.0,  -0.1, -1.0,  0.0,  0.0, 5.0],
+                                              [0.0,   0.0,  1.0,  0.0, -9.5, 1.0],
+                                              [0.0,   0.0,  0.0, -1.0, -1.0, 1.0]]))
         BSRtest = CSRtest.tobsr(blocksize=(2, 2))
 
-        # Check that entry equals Frobenius norm of that block (scaled by largest entry in the row) 
+        # Check that entry equals Frobenius norm of that block,
+        # scaled by largest entry in the row
         result = classical_soc(BSRtest, 0.1, block=True, norm='fro').toarray()
-        assert_allclose( result[0,0], np.sum(np.abs(BSRtest.data[0]*BSRtest.data[0]).flatten()) / 9.5**2 )
+        assert_allclose(result[0, 0],
+                        np.sum(np.abs(BSRtest.data[0]*BSRtest.data[0]).flatten()) / 9.5**2)
 
         # Check that theta filters an entry
         result = classical_soc(BSRtest, 0.1, block=True, norm='fro')
@@ -71,15 +73,16 @@ class TestStrengthOfConnection(TestCase):
         result = classical_soc(BSRtest, 0.9, block=True, norm='fro')
         assert_equal(result.nnz, 6)
 
-        # Check that abs chooses largest magnitue entry in a block (scaled by largest entry in the row)
+        # Check that abs chooses largest magnitue entry in a block
+        # scaled by largest entry in the row
         result = classical_soc(BSRtest, 0.1, block=True, norm='abs').toarray()
-        assert_allclose(result[0,0], 4 / 9.5)
-        assert_allclose(result[0,2], 1.0)
-        # Do same check for min choosing smallest entry, 
+        assert_allclose(result[0, 0], 4 / 9.5)
+        assert_allclose(result[0, 2], 1.0)
+        # Do same check for min choosing smallest entry,
         result = classical_soc(BSRtest, 0.1, block=True, norm='min').toarray()
-        assert_allclose(result[2,0], 0.0)
-        assert_allclose(result[2,1], 1./9.5)
-        assert_allclose(result[1,0], 1.9/4)
+        assert_allclose(result[2, 0], 0.0)
+        assert_allclose(result[2, 1], 1./9.5)
+        assert_allclose(result[1, 0], 1.9/4)
 
         # In such a setting, abs and fro should be the same
         result1 = classical_soc(BSRtest, 0.1, block=False, norm='abs').toarray()
@@ -87,15 +90,14 @@ class TestStrengthOfConnection(TestCase):
         assert_array_almost_equal(result1, result2)
 
         result = classical_soc(BSRtest, 0.1, block=False, norm='min').toarray()
-        assert_allclose(result[0,0], 1.0)
-        assert_allclose(result[0,1], 1.0)
-        assert_allclose(result[0,2], 0.0)
+        assert_allclose(result[0, 0], 1.0)
+        assert_allclose(result[0, 1], 1.0)
+        assert_allclose(result[0, 2], 0.0)
 
         # Result is the same with block=True|False for a CSR matrix
         result1 = classical_soc(CSRtest, 0.1, block=True, norm='min').toarray()
         result2 = classical_soc(CSRtest, 0.1, block=False, norm='min').toarray()
         assert_array_almost_equal(result1, result2)
-
 
     def test_classical_strength_of_connection_min(self):
         for A in self.cases:
