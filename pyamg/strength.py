@@ -316,8 +316,7 @@ def symmetric_strength_of_connection(A, theta=0):
         Sx = np.empty_like(A.data)
 
         fn = amg_core.symmetric_strength_of_connection
-        fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj,
-           Sx)
+        fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
@@ -438,8 +437,8 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     D = A.diagonal()
     Dinv = 1.0 / D
     Dinv[D == 0] = 0.0
-    Dinv = sparse.csc_matrix(
-        (Dinv, (np.arange(A.shape[0]), np.arange(A.shape[1]))), shape=A.shape)
+    Dinv = sparse.csc_matrix((Dinv, (np.arange(A.shape[0]),
+                                     np.arange(A.shape[1]))), shape=A.shape)
     DinvA = Dinv * A
     omega = 1.0 / approximate_spectral_radius(DinvA)
     del DinvA
@@ -504,8 +503,9 @@ def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
                                             block_flag, symmetrize_measure)
 
 
-def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
-                                     block_flag=False, symmetrize_measure=True):
+def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
+                                     proj_type='l2', block_flag=False,
+                                     symmetrize_measure=True):
     """Evolution Strength Measure.
 
     Construct strength of connection matrix using an Evolution-based measure
