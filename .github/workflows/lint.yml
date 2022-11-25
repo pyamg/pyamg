@@ -11,7 +11,7 @@ on:
 
 jobs:
     flake8:
-        name: flake8
+        name: flake8==5.0.4
         runs-on: ubuntu-latest
         steps:
         - name: Checkout code
