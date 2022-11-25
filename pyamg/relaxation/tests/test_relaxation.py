@@ -8,6 +8,7 @@ from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
 from pyamg.classical.split import RS
+from pyamg.classical import ruge_stuben_solver
 from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
@@ -1911,4 +1912,22 @@ class TestJacobiIndexed(TestCase):
 
     def test_integrated_cf_fc_relaxation(self):
         """Test CF/FC relaxation within a hierarchy."""
-        pass
+        A = poisson((10, 10), format='csr')
+        opts = {'omega': 4.0/3.0, 'iterations': 2}
+        ml = ruge_stuben_solver(A,
+                                presmoother=('fc_jacobi', opts),
+                                postsmoother=('fc_jacobi', opts))
+        assert not ml.symmetric_smoothing
+
+        ml = ruge_stuben_solver(A,
+                                presmoother=('cf_jacobi', opts),
+                                postsmoother=('fc_jacobi', opts))
+        assert ml.symmetric_smoothing
+
+        np.random.seed(1825622348)
+        x0 = np.random.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
+        tol = 1e-5
+        x, info = ml.solve(b, x0=x0, tol=tol, maxiter=100, return_info=True)
+        assert (np.linalg.norm(b - A @ x)/np.linalg.norm(b - A @ x0)) < tol
+        assert info == 0

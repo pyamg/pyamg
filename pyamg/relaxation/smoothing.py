@@ -63,8 +63,8 @@ def _extract_splitting(lvl):
     if splitting.dtype != bool:
         raise ValueError('CF splitting is required to be boolean.')
 
-    Fpts = np.array(np.where(not splitting)[0], dtype=int)
-    Cpts = np.array(np.where(splitting)[0], dtype=int)
+    Fpts = np.where(np.logical_not(splitting))[0].astype(dtype=int)
+    Cpts = np.where(splitting)[0].astype(dtype=int)
 
     return Fpts, Cpts
 
