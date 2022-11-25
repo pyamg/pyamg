@@ -12,7 +12,7 @@ from pkg_resources import parse_version  # included with setuptools
 from . import krylov
 from .util.utils import to_type
 from .util.params import set_tol
-from .relaxation import smoothing, rebuild_smoother
+from .relaxation import smoothing
 from .util import upcast
 
 if parse_version(sp.__version__) >= parse_version('1.7'):
@@ -312,7 +312,7 @@ class MultilevelSolver:
         """
         self.levels[0].A = A
 
-        rebuild_smoother(self.levels[0])
+        smoothing.rebuild_smoother(self.levels[0])
 
     def psolve(self, b):
         """Legacy solve interface."""
