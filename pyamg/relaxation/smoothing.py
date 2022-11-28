@@ -33,6 +33,7 @@ from ..krylov import gmres, cgne, cgnr, cg
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 
+from functools import partial, update_wrapper
 
 # Default relaxation parameters
 DEFAULT_SWEEP = 'forward'
@@ -181,12 +182,14 @@ def change_smoothers(ml, presmoother, postsmoother):
     if isinstance(presmoother, (str, tuple)) or (presmoother is None):
         presmoother = [presmoother]
     elif not isinstance(presmoother, list):
-        raise ValueError('Unrecognized presmoother')
+        raise ValueError('Unrecognized presmoother -- use a string:\n '
+                         '"method" or ("method", opts) or list thereof.')
 
     if isinstance(postsmoother, (str, tuple)) or (postsmoother is None):
         postsmoother = [postsmoother]
     elif not isinstance(postsmoother, list):
-        raise ValueError('Unrecognized postsmoother')
+        raise ValueError('Unrecognized postsmoother -- use a string:\n '
+                         '"method" or ("method", opts) or list thereof.')
 
     # set ml.levels[i].presmoother = presmoother[i],
     #     ml.levels[i].postsmoother = postsmoother[i]
@@ -200,20 +203,14 @@ def change_smoothers(ml, presmoother, postsmoother):
         # unpack presmoother[i]
         fn1, kwargs1 = _unpack_arg(presmoother[i])
         # get function handle
-        try:
-            setup_presmoother = _setup_call(str(fn1).lower())
-        except NameError as e:
-            raise NameError(f'Invalid presmoother method: {fn1}') from e
+        setup_presmoother = _setup_call(fn1)
 
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
         # unpack postsmoother[i]
         fn2, kwargs2 = _unpack_arg(postsmoother[i])
         # get function handle
-        try:
-            setup_postsmoother = _setup_call(str(fn2).lower())
-        except NameError as e:
-            raise NameError(f'Invalid postsmoother method: {fn2}') from e
+        setup_postsmoother = _setup_call(fn2)
 
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
@@ -266,10 +263,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             # unpack postsmoother[i]
             fn2, kwargs2 = _unpack_arg(postsmoother[i])
             # get function handle
-            try:
-                setup_postsmoother = _setup_call(str(fn2).lower())
-            except NameError as e:
-                raise NameError(f'Invalid postsmoother method: {fn2}') from e
+            setup_postsmoother = _setup_call(fn2)
 
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
@@ -318,10 +312,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             # unpack presmoother[i]
             fn1, kwargs1 = _unpack_arg(presmoother[i])
             # get function handle
-            try:
-                setup_presmoother = _setup_call(str(fn1).lower())
-            except NameError as e:
-                raise NameError(f'Invalid presmoother method: {fn1}') from e
+            setup_presmoother = _setup_call(fn1)
 
             ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
@@ -509,8 +500,11 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
-    def smoother(A, x, b):
-        relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
+
+    #def smoother(A, x, b):
+    #    relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
+    smoother = partial(relaxation.jacobi, iterations=iterations, omega=omega)
+    update_wrapper(smoother, relaxation.jacobi)
     return smoother
 
 
@@ -859,6 +853,12 @@ def _setup_call(fn):
         'none':                   setup_none,
     }
 
+    if fn is None:
+        fn = 'none'
+
+    if not isinstance(fn, str):
+        raise ValueError(f'Input function must be a string or None: {fn=}')
+
     if fn not in setup_register:
         raise ValueError(f'Function {fn} does not have a setup')
 
@@ -878,19 +878,16 @@ def rebuild_smoother(lvl):
     and post smoothers.  If different methods are needed, see
     `change_smoothers`.
     """
-    fn1 = lvl.presmoother
-    fn2 = lvl.postsmoother
+    try:
+        fn1 = lvl.presmoother.__name__
+        fn2 = lvl.postsmoother.__name__
+    except AttributeError as exc:
+        raise AttributeError('The pre/post smoothers need to be functions.') from exc
 
     # Rebuild presmoother
-    try:
-        setup_presmoother = _setup_call(str(fn1).lower())
-    except NameError as exc:
-        raise NameError(f'Invalid presmoother method: {fn1}') from exc
+    setup_presmoother = _setup_call(fn1)
     lvl.presmoother = setup_presmoother(lvl)
 
     # Rebuild postsmoother
-    try:
-        setup_postsmoother = _setup_call(str(fn2).lower())
-    except NameError as exc:
-        raise NameError(f'Invalid presmoother method: {fn2}') from exc
+    setup_postsmoother = _setup_call(fn2)
     lvl.postsmoother = setup_postsmoother(lvl)
