@@ -490,8 +490,8 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 # pylint: disable=unused-argument
 def setup_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
     """Set up Gauss-Seidel."""
-    def smoother(A, x, b):
-        relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
+    smoother = partial(relaxation.gauss_seidel, iterations=iterations, sweep=sweep)
+    update_wrapper(smoother, relaxation.gauss_seidel)
     return smoother
 
 
@@ -500,9 +500,6 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
-
-    #def smoother(A, x, b):
-    #    relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
     smoother = partial(relaxation.jacobi, iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.jacobi)
     return smoother
