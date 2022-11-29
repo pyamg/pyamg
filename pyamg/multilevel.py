@@ -54,7 +54,8 @@ class MultilevelSolver:
         Change matrix solve/preconditioning matrix.
         This also changes the corresponding relaxation routines on the fine
         grid.  This can be used, for example, to precondition a
-        quadratic finite element discretization with linears.
+        quadratic finite element discretization with AMG built from
+        a linear discretization on quadratic quadrature points.
     """
 
     class Level:
