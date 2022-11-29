@@ -560,8 +560,10 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_jacobi(lvl, iterations=iterations, omega=omega,
-                            withrho=withrho)
+        smoother = setup_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.block_jacobi)  # set __name__
+        return smoother
+
     # Use Block Jacobi
     if Dinv is None:
         Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
@@ -589,7 +591,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
 
     if blocksize == 1:
         # Block GS is equivalent to normal GS
-        return setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
+        smoother = setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
+        update_wrapper(smoother, relaxation.block_gauss_seidel)
+        return smoother
 
     # Use Block GS
     if Dinv is None:
@@ -626,9 +630,9 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
     # drop the constant coefficient
     coefficients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1]
 
-    def chebychev(A, x, b):
+    def chebyshev(A, x, b):
             relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
-    return chebychev
+    return chebyshev
 
 
 def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
@@ -722,7 +726,9 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_cf_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        smoother = setup_cf_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.cf_block_jacobi)
+        return smoother
 
     Fpts, Cpts = _extract_splitting(lvl)
 
@@ -763,7 +769,9 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_fc_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        smoother = setup_fc_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.fc_block_jacobi)
+        return smoother
 
     Fpts, Cpts = _extract_splitting(lvl)
 
