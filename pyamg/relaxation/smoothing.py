@@ -24,16 +24,17 @@ Examples
 See change_smoothers above
 """
 
+from functools import partial, update_wrapper
+
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import LinearOperator
+
 from ..util.utils import scale_rows, get_block_diag, get_diagonal
 from ..util.linalg import approximate_spectral_radius
 from ..krylov import gmres, cgne, cgnr, cg
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
-
-from functools import partial, update_wrapper
 
 # Default relaxation parameters
 DEFAULT_SWEEP = 'forward'
@@ -631,7 +632,7 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
     coefficients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1]
 
     def chebyshev(A, x, b):
-            relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
+        relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
     return chebyshev
 
 
@@ -867,7 +868,7 @@ def _setup_call(fn):
         fn = 'none'
 
     if not isinstance(fn, str):
-        raise ValueError(f'Input function must be a string or None: {fn=}')
+        raise ValueError(f'Input function must be a string or None: fn={fn}')
 
     if fn not in setup_register:
         raise ValueError(f'Function {fn} does not have a setup')
