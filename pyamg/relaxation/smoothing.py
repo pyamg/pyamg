@@ -491,7 +491,7 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 def setup_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
     """Set up Gauss-Seidel."""
     smoother = partial(relaxation.gauss_seidel, iterations=iterations, sweep=sweep)
-    update_wrapper(smoother, relaxation.gauss_seidel)
+    update_wrapper(smoother, relaxation.gauss_seidel)  # set __name__
     return smoother
 
 
@@ -501,7 +501,7 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
         omega = omega/rho_D_inv_A(lvl.A)
 
     smoother = partial(relaxation.jacobi, iterations=iterations, omega=omega)
-    update_wrapper(smoother, relaxation.jacobi)
+    update_wrapper(smoother, relaxation.jacobi)  # set __name__
     return smoother
 
 
@@ -521,6 +521,7 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                            subdomain_ptr=subdomain_ptr,
                            inv_subblock=inv_subblock,
                            inv_subblock_ptr=inv_subblock_ptr, sweep=sweep)
+    update_wrapper(smoother, relaxation.schwarz)  # set __name__
     return smoother
 
 
@@ -538,8 +539,11 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
     subdomain_ptr = C.indptr.copy()
     subdomain = C.indices.copy()
 
-    return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain,
-                         subdomain_ptr=subdomain_ptr, sweep=sweep)
+    def strength_based_schwarz(A, x, b):
+        smoother = setup_schwarz(lvl, iterations=iterations, subdomain=subdomain,
+                                 subdomain_ptr=subdomain_ptr, sweep=sweep)
+        smoother(A, x, b)
+    return strength_based_schwarz
 
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
@@ -564,10 +568,9 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
     if withrho:
         omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
-    def smoother(A, x, b):
-        relaxation.block_jacobi(A, x, b, iterations=iterations,
-                                omega=omega, Dinv=Dinv,
-                                blocksize=blocksize)
+    smoother = partial(relaxation.block_jacobi, iterations=iterations, omega=omega,
+                       Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.block_jacobi)  # set __name__
     return smoother
 
 
@@ -592,11 +595,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
     if Dinv is None:
         Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
 
-    def smoother(A, x, b):
-        relaxation.block_gauss_seidel(A, x, b, iterations=iterations,
-                                      Dinv=Dinv, blocksize=blocksize,
-                                      sweep=sweep)
-
+    smoother = partial(relaxation.block_gauss_seidel, iterations=iterations,
+                       Dinv=Dinv, blocksize=blocksize, sweep=sweep)
+    update_wrapper(smoother, relaxation.block_gauss_seidel)  # set __name__
     return smoother
 
 
@@ -604,17 +605,15 @@ def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
     """Set up Richardson."""
     omega = omega/approximate_spectral_radius(lvl.A)
 
-    def smoother(A, x, b):
-        relaxation.polynomial(A, x, b, coefficients=[omega],
-                              iterations=iterations)
-    return smoother
+    def richardson(A, x, b):
+        relaxation.polynomial(A, x, b, coefficients=[omega], iterations=iterations)
+    return richardson
 
 
 def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
     """Set up SOR."""
-    def smoother(A, x, b):
-        relaxation.sor(A, x, b, omega=omega, iterations=iterations,
-                       sweep=sweep)
+    smoother = partial(relaxation.sor, iterations=iterations, omega=omega, sweep=sweep)
+    update_wrapper(smoother, relaxation.sor)  # set __name__
     return smoother
 
 
@@ -627,10 +626,9 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
     # drop the constant coefficient
     coefficients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1]
 
-    def smoother(A, x, b):
-        relaxation.polynomial(A, x, b, coefficients=coefficients,
-                              iterations=iterations)
-    return smoother
+    def chebychev(A, x, b):
+            relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
+    return chebychev
 
 
 def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
@@ -642,6 +640,7 @@ def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     def smoother(A, x, b):
         relaxation.jacobi_ne(lvl.Acsr, x, b, iterations=iterations,
                              omega=omega)
+    update_wrapper(smoother, relaxation.jacobi_ne)  # set __name__
     return smoother
 
 
@@ -653,6 +652,7 @@ def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     def smoother(A, x, b):
         relaxation.gauss_seidel_ne(lvl.Acsr, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
+    update_wrapper(smoother, relaxation.gauss_seidel_ne)  # set __name__
     return smoother
 
 
@@ -664,6 +664,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     def smoother(A, x, b):
         relaxation.gauss_seidel_nr(lvl.Acsc, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
+    update_wrapper(smoother, relaxation.gauss_seidel_nr)  # set __name__
     return smoother
 
 
@@ -675,10 +676,10 @@ def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     Fpts, Cpts = _extract_splitting(lvl)
 
-    def smoother(A, x, b):
-        relaxation.cf_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
-                             c_iterations=c_iterations, iterations=DEFAULT_NITER,
-                             omega=omega)
+    smoother = partial(relaxation.cf_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=DEFAULT_NITER, omega=omega)
+    update_wrapper(smoother, relaxation.cf_jacobi)  # set __name__
     return smoother
 
 
@@ -690,10 +691,10 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     Fpts, Cpts = _extract_splitting(lvl)
 
-    def smoother(A, x, b):
-        relaxation.fc_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, f_iterations=f_iterations,
-                             c_iterations=c_iterations, iterations=DEFAULT_NITER,
-                             omega=omega)
+    smoother = partial(relaxation.fc_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=DEFAULT_NITER, omega=omega)
+    update_wrapper(smoother, relaxation.fc_jacobi)  # set __name__
     return smoother
 
 
@@ -731,10 +732,10 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     if withrho:
         omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
-    def smoother(A, x, b):
-        relaxation.cf_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                   f_iterations=f_iterations,  c_iterations=c_iterations,
-                                   omega=omega, Dinv=Dinv, blocksize=blocksize)
+    smoother = partial(relaxation.cf_block_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.cf_block_jacobi)  # set __name
     return smoother
 
 
@@ -772,10 +773,10 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     if withrho:
         omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
-    def smoother(A, x, b):
-        relaxation.fc_block_jacobi(A, x, b, Cpts=Cpts, Fpts=Fpts, iterations=iterations,
-                                   f_iterations=f_iterations,  c_iterations=c_iterations,
-                                   omega=omega, Dinv=Dinv, blocksize=blocksize)
+    smoother = partial(relaxation.fc_block_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.fc_block_jacobi)  # set __name__
     return smoother
 
 
@@ -783,16 +784,18 @@ def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, call
                 residuals=None):
     """Set up GMRES smoothing."""
     def smoother(A, x, b):
-        x[:] = (gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
+               callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, gmres)  # set __name__
     return smoother
 
 
 def setup_cg(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None, residuals=None):
     """Set up CG smoothing."""
     def smoother(A, x, b):
-        x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+               callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cg)  # set __name__
     return smoother
 
 
@@ -800,8 +803,9 @@ def setup_cgne(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
                residuals=None):
     """Set up CGNE smoothing."""
     def smoother(A, x, b):
-        x[:] = (cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+               callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cgne)  # set __name__
     return smoother
 
 
@@ -809,16 +813,17 @@ def setup_cgnr(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
                residuals=None):
     """Set up CGNR smoothing."""
     def smoother(A, x, b):
-        x[:] = (cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+               callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cgnr)  # set __name__
     return smoother
 
 
 def setup_none(lvl):
     """Set up default, empty smoother."""
-    def smoother(A, x, b):
+    def none(A, x, b):
         pass
-    return smoother
+    return none  # set __name__ none
 
 
 def _setup_call(fn):
