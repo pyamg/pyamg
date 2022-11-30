@@ -1143,8 +1143,8 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     CF Jacobi executes
 
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1207,8 +1207,8 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     FC Jacobi executes
 
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1271,8 +1271,8 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     CF block Jacobi executes
 
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
@@ -1342,8 +1342,8 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     FC block Jacobi executes
 
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
