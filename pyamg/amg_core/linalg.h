@@ -152,16 +152,17 @@ inline I col_major(const I row, const I col, const I num_rows)
  *
  * Parameters
  * ----------
- * x : {float|complex array}
- *      n-vector
- * y : {float|complex array}
- *      n-vector
- * n : {int}
- *      size of x and y
+ * x : array
+ *     n-vector
+ * y : array
+ *     n-vector
+ * n : int
+ *     size of x and y
  *
- * Return
- * ------
- * conjugate(x).T y
+ * Returns
+ * -------
+ * float
+ *     conjugate(x).T y
  *
  */
 template<class I, class T>
@@ -178,16 +179,17 @@ inline T dot_prod(const T x[], const T y[], const I n)
  *
  * Parameters
  * ----------
- * x : {float|complex array}
- *      n-vector
- * n : {int}
- *      size of x and y
- * normx : {scalar}
- *      output value
+ * x : array
+ *     n-vector
+ * n : int
+ *     size of x and y
+ * normx : float
+ *     output value
  *
- * Return
- * ------
- * normx = sqrt( <x, x> )
+ * Returns
+ * -------
+ * float
+ *     normx = sqrt( <x, x> )
  *
  */
 template<class I, class T, class F>
@@ -206,18 +208,19 @@ inline T norm(const T x[], const I n)
  *
  * Parameters
  * ----------
- * x : {float|complex array}
- *      n-vector
- * y : {float|complex array}
- *      n-vector
- * n : {int}
- *      size of x and y
- * alpha : {scalar}
+ * x : array
+ *     n-vector
+ * y : array
+ *     n-vector
+ * n : int
+ *     size of x and y
+ * alpha : float
+ *     value to scale with
  *
- * Return
- * ------
- * x = x + alpha*y
- *
+ * Returns
+ * -------
+ * x : float
+ *     x = x + alpha*y
  */
 template<class I, class T>
 inline void axpy(T x[], const T y[], const T alpha, const I n)
@@ -231,15 +234,17 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
  *
  * Parameters
  * ----------
- * Ax : {float|complex array}
+ * Ax : array
  *      m x n dense array
- * Bx : {float|complex array}
+ * Bx :array
  *      m x n dense array
- * m,n : {int}
- *      Dimensions of Ax and Bx
+ * m : int
+ *      Dimensions of Ax
+ * n : int
+ *      Dimensions of Bx
  *
- * Return
- * ------
+ * Returns
+ * -------
  * Bx is overwritten with the transpose of Ax
  *
  * Notes
@@ -334,52 +339,49 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  *
  * Parameters
  * ----------
- * Ax : {float|complex array}
+ * Ax : array
  *      Stored in row major
- * Arows : {int}
+ * Arows : int
  *      Number of rows of A
- * Acols : {int}
+ * Acols : int
  *      Number of columns of A
- * Atrans : {char}
+ * Atrans : char
  *      Not Used
- * Bx : {float|complex array}
+ * Bx : array
  *      Stored in col major
- * Brows : {int}
+ * Brows : int
  *      Number of rows of B
- * Bcols : {int}
+ * Bcols : int
  *      Number of columns of B
- * Btrans : {char}
+ * Btrans : char
  *      Supported, essentially Btrans='F' assumes
  *      B is in column major, and Brans='T' assumes
  *      B is in row major
- * Sx : {float|complex array}
+ * Sx : array
  *      Output array, Contents are overwritten
- * Srows : {int}
+ * Srows : int
  *      Number of rows of S
- * Scols : {int}
+ * Scols : int
  *      Number of columns of S
- * Strans : {char}
+ * Strans : char
  *      'T' gives S in col major (only works with Btrans='F')
  *      'F' gives S in row major
  * overwrite : {char}
  *      'T' overwrite S
  *      'F' accumulate to S
  *
- *
- * Return
- * ------
- * Sx = Ax*Bx in column or row major, depending on Strans.
+ * Returns
+ * -------
+ * Modified inplace: Sx = Ax*Bx in column or row major, depending on Strans.
  *
  * Notes
  * -----
- *  Supported matrix format combinations,
- *  Btrans = 'F' and Strans = 'T'
- *  Btrans = 'F' and Strans = 'F'
- *  Btrans = 'T' and Strans = 'F'
+ * Supported matrix format combinations,
+ * - Btrans = 'F' and Strans = 'T'
+ * - Btrans = 'F' and Strans = 'F'
+ * - Btrans = 'T' and Strans = 'F'
  *
- *  All other combinations are not yet supported
- *
- *
+ * All other combinations are not yet supported
  */
 template<class I, class T>
 inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
@@ -470,7 +472,7 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             }
         }
     }
-    else { 
+    else {
         std::cout << "Unsupported combination of row/column major for dense multiplication.\n";
     }
 }
@@ -482,36 +484,38 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  *
  * Parameters
  * ----------
- * Ax : {float|complex array}
- *      m x n dense matrix, stored in col major form
- * U : {float|complex array}
- *      m x n dense matrix initialized to 0.0
- *      Passed in as Tx
- * V : {float|complex array}
- *      n x n dense matrix initialized to 0.0
- *      Passed in as Bx
- * S : {float|complex array}
- *      n x 1 dense matrix initialized to 0.0
- *      Passed in as Sx
- * m,n : {int}
+ * Ax : array
+ *     m x n dense matrix, stored in col major form
+ * U : array
+ *     m x n dense matrix initialized to 0.0
+ *     Passed in as Tx
+ * V : array
+ *     n x n dense matrix initialized to 0.0
+ *     Passed in as Bx
+ * S : array
+ *     n x 1 dense matrix initialized to 0.0
+ *     Passed in as Sx
+ * m,n : int
  *      Dimensions of Ax, m > n.
  *
- * Return
- * ------
+ * Returns
+ * -------
  * Returns Ax = U S V.H
  * U, V, S are modified in place
  *
- * V : {array}
+ * V : array
  *      Orthogonal n x n matrix, V, stored in col major
- * U : {array}
+ * U : array
  *      Orthogonal m x n matrix, U, stored in col major
- * S : {array}
+ * S : array
  *      Singular values
- * int : {int}
+ * int : int
  *      Function return value,
- *      -1:  error
- *      0:  successful
- *      1:  did not converge
+        ==  =====================
+ *      -1  error
+ *       0  successful
+ *       1  did not converge
+        ==  =====================
  *
  * Notes
  * -----
@@ -531,7 +535,7 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  *
  */
 template<class I, class T, class F>
-I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
+I svd_jacobi(const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 {
     // Not implemented for m < n matrices
     if( m < n)
@@ -796,21 +800,21 @@ I svd_jacobi (const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
  *
  * Parameters
  * ----------
- * A : {float|complex array}
- *      m x n dense column major array, m>n
- * m,n : {int}
- *      Dimensions of A, m > n
- * b : {float|complex array}
- *      RHS, m-vector
+ * A : array
+ *     m x n dense column major array, m>n
+ * m,n : int
+ *     Dimensions of A, m > n
+ * b : array
+ *     RHS, m-vector
  * sing_vals : {float array}
- *      Holds the singular values upon return
- * work : {float|complex array}
- *      worksize array for temporary space for routine
- * worksize : {int}
- *      must be > m*n + n
+ *     Holds the singular values upon return
+ * work : array
+ *     worksize array for temporary space for routine
+ * worksize : int
+ *     must be > m*n + n
  *
- * Return
- * ------
+ * Returns
+ * -------
  * A^{-1} b replaces b
  * sing_vals holds the singular values
  *
@@ -870,21 +874,22 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
 
 /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
  * Routine is designed to invert many small matrices at once.
+ *
  * Parameters
  * ----------
- * AA : {float|complex array}
- *      (m, n, n) array, assumed to be "raveled" and in row major form
+ * AA : array
+ *     (m, n, n) array, assumed to be "raveled" and in row major form
  * m,n : int
- *      dimensions of AA
+ *     dimensions of AA
  * TransA : char
- *      'T' or 'F'.  Decides whether to transpose each nxn block
- *      of A before inverting.  If using Python array, should be 'T'.
+ *     'T' or 'F'.  Decides whether to transpose each nxn block
+ *     of A before inverting.  If using Python array, should be 'T'.
  *
- * Return
- * ------
- * AA : {array}
- *      AA is modified in place with the pseduoinverse replacing each
- *      block of AA.  AA is returned in row-major form for Python
+ * Returns
+ * -------
+ * AA : array
+ *     AA is modified in place with the pseduoinverse replacing each
+ *     block of AA.  AA is returned in row-major form for Python
  *
  * Notes
  * -----
@@ -984,9 +989,11 @@ void pinv_array(T AA[], const int AA_size,
 /*
  * Scale the columns of a CSC matrix *in place*
  *
+ * ..
  *   A[:,i] *= X[i]
  *
- * See:
+ * References
+ * ----------
  * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
  *
  */
@@ -1009,9 +1016,11 @@ void csc_scale_columns(const I n_row,
 /*
  * Scale the rows of a CSC matrix *in place*
  *
+ * ..
  *   A[i,:] *= X[i]
  *
- * See:
+ * References
+ * ----------
  * https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h
  *
  */
@@ -1376,6 +1385,29 @@ void least_squares(T A[],
  *
  *  Returns:
  *      Nothing, Ax is modified in place
+=======
+/*
+ * Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+ *
+ *    |A_ij| < theta * |A_ii|
+ *
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * theta : float
+ *     stength of connection tolerance
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
+ *
+ * Returns
+ * -------
+ * Nothing, Ax is modified in place
+>>>>>>> 125040aff36fd22fc6ab523ca64d9954b1eb19fd
  */
 template<class I, class T, class F>
 void filter_matrix_rows(const I n_row,
@@ -1383,7 +1415,7 @@ void filter_matrix_rows(const I n_row,
                         const I Ap[], const int Ap_size,
                         const I Aj[], const int Aj_size,
                               T Ax[], const int Ax_size,
-                        const I lump)
+                        const bool lump)
 {
     // Lump each row by setting A_ii += A_ij for all j s.t. |A_ij| < theta*|A_ii|,
     // and set A_ij = 0
@@ -1410,7 +1442,7 @@ void filter_matrix_rows(const I n_row,
                 F norm_jj = mynorm(Ax[jj]);
 
                 // Remove entry if below threshold
-                if(norm_jj < threshold){
+                if(norm_jj < threshold && Aj[jj] != i){
                     Ax[diag_ind] += Ax[jj];
                     Ax[jj] = 0.0;
                 }
@@ -1446,6 +1478,5 @@ void filter_matrix_rows(const I n_row,
         }
     }
 }
-
 
 #endif

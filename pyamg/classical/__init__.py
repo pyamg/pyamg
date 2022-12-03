@@ -1,10 +1,21 @@
-"""Classical AMG"""
-from __future__ import absolute_import
+"""Classical AMG."""
 
-from .air import *
-from .classical import *
-from .split import *
-from .interpolate import *
-from .cr import *
+from . import classical
+from . import air
+from . import split
+from . import interpolate
+from . import cr
+>>>>>>> 125040aff36fd22fc6ab523ca64d9954b1eb19fd
 
-__all__ = [s for s in dir() if not s.startswith('_')]
+from .classical import ruge_stuben_solver
+from .classical import air_solver
+
+__all__ = [
+    'classical',
+    'air',
+    'split',
+    'interpolate',
+    'cr',
+    'ruge_stuben_solver',
+    'air_solver',
+]

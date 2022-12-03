@@ -1,9 +1,9 @@
+"""Test compatible relaxation."""
 import numpy as np
+from numpy.testing import TestCase
 from scipy.sparse import csr_matrix
 from pyamg.gallery import poisson, load_example
 from pyamg.classical.cr import binormalize, CR
-
-from numpy.testing import TestCase
 
 
 class TestCR(TestCase):
@@ -33,11 +33,10 @@ class TestCR(TestCase):
         for A in self.cases:
             C = binormalize(A)
             alpha = abs(1.0-C.multiply(C).sum(axis=1)).max()
-            assert(alpha < 1e-4)
+            assert alpha < 1e-4
 
     def test_cr(self):
         A = self.cases[6]
-        splitting = CR(A)
 
         # 1d-tests, should be alternating aggregates
         #       (n-1)/2 < = sum <= (n+1)/2.
@@ -46,23 +45,23 @@ class TestCR(TestCase):
             A = self.cases[i]
             h_split_auto = CR(A, method='habituated', thetacr=0.7,
                               thetacs='auto')
-            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
-            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/2)
+            assert h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2
+            assert h_split_auto.sum() >= (h_split_auto.shape[0]-1)/2
 
             c_split_auto = CR(A, method='concurrent', thetacr=0.7,
                               thetacs='auto')
-            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
-            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/2)
+            assert c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2
+            assert c_split_auto.sum() >= (c_split_auto.shape[0]-1)/2
 
             h_split = CR(A, method='habituated', thetacr=0.7,
                          thetacs=[0.3, 0.5])
-            assert(h_split.sum() <= (h_split.shape[0]+1)/2)
-            assert(h_split.sum() >= (h_split.shape[0]-1)/2)
+            assert h_split.sum() <= (h_split.shape[0]+1)/2
+            assert h_split.sum() >= (h_split.shape[0]-1)/2
 
             c_split = CR(A, method='concurrent', thetacr=0.7,
                          thetacs=[0.3, 0.5])
-            assert(c_split.sum() <= (c_split.shape[0]+1)/2)
-            assert(c_split.sum() >= (c_split.shape[0]-1)/2)
+            assert c_split.sum() <= (c_split.shape[0]+1)/2
+            assert c_split.sum() >= (c_split.shape[0]-1)/2
 
         # 2d-tests. CR is a little more picky with parameters and relaxation
         # type in 2d. Can still bound above by (n+1)/2.
@@ -72,20 +71,20 @@ class TestCR(TestCase):
             A = self.cases[i]
             h_split_auto = CR(A, method='habituated', thetacr=0.7,
                               thetacs='auto')
-            assert(h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2)
-            assert(h_split_auto.sum() >= (h_split_auto.shape[0]-1)/4)
+            assert h_split_auto.sum() <= (h_split_auto.shape[0]+1)/2
+            assert h_split_auto.sum() >= (h_split_auto.shape[0]-1)/4
 
             c_split_auto = CR(A, method='concurrent', thetacr=0.7,
                               thetacs='auto')
-            assert(c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2)
-            assert(c_split_auto.sum() >= (c_split_auto.shape[0]-1)/4)
+            assert c_split_auto.sum() <= (c_split_auto.shape[0]+1)/2
+            assert c_split_auto.sum() >= (c_split_auto.shape[0]-1)/4
 
             h_split = CR(A, method='habituated', thetacr=0.7,
                          thetacs=[0.3, 0.5])
-            assert(h_split.sum() <= (h_split.shape[0]+1)/2)
-            assert(h_split.sum() >= (h_split.shape[0]-1)/4)
+            assert h_split.sum() <= (h_split.shape[0]+1)/2
+            assert h_split.sum() >= (h_split.shape[0]-1)/4
 
             c_split = CR(A, method='concurrent', thetacr=0.7,
                          thetacs=[0.3, 0.5])
-            assert(c_split.sum() <= (c_split.shape[0]+1)/2)
-            assert(c_split.sum() >= (c_split.shape[0]-1)/4)
+            assert c_split.sum() <= (c_split.shape[0]+1)/2
+            assert c_split.sum() >= (c_split.shape[0]-1)/4

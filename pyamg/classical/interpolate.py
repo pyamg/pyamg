@@ -1,4 +1,6 @@
 """Classical AMG Interpolation methods."""
+
+
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
     isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
@@ -6,31 +8,22 @@ from pyamg import amg_core
 from pyamg.util.utils import filter_matrix_rows, UnAmal
 from pyamg.strength import classical_strength_of_connection
 
-
 __all__ = ['direct_interpolation','standard_interpolation',
            'distance_two_interpolation','injection_interpolation',
-           'one_point_interpolation','neumann_AIR', 'local_AIR']
+           'one_point_interpolation','local_air']
 
-
-def direct_interpolation(A, C, splitting, theta=None, norm='min'):
+def direct_interpolation(A, C, splitting):
     """Create prolongator using direct interpolation.
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         NxN matrix in CSR format
-    C : {csr_matrix}
+    C : csr_matrix
         Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
-    theta : float in [0,1), default None
-        theta value defining strong connections in a classical AMG
-        sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
-    norm : string, default 'abs'
-        Norm used in redefining classical SOC. Options are 'min' and
-        'abs' for CSR matrices. See strength.py for more information.
 
     Returns
     -------
@@ -40,17 +33,17 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import direct_interpolation
+    >>> from pyamg.classical.interpolate import direct_interpolation
     >>> import numpy as np
     >>> A = poisson((5,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = direct_interpolation(A, A, splitting)
-    >>> print P.todense()
-    [[ 1.   0.   0. ]
-     [ 0.5  0.5  0. ]
-     [ 0.   1.   0. ]
-     [ 0.   0.5  0.5]
-     [ 0.   0.   1. ]]
+    >>> print(P.toarray())
+    [[1.  0.  0. ]
+     [0.5 0.5 0. ]
+     [0.  1.  0. ]
+     [0.  0.5 0.5]
+     [0.  0.  1. ]]
 
     """
     if not isspmatrix_csr(A):
@@ -58,210 +51,29 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix for C')
-    
-    if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
-    C0.eliminate_zeros()
-
-    # Interpolation weights are computed based on entries in A, but subject to the
-    # sparsity pattern of C.  So, copy the entries of A into sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
-
-    P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_direct_interpolation_pass1(A.shape[0], C0.indptr, C0.indices, 
-                                           splitting, P_indptr)
-    nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
-    P_data = np.empty(nnz, dtype=A.dtype)
-
-    amg_core.rs_direct_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                           A.data, C0.indptr, C0.indices, C0.data,
-                                           splitting, P_indptr, P_colinds, P_data)
-
-    nc = np.sum(splitting)
-    n = A.shape[0]
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
-
-
-
-def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
-    """Create prolongator using standard interpolation
-
-    Parameters
-    ----------
-    A : {csr_matrix}
-        NxN matrix in CSR format
-    C : {csr_matrix}
-        Strength-of-Connection matrix
-        Must have zero diagonal
-    splitting : array
-        C/F splitting stored in an array of length N
-    theta : float in [0,1), default None
-        theta value defining strong connections in a classical AMG
-        sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
-    norm : string, default 'abs'
-        Norm used in redefining classical SOC. Options are 'min' and
-        'abs' for CSR matrices. See strength.py for more information.
-    modified : bool, default True
-        Use modified classical interpolation. More robust if RS coarsening with
-        second pass is not used for CF splitting. Ignores interpolating from strong
-        F-connections without a common C-neighbor.
-
-    Returns
-    -------
-    P : {csr_matrix}
-        Prolongator using standard interpolation
-
-    Examples
-    --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import standard_interpolation
-    >>> import numpy as np
-    >>> A = poisson((5,),format='csr')
-    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
-    >>> P = standard_interpolation(A, A, splitting)
-    >>> print P.todense()
-    [[ 1.   0.   0. ]
-     [ 0.5  0.5  0. ]
-     [ 0.   1.   0. ]
-     [ 0.   0.5  0.5]
-     [ 0.   0.   1. ]]
-
-    """
-    if not isspmatrix_csr(A):
-        raise TypeError('expected csr_matrix for A')
-
-    if not isspmatrix_csr(C):
-        raise TypeError('Expected csr_matrix SOC matrix, C.')
-
-    nc = np.sum(splitting)
-    n = A.shape[0]
-
-    if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
-
-    # Use modified standard interpolation by ignoring strong F-connections that do
-    # not have a common C-point.
-    if modified:
-        amg_core.remove_strong_FF_connections(A.shape[0], C0.indptr, C0.indices, C0.data, splitting)
-    C0.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
     # sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
+    C = C.copy()
+    C.data[:] = 1.0
+    C = C.multiply(A)
 
-    P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_standard_interpolation_pass1(A.shape[0], C0.indptr,
-                                             C0.indices, splitting, P_indptr)
-    nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
-    P_data = np.empty(nnz, dtype=A.dtype)
+    Pp = np.empty_like(A.indptr)
 
-    if modified:
-        amg_core.mod_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                  A.data, C0.indptr, C0.indices,
-                                                  C0.data, splitting, P_indptr,
-                                                  P_colinds, P_data)
-    else:
-        amg_core.rs_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                 A.data, C0.indptr, C0.indices,
-                                                 C0.data, splitting, P_indptr,
-                                                 P_colinds, P_data)
+    amg_core.rs_direct_interpolation_pass1(A.shape[0],
+                                           C.indptr, C.indices, splitting, Pp)
 
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
+    nnz = Pp[-1]
+    Pj = np.empty(nnz, dtype=Pp.dtype)
+    Px = np.empty(nnz, dtype=A.dtype)
 
-
-
-def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=True):
-    """Create prolongator using distance-two AMG interpolation (extended+i interpolaton).
-
-    Parameters
-    ----------
-    A : {csr_matrix}
-        NxN matrix in CSR format
-    C : {csr_matrix}
-        Strength-of-Connection matrix
-        Must have zero diagonal
-    splitting : array
-        C/F splitting stored in an array of length N
-    theta : float in [0,1), default None
-        theta value defining strong connections in a classical AMG
-        sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
-    norm : string, default 'abs'
-        Norm used in redefining classical SOC. Options are 'min' and
-        'abs' for CSR matrices. See strength.py for more information.
-    plus_i : bool, default True
-        Use "Extended+i" interpolation from [0] as opposed to "Extended"
-        interpolation. Typically gives better interpolation with minimal
-        added expense.
-
-    Returns
-    -------
-    P : {csr_matrix}
-        Prolongator using standard interpolation
-
-    References
-    ----------
-    [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
-       H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2007).
-
-    Examples
-    --------
-
-
-    """
-    if not isspmatrix_csr(C):
-        raise TypeError('Expected csr_matrix SOC matrix, C.')
-
-    nc = np.sum(splitting)
-    n = A.shape[0]
-
-    if theta is not None:
-        C0 = classical_strength_of_connection(A, theta=theta, norm=norm, cost=cost)
-    else:
-        # BS - had this in my code, can't remember why; presumably need C later?
-        # C0 = C.copy()
-        C0 = C
-    C0.eliminate_zeros()
-
-    # Interpolation weights are computed based on entries in A, but subject to
-    # the sparsity pattern of C.  So, copy the entries of A into the
-    # sparsity pattern of C.
-    C0.data[:] = 1.0
-    C0 = C0.multiply(A)
-
-    P_indptr = np.empty_like(A.indptr)
-    amg_core.distance_two_amg_interpolation_pass1(A.shape[0], C0.indptr,
-                                                  C0.indices, splitting, P_indptr)
-    nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
-    P_data = np.empty(nnz, dtype=A.dtype)
-    if plus_i:
-        amg_core.extended_plusi_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                    A.data, C0.indptr, C0.indices,
-                                                    C0.data, splitting, P_indptr,
-                                                    P_colinds, P_data)
-    else:
-        amg_core.extended_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                              A.data, C0.indptr, C0.indices,
-                                              C0.data, splitting, P_indptr,
-                                              P_colinds, P_data)
-
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
-
+    amg_core.rs_direct_interpolation_pass2(A.shape[0],
+                                           A.indptr, A.indices, A.data,
+                                           C.indptr, C.indices, C.data,
+                                           splitting,
+                                           Pp, Pj, Px)
+    return csr_matrix((Px, Pj, Pp))
 
 def injection_interpolation(A, splitting):
     """ Create interpolation operator by injection, that is C-points are
@@ -367,105 +179,7 @@ def one_point_interpolation(A, C, splitting, by_val=False):
                           shape=[blocksize*n,blocksize*nc])
 
 
-def neumann_AIR(A, splitting, theta=0.025, degree=1, post_theta=0):
-    """ Approximate ideal restriction using a truncated Neumann expansion for A_ff^{-1},
-    where 
-        R = [-Acf*D, I],   where
-        D = \sum_{i=0}^degree Lff^i
-
-    Parameters
-    ----------
-    A : {csr_matrix}
-        NxN matrix in CSR format
-    splitting : array
-        C/F splitting stored in an array of length N
-    theta : float : default 0.025
-        Compute approximation to ideal restriction for C, where C has rows filtered
-        with tolerance theta, that is for j s.t.
-            |C_ij| <= theta * |C_ii|        --> C_ij = 0.
-        Helps keep R sparse. 
-    degree : int in [0,4] : default 1
-        Degree of Neumann expansion. Only supported up to degree 4.
-
-    Returns
-    -------
-    Approximate ideal restriction in CSR format.
-
-    Notes
-    -----
-    Does not support block matrices.
-    """
-
-    Cpts = np.array(np.where(splitting == 1)[0], dtype='int32')
-    Fpts = np.array(np.where(splitting == 0)[0], dtype='int32')
-
-    # Convert block CF-splitting into scalar CF-splitting so that we can access
-    # submatrices of BSR matrix A
-    if isspmatrix_bsr(A):
-        bsize = A.blocksize[0]
-        Cpts *= bsize
-        Fpts *= bsize
-        Cpts0 = Cpts
-        Fpts0 = Fpts
-        for i in range(1,bsize):
-            Cpts = np.hstack([Cpts,Cpts0+i])
-            Fpts = np.hstack([Fpts,Fpts0+i])
-        Cpts.sort()
-        Fpts.sort()
-    
-    nc = Cpts.shape[0]
-    nf = Fpts.shape[0]
-    n = A.shape[0]
-    C = csr_matrix(A, copy=True)
-    if theta > 0.0:
-        filter_matrix_rows(C, theta, diagonal=True, lump=False)
-
-    # Expand sparsity pattern for R
-    C.data[np.abs(C.data)<1e-16] = 0
-    C.eliminate_zeros()
-
-    Lff = -C[Fpts,:][:,Fpts]
-    pts = np.arange(0,nf)
-    Lff[pts,pts] = 0.0
-    Lff.eliminate_zeros()
-    Acf = C[Cpts,:][:,Fpts]
-
-    # Form Neuman approximation to Aff^{-1}
-    Z = eye(nf,format='csr')
-    if degree >= 1:
-        Z += Lff
-    if degree >= 2:
-        Z += Lff*Lff
-    if degree >= 3:
-        Z += Lff*Lff*Lff
-    if degree == 4:
-        Z += Lff*Lff*Lff*Lff
-    if degree > 4:
-        raise ValueError("Only sparsity degree 0-4 supported.")
-
-    # Multiply Acf by approximation to Aff^{-1}
-    Z = -Acf*Z
-
-    if post_theta > 0.0:
-        if not isspmatrix_csr(Z):
-            Z = Z.tocsr()
-        filter_matrix_rows(Z, post_theta, diagonal=False, lump=False)
-
-    # Get sizes and permutation matrix from [F, C] block
-    # ordering to natural matrix ordering.
-    permute = eye(n,format='csr')
-    permute.indices = np.concatenate((Fpts,Cpts))
-
-    # Form R = [Z, I], reorder and return
-    R = hstack([Z, eye(nc, format='csr')])
-    if isspmatrix_bsr(A):
-        R = bsr_matrix(R * permute, blocksize=[bsize,bsize])
-    else:
-        R = csr_matrix(R * permute)
-    return R
-
-
-def local_AIR(A, splitting, theta=0.1, norm='abs', degree=1, use_gmres=False,
+def local_air(A, splitting, theta=0.1, norm='abs', degree=1, use_gmres=False,
                                   maxiter=10, precondition=True):
     """ Compute approximate ideal restriction by setting RA = 0, within the
     sparsity pattern of R. Sparsity pattern of R for the ith row (i.e. ith

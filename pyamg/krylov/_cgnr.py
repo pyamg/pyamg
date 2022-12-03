@@ -1,20 +1,20 @@
-import numpy as np
-from scipy.sparse import isspmatrix
-from scipy.sparse.sputils import upcast
-from scipy.sparse.linalg.isolve.utils import make_system
-from scipy.sparse.linalg.interface import aslinearoperator
+"""Conjugate Gradient, Normal Residual Krylov solver."""
+
+import warnings
 from warnings import warn
-from pyamg.util.linalg import norm
+import numpy as np
+from scipy import sparse
+from scipy.sparse.linalg import aslinearoperator
+from ..util.linalg import norm
+from ..util import make_system
 
 
-__all__ = ['cgnr']
-
-
-def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
+def cgnr(A, b, x0=None, tol=1e-5, criteria='rr',
+         maxiter=None, M=None,
          callback=None, residuals=None):
     """Conjugate Gradient, Normal Residual algorithm.
 
-    Applies CG to the normal equations, A.H A x = b. Left preconditioning
+    Applies CG to the normal equations, A.H A x = A.H b. Left preconditioning
     is supported.  Note that unless A is well-conditioned, the use of
     CGNR is inadvisable
 
@@ -27,25 +27,29 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
     x0 : array, matrix
         initial guess, default is a vector of zeros
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by ||r_0||_2
+        Tolerance for stopping criteria
+    criteria : string
+        Stopping criteria, let r=r_k, x=x_k
+        'rr':        ||r||       < tol ||b||
+        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+        'MrMr':      ||M r||     < tol ||M b||
+        'rMr':       <r, Mr>^1/2 < tol
+        if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
+        maximum number of iterations allowed
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A.H A x = b.
+        n x n, inverted preconditioner, i.e. solve M A.H A x = M A.H b.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
     residuals : list
-        residuals has the residual norm history,
-        including the initial residual, appended to it
+        residual history in the 2-norm, including the initial residual
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of cgnr
+    (xk, info)
+    xk : an updated guess after k iterations to the solution of Ax = b
+    info : halting status
 
             ==  =======================================
             0   successful exit
@@ -54,25 +58,23 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
             <0  numerical breakdown, or illegal input
             ==  =======================================
 
-
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
+    The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
+    as opposed to explicitly constructing the matrix.
 
     Examples
     --------
-    >>> from pyamg.krylov.cgnr import cgnr
+    >>> from pyamg.krylov import cgnr
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = cgnr(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
-    9.3910201849
+    >>> print(f'{norm(b - A*x):.6}')
+    9.39102
 
     References
     ----------
@@ -82,102 +84,101 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     """
     # Store the conjugate transpose explicitly as it will be used much later on
-    if isspmatrix(A):
+    if sparse.isspmatrix(A):
         AH = A.H
     else:
-        # TODO avoid doing this since A may be a different sparse type
-        AH = aslinearoperator(np.asmatrix(A).H)
+        # avoid doing this since A may be a different sparse type
+        AH = aslinearoperator(np.asarray(A).conj().T)
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
-    dimen = A.shape[0]
+    n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
-    import warnings
-    warnings.filterwarnings('always', module='pyamg\.krylov\._cgnr')
-
-    # Choose type
-    if not hasattr(A, 'dtype'):
-        Atype = upcast(x.dtype, b.dtype)
-    else:
-        Atype = A.dtype
-    if not hasattr(M, 'dtype'):
-        Mtype = upcast(x.dtype, b.dtype)
-    else:
-        Mtype = M.dtype
-    xtype = upcast(Atype, x.dtype, b.dtype, Mtype)
-
-    # Should norm(r) be kept
-    if residuals == []:
-        keep_r = True
-    else:
-        keep_r = False
+    warnings.filterwarnings('always', module='pyamg.krylov._cgnr')
 
     # How often should r be recomputed
     recompute_r = 8
 
     # Check iteration numbers. CGNR suffers from loss of orthogonality quite
     # easily, so we arbitrarily let the method go up to 130% over the
-    # theoretically necessary limit of maxiter=dimen
+    # theoretically necessary limit of maxiter=n
     if maxiter is None:
-        maxiter = int(np.ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*n)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    elif maxiter > (1.3*dimen):
+    elif maxiter > (1.3*n):
         warn('maximum allowed inner iterations (maxiter) are the 130% times \
               the number of dofs')
-        maxiter = int(np.ceil(1.3*dimen)) + 2
+        maxiter = int(np.ceil(1.3*n)) + 2
 
     # Prep for method
-    r = b - A*x
-    rhat = AH*r
+    r = b - A @ x
+    rhat = AH @ r
     normr = norm(r)
-    if keep_r:
-        residuals.append(normr)
-
-    # Check initial guess ( scaling by b, if b != 0,
-    #   must account for case when norm(b) is very small)
-    normb = norm(b)
-    if normb == 0.0:
-        normb = 1.0
-    if normr < tol*normb:
-        if callback is not None:
-            callback(x)
-        return (postprocess(x), 0)
-
-    # Scale tol by ||r_0||_2
-    if normr != 0.0:
-        tol = tol*normr
-
-    # Begin CGNR
 
     # Apply preconditioner and calculate initial search direction
-    z = M*rhat
+    z = M @ rhat
     p = z.copy()
     old_zr = np.inner(z.conjugate(), rhat)
 
-    for iter in range(maxiter):
+    if residuals is not None:
+        residuals[:] = [normr]  # initial residual
 
+    # Check initial guess if b != 0,
+    normb = norm(b)
+    if normb == 0.0:
+        normb = 1.0  # reset so that tol is unscaled
+
+    # set the stopping criteria (see the docstring)
+    if criteria == 'rr':
+        rtol = tol * normb
+    elif criteria == 'rr+':
+        if sparse.issparse(A.A):
+            normA = norm(A.A.data)
+        elif isinstance(A.A, np.ndarray):
+            normA = norm(np.ravel(A.A))
+        else:
+            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+        rtol = tol * (normA * np.linalg.norm(x) + normb)
+    elif criteria == 'MrMr':
+        normr = norm(z)
+        normMb = norm(M @ b)
+        rtol = tol * normMb
+    elif criteria == 'rMr':
+        normr = np.sqrt(old_zr)
+        rtol = tol
+    else:
+        raise ValueError('Invalid stopping criteria.')
+
+    if normr < rtol:
+        return (postprocess(x), 0)
+
+    # Begin CGNR
+
+    it = 0
+
+    while True:
         # w_j = A p_j
-        w = A*p
+        w = A @ p
 
         # alpha = (z_j, rhat_j) / (w_j, w_j)
         alpha = old_zr / np.inner(w.conjugate(), w)
 
         # x_{j+1} = x_j + alpha*p_j
-        x += alpha*p
+        x += alpha * p
 
         # r_{j+1} = r_j - alpha*w_j
-        if np.mod(iter, recompute_r) and iter > 0:
-            r -= alpha*w
+        if np.mod(it, recompute_r) and it > 0:
+            r -= alpha * w
         else:
-            r = b - A*x
+            r = b - A @ x
 
         # rhat_{j+1} = A.H*r_{j+1}
-        rhat = AH*r
+        rhat = AH @ r
 
         # z_{j+1} = M*r_{j+1}
-        z = M*rhat
+        z = M @ rhat
 
         # beta = (z_{j+1}, rhat_{j+1}) / (z_j, rhat_j)
         new_zr = np.inner(z.conjugate(), rhat)
@@ -188,51 +189,29 @@ def cgnr(A, b, x0=None, tol=1e-5, maxiter=None, xtype=None, M=None,
         p *= beta
         p += z
 
-        # Allow user access to residual
+        it += 1
+        normr = np.linalg.norm(r)
+
+        if residuals is not None:
+            residuals.append(normr)
+
         if callback is not None:
             callback(x)
 
-        # test for convergence
-        normr = norm(r)
-        if keep_r:
-            residuals.append(normr)
-        if normr < tol:
+        # set the stopping criteria (see the docstring)
+        if criteria == 'rr':
+            rtol = tol * normb
+        elif criteria == 'rr+':
+            rtol = tol * (normA * np.linalg.norm(x) + normb)
+        elif criteria == 'MrMr':
+            normr = norm(z)
+            rtol = tol * normMb
+        elif criteria == 'rMr':
+            normr = np.sqrt(new_zr)
+            rtol = tol
+
+        if normr < rtol:
             return (postprocess(x), 0)
 
-    # end loop
-
-    return (postprocess(x), iter+1)
-
-# if __name__ == '__main__':
-#    # from numpy import diag
-#    # A = random((4,4))
-#    # A = A*A.transpose() + diag([10,10,10,10])
-#    # b = random((4,1))
-#    # x0 = random((4,1))
-#
-#    from pyamg.gallery import stencil_grid
-#    from numpy.random import random
-#    A = stencil_grid([[0,-1,0],[-1,4,-1],[0,-1,0]],(150,150),\
-#                     dtype=float,format='csr')
-#    b = random((A.shape[0],))
-#    x0 = random((A.shape[0],))
-#
-#    import time
-#    from scipy.sparse.linalg.isolve import cg as icg
-#
-#    print '\n\nTesting CGNR with %d x %d 2D Laplace Matrix'%\
-#           (A.shape[0],A.shape[0])
-#    t1=time.time()
-#    (x,flag) = cgnr(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '%s took %0.3f ms' % ('cgnr', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*x))
-#    print 'info flag = %d'%(flag)
-#
-#    t1=time.time()
-#    (y,flag) = icg(A,b,x0,tol=1e-8,maxiter=100)
-#    t2=time.time()
-#    print '\n%s took %0.3f ms' % ('linalg cg', (t2-t1)*1000.0)
-#    print 'norm = %g'%(norm(b - A*y))
-#    print 'info flag = %d'%(flag)
-#
+        if it == maxiter:
+            return (postprocess(x), it)

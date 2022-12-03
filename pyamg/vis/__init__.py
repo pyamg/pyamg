@@ -1,9 +1,15 @@
-"Visualization Support"
-from __future__ import absolute_import
+"""Basic vtk support.
 
-from .info import __doc__
+The vis module provides support for generic vtk file writing, basic mesh
+writing (unstructured triangular and tetrahedral meshes), visualization of
+aggregate groupings in 2d and in 3d, and C/F splittings.
+"""
 
-from .vtk_writer import *
-from .vis_coarse import *
+from . import vtk_writer
+from . import vis_coarse
 
-__all__ = [s for s in dir() if not s.startswith('_')]
+from .vtk_writer import write_vtu, write_basic_mesh
+from .vis_coarse import vis_aggregate_groups
+
+__all__ = ['vtk_writer', 'vis_coarse',
+           'vis_aggregate_groups', 'write_vtu', 'write_basic_mesh']

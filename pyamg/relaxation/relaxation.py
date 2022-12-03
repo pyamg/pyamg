@@ -1,21 +1,15 @@
 """Relaxation methods for linear systems."""
 
-
 from warnings import warn
 
 import numpy as np
-import scipy as sp
 from scipy import sparse
-
-from pyamg.util.utils import type_prep, get_diagonal, get_block_diag
-from pyamg import amg_core
 from scipy.linalg import lapack as la
 
-__all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial', 'schwarz', \
-           'schwarz_parameters', 'jacobi_ne', 'gauss_seidel_ne', \
-           'gauss_seidel_nr', 'gauss_seidel_indexed', 'block_jacobi', \
-           'block_gauss_seidel',  'CF_jacobi', 'FC_jacobi', \
-           'CF_block_jacobi', 'FC_block_jacobi']
+from ..util.utils import type_prep, get_diagonal, get_block_diag
+from ..util.params import set_tol
+from ..util.linalg import norm
+from .. import amg_core
 
 
 def make_system(A, x, b, formats=None):
@@ -53,11 +47,11 @@ def make_system(A, x, b, formats=None):
     >>> x = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
-    >>> print str(x.shape)
+    >>> print(x.shape)
     (100,)
-    >>> print str(b.shape)
+    >>> print(b.shape)
     (100,)
-    >>> print A.format
+    >>> print(A.format)
     csc
 
     """
@@ -141,13 +135,13 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print norm(b-A*x0)
-    3.03888724811
+    >>> print(f'{norm(b-A*x0):2.4}')
+    3.039
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}),
     ...         postsmoother=('sor', {'sweep':'symmetric', 'omega' : 1.33}))
     >>> x0 = np.zeros((A.shape[0],1))
@@ -159,7 +153,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     x_old = np.empty_like(x)
 
-    for i in range(iterations):
+    for _i in range(iterations):
         x_old[:] = x
 
         gauss_seidel(A, x, b, iterations=1, sweep=sweep)
@@ -226,13 +220,13 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    0.126326160522
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.1263
     >>> #
     >>> # Schwarz as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother='schwarz',
     ...         postsmoother='schwarz')
     >>> x0=np.zeros((A.shape[0],1))
@@ -244,7 +238,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     A.sort_indices()
 
     if subdomain is None and inv_subblock is not None:
-        raise ValueError("inv_subblock must be None if subdomain is None")
+        raise ValueError('inv_subblock must be None if subdomain is None')
 
     # If no subdomains are defined, default is to use the sparsity pattern of A
     # to define the overlapping regions
@@ -252,12 +246,15 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         schwarz_parameters(A, subdomain, subdomain_ptr,
                            inv_subblock, inv_subblock_ptr)
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, subdomain_ptr.shape[0]-1, 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = subdomain_ptr.shape[0]-2, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             schwarz(A, x, b, iterations=1, subdomain=subdomain,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='forward')
@@ -265,12 +262,9 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     # Call C code, need to make sure that subdomains are sorted and unique
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.overlapping_schwarz_csr(A.indptr, A.indices, A.data,
                                          x, b, inv_subblock, inv_subblock_ptr,
                                          subdomain, subdomain_ptr,
@@ -309,13 +303,13 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print norm(b-A*x0)
-    4.00733716236
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.007
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('gauss_seidel', {'sweep':'symmetric'}),
     ...         postsmoother=('gauss_seidel', {'sweep':'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -333,25 +327,25 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             raise ValueError('BSR blocks must be square')
         blocksize = R
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
     else:
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
 
@@ -379,7 +373,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     Examples
     --------
     >>> # Use Jacobi as a Stand-Alone Solver
-    >>> from pyamg.relaxation.relaxation.relaxation import jacobi
+    >>> from pyamg.relaxation.relaxation import jacobi
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
@@ -387,13 +381,13 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    5.83475132751
+    >>> print(f'{norm(b-A*x0):2.4}')
+    5.835
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}),
     ...         postsmoother=('jacobi', {'omega': 4.0/3.0, 'iterations' : 2}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -415,7 +409,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
                             row_start, row_stop, row_step, omega)
     else:
@@ -424,7 +418,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
             raise ValueError('BSR blocks must be square')
         row_start = int(row_start / R)
         row_stop = int(row_stop / R)
-        for iter in range(iterations):
+        for _iter in range(iterations):
             amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
                                 x, b, temp, row_start, row_stop,
                                 row_step, R, omega)
@@ -466,14 +460,14 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
-    >>> print norm(b-A*x0)
-    4.66474230129
+    >>> print(f'{norm(b-A*x0):2.4}')
+    4.665
     >>> #
     >>> # Use block Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'omega': 4.0/3.0, 'iterations' : 2, 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...        coarse_solver='pinv2', max_coarse=50,
+    ...        coarse_solver='pinv', max_coarse=50,
     ...        presmoother=('block_jacobi', opts),
     ...        postsmoother=('block_jacobi', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -502,7 +496,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.block_jacobi(A.indptr, A.indices, np.ravel(A.data),
                               x, b, np.ravel(Dinv), temp,
                               row_start, row_stop, row_step,
@@ -546,16 +540,15 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> A = poisson((10,10), format='csr')
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
-    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4,
-                           sweep='symmetric')
-    >>> print norm(b-A*x0)
-    0.958333817624
+    >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
+    >>> print(f'{norm(b-A*x0):2.4}')
+    0.9583
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'sweep':'symmetric', 'blocksize' : 4}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...        coarse_solver='pinv2', max_coarse=50,
+    ...        coarse_solver='pinv', max_coarse=50,
     ...        presmoother=('block_gauss_seidel', opts),
     ...        postsmoother=('block_gauss_seidel', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -573,22 +566,22 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             block_gauss_seidel(A, x, b, iterations=1, sweep='forward',
                                blocksize=blocksize, Dinv=Dinv)
             block_gauss_seidel(A, x, b, iterations=1, sweep='backward',
                                blocksize=blocksize, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                     x, b, np.ravel(Dinv),
                                     row_start, row_stop, row_step, blocksize)
@@ -646,7 +639,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     >>> A = poisson((10,10), format='csr')
     >>> b = np.ones((A.shape[0],1))
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('chebyshev', {'degree':3, 'iterations':1}),
     ...         postsmoother=('chebyshev', {'degree':3, 'iterations':1}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -656,8 +649,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     """
     A, x, b = make_system(A, x, b, formats=None)
 
-    for i in range(iterations):
-        from pyamg.util.linalg import norm
+    for _i in range(iterations):
 
         if norm(x) == 0:
             residual = b
@@ -724,22 +716,22 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     # if indices.max() >= A.shape[0]
     #     raise ValueError('row index (%d) is invalid' % indices.max())
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(indices), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = len(indices)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='forward')
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='backward')
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for iter in range(iterations):
+    for _iter in range(iterations):
         amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
                                       x, b, indices,
                                       row_start, row_stop, row_step)
@@ -791,14 +783,14 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print norm(b-A*x0)
-    49.3886046066
+    >>> print(f'{norm(b-A*x0):2.4}')
+    49.39
     >>> #
     >>> # Use NE Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> opts = {'iterations' : 2, 'omega' : 4.0/3.0}
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('jacobi_ne', opts),
     ...         postsmoother=('jacobi_ne', opts))
     >>> x0=np.zeros((A.shape[0],1))
@@ -819,7 +811,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    for i in range(iterations):
+    for _i in range(iterations):
         delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
         amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                            x, b, delta, temp, row_start,
@@ -828,7 +820,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
 def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
-    """Perform Gauss-Seidel iterations on the linear system A A.H x = b.
+    """Perform Gauss-Seidel iterations on the linear system A A.H y = b, where x = A.H y.
 
     Also known as Kaczmarz relaxation
 
@@ -875,13 +867,13 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.47576806771
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.476
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...         coarse_solver='pinv2', max_coarse=50,
+    ...         coarse_solver='pinv', max_coarse=50,
     ...         presmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}),
     ...         postsmoother=('gauss_seidel_ne', {'sweep' : 'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -895,22 +887,22 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(x), 1
     elif sweep == 'backward':
         row_start, row_stop, row_step = len(x)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_ne(A, x, b, iterations=1, sweep='forward',
                             omega=omega, Dinv=Dinv)
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
-    for i in range(iterations):
+    for _i in range(iterations):
         amg_core.gauss_seidel_ne(A.indptr, A.indices, A.data,
                                  x, b, row_start,
                                  row_stop, row_step, Dinv, omega)
@@ -960,13 +952,13 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print norm(b-A*x0)
-    8.45044864352
+    >>> print(f'{norm(b-A*x0):2.4}')
+    8.45
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
-    ...      coarse_solver='pinv2', max_coarse=50,
+    ...      coarse_solver='pinv', max_coarse=50,
     ...      presmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}),
     ...      postsmoother=('gauss_seidel_nr', {'sweep' : 'symmetric'}))
     >>> x0=np.zeros((A.shape[0],1))
@@ -980,25 +972,25 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=1, inv=True))
 
+    if sweep not in ('forward', 'backward', 'symmetric'):
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
+
     if sweep == 'forward':
         col_start, col_stop, col_step = 0, len(x), 1
     elif sweep == 'backward':
         col_start, col_stop, col_step = len(x)-1, -1, -1
     elif sweep == 'symmetric':
-        for iter in range(iterations):
+        for _iter in range(iterations):
             gauss_seidel_nr(A, x, b, iterations=1, sweep='forward',
                             omega=omega, Dinv=Dinv)
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
-    else:
-        raise ValueError("valid sweep directions are 'forward',\
-                          'backward', and 'symmetric'")
 
     # Calculate initial residual
     r = b - A*x
 
-    for i in range(iterations):
+    for _i in range(iterations):
         amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,
                                  x, r, col_start,
                                  col_stop, col_step, Dinv, omega)
@@ -1065,19 +1057,14 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                                    inv_subblock_ptr, subdomain, subdomain_ptr,
                                    int(subdomain_ptr.shape[0]-1), A.shape[0])
         # Choose tolerance for which singular values are zero in *gelss below
-        t = A.dtype.char
-        eps = np.finfo(np.float).eps
-        feps = np.finfo(np.single).eps
-        geps = np.finfo(np.longfloat).eps
-        _array_precision = {'f': 0, 'd': 1, 'g': 2, 'F': 0, 'D': 1, 'G': 2}
-        cond = {0: feps*1e3, 1: eps*1e6, 2: geps*1e6}[_array_precision[t]]
+        cond = set_tol(A.dtype)
 
         # Invert each block column
         my_pinv, = la.get_lapack_funcs(['gelss'],
                                        (np.ones((1,), dtype=A.dtype)))
         for i in range(subdomain_ptr.shape[0]-1):
             m = blocksize[i]
-            rhs = sp.eye(m, m, dtype=A.dtype)
+            rhs = np.eye(m, m, dtype=A.dtype)
             j0 = inv_subblock_ptr[i]
             j1 = inv_subblock_ptr[i+1]
             gelssoutput = my_pinv(inv_subblock[j0:j1].reshape(m, m),
@@ -1089,16 +1076,75 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
                             inv_subblock_ptr)
     return A.schwarz_parameters
 
-# from pyamg.utils import dispatcher
-# dispatch = dispatcher( dict([ (fn,eval(fn)) for fn in __all__ ]) )
+
+def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
+    """Perform indexed Jacobi iteration on the linear system Ax=b.
+
+    The indexed method may be used to implement
+    specialized smoothers, like F-smoothing in classical AMG.
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    indices : ndarray
+        Row indices to relax.
+    iterations : int
+        Number of iterations to perform
+    omega : scalar
+        Damping parameter
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.relaxation.relaxation import jacobi_indexed
+    >>> import numpy as np
+    >>> A = poisson((4,), format='csr')
+    >>> x = np.array([0.0, 0.0, 0.0, 0.0])
+    >>> b = np.array([0.0, 1.0, 2.0, 3.0])
+    >>> jacobi_indexed(A, x, b, [0,1,2,3])  # relax all rows in order
+    >>> jacobi_indexed(A, x, b, [0,1])      # relax first two rows
+    >>> jacobi_indexed(A, x, b, [2,0])      # relax row 2, then row 0
+    >>> jacobi_indexed(A, x, b, [2,3])      # relax 2 and 3
+
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    indices = np.asarray(indices, dtype='intc')
+
+    # Create uniform type, convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
+
+    if sparse.isspmatrix_csr(A):
+        for _iter in range(iterations):
+            amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, indices, omega)
+    else:
+        R, C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        if indices.max() > A.shape[0]/R - 1:
+            raise ValueError('Indices must range from 0, ..., numrows/blocksize - 1)')
+        for _iter in range(iterations):
+            amg_core.bsr_jacobi_indexed(A.indptr, A.indices, A.data.ravel(), x, b,
+                                        indices, R, omega)
 
 
-def CF_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
-              C_iterations=1, omega=1.0):
-    """Perform CF Jacobi iteration on the linear system Ax=b, that is
+def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
+              c_iterations=1, omega=1.0):
+    """Perform CF Jacobi iteration on the linear system Ax=b.
 
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
+    CF Jacobi executes
+
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1116,9 +1162,9 @@ def CF_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
         List of F-points
     iterations : int
         Number of iterations to perform of total CF-cycle
-    F_iterations : int
+    f_iterations : int
         Number of sweeps of F-relaxation to perform
-    C_iterations : int
+    c_iterations : int
         Number of sweeps of C-relaxation to perform
     omega : scalar
         Damping parameter
@@ -1129,35 +1175,40 @@ def CF_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
-            for Citer in range(C_iterations):
+        for _iter in range(iterations):
+            for _citer in range(c_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
-            for Fiter in range(F_iterations):
+            for _fiter in range(f_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
     else:
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
 
-        for iter in range(iterations):
-            for Citer in range(C_iterations):
+        for _iter in range(iterations):
+            for _citer in range(c_iterations):
                 amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                             x, b, Cpts, R, omega)
-            for Fiter in range(F_iterations):
+            for _fiter in range(f_iterations):
                 amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                             x, b, Fpts, R, omega)
 
 
-def FC_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
-              C_iterations=1, omega=1.0):
-    """Perform FC Jacobi iteration on the linear system Ax=b, that is
+def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
+              c_iterations=1, omega=1.0):
+    """Perform FC Jacobi iteration on the linear system Ax=b.
 
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
+    FC Jacobi executes
+
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1175,9 +1226,9 @@ def FC_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
         List of F-points
     iterations : int
         Number of iterations to perform of total FC-cycle
-    F_iterations : int
+    f_iterations : int
         Number of sweeps of F-relaxation to perform
-    C_iterations : int
+    c_iterations : int
         Number of sweeps of C-relaxation to perform
     omega : scalar
         Damping parameter
@@ -1188,35 +1239,40 @@ def FC_jacobi(A, x, b, Cpts, Fpts, iterations=1, F_iterations=1,
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
     if sparse.isspmatrix_csr(A):
-        for iter in range(iterations):
-            for Fiter in range(F_iterations):
+        for _iter in range(iterations):
+            for _fiter in range(f_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
-            for Citer in range(C_iterations):
+            for _citer in range(c_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
     else:
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
 
-        for iter in range(iterations):
-            for Fiter in range(F_iterations):
+        for _iter in range(iterations):
+            for _fiter in range(f_iterations):
                 amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                             x, b, Fpts, R, omega)
-            for Citer in range(C_iterations):
+            for _citer in range(c_iterations):
                 amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                             x, b, Cpts, R, omega)
 
 
-def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
-                    F_iterations=1, C_iterations=1, omega=1.0):
-    """Perform CF block Jacobi iteration on the linear system Ax=b, that is
+def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+                    f_iterations=1, c_iterations=1, omega=1.0):
+    """Perform CF block Jacobi iteration on the linear system Ax=b.
 
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
+    CF block Jacobi executes
+
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
@@ -1240,9 +1296,9 @@ def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
         Desired dimension of blocks
     iterations : int
         Number of iterations to perform of total CF-cycle
-    F_iterations : int
+    f_iterations : int
         Number of sweeps of F-relaxation to perform
-    C_iterations : int
+    c_iterations : int
         Number of sweeps of C-relaxation to perform
     omega : scalar
         Damping parameter
@@ -1255,6 +1311,9 @@ def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != int(A.shape[0]/blocksize):
@@ -1266,23 +1325,25 @@ def CF_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     [omega] = type_prep(A.dtype, [omega])
 
     # Perform block C-relaxation then block F-relaxation
-    for iter in range(iterations):
-        for Citer in range(C_iterations):
+    for _iter in range(iterations):
+        for _citer in range(c_iterations):
             amg_core.block_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                           x, b, np.ravel(Dinv), Cpts, omega,
                                           blocksize)
-        for Fiter in range(F_iterations):
+        for _fiter in range(f_iterations):
             amg_core.block_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                           x, b, np.ravel(Dinv), Fpts, omega,
                                           blocksize)
 
 
-def FC_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
-                    F_iterations=1, C_iterations=1, omega=1.0):
-    """Perform FC block Jacobi iteration on the linear system Ax=b, that is
+def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+                    f_iterations=1, c_iterations=1, omega=1.0):
+    """Perform FC block Jacobi iteration on the linear system Ax=b.
 
-        x_f = (1-omega)x_f + omega*Dff^{-1}(b_f - Aff*xf - Afc*xc)
-        x_c = (1-omega)x_c + omega*Dff^{-1}(b_c - Acf*xf - Acc*xc)
+    FC block Jacobi executes
+
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
@@ -1306,9 +1367,9 @@ def FC_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
         Desired dimension of blocks
     iterations : int
         Number of iterations to perform of total FC-cycle
-    F_iterations : int
+    f_iterations : int
         Number of sweeps of F-relaxation to perform
-    C_iterations : int
+    c_iterations : int
         Number of sweeps of C-relaxation to perform
     omega : scalar
         Damping parameter
@@ -1321,6 +1382,9 @@ def FC_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
     A = A.tobsr(blocksize=(blocksize, blocksize))
 
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
     if Dinv is None:
         Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
     elif Dinv.shape[0] != int(A.shape[0]/blocksize):
@@ -1332,12 +1396,12 @@ def FC_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
     [omega] = type_prep(A.dtype, [omega])
 
     # Perform block C-relaxation then block F-relaxation
-    for iter in range(iterations):
-        for Fiter in range(F_iterations):
+    for _iter in range(iterations):
+        for _fiter in range(f_iterations):
             amg_core.block_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                           x, b, np.ravel(Dinv), Fpts, omega,
                                           blocksize)
-        for Citer in range(C_iterations):
+        for _citer in range(c_iterations):
             amg_core.block_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                           x, b, np.ravel(Dinv), Cpts, omega,
                                           blocksize)

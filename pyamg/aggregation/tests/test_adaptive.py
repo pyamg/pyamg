@@ -1,22 +1,17 @@
+"""Test adaptive SA."""
+import warnings
 import numpy as np
-import scipy as sp
+from numpy.testing import TestCase
+from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, linear_elasticity
 from pyamg.aggregation import smoothed_aggregation_solver
 from pyamg.aggregation.adaptive import adaptive_sa_solver
 
-from numpy.testing import TestCase
-
-import warnings
-from scipy.sparse import SparseEfficiencyWarning
-warnings.simplefilter('ignore', SparseEfficiencyWarning)
-warnings.filterwarnings('ignore', category=UserWarning,
-                        message='Having less target vectors')
-
 
 class TestAdaptiveSA(TestCase):
     def setUp(self):
-        np.random.seed(0)
+        np.random.seed(3485190434)
 
     def test_poisson(self):
         A = poisson((50, 50), format='csr')
@@ -24,7 +19,7 @@ class TestAdaptiveSA(TestCase):
         [asa, work] = adaptive_sa_solver(A, num_candidates=1)
         sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)))
 
-        b = sp.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -38,9 +33,11 @@ class TestAdaptiveSA(TestCase):
 
         # print "ASA convergence (Poisson)",conv_asa
         # print "SA convergence (Poisson)",conv_sa
-        assert(conv_asa < 1.2 * conv_sa)
+        assert conv_asa < 1.2 * conv_sa
 
     def test_elasticity(self):
+        warnings.filterwarnings('ignore', category=UserWarning,
+                                message='Having less target vectors')
         A, B = linear_elasticity((35, 35), format='bsr')
 
         smoother = ('gauss_seidel', {'sweep': 'symmetric', 'iterations': 2})
@@ -49,7 +46,7 @@ class TestAdaptiveSA(TestCase):
                                          prepostsmoother=smoother)
         sa = smoothed_aggregation_solver(A, B=B)
 
-        b = sp.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
 
         residuals0 = []
         residuals1 = []
@@ -63,33 +60,33 @@ class TestAdaptiveSA(TestCase):
 
         # print "ASA convergence (Elasticity) %1.2e" % (conv_asa)
         # print "SA convergence (Elasticity) %1.2e" % (conv_sa)
-        assert(conv_asa < 1.3 * conv_sa)
+        assert conv_asa < 1.3 * conv_sa
 
     def test_matrix_formats(self):
+        warnings.filterwarnings('ignore', category=SparseEfficiencyWarning)
 
         # Do dense, csr, bsr and csc versions of A all yield the same solver
         A = poisson((7, 7), format='csr')
         cases = [A.tobsr(blocksize=(1, 1))]
         cases.append(A.tocsc())
-        cases.append(A.todense())
-        warnings.filterwarnings('ignore', message='SparseEfficiencyWarning')
+        cases.append(A.toarray())
 
-        np.random.seed(0)
+        np.random.seed(111908910)
         sa_old = adaptive_sa_solver(A, initial_candidates=np.ones((49, 1)),
                                     max_coarse=10)[0]
         for AA in cases:
-            np.random.seed(0)
+            np.random.seed(111908910)
             sa_new = adaptive_sa_solver(AA,
                                         initial_candidates=np.ones((49, 1)),
                                         max_coarse=10)[0]
-            assert(abs(np.ravel(sa_old.levels[-1].A.todense() -
-                                sa_new.levels[-1].A.todense())).max() < 0.01)
+            assert (abs(np.ravel(sa_old.levels[-1].A.toarray()
+                    - sa_new.levels[-1].A.toarray())).max()) < 0.01
             sa_old = sa_new
 
 
 class TestComplexAdaptiveSA(TestCase):
     def setUp(self):
-        np.random.seed(0)
+        np.random.seed(1985581638)
 
     def test_poisson(self):
         cases = []
@@ -97,7 +94,7 @@ class TestComplexAdaptiveSA(TestCase):
         # perturbed Laplacian
         A = poisson((50, 50), format='csr')
         Ai = A.copy()
-        Ai.data = Ai.data + 1e-5j * sp.rand(Ai.nnz)
+        Ai.data = Ai.data + 1e-5j * np.random.rand(Ai.nnz)
         cases.append((Ai, 0.25))
 
         # imaginary Laplacian
@@ -106,16 +103,15 @@ class TestComplexAdaptiveSA(TestCase):
 
         # JBS:  Not sure if this is a valid test case
         # imaginary shift
-        # Ai = A + 1.1j*scipy.sparse.eye(A.shape[0], A.shape[1])
+        # Ai = A + 1.1j*sparse.eye(A.shape[0], A.shape[1])
         # cases.append((Ai,0.8))
 
         for A, rratio in cases:
-            [asa, work] = adaptive_sa_solver(A, num_candidates=1,
-                                             symmetry='symmetric')
+            [asa, work] = adaptive_sa_solver(A, num_candidates=1, symmetry='symmetric')
             # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
-            x0 = sp.rand(A.shape[0],) + 1.0j * sp.rand(A.shape[0],)
+            x0 = np.random.rand(A.shape[0],) + 1.0j * np.random.rand(A.shape[0],)
 
             residuals0 = []
 
@@ -126,7 +122,7 @@ class TestComplexAdaptiveSA(TestCase):
             conv_asa = \
                 (residuals0[-1] / residuals0[0]) ** (1.0 / len(residuals0))
 
-            assert(conv_asa < rratio)
+            assert conv_asa < rratio
 
 # class TestAugmentCandidates(TestCase):
 #    def setUp(self):
@@ -189,7 +185,7 @@ class TestComplexAdaptiveSA(TestCase):
 #                   fine_candidates[:, [i]])
 #
 # compare against SA method (which is assumed to be correct)
-#                assert_almost_equal(Q_expected.todense(),Q_result.todense())
+#                assert_almost_equal(Q_expected.toarray(),Q_result.toarray())
 #                assert_almost_equal(R_expected,R_result)
 #
 # each fine level candidate should be fit exactly

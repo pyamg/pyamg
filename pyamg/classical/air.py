@@ -23,9 +23,9 @@ from pyamg.classical.interpolate import direct_interpolation, \
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
-__all__ = ['AIR_solver']
+__all__ = ['air_solver']
 
-def AIR_solver(A,
+def air_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
                interp='one_point',
@@ -55,8 +55,8 @@ def AIR_solver(A,
     interp : {string} : default 'one-point'
         Options include 'direct', 'standard', 'inject' and 'one-point'.
     restrict : {string} : default distance-2 AIR, with theta = 0.05.
-        Options include 'air' for local approximate ideal restriction (lAIR)
-        and 'neumann' for Neumann approximate ideal restriction (nAIR).
+        Option is 'air' for local approximate ideal restriction (lAIR),
+        with inner options specifying degree, strength tolerance, etc.
     presmoother : {string or dict} : default None
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
