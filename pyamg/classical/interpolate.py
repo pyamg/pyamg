@@ -102,18 +102,17 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import standard_interpolation
+    >>> from pyamg.classical.interpolate import standard_interpolation
     >>> import numpy as np
     >>> A = poisson((5,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = standard_interpolation(A, A, splitting, 0.25)
-    >>> print P.todense()
+    >>> print(P.todense())
     [[ 1.   0.   0. ]
      [ 0.5  0.5  0. ]
      [ 0.   1.   0. ]
      [ 0.   0.5  0.5]
      [ 0.   0.   1. ]]
-
     """
     if not isspmatrix_csr(A):
         raise TypeError('expected csr_matrix for A')
@@ -197,12 +196,12 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical import standard_interpolation
+    >>> from pyamg.classical.interpolate import distance_two_interpolation
     >>> import numpy as np
-    >>> A = poisson((5,),format='csr')
+    >>> A = poisson((9,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = distance_two_interpolation(A, A, splitting, 0.25)
-    >>> print P.todense()
+    >>> print(P.todense())
     [[ 1.   0.   0. ]
      [ 0.5  0.5  0. ]
      [ 0.   1.   0. ]
