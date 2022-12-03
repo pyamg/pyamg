@@ -11,7 +11,6 @@ __all__ = ['direct_interpolation', 'standard_interpolation',
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     """Create prolongator using direct interpolation.
-
     Parameters
     ----------
     A : csr_matrix
@@ -21,12 +20,10 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
-
     Returns
     -------
     P : csr_matrix
         Prolongator using direct interpolation
-
     Examples
     --------
     >>> from pyamg.gallery import poisson
@@ -41,7 +38,6 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
      [0.  1.  0. ]
      [0.  0.5 0.5]
      [0.  0.  1. ]]
-
     """
     if not isspmatrix_csr(A):
         raise TypeError('expected csr_matrix for A')

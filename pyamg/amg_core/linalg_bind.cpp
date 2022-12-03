@@ -92,7 +92,7 @@ void _filter_matrix_rows(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-             const I lump
+          const bool lump
                          )
 {
     auto py_Ap = Ap.unchecked();

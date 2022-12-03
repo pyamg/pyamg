@@ -8,7 +8,7 @@ from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection, energy_based_strength_of_connection \
+    distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
        distance_two_interpolation, standard_interpolation
@@ -150,19 +150,24 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
-        splitting = split.RS(C, **kwargs)
+        splitting = RS(C, **kwargs)
     elif fn == 'PMIS':
-        splitting = split.PMIS(C, **kwargs)
+        splitting = PMIS(C, **kwargs)
     elif fn == 'PMISc':
-        splitting = split.PMISc(C, **kwargs)
+        splitting = PMISc(C, **kwargs)
     elif fn == 'CLJP':
-        splitting = split.CLJP(C, **kwargs)
+        splitting = CLJP(C, **kwargs)
     elif fn == 'CLJPc':
-        splitting = split.CLJPc(C, **kwargs)
+        splitting = CLJPc(C, **kwargs)
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
         raise ValueError(f'Unknown C/F splitting method {CF}')
+
+    # Make sure all points were not declared as C- or F-points
+    num_fpts = np.sum(splitting)
+    if (num_fpts == len(splitting)) or (num_fpts == 0):
+        return 1
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
