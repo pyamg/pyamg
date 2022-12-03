@@ -108,11 +108,12 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
-    """Classical strength of connection measure.
+def classical_strength_of_connection(A, theta=0.0, norm='abs'):
+    """Classical Strength Measure.
 
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
+
              |A[i,j]| >= theta * max(|A[i,k]|), where k != i     (norm='abs')
              -A[i,j]  >= theta * max(-A[i,k]),  where k != i     (norm='min')
 

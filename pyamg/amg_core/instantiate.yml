@@ -31,6 +31,9 @@ instantiate:
     - evolution_strength_helper
     - incomplete_mat_mult_csr
     - filter_matrix_rows
+    - jacobi_indexed
+    - bsr_jacobi_indexed
+    - block_jacobi_indexed
 
 - types:
     - [int,float]
