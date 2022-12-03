@@ -447,7 +447,9 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
             }
         }
     }
-
+    else {
+        std::cout << "Unsupported combination of row/column major for dense multiplication.\n";
+    }
 }
 
 
@@ -507,7 +509,6 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  * Vol 10, No 2, p 359-371, March 1989.
  *
  */
-
 template<class I, class T, class F>
 I svd_jacobi(const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 {
@@ -1006,6 +1007,99 @@ void csc_scale_rows(const I n_row,
     const I nnz = Ap[n_col];
     for(I i = 0; i < nnz; i++){
         Ax[i] *= Xx[Aj[i]];
+    }
+}
+
+
+/*
+ * Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+ *
+ *    |A_ij| < theta * |A_ii|
+ *
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     number of rows in A
+ * theta : float
+ *     stength of connection tolerance
+ * Ap : array
+ *     CSR row pointer
+ * Aj : array
+ *     CSR index array
+ * Ax : array
+ *     CSR data array
+ *
+ * Returns
+ * -------
+ * Nothing, Ax is modified in place
+ */
+template<class I, class T, class F>
+void filter_matrix_rows(const I n_row,
+                        const F theta,
+                        const I Ap[], const int Ap_size,
+                        const I Aj[], const int Aj_size,
+                              T Ax[], const int Ax_size,
+                        const bool lump)
+{
+    // Lump each row by setting A_ii += A_ij for all j s.t. |A_ij| < theta*|A_ii|,
+    // and set A_ij = 0
+    if (lump) {
+        for(I i = 0; i < n_row; i++) {
+            F diagonal = 0.0;
+
+            const I row_start = Ap[i];
+            const I row_end   = Ap[i+1];
+
+            // Find diagonal of this row
+            I diag_ind = -1;
+            for(I jj = row_start; jj < row_end; jj++){
+                if(Aj[jj] == i){
+                    diag_ind = jj;
+                    diagonal = mynorm(Ax[jj]);
+                    break;
+                }
+            }
+
+            // Set threshold for strong connections
+            F threshold = theta*diagonal;
+            for(I jj = row_start; jj < row_end; jj++){
+                F norm_jj = mynorm(Ax[jj]);
+
+                // Remove entry if below threshold
+                if(norm_jj < threshold && Aj[jj] != i){
+                    Ax[diag_ind] += Ax[jj];
+                    Ax[jj] = 0.0;
+                }
+            }
+        }
+    }
+    // Filter each row by setting explicit zeros when |A_ij| < theta*|A_ii|
+    else {
+        for(I i = 0; i < n_row; i++) {
+            F diagonal = 0.0;
+
+            const I row_start = Ap[i];
+            const I row_end   = Ap[i+1];
+
+            // Find diagonal of this row
+            for(I jj = row_start; jj < row_end; jj++){
+                if(Aj[jj] == i){
+                    diagonal = mynorm(Ax[jj]);
+                    break;
+                }
+            }
+
+            // Set threshold for strong connections
+            F threshold = theta*diagonal;
+            for(I jj = row_start; jj < row_end; jj++){
+                F norm_jj = mynorm(Ax[jj]);
+
+                // Remove entry if below threshold
+                if(norm_jj < threshold){
+                    Ax[jj] = 0.0;
+                }
+            }
+        }
     }
 }
 
