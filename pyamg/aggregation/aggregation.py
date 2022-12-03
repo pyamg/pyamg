@@ -416,7 +416,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P              # Galerkin operator
+    A = R @ A @ P              # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates
