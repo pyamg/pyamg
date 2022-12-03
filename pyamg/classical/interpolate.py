@@ -1,4 +1,6 @@
 """Classical AMG Interpolation methods."""
+
+
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr
 from pyamg.strength import classical_strength_of_connection
@@ -12,20 +14,13 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         NxN matrix in CSR format
-    C : {csr_matrix}
+    C : csr_matrix
         Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
-    theta : float in [0,1), default None
-        theta value defining strong connections in a classical AMG
-        sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
-    norm : string, default 'abs'
-        Norm used in redefining classical SOC. Options are 'min' and
-        'abs' for CSR matrices. See strength.py for more information.
 
     Returns
     -------
@@ -79,7 +74,6 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
 
 
-
 def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
     """Create prolongator using distance-1 standard/classical interpolation
 
@@ -116,7 +110,7 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     >>> import numpy as np
     >>> A = poisson((5,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
-    >>> P = standard_interpolation(A, A, splitting)
+    >>> P = standard_interpolation(A, A, splitting, 0.25)
     >>> print P.todense()
     [[ 1.   0.   0. ]
      [ 0.5  0.5  0. ]
@@ -166,9 +160,8 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
                                                  A.data, C.indptr, C.indices,
                                                  C.data, splitting, P_indptr,
                                                  P_colinds, P_data)
-
+    
     return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
-
 
 
 def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=False):
@@ -207,7 +200,18 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
 
     Examples
     --------
-
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical import standard_interpolation
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> P = distance_two_interpolation(A, A, splitting, 0.25)
+    >>> print P.todense()
+    [[ 1.   0.   0. ]
+     [ 0.5  0.5  0. ]
+     [ 0.   1.   0. ]
+     [ 0.   0.5  0.5]
+     [ 0.   0.   1. ]]
 
     """
     if not isspmatrix_csr(C):
@@ -244,4 +248,3 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
                                               P_colinds, P_data)
 
     return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
-

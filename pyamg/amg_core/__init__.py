@@ -17,7 +17,8 @@ from .relaxation import (gauss_seidel, bsr_gauss_seidel, gauss_seidel_indexed,
                          jacobi, bsr_jacobi,
                          jacobi_ne, gauss_seidel_ne, gauss_seidel_nr,
                          block_jacobi, block_gauss_seidel,
-                         extract_subblocks, overlapping_schwarz_csr)
+                         extract_subblocks, overlapping_schwarz_csr,
+                         jacobi_indexed, bsr_jacobi_indexed, block_jacobi_indexed)
 from .ruge_stuben import (classical_strength_of_connection_abs,
                           classical_strength_of_connection_min,
                           maximum_row_value,
@@ -78,6 +79,9 @@ __all__ = [
     'block_gauss_seidel',
     'extract_subblocks',
     'overlapping_schwarz_csr',
+    'jacobi_indexed',
+    'bsr_jacobi_indexed',
+    'block_jacobi_indexed',
     #
     'classical_strength_of_connection_abs',
     'classical_strength_of_connection_min',

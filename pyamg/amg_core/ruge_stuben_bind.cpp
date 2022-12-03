@@ -147,6 +147,7 @@ py::array_t<I> & splitting
 template<class I>
 void _rs_cf_splitting_pass2(
           const I n_nodes,
+<<<<<<< HEAD
       py::array_t<I> & Sp,
       py::array_t<I> & Sj,
 py::array_t<I> & splitting
@@ -157,12 +158,29 @@ py::array_t<I> & splitting
     auto py_splitting = splitting.mutable_unchecked();
     const I *_Sp = py_Sp.data();
     const I *_Sj = py_Sj.data();
+=======
+py::array_t<I> & C_rowptr,
+py::array_t<I> & C_colinds,
+py::array_t<I> & splitting
+                            )
+{
+    auto py_C_rowptr = C_rowptr.unchecked();
+    auto py_C_colinds = C_colinds.unchecked();
+    auto py_splitting = splitting.mutable_unchecked();
+    const I *_C_rowptr = py_C_rowptr.data();
+    const I *_C_colinds = py_C_colinds.data();
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
     I *_splitting = py_splitting.mutable_data();
 
     return rs_cf_splitting_pass2<I>(
                   n_nodes,
+<<<<<<< HEAD
                       _Sp, Sp.shape(0),
                       _Sj, Sj.shape(0),
+=======
+                _C_rowptr, C_rowptr.shape(0),
+               _C_colinds, C_colinds.shape(0),
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
                _splitting, splitting.shape(0)
                                     );
 }
@@ -206,24 +224,24 @@ void _rs_direct_interpolation_pass1(
       py::array_t<I> & Sp,
       py::array_t<I> & Sj,
 py::array_t<I> & splitting,
-      py::array_t<I> & Pp
+      py::array_t<I> & Bp
                                     )
 {
     auto py_Sp = Sp.unchecked();
     auto py_Sj = Sj.unchecked();
     auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.mutable_unchecked();
+    auto py_Bp = Bp.mutable_unchecked();
     const I *_Sp = py_Sp.data();
     const I *_Sj = py_Sj.data();
     const I *_splitting = py_splitting.data();
-    I *_Pp = py_Pp.mutable_data();
+    I *_Bp = py_Bp.mutable_data();
 
     return rs_direct_interpolation_pass1<I>(
                   n_nodes,
                       _Sp, Sp.shape(0),
                       _Sj, Sj.shape(0),
                _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0)
+                      _Bp, Bp.shape(0)
                                             );
 }
 
@@ -237,9 +255,9 @@ void _rs_direct_interpolation_pass2(
       py::array_t<I> & Sj,
       py::array_t<T> & Sx,
 py::array_t<I> & splitting,
-      py::array_t<I> & Pp,
-      py::array_t<I> & Pj,
-      py::array_t<T> & Px
+      py::array_t<I> & Bp,
+      py::array_t<I> & Bj,
+      py::array_t<T> & Bx
                                     )
 {
     auto py_Ap = Ap.unchecked();
@@ -249,9 +267,9 @@ py::array_t<I> & splitting,
     auto py_Sj = Sj.unchecked();
     auto py_Sx = Sx.unchecked();
     auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.unchecked();
-    auto py_Pj = Pj.mutable_unchecked();
-    auto py_Px = Px.mutable_unchecked();
+    auto py_Bp = Bp.unchecked();
+    auto py_Bj = Bj.mutable_unchecked();
+    auto py_Bx = Bx.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
@@ -259,9 +277,9 @@ py::array_t<I> & splitting,
     const I *_Sj = py_Sj.data();
     const T *_Sx = py_Sx.data();
     const I *_splitting = py_splitting.data();
-    const I *_Pp = py_Pp.data();
-    I *_Pj = py_Pj.mutable_data();
-    T *_Px = py_Px.mutable_data();
+    const I *_Bp = py_Bp.data();
+    I *_Bj = py_Bj.mutable_data();
+    T *_Bx = py_Bx.mutable_data();
 
     return rs_direct_interpolation_pass2<I, T>(
                   n_nodes,
@@ -272,16 +290,16 @@ py::array_t<I> & splitting,
                       _Sj, Sj.shape(0),
                       _Sx, Sx.shape(0),
                _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0),
-                      _Pj, Pj.shape(0),
-                      _Px, Px.shape(0)
+                      _Bp, Bp.shape(0),
+                      _Bj, Bj.shape(0),
+                      _Bx, Bx.shape(0)
                                                );
 }
 
 template<class I, class T>
 void _cr_helper(
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
+py::array_t<I> & A_rowptr,
+py::array_t<I> & A_colinds,
        py::array_t<T> & B,
        py::array_t<T> & e,
  py::array_t<I> & indices,
@@ -290,15 +308,15 @@ py::array_t<I> & splitting,
           const T thetacs
                 )
 {
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
+    auto py_A_rowptr = A_rowptr.unchecked();
+    auto py_A_colinds = A_colinds.unchecked();
     auto py_B = B.unchecked();
     auto py_e = e.mutable_unchecked();
     auto py_indices = indices.mutable_unchecked();
     auto py_splitting = splitting.mutable_unchecked();
     auto py_gamma = gamma.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
+    const I *_A_rowptr = py_A_rowptr.data();
+    const I *_A_colinds = py_A_colinds.data();
     const T *_B = py_B.data();
     T *_e = py_e.mutable_data();
     I *_indices = py_indices.mutable_data();
@@ -306,8 +324,8 @@ py::array_t<I> & splitting,
     T *_gamma = py_gamma.mutable_data();
 
     return cr_helper<I, T>(
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
+                _A_rowptr, A_rowptr.shape(0),
+               _A_colinds, A_colinds.shape(0),
                        _B, B.shape(0),
                        _e, e.shape(0),
                  _indices, indices.shape(0),
@@ -315,291 +333,6 @@ py::array_t<I> & splitting,
                    _gamma, gamma.shape(0),
                   thetacs
                            );
-}
-
-template<class I>
-void _rs_standard_interpolation_pass1(
-          const I n_nodes,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp
-                                      )
-{
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.mutable_unchecked();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const I *_splitting = py_splitting.data();
-    I *_Pp = py_Pp.mutable_data();
-
-    return rs_standard_interpolation_pass1<I>(
-                  n_nodes,
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0)
-                                              );
-}
-
-template<class I, class T>
-void _rs_standard_interpolation_pass2(
-          const I n_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-      py::array_t<T> & Sx,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp,
-      py::array_t<I> & Pj,
-      py::array_t<T> & Px
-                                      )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_Sx = Sx.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.unchecked();
-    auto py_Pj = Pj.mutable_unchecked();
-    auto py_Px = Px.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const T *_Sx = py_Sx.data();
-    const I *_splitting = py_splitting.data();
-    const I *_Pp = py_Pp.data();
-    I *_Pj = py_Pj.mutable_data();
-    T *_Px = py_Px.mutable_data();
-
-    return rs_standard_interpolation_pass2<I, T>(
-                  n_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-                      _Sx, Sx.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0),
-                      _Pj, Pj.shape(0),
-                      _Px, Px.shape(0)
-                                                 );
-}
-
-template<class I, class T>
-void _remove_strong_FF_connections(
-          const I n_nodes,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-      py::array_t<T> & Sx,
-py::array_t<I> & splitting
-                                   )
-{
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_Sx = Sx.mutable_unchecked();
-    auto py_splitting = splitting.unchecked();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    T *_Sx = py_Sx.mutable_data();
-    const I *_splitting = py_splitting.data();
-
-    return remove_strong_FF_connections<I, T>(
-                  n_nodes,
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-                      _Sx, Sx.shape(0),
-               _splitting, splitting.shape(0)
-                                              );
-}
-
-template<class I, class T>
-void _mod_standard_interpolation_pass2(
-          const I n_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-      py::array_t<T> & Sx,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp,
-      py::array_t<I> & Pj,
-      py::array_t<T> & Px
-                                       )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_Sx = Sx.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.unchecked();
-    auto py_Pj = Pj.mutable_unchecked();
-    auto py_Px = Px.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const T *_Sx = py_Sx.data();
-    const I *_splitting = py_splitting.data();
-    const I *_Pp = py_Pp.data();
-    I *_Pj = py_Pj.mutable_data();
-    T *_Px = py_Px.mutable_data();
-
-    return mod_standard_interpolation_pass2<I, T>(
-                  n_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-                      _Sx, Sx.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0),
-                      _Pj, Pj.shape(0),
-                      _Px, Px.shape(0)
-                                                  );
-}
-
-template<class I>
-void _distance_two_amg_interpolation_pass1(
-          const I n_nodes,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp
-                                           )
-{
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.mutable_unchecked();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const I *_splitting = py_splitting.data();
-    I *_Pp = py_Pp.mutable_data();
-
-    return distance_two_amg_interpolation_pass1<I>(
-                  n_nodes,
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0)
-                                                   );
-}
-
-template<class I, class T>
-void _extended_plusi_interpolation_pass2(
-          const I n_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-      py::array_t<T> & Sx,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp,
-      py::array_t<I> & Pj,
-      py::array_t<T> & Px
-                                         )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_Sx = Sx.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.unchecked();
-    auto py_Pj = Pj.mutable_unchecked();
-    auto py_Px = Px.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const T *_Sx = py_Sx.data();
-    const I *_splitting = py_splitting.data();
-    const I *_Pp = py_Pp.data();
-    I *_Pj = py_Pj.mutable_data();
-    T *_Px = py_Px.mutable_data();
-
-    return extended_plusi_interpolation_pass2<I, T>(
-                  n_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-                      _Sx, Sx.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0),
-                      _Pj, Pj.shape(0),
-                      _Px, Px.shape(0)
-                                                    );
-}
-
-template<class I, class T>
-void _extended_interpolation_pass2(
-          const I n_nodes,
-      py::array_t<I> & Ap,
-      py::array_t<I> & Aj,
-      py::array_t<T> & Ax,
-      py::array_t<I> & Sp,
-      py::array_t<I> & Sj,
-      py::array_t<T> & Sx,
-py::array_t<I> & splitting,
-      py::array_t<I> & Pp,
-      py::array_t<I> & Pj,
-      py::array_t<T> & Px
-                                   )
-{
-    auto py_Ap = Ap.unchecked();
-    auto py_Aj = Aj.unchecked();
-    auto py_Ax = Ax.unchecked();
-    auto py_Sp = Sp.unchecked();
-    auto py_Sj = Sj.unchecked();
-    auto py_Sx = Sx.unchecked();
-    auto py_splitting = splitting.unchecked();
-    auto py_Pp = Pp.unchecked();
-    auto py_Pj = Pj.mutable_unchecked();
-    auto py_Px = Px.mutable_unchecked();
-    const I *_Ap = py_Ap.data();
-    const I *_Aj = py_Aj.data();
-    const T *_Ax = py_Ax.data();
-    const I *_Sp = py_Sp.data();
-    const I *_Sj = py_Sj.data();
-    const T *_Sx = py_Sx.data();
-    const I *_splitting = py_splitting.data();
-    const I *_Pp = py_Pp.data();
-    I *_Pj = py_Pj.mutable_data();
-    T *_Px = py_Px.mutable_data();
-
-    return extended_interpolation_pass2<I, T>(
-                  n_nodes,
-                      _Ap, Ap.shape(0),
-                      _Aj, Aj.shape(0),
-                      _Ax, Ax.shape(0),
-                      _Sp, Sp.shape(0),
-                      _Sj, Sj.shape(0),
-                      _Sx, Sx.shape(0),
-               _splitting, splitting.shape(0),
-                      _Pp, Pp.shape(0),
-                      _Pj, Pj.shape(0),
-                      _Px, Px.shape(0)
-                                              );
 }
 
 PYBIND11_MODULE(ruge_stuben, m) {
@@ -617,13 +350,6 @@ PYBIND11_MODULE(ruge_stuben, m) {
     rs_direct_interpolation_pass1
     rs_direct_interpolation_pass2
     cr_helper
-    rs_standard_interpolation_pass1
-    rs_standard_interpolation_pass2
-    remove_strong_FF_connections
-    mod_standard_interpolation_pass2
-    distance_two_amg_interpolation_pass1
-    extended_plusi_interpolation_pass2
-    extended_interpolation_pass2
     )pbdoc";
 
     py::options options;
@@ -713,7 +439,11 @@ Returns
 Nothing, x[i] will hold row i's maximum magnitude entry)pbdoc");
 
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
+<<<<<<< HEAD
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
+=======
+        py::arg("n_nodes"), py::arg("C_rowptr").noconvert(), py::arg("C_colinds").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
 R"pbdoc(
 Compute a C/F (coarse-fine) splitting using the classical coarse grid
 selection method of Ruge and Stuben.  The strength of connection matrix S,
@@ -744,7 +474,11 @@ Notes
 The splitting array must be preallocated)pbdoc");
 
     m.def("rs_cf_splitting_pass2", &_rs_cf_splitting_pass2<int>,
+<<<<<<< HEAD
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(),
+=======
+        py::arg("n_nodes"), py::arg("C_rowptr").noconvert(), py::arg("C_colinds").noconvert(), py::arg("splitting").noconvert(),
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
 R"pbdoc(
 )pbdoc");
 
@@ -754,7 +488,7 @@ R"pbdoc(
 )pbdoc");
 
     m.def("rs_direct_interpolation_pass1", &_rs_direct_interpolation_pass1<int>,
-        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Bp").noconvert(),
 R"pbdoc(
 Produce the Ruge-Stuben prolongator using "Direct Interpolation"
 
@@ -782,25 +516,33 @@ References
 Page 479 of Multigrid)pbdoc");
 
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, float>,
-        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert());
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, double>,
-        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(),
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(),
 R"pbdoc(
 )pbdoc");
 
     m.def("cr_helper", &_cr_helper<int, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"));
+        py::arg("A_rowptr").noconvert(), py::arg("A_colinds").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"));
     m.def("cr_helper", &_cr_helper<int, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"),
+        py::arg("A_rowptr").noconvert(), py::arg("A_colinds").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"),
 R"pbdoc(
 Helper function for compatible relaxation to perform steps 3.1d - 3.1f
 in Falgout / Brannick (2010).
 
+<<<<<<< HEAD
 Input:
 ------
 Ap : const {int array}
      Row pointer for sparse matrix in CSR format.
 Aj : const {int array}
+=======
+Parameters
+----------
+A_rowptr : array
+     Row pointer for sparse matrix in CSR format.
+A_colinds : array
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
      Column indices for sparse matrix in CSR format.
 B : array
      Target near null space vector for computing candidate set measure.
@@ -821,6 +563,7 @@ Returns
 -------
 Nothing, updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
+<<<<<<< HEAD
     m.def("rs_standard_interpolation_pass1", &_rs_standard_interpolation_pass1<int>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
 R"pbdoc(
@@ -1082,5 +825,7 @@ References:
 [0] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
+=======
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
 }
 

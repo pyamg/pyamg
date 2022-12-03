@@ -31,6 +31,9 @@ instantiate:
     - evolution_strength_helper
     - incomplete_mat_mult_csr
     - filter_matrix_rows
+    - jacobi_indexed
+    - bsr_jacobi_indexed
+    - block_jacobi_indexed
 
 - types:
     - [int,float]
@@ -43,11 +46,6 @@ instantiate:
     - apply_absolute_distance_filter
     - min_blocks
     - classical_strength_of_connection_min
-    - rs_standard_interpolation_pass2
-    - remove_strong_FF_connections
-    - mod_standard_interpolation_pass2
-    - extended_plusi_interpolation_pass2
-    - extended_interpolation_pass2
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -93,8 +91,11 @@ instantiate:
     - rs_cf_splitting_pass2
     - cljp_naive_splitting
     - rs_direct_interpolation_pass1
+<<<<<<< HEAD
     - rs_standard_interpolation_pass1
     - distance_two_amg_interpolation_pass1
+=======
+>>>>>>> be0952957b8df4fc2ae58dea4a7f8910132028d9
     - cluster_node_incidence
     - print_it
 

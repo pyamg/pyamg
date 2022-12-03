@@ -8,14 +8,12 @@ from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection, algebraic_distance, affinity_distance, \
-    energy_based_strength_of_connection
+    distance_strength_of_connection, energy_based_strength_of_connection \
+    algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
        distance_two_interpolation, standard_interpolation
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
-
-import numpy as np
 
 
 def ruge_stuben_solver(A,
@@ -25,7 +23,7 @@ def ruge_stuben_solver(A,
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=30, max_coarse=20, keep=False, **kwargs):
-    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
+    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG).
 
     Parameters
     ----------
@@ -55,8 +53,8 @@ def ruge_stuben_solver(A,
     max_coarse: {integer} : default 20
         Maximum number of variables permitted on the coarse grid.
     keep: {bool} : default False
-        Flag to indicate keeping extra operators in the hierarchy for
-        diagnostics, such as strength of connection (C).
+        Flag to indicate keeping strength of connection (C) in the
+        hierarchy for diagnostics.
 
     Returns
     -------
@@ -78,12 +76,12 @@ def ruge_stuben_solver(A,
     'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
     (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
     function, and args is a dictionary of arguments to be passed to fn.
-    See [0] for additional details.
+    See [2001TrOoSc]_ for additional details.
 
 
     References
     ----------
-    .. [0] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
+    .. [2001TrOoSc] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
        "Multigrid" San Diego: Academic Press, 2001.  Appendix A
 
     See Also
@@ -126,10 +124,6 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
         return v, {}
 
     A = levels[-1].A
-    
-    # Check if matrix was filtered to be diagonal --> coarsest grid
-    if A.nnz == A.shape[0]:
-        return 1
 
     # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
@@ -156,23 +150,19 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
-        splitting = RS(C, **kwargs)
+        splitting = split.RS(C, **kwargs)
     elif fn == 'PMIS':
-        splitting = PMIS(C, **kwargs)
+        splitting = split.PMIS(C, **kwargs)
     elif fn == 'PMISc':
-        splitting = PMISc(C, **kwargs)
+        splitting = split.PMISc(C, **kwargs)
     elif fn == 'CLJP':
-        splitting = CLJP(C, **kwargs)
+        splitting = split.CLJP(C, **kwargs)
     elif fn == 'CLJPc':
-        splitting = CLJPc(C, **kwargs)
+        splitting = split.CLJPc(C, **kwargs)
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
         raise ValueError(f'Unknown C/F splitting method {CF}')
-
-    # Make sure at least one point was declared C-point
-    if np.sum(splitting) == len(splitting):
-        return 1
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
@@ -192,11 +182,11 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
 
     # Store relevant information for this level
     if keep:
-        levels[-1].C = C                  # strength of connection matrix
+        levels[-1].C = C                           # strength of connection matrix
 
-    levels[-1].P = P                  # prolongation operator
-    levels[-1].R = R                  # restriction operator
-    levels[-1].splitting = splitting  # C/F splitting
+    levels[-1].splitting = splitting.astype(bool)  # C/F splitting
+    levels[-1].P = P                               # prolongation operator
+    levels[-1].R = R                               # restriction operator
 
     # Form next level through Galerkin product
     levels.append(MultilevelSolver.Level())
