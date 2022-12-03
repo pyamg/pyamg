@@ -207,6 +207,7 @@ PYBIND11_MODULE(air, m) {
     Methods
     -------
     one_point_interpolation
+    sort_2nd
     approx_ideal_restriction_pass1
     approx_ideal_restriction_pass2
     block_approx_ideal_restriction_pass2

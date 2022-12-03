@@ -19,7 +19,7 @@ from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
     filter_matrix_rows
 from pyamg.classical.interpolate import direct_interpolation, \
     standard_interpolation, distance_two_interpolation, injection_interpolation, \
-    one_point_interpolation, neumann_AIR, local_AIR
+    one_point_interpolation, local_air
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
@@ -93,9 +93,6 @@ def air_solver(A,
 
     Notes
     -----
-
-
-
 
     References
     ----------
@@ -215,10 +212,8 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     fn, kwargs = unpack_arg(restrict)
     if fn is None:
         R = P.T
-    elif fn == 'lAIR':
-        R = local_AIR(A, splitting, **kwargs)
-    elif fn == 'nAIR':
-        R = neumann_AIR(A, splitting, **kwargs)
+    elif fn == 'air':
+        R = local_air(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
 

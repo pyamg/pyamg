@@ -826,33 +826,6 @@ Perform one iteration of Jacobi relaxation on the linear
  Returns:
      Nothing, x will be modified in place)pbdoc");
 
-    m.def("jacobi_indexed", &_jacobi_indexed<int, float, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
-    m.def("jacobi_indexed", &_jacobi_indexed<int, double, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
-    m.def("jacobi_indexed", &_jacobi_indexed<int, std::complex<float>, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
-    m.def("jacobi_indexed", &_jacobi_indexed<int, std::complex<double>, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(),
-R"pbdoc(
-Perform one iteration of Jacobi relaxation on the linear
- system Ax = b for a given set of row indices, where A is
- stored in CSR format and x and b are column vectors.
- Damping is controlled by the omega parameter.
-
- Parameters
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     temp[]     - temporary vector the same size as x
-     indices[]  - list of row indices to perform Jacobi on, e.g. F-points
-     omega      - damping parameter
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
-
     m.def("bsr_jacobi", &_bsr_jacobi<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
     m.def("bsr_jacobi", &_bsr_jacobi<int, double, double>,
@@ -898,36 +871,6 @@ omega : float
 Returns
 -------
 Nothing, x will be modified inplace)pbdoc");
-
-    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, float, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
-    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, double, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
-    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, std::complex<float>, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
-    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, std::complex<double>, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert(),
-R"pbdoc(
-Perform one iteration of Jacobi relaxation on the linear
- system Ax = b for a given set of row indices, where A is
- stored in Block CSR format and x and b are column vectors.
- This method applies point-wise relaxation to the BSR matrix
- for a given set of row block indices, as opposed to "block
- relaxation".
-
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array
-     x[]        - approximate solution
-     b[]        - right hand side
-     indices[]  - list of row indices to perform Jacobi on, e.g., F-points.
-                  Note, it is assumed that indices correspond to blocks in A.
-     blocksize  - BSR blocksize (blocks must be square)
-     omega      - damping parameter
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
 
     m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
@@ -1180,35 +1123,6 @@ omega : float
     damping parameter
 blocksize int
     dimension of sqare blocks in BSR matrix A)pbdoc");
-
-    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, float, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
-    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, double, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
-    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, std::complex<float>, float>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
-    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, std::complex<double>, double>,
-        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"),
-R"pbdoc(
-Perform one iteration of block Jacobi relaxation on the linear
- system Ax = b for a given set of (block) row indices. A is
- stored in BSR format and x and b are column vectors. Damping
- is controlled by the parameter omega.
-
- Parameters
-     Ap[]       - BSR row pointer
-     Aj[]       - BSR index array
-     Ax[]       - BSR data array, blocks assumed square
-     x[]        - approximate solution
-     b[]        - right hand side
-     Tx[]       - Inverse of each diagonal block of A stored
-                  as a (n/blocksize, blocksize, blocksize) array
-     indices[]  -
-     omega      - damping parameter
-     blocksize  - dimension of sqare blocks in BSR matrix A
-
- Returns:
-     Nothing, x will be modified in place)pbdoc");
 
     m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));

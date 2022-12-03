@@ -92,7 +92,7 @@ void _filter_matrix_rows(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-             const I lump
+          const bool lump
                          )
 {
     auto py_Ap = Ap.unchecked();
@@ -252,40 +252,7 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"),
 R"pbdoc(
-Filter matrix rows by diagonal entry, that is set A_ij = 0 if
-
-<<<<<<< HEAD
-    |A_ij| < theta * |A_ii|
-
- Parameters
-     num_rows   - number of rows in A
-     theta      - stength of connection tolerance
-     Ap[]       - CSR row pointer
-     Aj[]       - CSR index array
-     Ax[]       - CSR data array
-
- Returns:
-     Nothing, Ax is modified in place)pbdoc");
-=======
-   |A_ij| < theta * |A_ii|
-
-Parameters
-----------
-num_rows : int
-    number of rows in A
-theta : float
-    stength of connection tolerance
-Ap : array
-    CSR row pointer
-Aj : array
-    CSR index array
-Ax : array
-    CSR data array
-
-Returns
--------
-Nothing, Ax is modified in place)pbdoc");
->>>>>>> 125040aff36fd22fc6ab523ca64d9954b1eb19fd
+)pbdoc");
 
 }
 
