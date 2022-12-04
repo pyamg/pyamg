@@ -167,10 +167,3 @@ class TestComplexMultilevel(TestCase):
                 # subsequent calls use cached data
                 x = s(A, b)
                 assert_almost_equal(A*x, b)
-
-
-class TestChangeMatrix(TestCase):
-    """Test changing the fine level matrix."""
-
-    def test_change_matrix(self):
-        pass
