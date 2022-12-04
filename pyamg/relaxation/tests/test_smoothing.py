@@ -101,6 +101,7 @@ class TestSmoothing(TestCase):
             change_smoothers(ml, presmoother=method[0], postsmoother=method[1])
             assert not ml.symmetric_smoothing
 
+
 class TestSolverMatrix(TestCase):
     def test_change_solve_matrix(self):
         A = poisson((20,), format='csr')
@@ -137,4 +138,3 @@ class TestSolverMatrix(TestCase):
 
             ml.change_solve_matrix(Anew)
             assert ml.levels[0].presmoother.__name__ == solver
-
