@@ -284,5 +284,3 @@ def reference_pairwise_aggregation(C):
     Px = np.ones(n)
 
     return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
-
->>>>>>> 71cfe81 (Add tests and fix bugs)
