@@ -104,6 +104,10 @@ class TestSmoothing(TestCase):
 
 class TestSolverMatrix(TestCase):
     def test_change_solve_matrix(self):
+        """Check that the matrix changes and that relaxation stays the same name.
+
+        Relaxation parameters should change.  This is not checked.
+        """
         A = poisson((20,), format='csr')
         Anew = sparse.identity(A.shape[0], format='csr')
         register = ['gauss_seidel',
@@ -135,6 +139,8 @@ class TestSolverMatrix(TestCase):
                                     max_levels=2)
 
             assert ml.levels[0].presmoother.__name__ == solver
+            assert ml.levels[0].A.data[0] == 2  # Poisson diagonal
 
             ml.change_solve_matrix(Anew)
             assert ml.levels[0].presmoother.__name__ == solver
+            assert ml.levels[0].A.data[0] == 1  # Identity diagonal
