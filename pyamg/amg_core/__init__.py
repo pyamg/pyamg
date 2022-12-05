@@ -30,7 +30,7 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           rs_classical_interpolation_pass2,
                           remove_strong_FF_connections)
 from .smoothed_aggregation import (symmetric_strength_of_connection, standard_aggregation,
-                                   naive_aggregation,
+                                   naive_aggregation, pairwise_aggregation,
                                    fit_candidates,
                                    satisfy_constraints_helper, calc_BtB,
                                    incomplete_mat_mult_bsr, truncate_rows_csr)
