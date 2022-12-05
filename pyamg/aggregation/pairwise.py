@@ -14,7 +14,7 @@ from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
-from .aggregate import pairwise_aggregation
+from .aggregate import pairwise_aggregation, pairwise_aggregation2
 from .tentative import fit_candidates
 
 from ..relaxation.utils import relaxation_as_linear_operator
@@ -24,13 +24,14 @@ __all__ = ['pairwise_solver']
 
 
 def pairwise_solver(A,
-                    strength=None,
+                    aggregate=('pairwise', {'theta': 0.25,
+                        'norm':'min', 'matchings': 2}),
                     presmoother=('block_gauss_seidel',
                                  {'sweep': 'symmetric'}),
                     postsmoother=('block_gauss_seidel',
                                   {'sweep': 'symmetric'}),
                     max_levels = 20, max_coarse = 10,
-                    keep=False, **kwargs):
+                    **kwargs):
     """
     Create a multilevel solver using Pairwise Aggregation
 
@@ -50,10 +51,6 @@ def pairwise_solver(A,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
-    keep : {bool} : default False
-        Flag to indicate keeping extra operators in the hierarchy for
-        diagnostics.  For example, if True, then strength of connection (C),
-        tentative prolongation (T), and aggregation (AggOp) are kept.
 
     Returns
     -------
@@ -89,8 +86,8 @@ def pairwise_solver(A,
 
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
-    max_levels, max_coarse, strength =\
-        levelize_strength_or_aggregation(strength, max_levels, max_coarse)
+    max_levels, max_coarse, aggregate =\
+        levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
 
     # Construct multilevel structure
     levels = []
@@ -99,19 +96,15 @@ def pairwise_solver(A,
 
     while len(levels) < max_levels and\
             int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
-        _extend_hierarchy(levels, strength, keep)
+        _extend_hierarchy(levels, aggregate)
 
     ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 
-def _extend_hierarchy(levels, strength, keep):
+def _extend_hierarchy(levels, aggregate):
     """Extend the multigrid hierarchy.
-
-    Service routine to implement the strength of connection, aggregation,
-    tentative prolongation construction, and prolongation smoothing.  Called by
-    smoothed_aggregation_solver.
 
     """
     def unpack_arg(v):
@@ -121,42 +114,10 @@ def _extend_hierarchy(levels, strength, keep):
 
     A = levels[-1].A
 
-    # Compute the strength-of-connection matrix C, where larger
-    # C[i,j] denote stronger couplings between i and j. Note, this
-    # is not used for aggregation, only as sparsity pattern for
-    # energy-min smoothing, or filtering Jacobi smoothing of T.
-    fn, kwargs = unpack_arg(strength[len(levels)-1])
-    if fn == 'symmetric':
-        C = symmetric_strength_of_connection(A, **kwargs)
-    elif fn == 'classical':
-        C = classical_strength_of_connection(A, **kwargs)
-    elif fn == 'distance':
-        C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
-        if 'B' in kwargs:
-            C = evolution_strength_of_connection(A, **kwargs)
-        else:
-            C = evolution_strength_of_connection(A, B, **kwargs)
-    elif fn == 'energy_based':
-        C = energy_based_strength_of_connection(A, **kwargs)
-    elif fn == 'predefined':
-        C = kwargs['C'].tocsr()
-    elif fn == 'algebraic_distance':
-        C = algebraic_distance(A, **kwargs)
-    elif fn == 'affinity':
-        C = affinity_distance(A, **kwargs)
-    elif fn is None:
-        C = A.tocsr()
-    else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
-
     # Compute pairwise interpolation and restriction matrices, R=P^*
-    P = pairwise_aggregation(C, A, compute_P=True, **kwargs)[0]
+    fn, kwargs = unpack_arg(aggregate[len(levels)-1])
+    P = pairwise_aggregation2(A, **kwargs, compute_P=True)[0]
     R = P.H
-
-    if keep:
-        levels[-1].C = C  # strength of connection matrix
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator

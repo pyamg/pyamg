@@ -5,6 +5,8 @@ import numpy as np
 from scipy import sparse
 from .. import amg_core
 from ..graph import lloyd_cluster
+from warnings import warn
+from ..strength import classical_strength_of_connection
 
 
 def standard_aggregation(C):
@@ -282,6 +284,98 @@ def pairwise_aggregation(C, A, compute_P=False):
             Tp = np.arange(num_rows+1, dtype=index_type)
             Tx = np.ones(len(Tj), dtype='int8')
             return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+
+
+def pairwise_aggregation2(A, matchings=2, theta=0.25,
+    norm='min', compute_P=False):
+    """Compute the sparsity pattern of the tentative prolongator.
+
+    Parameters
+    ----------
+    A : csr_matrix or bsr_matrix
+        level matrix
+    compute_P : bool; default False
+        Compute pairwise interpolation directly; if False, return
+        integer aggregation matrix for smoothed_aggregation_solver.
+        If True, return float interpolation P, converting to BSR
+        form with identity of size bsize x bsize on each aggregate
+        if A is BSR.
+
+    """
+
+    # Get SOC matrix
+    if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
+        try:
+            A = A.tocsr()
+            warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+        except BaseException as e:
+            raise TypeError("Invalid matrix type, must be CSR or BSR.") from e
+
+    index_type = A.indptr.dtype
+    Ac = A      # Let Ac reference A for loop purposes
+    T = None
+    Cpts = None
+
+    # Loop over the number of pairwise matchings to be done
+    for i in range(0,matchings):
+
+        # Compute SOC matrix for this matching
+        if sparse.isspmatrix_bsr(A):
+            C = classical_strength_of_connection(A=Ac, theta=theta, block=True, norm=norm)
+        else:
+            C = classical_strength_of_connection(A=Ac, theta=theta, block=False, norm=norm)
+
+        # Form pairwise aggregation matrix
+        num_rows = C.shape[0]
+        Tj = np.empty(num_rows, dtype=index_type)  # stores the aggregate #s
+        new_cpts = np.empty(num_rows, dtype=index_type)  # stores the new_cpts
+        fn = amg_core.pairwise_aggregation
+        num_aggregates = fn(num_rows, C.indptr, C.indices, C.data, Tj, new_cpts)
+        if Cpts is None:
+            Cpts = new_cpts[:num_aggregates]
+        else:
+            Cpts = Cpts[new_cpts[:num_aggregates]]
+        Tj = Tj - 1
+
+        # Construct sparse T
+        if num_aggregates == 0:
+            # all zero matrix
+            T_temp = sparse.csr_matrix((num_rows, 1), dtype='int8')
+            warn('No pairwise aggregates found, T = 0.')
+        else:
+            shape = (num_rows, num_aggregates)
+            Tp = np.arange(num_rows+1, dtype=index_type)
+            # If A is not BSR, 
+            if not sparse.isspmatrix_bsr(A):
+                Tx = np.ones(len(Tj), dtype='int8')
+                T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
+            else:
+                Tx = np.dstack([np.eye(A.blocksize[0])]*len(Tj), dtype='int8')
+                T_temp = sparse.bsr_matrix((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
+
+        # Form aggregation matrix, need to make sure is CSR/BSR
+        if i == 0:
+            T = T_temp
+        else:
+            if sparse.isspmatrix_bsr(A):
+                T = sparse.bsr_matrix(T * T_temp)
+            else:
+                T = sparse.csr_matrix(T * T_temp)
+        
+        # Break loop if zero aggregates were found
+        if num_aggregates == 0:
+            break
+
+        # Form coarse grid operator for next matching
+        if i < (matchings-1):
+            TA = T_temp.T * Ac
+            Ac = TA * T_temp
+
+    # Convert T to dtype int if only used for aggregation
+    if compute_P:
+        T = T.astype(A.dtype, copy=False)
+
+    return T, Cpts
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
