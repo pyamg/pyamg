@@ -557,11 +557,16 @@ Largest-Degree-First (LDF) algorithm
 
 Parameters
 ----------
-    num_rows   - number of rows in A (number of vertices)
-    Ap[]       - CSR row pointer
-    Aj[]       - CSR index array
-    x[]        - color of each vertex
-    y[]        - initial random values for each vertex
+num_rows : int
+    number of rows in A (number of vertices)
+Ap : array
+    CSR row pointer
+Aj : array
+    CSR index array
+x : array
+    color of each vertex
+y : array
+    initial random values for each vertex
 
 References
 ----------

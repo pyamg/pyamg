@@ -1044,9 +1044,7 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
                          'spatial location,i.e. ndof = [1 | 3 | 6]. '
                          f'You have entered {ndof}.')
 
-    if((max(x.shape) != nnodes)
-       or (max(y.shape) != nnodes)
-       or (max(z.shape) != nnodes)):
+    if (max(x.shape) != nnodes) or (max(y.shape) != nnodes) or (max(z.shape) != nnodes):
         raise ValueError('coord_to_rbm(...) requires coordinate vectors of equal '
                          f'length.  Length must be nnodes = {nnodes}')
 
@@ -2000,7 +1998,7 @@ def filter_matrix_columns(A, theta):
     return A_filter
 
 
-def filter_matrix_rows(A, theta):
+def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     """Filter each row of A with tol.
 
     i.e., drop all entries in row k where
@@ -2012,12 +2010,19 @@ def filter_matrix_rows(A, theta):
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
+    diagonal : bool
+        If True, filter by diagonal entry. Otherwise, filter by maximum absolute
+        value in row.  This is in place.
+    lump : bool
+        If True, instead of removing entries, lump them to diagonal. Preserves
+        row sum of matrix.
 
     Returns
     -------
     A_filter : sparse_matrix
         Each row has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
+        If `diagonal == True`, then no return (None).
 
     Examples
     --------
@@ -2044,13 +2049,23 @@ def filter_matrix_rows(A, theta):
     if (theta < 0) or (theta >= 1.0):
         raise ValueError('theta must be in [0,1)')
 
+    # Filter by diagonal entry, A_ij = 0 if |A_ij| < theta*|A_ii|
+    if diagonal:
+        amg_core.filter_matrix_rows(A.shape[0], theta, A.indptr,
+                                    A.indices, A.data, lump)
+        A.eliminate_zeros()
+        if Aformat == 'bsr':
+            A = A.tobsr(blocksize=blocksize)
+        return None  # inplace
+
     # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
-    # amg_core.classical_strength_of_connection(), which ignores diagonal
+    # amg_core.classical_strength_of_connection_abs(), which ignores diagonal
     # entries, thus necessitating the trick where we add A.shape[0] to each of
     # the row indices
     A_filter = A.copy()
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
+
     # classical_strength_of_connection takes an absolute value internally
     amg_core.classical_strength_of_connection_abs(A.shape[0],
                                                   theta,

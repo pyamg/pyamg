@@ -171,11 +171,11 @@ def _extend_hierarchy(levels, strength, CF, keep):
 
     # Store relevant information for this level
     if keep:
-        levels[-1].C = C                  # strength of connection matrix
-        levels[-1].splitting = splitting  # C/F splitting
+        levels[-1].C = C                           # strength of connection matrix
 
-    levels[-1].P = P                  # prolongation operator
-    levels[-1].R = R                  # restriction operator
+    levels[-1].splitting = splitting.astype(bool)  # C/F splitting
+    levels[-1].P = P                               # prolongation operator
+    levels[-1].R = R                               # restriction operator
 
     levels.append(MultilevelSolver.Level())
 

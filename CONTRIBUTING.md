@@ -1,18 +1,23 @@
 PyAMG is distributed under LICENSE.txt:
 
-Copyright (c) 2008-2015 PyAMG Developers
+Copyright (c) 2008-2022 PyAMG Developers
 License: MIT, http://opensource.org/licenses/MIT
 
 Contributing
 ---
 
 Contributing code to this project assumes that
-    - your contributions are not significant enough to claim copyright or
-      that you implicitly transfer the copyright of your contribution to
-      the PyAMG Developers
-    - you agree to the Developer Certificate of Origin for
-      your contributing portion as described here (and below):
-      http://developercertificate.org/
+
+- you implicitly transfer the copyright of your contribution to the PyAMG
+  Developers or that your contributions are not significant enough to claim
+  copyright
+
+- you agree to the Developer Certificate of Origin for
+  your contributing portion as described here (and below):
+  http://developercertificate.org/
+
+- there is no assumption that contributions will be retained or
+  included in a release.
 
 Certificate of Origin
 ---

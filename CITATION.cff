@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: If you use this software, please see citation.bib
+title: 'PyAMG: Algebraic Multigrid Solvers in Python'
+license: MIT
+repository-code: https://github.com/pyamg/pyamg
+type: software
+version: 4.2.3
+authors:
+- given-names: Nathan
+  family-names: Bell
+  affiliation: Google
+- given-names: Luke
+  family-names: Olson
+  orcid: https://orcid.org/0000-0002-5283-6104
+  affiliation: Department of Computer Science, University of Illinois at Urbana-Champaign
+- given-names: Jacob
+  family-names: Schroder
+  orcid: https://orcid.org/0000-0002-1076-9206
+  affiliation: Department of Mathematics and Statistics, University of New Mexico
