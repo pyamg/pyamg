@@ -283,4 +283,4 @@ def reference_pairwise_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
