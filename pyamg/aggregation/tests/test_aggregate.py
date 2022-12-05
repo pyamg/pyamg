@@ -81,7 +81,7 @@ class TestAggregate(TestCase):
 
         # S is diagonal - no dofs aggregated
         S = spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
-        (result, Cpts) = pairwise_aggregation(S)
+        (result, Cpts) = pairwise_aggregation(S, A)
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
