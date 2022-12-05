@@ -9,13 +9,13 @@ from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr,
 import numpy as np
 from copy import deepcopy
 
-from pyamg.multilevel import multilevel_solver
+from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     distance_strength_of_connection, algebraic_distance, affinity_distance, \
     energy_based_strength_of_connection
-from pyamg.util.utils import unpack_arg, extract_diagonal_blocks, \
+from pyamg.util.utils import extract_diagonal_blocks, \
     filter_matrix_rows
 from pyamg.classical.interpolate import direct_interpolation, \
     standard_interpolation, distance_two_interpolation, injection_interpolation, \
@@ -31,9 +31,9 @@ def air_solver(A,
                interp='one_point',
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
-               postsmoother=('FC_jacobi', {'omega': 1.0, 'iterations': 1,
-                              'withrho': False,  'F_iterations': 2,
-                              'C_iterations': 0} ),
+               postsmoother=('fc_jacobi', {'omega': 1.0, 'iterations': 1,
+                              'withrho': False,  'f_iterations': 2,
+                              'c_iterations': 1} ),
                filter_operator=None,
                max_levels=20, max_coarse=20,
                keep=False, **kwargs):
@@ -59,10 +59,10 @@ def air_solver(A,
         with inner options specifying degree, strength tolerance, etc.
     presmoother : {string or dict} : default None
         Method used for presmoothing at each level.  Method-specific parameters
-        may be passed in using a tuple, e.g.
-        presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
+        may be passed in using a tuple. presmoother=None is the default.
     postsmoother : {string or dict} : default F-Jacobi
-        Postsmoothing method with the same usage as presmoother
+        Postsmoothing method with the same usage as presmoother. 
+        postsmoother=('fc_jacobi', ... ) is the default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
         considered "small" if |a_ij| < tol |a_ii|.
@@ -110,7 +110,7 @@ def air_solver(A,
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    levels = [multilevel_solver.level()]
+    levels = [MultilevelSolver.Level()]
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
@@ -119,14 +119,17 @@ def air_solver(A,
         if bottom:
             break
 
-    ml = multilevel_solver(levels, **kwargs)
+    ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
     return ml
 
 
-# internal function
 def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, keep):
-    """ helper function for local methods """
+    """Extend the multigrid hierarchy."""
+    def unpack_arg(v):
+        if isinstance(v, tuple):
+            return v[0], v[1]
+        return v, {}
 
     # Filter operator. Need to keep original matrix on finest level for
     # computing residuals
@@ -221,9 +224,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     if keep:
         levels[-1].C = C              # strength of connection matrix
 
-    levels[-1].P = P                  # prolongation operator
-    levels[-1].R = R                  # restriction operator
-    levels[-1].splitting = splitting  # C/F splitting
+    levels[-1].splitting = splitting.astype(bool)  # C/F splitting
+    levels[-1].P = P                               # prolongation operator
+    levels[-1].R = R                               # restriction operator
 
     # RAP = R*(A*P)
     A = R * A * P
@@ -234,7 +237,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     elif (isspmatrix_bsr(P) and (not isspmatrix_bsr(A))):
         A = A.tobsr()
 
-    levels.append(multilevel_solver.level())
+    levels.append(MultilevelSolver.Level())
     levels[-1].A = A
     return 0
 

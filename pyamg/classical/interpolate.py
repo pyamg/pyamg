@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
     isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
 from pyamg.strength import classical_strength_of_connection
 from pyamg import amg_core
-from pyamg.util.utils import filter_matrix_rows, UnAmal
+from pyamg.util.utils import filter_matrix_rows
 
 __all__ = ['direct_interpolation','standard_interpolation',
            'distance_two_interpolation','injection_interpolation',
@@ -352,8 +352,8 @@ def one_point_interpolation(A, C, splitting, by_val=False):
                           shape=[blocksize*n,blocksize*nc])
 
 
-def local_air(A, splitting, theta=0.1, norm='abs', degree=1, use_gmres=False,
-                                  maxiter=10, precondition=True):
+def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
+              use_gmres=False, maxiter=10, precondition=True):
     """ Compute approximate ideal restriction by setting RA = 0, within the
     sparsity pattern of R. Sparsity pattern of R for the ith row (i.e. ith
     C-point) is the set of all strongly connected F-points, or the max_row
