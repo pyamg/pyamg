@@ -2043,8 +2043,6 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     Aformat = A.format
     A = A.tocsr()
 
-    cost[0] += 2.0 * A.nnz
-
     if (theta < 0) or (theta >= 1.0):
         raise ValueError('theta must be in [0,1)')
 
