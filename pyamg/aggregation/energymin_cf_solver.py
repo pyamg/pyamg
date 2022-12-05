@@ -21,7 +21,7 @@ from ..strength import classical_strength_of_connection,\
 from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from .tentative import fit_candidates
-from .smooth import energy_prolongation_smoother
+from .smooth import energy_prolongation_smoother, AIRplus
 from ..classical import split
 
 def energymin_cf_solver(A, B=None, BH=None,
@@ -462,6 +462,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                                          Cpt_params=Cpt_params, 
                                          force_fit_candidates=classical_CF, 
                                          **kwargs)
+    elif fn == 'AIRplus':
+        P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, **kwargs)
     elif fn is None:
         P = T
     else:
@@ -483,6 +485,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                                              force_fit_candidates=classical_CF, 
                                              **kwargs)
             R = R.H
+        elif fn == 'AIRplus':
+            R = AIRplus(AH, TH, C, BH, levels[-1].BH, Cpt_params, **kwargs)
+            R = R.H
         elif fn is None:
             R = T.H
         else:
@@ -500,6 +505,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         levels[-1].I_F = Cpt_params[1]['I_F']    # Identity on F-pts
         levels[-1].I_C = Cpt_params[1]['I_C']    # Identity on C-pts
 
+    splitting = np.zeros((A.shape[0],), dtype=bool)
+    splitting[Cpt_params[1]['Cpts']] = True
+    levels[-1].splitting = splitting             # Splitting
     levels[-1].P = P                             # smoothed prolongator
     levels[-1].R = R                             # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)

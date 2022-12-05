@@ -5,13 +5,15 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 import scipy.linalg as la
+from scipy.linalg import lapack as lapack
 from .. import amg_core
 from ..util.utils import scale_rows, get_diagonal, get_block_diag, \
     unamal, filter_operator, compute_BtBinv, filter_matrix_rows, \
     truncate_rows
 from ..util.linalg import approximate_spectral_radius
 from ..util import upcast
-
+from ..util.params import set_tol
+from .. import amg_core
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
 def satisfy_constraints(U, B, BtBinv):
@@ -1179,3 +1181,457 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
                                      postfilter={'secondpass': True})
 
     return T
+
+
+
+def get_block_inverses(A, subdomain, subdomain_ptr):
+    """
+    Compute block inverses to A, where each block size is defined by subdomain
+    and subdomain_ptr (CSR-like data structure)
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+
+
+    Returns
+    -------
+    block_invs[i] = block inverse for subdomain i
+
+    """
+
+    class new_array(np.ndarray):
+        ''' Hack of np array to allow for array.solve member function '''
+        def __new__(cls, input_array):
+            obj = np.asarray(input_array).view(cls)
+            obj.solve = input_array.dot
+            return obj
+
+        def __array_finalize__(self, obj):
+            if obj is None: return
+            self.your_new_attr = getattr(obj, 'solve', None)
+
+    ##
+    # Extract each subdomain's block from the matrix
+    inv_subblock_ptr = np.zeros(subdomain_ptr.shape,
+                                dtype=A.indices.dtype)
+    blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
+    inv_subblock_ptr[1:] = np.cumsum(blocksize*blocksize)
+    inv_subblock = np.zeros((inv_subblock_ptr[-1],), dtype=A.dtype)
+    amg_core.extract_subblocks(A.indptr, A.indices, A.data, inv_subblock,
+                               inv_subblock_ptr, subdomain, subdomain_ptr,
+                               int(subdomain_ptr.shape[0]-1), A.shape[0])
+    ##
+    # Invert each block of A
+
+    # Choose tolerance for which singular values are zero in *gelss below
+    cond = set_tol(A.dtype)
+    my_pinv, = lapack.get_lapack_funcs(['gelss'],
+                                   (np.ones((1,), dtype=A.dtype)))
+    for i in range(subdomain_ptr.shape[0]-1):
+        m = blocksize[i]
+        rhs = np.eye(m, m, dtype=A.dtype)
+        j0 = inv_subblock_ptr[i]
+        j1 = inv_subblock_ptr[i+1]
+        if( j1 > j0):
+            # sometimes for simple problems, the RHS can have a zero column 
+            gelssoutput = my_pinv(inv_subblock[j0:j1].reshape(m, m),
+                                  rhs, cond=cond, overwrite_a=True,
+                                  overwrite_b=True)
+            inv_subblock[j0:j1] = np.ravel(gelssoutput[1])
+
+    ##
+    # Convert inverted blocks into a list of little inverses ready for use
+    block_invs = np.array_split(inv_subblock, inv_subblock_ptr[1:-1])
+    block_invs = [ new_array(block.reshape(bsize,bsize)) for (block, bsize) in zip(block_invs, blocksize) ]
+
+    return block_invs
+
+
+def AIRplus(A, T, Atilde, B, Bf, Cpt_params, maxiter=1, degree=1, **kwargs):
+    """Solve the AIR equations 
+             A_FF^{-1} W = -A_FC 
+       subject to mode interpolation constraints.
+
+    This differs from the rootnode solver, in part, because it allows for
+    separate, local inverses when computing updates for column i of W.
+    Essentially, each column i of W corresponds to (approx) inverting a window
+    of A_FF, and here each (approx) inverse of an A_FF window is computed
+    independently.  For rootnode, a single global Krylov polynomial is used to
+    compute all inverses of A_FF windows. 
+
+    Parameters
+    ----------
+    A : csr_matrix, bsr_matrix
+        Sparse NxN matrix
+    T : bsr_matrix
+        Tentative prolongator, a NxM sparse matrix (M < N)
+    Atilde : csr_matrix
+        Strength of connection matrix
+    B : array
+        Near-nullspace modes for coarse grid.  Has shape (M,k) where
+        k is the number of coarse candidate vectors.
+    Bf : array
+        Near-nullspace modes for fine grid.  Has shape (N,k) where
+        k is the number of coarse candidate vectors.
+    Cpt_params : tuple
+        Tuple of the form (bool, dict).  If the Cpt_params[0] = False, then the
+        standard SA prolongation smoothing is carried out.  If True, then
+        root-node style prolongation smoothing is carried out.  The dict must
+        be a dictionary of parameters containing, (1) for P_I, P_I.T is the
+        injection matrix for the Cpts, (2) I_F is an identity matrix for only the
+        F-points (i.e. I, but with zero rows and columns for C-points) and I_C is
+        the C-point analogue to I_F.  See Notes below for more information.
+    maxiter : integer
+        Number of iterations when solving for W 
+    degree : int
+        Beginning sparsity pattern for P based on ( Atilde^degree  [-A_FC;  I] )
+        The degree should be > 0 when you need more nonzeros to satisfy the constraints
+        in the initial P
+
+    Returns
+    -------
+    T : bsr_matrix
+        Smoothed prolongator
+    """
+
+    # TODO: this code doesn't support BSR A.  Not sure how to handle this case.
+    #       It may be that if the coarsening is done block-wise, followed by the
+    #       C-pts and F-pts being unamalgamated to regular DOFs, then this code 
+    #       will do something reasonable
+
+    # Test Inputs
+    if maxiter < 1:
+        raise ValueError('maxiter must be > 1')
+    if degree < 0:
+        raise ValueError('degree must be > 0')
+
+    if sparse.isspmatrix_csr(A):
+        pass
+    elif sparse.isspmatrix_bsr(A):
+        A = A.tocsr(copy=False)
+    else:
+        raise TypeError('A must be csr_matrix or bsr_matrix')
+
+    if sparse.isspmatrix_csr(T):
+        pass
+    elif sparse.isspmatrix_bsr(T):
+        T = T.tocsr(copy=False)
+    else:
+        raise TypeError('T must be csr_matrix or bsr_matrix')
+
+    if B.shape[0] != T.shape[1]:
+        raise ValueError('B is the candidates for the coarse grid. '
+                         '  num_rows(B) = num_cols(T)')
+
+    if min(T.nnz, A.nnz) == 0:
+        return T
+
+    if not sparse.isspmatrix_csr(Atilde):
+        raise TypeError('Atilde must be csr_matrix')
+    
+    ##
+    # Extract needed C/F splitting information
+    I_F = Cpt_params[1]['I_F'].tocsr()
+    I_C = Cpt_params[1]['I_C'].tocsr()
+    P_I = Cpt_params[1]['P_I'].tocsr()
+    Cpts = Cpt_params[1]['Cpts']
+    AFC = ((I_F*A)[:,Cpts]).tocsr()
+    AFF = I_F * A * I_F
+
+    ##
+    # Initialize T = [- A_FC; I]
+    T = -AFC + P_I
+
+    ##
+    # Compute initial sparsity pattern, using [ -A_FC; I] as the initial pattern
+    # and expanding the pattern through multiplication by Atilde
+    pattern = AFC + P_I
+    pattern.data[:] = 1.0
+    for _ in range(degree):
+        pattern = Atilde * pattern
+    #
+    pattern.data[:] = 1.0
+    # Enforce identity at C-points
+    pattern = I_F*pattern
+    pattern = P_I + pattern
+    num_ff_nnz = (I_F*pattern).nnz
+    pattern.sort_indices()
+
+    ##
+    # Compute data for constraint enforcement (BtBinv) and block_invs for
+    # solving (inexactly) Aff W = -Afc. Similar to classic en-min, we treat the
+    # above pattern as fixed, and compute these quantities _only_ once 
+    #
+    # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
+    # sparsity pattern in pattern. Needed by satisfy_constraints(...)
+    BtBinv = compute_BtBinv(B, pattern)
+    #
+    # Compute (approx) block inverses for corresponding windows of A_FF
+    pattern_FF= (I_F*pattern).tocsc()
+    pattern_FF.sort_indices()
+    block_invs = get_block_inverses(A, pattern_FF.indices, pattern_FF.indptr)
+
+    ##
+    # Update T to satisfy the constraints (T*B = Bf), have identity at C-pts, and the 
+    # same sparsity pattern as "pattern"
+    T = filter_operator(T, pattern, B, Bf, BtBinv)
+    T = I_F*T + P_I
+    T = T.multiply(pattern) + 1e-12*pattern_FF
+    T.data[ T.data == 1e-12] = 0.0
+    T.sort_indices()
+    if(T.nnz != pattern.nnz):
+        raise ValueError('T and pattern should have same nnz, perhaps some values canceled during computation of T')
+    
+    ##
+    # Iteratively solve the AIR equations
+    #    A_FF W_update = - A_FC - A_FF W_T
+    # where W_T is the weight block from T and each iteration, W_update is
+    # projected so that W_update*B = 0.  Note, the original W satisfies the
+    # constraints.
+    for i in range(maxiter):
+        # Compute right-hand-side, making sure to have same nonzero pattern as "pattern"
+        RHS = -AFC - AFF*T
+        RHS = RHS.multiply(pattern) + 1e-12*pattern_FF
+        RHS.data[ RHS.data == 1e-12] = 0.0
+
+        if(RHS.nnz != num_ff_nnz):
+            raise ValueError('RHS and W should have same nnz, perhaps some values canceled during computation of T')
+        
+        # Compute interpolation update T_hat
+        RHS = RHS.tocsc()
+        RHS.sort_indices()
+        T_hat = RHS.copy()
+        ## RHS, T_hat, and pattern_FF should have the exact same sparsity pattern and indices at this point
+        for k, (start,end) in enumerate( zip(RHS.indptr[:-1], RHS.indptr[1:]) ):
+            T_hat.data[start:end] = block_invs[k].dot(RHS.data[start:end])
+            #T_hat.data[start:end] = 0.25*RHS.data[start:end]
+        #
+        T_hat = T_hat.tobsr(blocksize=(1,1))
+
+        # Project update so that T_hat*B = 0
+        #satisfy_constraints(T_hat, B, BtBinv)
+        
+        # Add update to T
+        T = T + T_hat.tocsr()
+    
+    T = T.tobsr(blocksize=(1,1))
+    return T
+
+
+
+    # Constraints can be violated by diagonal dominance (i.e., those rows are zero in P) 
+    # Compare RS and PMIS coarsening, one will give much better Aff 
+    #
+    # max(abs(T*B - Bf))
+    
+    # TODO 
+    #   Do you need to rethink the problem...?
+    #       Set a sparsity pattern with degree 1 or 2, 
+    #           Then setup BtBinv JUST ONCE
+    #           Then setup block_invs JUST ONCE
+    #       Then keep updating P inside these sparsity confines
+    #           I guess do your update, compute T_hat so that it lies within pattern
+    #           Maybe force RHS to be in pattern.  Then the block_invs should be the right size
+    #       Then compute your update That
+    #       Then enforce constraints on That, and update T
+    #       --> I think this was what you wondered would be iterative, or not...
+    #
+    #   Check that the identity is there
+    #   Check constraints
+    #   Does algorithm change based on maxiter...?
+
+
+    #   Check that block_invs * AFF*T = T .... or figure out in what circumstances this is true
+    #       I think the above is true only when T obeys the right sparsity pattern, i.e., 
+    #           AFF*T must have a sparsity pattern less then or equal to the patter of block_invs 
+    #       Moreover, when is the above equivalent in pencil and paper to AIR?
+    
+       # Check that 
+    #   T obeys constraints
+    #   T obeys sparsity patter 
+    #   With no constraints and one iter, you get AIR back (but pattern is likely different 
+    #                                            than with AIR, so they won't be the same) !!!
+    #   You are always better than rootnode
+    # Try
+    #   Using Dinv, Linv, and SPLU options
+
+    # Note that
+    # With no improve candidates (B = 1), and 30x30 grid for Poisson, some
+    #   columns in RHS are 0.  Not sure if this is a good idea, or is idea prol
+    #   just satisfied in a few places?
+
+
+###############
+# This version of AIRplus doesn't restrict things to a certain sparsity pattern, somehow it's simpler
+# but it is also very sensitive to improve_candidates, and (maybe) diag dominance.  Its performance 
+# on Poisson is not so good...
+##  def AIRplus(A, T, Atilde, B, Bf, Cpt_params, maxiter=1, degree=0, **kwargs):
+##      """Solve the AIR equations 
+##               A_FF^{-1} W = -A_FC 
+##         subject to mode interpolation constraints.
+##  
+##      This differs from the rootnode solver, in part, because it allows for
+##      separate, local inverses when computing updates for column i of W.
+##      Essentially, each column i of W corresponds to (approx) inverting a window
+##      of A_FF, and here each (approx) inverse of an A_FF window is computed
+##      independently.  For rootnode, a single global Krylov polynomial is used to
+##      compute all inverses of A_FF windows. 
+##  
+##      Parameters
+##      ----------
+##      A : csr_matrix, bsr_matrix
+##          Sparse NxN matrix
+##      T : bsr_matrix
+##          Tentative prolongator, a NxM sparse matrix (M < N)
+##      Atilde : csr_matrix
+##          Strength of connection matrix
+##      B : array
+##          Near-nullspace modes for coarse grid.  Has shape (M,k) where
+##          k is the number of coarse candidate vectors.
+##      Bf : array
+##          Near-nullspace modes for fine grid.  Has shape (N,k) where
+##          k is the number of coarse candidate vectors.
+##      Cpt_params : tuple
+##          Tuple of the form (bool, dict).  If the Cpt_params[0] = False, then the
+##          standard SA prolongation smoothing is carried out.  If True, then
+##          root-node style prolongation smoothing is carried out.  The dict must
+##          be a dictionary of parameters containing, (1) for P_I, P_I.T is the
+##          injection matrix for the Cpts, (2) I_F is an identity matrix for only the
+##          F-points (i.e. I, but with zero rows and columns for C-points) and I_C is
+##          the C-point analogue to I_F.  See Notes below for more information.
+##      maxiter : integer
+##          Number of iterations when solving for W 
+##      degree : int
+##          Beginning sparsity pattern for P based on ( Atilde^degree  [-A_FC;  I] )
+##          The degree should be > 0 when you need more nonzeros to satisfy the constraints
+##          in the initial P
+##  
+##      Returns
+##      -------
+##      T : bsr_matrix
+##          Smoothed prolongator
+##      """
+##  
+##      # TODO: this code doesn't support BSR A.  Not sure how to handle this case.
+##      #       It may be that if the coarsening is done block-wise, followed by the
+##      #       C-pts and F-pts being unamalgamated to regular DOFs, then this code 
+##      #       will do something reasonable
+##  
+##      # Test Inputs
+##      if maxiter < 1:
+##          raise ValueError('maxiter must be > 1')
+##      if degree < 0:
+##          raise ValueError('degree must be > 0')
+##  
+##      if sparse.isspmatrix_csr(A):
+##          pass
+##      elif sparse.isspmatrix_bsr(A):
+##          A = A.tocsr(copy=False)
+##      else:
+##          raise TypeError('A must be csr_matrix or bsr_matrix')
+##  
+##      if sparse.isspmatrix_csr(T):
+##          pass
+##      elif sparse.isspmatrix_bsr(T):
+##          T = T.tocsr(copy=False)
+##      else:
+##          raise TypeError('T must be csr_matrix or bsr_matrix')
+##  
+##      if B.shape[0] != T.shape[1]:
+##          raise ValueError('B is the candidates for the coarse grid. '
+##                           '  num_rows(B) = num_cols(T)')
+##  
+##      if min(T.nnz, A.nnz) == 0:
+##          return T
+##  
+##      if not sparse.isspmatrix_csr(Atilde):
+##          raise TypeError('Atilde must be csr_matrix')
+##      
+##      ##
+##      # Extract needed C/F splitting information
+##      I_F = Cpt_params[1]['I_F'].tocsr()
+##      I_C = Cpt_params[1]['I_C'].tocsr()
+##      P_I = Cpt_params[1]['P_I'].tocsr()
+##      Cpts = Cpt_params[1]['Cpts']
+##      AFC = ((I_F*A)[:,Cpts]).tocsr()
+##      AFF = I_F * A * I_F
+##  
+##      ##
+##      # Initialize T = [- A_FC; I]
+##      T = -AFC + P_I
+##  
+##      ##
+##      # Compute initial sparsity pattern, using [ -A_FC; I] as the initial pattern
+##      # and expanding the pattern through multiplication by Atilde
+##      pattern = AFC + P_I
+##      pattern.data[:] = 1.0
+##      for _ in range(degree):
+##          pattern = Atilde * pattern
+##      #
+##      pattern.data[:] = 1.0
+##      pattern.sort_indices()
+##      # Enforce identity at C-points
+##      pattern = I_F*pattern
+##      pattern = P_I + pattern
+##  
+##      ##
+##      # Compute data for constraint enforcement
+##      #
+##      # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
+##      # sparsity pattern in pattern. Needed by satisfy_constraints(...)
+##      BtBinv = compute_BtBinv(B, pattern)
+##      
+##      ##
+##      # Update T to satisfy the constraints (T*B = Bf) and have identity at C-pts
+##      T = filter_operator(T, pattern, B, Bf, BtBinv)
+##      T = I_F*T + P_I
+##      T.sort_indices()
+##      if(T.nnz != pattern.nnz):
+##          raise ValueError('T and pattern should have same nnz, perhaps some values canceled during computation of T')
+##  
+##      
+##      ##
+##      # Could create new version that restricts the sparsity pattern like in
+##      # classic en-min, so that you only have to compute BtBinv and block_invs
+##      # once.  For now, though, we take simplest route, and do not do that.
+##      # If that route were taken, we'd want to check during the maxiter loop that 
+##      #   Wnnz = (I_F*pattern).nnz
+##      #   if(RHS.nnz != Wnnz):
+##      #      raise ValueError('RHS and W_pattern should have same nnz, perhaps some values canceled during computation of T')
+##  
+##      ##
+##      # Iteratively solve the AIR equations
+##      #    A_FF W_update = - A_FC - A_FF W_T
+##      # where W_T is the weight block from T and each iteration, W_update is
+##      # projected so that W_update*B = 0.  Note, the original W satisfies the
+##      # constraints.
+##      for i in range(maxiter):
+##          # Compute right-hand-size
+##          RHS = -AFC - AFF*T
+##          
+##          # Compute (approx) block inverses for corresponding windows of A_FF
+##          RHS = RHS.tocsc()
+##          block_invs = get_block_inverses(A, RHS.indices, RHS.indptr)
+##  
+##          # Compute interpolation update T_hat
+##          T_hat = RHS.copy()
+##          for k, (start,end) in enumerate( zip(RHS.indptr[:-1], RHS.indptr[1:]) ):
+##              T_hat.data[start:end] = block_invs[k].solve(RHS.data[start:end])
+##          #
+##          T_hat = T_hat.tobsr(blocksize=(1,1))
+##  
+##          # Project update so that T_hat*B = 0, note that BtBinv must 
+##          #  be recomputed, because the sparsity of T_hat has changed
+##          BtBinv = compute_BtBinv(B, T_hat)
+##          satisfy_constraints(T_hat, B, BtBinv)
+##          # Add update to T
+##          T = T + T_hat.tocsr()
+##      
+##      T = T.tobsr(blocksize=(1,1))
+##      return T
+##  
+##  
+##  
+##  
+
