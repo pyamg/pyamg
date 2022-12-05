@@ -2089,7 +2089,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
         A_filter.indices += A.shape[0]
 
         # classical_strength_of_connection takes an absolute value internally
-        pyamg.amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
+        amg_core.classical_strength_of_connection_abs(A.shape[0], theta,
                                                             A.indptr, A.indices,
                                                             A.data, A_filter.indptr,
                                                             A_filter.indices,

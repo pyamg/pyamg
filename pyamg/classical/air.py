@@ -190,9 +190,9 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
-    # BS - have run into cases where no C-points are designated, and it
-    # throws off the next routines. If everything is an F-point, return here
-    if np.sum(splitting) == len(splitting):
+    # Make sure all points were not declared as C- or F-points
+    num_fpts = np.sum(splitting)
+    if (num_fpts == len(splitting)) or (num_fpts == 0):
         return 1
 
     # Generate the interpolation matrix that maps from the coarse-grid to the

@@ -12,8 +12,8 @@ from pyamg.classical.air import air_solver
 class TestAIR(TestCase):
     def test_poisson(self):
         sizes = []
-        sizes.append((100,))
-        sizes.append((275,))
+        sizes.append(100)
+        sizes.append(275)
 
         for n in sizes:
             # CSR case
