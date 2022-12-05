@@ -73,7 +73,7 @@ class TestAggregate(TestCase):
             S = classical_strength_of_connection(A, norm='min')
 
             (expected, expected_Cpts) = reference_pairwise_aggregation(S)
-            (result, Cpts) = pairwise_aggregation(S)
+            (result, Cpts) = pairwise_aggregation(S, A)
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
