@@ -176,19 +176,29 @@ def naive_aggregation(C):
     return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def pairwise_aggregation(C):
+def pairwise_aggregation(C, A, compute_P=False):
     """Compute the sparsity pattern of the tentative prolongator.
 
     Parameters
     ----------
     C : csr_matrix
         strength of connection matrix
+    A : csr_matrix or bsr_matrix
+        level matrix
+    compute_P : bool; default False
+        Compute pairwise interpolation directly; if False, return
+        integer aggregation matrix for smoothed_aggregation_solver.
+        If True, return float interpolation P, converting to BSR
+        form with identity of size bsize x bsize on each aggregate
+        if A is BSR.
 
     Returns
     -------
-    AggOp : csr_matrix
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
+    AggOp : csr_matrix or bsr_matrix.
+        compute_P = False: aggregation operator which determines
+        the sparsity pattern of the tentative prolongator.
+        compute_P = True: pairwise interpolation operator in 
+        same format as A (csr_matrix or bsr_matrix).
     Cpts : array
         array of Cpts, i.e., Cpts[i] = root node of aggregate i
 
@@ -229,7 +239,7 @@ def pairwise_aggregation(C):
     Electronic transactions on numerical analysis 37.6 (2010): 123-146.
 
     """
-    if not isspmatrix_csr(C):
+    if not sparse.isspmatrix_csr(C):
         raise TypeError('expected csr_matrix')
 
     if C.shape[0] != C.shape[1]:
@@ -247,15 +257,31 @@ def pairwise_aggregation(C):
     Cpts = Cpts[:num_aggregates]
     Tj = Tj - 1
 
-    if num_aggregates == 0:
-        # all zero matrix
-        return csr_matrix((num_rows, 1), dtype='int8'), Cpts
+    if compute_P:
+        if num_aggregates == 0:
+            # all zero matrix
+            return sparse.csr_matrix((num_rows, 1), dtype=A.dtype), Cpts
+        else:
+            shape = (num_rows, num_aggregates)
+            # all nodes aggregated
+            Tp = np.arange(num_rows+1, dtype=index_type)
+            # If A is not BSR, 
+            if not sparse.isspmatrix_bsr(A):
+                Tx = np.ones(len(Tj), dtype=A.dtype)
+                return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+            else:
+                Tx = np.dstack([np.eye(A.blocksize[0])]*len(Tj), dtype=A.dtype)
+                return sparse.bsr_matrix((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape), Cpts
     else:
-        shape = (num_rows, num_aggregates)
-        # all nodes aggregated
-        Tp = np.arange(num_rows+1, dtype=index_type)
-        Tx = np.ones(len(Tj), dtype='int8')
-        return csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+        if num_aggregates == 0:
+            # all zero matrix
+            return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
+        else:
+            shape = (num_rows, num_aggregates)
+            # all nodes aggregated
+            Tp = np.arange(num_rows+1, dtype=index_type)
+            Tx = np.ones(len(Tj), dtype='int8')
+            return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
