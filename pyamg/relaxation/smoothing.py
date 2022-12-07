@@ -794,7 +794,7 @@ def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, call
     """Set up GMRES smoothing."""
     def smoother(A, x, b):
         x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
-               callback=callback, residuals=residuals)[0].reshape(x.shape)
+                     callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, gmres)  # set __name__
     return smoother
 
@@ -803,7 +803,7 @@ def setup_cg(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None, resid
     """Set up CG smoothing."""
     def smoother(A, x, b):
         x[:] = cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-               callback=callback, residuals=residuals)[0].reshape(x.shape)
+                  callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, cg)  # set __name__
     return smoother
 
@@ -813,7 +813,7 @@ def setup_cgne(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
     """Set up CGNE smoothing."""
     def smoother(A, x, b):
         x[:] = cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-               callback=callback, residuals=residuals)[0].reshape(x.shape)
+                    callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, cgne)  # set __name__
     return smoother
 
@@ -823,7 +823,7 @@ def setup_cgnr(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
     """Set up CGNR smoothing."""
     def smoother(A, x, b):
         x[:] = cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-               callback=callback, residuals=residuals)[0].reshape(x.shape)
+                    callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, cgnr)  # set __name__
     return smoother
 

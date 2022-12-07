@@ -34,6 +34,7 @@ instantiate:
     - jacobi_indexed
     - bsr_jacobi_indexed
     - block_jacobi_indexed
+    - filter_matrix_rows
 
 - types:
     - [int,float]
