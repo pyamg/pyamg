@@ -80,7 +80,7 @@ class TestAggregate(TestCase):
 
         # S is diagonal - no dofs aggregated
         S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
-        (result, Cpts) = pairwise_aggregation(A, matchings=1, theta=0.25, norm='min')
+        (result, Cpts) = pairwise_aggregation(S, matchings=1, theta=0.25, norm='min')
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
