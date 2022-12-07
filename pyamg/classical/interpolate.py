@@ -47,6 +47,8 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    else:
+        C = C.copy()
     C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to the
@@ -126,6 +128,8 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    else:
+        C = C.copy()
 
     # Use modified classical interpolation by ignoring strong F-connections that do
     # not have a common C-point.
@@ -214,6 +218,8 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
 
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    else:
+        C = C.copy()
     C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to
