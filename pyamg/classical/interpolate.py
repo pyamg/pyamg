@@ -18,6 +18,13 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     C : csr_matrix
         Strength-of-Connection matrix
         Must have zero diagonal
+    theta : float in [0,1), default None
+        theta value defining strong connections in a classical AMG
+        sense. Provide if a different SOC is used for P than for
+        CF-splitting; otherwise, theta = None. 
+    norm : string, default 'abs'
+        Norm used in redefining classical SOC. Options are 'min' and
+        'abs' for CSR matrices. See strength.py for more information.
     splitting : array
         C/F splitting stored in an array of length N
     Returns
