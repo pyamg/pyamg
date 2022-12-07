@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix, isspmatrix_csr
 from pyamg.strength import classical_strength_of_connection
 from pyamg import amg_core
 
-__all__ = ['direct_interpolation', 'standard_interpolation',
+__all__ = ['direct_interpolation', 'classical_interpolation',
            'distance_two_interpolation']
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
@@ -58,20 +58,20 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     amg_core.rs_direct_interpolation_pass1(A.shape[0], C.indptr, C.indices, 
                                            splitting, P_indptr)
     nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+    P_indices = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
 
     amg_core.rs_direct_interpolation_pass2(A.shape[0], A.indptr, A.indices,
                                            A.data, C.indptr, C.indices, C.data,
-                                           splitting, P_indptr, P_colinds, P_data)
+                                           splitting, P_indptr, P_indices, P_data)
 
     nc = np.sum(splitting)
     n = A.shape[0]
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
+    return csr_matrix((P_data, P_indices, P_indptr), shape=[n,nc])
 
 
-def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
-    """Create prolongator using distance-1 standard/classical interpolation
+def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
+    """Create prolongator using distance-1 classical interpolation
 
     Parameters
     ----------
@@ -97,16 +97,17 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     Returns
     -------
     P : {csr_matrix}
-        Prolongator using standard interpolation
+        Prolongator using classical interpolation; see Sec. 3 Eq. (8)
+        of [0] for modified=False and Eq. (9) for modified=True.
 
     Examples
     --------
     >>> from pyamg.gallery import poisson
-    >>> from pyamg.classical.interpolate import standard_interpolation
+    >>> from pyamg.classical.interpolate import classical_interpolation
     >>> import numpy as np
     >>> A = poisson((5,),format='csr')
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
-    >>> P = standard_interpolation(A, A, splitting, 0.25)
+    >>> P = classical_interpolation(A, A, splitting, 0.25)
     >>> print(P.todense())
     [[ 1.   0.   0. ]
      [ 0.5  0.5  0. ]
@@ -126,7 +127,7 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
 
-    # Use modified standard interpolation by ignoring strong F-connections that do
+    # Use modified classical interpolation by ignoring strong F-connections that do
     # not have a common C-point.
     if modified:
         amg_core.remove_strong_FF_connections(A.shape[0], C.indptr, C.indices, C.data, splitting)
@@ -139,24 +140,18 @@ def standard_interpolation(A, C, splitting, theta=None, norm='min', modified=Tru
     C = C.multiply(A)
 
     P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_standard_interpolation_pass1(A.shape[0], C.indptr,
+    amg_core.rs_classical_interpolation_pass1(A.shape[0], C.indptr,
                                              C.indices, splitting, P_indptr)
     nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+    P_indices = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
 
-    if modified:
-        amg_core.mod_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                  A.data, C.indptr, C.indices,
-                                                  C.data, splitting, P_indptr,
-                                                  P_colinds, P_data)
-    else:
-        amg_core.rs_standard_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                                 A.data, C.indptr, C.indices,
-                                                 C.data, splitting, P_indptr,
-                                                 P_colinds, P_data)
+    amg_core.rs_classical_interpolation_pass2(A.shape[0], A.indptr, A.indices,
+                                             A.data, C.indptr, C.indices,
+                                             C.data, splitting, P_indptr,
+                                             P_indices, P_data, modified)
     
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
+    return csr_matrix((P_data, P_indices, P_indptr), shape=[n,nc])
 
 
 def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=False):
@@ -186,7 +181,9 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
     Returns
     -------
     P : {csr_matrix}
-        Prolongator using standard interpolation
+        Prolongator using distance-two classical interpolation; see
+        Section 4, Eq. (15) of [0] for plus_i=False and Sec 4 Eqs.
+        (19) and (20) for plus_i=True.
 
     References
     ----------
@@ -229,17 +226,17 @@ def distance_two_interpolation(A, C, splitting, theta=None, norm='min', plus_i=F
     amg_core.distance_two_amg_interpolation_pass1(A.shape[0], C.indptr,
                                                   C.indices, splitting, P_indptr)
     nnz = P_indptr[-1]
-    P_colinds = np.empty(nnz, dtype=P_indptr.dtype)
+    P_indices = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
     if plus_i:
         amg_core.extended_plusi_interpolation_pass2(A.shape[0], A.indptr, A.indices,
                                                     A.data, C.indptr, C.indices,
                                                     C.data, splitting, P_indptr,
-                                                    P_colinds, P_data)
+                                                    P_indices, P_data)
     else:
         amg_core.extended_interpolation_pass2(A.shape[0], A.indptr, A.indices,
                                               A.data, C.indptr, C.indices,
                                               C.data, splitting, P_indptr,
-                                              P_colinds, P_data)
+                                              P_indices, P_data)
 
-    return csr_matrix((P_data, P_colinds, P_indptr), shape=[n,nc])
+    return csr_matrix((P_data, P_indices, P_indptr), shape=[n,nc])

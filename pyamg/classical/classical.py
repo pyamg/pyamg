@@ -11,7 +11,7 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
-       distance_two_interpolation, standard_interpolation
+       distance_two_interpolation, classical_interpolation
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
@@ -19,7 +19,7 @@ from pyamg.classical.cr import CR
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
                        CF=('RS',{'second_pass': False}),
-                       interpolation='standard',
+                       interpolation='classical',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=30, max_coarse=20, keep=False, **kwargs):
@@ -39,8 +39,8 @@ def ruge_stuben_solver(A,
     CF : {string} : default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interpolation : {string} : default 'standard'
-        Method for interpolation. Options include 'direct', 'standard', and
+    interpolation : {string} : default 'classical'
+        Method for interpolation. Options include 'direct', 'classical', and
         'distance_two'.
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
@@ -172,8 +172,8 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
     fn, kwargs = unpack_arg(interpolation)
-    if fn == 'standard':
-        P = standard_interpolation(A, C, splitting, **kwargs)
+    if fn == 'classical':
+        P = classical_interpolation(A, C, splitting, **kwargs)
     elif fn == 'distance_two':
         P = distance_two_interpolation(A, C, splitting, **kwargs)
     elif fn == 'direct':

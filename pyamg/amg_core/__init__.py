@@ -26,8 +26,8 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           cljp_naive_splitting,
                           rs_direct_interpolation_pass1, rs_direct_interpolation_pass2,
                           cr_helper, 
-                          rs_standard_interpolation_pass1, rs_standard_interpolation_pass2,
-                          remove_strong_FF_connections, mod_standard_interpolation_pass2,
+                          rs_classical_interpolation_pass1, rs_classical_interpolation_pass2,
+                          remove_strong_FF_connections,
                           distance_two_amg_interpolation_pass1, 
                           extended_plusi_interpolation_pass2,
                           extended_interpolation_pass2)
@@ -36,6 +36,8 @@ from .smoothed_aggregation import (symmetric_strength_of_connection, standard_ag
                                    fit_candidates,
                                    satisfy_constraints_helper, calc_BtB,
                                    incomplete_mat_mult_bsr, truncate_rows_csr)
+from .air import (one_point_interpolation, approx_ideal_restriction_pass1,
+                  approx_ideal_restriction_pass2, block_approx_ideal_restriction_pass2)
 
 __all__ = [
     'apply_absolute_distance_filter',
@@ -92,6 +94,12 @@ __all__ = [
     'rs_direct_interpolation_pass1',
     'rs_direct_interpolation_pass2',
     'cr_helper',
+    'rs_classical_interpolation_pass1',
+    'rs_classical_interpolation_pass2',
+    'remove_strong_FF_connections',
+    'distance_two_amg_interpolation_pass1', 
+    'extended_plusi_interpolation_pass2',
+    'extended_interpolation_pass2',
     #
     'symmetric_strength_of_connection',
     'standard_aggregation',
@@ -101,4 +109,7 @@ __all__ = [
     'calc_BtB',
     'incomplete_mat_mult_bsr',
     'truncate_rows_csr'
+    #
+
 ]
+

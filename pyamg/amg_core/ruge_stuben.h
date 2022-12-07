@@ -943,9 +943,8 @@ void cr_helper(const I Ap[], const int Ap_size,
     }
 }
 
-/* First pass of classical AMG interpolation to build row pointer for P based
- * on SOC matrix and CF-splitting. Same method used for standard and modified
- * AMG interpolation below. 
+/* First pass of classical AMG interpolation to build row pointer for
+ * P based on SOC matrix and CF-splitting.
  *
  * Parameters:
  * -----------
@@ -966,7 +965,7 @@ void cr_helper(const I Ap[], const int Ap_size,
  *
  */
 template<class I>
-void rs_standard_interpolation_pass1(const I n_nodes,
+void rs_classical_interpolation_pass1(const I n_nodes,
                                      const I Sp[], const int Sp_size,
                                      const I Sj[], const int Sj_size,
                                      const I splitting[], const int splitting_size,
@@ -985,172 +984,6 @@ void rs_standard_interpolation_pass1(const I n_nodes,
             }
         }
         Pp[i+1] = nnz;
-    }
-}
-
-
-/* Produce the classical "standard" AMG interpolation operator. The first pass
- * uses the strength of connection matrix and C/F splitting to compute the row
- * pointer for the prolongator. The second pass fills in the nonzero entries of
- * the prolongator. Formula can be found in Eq. (3.8) in [1].
- *
- * Parameters:
- * -----------
- *      n_nodes : const int
- *          Number of rows in A
- *      Ap : const array<int>
- *          Row pointer for matrix A
- *      Aj : const array<int>
- *          Column indices for matrix A
- *      Ax : const array<float>
- *          Data array for matrix A
- *      Sp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Sj : const array<int>
- *          Column indices for SOC matrix, C
- *      Sx : const array<float>
- *          Data array for SOC matrix, C -- MUST HAVE VALUES OF A
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      Pp : const array<int>
- *          Row pointer for matrix P
- *      Pj : array<int>
- *          Column indices for matrix P
- *      Px : array<float>
- *          Data array for matrix P
- *
- * Returns:
- * --------
- * Nothing, Pj[] and Px[] modified in place.
- *
- * References:
- * -----------
- * [0] J. W. Ruge and K. Stüben, Algebraic multigrid (AMG), in : S. F.
- *      McCormick, ed., Multigrid Methods, vol. 3 of Frontiers in Applied
- *      Mathematics (SIAM, Philadelphia, 1987) 73–130.
- *
- * [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
- */
-template<class I, class T>
-void rs_standard_interpolation_pass2(const I n_nodes,
-                                     const I Ap[], const int Ap_size,
-                                     const I Aj[], const int Aj_size,
-                                     const T Ax[], const int Ax_size,
-                                     const I Sp[], const int Sp_size,
-                                     const I Sj[], const int Sj_size,
-                                     const T Sx[], const int Sx_size,
-                                     const I splitting[], const int splitting_size,
-                                     const I Pp[], const int Pp_size,
-                                           I Pj[], const int Pj_size,
-                                           T Px[], const int Px_size)
-{
-    for (I i = 0; i < n_nodes; i++) {
-        // If node i is a C-point, then set interpolation as injection
-        if(splitting[i] == C_NODE) {
-            Pj[Pp[i]] = i;
-            Px[Pp[i]] = 1;
-        } 
-        // Otherwise, use RS standard interpolation formula
-        else {
-
-            // Calculate denominator
-            T denominator = 0;
-
-            // Start by summing entire row of A
-            for (I mm = Ap[i]; mm < Ap[i+1]; mm++) {
-                denominator += Ax[mm];
-            }
-
-            // Then subtract off the strong connections so that you are left with 
-            // denominator = a_ii + sum_{m in weak connections} a_im
-            for (I mm = Sp[i]; mm < Sp[i+1]; mm++) {
-                if ( Sj[mm] != i ) {
-                    denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
-                }
-            }
-
-            // Set entries in P (interpolation weights w_ij from strongly connected C-points)
-            I nnz = Pp[i];
-            for (I jj = Sp[i]; jj < Sp[i+1]; jj++) {
-
-                if (splitting[Sj[jj]] == C_NODE) {
-
-                    // Set temporary value for Pj as global index, j. Will be mapped to
-                    // appropriate coarse-grid column index after all data is filled in. 
-                    Pj[nnz] = Sj[jj];
-                    I j = Sj[jj];
-
-                    // Initialize numerator as a_ij
-                    T numerator = Sx[jj];
-
-                    // Sum over strongly connected fine points
-                    for (I kk = Sp[i]; kk < Sp[i+1]; kk++) {
-                        if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ) {
-                            
-                            // Get column k and value a_ik
-                            I k = Sj[kk];
-                            T a_ik = Sx[kk];
-
-                            // Get a_kj (have to search over k'th row in A for connection a_kj)
-                            T a_kj = 0;
-                            for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                if ( Aj[search_ind] == j ){
-                                    a_kj = Ax[search_ind];
-                                    break;
-                                }
-                            }
-
-                            // If a_kj == 0, then we don't need to do any more work, otherwise
-                            // proceed to account for node k's contribution
-                            if (std::abs(a_kj) > 1e-16) {
-                                
-                                // Calculate sum for inner denominator (loop over strongly connected C-points)
-                                T inner_denominator = 0;
-                                for (I ll = Sp[i]; ll < Sp[i+1]; ll++) {
-                                    if (splitting[Sj[ll]] == C_NODE) {
-                                        
-                                        // Get column l
-                                        I l = Sj[ll];
-                                        
-                                        // Add connection a_kl if present in matrix (search over kth row in A for connection)
-                                        for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                            if (Aj[search_ind] == l) {
-                                                inner_denominator += Ax[search_ind];
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Add a_ik * a_kj / inner_denominator to the numerator 
-                                if (std::abs(inner_denominator) < 1e-16) {
-                                    printf("Inner denominator was zero.\n");
-                                }
-                                numerator += a_ik * a_kj / inner_denominator;
-                            }
-                        }
-                    }
-
-                    // Set w_ij = -numerator/denominator
-                    if (std::abs(denominator) < 1e-16) {
-                        printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
-                    }
-                    Px[nnz] = -numerator / denominator;
-                    nnz++;
-                }
-            }
-        }
-    }
-
-    // Column indices were initially stored as global indices. Build map to switch
-    // to C-point indices.
-    std::vector<I> map(n_nodes);
-    for (I i = 0, sum = 0; i < n_nodes; i++) {
-        map[i]  = sum;
-        sum    += splitting[i];
-    }
-    for (I i = 0; i < Pp[n_nodes]; i++) {
-        Pj[i] = map[Pj[i]];
     }
 }
 
@@ -1229,9 +1062,10 @@ void remove_strong_FF_connections(const I n_nodes,
 }
 
 
-/* Produce a modified "standard" AMG interpolation operator for the case in which
- * two strongly connected F -points do NOT have a common C-neighbor. Formula can
- * be found in Eq. (3.9) of [1].
+/* Produce a classical AMG interpolation operator for the case in which
+ * two strongly connected F -points do NOT have a common C-neighbor. Formula
+ * can be found in Sec. 3 Eq. (8) of [1] for modified=False and Eq. (9)
+ * for modified=True.
  *
  * Parameters:
  * -----------
@@ -1255,12 +1089,15 @@ void remove_strong_FF_connections(const I n_nodes,
  *          Column indices for matrix P
  *      Px : array<float>
  *          Data array for matrix P
+ *      modified : bool
+ *          Use modified interpolation formula
  *
  * Notes:
  * ------
- * It is assumed that SOC matrix C is passed in WITHOUT any F-to-F connections
- * that do not share a common C-point neighbor. Any SOC matrix C can be set as
- * such by calling remove_strong_FF_connections().
+ * For modified interpolation, it is assumed that SOC matrix C is
+ * passed in WITHOUT any F-to-F connections that do not share a
+ * common C-point neighbor. Any SOC matrix C can be set as such by
+ * calling remove_strong_FF_connections().
  *
  * Returns:
  * --------
@@ -1275,17 +1112,18 @@ void remove_strong_FF_connections(const I n_nodes,
  *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  */
 template<class I, class T>
-void mod_standard_interpolation_pass2(const I n_nodes,
-                                      const I Ap[], const int Ap_size,
-                                      const I Aj[], const int Aj_size,
-                                      const T Ax[], const int Ax_size,
-                                      const I Sp[], const int Sp_size,
-                                      const I Sj[], const int Sj_size,
-                                      const T Sx[], const int Sx_size,
-                                      const I splitting[], const int splitting_size,
-                                      const I Pp[], const int Pp_size,
-                                            I Pj[], const int Pj_size,
-                                            T Px[], const int Px_size)
+void rs_classical_interpolation_pass2(const I n_nodes,
+                                     const I Ap[], const int Ap_size,
+                                     const I Aj[], const int Aj_size,
+                                     const T Ax[], const int Ax_size,
+                                     const I Sp[], const int Sp_size,
+                                     const I Sj[], const int Sj_size,
+                                     const T Sx[], const int Sx_size,
+                                     const I splitting[], const int splitting_size,
+                                     const I Pp[], const int Pp_size,
+                                           I Pj[], const int Pj_size,
+                                           T Px[], const int Px_size,
+                                     const I modified)
 {
     for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
@@ -1293,7 +1131,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
             Pj[Pp[i]] = i;
             Px[Pp[i]] = 1;
         } 
-        // Otherwise, use RS standard interpolation formula
+        // Otherwise, use RS classical interpolation formula
         else {
 
             // Calculate denominator
@@ -1337,24 +1175,34 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                             // Get a_kj (have to search over k'th row in A for connection a_kj)
                             T a_kj = 0;
                             T a_kk = 0;
-                            for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                if (Aj[search_ind] == j) {
-                                    a_kj = Ax[search_ind];
+                            if (modified) {
+                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
+                                    if (Aj[search_ind] == j) {
+                                        a_kj = Ax[search_ind];
+                                    }
+                                    else if (Aj[search_ind] == k) {
+                                        a_kk = Ax[search_ind];
+                                    }
                                 }
-                                else if (Aj[search_ind] == k) {
-                                    a_kk = Ax[search_ind];
+                            }
+                            else {
+                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
+                                    if ( Aj[search_ind] == j ){
+                                        a_kj = Ax[search_ind];
+                                        break;
+                                    }
                                 }
                             }
 
                             // If sign of a_kj matches sign of a_kk, ignore a_kj in sum
-                            // (i.e. leave as a_kj = 0)
-                            if (signof(a_kj) == signof(a_kk)) {
+                            // (i.e. leave as a_kj = 0) for modified interpolation
+                            if ( modified && (signof(a_kj) == signof(a_kk)) ) {
                                 a_kj = 0;
                             }
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (std::abs(a_kj) > 1e-16) {
+                            if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
@@ -1369,7 +1217,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                                         for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
                                             if (Aj[search_ind] == l) {
                                                 T a_kl = Ax[search_ind];
-                                                if (signof(a_kl) != signof(a_kk)) {
+                                                if ( (!modified) || (signof(a_kl) != signof(a_kk)) ) {
                                                     inner_denominator += a_kl;
                                                 }
                                                 break;
@@ -1379,7 +1227,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                                 }
 
                                 // Add a_ik * a_kj / inner_denominator to the numerator 
-                                if (std::abs(inner_denominator) < 1e-16) {
+                                if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                     printf("Inner denominator was zero.\n");
                                 }
                                 numerator += a_ik * a_kj / inner_denominator;
@@ -1388,7 +1236,7 @@ void mod_standard_interpolation_pass2(const I n_nodes,
                     }
 
                     // Set w_ij = -numerator/denominator
-                    if (std::abs(denominator) < 1e-16) {
+                    if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
                         printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
                     }
                     Px[nnz] = -numerator / denominator;
@@ -1477,7 +1325,7 @@ void distance_two_amg_interpolation_pass1(const I n_nodes,
 
 /* Compute distance-two "Extended+i" classical AMG interpolation from [0]. Uses
  * neighbors within distance two for interpolation weights. Formula can be found
- * in Eqs. (4.19-4.20) in [0].
+ * in Section 4, Eqs. (19) and (20) in [0].
  *
  * Parameters:
  * -----------
@@ -1537,7 +1385,6 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
             Px[Pp[i]] = 1;
         } 
         // Otherwise, use extended+i distance-two AMG interpolation formula
-        // (see Eqs. 4.10-4.11 in [0])
         else {
 
             // -------------------------------------------------------------------------------- //
@@ -1608,7 +1455,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
 
                     // If a_ki == 0, then we don't need to do any more work, otherwise
                     // proceed to account for node k's contribution
-                    if (std::abs(a_ki) > 1e-16) {
+                    if (std::abs(a_ki) > 1e-15*std::abs(a_ik)) {
                         // Calculate sum for inner denominator (loop over strongly connected C-points
                         // and distance-two strongly connected C-points from node i).
                         T inner_denominator = 0;
@@ -1658,7 +1505,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                         inner_denominator += a_ki;
 
                         // Add a_ik * a_ki / inner_denominator to the denominator 
-                        if (std::abs(inner_denominator) < 1e-16) {
+                        if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_ki)) {
                             std::cout << "Inner denominator of outer denominator is zero.\n";
                         }
                         denominator += a_ik * a_ki / inner_denominator;
@@ -1712,7 +1559,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (std::abs(a_kj) > 1e-16) {
+                            if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points
                                 // and distance-two strongly connected C-points from node i).
@@ -1773,7 +1620,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                                 inner_denominator += a_ki;
 
                                 // Add a_ik * a_kj / inner_denominator to the numerator 
-                                if (std::abs(inner_denominator) < 1e-16) {
+                                if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                     printf("Inner denominator was zero.\n");
                                 }
                                 numerator += a_ik * a_kj / inner_denominator;
@@ -1782,7 +1629,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                     }
 
                     // Set w_ij = -numerator/denominator
-                    if (std::abs(denominator) < 1e-16) {
+                    if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
                         printf("Outer denominator was zero.\n");
                     }
                     Px[nnz] = -numerator / denominator;
@@ -1839,7 +1686,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
 
                                     // If a_kj == 0, then we don't need to do any more work, otherwise
                                     // proceed to account for node k's contribution
-                                    if (std::abs(a_kj) > 1e-16) {
+                                    if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
                                         
                                         // Calculate sum for inner denominator (loop over strongly connected C-points
                                         // and distance-two strongly connected C-points).
@@ -1900,7 +1747,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                                         inner_denominator += a_ki;
 
                                         // Add a_ik * a_kj / inner_denominator to the numerator 
-                                        if (std::abs(inner_denominator) < 1e-16) {
+                                        if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                             printf("Inner denominator was zero.\n");
                                         }
                                         numerator += a_ik * a_kj / inner_denominator;
@@ -1909,7 +1756,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                             }
 
                             // Set w_ij = -numerator/denominator
-                            if (std::abs(denominator) < 1e-16) {
+                            if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
                                 printf("Outer denominator was zero.\n");
                             }
                             Px[nnz] = -numerator / denominator;
@@ -1938,7 +1785,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
 
 /* Compute distance-two "Extended" classical AMG interpolation from [0]. Uses
  * neighbors within distance two for interpolation weights. Formula can be found
- * in Eq. (4.15) in [0].
+ * in Sec. 4 Eq. (15) in [0].
  *
  * Parameters:
  * -----------
@@ -2081,7 +1928,7 @@ void extended_interpolation_pass2(const I n_nodes,
 
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
-                            if (std::abs(a_kj) > 1e-16) {
+                            if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
                                 
                                 // Calculate sum for inner denominator (loop over strongly connected C-points
                                 // and distance-two strongly connected C-points from node i).
@@ -2129,7 +1976,7 @@ void extended_interpolation_pass2(const I n_nodes,
                                 }
 
                                 // Add a_ik * a_kj / inner_denominator to the numerator 
-                                if (std::abs(inner_denominator) < 1e-16) {
+                                if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                     printf("Inner denominator was zero.\n");
                                 }
                                 numerator += a_ik * a_kj / inner_denominator;
@@ -2138,7 +1985,7 @@ void extended_interpolation_pass2(const I n_nodes,
                     }
 
                     // Set w_ij = -numerator/denominator
-                    if (std::abs(denominator) < 1e-16) {
+                    if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
                         printf("Outer denominator was zero.\n");
                     }
                     Px[nnz] = -numerator / denominator;
@@ -2195,7 +2042,7 @@ void extended_interpolation_pass2(const I n_nodes,
 
                                     // If a_kj == 0, then we don't need to do any more work, otherwise
                                     // proceed to account for node k's contribution
-                                    if (std::abs(a_kj) > 1e-16) {
+                                    if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
                                         
                                         // Calculate sum for inner denominator (loop over strongly connected C-points
                                         // and distance-two strongly connected C-points).
@@ -2243,7 +2090,7 @@ void extended_interpolation_pass2(const I n_nodes,
                                         }
 
                                         // Add a_ik * a_kj / inner_denominator to the numerator 
-                                        if (std::abs(inner_denominator) < 1e-16) {
+                                        if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                             printf("Inner denominator was zero.\n");
                                         }
                                         numerator += a_ik * a_kj / inner_denominator;
@@ -2252,7 +2099,7 @@ void extended_interpolation_pass2(const I n_nodes,
                             }
 
                             // Set w_ij = -numerator/denominator
-                            if (std::abs(denominator) < 1e-16) {
+                            if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
                                 printf("Outer denominator was zero.\n");
                             }
                             Px[nnz] = -numerator / denominator;
