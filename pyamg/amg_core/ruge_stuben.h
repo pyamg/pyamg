@@ -966,10 +966,10 @@ void cr_helper(const I Ap[], const int Ap_size,
  */
 template<class I>
 void rs_classical_interpolation_pass1(const I n_nodes,
-                                     const I Sp[], const int Sp_size,
-                                     const I Sj[], const int Sj_size,
-                                     const I splitting[], const int splitting_size,
-                                           I Pp[], const int Pp_size)
+                                      const I Sp[], const int Sp_size,
+                                      const I Sj[], const int Sj_size,
+                                      const I splitting[], const int splitting_size,
+                                            I Pp[], const int Pp_size)
 {
     I nnz = 0;
     Pp[0] = 0;
@@ -1113,17 +1113,17 @@ void remove_strong_FF_connections(const I n_nodes,
  */
 template<class I, class T>
 void rs_classical_interpolation_pass2(const I n_nodes,
-                                     const I Ap[], const int Ap_size,
-                                     const I Aj[], const int Aj_size,
-                                     const T Ax[], const int Ax_size,
-                                     const I Sp[], const int Sp_size,
-                                     const I Sj[], const int Sj_size,
-                                     const T Sx[], const int Sx_size,
-                                     const I splitting[], const int splitting_size,
-                                     const I Pp[], const int Pp_size,
-                                           I Pj[], const int Pj_size,
-                                           T Px[], const int Px_size,
-                                     const I modified)
+                                      const I Ap[], const int Ap_size,
+                                      const I Aj[], const int Aj_size,
+                                      const T Ax[], const int Ax_size,
+                                      const I Sp[], const int Sp_size,
+                                      const I Sj[], const int Sj_size,
+                                      const T Sx[], const int Sx_size,
+                                      const I splitting[], const int splitting_size,
+                                      const I Pp[], const int Pp_size,
+                                            I Pj[], const int Pj_size,
+                                            T Px[], const int Px_size,
+                                      const bool modified)
 {
     for (I i = 0; i < n_nodes; i++) {
         // If node i is a C-point, then set interpolation as injection
@@ -1187,7 +1187,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                             }
                             else {
                                 for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                    if ( Aj[search_ind] == j ){
+                                    if ( Aj[search_ind] == j ) {
                                         a_kj = Ax[search_ind];
                                         break;
                                     }
