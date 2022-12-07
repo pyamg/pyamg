@@ -1415,7 +1415,7 @@ void extended_plusi_interpolation_pass2(const I n_nodes,
                         if (splitting[d2_point] == C_NODE) {
 
                             // Add connection a_kl if present in matrix (search over kth row in A
-                            // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                            // for connection). 
                             for (I search_ind = Ap[i]; search_ind < Ap[i+1]; search_ind++) {
                                 if (Aj[search_ind] == d2_point) {
                                     denominator -= Ax[search_ind];
@@ -1870,7 +1870,7 @@ void extended_interpolation_pass2(const I n_nodes,
                         if (splitting[d2_point] == C_NODE) {
 
                             // Add connection a_kl if present in matrix (search over kth row in A
-                            // for connection). Only add if sign of a_kl does not equal sign of a_kk
+                            // for connection). 
                             for (I search_ind = Ap[i]; search_ind < Ap[i+1]; search_ind++) {
                                 if (Aj[search_ind] == d2_point) {
                                     denominator -= Ax[search_ind];
