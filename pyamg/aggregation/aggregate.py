@@ -178,129 +178,33 @@ def naive_aggregation(C):
     return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
 
 
-def pairwise_aggregation(C, A, compute_P=False):
+def pairwise_aggregation(A, matchings=2, theta=0.25,
+                         norm='min', compute_P=False):
     """Compute the sparsity pattern of the tentative prolongator.
 
     Parameters
     ----------
-    C : csr_matrix
-        strength of connection matrix
     A : csr_matrix or bsr_matrix
         level matrix
+    matchings : int, default 2
+        number of times to perform pairwise aggregation; each
+        matching increases coarsening factor by about two.
+    theta : float, default 0.25
+        Strength tolerance used in computing classical SOC.
+    norm : string, default 'min'
+        Norm type used in computing classical SOC.
     compute_P : bool; default False
         Compute pairwise interpolation directly; if False, return
         integer aggregation matrix for smoothed_aggregation_solver.
         If True, return float interpolation P, converting to BSR
         form with identity of size bsize x bsize on each aggregate
         if A is BSR.
-
-    Returns
-    -------
-    AggOp : csr_matrix or bsr_matrix.
-        compute_P = False: aggregation operator which determines
-        the sparsity pattern of the tentative prolongator.
-        compute_P = True: pairwise interpolation operator in 
-        same format as A (csr_matrix or bsr_matrix).
-    Cpts : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
-
-    Examples
-    --------
-    >>> from scipy.sparse import csr_matrix
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg.aggregation.aggregate import pairwise_aggregation
-    >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
-    >>> A.todense()
-    matrix([[ 2., -1.,  0.,  0.],
-            [-1.,  2., -1.,  0.],
-            [ 0., -1.,  2., -1.],
-            [ 0.,  0., -1.,  2.]])
-    >>> pairwise_aggregation(A)[0].todense() # two aggregates
-    matrix([[1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
-    >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
-    >>> A.todense()                      # first vertex is isolated
-    matrix([[1, 0, 0],
-            [0, 1, 1],
-            [0, 1, 1]])
-    >>> pairwise_aggregation(A)[0].todense() # two aggregates
-    matrix([[1, 0],
-            [0, 1],
-            [0, 1]], dtype=int8)
-
-    See Also
-    --------
-    amg_core.pairwise_aggregation
-
 
     References
     ----------
-    .. [1] Notay, Yvan. "An aggregation-based algebraic multigrid method."
-    Electronic transactions on numerical analysis 37.6 (2010): 123-146.
-
-    """
-    if not sparse.isspmatrix_csr(C):
-        raise TypeError('expected csr_matrix')
-
-    if C.shape[0] != C.shape[1]:
-        raise ValueError('expected square matrix')
-
-    index_type = C.indptr.dtype
-    num_rows = C.shape[0]
-
-    Tj = np.empty(num_rows, dtype=index_type)  # stores the aggregate #s
-    Cpts = np.empty(num_rows, dtype=index_type)  # stores the Cpts
-
-    fn = amg_core.pairwise_aggregation
-
-    num_aggregates = fn(num_rows, C.indptr, C.indices, C.data, Tj, Cpts)
-    Cpts = Cpts[:num_aggregates]
-    Tj = Tj - 1
-
-    if compute_P:
-        if num_aggregates == 0:
-            # all zero matrix
-            return sparse.csr_matrix((num_rows, 1), dtype=A.dtype), Cpts
-        else:
-            shape = (num_rows, num_aggregates)
-            # all nodes aggregated
-            Tp = np.arange(num_rows+1, dtype=index_type)
-            # If A is not BSR, 
-            if not sparse.isspmatrix_bsr(A):
-                Tx = np.ones(len(Tj), dtype=A.dtype)
-                return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
-            else:
-                Tx = np.dstack([np.eye(A.blocksize[0])]*len(Tj), dtype=A.dtype)
-                return sparse.bsr_matrix((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape), Cpts
-    else:
-        if num_aggregates == 0:
-            # all zero matrix
-            return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
-        else:
-            shape = (num_rows, num_aggregates)
-            # all nodes aggregated
-            Tp = np.arange(num_rows+1, dtype=index_type)
-            Tx = np.ones(len(Tj), dtype='int8')
-            return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
-
-
-def pairwise_aggregation2(A, matchings=2, theta=0.25,
-    norm='min', compute_P=False):
-    """Compute the sparsity pattern of the tentative prolongator.
-
-    Parameters
-    ----------
-    A : csr_matrix or bsr_matrix
-        level matrix
-    compute_P : bool; default False
-        Compute pairwise interpolation directly; if False, return
-        integer aggregation matrix for smoothed_aggregation_solver.
-        If True, return float interpolation P, converting to BSR
-        form with identity of size bsize x bsize on each aggregate
-        if A is BSR.
-
+    [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
+    method. Electronic transactions on numerical analysis, 37(6),
+    123-146.
     """
 
     # Get SOC matrix

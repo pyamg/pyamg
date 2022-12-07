@@ -14,7 +14,7 @@ from pyamg.strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
-from .aggregate import pairwise_aggregation, pairwise_aggregation2
+from .aggregate import pairwise_aggregation
 from .tentative import fit_candidates
 
 from ..relaxation.utils import relaxation_as_linear_operator
@@ -39,8 +39,12 @@ def pairwise_solver(A,
     ----------
     A : {csr_matrix, bsr_matrix}
         Sparse NxN matrix in CSR or BSR format
+    aggregate : {tuple, string, list} : default ('pairwise',
+            {'theta': 0.25, 'norm':'min', 'matchings': 2})
+        Type must be 'pairwise'; inner pairwise options including
+        matchings, theta, and norm can be modified,
     presmoother : {tuple, string, list} : default ('block_gauss_seidel',
-                  {'sweep':'symmetric'})
+            {'sweep':'symmetric'})
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
@@ -62,13 +66,11 @@ def pairwise_solver(A,
     multilevel_solver, classical.ruge_stuben_solver,
     aggregation.smoothed_aggregation_solver
 
-    Notes
-    -----
-
-
     References
     ----------
-
+    [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
+    method. Electronic transactions on numerical analysis, 37(6),
+    123-146.
 
     """
     if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
@@ -116,7 +118,7 @@ def _extend_hierarchy(levels, aggregate):
 
     # Compute pairwise interpolation and restriction matrices, R=P^*
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
-    P = pairwise_aggregation2(A, **kwargs, compute_P=True)[0]
+    P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
     R = P.H
 
     levels[-1].P = P  # smoothed prolongator

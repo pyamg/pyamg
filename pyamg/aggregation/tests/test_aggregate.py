@@ -70,10 +70,9 @@ class TestAggregate(TestCase):
 
     def test_pairwise_aggregation(self):
         for i, A in enumerate(self.cases):
-            S = classical_strength_of_connection(A, norm='min')
-
+            S = classical_strength_of_connection(A, theta=0.25, norm='min')
             (expected, expected_Cpts) = reference_pairwise_aggregation(S)
-            (result, Cpts) = pairwise_aggregation(S, A)
+            (result, Cpts) = pairwise_aggregation(A, matchings=1, theta=0.25, norm='min')
 
             assert_equal((result - expected).nnz, 0)
             assert_equal(Cpts.shape[0], expected_Cpts.shape[0])
@@ -81,7 +80,7 @@ class TestAggregate(TestCase):
 
         # S is diagonal - no dofs aggregated
         S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
-        (result, Cpts) = pairwise_aggregation(S, A)
+        (result, Cpts) = pairwise_aggregation(A, matchings=1, theta=0.25, norm='min')
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
