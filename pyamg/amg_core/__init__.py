@@ -16,7 +16,7 @@ from .linalg import (pinv_array, csc_scale_columns, csc_scale_rows, filter_matri
 from .relaxation import (gauss_seidel, bsr_gauss_seidel, gauss_seidel_indexed,
                          jacobi, bsr_jacobi,
                          jacobi_ne, gauss_seidel_ne, gauss_seidel_nr,
-                         block_jacobi, block_gauss_seidel,
+                         block_jacobi, block_gauss_seidel, block_gauss_seidel_indexed,
                          extract_subblocks, overlapping_schwarz_csr,
                          jacobi_indexed, bsr_jacobi_indexed, block_jacobi_indexed)
 from .ruge_stuben import (classical_strength_of_connection_abs,
@@ -72,6 +72,7 @@ __all__ = [
     'gauss_seidel_nr',
     'block_jacobi',
     'block_gauss_seidel',
+    'block_gauss_seidel_indexed',
     'extract_subblocks',
     'overlapping_schwarz_csr',
     'jacobi_indexed',

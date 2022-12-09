@@ -18,6 +18,7 @@ instantiate:
     - gauss_seidel_ne
     - block_jacobi
     - block_gauss_seidel
+    - block_gauss_seidel_indexed
     - extract_subblocks
     - overlapping_schwarz_csr
     - pinv_array

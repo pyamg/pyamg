@@ -956,7 +956,8 @@ void block_jacobi(const I Ap[], const int Ap_size,
         //          (Dinv[i*blocksize_sq : (i+1)*blocksize_sq]*(b[i*blocksize:(i+1)*blocksize] - rsum[0:blocksize]));
         I iblocksize = i*blocksize;
         for(I k = 0; k < blocksize; k++) {
-            rsum[k] = b[iblocksize + k] - rsum[k]; }
+            rsum[k] = b[iblocksize + k] - rsum[k];
+        }
 
         gemm(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
              &(rsum[0]),              blocksize, 1,         'F',
@@ -986,7 +987,7 @@ void block_jacobi(const I Ap[], const int Ap_size,
  *      b[]        - right hand side
  *      Tx[]       - Inverse of each diagonal block of A stored
  *                   as a (n/blocksize, blocksize, blocksize) array
- *      indices[]  -
+ *      indices[]  - Block indices over which to relax
  *      omega      - damping parameter
  *      blocksize  - dimension of sqare blocks in BSR matrix A
  *
@@ -1148,6 +1149,85 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
             rsum[k] = b[iblocksize + k] - rsum[k]; }
 
         gemm(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
+             &(rsum[0]),              blocksize, 1,         'F',
+             &(x[iblocksize]),        blocksize, 1,         'F',
+             'T');
+    }
+
+    delete[] v;
+    delete[] rsum;
+}
+
+/*
+ * Perform one iteration of block Gauss-Seidel relaxation on the
+ * linear system Ax = b, for a given set of (block) row indices.
+ * A is stored in BSR format and x and b are column vectors.
+ *
+ *  Parameters
+ *      Ap[]       - BSR row pointer
+ *      Aj[]       - BSR index array
+ *      Ax[]       - BSR data array, blocks assumed square
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      Tx[]       - Inverse of each diagonal block of A stored
+ *                   as a (n/blocksize, blocksize, blocksize) array
+ *      indices[]  - Block indices over which to relax
+ *      blocksize  - dimension of sqare blocks in BSR matrix A
+ *
+ *  Returns:
+ *      Nothing, x will be modified in place
+ */
+template<class I, class T, class F>
+void block_gauss_seidel_indexed(const I Ap[], const int Ap_size,
+                                const I Aj[], const int Aj_size,
+                                const T Ax[], const int Ax_size,
+                                      T  x[], const int  x_size,
+                                const T  b[], const int  b_size,
+                                const T Tx[], const int Tx_size,
+                                const I indices[], const int indices_size,
+                                const I row_start,
+                                const I row_stop,
+                                const I row_step,
+                                const I blocksize)
+{
+    // Rename
+    const T * Dinv = Tx;
+    T zero = 0.0;
+    T *rsum = new T[blocksize];
+    T *v = new T[blocksize];
+    I blocksize_sq = blocksize*blocksize;
+
+    // Begin block Gauss-Seidel sweep
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I row = indices[i];
+        I start = Ap[row];
+        I end   = Ap[row+1];
+        std::fill(&(rsum[0]), &(rsum[blocksize]), zero);
+
+        // Carry out a block dot product between block row i and x
+        for(I jj = start; jj < end; jj++){
+            I j = Aj[jj];
+            if (row == j) {
+                //diagonal, do nothing
+                continue;
+            }
+            else {
+                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
+                     &(x[j*blocksize]),      blocksize, 1,         'F',
+                     &(v[0]),                blocksize, 1,         'F',
+                     'T');
+                for(I k = 0; k < blocksize; k++) {
+                    rsum[k] += v[k]; }
+            }
+        }
+
+        // x[i*blocksize:(i+1)*blocksize] = (Dinv[i*blocksize_sq : (i+1)*blocksize_sq]*(b[i*blocksize:(i+1)*blocksize] - rsum[0:blocksize]));
+        I iblocksize = row*blocksize;
+        for(I k = 0; k < blocksize; k++) {
+            rsum[k] = b[iblocksize + k] - rsum[k];
+        }
+
+        gemm(&(Dinv[row*blocksize_sq]), blocksize, blocksize, 'F',
              &(rsum[0]),              blocksize, 1,         'F',
              &(x[iblocksize]),        blocksize, 1,         'F',
              'T');
