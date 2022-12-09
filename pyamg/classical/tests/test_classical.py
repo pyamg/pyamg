@@ -124,7 +124,7 @@ class TestRugeStubenFunctions(TestCase):
             S = classical_strength_of_connection(A, 0.0)
             splitting = split.RS(S, second_pass=True)
 
-            result = classical_interpolation(A, S, splitting, modified=True)
+            result = classical_interpolation(A, S, splitting, modified=False)
             expected = reference_classical_interpolation(A, S, splitting)
             
             # elasticity produces large entries, so normalize
