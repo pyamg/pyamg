@@ -317,6 +317,33 @@ py::array_t<I> & splitting,
                            );
 }
 
+template<class I>
+void _rs_classical_interpolation_pass1(
+          const I n_nodes,
+      py::array_t<I> & Sp,
+      py::array_t<I> & Sj,
+py::array_t<I> & splitting,
+      py::array_t<I> & Pp
+                                       )
+{
+    auto py_Sp = Sp.unchecked();
+    auto py_Sj = Sj.unchecked();
+    auto py_splitting = splitting.unchecked();
+    auto py_Pp = Pp.mutable_unchecked();
+    const I *_Sp = py_Sp.data();
+    const I *_Sj = py_Sj.data();
+    const I *_splitting = py_splitting.data();
+    I *_Pp = py_Pp.mutable_data();
+
+    return rs_classical_interpolation_pass1<I>(
+                  n_nodes,
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+               _splitting, splitting.shape(0),
+                      _Pp, Pp.shape(0)
+                                               );
+}
+
 template<class I, class T>
 void _remove_strong_FF_connections(
           const I n_nodes,
@@ -344,6 +371,59 @@ py::array_t<I> & splitting
                                               );
 }
 
+template<class I, class T>
+void _rs_classical_interpolation_pass2(
+          const I n_nodes,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+      py::array_t<I> & Sp,
+      py::array_t<I> & Sj,
+      py::array_t<T> & Sx,
+py::array_t<I> & splitting,
+      py::array_t<I> & Pp,
+      py::array_t<I> & Pj,
+      py::array_t<T> & Px,
+      const bool modified
+                                       )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_Sp = Sp.unchecked();
+    auto py_Sj = Sj.unchecked();
+    auto py_Sx = Sx.unchecked();
+    auto py_splitting = splitting.unchecked();
+    auto py_Pp = Pp.unchecked();
+    auto py_Pj = Pj.mutable_unchecked();
+    auto py_Px = Px.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    const I *_Sp = py_Sp.data();
+    const I *_Sj = py_Sj.data();
+    const T *_Sx = py_Sx.data();
+    const I *_splitting = py_splitting.data();
+    const I *_Pp = py_Pp.data();
+    I *_Pj = py_Pj.mutable_data();
+    T *_Px = py_Px.mutable_data();
+
+    return rs_classical_interpolation_pass2<I, T>(
+                  n_nodes,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0),
+               _splitting, splitting.shape(0),
+                      _Pp, Pp.shape(0),
+                      _Pj, Pj.shape(0),
+                      _Px, Px.shape(0),
+                 modified
+                                                  );
+}
+
 PYBIND11_MODULE(ruge_stuben, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for ruge_stuben.h
@@ -359,7 +439,9 @@ PYBIND11_MODULE(ruge_stuben, m) {
     rs_direct_interpolation_pass1
     rs_direct_interpolation_pass2
     cr_helper
+    rs_classical_interpolation_pass1
     remove_strong_FF_connections
+    rs_classical_interpolation_pass2
     )pbdoc";
 
     py::options options;
@@ -557,6 +639,29 @@ Returns
 -------
 Nothing, updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
+    m.def("rs_classical_interpolation_pass1", &_rs_classical_interpolation_pass1<int>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
+R"pbdoc(
+First pass of classical AMG interpolation to build row pointer for
+P based on SOC matrix and CF-splitting.
+
+Parameters:
+-----------
+     n_nodes : const int
+         Number of rows in A
+     Sp : const array<int>
+         Row pointer for SOC matrix, C
+     Sj : const array<int>
+         Column indices for SOC matrix, C
+     splitting : const array<int>
+         Boolean array with 1 denoting C-points and 0 F-points
+     Pp : array<int>
+         empty array to store row pointer for matrix P
+
+Returns:
+--------
+Nothing, Pp is modified in place.)pbdoc");
+
     m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int, float>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert());
     m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int, double>,
@@ -583,6 +688,60 @@ Parameters:
 Returns:
 --------
      Nothing, Sx[] is set to zero to eliminate connections.)pbdoc");
+
+    m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int, float>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"));
+    m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int, double>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"),
+R"pbdoc(
+Produce a classical AMG interpolation operator for the case in which
+two strongly connected F -points do NOT have a common C-neighbor. Formula
+can be found in Sec. 3 Eq. (8) of [1] for modified=False and Eq. (9)
+for modified=True.
+
+Parameters:
+-----------
+     Ap : const array<int>
+         Row pointer for matrix A
+     Aj : const array<int>
+         Column indices for matrix A
+     Ax : const array<float>
+         Data array for matrix A
+     Sp : const array<int>
+         Row pointer for SOC matrix, C
+     Sj : const array<int>
+         Column indices for SOC matrix, C
+     Sx : const array<float>
+         Data array for SOC matrix, C -- MUST HAVE VALUES OF A
+     splitting : const array<int>
+         Boolean array with 1 denoting C-points and 0 F-points
+     Pp : const array<int>
+         Row pointer for matrix P
+     Pj : array<int>
+         Column indices for matrix P
+     Px : array<float>
+         Data array for matrix P
+     modified : bool
+         Use modified interpolation formula
+
+Notes:
+------
+For modified interpolation, it is assumed that SOC matrix C is
+passed in WITHOUT any F-to-F connections that do not share a
+common C-point neighbor. Any SOC matrix C can be set as such by
+calling remove_strong_FF_connections().
+
+Returns:
+--------
+Nothing, Pj[] and Px[] modified in place.
+
+References:
+-----------
+[0] V. E. Henson and U. M. Yang, BoomerAMG: a parallel algebraic multigrid
+     solver and preconditioner, Applied Numerical Mathematics 41 (2002).
+
+[1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
+     H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).)pbdoc");
 
 }
 
