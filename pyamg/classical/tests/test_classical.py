@@ -13,7 +13,7 @@ from pyamg.strength import classical_strength_of_connection
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
 from pyamg.classical.interpolate import direct_interpolation, \
-    standard_interpolation
+    classical_interpolation
 
 
 class TestRugeStubenFunctions(TestCase):
@@ -115,7 +115,7 @@ class TestRugeStubenFunctions(TestCase):
 
             assert_almost_equal(result.toarray(), expected.toarray())
 
-    def test_standard_interpolation(self):
+    def test_classical_interpolation(self):
         for A in self.cases:
             # the reference code is very slow, so just take a small block of A 
             mini = min(100, A.shape[0])
@@ -124,8 +124,8 @@ class TestRugeStubenFunctions(TestCase):
             S = classical_strength_of_connection(A, 0.0)
             splitting = split.RS(S, second_pass=True)
 
-            result = standard_interpolation(A, S, splitting, modified=True)
-            expected = reference_standard_interpolation(A, S, splitting)
+            result = classical_interpolation(A, S, splitting, modified=True)
+            expected = reference_classical_interpolation(A, S, splitting)
             
             # elasticity produces large entries, so normalize
             Diff = result - expected
@@ -268,7 +268,7 @@ def reference_direct_interpolation(A, S, splitting):
 
 
 # strength has zero diagonal...?
-def reference_standard_interpolation(A, S, splitting):
+def reference_classical_interpolation(A, S, splitting):
 
     # this routine only tests the computation of the "weights" the computation
     # of the sparsity pattern is the same as for direct interpolation, and is
