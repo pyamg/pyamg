@@ -13,7 +13,7 @@ from pyamg.strength import classical_strength_of_connection
 from pyamg.classical import split
 from pyamg.classical.classical import ruge_stuben_solver
 from pyamg.classical.interpolate import direct_interpolation, \
-       distance_two_interpolation, standard_interpolation
+    standard_interpolation
 
 
 class TestRugeStubenFunctions(TestCase):
