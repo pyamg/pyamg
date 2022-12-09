@@ -11,7 +11,7 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
-       distance_two_interpolation, classical_interpolation
+       classical_interpolation
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
 from pyamg.classical.cr import CR
 
@@ -40,8 +40,7 @@ def ruge_stuben_solver(A,
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interpolation : {string} : default 'classical'
-        Method for interpolation. Options include 'direct', 'classical', and
-        'distance_two'.
+        Method for interpolation. Options include 'direct', 'classical'.
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -174,8 +173,6 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     fn, kwargs = unpack_arg(interpolation)
     if fn == 'classical':
         P = classical_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'distance_two':
-        P = distance_two_interpolation(A, C, splitting, **kwargs)
     elif fn == 'direct':
         P = direct_interpolation(A, C, splitting, **kwargs)
     else:
