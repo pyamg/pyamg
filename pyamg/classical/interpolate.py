@@ -20,7 +20,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     theta : float in [0,1), default None
         theta value defining strong connections in a classical AMG
         sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
+        CF-splitting; otherwise, theta = None.
     norm : string, default 'abs'
         Norm used in redefining classical SOC. Options are 'min' and
         'abs' for CSR matrices. See strength.py for more information.
@@ -50,7 +50,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix for C')
-    
+
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
     else:
@@ -63,7 +63,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     C = C.multiply(A)
 
     P_indptr = np.empty_like(A.indptr)
-    amg_core.rs_direct_interpolation_pass1(A.shape[0], C.indptr, C.indices, 
+    amg_core.rs_direct_interpolation_pass1(A.shape[0], C.indptr, C.indices,
                                            splitting, P_indptr)
     nnz = P_indptr[-1]
     P_indices = np.empty(nnz, dtype=P_indptr.dtype)
@@ -93,7 +93,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
     theta : float in [0,1), default None
         theta value defining strong connections in a classical AMG
         sense. Provide if a different SOC is used for P than for
-        CF-splitting; otherwise, theta = None. 
+        CF-splitting; otherwise, theta = None.
     norm : string, default 'abs'
         Norm used in redefining classical SOC. Options are 'min' and
         'abs' for CSR matrices. See strength.py for more information.
@@ -160,5 +160,5 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
                                              A.data, C.indptr, C.indices,
                                              C.data, splitting, P_indptr,
                                              P_indices, P_data, modified)
-    
+
     return csr_matrix((P_data, P_indices, P_indptr), shape=[n,nc])

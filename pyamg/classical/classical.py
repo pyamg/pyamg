@@ -3,6 +3,7 @@
 
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+import numpy as np
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -12,7 +13,7 @@ from pyamg.strength import classical_strength_of_connection,\
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
        classical_interpolation
-from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
+from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc
 from pyamg.classical.cr import CR
 
 
@@ -176,7 +177,7 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     elif fn == 'direct':
         P = direct_interpolation(A, C, splitting, **kwargs)
     else:
-        raise ValueError('unknown interpolation method (%s)' % interpolation)
+        raise ValueError(f'Unknown interpolation method {interpolation}')
 
     # Generate the restriction matrix that maps from the fine-grid to the
     # coarse-grid
