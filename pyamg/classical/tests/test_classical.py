@@ -149,10 +149,8 @@ class TestSolverPerformance(TestCase):
             A = poisson(case, format='csr')
 
             for interp in ['direct', \
-                ('standard', {'modified': False}), \
-                ('standard', {'modified': True}), \
-                ('distance_two', {'plus_i': False}),
-                ('distance_two', {'plus_i': True})]:
+                ('classical', {'modified': False}), \
+                ('classical', {'modified': True})]:
 
                 np.random.seed(0)  # make tests repeatable
                 x = np.random.rand(A.shape[0])
@@ -294,7 +292,7 @@ def reference_classical_interpolation(A, S, splitting):
             Pj[Pp[i]] = i
             Px[Pp[i]] = 1
         
-        # Else compute standard interpolation weight
+        # Else compute classical interpolation weight
         else:
             rowstartA = A.indptr[i]
             rowendA   = A.indptr[i+1]
