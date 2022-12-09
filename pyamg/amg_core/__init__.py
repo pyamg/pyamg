@@ -28,9 +28,7 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           cr_helper, 
                           rs_classical_interpolation_pass1, rs_classical_interpolation_pass2,
                           remove_strong_FF_connections,
-                          distance_two_amg_interpolation_pass1, 
-                          extended_plusi_interpolation_pass2,
-                          extended_interpolation_pass2)
+                          distance_two_amg_interpolation_pass1)
 from .smoothed_aggregation import (symmetric_strength_of_connection, standard_aggregation,
                                    naive_aggregation,
                                    fit_candidates,
@@ -95,9 +93,6 @@ __all__ = [
     'rs_classical_interpolation_pass1',
     'rs_classical_interpolation_pass2',
     'remove_strong_FF_connections',
-    'distance_two_amg_interpolation_pass1', 
-    'extended_plusi_interpolation_pass2',
-    'extended_interpolation_pass2',
     #
     'symmetric_strength_of_connection',
     'standard_aggregation',
