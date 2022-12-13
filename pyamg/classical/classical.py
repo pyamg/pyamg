@@ -12,14 +12,14 @@ from pyamg.strength import classical_strength_of_connection,\
     distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, \
-       classical_interpolation
+    classical_interpolation
 from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc
 from pyamg.classical.cr import CR
 
 
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
-                       CF=('RS',{'second_pass': False}),
+                       CF=('RS', {'second_pass': False}),
                        interpolation='classical',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),

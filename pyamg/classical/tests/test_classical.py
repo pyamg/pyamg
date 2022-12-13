@@ -117,24 +117,24 @@ class TestRugeStubenFunctions(TestCase):
 
     def test_classical_interpolation(self):
         for A in self.cases:
-            # the reference code is very slow, so just take a small block of A 
+            # the reference code is very slow, so just take a small block of A
             mini = min(100, A.shape[0])
-            A = ((A.tocsr()[0:mini, :])[:,0:mini]).tocsr()
+            A = ((A.tocsr()[0:mini, :])[:, 0:mini]).tocsr()
 
             S = classical_strength_of_connection(A, 0.0)
             splitting = split.RS(S, second_pass=True)
 
             result = classical_interpolation(A, S, splitting, modified=False)
             expected = reference_classical_interpolation(A, S, splitting)
-            
+
             # elasticity produces large entries, so normalize
             Diff = result - expected
             Diff.data = abs(Diff.data)
             expected.data = 1./abs(expected.data)
             Diff = Diff.multiply(expected)
-            Diff.data[ Diff.data < 1e-7] = 0.0
+            Diff.data[Diff.data < 1e-7] = 0.0
             Diff.eliminate_zeros()
-            assert( Diff.nnz == 0)
+            assert (Diff.nnz == 0)
 
 
 class TestSolverPerformance(TestCase):
@@ -148,9 +148,9 @@ class TestSolverPerformance(TestCase):
         for case in cases:
             A = poisson(case, format='csr')
 
-            for interp in ['direct', \
-                ('classical', {'modified': False}), \
-                ('classical', {'modified': True})]:
+            for interp in ['direct',
+                           ('classical', {'modified': False}),
+                           ('classical', {'modified': True})]:
 
                 np.random.seed(0)  # make tests repeatable
                 x = np.random.rand(A.shape[0])
@@ -164,7 +164,7 @@ class TestSolverPerformance(TestCase):
                 del x_sol
 
                 avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
-                assert(avg_convergence_ratio < 0.20)
+                assert (avg_convergence_ratio < 0.20)
 
     def test_matrix_formats(self):
         warnings.simplefilter('ignore', SparseEfficiencyWarning)
@@ -276,8 +276,8 @@ def reference_classical_interpolation(A, S, splitting):
     S.data[:] = 1.0
     S = S.multiply(A)
     Pp = np.empty_like(A.indptr)
-    amg_core.rs_direct_interpolation_pass1(A.shape[0],
-                     S.indptr, S.indices, splitting, Pp)
+    amg_core.rs_direct_interpolation_pass1(A.shape[0], S.indptr, S.indices,
+                                           splitting, Pp)
     nnz = Pp[-1]
     Pj = np.empty(nnz, dtype=Pp.dtype)
     Px = np.empty(nnz, dtype=A.dtype)
@@ -285,19 +285,19 @@ def reference_classical_interpolation(A, S, splitting):
     F_NODE = 0
     C_NODE = 1
 
-    # Now, we implement the second pass in Python to double check the C++ code 
+    # Now, we implement the second pass in Python to double check the C++ code
     for i in range(A.shape[0]):
-        # If node is is a C-point, do injection 
-        if(splitting[i] == C_NODE):
+        # If node is is a C-point, do injection
+        if (splitting[i] == C_NODE):
             Pj[Pp[i]] = i
             Px[Pp[i]] = 1
-        
+
         # Else compute classical interpolation weight
         else:
             rowstartA = A.indptr[i]
-            rowendA   = A.indptr[i+1]
+            rowendA = A.indptr[i+1]
             rowstartS = S.indptr[i]
-            rowendS   = S.indptr[i+1]
+            rowendS = S.indptr[i+1]
 
             # Denominator = a_ii + sum_{m in weak connections} a_im
             denominator = sum(A.data[rowstartA:rowendA])
@@ -306,7 +306,7 @@ def reference_classical_interpolation(A, S, splitting):
 
             # Compute interpolation weights from strongly connected C-points
             nnz = Pp[i]
-            for jj in range(rowstartS, rowendS): 
+            for jj in range(rowstartS, rowendS):
                 Sj = S.indices[jj]
                 if (splitting[Sj] == C_NODE) and (Sj != i):
                     Pj[nnz] = Sj
@@ -318,26 +318,26 @@ def reference_classical_interpolation(A, S, splitting):
                             for ll in range(rowstartS, rowendS):
                                 Sl = S.indices[ll]
                                 if (splitting[Sl] == C_NODE) and (Sl != i):
-                                    for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
-                                        if ( A.indices[search_ind] == Sl ):
+                                    for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]):
+                                        if (A.indices[search_ind] == Sl):
                                             inner_denominator += A.data[search_ind]
-                            
-                            for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]): 
-                                if (A.indices[search_ind] == Sj) and (inner_denominator != 0.0):
-                                    numerator += (S.data[kk]*A.data[search_ind]/inner_denominator)
-                    
+
+                            for search_ind in range(A.indptr[Sk], A.indptr[Sk+1]):
+                                if (A.indices[search_ind] == Sj) and \
+                                   (inner_denominator != 0.0):
+                                    numerator += \
+                                        (S.data[kk]*A.data[search_ind]/inner_denominator)
+
                     Px[nnz] = -numerator/denominator
                     nnz += 1
-    
+
     reorder = np.zeros((A.shape[0],))
     cumulative = 0
     for i in range(A.shape[0]):
-        reorder[i]  = cumulative
+        reorder[i] = cumulative
         cumulative += splitting[i]
-    
+
     for i in range(Pp[A.shape[0]]):
         Pj[i] = reorder[Pj[i]]
-    
 
-    return  csr_matrix((Px, Pj, Pp)) 
-
+    return csr_matrix((Px, Pj, Pp))

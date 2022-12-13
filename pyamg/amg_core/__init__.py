@@ -26,7 +26,8 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           cljp_naive_splitting,
                           rs_direct_interpolation_pass1, rs_direct_interpolation_pass2,
                           cr_helper,
-                          rs_classical_interpolation_pass1, rs_classical_interpolation_pass2,
+                          rs_classical_interpolation_pass1,
+                          rs_classical_interpolation_pass2,
                           remove_strong_FF_connections)
 from .smoothed_aggregation import (symmetric_strength_of_connection, standard_aggregation,
                                    naive_aggregation,
@@ -103,4 +104,3 @@ __all__ = [
     'truncate_rows_csr'
     #
 ]
-
