@@ -546,6 +546,51 @@ void _block_gauss_seidel(
 }
 
 template<class I, class T, class F>
+void _block_gauss_seidel_indexed(
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+       py::array_t<T> & b,
+      py::array_t<T> & Tx,
+ py::array_t<I> & indices,
+        const I row_start,
+         const I row_stop,
+         const I row_step,
+        const I blocksize
+                                 )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_b = b.unchecked();
+    auto py_Tx = Tx.unchecked();
+    auto py_indices = indices.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    const T *_b = py_b.data();
+    const T *_Tx = py_Tx.data();
+    const I *_indices = py_indices.data();
+
+    return block_gauss_seidel_indexed<I, T, F>(
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                      _Tx, Tx.shape(0),
+                 _indices, indices.shape(0),
+                row_start,
+                 row_stop,
+                 row_step,
+                blocksize
+                                               );
+}
+
+template<class I, class T, class F>
 void _extract_subblocks(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
@@ -660,6 +705,7 @@ PYBIND11_MODULE(relaxation, m) {
     block_jacobi
     block_jacobi_indexed
     block_gauss_seidel
+    block_gauss_seidel_indexed
     extract_subblocks
     overlapping_schwarz_csr
     )pbdoc";
@@ -1146,7 +1192,7 @@ Perform one iteration of block Jacobi relaxation on the linear
      b[]        - right hand side
      Tx[]       - Inverse of each diagonal block of A stored
                   as a (n/blocksize, blocksize, blocksize) array
-     indices[]  -
+     indices[]  - Block indices over which to relax
      omega      - damping parameter
      blocksize  - dimension of sqare blocks in BSR matrix A
 
@@ -1192,6 +1238,33 @@ row_step : int
     stride used during the sweep (may be negative)
 blocksize : int
     dimension of square blocks in BSR matrix A)pbdoc");
+
+    m.def("block_gauss_seidel_indexed", &_block_gauss_seidel_indexed<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel_indexed", &_block_gauss_seidel_indexed<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel_indexed", &_block_gauss_seidel_indexed<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel_indexed", &_block_gauss_seidel_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
+R"pbdoc(
+Perform one iteration of block Gauss-Seidel relaxation on the
+linear system Ax = b, for a given set of (block) row indices.
+A is stored in BSR format and x and b are column vectors.
+
+ Parameters
+     Ap[]       - BSR row pointer
+     Aj[]       - BSR index array
+     Ax[]       - BSR data array, blocks assumed square
+     x[]        - approximate solution
+     b[]        - right hand side
+     Tx[]       - Inverse of each diagonal block of A stored
+                  as a (n/blocksize, blocksize, blocksize) array
+     indices[]  - Block indices over which to relax
+     blocksize  - dimension of sqare blocks in BSR matrix A
+
+ Returns:
+     Nothing, x will be modified in place)pbdoc");
 
     m.def("extract_subblocks", &_extract_subblocks<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
