@@ -66,42 +66,34 @@ def air_solver(A,
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
         considered "small" if |a_ij| < tol |a_ii|.
-    coarse_grid_P : {string} : default None
-        Option to specify a different construction of P used in computing RAP
-        vs. for interpolation in an actual solve.
     max_levels: {integer} : default 20
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer} : default 20
         Maximum number of variables permitted on the coarse grid.
     keep: {bool} : default False
-        Flag to indicate keeping extra operators in the hierarchy for
-        diagnostics.  For example, if True, then strength of connection (C) and
-        tentative prolongation (T) are kept.
+        Flag to indicate keeping strength of connection matrix (C) in 
+        hierarchy.
 
     Returns
     -------
     ml : multilevel_solver
         Multigrid hierarchy of matrices and prolongation operators
 
-    Other Parameters
-    ----------------
-    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
-        Solver used at the coarsest level of the MG hierarchy.
-            Optionally, may be a tuple (fn, args), where fn is a string such as
-        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
-        arguments to be passed to fn.
-
-    Notes
-    -----
-
     References
     ----------
-    .. [1] 
+    [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
+    (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM 
+    Journal on Scientific Computing, 41(5), S242-S268. 
+
+    [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
+    Nonsymmetric algebraic multigrid based on local approximate ideal
+    restriction (lAIR). SIAM Journal on Scientific Computing, 40(6),
+    A4105-A4130.
 
     See Also
     --------
     aggregation.smoothed_aggregation_solver, multilevel_solver,
-    aggregation.rootnode_solver
+    aggregation.rootnode_solver, ruge_stuben_solver
 
     """
 
@@ -183,10 +175,6 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
         splitting = CLJPc(C, **kwargs)
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
-    elif fn == 'weighted_matching':
-        splitting, soc = weighted_matching(C, **kwargs)
-        if soc is not None:
-            C = soc
     else:
         raise ValueError('unknown C/F splitting method (%s)' % CF)
 
@@ -211,9 +199,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
-    if fn is None:
-        R = P.T
-    elif fn == 'air':
+    if fn == 'air':
         R = local_air(A, splitting, **kwargs)
     else:
         raise ValueError('unknown restriction method (%s)' % restrict)
