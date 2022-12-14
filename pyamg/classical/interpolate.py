@@ -1,7 +1,7 @@
 """Classical AMG Interpolation methods."""
 
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_csr, \
+from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
     isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
 
 from .. import amg_core
