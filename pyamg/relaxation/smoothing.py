@@ -877,8 +877,6 @@ def setup_fc_block_gauss_seidel(lvl, f_iterations=DEFAULT_NITER, c_iterations=DE
     if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
         raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
 
-    if blocksize == 1:
-
     Fpts, Cpts = _extract_splitting(lvl)
 
     # Use Block FC Gauss Seidel
