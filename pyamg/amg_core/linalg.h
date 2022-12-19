@@ -195,6 +195,23 @@ inline void norm(const T x[], const I n, F &normx)
     normx = sqrt(real(dot_prod(x,x,n)));
 }
 
+/* norm(x, n)
+ *
+ * Parameters
+ * ----------
+ * x : array
+ *     n-vector
+ * n : int
+ *     size of x and y
+ * normx : float
+ *     output value
+ *
+ * Returns
+ * -------
+ * float
+ *     sqrt( <x, x> )
+ *
+ */
 template<class I, class T>
 inline T norm(const T x[], const I n)
 {
@@ -1130,22 +1147,22 @@ void filter_matrix_rows(const I n_row,
  * 
  * Parameters
  * ----------
- *        A : double array
- *            2d matrix A stored in 1d column- or row-major.
- *        m : &int
- *            Number of rows in A
- *        n : &int
- *            Number of columns in A
- *        is_col_major : bool
- *            True if A is stored in column-major, false
- *            if A is stored in row-major.
+ * A : double array
+ *     2d matrix A stored in 1d column- or row-major.
+ * m : &int
+ *     Number of rows in A
+ * n : &int
+ *     Number of columns in A
+ * is_col_major : bool
+ *     True if A is stored in column-major, false
+ *     if A is stored in row-major.
  *
  * Returns
  * -------
- *        Q : vector<double>
- *            Matrix Q stored in same format as A.
- *        R : in-place
- *            R is stored over A in place, in same format.
+ * Q : vector<double>
+ *     Matrix Q stored in same format as A.
+ * R : in-place
+ *     R is stored over A in place, in same format.
  * 
  * Notes
  * ------
@@ -1251,29 +1268,29 @@ std::vector<T> QR(T A[],
  * 
  * Parameters
  * ----------
- *        R : double array, length m*n
- *            Upper-triangular array stored in column- or row-major.
- *        rhs : double array, length m
- *            Right hand side of linear system
- *        x : double array, length n
- *            Preallocated array for solution
- *        m : &int
- *            Number of rows in R
- *        n : &int
- *            Number of columns in R
- *        is_col_major : bool
- *            True if R is stored in column-major, false
- *            if R is stored in row-major.
+ * R : double array, length m*n
+ *     Upper-triangular array stored in column- or row-major.
+ * rhs : double array, length m
+ *     Right hand side of linear system
+ * x : double array, length n
+ *     Preallocated array for solution
+ * m : &int
+ *     Number of rows in R
+ * n : &int
+ *     Number of columns in R
+ * is_col_major : bool
+ *     True if R is stored in column-major, false
+ *     if R is stored in row-major.
  *
  * Returns
  * -------
- *        Nothing, solution is stored in x[].
+ * Nothing, solution is stored in x[].
  *
  * Notes
  * -----
  * R need not be square, the system will be solved over the
- * rank r upper-triangular block. If remaining entries in
- * solution are unused, they will be set to zero. If a zero
+ * upper-triangular block of size min(m,n). If remaining entries
+ * insolution are unused, they will be set to zero. If a zero
  * is encountered on the ith diagonal, x[i] is set to zero. 
  *
  */        
@@ -1323,29 +1340,29 @@ void upper_tri_solve(const T R[],
  * 
  * Parameters
  * ----------
- *        L : double array, length m*n
- *            Lower-triangular array stored in column- or row-major.
- *        rhs : double array, length m
- *            Right hand side of linear system
- *        x : double array, length n
- *            Preallocated array for solution
- *        m : &int
- *            Number of rows in L
- *        n : &int
- *            Number of columns in L
- *        is_col_major : bool
- *            True if L is stored in column-major, false
- *            if L is stored in row-major.
+ * L : double array, length m*n
+ *     Lower-triangular array stored in column- or row-major.
+ * rhs : double array, length m
+ *     Right hand side of linear system
+ * x : double array, length n
+ *     Preallocated array for solution
+ * m : &int
+ *     Number of rows in L
+ * n : &int
+ *     Number of columns in L
+ * is_col_major : bool
+ *     True if L is stored in column-major, false
+ *     if L is stored in row-major.
  *
  * Returns
  * -------
- *        Nothing, solution is stored in x[].
+ * Nothing, solution is stored in x[].
  *
  * Notes
  * -----
  * L need not be square, the system will be solved over the
- * rank r lower-triangular block. If remaining entries in
- * solution are unused, they will be set to zero. If a zero
+ * lower-triangular block of size min(m,n). If remaining entries
+ * in solution are unused, they will be set to zero. If a zero
  * is encountered on the ith diagonal, x[i] is set to zero. 
  *
  *
@@ -1395,24 +1412,24 @@ void lower_tri_solve(const T L[],
  *
  * Parameters
  * ----------
- *        A : double array, length m*n
- *            2d array stored in column- or row-major.
- *        b : double array, length m
- *            Right hand side of unconstrained problem.
- *        x : double array, length n
- *            Container for solution
- *        m : &int
- *            Number of rows in A
- *        n : &int
- *            Number of columns in A
- *        is_col_major : bool
- *            True if A is stored in column-major, false
- *            if A is stored in row-major.
+ * A : double array, length m*n
+ *     2d array stored in column- or row-major.
+ * b : double array, length m
+ *     Right hand side of unconstrained problem.
+ * x : double array, length n
+ *     Container for solution
+ * m : &int
+ *     Number of rows in A
+ * n : &int
+ *     Number of columns in A
+ * is_col_major : bool
+ *     True if A is stored in column-major, false
+ *     if A is stored in row-major.
  *
  * Returns
  * -------
- *         x : vector<double>
- *            Solution to constrained least sqaures problem.
+ * x : vector<double>
+ *    Solution to constrained least sqaures problem.
  *
  * Notes
  * -----
