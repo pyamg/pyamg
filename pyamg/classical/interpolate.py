@@ -183,6 +183,21 @@ def injection_interpolation(A, splitting):
     Returns
     -------
     NxNc interpolation operator, P
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.interpolate import injection_interpolation
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> P = injection_interpolation(A, splitting)
+    >>> print(P.todense())
+    [[1. 0. 0.]
+     [0. 0. 0.]
+     [0. 1. 0.]
+     [0. 0. 0.]
+     [0. 0. 1.]]
     """
     if isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
@@ -222,16 +237,31 @@ def one_point_interpolation(A, C, splitting, by_val=False):
         NxN matrix in CSR format
     C : {csr_matrix}
         Strength-of-Connection matrix (does not need zero diagonal)
+    splitting : array
+        C/F splitting stored in an array of length N
     by_val : bool
         For CSR matrices only right now, use values of -Afc in interp as an
         approximation to P_ideal. If false, F-points are interpolated by value
         with weight 1.
-    splitting : array
-        C/F splitting stored in an array of length N
 
     Returns
     -------
     NxNc interpolation operator, P
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.interpolate import one_point_interpolation
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> P = one_point_interpolation(A, A, splitting)
+    >>> print(P.todense())
+    [[1. 0. 0.]
+     [1. 0. 0.]
+     [0. 1. 0.]
+     [0. 1. 0.]
+     [0. 0. 1.]]
     """
     if isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
@@ -253,8 +283,6 @@ def one_point_interpolation(A, C, splitting, by_val=False):
     P_colinds = np.empty((n,),dtype=A.indptr.dtype)
     P_data = np.empty((n,),dtype=A.dtype)
 
-    #amg_core.one_point_interpolation(P_rowptr, P_colinds, A.indptr,
-    #                                 A.indices, A.data, splitting)
     if blocksize == 1:
         if by_val:
             amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, A.indptr,
@@ -282,7 +310,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : {csr_matrix, bsr_matrix}
         NxN matrix in CSR or BSR format
     splitting : array
         C/F splitting stored in an array of length N
@@ -293,7 +321,8 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
         Expand sparsity pattern for R by considering strongly connected
         neighbors within 'degree' of a given node. Only supports degree 1 and 2.
     use_gmres : bool
-        Solve local linear system for each row of R using GMRES
+        Solve local linear system for each row of R using GMRES.  If False, use
+        direct solve.
     maxiter : int
         Maximum number of GMRES iterations
     precondition : bool
@@ -305,7 +334,20 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     Notes
     -----
-    - Supports block bsr matrices as well.
+    - Supports BSR (block) matrices, in addition to CSR.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.interpolate import local_air
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> R = local_air(A, splitting)
+    >>> print(R.todense())
+    [[1.  0.5 0.  0.  0. ]
+     [0.  0.5 1.  0.5 0. ]
+     [0.  0.  0.  0.5 1. ]]
     """
 
     # Get SOC matrix containing neighborhood to be included in local solve
