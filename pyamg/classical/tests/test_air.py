@@ -6,11 +6,12 @@ import numpy as np
 from numpy.testing import TestCase
 from scipy.sparse import csr_matrix, bsr_matrix, diags
 from pyamg.classical.air import air_solver
+from pyamg.gallery import poisson
 
 # 2-level reduction on 1d upwind advection should be exact in
 # one iteration; test on scalar and block bidiagonal matrix.
 class TestAIR(TestCase):
-    def test_poisson(self):
+    def test_upwind_advection(self):
         sizes = []
         sizes.append(100)
         sizes.append(275)
@@ -48,3 +49,31 @@ class TestAIR(TestCase):
             x_sol = ml.solve(bb, x0=xb, maxiter=1, tol=1e-12, residuals=res)
             del x_sol
             assert(res[1] < 1e-12)
+
+    def test_poisson(self):
+        cases = []
+
+        cases.append(((500,), 0.001))
+        cases.append(((50,50), 0.7))
+        for case, expected_speed in cases:
+            A = poisson(case, format='csr')
+
+            for interp in ['direct', 'inject', 'one_point',
+                           ('classical', {'modified': False}),
+                           ('classical', {'modified': True})]:
+                for restrict in [('air', {'theta': 0.05, 'degree': 1}), 
+                                 ('air', {'theta': 0.05, 'degree': 2})]:
+
+                    np.random.seed(0)  # make tests repeatable
+                    x = np.random.rand(A.shape[0])
+                    b = A*np.random.rand(A.shape[0])  # zeros_like(x)
+
+                    ml = air_solver(A, interpolation=interp, restrict=restrict, max_coarse=50)
+
+                    res = []
+                    x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-12,
+                                     residuals=res)
+                    del x_sol
+
+                    avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
+                    assert (avg_convergence_ratio < expected_speed)
