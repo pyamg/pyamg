@@ -164,7 +164,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
         C = classical_strength_of_connection(A, **kwargs)
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
-    elif (fn == 'ode') or (fn == 'evolution'):
+    elif fn in ('ode', 'evolution'):
         C = evolution_strength_of_connection(A, **kwargs)
     elif fn == 'energy_based':
         C = energy_based_strength_of_connection(A, **kwargs)
