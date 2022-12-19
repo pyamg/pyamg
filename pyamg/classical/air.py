@@ -36,19 +36,19 @@ def air_solver(A,
                filter_operator=None,
                max_levels=20, max_coarse=20,
                keep=False, **kwargs):
-    """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
+    """Create a multilevel solver using approximate ideal restriction (AIR) AMG
 
     Parameters
     ----------
     A : csr_matrix
-        Square nonsymmetric matrix in CSR format
+        Square (non)symmetric matrix in CSR format
     strength : ['symmetric', 'classical', 'evolution', 'distance',
                 'algebraic_distance','affinity', 'energy_based', None]
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
-    CF : {string} : default 'RS'
+    CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interp : {string} : default 'one-point'
@@ -58,10 +58,10 @@ def air_solver(A,
         with inner options specifying degree, strength tolerance, etc.
     presmoother : {string or dict} : default None
         Method used for presmoothing at each level.  Method-specific parameters
-        may be passed in using a tuple. presmoother=None is the default.
-    postsmoother : {string or dict} : default F-Jacobi
+        may be passed in using a tuple.
+    postsmoother : {string or dict}
         Postsmoothing method with the same usage as presmoother. 
-        postsmoother=('fc_jacobi', ... ) is the default.
+        postsmoother=('fc_jacobi', ... ) with 2 F-sweeps, 1 C-sweep is default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
         considered "small" if |a_ij| < tol |a_ii|.
@@ -77,6 +77,24 @@ def air_solver(A,
     -------
     ml : multilevel_solver
         Multigrid hierarchy of matrices and prolongation operators
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg import air_solver
+    >>> A = poisson((10,),format='csr')
+    >>> ml = air_solver(A,max_coarse=3)
+
+    Notes
+    -----
+    "coarse_solver" is an optional argument and is the solver used at the
+    coarsest grid.  The default is a pseudo-inverse.  Most simply,
+    coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
+    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
+    (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
+    function, and args is a dictionary of arguments to be passed to fn.
+    See [2001TrOoSc]_ for additional details.
+
 
     References
     ----------
