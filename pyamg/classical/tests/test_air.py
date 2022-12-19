@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 
-from numpy.testing import TestCase
+from numpy.testing import TestCase, assert_array_almost_equal
 from scipy.sparse import csr_matrix, bsr_matrix, diags
 from pyamg.classical.air import air_solver
 from pyamg.gallery import poisson
@@ -77,3 +77,47 @@ class TestAIR(TestCase):
 
                     avg_convergence_ratio = (res[-1]/res[0])**(1.0/len(res))
                     assert (avg_convergence_ratio < expected_speed)
+
+    def test_injection_interpolation(self):
+        from pyamg.classical.interpolate import injection_interpolation
+        A = poisson((5,),format='csr')
+        splitting = np.array([1,0,1,0,1], dtype='intc')
+        P = injection_interpolation(A, splitting)
+        P_exact = np.array([[1., 0., 0.],
+                            [0., 0., 0.],
+                            [0., 1., 0.],
+                            [0., 0., 0.],
+                            [0., 0., 1.]])
+        assert_array_almost_equal(P.toarray(), P_exact)
+
+    def test_one_point_interpolation(self):
+        from pyamg.classical.interpolate import one_point_interpolation
+        A = poisson((5,),format='csr')
+        splitting = np.array([1,0,1,0,1], dtype='intc')
+        P = one_point_interpolation(A, A, splitting)
+        P_exact = np.array([[1., 0., 0.],
+                            [1., 0., 0.],
+                            [0., 1., 0.],
+                            [0., 1., 0.],
+                            [0., 0., 1.]])
+        assert_array_almost_equal(P.toarray(), P_exact)
+
+    def test_air_restrict(self):
+        from pyamg.classical.interpolate import local_air
+        A = poisson((5,),format='csr')
+        splitting = np.array([1,0,1,0,1], dtype='intc')
+        R = local_air(A, splitting)
+        R_exact = np.array([[1.,  0.5, 0.,  0.,  0.],
+                            [0.,  0.5, 1.,  0.5, 0.],
+                            [0.,  0.,  0.,  0.5, 1.]])
+        assert_array_almost_equal(R.toarray(), R_exact)
+
+        A = poisson( (3,3), format='csr')
+        splitting = np.array([1,0,1,0,1,0,1,0,1], dtype='intc')
+        R = local_air(A, splitting)
+        R_exact = np.array([[1., 0.25, 0., 0.25, 0., 0.  , 0., 0.  , 0.],
+                            [0., 0.25, 1., 0.  , 0., 0.25, 0., 0.  , 0.],
+                            [0., 0.25, 0., 0.25, 1., 0.25, 0., 0.25, 0.],
+                            [0., 0.  , 0., 0.25, 0., 0.  , 1., 0.25, 0.],
+                            [0., 0.  , 0., 0.  , 0., 0.25, 0., 0.25, 1.]])
+        assert_array_almost_equal(R.toarray(), R_exact)
