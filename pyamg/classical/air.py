@@ -27,7 +27,7 @@ __all__ = ['air_solver']
 def air_solver(A,
                strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
-               interp='one_point',
+               interpolation='one_point',
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
                postsmoother=('fc_jacobi', {'omega': 1.0, 'iterations': 1,
@@ -51,7 +51,7 @@ def air_solver(A,
     CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interp : {string} : default 'one-point'
+    interpolation : {string} : default 'one-point'
         Options include 'direct', 'classical', 'inject' and 'one-point'.
     restrict : {string} : default distance-2 AIR, with theta = 0.05.
         Option is 'air' for local approximate ideal restriction (lAIR),
@@ -123,7 +123,7 @@ def air_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        bottom = extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator,
+        bottom = extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_operator,
                                   keep)
         if bottom:
             break
@@ -133,7 +133,7 @@ def air_solver(A,
     return ml
 
 
-def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, keep):
+def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_operator, keep):
     """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):
@@ -202,7 +202,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
-    fn, kwargs = unpack_arg(interp)
+    fn, kwargs = unpack_arg(interpolation)
     if fn == 'classical':
         P = classical_interpolation(A, C, splitting, **kwargs)
     elif fn == 'direct':
@@ -212,7 +212,7 @@ def extend_hierarchy(levels, strength, CF, interp, restrict, filter_operator, ke
     elif fn == 'inject':
         P = injection_interpolation(A, splitting, **kwargs)
     else:
-        raise ValueError('unknown interpolation method (%s)' % interp)
+        raise ValueError('unknown interpolation method (%s)' % interpolation)
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
