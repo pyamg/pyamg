@@ -51,7 +51,7 @@ def air_solver(A,
     CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interpolation : {string} : default 'one-point'
+    interpolation : {string} : default 'one_point'
         Options include 'direct', 'classical', 'inject' and 'one-point'.
     restrict : {string} : default distance-2 AIR, with theta = 0.05.
         Option is 'air' for local approximate ideal restriction (lAIR),
