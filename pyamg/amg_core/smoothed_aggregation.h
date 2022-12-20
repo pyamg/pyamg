@@ -304,18 +304,28 @@ I naive_aggregation(const I n_row,
 /*
  * Compute aggregates for a matrix S stored in CSR format
  *
- * Parameters:
- *   n_row         - number of rows in S
- *   Sp[n_row + 1] - CSR row pointer
- *   Sj[nnz]       - CSR column indices
- *   Sx[nnz]       - CSR data array
- *    x[n_row]     - aggregate numbers for each node
- *    y[n_row]     - will hold Cpts upon return
+ * Parameters
+ * ----------
+ * n_row : int
+ *     number of rows in S
+ * Sp : array, n_row+1
+ *     CSR row pointer
+ * Sj : array, nnz
+ *     CSR column indices
+ * Sx : array, nnz
+ *     CSR data array
+ * x : array, n_row, inplace
+ *     aggregate numbers for each node
+ * y : array, n_row, inplace
+ *     will hold Cpts upon return
  *
- * Returns:
+ * Returns
+ * -------
+ * int
  *  The number of aggregates (== max(x[:]) + 1 )
  *
- * Notes:
+ * Notes
+ * -----
  * S is the strength matrix. Assumes that the strength matrix is for
  * classic strength with min norm.
  */

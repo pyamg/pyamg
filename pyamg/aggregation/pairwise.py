@@ -56,6 +56,15 @@ def pairwise_solver(A,
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
 
+    Other Parameters
+    ----------------
+    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+        Solver used at the coarsest level of the MG hierarchy.
+        Optionally, may be a tuple (fn, args), where fn is a string such as
+        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        arguments to be passed to fn.
+
+
     Returns
     -------
     ml : multilevel_solver
@@ -97,6 +106,8 @@ def pairwise_solver(A,
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+    if np.iscomplexobj(A.data):
+        raise ValueError('Pairwise solver not verified for complex matrices')
 
     # Levelize the user parameters, so that they become lists describing the
     # desired user option on each level.
