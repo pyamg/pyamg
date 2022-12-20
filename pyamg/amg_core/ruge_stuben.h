@@ -687,7 +687,7 @@ void cljp_naive_splitting(const I n,
  *     Strength matrix column index array
  * splitting : array
  *     C/F splitting
- * Pb : array, inplace
+ * Pp : array, inplace
  *     Row pointer array
  *
  * References
@@ -700,10 +700,10 @@ void rs_direct_interpolation_pass1(const I n_nodes,
                                    const I Sp[], const int Sp_size,
                                    const I Sj[], const int Sj_size,
                                    const I splitting[], const int splitting_size,
-                                         I Pb[], const int Pb_size)
+                                         I Pp[], const int Pp_size)
 {
     I nnz = 0;
-    Pb[0] = 0;
+    Pp[0] = 0;
     for(I i = 0; i < n_nodes; i++){
         if( splitting[i] == C_NODE ){
             nnz++;
@@ -713,7 +713,7 @@ void rs_direct_interpolation_pass1(const I n_nodes,
                     nnz++;
             }
         }
-        Pb[i+1] = nnz;
+        Pp[i+1] = nnz;
     }
 }
 
@@ -727,15 +727,15 @@ void rs_direct_interpolation_pass2(const I n_nodes,
                                    const I Sj[], const int Sj_size,
                                    const T Sx[], const int Sx_size,
                                    const I splitting[], const int splitting_size,
-                                   const I Pb[], const int Pb_size,
+                                   const I Pp[], const int Pp_size,
                                          I Pj[], const int Pj_size,
                                          T Px[], const int Px_size)
 {
 
     for(I i = 0; i < n_nodes; i++){
         if(splitting[i] == C_NODE){
-            Pj[Pb[i]] = i;
-            Px[Pb[i]] = 1;
+            Pj[Pp[i]] = i;
+            Px[Pp[i]] = 1;
         } else {
             T sum_strong_pos = 0, sum_strong_neg = 0;
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
@@ -771,7 +771,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
             T neg_coeff = -alpha/diag;
             T pos_coeff = -beta/diag;
 
-            I nnz = Pb[i];
+            I nnz = Pp[i];
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                 if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
                     Pj[nnz] = Sj[jj];
@@ -791,7 +791,7 @@ void rs_direct_interpolation_pass2(const I n_nodes,
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < Pb[n_nodes]; i++){
+    for(I i = 0; i < Pp[n_nodes]; i++){
         Pj[i] = map[Pj[i]];
     }
 }
