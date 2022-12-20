@@ -1,11 +1,11 @@
 """Aggregation methods."""
 
 
+from warnings import warn
 import numpy as np
 from scipy import sparse
 from .. import amg_core
 from ..graph import lloyd_cluster
-from warnings import warn
 from ..strength import classical_strength_of_connection
 
 
@@ -232,14 +232,13 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     method. Electronic transactions on numerical analysis, 37(6),
     123-146.
     """
-
     # Get SOC matrix
     if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
         try:
             A = A.tocsr()
-            warn("Implicit conversion of A to csr", sparse.SparseEfficiencyWarning)
+            warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         except BaseException as e:
-            raise TypeError("Invalid matrix type, must be CSR or BSR.") from e
+            raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     index_type = A.indptr.dtype
     Ac = A      # Let Ac reference A for loop purposes
@@ -247,7 +246,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     Cpts = None
 
     # Loop over the number of pairwise matchings to be done
-    for i in range(0,matchings):
+    for i in range(0, matchings):
 
         # Compute SOC matrix for this matching
         if sparse.isspmatrix_bsr(A):
@@ -275,7 +274,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         else:
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
-            # If A is not BSR, 
+            # If A is not BSR
             if not sparse.isspmatrix_bsr(A):
                 Tx = np.ones(len(Tj), dtype='int8')
                 T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
@@ -292,7 +291,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
                 T = sparse.bsr_matrix(T * T_temp)
             else:
                 T = sparse.csr_matrix(T * T_temp)
-        
+
         # Break loop if zero aggregates were found
         if num_aggregates == 0:
             break

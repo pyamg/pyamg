@@ -5,12 +5,11 @@ from scipy import sparse
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import (symmetric_strength_of_connection,
-    classical_strength_of_connection)
+                            classical_strength_of_connection)
 from pyamg.aggregation.aggregate import (standard_aggregation, naive_aggregation,
-    pairwise_aggregation)
+                                         pairwise_aggregation)
 
-from numpy.testing import TestCase, assert_equal
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
 
 class TestAggregate(TestCase):
@@ -69,7 +68,7 @@ class TestAggregate(TestCase):
         assert_equal(Cpts.shape[0], 4)
 
     def test_pairwise_aggregation(self):
-        for i, A in enumerate(self.cases):
+        for A in self.cases:
             S = classical_strength_of_connection(A, theta=0.25, norm='min')
             (expected, expected_Cpts) = reference_pairwise_aggregation(S)
             (result, Cpts) = pairwise_aggregation(A, matchings=1, theta=0.25, norm='min')
@@ -221,7 +220,7 @@ def reference_pairwise_aggregation(C):
     aggregate_count = 0               # aggregate_count is the aggregate counter
     Cpts = []
     m = np.zeros(n, dtype=C.indices.dtype)
-    for i, row in enumerate(S):
+    for row in S:
         m[row] = m[row] + 1
 
     max_m = max(m)
@@ -276,7 +275,7 @@ def reference_pairwise_aggregation(C):
         count += len(aggregate_set)
         aggregate_count += 1
 
-    assert(np.unique(R).shape[0] == n)
+    assert (np.unique(R).shape[0] == n)
 
     Pj = aggregates
     Pp = np.arange(n+1)

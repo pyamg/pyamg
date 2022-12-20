@@ -8,29 +8,20 @@ from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize,\
-    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
-from pyamg.strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    energy_based_strength_of_connection, distance_strength_of_connection,\
-    algebraic_distance, affinity_distance
+from pyamg.util.utils import get_blocksize, levelize_strength_or_aggregation
 from .aggregate import pairwise_aggregation
-from .tentative import fit_candidates
-
-from ..relaxation.utils import relaxation_as_linear_operator
-
 
 __all__ = ['pairwise_solver']
 
 
 def pairwise_solver(A,
                     aggregate=('pairwise', {'theta': 0.25,
-                        'norm':'min', 'matchings': 2}),
+                               'norm': 'min', 'matchings': 2}),
                     presmoother=('block_gauss_seidel',
                                  {'sweep': 'symmetric'}),
                     postsmoother=('block_gauss_seidel',
                                   {'sweep': 'symmetric'}),
-                    max_levels = 20, max_coarse = 10,
+                    max_levels=20, max_coarse=10,
                     **kwargs):
     """
     Create a multilevel solver using Pairwise Aggregation.
@@ -129,9 +120,7 @@ def pairwise_solver(A,
 
 
 def _extend_hierarchy(levels, aggregate):
-    """Extend the multigrid hierarchy.
-
-    """
+    """Extend the multigrid hierarchy."""
     def unpack_arg(v):
         if isinstance(v, tuple):
             return v[0], v[1]

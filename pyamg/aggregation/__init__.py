@@ -17,4 +17,4 @@ __all__ = ['adaptive_sa_solver',
            'fit_candidates',
            'jacobi_prolongation_smoother', 'richardson_prolongation_smoother',
            'energy_prolongation_smoother',
-           'rootnode_solver', pairwise_solver]
+           'rootnode_solver', 'pairwise_solver']
