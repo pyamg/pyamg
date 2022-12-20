@@ -47,7 +47,6 @@ instantiate:
     - apply_absolute_distance_filter
     - min_blocks
     - classical_strength_of_connection_min
-    - rs_standard_interpolation_pass2
     - remove_strong_FF_connections
     - rs_classical_interpolation_pass2
 
