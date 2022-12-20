@@ -11,7 +11,6 @@ class TestPairwise(TestCase):
 
     def test_spd(self):
         cases = []
-        import pdb; pdb.set_trace()
         cases.append(poisson((500,), format='csr'))
         cases.append(poisson((50, 50), format='csr'))
         #cases.append(linear_elasticity((7, 7), format='bsr')[0])
