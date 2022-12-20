@@ -107,7 +107,10 @@ def ruge_stuben_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        _extend_hierarchy(levels, strength, CF, interpolation, keep)
+        bottom = _extend_hierarchy(levels, strength, CF, interpolation, keep)
+
+        if bottom:
+            break
 
     ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -167,7 +170,7 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     # Return early, do not add another coarse level
     num_fpts = np.sum(splitting)
     if (num_fpts == len(splitting)) or (num_fpts == 0):
-        return
+        return True
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
@@ -195,3 +198,4 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     levels.append(MultilevelSolver.Level())
     A = R * A * P
     levels[-1].A = A
+    return False
