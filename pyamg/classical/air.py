@@ -1,6 +1,4 @@
 """Approximate ideal restriction AMG."""
-from __future__ import absolute_import
-
 __docformat__ = 'restructuredtext en'
 
 from copy import deepcopy
