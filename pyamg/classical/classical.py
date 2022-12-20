@@ -8,13 +8,12 @@ import numpy as np
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection, energy_based_strength_of_connection, \
+    symmetric_strength_of_connection, evolution_strength_of_connection,\
+    distance_strength_of_connection, energy_based_strength_of_connection,\
     algebraic_distance, affinity_distance
-from pyamg.classical.interpolate import direct_interpolation, \
-    classical_interpolation
-from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc
-from pyamg.classical.cr import CR
+from pyamg.classical.interpolate import direct_interpolation, classical_interpolation
+from . import split
+from .cr import CR
 
 
 def ruge_stuben_solver(A,
@@ -150,15 +149,15 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
     if fn == 'RS':
-        splitting = RS(C, **kwargs)
+        splitting = split.RS(C, **kwargs)
     elif fn == 'PMIS':
-        splitting = PMIS(C, **kwargs)
+        splitting = split.PMIS(C, **kwargs)
     elif fn == 'PMISc':
-        splitting = PMISc(C, **kwargs)
+        splitting = split.PMISc(C, **kwargs)
     elif fn == 'CLJP':
-        splitting = CLJP(C, **kwargs)
+        splitting = split.CLJP(C, **kwargs)
     elif fn == 'CLJPc':
-        splitting = CLJPc(C, **kwargs)
+        splitting = split.CLJPc(C, **kwargs)
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
