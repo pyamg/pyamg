@@ -129,7 +129,7 @@ def _extend_hierarchy(levels, aggregate):
     A = levels[-1].A
 
     # Compute pairwise interpolation and restriction matrices, R=P^*
-    fn, kwargs = unpack_arg(aggregate[len(levels)-1])
+    _, kwargs = unpack_arg(aggregate[len(levels)-1])
     P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
     R = P.H
     if isspmatrix_csr(P):

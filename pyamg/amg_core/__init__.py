@@ -97,6 +97,7 @@ __all__ = [
     'symmetric_strength_of_connection',
     'standard_aggregation',
     'naive_aggregation',
+    'pairwise_aggregation',
     'fit_candidates',
     'satisfy_constraints_helper',
     'calc_BtB',
