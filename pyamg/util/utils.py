@@ -2178,17 +2178,3 @@ def scale_block_inverse(A, blocksize):
     scale = bsr_matrix((Dinv, np.arange(0,N_block), np.arange(0,N_block+1)),
                         blocksize=[blocksize,blocksize], shape=A.shape)
     return scale * A, scale
-
-
-# Get the square diagonal blocks of csr_matrix A
-# where the row start indices of the blocks are stored in block_starts
-def extract_diagonal_blocks(A, block_starts):
-
-    # Will return a list of csr matrices
-    A_diag = []
-
-    for block in range(len(block_starts) - 1):
-        A_diag.append( A[ block_starts[block]:block_starts[block+1] , \
-                          block_starts[block]:block_starts[block+1] ] )
-
-    return A_diag

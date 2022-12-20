@@ -96,20 +96,6 @@ void one_point_interpolation(      I Pp[],    const int Pp_size,
 }
 
 
-
-/* Sorting function for approx_ideal_restriction_pass1, doesn't like being
- * templated I, T for some compilers. Needs to be outside scope of function.
- */
-bool sort_2nd(const std::pair<int,double> &left,const std::pair<int,double> &right)
-{
-       return left.second < right.second;
-}
-// bool sort_2nd(const std::pair<int,float> &left,const std::pair<int,float> &right)
-// {
-//        return left.second < right.second;
-// }
-
-
 /* Build row_pointer for approximate ideal restriction in CSR or BSR form.
  * 
  * Parameters
@@ -168,7 +154,7 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
         Rp[row+1] = nnz; 
     }
     if ((distance != 1) && (distance != 2)) {
-        std::cout << "Can only choose distance one or two neighborhood for AIR.\n";
+        std::cerr << "Error approx_ideal_restriction_pass1: can only choose distance one or two neighborhood for AIR.\n";
     }
 }
 
@@ -262,7 +248,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         }
 
         if (ind != (Rp[row+1]-1)) {
-            std::cout << "Error: Row pointer does not agree with neighborhood size.\n\t"
+            std::cerr << "Error approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n\t"
                          "ind = " << ind << ", Rp[row] = " << Rp[row] <<
                          ", Rp[row+1] = " << Rp[row+1] << "\n";
         }
@@ -423,7 +409,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         }
 
         if (ind != (Rp[row+1]-1)) {
-            std::cout << "Error: Row pointer does not agree with neighborhood size.\n";
+            std::cerr << "Error block_approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n";
         }
 
         // Build local linear system as the submatrix A^T restricted to the neighborhood,
@@ -468,7 +454,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                                 I Ax_ind = blockx_ind + block_row * blocksize + block_col;
                                 A0[row_maj_ind + block_col] = Ax[Ax_ind];
                                 if ((row_maj_ind + block_col) > num_DOFs*num_DOFs) {
-                                    std::cout << "Warning: Accessing out of bounds index building A0.\n";
+                                    std::cerr << "Warning block_approx_ideal_restriction_pass2: Accessing out of bounds index building A0.\n";
                                 }
                             }
                         }
