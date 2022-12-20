@@ -30,29 +30,29 @@ def ruge_stuben_solver(A,
     ----------
     A : csr_matrix
         Square matrix in CSR format
-    strength : string
+    strength : str
         Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
         'algebraic_distance','affinity', 'energy_based', None].
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
-        using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
+        using a tuple, e.g. strength=('symmetric',{'theta': 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
-    CF : {string} : default 'RS'
+    CF : str or tuple, default 'RS'
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interpolation : {string} : default 'classical'
+    interpolation : str, default 'classical'
         Method for interpolation. Options include 'direct', 'classical'.
-    presmoother : {string or dict}
+    presmoother : str or dict
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
         presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
-    postsmoother : {string or dict}
+    postsmoother : str or dict
         Postsmoothing method with the same usage as presmoother
-    max_levels: {integer} : default 30
+    max_levels : int, default 30
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse: {integer} : default 20
+    max_coarse : int, default 20
         Maximum number of variables permitted on the coarse grid.
-    keep: {bool} : default False
+    keep : bool, default False
         Flag to indicate keeping strength of connection (C) in the
         hierarchy for diagnostics.
 
