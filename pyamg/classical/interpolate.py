@@ -1,9 +1,10 @@
 """Classical AMG Interpolation methods."""
 
-
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr
-from pyamg import amg_core
+
+from .. import amg_core
+from ..strength import classical_strength_of_connection
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
