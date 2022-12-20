@@ -800,11 +800,11 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 /* Helper function for compatible relaxation to perform steps 3.1d - 3.1f
  * in Falgout / Brannick (2010).
  *
- * Input:
- * ------
- * Ap : const {int array}
+ * Parameters
+ * ----------
+ * Ap : array
  *      Row pointer for sparse matrix in CSR format.
- * Aj : const {int array}
+ * Aj : array
  *      Column indices for sparse matrix in CSR format.
  * B : array
  *      Target near null space vector for computing candidate set measure.
@@ -828,12 +828,12 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 template<class I, class T>
 void cr_helper(const I Ap[], const int Ap_size,
                const I Aj[], const int Aj_size,
-               const T B[], const int B_size,
-               T e[], const int e_size,
-               I indices[], const int indices_size,
-               I splitting[], const int splitting_size,
-               T gamma[], const int gamma_size,
-               const T thetacs  )
+               const T  B[], const int  B_size,
+                     T         e[], const int e_size,
+                     I   indices[], const int indices_size,
+                     I splitting[], const int splitting_size,
+                     T     gamma[], const int gamma_size,
+               const T thetacs)
 {
     I n = splitting_size;
     I &num_Fpts = indices[0];
@@ -946,22 +946,22 @@ void cr_helper(const I Ap[], const int Ap_size,
 /* First pass of classical AMG interpolation to build row pointer for
  * P based on SOC matrix and CF-splitting.
  *
- * Parameters:
- * -----------
- *      n_nodes : const int
- *          Number of rows in A
- *      Sp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Sj : const array<int>
- *          Column indices for SOC matrix, C
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      Pp : array<int>
- *          empty array to store row pointer for matrix P
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of rows in A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
+ * Pp : array
+ *     empty array to store row pointer for matrix P
  *
- * Returns:
- * --------
- * Nothing, Pp is modified in place. 
+ * Returns
+ * -------
+ * Nothing, Pp is modified in place.
  *
  */
 template<class I>
@@ -991,24 +991,24 @@ void rs_classical_interpolation_pass1(const I n_nodes,
 /* Remove strong F-to-F connections that do NOT have a common C-point from
  * the set of strong connections. Specifically, set the data value in CSR
  * format to 0. Removing zero entries afterwards will adjust row pointer
- * and column indices. 
+ * and column indices.
  *
- * Parameters:
- * -----------
- *      n_nodes : const int
- *          Number of rows in A
- *      Sp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Sj : const array<int>
- *          Column indices for SOC matrix, C
- *      Sx : array<float>
- *          Data array for SOC matrix, C
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of rows in A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * Sx : array
+ *     Data array for SOC matrix, C
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
  *
- * Returns:
- * --------
- *      Nothing, Sx[] is set to zero to eliminate connections.
+ * Returns
+ * -------
+ * Nothing, Sx[] is set to zero to eliminate connections.
  */
 template<class I, class T>
 void remove_strong_FF_connections(const I n_nodes,
@@ -1047,7 +1047,7 @@ void remove_strong_FF_connections(const I n_nodes,
 
                     // Node j passed dependence test
                     if (dependence) {
-                        continue;   
+                        continue;
                     }
                     // Node j did not pass dependence test. That is, the two F-points
                     // do not have a common C neighbor, and we thus remove the strong
@@ -1067,44 +1067,44 @@ void remove_strong_FF_connections(const I n_nodes,
  * can be found in Sec. 3 Eq. (8) of [1] for modified=False and Eq. (9)
  * for modified=True.
  *
- * Parameters:
- * -----------
- *      Ap : const array<int>
- *          Row pointer for matrix A
- *      Aj : const array<int>
- *          Column indices for matrix A
- *      Ax : const array<float>
- *          Data array for matrix A
- *      Sp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Sj : const array<int>
- *          Column indices for SOC matrix, C
- *      Sx : const array<float>
- *          Data array for SOC matrix, C -- MUST HAVE VALUES OF A
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      Pp : const array<int>
- *          Row pointer for matrix P
- *      Pj : array<int>
- *          Column indices for matrix P
- *      Px : array<float>
- *          Data array for matrix P
- *      modified : bool
- *          Use modified interpolation formula
+ * Parameters
+ * ----------
+ * Ap : array
+ *     Row pointer for matrix A
+ * Aj : array
+ *     Column indices for matrix A
+ * Ax : array
+ *     Data array for matrix A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * Sx : array
+ *     Data array for SOC matrix, C -- MUST HAVE VALUES OF A
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
+ * Pp : array
+ *     Row pointer for matrix P
+ * Pj : array
+ *     Column indices for matrix P
+ * Px : array
+ *     Data array for matrix P
+ * modified : bool
+ *     Use modified interpolation formula
  *
- * Notes:
- * ------
+ * Notes
+ * -----
  * For modified interpolation, it is assumed that SOC matrix C is
  * passed in WITHOUT any F-to-F connections that do not share a
  * common C-point neighbor. Any SOC matrix C can be set as such by
  * calling remove_strong_FF_connections().
  *
- * Returns:
- * --------
+ * Returns
+ * -------
  * Nothing, Pj[] and Px[] modified in place.
  *
- * References:
- * -----------
+ * References
+ * ----------
  * [0] V. E. Henson and U. M. Yang, BoomerAMG: a parallel algebraic multigrid
  *      solver and preconditioner, Applied Numerical Mathematics 41 (2002).
  *
@@ -1130,7 +1130,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
         if(splitting[i] == C_NODE) {
             Pj[Pp[i]] = i;
             Px[Pp[i]] = 1;
-        } 
+        }
         // Otherwise, use RS classical interpolation formula
         else {
 
@@ -1142,7 +1142,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                 denominator += Ax[mm];
             }
 
-            // Then subtract off the strong connections so that you are left with 
+            // Then subtract off the strong connections so that you are left with
             // denominator = a_ii + sum_{m in weak connections} a_im
             for (I mm = Sp[i]; mm < Sp[i+1]; mm++) {
                 if ( Sj[mm] != i ) {
@@ -1157,7 +1157,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                 if (splitting[Sj[jj]] == C_NODE) {
 
                     // Set temporary value for Pj as global index, j. Will be mapped to
-                    // appropriate coarse-grid column index after all data is filled in. 
+                    // appropriate coarse-grid column index after all data is filled in.
                     Pj[nnz] = Sj[jj];
                     I j = Sj[jj];
 
@@ -1167,7 +1167,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                     // Sum over strongly connected fine points
                     for (I kk = Sp[i]; kk < Sp[i+1]; kk++) {
                         if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ) {
-                            
+
                             // Get column k and value a_ik
                             I k = Sj[kk];
                             T a_ik = Sx[kk];
@@ -1203,15 +1203,15 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                             // If a_kj == 0, then we don't need to do any more work, otherwise
                             // proceed to account for node k's contribution
                             if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
-                                
+
                                 // Calculate sum for inner denominator (loop over strongly connected C-points)
                                 T inner_denominator = 0;
                                 for (I ll = Sp[i]; ll < Sp[i+1]; ll++) {
                                     if (splitting[Sj[ll]] == C_NODE) {
-                                        
+
                                         // Get column l
                                         I l = Sj[ll];
-                                        
+
                                         // Add connection a_kl if present in matrix (search over kth row in A for connection)
                                         // Only add if sign of a_kl does not equal sign of a_kk
                                         for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
@@ -1226,7 +1226,7 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                                     }
                                 }
 
-                                // Add a_ik * a_kj / inner_denominator to the numerator 
+                                // Add a_ik * a_kj / inner_denominator to the numerator
                                 if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
                                     printf("Inner denominator was zero.\n");
                                 }
