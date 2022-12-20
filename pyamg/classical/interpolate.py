@@ -25,10 +25,12 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
         'abs' for CSR matrices. See strength.py for more information.
     splitting : array
         C/F splitting stored in an array of length N
+
     Returns
     -------
     P : csr_matrix
         Prolongator using direct interpolation
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
@@ -68,8 +70,8 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     P_indices = np.empty(nnz, dtype=P_indptr.dtype)
     P_data = np.empty(nnz, dtype=A.dtype)
 
-    amg_core.rs_direct_interpolation_pass2(A.shape[0], A.indptr, A.indices,
-                                           A.data, C.indptr, C.indices, C.data,
+    amg_core.rs_direct_interpolation_pass2(A.shape[0], A.indptr, A.indices, A.data,
+                                           C.indptr, C.indices, C.data,
                                            splitting, P_indptr, P_indices, P_data)
 
     nc = np.sum(splitting)
@@ -82,9 +84,9 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : csr_matrix
         NxN matrix in CSR format
-    C : {csr_matrix}
+    C : csr_matrix
         Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
@@ -103,7 +105,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     Returns
     -------
-    P : {csr_matrix}
+    P : csr_matrix
         Prolongator using classical interpolation; see Sec. 3 Eq. (8)
         of [0] for modified=False and Eq. (9) for modified=True.
 
