@@ -200,6 +200,32 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         form with identity of size bsize x bsize on each aggregate
         if A is BSR.
 
+    Examples
+    --------
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.aggregation.aggregate import pairwise_aggregation
+    >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
+    >>> A.toarray()
+    array([[ 2., -1.,  0.,  0.],
+           [-1.,  2., -1.,  0.],
+           [ 0., -1.,  2., -1.],
+           [ 0.,  0., -1.,  2.]])
+    >>> pairwise_aggregation(A, matchings=1)[0].toarray() # two aggregates
+    array([[1, 0],
+           [1, 0],
+           [0, 1],
+           [0, 1]], dtype=int8)
+    >>> pairwise_aggregation(A, matchings=2)[0].toarray() # one aggregate
+    array([[1],
+           [1],
+           [1],
+           [1]], dtype=int8)
+
+    See Also
+    --------
+    amg_core.pairwise_aggregation
+
     References
     ----------
     [0] Notay, Y. (2010). An aggregation-based algebraic multigrid

@@ -33,7 +33,7 @@ def pairwise_solver(A,
                     max_levels = 20, max_coarse = 10,
                     **kwargs):
     """
-    Create a multilevel solver using Pairwise Aggregation
+    Create a multilevel solver using Pairwise Aggregation.
 
     Parameters
     ----------
@@ -41,7 +41,7 @@ def pairwise_solver(A,
         Sparse NxN matrix in CSR or BSR format
     aggregate : {tuple, string, list} : default ('pairwise',
             {'theta': 0.25, 'norm':'min', 'matchings': 2})
-        Type must be 'pairwise'; inner pairwise options including
+        Method choice must be 'pairwise'; inner pairwise options including
         matchings, theta, and norm can be modified,
     presmoother : {tuple, string, list} : default ('block_gauss_seidel',
             {'sweep':'symmetric'})
@@ -65,6 +65,18 @@ def pairwise_solver(A,
     --------
     multilevel_solver, classical.ruge_stuben_solver,
     aggregation.smoothed_aggregation_solver
+
+    Examples
+    --------
+    >>> from pyamg import pairwise_solver
+    >>> from pyamg.gallery import poisson
+    >>> from scipy.sparse.linalg import cg
+    >>> import numpy as np
+    >>> A = poisson((100, 100), format='csr')       # matrix
+    >>> b = np.ones((A.shape[0]))                   # RHS
+    >>> ml = pairwise_solver(A)                     # AMG solver
+    >>> M = ml.aspreconditioner(cycle='V')          # preconditioner
+    >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
 
     References
     ----------
@@ -120,6 +132,9 @@ def _extend_hierarchy(levels, aggregate):
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
     P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
     R = P.H
+    if isspmatrix_csr(P):
+        # In this case, R will be CSC, which must be changed
+        R = R.tocsr()
 
     levels[-1].P = P  # smoothed prolongator
     levels[-1].R = R  # restriction operator
