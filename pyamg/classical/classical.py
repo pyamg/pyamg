@@ -23,7 +23,7 @@ def ruge_stuben_solver(A,
                        interpolation='classical',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
-                       max_levels=30, max_coarse=20, keep=False, **kwargs):
+                       max_levels=30, max_coarse=10, keep=False, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG).
 
     Parameters
@@ -165,9 +165,10 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
         raise ValueError(f'Unknown C/F splitting method {CF}')
 
     # Make sure all points were not declared as C- or F-points
+    # Return early, do not add another coarse level
     num_fpts = np.sum(splitting)
     if (num_fpts == len(splitting)) or (num_fpts == 0):
-        return 1
+        return
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
