@@ -300,8 +300,10 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
         # Form coarse grid operator for next matching
         if i < (matchings-1):
-            TA = T_temp.T * Ac
-            Ac = TA * T_temp
+            if sparse.isspmatrix_csr(T_temp):
+                Ac = T_temp.T.tocsr() * Ac * T_temp
+            else:
+                Ac = T_temp.T * Ac * T_temp
 
     # Convert T to dtype int if only used for aggregation
     if compute_P:

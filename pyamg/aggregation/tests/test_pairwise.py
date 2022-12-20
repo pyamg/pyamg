@@ -14,7 +14,7 @@ class TestPairwise(TestCase):
         cases.append(poisson((500,), format='csr'))
         cases.append(poisson((50, 50), format='csr'))
         #cases.append(linear_elasticity((7, 7), format='bsr')[0])
-        cases.append(load_example('airfoil')['A'])
+        cases.append(load_example('airfoil')['A'].tocsr())
         
         for A in cases:
             for agg, expected in [(('pairwise', {'theta': 0.25, 'matchings': 2}), 0.75),
