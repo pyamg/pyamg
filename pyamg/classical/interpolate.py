@@ -3,10 +3,7 @@
 
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr
-from pyamg.strength import classical_strength_of_connection
 from pyamg import amg_core
-
-__all__ = ['direct_interpolation', 'classical_interpolation']
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
