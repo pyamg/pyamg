@@ -219,7 +219,8 @@ def injection_interpolation(A, splitting):
         except BaseException as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
-    P_rowptr = np.append(np.array([0], dtype=A.indptr.dtype), np.cumsum(splitting, dtype=A.indptr.dtype))
+    P_rowptr = np.append(np.array([0], dtype=A.indptr.dtype),
+                         np.cumsum(splitting, dtype=A.indptr.dtype))
     nc = P_rowptr[-1]
     P_colinds = np.arange(start=0, stop=nc, step=1, dtype=A.indptr.dtype)
 
