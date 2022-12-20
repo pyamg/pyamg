@@ -15,8 +15,7 @@ from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     distance_strength_of_connection, algebraic_distance, affinity_distance, \
     energy_based_strength_of_connection
-from pyamg.util.utils import extract_diagonal_blocks, \
-    filter_matrix_rows
+from pyamg.util.utils import filter_matrix_rows
 from pyamg.classical.interpolate import direct_interpolation, \
     classical_interpolation, injection_interpolation, \
     one_point_interpolation, local_air

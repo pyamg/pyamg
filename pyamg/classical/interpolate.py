@@ -199,9 +199,9 @@ def injection_interpolation(A, splitting):
         except:
             raise TypeError("Invalid matrix type, must be CSR or BSR.")
 
-    P_rowptr = np.append(np.array([0],dtype='int32'), np.cumsum(splitting,dtype='int32') )
+    P_rowptr = np.append(np.array([0],dtype=A.indptr.dtype), np.cumsum(splitting,dtype=A.indptr.dtype) )
     nc = P_rowptr[-1]
-    P_colinds = np.arange(start=0, stop=nc, step=1, dtype='int32')
+    P_colinds = np.arange(start=0, stop=nc, step=1, dtype=A.indptr.dtype)
 
     if blocksize == 1:
         return csr_matrix((np.ones((nc,), dtype=A.dtype), P_colinds, P_rowptr), shape=[n,nc])
@@ -249,8 +249,8 @@ def one_point_interpolation(A, C, splitting, by_val=False):
             raise TypeError("Invalid matrix type, must be CSR or BSR.")
 
     nc = np.sum(splitting)
-    P_rowptr = np.empty((n+1,), dtype='int32') # P: n x nc, at most 'n' nnz
-    P_colinds = np.empty((n,),dtype='int32')
+    P_rowptr = np.empty((n+1,), dtype=A.indptr.dtype) # P: n x nc, at most 'n' nnz
+    P_colinds = np.empty((n,),dtype=A.indptr.dtype)
     P_data = np.empty((n,),dtype=A.dtype)
 
     #amg_core.one_point_interpolation(P_rowptr, P_colinds, A.indptr,
@@ -324,17 +324,17 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
         except:
             raise TypeError("Invalid matrix type, must be CSR or BSR.")
 
-    Cpts = np.array(np.where(splitting == 1)[0], dtype='int32')
+    Cpts = np.array(np.where(splitting == 1)[0], dtype=A.indptr.dtype)
     nc = Cpts.shape[0]
     n = C.shape[0]
 
-    R_rowptr = np.empty(nc+1, dtype='int32')
+    R_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
     amg_core.approx_ideal_restriction_pass1(R_rowptr, C.indptr, C.indices,
                                             Cpts, splitting, degree)       
 
     # Build restriction operator
     nnz = R_rowptr[-1]
-    R_colinds = np.zeros(nnz, dtype='int32')
+    R_colinds = np.zeros(nnz, dtype=A.indptr.dtype)
 
     # Block matrix
     if isspmatrix_bsr(A):
