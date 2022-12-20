@@ -280,9 +280,8 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
                 Tx = np.ones(len(Tj), dtype='int8')
                 T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
             else:
-                shape = (shape[0]*A.blocksize[0], shape[1])
+                shape = (shape[0]*A.blocksize[0], shape[1]*A.blocksize[1])
                 Tx = np.array(len(Tj)*[np.identity(A.blocksize[0])], dtype='int8')
-                # TODO this is old code, Tx = np.dstack([np.eye(A.blocksize[0])]*len(Tj), dtype='int8')
                 T_temp = sparse.bsr_matrix((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
 
         # Form aggregation matrix, need to make sure is CSR/BSR
