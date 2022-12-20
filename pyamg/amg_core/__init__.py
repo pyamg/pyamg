@@ -105,7 +105,7 @@ __all__ = [
     'satisfy_constraints_helper',
     'calc_BtB',
     'incomplete_mat_mult_bsr',
-    'truncate_rows_csr'
+    'truncate_rows_csr',
     #
     'one_point_interpolation',
     'approx_ideal_restriction_pass1',
