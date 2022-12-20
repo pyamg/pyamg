@@ -116,6 +116,8 @@ def air_solver(A,
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
+    if np.iscomplexobj(A.data):
+        raise ValueError('AIR solver not verified for complex matrices')
 
     levels = [MultilevelSolver.Level()]
     levels[-1].A = A
