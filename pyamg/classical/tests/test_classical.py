@@ -3,7 +3,8 @@ import warnings
 
 import numpy as np
 
-from numpy.testing import TestCase, assert_equal, assert_almost_equal
+from numpy.testing import TestCase, assert_equal, assert_almost_equal, \
+    assert_array_almost_equal
 
 from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
 
@@ -135,6 +136,28 @@ class TestRugeStubenFunctions(TestCase):
             Diff.data[Diff.data < 1e-7] = 0.0
             Diff.eliminate_zeros()
             assert (Diff.nnz == 0)
+
+    def test_remove_strong_FF_connections(self):
+        from pyamg import amg_core
+        # test removing an F-F connection without any strong C in between (4--2),
+        # while keeping the F-f connection (4--6) which does have a strong C in between
+        C = csr_matrix(np.array([[2., 1., 0., 0., 0., 0.],
+                                 [1., 2., 1., 1., 0., 0.],
+                                 [0., 1., 2., 0., 0., 0.],
+                                 [0., 1., 0., 2., 1., 1.],
+                                 [0., 0., 0., 1., 2., 1.],
+                                 [0., 0., 0., 1., 1., 2.]]))
+        splitting = np.array([1, 0, 1, 0, 1, 0], dtype=C.indices.dtype)
+        amg_core.remove_strong_FF_connections(6, C.indptr, C.indices,
+                                              C.data, splitting)
+
+        exact = np.array([[2., 1., 0., 0., 0., 0.],
+                          [1., 2., 1., 0., 0., 0.],
+                          [0., 1., 2., 0., 0., 0.],
+                          [0., 0., 0., 2., 1., 1.],
+                          [0., 0., 0., 1., 2., 1.],
+                          [0., 0., 0., 1., 1., 2.]])
+        assert_array_almost_equal(C.toarray(), exact)
 
 
 class TestSolverPerformance(TestCase):
