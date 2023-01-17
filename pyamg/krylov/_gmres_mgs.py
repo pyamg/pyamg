@@ -40,7 +40,7 @@ def apply_givens(Q, v, k):
 
 def gmres_mgs(A, b, x0=None, tol=1e-5,
               restrt=None, maxiter=None,
-              M=None, callback=None, residuals=None, reorth=False):
+              M=None, D=None, callback=None, residuals=None, reorth=False):
     """Generalized Minimum Residual Method (GMRES) based on MGS.
 
     GMRES iteratively refines the initial solution guess to the system
@@ -72,6 +72,8 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
+    D : array, matrix, sparse matrix, LinearOperator
+        n x n, Hermitian positive definite matrix induced by the D-norm GMRES.
     callback : function
         User-supplied function is called after each iteration as
         callback(xk), where xk is the current solution vector
@@ -129,6 +131,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     """
     # Convert inputs to linear system, with error checking
+    D = make_system(A, D, x0, b)[1]  # D=I if None
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     n = A.shape[0]
 
@@ -145,6 +148,10 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         # real type
         [axpy, dotu, dotc, scal] =\
             get_blas_funcs(['axpy', 'dot', 'dot', 'scal'], [x])
+
+    def _normD(x):
+        """Compute D-norm of x."""
+        return np.sqrt(dotc(D @ x, x).real)
 
     # Set number of outer and inner iterations
     # If no restarts,
@@ -180,16 +187,16 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # Apply preconditioner
     r = M @ r
 
-    normr = norm(r)
+    normr = _normD(r)
     if residuals is not None:
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
-    normb = norm(b)
+    normb = _normD(b)
     if normb == 0.0:
         normMb = 1.0   # reset so that tol is unscaled
     else:
-        normMb = norm(M @ b)
+        normMb = _normD(M @ b)
 
     # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
@@ -230,23 +237,23 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
             v = V[inner+1, :]
             v[:] = np.ravel(M @ (A @ vs[-1]))
             vs.append(v)
-            normv_old = norm(v)
+            normv_old = _normD(v)
 
             #  Modified Gram Schmidt
             for k in range(inner+1):
                 vk = vs[k]
-                alpha = dotc(vk, v)
+                alpha = dotc(D @ vk, v)
                 H[inner, k] = alpha
                 v[:] = axpy(vk, v, n, -alpha)
 
-            normv = norm(v)
+            normv = _normD(v)
             H[inner, inner+1] = normv
 
             # Re-orthogonalize
             if (reorth is True) and (normv_old == normv_old + 0.001 * normv):
                 for k in range(inner+1):
                     vk = vs[k]
-                    alpha = dotc(vk, v)
+                    alpha = dotc(D @ vk, v)
                     H[inner, k] = H[inner, k] + alpha
                     v[:] = axpy(vk, v, n, -alpha)
 
@@ -302,7 +309,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
         # Apply preconditioner
         r = M @ r
-        normr = norm(r)
+        normr = _normD(r)
 
         # Allow user access to the iterates
         if callback is not None:
