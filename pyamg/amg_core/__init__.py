@@ -25,7 +25,10 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           rs_cf_splitting, rs_cf_splitting_pass2,
                           cljp_naive_splitting,
                           rs_direct_interpolation_pass1, rs_direct_interpolation_pass2,
-                          cr_helper)
+                          cr_helper,
+                          rs_classical_interpolation_pass1,
+                          rs_classical_interpolation_pass2,
+                          remove_strong_FF_connections)
 from .smoothed_aggregation import (symmetric_strength_of_connection, standard_aggregation,
                                    naive_aggregation,
                                    fit_candidates,
@@ -87,6 +90,9 @@ __all__ = [
     'rs_direct_interpolation_pass1',
     'rs_direct_interpolation_pass2',
     'cr_helper',
+    'rs_classical_interpolation_pass1',
+    'rs_classical_interpolation_pass2',
+    'remove_strong_FF_connections',
     #
     'symmetric_strength_of_connection',
     'standard_aggregation',
@@ -96,4 +102,5 @@ __all__ = [
     'calc_BtB',
     'incomplete_mat_mult_bsr',
     'truncate_rows_csr'
+    #
 ]

@@ -33,7 +33,7 @@ author = '2022, Luke Olson and Jacob Schroder'
 version = pyamg.__version__
 release = version
 
-language = None
+language = 'en'
 exclude_patterns = ['README.md']
 
 pygments_style = 'sphinx'

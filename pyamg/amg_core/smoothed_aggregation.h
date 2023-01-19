@@ -555,8 +555,8 @@ void fit_candidates_complex(const I n_row,
  * Sx : array
  *      Value array for BSR matrix S
  *
- * Return
- * ------
+ * Returns
+ * -------
  * Sx is modified such that S*B = 0.  S ends up being the
  * update to the prolongator in the energy_minimization algorithm.
  *

@@ -1000,11 +1000,26 @@ class TestUtils(TestCase):
         A = csr_matrix(np.array([[0.24, -0.5, 0., 0.],
                                  [1., 1., 0.49, 0.],
                                  [0., -0.5, 1., -0.5]]))
-        A = filter_matrix_rows(A, 0.5)
+
+        A2 = filter_matrix_rows(A, 0.5)
         exact = np.array([[0.0, -0.5, 0., 0.],
                           [1., 1., 0., 0.],
                           [0., -0.5, 1., -0.5]])
-        assert_array_almost_equal(A.toarray(), exact)
+        assert_array_almost_equal(A2.toarray(), exact)
+
+        A2 = A.copy()
+        filter_matrix_rows(A2, 0.5, diagonal=True)
+        exact = np.array([[0.24, -0.5, 0., 0.],
+                          [1., 1., 0.0, 0.],
+                          [0., -0.5, 1., -0.5]])
+        assert_array_almost_equal(A2.toarray(), exact)
+
+        A2 = A.copy()
+        filter_matrix_rows(A2, 0.5, diagonal=True, lump=True)
+        exact = np.array([[0.24, -0.5, 0., 0.],
+                          [1., 1.49, 0.0, 0.],
+                          [0., -0.5, 1., -0.5]])
+        assert_array_almost_equal(A2.toarray(), exact)
 
     def test_filter_matrix_columns(self):
         from pyamg.util.utils import filter_matrix_columns
