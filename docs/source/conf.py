@@ -47,6 +47,13 @@ html_theme = 'pydata_sphinx_theme'
 html_logo = '../logo/pyamg_logo.png'
 html_static_path = ['_static']
 
+html_theme_options = {
+    'github_url': 'https://github.com/pyamg/pyamg',
+    'logo': {'image_light': 'pyamg_logo.png',
+             'image_dark': 'pyamg_logo.png',
+             }
+}
+
 htmlhelp_basename = 'PyAMGdoc'
 
 latex_elements = {

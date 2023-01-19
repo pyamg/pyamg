@@ -1,6 +1,5 @@
 """Adaptive Smoothed Aggregation."""
 
-
 from warnings import warn
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
@@ -24,7 +23,7 @@ from .tentative import fit_candidates
 
 
 def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
-    """Eliminate canidates locally.
+    """Eliminate candidates locally.
 
     Helper function that determines where to eliminate candidates locally
     on a per aggregate basis.
