@@ -5,6 +5,7 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
+#include <map>
 
 #include <assert.h>
 #include <cmath>
@@ -297,6 +298,133 @@ I naive_aggregation(const I n_row,
 
     return (next_aggregate-1); //number of aggregates
 }
+
+
+
+/*
+ * Compute aggregates for a matrix S stored in CSR format
+ *
+ * Parameters
+ * ----------
+ * n_row : int
+ *     number of rows in S
+ * Sp : array, n_row+1
+ *     CSR row pointer
+ * Sj : array, nnz
+ *     CSR column indices
+ * Sx : array, nnz
+ *     CSR data array
+ * x : array, n_row, inplace
+ *     aggregate numbers for each node
+ * y : array, n_row, inplace
+ *     will hold Cpts upon return
+ *
+ * Returns
+ * -------
+ * int
+ *  The number of aggregates (== max(x[:]) + 1 )
+ *
+ * Notes
+ * -----
+ * S is the strength matrix. Assumes that the strength matrix is for
+ * classic strength with min norm.
+ */
+template <class I, class T>
+I pairwise_aggregation(const I n_row,
+                       const I Sp[], const int Sp_size,
+                       const I Sj[], const int Sj_size,
+                       const T Sx[], const int Sx_size,
+                             I  x[], const int  x_size,
+                             I  y[], const int  y_size)
+{
+    // x[n] == 0 means i-th node has not been aggregated
+    std::fill(x, x + n_row, 0);
+
+    std::vector<I> m(n_row, 0);
+    for(I i = 0; i < n_row; i++){
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
+        for (I jj = row_start; jj < row_end; jj++) {
+            if (Sj[jj] != i) {
+                m[Sj[jj]]++;
+            }
+        }
+    }
+    std::multimap<I, I> mmap;
+    std::vector<decltype(mmap.begin())> mmap_iterators(n_row);
+
+    auto it = mmap.begin();
+    for(I i = 0; i < n_row; i++){
+        it = mmap.insert({m[i], i});
+        mmap_iterators[i] = it;
+    }
+
+    I next_aggregate = 1; // number of aggregates + 1
+
+    while (!mmap.empty()) {
+        // select minimum of m_i.
+        // Since mmap is a sorted container, first element is the minimum
+        I i = mmap.begin()->second;
+
+        const I row_start = Sp[i];
+        const I row_end   = Sp[i+1];
+
+        I j = 0;
+        bool found = false;
+        T max_val = std::numeric_limits<T>::lowest();
+
+        // x stores a list of the aggregate numbers
+        x[i] = next_aggregate;
+
+        // select minimum of a_ij. (algorithm looks for minimum j in original matrix,
+        // and checks whether it is strongly connected. In the code we look in
+        // strength matrix only since a_ij less than a strongly connected j' implies
+        // j is also strongly connected.
+        for (I jj = row_start; jj < row_end; jj++) {
+            if (!x[Sj[jj]] && Sx[jj] >= max_val) {
+                max_val = Sx[jj];
+                j = Sj[jj];
+                found = true;
+            }
+        }
+        if (found) {
+            x[j] = next_aggregate;
+        }
+        // y stores a list of the Cpts
+        y[next_aggregate-1] = i;
+        for (I jj = row_start; jj < row_end; jj++) {
+            if (x[Sj[jj]] == 0) {
+                // to change the key of a multimap, add a new entry and remove the old entry.
+                // finally update mmap_iterators with the iterator to the new entry
+                auto old_it = mmap_iterators[Sj[jj]];
+                auto new_it = mmap.insert({old_it->first-1, Sj[jj]});
+                mmap.erase(old_it);
+                mmap_iterators[Sj[jj]] = new_it;
+            }
+        }
+        // Remove node i from mmap
+        mmap.erase(mmap_iterators[i]);
+        if (found) {
+            x[j] = next_aggregate;
+            const I row_start2 = Sp[j];
+            const I row_end2   = Sp[j+1];
+            for (I jj = row_start2; jj < row_end2; jj++) {
+                if (x[Sj[jj]] == 0) {
+                    auto old_it = mmap_iterators[Sj[jj]];
+                    auto new_it = mmap.insert({old_it->first-1, Sj[jj]});
+                    mmap.erase(old_it);
+                    mmap_iterators[Sj[jj]] = new_it;
+                }
+            }
+            // Remove node j from mmap
+            mmap.erase(mmap_iterators[j]);
+        }
+        next_aggregate++;
+    }
+
+    return (next_aggregate-1); //number of aggregates
+}
+
 
 
 /*

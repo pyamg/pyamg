@@ -13,7 +13,7 @@ from . import (blackbox, graph, graph_ref, multilevel, strength)
 
 from .multilevel import coarse_grid_solver, multilevel_solver, MultilevelSolver
 from .classical import ruge_stuben_solver
-from .aggregation import smoothed_aggregation_solver, rootnode_solver
+from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
@@ -23,7 +23,7 @@ __all__ = ['__version_tuple__', '__version__',
            'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
            'coarse_grid_solver', 'multilevel_solver', 'MultilevelSolver',
            'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',
-           'demo', 'solve', 'solver', 'solver_configuration']
+           'pairwise_solver', 'demo', 'solve', 'solver', 'solver_configuration']
 
 __all__ += ['test']
 
