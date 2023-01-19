@@ -32,7 +32,8 @@ def pairwise_solver(A,
             {'theta': 0.25, 'norm':'min', 'matchings': 2})
         Method choice must be 'pairwise'; inner pairwise options including
         matchings, theta, and norm can be modified,
-    presmoother : {tuple, string, list} : default ('block_gauss_seidel', {'sweep':'symmetric'})
+    presmoother : {tuple, string, list} : default ('block_gauss_seidel',
+        {'sweep':'symmetric'})
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
