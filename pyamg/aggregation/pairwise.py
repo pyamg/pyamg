@@ -134,7 +134,7 @@ def _extend_hierarchy(levels, aggregate):
         # In this case, R will be CSC, which must be changed
         R = R.tocsr()
 
-    levels[-1].P = P  # smoothed prolongator
+    levels[-1].P = P  # unsmoothed prolongator
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
