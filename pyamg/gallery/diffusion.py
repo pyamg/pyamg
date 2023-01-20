@@ -15,13 +15,13 @@ import numpy as np
 def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     """Rotated Anisotropic diffusion in 2d of the form.
 
-    -div Q A Q^T grad u
+        -div Q A Q^T grad u
 
-    Q = [cos(theta) -sin(theta)]
-        [sin(theta)  cos(theta)]
+        Q = [cos(theta) -sin(theta)]
+            [sin(theta)  cos(theta)]
 
-    A = [1          0        ]
-        [0          eps      ]
+        A = [1          0        ]
+            [0          eps      ]
 
     Parameters
     ----------
@@ -59,15 +59,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
      [-0.250075   2.0002    -0.250075 ]
      [ 0.2164847 -0.750025  -0.2164847]]
 
-    Considered a 2 x 4 grid
-    x--x--x
-    |  |  |
-    x--x--x
-    |  |  |
-    x--x--x
-    |  |  |
-    x--x--x
+    Consider a 2 x 4 grid ([x0, x1] x [y0, y1, y2, y3]).
     The first dimension of the stencil defines
+
     >>> nx, ny = (2, 4)
     >>> sten = pyamg.gallery.diffusion_stencil_2d(epsilon=0.1, type='FD')
     >>> A = pyamg.gallery.stencil_grid(sten, (nx, ny)).toarray()
