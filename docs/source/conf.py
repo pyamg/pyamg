@@ -14,6 +14,8 @@ extensions = ['sphinx.ext.autodoc',
               'm2r2',
               'numpydoc']
 
+numpydoc_show_inherited_class_members = False
+
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
