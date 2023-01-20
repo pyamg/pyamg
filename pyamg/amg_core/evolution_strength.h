@@ -9,16 +9,16 @@
 #include "smoothed_aggregation.h"
 
 /*
- * Return a filtered strength-of-connection matrix by applying a drop tolerance
- *  Strength values are assumed to be "distance"-like, i.e. the smaller the
- *  value the stronger the connection
+ * Return a filtered strength-of-connection matrix by applying a drop tolerance.
  *
- *    Strength values are _Not_ evaluated relatively, i.e. an off-diagonal
- *    entry A[i,j] is a strong connection iff
+ * Strength values are assumed to be "distance"-like, i.e. the smaller the
+ * value the stronger the connection.
+ * Strength values are _Not_ evaluated relatively, i.e. an off-diagonal
+ * entry A[i,j] is a strong connection iff::
  *
- *            S[i,j] <= epsilon,   where k != i
+ *     S[i,j] <= epsilon,   where k != i
  *
- *   Also, set the diagonal to 1.0, as each node is perfectly close to itself
+ * Also, set the diagonal to 1.0, as each node is perfectly close to itself.
  *
  * Parameters
  * ----------
@@ -35,13 +35,14 @@
  *
  * Returns
  * -------
- * Sx is modified in place such that the above dropping strategy has been applied
- * There will be explicit zero entries for each weak connection
+ * Sx : {float|complex array}
+ *      Modified in place such that the above dropping strategy has been applied
+ *      There will be explicit zero entries for each weak connection
  *
  * Notes
  * -----
  * Principle calling routines are strength of connection routines, e.g.,
- * distance_strength_of_connection(.)
+ * `distance_strength_of_connection`
  *
  * Examples
  * --------
@@ -56,6 +57,7 @@
  * >>> print "Matrix Before Applying Filter\n" + str(S.todense())
  * >>> apply_absolute_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
  * >>> print "Matrix After Applying Filter\n" + str(S.todense())
+ *
  */
 template<class I, class T>
 void apply_absolute_distance_filter(const I n_row,
@@ -109,8 +111,9 @@ void apply_absolute_distance_filter(const I n_row,
  *
  * Returns
  * -------
- * Sx is modified in place such that the above dropping strategy has been applied
- * There will be explicit zero entries for each weak connection
+ * Sx : {float|complex array}
+ *      Modified in place such that the above dropping strategy has been applied
+ *      There will be explicit zero entries for each weak connection
  *
  * Notes
  * -----
@@ -184,8 +187,8 @@ void apply_distance_filter(const I n_row,
  *
  * Returns
  * -------
- * Tx[i] modified in place, it holds
- * the minimum nonzero value of block i of S
+ * Tx : {float|complex array}
+ *      Modified in place; Tx[i] holds the minimum nonzero value of block i of S
  *
  * Notes
  * -----
@@ -293,8 +296,8 @@ void min_blocks(const I n_blocks,
  *
  * Returns
  * -------
- * Sx is written in place and holds strength
- * values reflecting the above minimization problem
+ * Sx : {float|complex array}
+ *      Modified inplace and holds strength values for the above minimization problem
  *
  * Notes
  * -----
@@ -562,7 +565,8 @@ void evolution_strength_helper(      T Sx[], const int Sx_size,
  *
  * Returns
  * -------
- * returns <A_{row,:}, B_{:, col}>
+ * sum : float
+ *       returns <A_{row,:}, B_{:, col}>
  *
  * Notes
  * -----
@@ -637,7 +641,8 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  *
  * Returns
  * -------
- * Sx is modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ * Sx : {float|complex array}
+ *      Modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
  *
  * Notes
  * -----

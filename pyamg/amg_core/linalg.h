@@ -1012,7 +1012,7 @@ void csc_scale_rows(const I n_row,
 
 
 /*
- * Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+ * Filter matrix rows by diagonal entry, that is set A_ij = 0 if::
  *
  *    |A_ij| < theta * |A_ii|
  *

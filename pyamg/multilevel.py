@@ -789,7 +789,11 @@ def coarse_grid_solver(solver):
 
 
 class multilevel_solver(MultilevelSolver):  # noqa: N801
-    """Deprecated level class."""
+    """Deprecated level class.
+
+    .. deprecated:: 4.2.3
+              Use :class:`MultilevelSolver` instead.
+    """
 
     def __init__(self, *args, **kwargs):
         """Raise deprecation warning on use, not import."""
