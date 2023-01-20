@@ -60,7 +60,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
      [ 0.2164847 -0.750025  -0.2164847]]
 
     Consider a 2 x 4 grid ([x0, x1] x [y0, y1, y2, y3]).
-    The first dimension of the stencil defines
+    The first dimension of the stencil defines x.
 
     >>> nx, ny = (2, 4)
     >>> sten = pyamg.gallery.diffusion_stencil_2d(epsilon=0.1, type='FD')
