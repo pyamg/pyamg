@@ -1,3 +1,4 @@
+./bindthem.py air.h
 ./bindthem.py evolution_strength.h
 ./bindthem.py graph.h
 ./bindthem.py krylov.h
