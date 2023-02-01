@@ -1071,6 +1071,22 @@ class TestUtils(TestCase):
                           [0., 0., 0., 0.]])
         assert_array_almost_equal(Acopy.toarray(), exact)
 
+    def test_scale_block_inverse(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_block_inverse
+        A = poisson((4,), format='csr')
+        A, Dinv = scale_block_inverse(A, 2)
+        A_stored = np.array([[ 1. ,  0.,     -1./3.,  0.],
+                             [ 0. ,  1.,     -2./3.,  0.],
+                             [ 0. , -2./3.,  1.    ,  0.],
+                             [ 0. , -1./3.,  0.    ,  1.]])
+        Dinv_stored = np.array([[2./3.,  1./3.,  0.,     0.],
+                                [1./3.,  2./3.,  0.,     0.],
+                                [0.,     0.,     2./3.,  1./3.],
+                                [0.,     0.,     1./3.,  2./3.]])
+        assert_array_almost_equal(A.toarray(), A_stored)
+        assert_array_almost_equal(Dinv.toarray(), Dinv_stored)
+
 
 class TestComplexUtils(TestCase):
     def test_diag_sparse(self):
@@ -1395,6 +1411,24 @@ class TestComplexUtils(TestCase):
                           [0.00000000+0.j, -0.50000000+0.j, 1.0+0.j, -0.5+0.j],
                           [0.00000000+0.j, 0.00000000+0.j, -0.5+0.j, 1.0+0.j]])
         assert_array_almost_equal(A.toarray(), exact)
+
+    def test_scale_block_inverse(self):
+        from pyamg.gallery import poisson
+        from pyamg.util.utils import scale_block_inverse
+        A = poisson((4,), format='csr', dtype=complex)
+        A.data = 1.0j*A.data
+        A, Dinv = scale_block_inverse(A, 2)
+        A_stored = np.array([[ 1. ,  0.,     -1./3.,  0.],
+                             [ 0. ,  1.,     -2./3.,  0.],
+                             [ 0. , -2./3.,  1.    ,  0.],
+                             [ 0. , -1./3.,  0.    ,  1.]])
+        Dinv_stored = -1.0j*np.array([[2./3.,  1./3.,  0.,     0.],
+                                      [1./3.,  2./3.,  0.,     0.],
+                                      [0.,     0.,     2./3.,  1./3.],
+                                      [0.,     0.,     1./3.,  2./3.]], 
+                                     dtype=complex)
+        assert_array_almost_equal(A.toarray(), A_stored)
+        assert_array_almost_equal(Dinv.toarray(), Dinv_stored)
 
     # note: no explicitly complex tests necessary for get_Cpt_params
     # def test_get_Cpt_params(self):
