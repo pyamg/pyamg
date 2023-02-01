@@ -1,5 +1,7 @@
 """Classical AMG Interpolation methods."""
 
+from warnings import warn
+
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
     isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
@@ -170,8 +172,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
 
 def injection_interpolation(A, splitting):
-    """ Create interpolation operator by injection, that is C-points are
-    interpolated by value and F-points are not interpolated.
+    """Create interpolation operator by injection.
 
     Parameters
     ----------
@@ -183,6 +184,10 @@ def injection_interpolation(A, splitting):
     Returns
     -------
     NxNc interpolation operator, P
+
+    Notes
+    -----
+    C-points are interpolated by value and F-points are not interpolated.
 
     Examples
     --------
@@ -208,28 +213,29 @@ def injection_interpolation(A, splitting):
     else:
         try:
             A = A.tocsr()
-            warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
+            warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             n = A.shape[0]
             blocksize = 1
-        except:
-            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+        except BaseException as e:
+            raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
-    P_rowptr = np.append(np.array([0],dtype=A.indptr.dtype), np.cumsum(splitting,dtype=A.indptr.dtype) )
+    P_rowptr = np.append(np.array([0], dtype=A.indptr.dtype), np.cumsum(splitting, dtype=A.indptr.dtype))
     nc = P_rowptr[-1]
     P_colinds = np.arange(start=0, stop=nc, step=1, dtype=A.indptr.dtype)
 
     if blocksize == 1:
-        return csr_matrix((np.ones((nc,), dtype=A.dtype), P_colinds, P_rowptr), shape=[n,nc])
+        P = csr_matrix((np.ones((nc,), dtype=A.dtype),
+                       P_colinds, P_rowptr), shape=[n, nc])
     else:
         P_data = np.array(nc*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
-        return bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize,blocksize],
-                          shape=[n*blocksize,nc*blocksize])
+        P = bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
+                       shape=[n*blocksize, nc*blocksize])
+
+    return P
 
 
 def one_point_interpolation(A, C, splitting, by_val=False):
-    """ Create one-point interpolation operator, that is C-points are
-    interpolated by value and F-points are interpolated by value from
-    their strongest-connected C-point neighbor.
+    """Create one-point interpolation operator.
 
     Parameters
     ----------
@@ -247,6 +253,11 @@ def one_point_interpolation(A, C, splitting, by_val=False):
     Returns
     -------
     NxNc interpolation operator, P
+
+    Notes
+    -----
+    C-points are interpolated by value and F-points are interpolated by value
+    from their strongest-connected C-point neighbor.
 
     Examples
     --------
@@ -272,41 +283,40 @@ def one_point_interpolation(A, C, splitting, by_val=False):
     else:
         try:
             A = A.tocsr()
-            warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
+            warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             n = A.shape[0]
             blocksize = 1
-        except:
-            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+        except BaseException as e:
+            raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     nc = np.sum(splitting)
-    P_rowptr = np.empty((n+1,), dtype=A.indptr.dtype) # P: n x nc, at most 'n' nnz
-    P_colinds = np.empty((n,),dtype=A.indptr.dtype)
-    P_data = np.empty((n,),dtype=A.dtype)
+    P_rowptr = np.empty((n+1,), dtype=A.indptr.dtype)  # P: n x nc, at most 'n' nnz
+    P_colinds = np.empty((n,), dtype=A.indptr.dtype)
+    P_data = np.empty((n,), dtype=A.dtype)
 
     if blocksize == 1:
         if by_val:
             amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, A.indptr,
-                                     A.indices, A.data, splitting)
-            return csr_matrix((P_data,P_colinds,P_rowptr), shape=[n,nc])
+                                             A.indices, A.data, splitting)
+            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[n, nc])
         else:
             amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, C.indptr,
-                                     C.indices, C.data, splitting)
+                                             C.indices, C.data, splitting)
             P_data = np.ones((n,), dtype=A.dtype)
-            return csr_matrix((P_data,P_colinds,P_rowptr), shape=[n,nc])
+            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[n, nc])
     else:
         amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, C.indptr,
-                         C.indices, C.data, splitting)
+                                         C.indices, C.data, splitting)
         P_data = np.array(n*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
-        return bsr_matrix((P_data,P_colinds,P_rowptr), blocksize=[blocksize,blocksize],
-                          shape=[blocksize*n,blocksize*nc])
+        P = bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
+                       shape=[blocksize*n, blocksize*nc])
+
+    return P
 
 
 def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
               use_gmres=False, maxiter=10, precondition=True):
-    """ Compute approximate ideal restriction by setting RA = 0, within the
-    sparsity pattern of R. Sparsity pattern of R for the ith row (i.e. ith
-    C-point) is the set of all strongly connected F-points, or the max_row
-    *most* strongly connected F-points.
+    """Compute approx ideal restriction by setting RA = 0, within sparsity pattern of R.
 
     Parameters
     ----------
@@ -334,7 +344,11 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     Notes
     -----
-    - Supports BSR (block) matrices, in addition to CSR.
+    Supports BSR (block) matrices, in addition to CSR.
+
+    Sparsity pattern of R for the ith row (i.e. ith C-point) is the set of all
+    strongly connected F-points, or the max_row *most* strongly connected
+    F-points
 
     Examples
     --------
@@ -349,7 +363,6 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
      [0.  0.5 1.  0.5 0. ]
      [0.  0.  0.  0.5 1. ]]
     """
-
     # Get SOC matrix containing neighborhood to be included in local solve
     if isspmatrix_bsr(A):
         C = classical_strength_of_connection(A=A, theta=theta, block=True, norm=norm)
@@ -360,19 +373,18 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
     else:
         try:
             A = A.tocsr()
-            warn("Implicit conversion of A to csr", SparseEfficiencyWarning)
+            warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             C = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
             blocksize = 1
-        except:
-            raise TypeError("Invalid matrix type, must be CSR or BSR.")
+        except BaseException as e:
+            raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     Cpts = np.array(np.where(splitting == 1)[0], dtype=A.indptr.dtype)
     nc = Cpts.shape[0]
-    n = C.shape[0]
 
     R_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
     amg_core.approx_ideal_restriction_pass1(R_rowptr, C.indptr, C.indices,
-                                            Cpts, splitting, degree)       
+                                            Cpts, splitting, degree)
 
     # Build restriction operator
     nnz = R_rowptr[-1]
@@ -386,16 +398,16 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
                                                       C.indices, C.data, Cpts, splitting,
                                                       blocksize, degree, use_gmres, maxiter,
                                                       precondition)
-        R = bsr_matrix((R_data.reshape(nnz,blocksize,blocksize), R_colinds, R_rowptr),
-                        blocksize=[blocksize,blocksize], shape=[nc*blocksize,A.shape[0]])
+        R = bsr_matrix((R_data.reshape((nnz, blocksize, blocksize)), R_colinds, R_rowptr),
+                       blocksize=[blocksize, blocksize], shape=[nc*blocksize, A.shape[0]])
     # Not block matrix
     else:
         R_data = np.zeros(nnz, dtype=A.dtype)
         amg_core.approx_ideal_restriction_pass2(R_rowptr, R_colinds, R_data, A.indptr,
                                                 A.indices, A.data, C.indptr, C.indices,
-                                                C.data, Cpts, splitting, degree, use_gmres, maxiter,
-                                                precondition)            
-        R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc,A.shape[0]])
+                                                C.data, Cpts, splitting, degree, use_gmres,
+                                                maxiter, precondition)
+        R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
 
     R.eliminate_zeros()
     return R
