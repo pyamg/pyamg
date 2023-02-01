@@ -2143,13 +2143,12 @@ def truncate_rows(A, nz_per_row):
 
 
 def scale_block_inverse(A, blocksize):
-    """
-    Get inverse of block diagonal of A and scale A, A = D^{-1}A.
+    """Get inverse of block diagonal of A and scale A, A = D^{-1}A.
 
     Parameters
     ----------
     A : csr or bsr_matrix
-        Matrix to scale by block inverse. 
+        Matrix to scale by block inverse.
     blocksize : int
         Blocksize of matrix.
 
@@ -2159,10 +2158,10 @@ def scale_block_inverse(A, blocksize):
 
     Notes
     -----
-    This is not a symmetric scaling. 
+    This is not a symmetric scaling.
 
     Examples
-    -----
+    --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import scale_block_inverse
     >>> A = poisson((4,), format='csr')
@@ -2173,13 +2172,12 @@ def scale_block_inverse(A, blocksize):
            [ 0.        , -0.66666667,  1.        ,  0.        ],
            [ 0.        , -0.33333333,  0.        ,  1.        ]])
     """
-
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
-        raise ValueError("Expected square matrix")
+        raise ValueError('Expected square matrix')
     if np.mod(A.shape[0], blocksize) != 0:
-        raise ValueError("blocksize and A.shape must be compatible")
+        raise ValueError('blocksize and A.shape must be compatible')
 
     # Convert to BSR
     if not isspmatrix_bsr(A):
@@ -2190,8 +2188,8 @@ def scale_block_inverse(A, blocksize):
     # Get block diagonal inverse
     N_block = A.shape[0] / blocksize
     Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
-    scale = bsr_matrix((Dinv, np.arange(0,N_block), np.arange(0,N_block+1)),
-                        blocksize=[blocksize,blocksize], shape=A.shape)
+    scale = bsr_matrix((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
+                       blocksize=[blocksize, blocksize], shape=A.shape)
     return scale * A, scale
 
 

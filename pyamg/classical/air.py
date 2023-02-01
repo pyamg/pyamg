@@ -1,13 +1,11 @@
-"""Approximate ideal restriction AMG"""
+"""Approximate ideal restriction AMG."""
 from __future__ import absolute_import
 
-__docformat__ = "restructuredtext en"
+__docformat__ = 'restructuredtext en'
 
-from warnings import warn
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning, block_diag
-import numpy as np
 from copy import deepcopy
+import numpy as np
+from scipy.sparse import isspmatrix_csr, isspmatrix_bsr
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -19,24 +17,25 @@ from pyamg.util.utils import filter_matrix_rows
 from pyamg.classical.interpolate import direct_interpolation, \
     classical_interpolation, injection_interpolation, \
     one_point_interpolation, local_air
-from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc, MIS
+from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc
 from pyamg.classical.cr import CR
 
 __all__ = ['air_solver']
 
+
 def air_solver(A,
-               strength=('classical', {'theta': 0.3 ,'norm': 'min'}),
+               strength=('classical', {'theta': 0.3, 'norm': 'min'}),
                CF=('RS', {'second_pass': True}),
                interpolation='one_point',
                restrict=('air', {'theta': 0.05, 'degree': 2}),
                presmoother=None,
                postsmoother=('fc_jacobi', {'omega': 1.0, 'iterations': 1,
-                              'withrho': False,  'f_iterations': 2,
-                              'c_iterations': 1} ),
+                                           'withrho': False, 'f_iterations': 2,
+                                           'c_iterations': 1}),
                filter_operator=None,
                max_levels=20, max_coarse=20,
                keep=False, **kwargs):
-    """Create a multilevel solver using approximate ideal restriction (AIR) AMG
+    """Create a multilevel solver using approximate ideal restriction (AIR) AMG.
 
     Parameters
     ----------
@@ -60,7 +59,7 @@ def air_solver(A,
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple.
     postsmoother : {string or dict}
-        Postsmoothing method with the same usage as presmoother. 
+        Postsmoothing method with the same usage as presmoother.
         postsmoother=('fc_jacobi', ... ) with 2 F-sweeps, 1 C-sweep is default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
@@ -70,7 +69,7 @@ def air_solver(A,
     max_coarse: {integer} : default 20
         Maximum number of variables permitted on the coarse grid.
     keep: {bool} : default False
-        Flag to indicate keeping strength of connection matrix (C) in 
+        Flag to indicate keeping strength of connection matrix (C) in
         hierarchy.
 
     Returns
@@ -99,8 +98,8 @@ def air_solver(A,
     References
     ----------
     [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
-    (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM 
-    Journal on Scientific Computing, 41(5), S242-S268. 
+    (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM
+    Journal on Scientific Computing, 41(5), S242-S268.
 
     [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
     Nonsymmetric algebraic multigrid based on local approximate ideal
@@ -113,7 +112,6 @@ def air_solver(A,
     aggregation.rootnode_solver, ruge_stuben_solver
 
     """
-
     # preprocess A
     A = A.asfptype()
     if A.shape[0] != A.shape[1]:
@@ -123,8 +121,8 @@ def air_solver(A,
     levels[-1].A = A
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        bottom = extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_operator,
-                                  keep)
+        bottom = extend_hierarchy(levels, strength, CF, interpolation, restrict,
+                                  filter_operator, keep)
         if bottom:
             break
 
@@ -142,7 +140,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
 
     # Filter operator. Need to keep original matrix on finest level for
     # computing residuals
-    if (filter_operator is not None) and (filter_operator[1] != 0): 
+    if (filter_operator is not None) and (filter_operator[1] != 0):
         if len(levels) == 1:
             A = deepcopy(levels[-1].A)
         else:
@@ -175,8 +173,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     elif fn is None:
         C = A
     else:
-        raise ValueError('unrecognized strength of connection method: %s' %
-                         str(fn))
+        raise ValueError(f'Unrecognized strength of connection method: {fn}')
 
     # Generate the C/F splitting
     fn, kwargs = unpack_arg(CF)
@@ -193,7 +190,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     elif fn == 'CR':
         splitting = CR(C, **kwargs)
     else:
-        raise ValueError('unknown C/F splitting method (%s)' % CF)
+        raise ValueError(f'Unknown C/F splitting method {CF}')
 
     # Make sure all points were not declared as C- or F-points
     num_fpts = np.sum(splitting)
@@ -212,14 +209,14 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     elif fn == 'inject':
         P = injection_interpolation(A, splitting, **kwargs)
     else:
-        raise ValueError('unknown interpolation method (%s)' % interpolation)
+        raise ValueError(f'Unknown interpolation method {fn}')
 
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
     if fn == 'air':
         R = local_air(A, splitting, **kwargs)
     else:
-        raise ValueError('unknown restriction method (%s)' % restrict)
+        raise ValueError(f'Unknown restriction method {fn}')
 
     # Store relevant information for this level
     if keep:
@@ -241,4 +238,3 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     levels.append(MultilevelSolver.Level())
     levels[-1].A = A
     return 0
-
