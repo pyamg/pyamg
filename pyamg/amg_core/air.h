@@ -318,7 +318,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
 
 /* Build column indices and data array for approximate ideal restriction
- * in CSR format.
+ * in BSR format.
  * 
  * Parameters
  * ----------
