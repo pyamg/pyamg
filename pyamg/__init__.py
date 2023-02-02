@@ -12,7 +12,6 @@ from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, ut
 from . import (blackbox, graph, graph_ref, multilevel, strength)
 
 from .multilevel import coarse_grid_solver, multilevel_solver, MultilevelSolver
-from .classical import ruge_stuben_solver
 from .classical import ruge_stuben_solver, air_solver
 from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_solver
 from .gallery import demo
