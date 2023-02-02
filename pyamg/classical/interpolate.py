@@ -4,11 +4,10 @@ from warnings import warn
 
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
-    isspmatrix_bsr, SparseEfficiencyWarning, eye, hstack, vstack, diags
+    isspmatrix_bsr, SparseEfficiencyWarning
 
 from .. import amg_core
 from ..strength import classical_strength_of_connection
-from ..util.utils import filter_matrix_rows
 
 
 def direct_interpolation(A, C, splitting, theta=None, norm='min'):
