@@ -654,7 +654,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
         if norm(x) == 0:
             residual = b
         else:
-            residual = (b - A*x)
+            residual = b - A*x
 
         h = coefficients[0]*residual
 
@@ -1048,7 +1048,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     if inv_subblock is None or inv_subblock_ptr is None:
         inv_subblock_ptr = np.zeros(subdomain_ptr.shape,
                                     dtype=A.indices.dtype)
-        blocksize = (subdomain_ptr[1:] - subdomain_ptr[:-1])
+        blocksize = subdomain_ptr[1:] - subdomain_ptr[:-1]
         inv_subblock_ptr[1:] = np.cumsum(blocksize*blocksize)
 
         # Extract each block column from A

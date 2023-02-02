@@ -321,7 +321,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
     # Preallocate
     AP = sparse.bsr_matrix((np.zeros(pattern.data.shape, dtype=T.dtype),
                             pattern.indices, pattern.indptr),
-                           shape=(pattern.shape))
+                           shape=pattern.shape)
 
     # CG will be run with diagonal preconditioning
     if weighting == 'diagonal':
@@ -346,7 +346,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     R = sparse.bsr_matrix((uones, pattern.indices,
                            pattern.indptr),
-                          shape=(pattern.shape))
+                          shape=pattern.shape)
     amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                      np.ravel(A.data),
                                      T.indptr, T.indices,
@@ -501,7 +501,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     # Preallocate
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     AP = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
-                           shape=(pattern.shape))
+                           shape=pattern.shape)
 
     # D for A.H*A
     Dinv = get_diagonal(A, norm_eq=1, inv=True)
@@ -512,7 +512,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
-                          shape=(pattern.shape))
+                          shape=pattern.shape)
     AT = -1.0*A*T
     R.data[:] = 0.0
     amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
@@ -697,7 +697,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     # Preallocate space for new search directions
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     AV = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
-                           shape=(pattern.shape))
+                           shape=pattern.shape)
 
     # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
     xtype = upcast(A.dtype, T.dtype, B.dtype)
@@ -730,7 +730,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
-                          shape=(pattern.shape))
+                          shape=pattern.shape)
     amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                      np.ravel(A.data),
                                      T.indptr, T.indices,
