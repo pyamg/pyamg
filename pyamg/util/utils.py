@@ -338,7 +338,7 @@ def symmetric_rescaling(A, copy=True):
             raise ValueError('expected square matrix')
 
         D = diag_sparse(A)
-        mask = (D != 0)
+        mask = D != 0
 
         if A.dtype != complex:
             D_sqrt = np.sqrt(abs(D))
@@ -583,7 +583,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
     if inv:
         Dinv = np.zeros_like(D)
-        mask = (D != 0.0)
+        mask = D != 0.0
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
 
@@ -662,7 +662,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
-    nonzero_mask = (diag_entries != -1)
+    nonzero_mask = diag_entries != -1
     diag_entries = diag_entries[nonzero_mask]
     if diag_entries.shape != (0,):
         block_diag[nonzero_mask, :, :] = A.data[diag_entries, :, :]
@@ -1672,7 +1672,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
         diag_dom_rows = np.sum(diag_dom_rows, axis=1)
-        diag_dom_rows = (diag_dom_rows == bsize)
+        diag_dom_rows = diag_dom_rows == bsize
 
     # Replace these rows/cols in # C with rows/cols of the identity.
     Id = eye(C.shape[0], C.shape[1], format='csr')
