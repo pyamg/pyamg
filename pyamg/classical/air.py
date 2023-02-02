@@ -1,24 +1,21 @@
-"""Approximate ideal restriction AMG."""
-__docformat__ = 'restructuredtext en'
+"""Approximate idealkrestriction AMG."""
 
 from copy import deepcopy
 import numpy as np
 from scipy.sparse import isspmatrix_csr, isspmatrix_bsr
 
-from pyamg.multilevel import MultilevelSolver
-from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import classical_strength_of_connection, \
-    symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection, algebraic_distance, affinity_distance, \
-    energy_based_strength_of_connection
-from pyamg.util.utils import filter_matrix_rows
-from pyamg.classical.interpolate import direct_interpolation, \
-    classical_interpolation, injection_interpolation, \
-    one_point_interpolation, local_air
-from pyamg.classical.split import RS, PMIS, PMISc, CLJP, CLJPc
-from pyamg.classical.cr import CR
-
-__all__ = ['air_solver']
+from ..multilevel import MultilevelSolver
+from ..relaxation.smoothing import change_smoothers
+from ..strength import (classical_strength_of_connection,
+                        symmetric_strength_of_connection, evolution_strength_of_connection,
+                        distance_strength_of_connection, algebraic_distance,
+                        affinity_distance, energy_based_strength_of_connection)
+from ..util.utils import filter_matrix_rows
+from ..classical.interpolate import (direct_interpolation, classical_interpolation,
+                                     injection_interpolation, one_point_interpolation,
+                                     local_air)
+from .split import RS, PMIS, PMISc, CLJP, CLJPc
+from .cr import CR
 
 
 def air_solver(A,
