@@ -768,7 +768,7 @@ void jacobi_ne(const I Ap[], const int Ap_size,
  *
  * Notes
  * -----
- * Primary calling routine is gass_seidel_ne in relaxation.py
+ * Primary calling routine is gauss_seidel_ne in relaxation.py
  */
 template<class I, class T, class F>
 void gauss_seidel_ne(const I Ap[], const int Ap_size,
