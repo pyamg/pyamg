@@ -7,11 +7,14 @@ from scipy.sparse import spdiags, csr_matrix, bsr_matrix, eye
 from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
+from pyamg.classical.split import RS
+from pyamg.classical import ruge_stuben_solver
 from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
     block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
     gauss_seidel_indexed, polynomial, gauss_seidel_ne,\
-    gauss_seidel_nr
+    gauss_seidel_nr,\
+    jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
 
 # Ignore efficiency warnings
@@ -40,6 +43,7 @@ class TestCommonRelaxation(TestCase):
         self.cases.append((sor, (0.5,), {}))
         self.cases.append((gauss_seidel_indexed, ([1, 0],), {}))
         self.cases.append((polynomial, ([0.6, 0.1],), {}))
+        self.cases.append((jacobi_indexed, ([1, 0],), {}))
 
     def test_single_precision(self):
 
@@ -194,7 +198,6 @@ class TestRelaxation(TestCase):
 
     def test_jacobi_bsr(self):
         cases = []
-        # JBS: remove some N
         for N in [1, 2, 3, 4, 5, 6, 10]:
             cases.append(spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)],
                                  [0, -1, 1], N, N).tocsr())
@@ -407,6 +410,47 @@ class TestRelaxation(TestCase):
         gauss_seidel_indexed(A, x, b, [0, 0])
         assert_almost_equal(x, np.array([1.0/2.0, 1.0, 1.0, 1.0]))
 
+    def test_jacobi_indexed(self):
+        N = 1
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0])
+        assert_almost_equal(x, np.array([0]))
+
+        N = 3
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 1, 2])
+        assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
+
+        N = 3
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.arange(N).astype(np.float64)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [2, 1, 0])
+        assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
+
+        N = 4
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
+                    N, N, format='csr')
+        x = np.ones(N)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 3])
+        assert_almost_equal(x, np.array([0.5, 1.0, 1.0, 0.5]))
+
+        N = 4
+        A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
+                    format='csr')
+        x = np.ones(N)
+        b = np.zeros(N)
+        jacobi_indexed(A, x, b, [0, 0])
+        assert_almost_equal(x, np.array([1.0/2.0, 1.0, 1.0, 1.0]))
+
     def test_jacobi_ne(self):
         N = 1
         A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1], N, N,
@@ -459,7 +503,6 @@ class TestRelaxation(TestCase):
         assert_almost_equal(x, xtrue)
 
     def test_gauss_seidel_ne_bsr(self):
-        # JBS: remove some N
         for N in [1, 2, 3, 4, 5, 6, 10]:
             A = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
                         N, N).tocsr()
@@ -1709,16 +1752,182 @@ class TestBlockRelaxation(TestCase):
             assert_almost_equal(x, gold(A, x_copy, b, blocksize, 'symmetric'),
                                 decimal=4)
 
-# class TestDispatch(TestCase):
-#     def test_string(self):
-#         from pyamg.relaxation import dispatch
-#
-#         A = poisson( (4,), format='csr')
-#
-#         cases = []
-#         cases.append( 'gauss_seidel' )
-#         cases.append( ('gauss_seidel',{'iterations':3}) )
-#
-#         for case in cases:
-#             fn = dispatch(case)
-#             fn(A, np.ones(4), np.zeros(4))
+
+class TestJacobiIndexed(TestCase):
+    """Test indexed Jacobi routines against other routines."""
+
+    def test_compare_jacobi_indexed_to_jacobi(self):
+        A = poisson((8, 8), format='csr')
+        n = A.shape[0]
+        np.random.seed(336671267)
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+
+        # test all indices
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j, x_ji)
+
+        # test last 5 indices
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(n-5, n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j[-5:], x_ji[-5:])
+
+        # test complex
+        np.random.seed(635353774)
+        A = A.astype(np.complex128)
+        b = b.astype(np.complex128)
+        x0 = np.random.rand(n)
+        x_j = x0.copy().astype(np.complex128)
+        x_ji = x0.copy().astype(np.complex128)
+
+        A.data[:] += 0.1 * np.random.randn(len(A.data))
+        A.data[:] += 0.1 * 1j * np.random.randn(len(A.data))
+        indices = np.arange(n)
+        jacobi(A, x_j, b, omega=0.3)
+        jacobi_indexed(A, x_ji, b, indices, omega=0.3)
+        assert_almost_equal(x_j, x_ji)
+
+        # test blocks
+        A = poisson((8, )).tobsr(blocksize=(2, 2))
+        n = A.shape[0]
+        np.random.seed(25371657)
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        x_j = x0.copy()
+        x_ji = x0.copy()
+        indices = np.arange(4, dtype=np.int32)
+        jacobi(A, x_j, b)
+        jacobi_indexed(A, x_ji, b, indices)
+        assert_almost_equal(x_j, x_ji)
+
+    def test_compare_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to indexed."""
+        A = poisson((10, 10), format='csr')
+        splitting = RS(A)
+        f_pts = np.where(splitting == 0)[0]
+        c_pts = np.where(splitting == 1)[0]
+
+        np.random.seed(1479923306)
+        n = A.shape[0]
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        x_cf = x0.copy()
+        x_fc = x0.copy()
+        x_ji = x0.copy()
+
+        # first check F-points zeroed
+        x_cf[f_pts] = 0
+        x_fc[f_pts] = 0
+        x_ji[f_pts] = 0
+        jacobi_indexed(A, x_ji, b, c_pts, omega=0.7)
+        cf_jacobi(A, x_cf, b, c_pts, f_pts, omega=0.7)
+        assert_almost_equal(x_ji[c_pts], x_cf[c_pts])
+
+        # then check C-points zeroed
+        x_cf[c_pts] = 0
+        x_fc[c_pts] = 0
+        x_ji[c_pts] = 0
+        jacobi_indexed(A, x_ji, b, f_pts, omega=0.7)
+        fc_jacobi(A, x_fc, b, c_pts, f_pts, omega=0.7)
+        assert_almost_equal(x_ji[f_pts], x_fc[f_pts])
+
+    def test_compare_bsr_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to indexed in bsr."""
+        A = poisson((10,)).tobsr(blocksize=(2, 2))
+
+        splitting = np.array([1, 0, 1, 0, 1], dtype=np.int32)
+        f_pts = np.where(splitting == 0)[0]
+        c_pts = np.where(splitting == 1)[0]
+
+        np.random.seed(1479923306)
+        n = A.shape[0]
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        bs = A.blocksize[0]
+
+        # first check F-points zeroed
+        x = x0.copy()
+        x_ji = x0.copy()
+        for i in range(bs):
+            x[f_pts*bs+i] = 0
+            x_ji[f_pts*bs+i] = 0
+        jacobi_indexed(A, x_ji, b, c_pts, omega=0.7)
+        cf_jacobi(A, x, b, c_pts, f_pts, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_ji[c_pts*bs+i], x[c_pts*bs+i])
+
+        # then check C-points zeroed
+        x = x0.copy()
+        x_ji = x0.copy()
+        for i in range(bs):
+            x[c_pts*bs+i] = 0
+            x_ji[c_pts*bs+i] = 0
+        jacobi_indexed(A, x_ji, b, f_pts, omega=0.7)
+        fc_jacobi(A, x, b, c_pts, f_pts, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_ji[f_pts*bs+i], x[f_pts*bs+i])
+
+    def test_compare_block_cf_fc_jacobi(self):
+        """Compare CF/FC relaxation to block Jacobi."""
+        A = poisson((10,)).tobsr(blocksize=(2, 2))
+
+        splitting = np.array([1, 0, 1, 0, 1], dtype=np.int32)
+        f_pts = np.where(splitting == 0)[0]
+        c_pts = np.where(splitting == 1)[0]
+
+        np.random.seed(1479923306)
+        n = A.shape[0]
+        x0 = np.random.rand(n)
+        b = np.random.rand(n)
+        bs = A.blocksize[0]
+
+        # first check F-points zeroed
+        x = x0.copy()
+        x_j = x0.copy()
+        for i in range(bs):
+            x[f_pts*bs+i] = 0
+            x_j[f_pts*bs+i] = 0
+        block_jacobi(A, x_j, b, blocksize=2, omega=0.7)
+        cf_block_jacobi(A, x, b, c_pts, f_pts, blocksize=2, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_j[c_pts*bs+i], x[c_pts*bs+i])
+
+        # then check C-points zeroed
+        x = x0.copy()
+        x_j = x0.copy()
+        for i in range(bs):
+            x[c_pts*bs+i] = 0
+            x_j[c_pts*bs+i] = 0
+        block_jacobi(A, x_j, b, blocksize=2, omega=0.7)
+        fc_block_jacobi(A, x, b, c_pts, f_pts, blocksize=2, omega=0.7)
+        for i in range(A.blocksize[0]):
+            assert_almost_equal(x_j[f_pts*bs+i], x[f_pts*bs+i])
+
+    def test_integrated_cf_fc_relaxation(self):
+        """Test CF/FC relaxation within a hierarchy."""
+        A = poisson((10, 10), format='csr')
+        opts = {'omega': 4.0/3.0, 'iterations': 2}
+        ml = ruge_stuben_solver(A,
+                                presmoother=('fc_jacobi', opts),
+                                postsmoother=('fc_jacobi', opts))
+        assert not ml.symmetric_smoothing
+
+        ml = ruge_stuben_solver(A,
+                                presmoother=('cf_jacobi', opts),
+                                postsmoother=('fc_jacobi', opts))
+        assert ml.symmetric_smoothing
+
+        np.random.seed(1825622348)
+        x0 = np.random.rand(A.shape[0])
+        b = np.random.rand(A.shape[0])
+        tol = 1e-5
+        x, info = ml.solve(b, x0=x0, tol=tol, maxiter=100, return_info=True)
+        assert (np.linalg.norm(b - A @ x)/np.linalg.norm(b - A @ x0)) < tol
+        assert info == 0

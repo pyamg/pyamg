@@ -24,29 +24,51 @@ Examples
 See change_smoothers above
 """
 
+from functools import partial, update_wrapper
+
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import LinearOperator
+
 from ..util.utils import scale_rows, get_block_diag, get_diagonal
 from ..util.linalg import approximate_spectral_radius
 from ..krylov import gmres, cgne, cgnr, cg
-
 from . import relaxation
 from .chebyshev import chebyshev_polynomial_coefficients
 
-
-# Default relaxation parameters and list of by-definition
-# symmetric relaxation schemes, e.g. Jacobi.
+# Default relaxation parameters
 DEFAULT_SWEEP = 'forward'
 DEFAULT_NITER = 1
+
+# List of by-definition symmetric relaxation schemes, e.g. Jacobi.
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
                         'jacobi_ne', 'chebyshev', None]
+
+# List of supported Krylov relaxation schemes
+KRYLOV_RELAXATION = ['cg', 'cgne', 'cgnr', 'gmres']
 
 
 def _unpack_arg(v):
     if isinstance(v, tuple):
         return v[0], v[1]
     return v, {}
+
+
+def _extract_splitting(lvl):
+    """Check and extract splitting."""
+    # Get C-points and F-points from splitting
+    try:
+        splitting = lvl.splitting
+    except AttributeError as exc:
+        raise AttributeError('CF splitting is required in hierarchy.') from exc
+
+    if splitting.dtype != bool:
+        raise ValueError('CF splitting is required to be boolean.')
+
+    Fpts = np.where(np.logical_not(splitting))[0].astype(dtype=int)
+    Cpts = np.where(splitting)[0].astype(dtype=int)
+
+    return Fpts, Cpts
 
 
 def change_smoothers(ml, presmoother, postsmoother):
@@ -109,6 +131,10 @@ def change_smoothers(ml, presmoother, postsmoother):
         block_gauss_seidel
         jacobi
         block_jacobi
+        cf_jacobi
+        fc_jacobi
+        cf_block_jacobi
+        fc_block_jacobi
         richardson
         sor
         chebyshev
@@ -157,12 +183,14 @@ def change_smoothers(ml, presmoother, postsmoother):
     if isinstance(presmoother, (str, tuple)) or (presmoother is None):
         presmoother = [presmoother]
     elif not isinstance(presmoother, list):
-        raise ValueError('Unrecognized presmoother')
+        raise ValueError('Unrecognized presmoother -- use a string:\n '
+                         '"method" or ("method", opts) or list thereof.')
 
     if isinstance(postsmoother, (str, tuple)) or (postsmoother is None):
         postsmoother = [postsmoother]
     elif not isinstance(postsmoother, list):
-        raise ValueError('Unrecognized postsmoother')
+        raise ValueError('Unrecognized postsmoother -- use a string:\n '
+                         '"method" or ("method", opts) or list thereof.')
 
     # set ml.levels[i].presmoother = presmoother[i],
     #     ml.levels[i].postsmoother = postsmoother[i]
@@ -176,20 +204,15 @@ def change_smoothers(ml, presmoother, postsmoother):
         # unpack presmoother[i]
         fn1, kwargs1 = _unpack_arg(presmoother[i])
         # get function handle
-        try:
-            setup_presmoother = _setup_call(str(fn1).lower())
-        except NameError as e:
-            raise NameError(f'Invalid presmoother method: {fn1}') from e
+        setup_presmoother = _setup_call(fn1)
 
         ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
         # unpack postsmoother[i]
         fn2, kwargs2 = _unpack_arg(postsmoother[i])
         # get function handle
-        try:
-            setup_postsmoother = _setup_call(str(fn2).lower())
-        except NameError as e:
-            raise NameError(f'Invalid postsmoother method: {fn2}') from e
+        setup_postsmoother = _setup_call(fn2)
+
         ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
         # Check if symmetric smoothing scheme
@@ -203,23 +226,34 @@ def change_smoothers(ml, presmoother, postsmoother):
         else:
             it2 = DEFAULT_NITER
 
-        if (fn1 != fn2) or (it1 != it2):
+        if it1 != it2:
+            ml.symmetric_smoothing = False
+        elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                            ('fc_jacobi', 'cf_jacobi'),
+                            ('cf_block_jacobi', 'fc_block_jacobi'),
+                            ('fc_block_jacobi', 'cf_block_jacobi')]:
+
+            fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+            fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+            cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+            cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
+
+            if not (fit1 == fit2 and cit1 == cit2):
+                ml.symmetric_smoothing = False
+        elif fn1 != fn2:
+            ml.symmetric_smoothing = False
+        elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
         elif fn1 not in SYMMETRIC_RELAXATION:
-            if 'sweep' in kwargs1:
-                sweep1 = kwargs1['sweep']
-            else:
-                sweep1 = DEFAULT_SWEEP
-
-            if 'sweep' in kwargs2:
-                sweep2 = kwargs2['sweep']
-            else:
-                sweep2 = DEFAULT_SWEEP
-
-            if (sweep1, sweep2) not in (('forward', 'backward'),
-                                        ('backward', 'forward'),
-                                        ('symmetric', 'symmetric')):
+            if fn1.startswith(('cf_', 'fc_')):
                 ml.symmetric_smoothing = False
+            else:
+                sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
+                if (sweep1, sweep2) not in [('forward', 'backward'),
+                                            ('backward', 'forward'),
+                                            ('symmetric', 'symmetric')]:
+                    ml.symmetric_smoothing = False
 
     if len(presmoother) < len(postsmoother):
         mid_len = min(len(postsmoother), len(ml.levels[:-1]))
@@ -230,10 +264,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             # unpack postsmoother[i]
             fn2, kwargs2 = _unpack_arg(postsmoother[i])
             # get function handle
-            try:
-                setup_postsmoother = _setup_call(str(fn2).lower())
-            except NameError as e:
-                raise NameError(f'Invalid postsmoother method: {fn2}') from e
+            setup_postsmoother = _setup_call(fn2)
 
             ml.levels[i].postsmoother = setup_postsmoother(ml.levels[i], **kwargs2)
 
@@ -242,29 +273,39 @@ def change_smoothers(ml, presmoother, postsmoother):
                 it1 = kwargs1['iterations']
             else:
                 it1 = DEFAULT_NITER
-
             if 'iterations' in kwargs2:
                 it2 = kwargs2['iterations']
+
             else:
                 it2 = DEFAULT_NITER
 
-            if (fn1 != fn2) or (it1 != it2):
+            if it1 != it2:
+                ml.symmetric_smoothing = False
+            elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                                ('fc_jacobi', 'cf_jacobi'),
+                                ('cf_block_jacobi', 'fc_block_jacobi'),
+                                ('fc_block_jacobi', 'cf_block_jacobi')]:
+                fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
+
+                if not (fit1 == fit2 and cit1 == cit2):
+                    ml.symmetric_smoothing = False
+            elif fn1 != fn2:
+                ml.symmetric_smoothing = False
+            elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if 'sweep' in kwargs1:
-                    sweep1 = kwargs1['sweep']
-                else:
-                    sweep1 = DEFAULT_SWEEP
-
-                if 'sweep' in kwargs2:
-                    sweep2 = kwargs2['sweep']
-                else:
-                    sweep2 = DEFAULT_SWEEP
-
-                if (sweep1, sweep2) not in (('forward', 'backward'),
-                                            ('backward', 'forward'),
-                                            ('symmetric', 'symmetric')):
+                if fn1.startswith(('cf_', 'fc_')):
                     ml.symmetric_smoothing = False
+                else:
+                    sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                    sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
+                    if (sweep1, sweep2) not in (('forward', 'backward'),
+                                                ('backward', 'forward'),
+                                                ('symmetric', 'symmetric')):
+                        ml.symmetric_smoothing = False
 
     elif len(presmoother) > len(postsmoother):
         mid_len = min(len(presmoother), len(ml.levels[:-1]))
@@ -272,10 +313,7 @@ def change_smoothers(ml, presmoother, postsmoother):
             # unpack presmoother[i]
             fn1, kwargs1 = _unpack_arg(presmoother[i])
             # get function handle
-            try:
-                setup_presmoother = _setup_call(str(fn1).lower())
-            except NameError as e:
-                raise NameError(f'Invalid presmoother method: {fn1}') from e
+            setup_presmoother = _setup_call(fn1)
 
             ml.levels[i].presmoother = setup_presmoother(ml.levels[i], **kwargs1)
 
@@ -293,24 +331,34 @@ def change_smoothers(ml, presmoother, postsmoother):
             else:
                 it2 = DEFAULT_NITER
 
-            if (fn1 != fn2) or (it1 != it2):
+            if it1 != it2:
+                ml.symmetric_smoothing = False
+            elif (fn1, fn2) in [('cf_jacobi', 'fc_jacobi'),
+                                ('fc_jacobi', 'cf_jacobi'),
+                                ('cf_block_jacobi', 'fc_block_jacobi'),
+                                ('fc_block_jacobi', 'cf_block_jacobi')]:
+
+                fit1 = kwargs1.get('f_iterations', DEFAULT_NITER)
+                fit2 = kwargs2.get('f_iterations', DEFAULT_NITER)
+                cit1 = kwargs1.get('c_iterations', DEFAULT_NITER)
+                cit2 = kwargs2.get('c_iterations', DEFAULT_NITER)
+
+                if not (fit1 == fit2 and cit1 == cit2):
+                    ml.symmetric_smoothing = False
+            elif fn1 != fn2:
+                ml.symmetric_smoothing = False
+            elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
                 ml.symmetric_smoothing = False
             elif fn1 not in SYMMETRIC_RELAXATION:
-                if 'sweep' in kwargs1:
-                    sweep1 = kwargs1['sweep']
-                else:
-                    sweep1 = DEFAULT_SWEEP
-
-                if 'sweep' in kwargs2:
-                    sweep2 = kwargs2['sweep']
-                else:
-                    sweep2 = DEFAULT_SWEEP
-
-                if (sweep1, sweep2) not in (('forward', 'backward'),
-                                            ('backward', 'forward'),
-                                            ('symmetric', 'symmetric')):
+                if fn1.startswith(('cf_', 'fc_')):
                     ml.symmetric_smoothing = False
-
+                else:
+                    sweep1 = kwargs1.get('sweep', DEFAULT_SWEEP)
+                    sweep2 = kwargs2.get('sweep', DEFAULT_SWEEP)
+                    if (sweep1, sweep2) not in [('forward', 'backward'),
+                                                ('backward', 'forward'),
+                                                ('symmetric', 'symmetric')]:
+                        ml.symmetric_smoothing = False
     else:
         mid_len = min_len
 
@@ -443,8 +491,8 @@ def matrix_asformat(lvl, name, format, blocksize=None):
 # pylint: disable=unused-argument
 def setup_gauss_seidel(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
     """Set up Gauss-Seidel."""
-    def smoother(A, x, b):
-        relaxation.gauss_seidel(A, x, b, iterations=iterations, sweep=sweep)
+    smoother = partial(relaxation.gauss_seidel, iterations=iterations, sweep=sweep)
+    update_wrapper(smoother, relaxation.gauss_seidel)  # set __name__
     return smoother
 
 
@@ -453,8 +501,8 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
 
-    def smoother(A, x, b):
-        relaxation.jacobi(A, x, b, iterations=iterations, omega=omega)
+    smoother = partial(relaxation.jacobi, iterations=iterations, omega=omega)
+    update_wrapper(smoother, relaxation.jacobi)  # set __name__
     return smoother
 
 
@@ -474,6 +522,7 @@ def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                            subdomain_ptr=subdomain_ptr,
                            inv_subblock=inv_subblock,
                            inv_subblock_ptr=inv_subblock_ptr, sweep=sweep)
+    update_wrapper(smoother, relaxation.schwarz)  # set __name__
     return smoother
 
 
@@ -491,8 +540,11 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
     subdomain_ptr = C.indptr.copy()
     subdomain = C.indices.copy()
 
-    return setup_schwarz(lvl, iterations=iterations, subdomain=subdomain,
-                         subdomain_ptr=subdomain_ptr, sweep=sweep)
+    def strength_based_schwarz(A, x, b):
+        smoother = setup_schwarz(lvl, iterations=iterations, subdomain=subdomain,
+                                 subdomain_ptr=subdomain_ptr, sweep=sweep)
+        smoother(A, x, b)
+    return strength_based_schwarz
 
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
@@ -509,18 +561,19 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
 
     if blocksize == 1:
         # Block Jacobi is equivalent to normal Jacobi
-        return setup_jacobi(lvl, iterations=iterations, omega=omega,
-                            withrho=withrho)
+        smoother = setup_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.block_jacobi)  # set __name__
+        return smoother
+
     # Use Block Jacobi
     if Dinv is None:
         Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
     if withrho:
         omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
 
-    def smoother(A, x, b):
-        relaxation.block_jacobi(A, x, b, iterations=iterations,
-                                omega=omega, Dinv=Dinv,
-                                blocksize=blocksize)
+    smoother = partial(relaxation.block_jacobi, iterations=iterations, omega=omega,
+                       Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.block_jacobi)  # set __name__
     return smoother
 
 
@@ -539,17 +592,17 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
 
     if blocksize == 1:
         # Block GS is equivalent to normal GS
-        return setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
+        smoother = setup_gauss_seidel(lvl, iterations=iterations, sweep=sweep)
+        update_wrapper(smoother, relaxation.block_gauss_seidel)
+        return smoother
 
     # Use Block GS
     if Dinv is None:
         Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
 
-    def smoother(A, x, b):
-        relaxation.block_gauss_seidel(A, x, b, iterations=iterations,
-                                      Dinv=Dinv, blocksize=blocksize,
-                                      sweep=sweep)
-
+    smoother = partial(relaxation.block_gauss_seidel, iterations=iterations,
+                       Dinv=Dinv, blocksize=blocksize, sweep=sweep)
+    update_wrapper(smoother, relaxation.block_gauss_seidel)  # set __name__
     return smoother
 
 
@@ -557,17 +610,15 @@ def setup_richardson(lvl, iterations=DEFAULT_NITER, omega=1.0):
     """Set up Richardson."""
     omega = omega/approximate_spectral_radius(lvl.A)
 
-    def smoother(A, x, b):
-        relaxation.polynomial(A, x, b, coefficients=[omega],
-                              iterations=iterations)
-    return smoother
+    def richardson(A, x, b):
+        relaxation.polynomial(A, x, b, coefficients=[omega], iterations=iterations)
+    return richardson
 
 
 def setup_sor(lvl, omega=0.5, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP):
     """Set up SOR."""
-    def smoother(A, x, b):
-        relaxation.sor(A, x, b, omega=omega, iterations=iterations,
-                       sweep=sweep)
+    smoother = partial(relaxation.sor, iterations=iterations, omega=omega, sweep=sweep)
+    update_wrapper(smoother, relaxation.sor)  # set __name__
     return smoother
 
 
@@ -580,10 +631,9 @@ def setup_chebyshev(lvl, lower_bound=1.0/30.0, upper_bound=1.1, degree=3,
     # drop the constant coefficient
     coefficients = -chebyshev_polynomial_coefficients(a, b, degree)[:-1]
 
-    def smoother(A, x, b):
-        relaxation.polynomial(A, x, b, coefficients=coefficients,
-                              iterations=iterations)
-    return smoother
+    def chebyshev(A, x, b):
+        relaxation.polynomial(A, x, b, coefficients=coefficients, iterations=iterations)
+    return chebyshev
 
 
 def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
@@ -595,6 +645,7 @@ def setup_jacobi_ne(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     def smoother(A, x, b):
         relaxation.jacobi_ne(lvl.Acsr, x, b, iterations=iterations,
                              omega=omega)
+    update_wrapper(smoother, relaxation.jacobi_ne)  # set __name__
     return smoother
 
 
@@ -606,6 +657,7 @@ def setup_gauss_seidel_ne(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     def smoother(A, x, b):
         relaxation.gauss_seidel_ne(lvl.Acsr, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
+    update_wrapper(smoother, relaxation.gauss_seidel_ne)  # set __name__
     return smoother
 
 
@@ -617,77 +669,170 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
     def smoother(A, x, b):
         relaxation.gauss_seidel_nr(lvl.Acsc, x, b, iterations=iterations,
                                    sweep=sweep, omega=omega)
+    update_wrapper(smoother, relaxation.gauss_seidel_nr)  # set __name__
     return smoother
 
 
-def setup_gmres(lvl, tol=1e-12, maxiter=1, restrt=None, M=None, callback=None,
+def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+    """Set up coarse-fine Jacobi."""
+    if withrho:
+        omega = omega/rho_D_inv_A(lvl.A)
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.cf_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=DEFAULT_NITER, omega=omega)
+    update_wrapper(smoother, relaxation.cf_jacobi)  # set __name__
+    return smoother
+
+
+def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+    """Set up fine-coarse Jacobi."""
+    if withrho:
+        omega = omega/rho_D_inv_A(lvl.A)
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.fc_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=DEFAULT_NITER, omega=omega)
+    update_wrapper(smoother, relaxation.fc_jacobi)  # set __name__
+    return smoother
+
+
+def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                          iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
+                          withrho=False):
+    """Set up coarse-fine block Jacobi."""
+    # Determine Blocksize
+    if blocksize is None and Dinv is None:
+        if sparse.isspmatrix_csr(lvl.A):
+            blocksize = 1
+        elif sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize is None:
+        if sparse.isspmatrix_bsr(Dinv):
+            blocksize = Dinv.blocksize[1]
+        else:
+            blocksize = 1
+
+    # Check for compatible dimensions
+    if (lvl.A.shape[0] % blocksize) != 0:
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
+
+    if blocksize == 1:
+        # Block Jacobi is equivalent to normal Jacobi
+        smoother = setup_cf_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.cf_block_jacobi)
+        return smoother
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+
+    smoother = partial(relaxation.cf_block_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.cf_block_jacobi)  # set __name
+    return smoother
+
+
+def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                          iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
+                          withrho=False):
+    """Set up coarse-fine block Jacobi."""
+    # Determine Blocksize
+    if blocksize is None and Dinv is None:
+        if sparse.isspmatrix_csr(lvl.A):
+            blocksize = 1
+        elif sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize is None:
+        if sparse.isspmatrix_bsr(Dinv):
+            blocksize = Dinv.blocksize[1]
+        else:
+            blocksize = 1
+
+    # Check for compatible dimensions
+    if (lvl.A.shape[0] % blocksize) != 0:
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
+
+    if blocksize == 1:
+        # Block Jacobi is equivalent to normal Jacobi
+        smoother = setup_fc_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.fc_block_jacobi)
+        return smoother
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+
+    smoother = partial(relaxation.fc_block_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.fc_block_jacobi)  # set __name__
+    return smoother
+
+
+def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
                 residuals=None):
     """Set up GMRES smoothing."""
     def smoother(A, x, b):
-        x[:] = (
-            gmres(
-                A,
-                b,
-                x0=x,
-                tol=tol,
-                maxiter=maxiter,
-                restrt=restrt,
-                M=M,
-                callback=callback,
-                residuals=residuals)[0]).reshape(
-            x.shape)
+        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
+                     callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, gmres)  # set __name__
     return smoother
 
 
-def setup_cg(lvl, tol=1e-12, maxiter=1, M=None, callback=None, residuals=None):
+def setup_cg(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None, residuals=None):
     """Set up CG smoothing."""
     def smoother(A, x, b):
-        x[:] = (cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
-                   callback=callback, residuals=residuals)[0]).reshape(x.shape)
+        x[:] = cg(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+                  callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cg)  # set __name__
     return smoother
 
 
-def setup_cgne(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
+def setup_cgne(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
                residuals=None):
     """Set up CGNE smoothing."""
     def smoother(A, x, b):
-        x[:] = (
-            cgne(
-                A,
-                b,
-                x0=x,
-                tol=tol,
-                maxiter=maxiter,
-                M=M,
-                callback=callback,
-                residuals=residuals)[0]).reshape(
-            x.shape)
+        x[:] = cgne(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+                    callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cgne)  # set __name__
     return smoother
 
 
-def setup_cgnr(lvl, tol=1e-12, maxiter=1, M=None, callback=None,
+def setup_cgnr(lvl, tol=1e-12, maxiter=DEFAULT_NITER, M=None, callback=None,
                residuals=None):
     """Set up CGNR smoothing."""
     def smoother(A, x, b):
-        x[:] = (
-            cgnr(
-                A,
-                b,
-                x0=x,
-                tol=tol,
-                maxiter=maxiter,
-                M=M,
-                callback=callback,
-                residuals=residuals)[0]).reshape(
-            x.shape)
+        x[:] = cgnr(A, b, x0=x, tol=tol, maxiter=maxiter, M=M,
+                    callback=callback, residuals=residuals)[0].reshape(x.shape)
+    update_wrapper(smoother, cgnr)  # set __name__
     return smoother
 
 
 def setup_none(lvl):
     """Set up default, empty smoother."""
-    def smoother(A, x, b):
+    def none(A, x, b):
         pass
-    return smoother
+    return none  # set __name__ none
 
 
 def _setup_call(fn):
@@ -708,6 +853,10 @@ def _setup_call(fn):
         'jacobi_ne':              setup_jacobi_ne,
         'gauss_seidel_ne':        setup_gauss_seidel_ne,
         'gauss_seidel_nr':        setup_gauss_seidel_nr,
+        'cf_jacobi':              setup_cf_jacobi,
+        'fc_jacobi':              setup_fc_jacobi,
+        'cf_block_jacobi':        setup_cf_block_jacobi,
+        'fc_block_jacobi':        setup_fc_block_jacobi,
         'gmres':                  setup_gmres,
         'cg':                     setup_cg,
         'cgne':                   setup_cgne,
@@ -715,7 +864,41 @@ def _setup_call(fn):
         'none':                   setup_none,
     }
 
+    if fn is None:
+        fn = 'none'
+
+    if not isinstance(fn, str):
+        raise ValueError(f'Input function must be a string or None: fn={fn}')
+
     if fn not in setup_register:
         raise ValueError(f'Function {fn} does not have a setup')
 
     return setup_register[fn]
+
+
+def rebuild_smoother(lvl):
+    """Rebuild the pre/post smoother on a level.
+
+    Parameters
+    ----------
+    lvl : Level object
+
+    Notes
+    -----
+    This rebuilds a smoother on level lvl using the existing pre
+    and post smoothers.  If different methods are needed, see
+    `change_smoothers`.
+    """
+    try:
+        fn1 = lvl.presmoother.__name__
+        fn2 = lvl.postsmoother.__name__
+    except AttributeError as exc:
+        raise AttributeError('The pre/post smoothers need to be functions.') from exc
+
+    # Rebuild presmoother
+    setup_presmoother = _setup_call(fn1)
+    lvl.presmoother = setup_presmoother(lvl)
+
+    # Rebuild postsmoother
+    setup_postsmoother = _setup_call(fn2)
+    lvl.postsmoother = setup_postsmoother(lvl)

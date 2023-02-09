@@ -267,6 +267,75 @@ void jacobi(const I Ap[], const int Ap_size,
     }
 }
 
+
+/*
+ *  Perform one iteration of Jacobi relaxation on the linear
+ *  system Ax = b for a given set of row indices, where A is
+ *  stored in CSR format and x and b are column vectors.
+ *  Damping is controlled by the omega parameter.
+ *
+ *  Parameters
+ *      Ap[]       - CSR row pointer
+ *      Aj[]       - CSR index array
+ *      Ax[]       - CSR data array
+ *      x[]        - approximate solution
+ *      b[]        - right hand side
+ *      temp[]     - temporary vector the same size as x
+ *      indices[]  - list of row indices to perform Jacobi on, e.g. F-points
+ *      omega      - damping parameter
+ *
+ *  Returns:
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void jacobi_indexed(const I Ap[], const int Ap_size,
+                    const I Aj[], const int Aj_size,
+                    const T Ax[], const int Ax_size,
+                          T  x[], const int  x_size,
+                    const T  b[], const int  b_size,
+                    const I indices[], const int indices_size,
+                    const T omega[], const int omega_size)
+{
+    T one = 1.0;
+    T omega2 = omega[0];
+    std::vector<T> temp(x_size);
+
+    // Set temp = x
+    for(I i=0; i<x_size; i++) {
+        temp[i] = x[i];
+    }
+
+    // Perform Jacobi on each row in indices[]
+    for(I i=0; i<indices_size; i++) {
+        I row = indices[i];
+        I start = Ap[row];
+        I end   = Ap[row+1];
+        T rsum = 0;
+        T diag = 0;
+
+        // Compute A*x for this row, get diagonal element of A
+        for(I jj = start; jj < end; jj++){
+            I col = Aj[jj];
+            if (row == col) {
+                diag  = Ax[jj];
+            }
+            else {
+                rsum += Ax[jj]*temp[col];
+            }
+        }
+
+        // Check for nonzero diagonal and update ith index
+        if (diag != (F) 0.0){
+            x[row] = (one - omega2) * temp[row] + omega2 * ((b[row] - rsum)/diag);
+        }
+        else {
+            std::cout << "Warning : zero diagonal encountered in Jacobi; ignored.\n";
+        }
+    }
+}
+
+
 /*
  * Perform one iteration of Jacobi relaxation on the linear
  * system Ax = b, where A is stored in Block CSR format and x and b
@@ -401,6 +470,127 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
 
 
 /*
+ *  Perform one iteration of Jacobi relaxation on the linear
+ *  system Ax = b for a given set of row indices, where A is
+ *  stored in Block CSR format and x and b are column vectors.
+ *  This method applies point-wise relaxation to the BSR matrix
+ *  for a given set of row block indices, as opposed to "block
+ *  relaxation".
+ *
+ *  Parameters
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array
+ *  x : array
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  indices : array
+ *      list of row indices to perform Jacobi on, e.g., F-points.
+ *      Note, it is assumed that indices correspond to blocks in A.
+ *  blocksize : int
+ *      BSR blocksize (blocks must be square)
+ *  omega : float
+ *      damping parameter
+ *
+ *  Returns
+ *  -------
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void bsr_jacobi_indexed(const I Ap[], const int Ap_size,
+                        const I Aj[], const int Aj_size,
+                        const T Ax[], const int Ax_size,
+                              T  x[], const int  x_size,
+                        const T  b[], const int  b_size,
+                        const I indices[], const int indices_size,
+                        const I blocksize,
+                        const T omega[], const int omega_size)
+{
+    I B2 = blocksize*blocksize;
+    T *rsum = new T[blocksize];
+    T *Axloc = new T[blocksize];
+    T omega2 = omega[0];
+    T one = 1.0;
+
+    // copy x to temp
+    std::vector<T> temp(x_size);
+    for(I i=0; i<x_size; i++) {
+        temp[i] = x[i];
+    }
+
+    for(I i=0; i<indices_size; i++) {
+
+        I row = indices[i];
+        I start = Ap[row];
+        I end   = Ap[row+1];
+        I diag_ptr = -1;
+
+        // initialize rsum to b, then later subtract A*x
+        for(I k = 0; k < blocksize; k++) {
+            rsum[k] = b[row*blocksize+k];
+        }
+
+        // loop over this row
+        for(I jj=start; jj<end; jj++) {
+            // extract column entry
+            I j = Aj[jj];
+            // absolute column entry for the start of this block
+            I col = j*blocksize;
+
+            if (row == j){    //point to where in Ax the diagonal block starts
+                diag_ptr = jj*B2;
+            }
+            else {
+                // do a dense multiply of this block times x and accumulate in rsum
+                gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
+                     &(temp[col]),  blocksize,   1,       'F',
+                     &(Axloc[0]),   blocksize,   1,       'F',
+                     'T');
+                for(I m = 0; m < blocksize; m++) {
+                    rsum[m] -= Axloc[m];
+                }
+            }
+        }
+
+        // Carry out point-wise jacobi over the diagonal block,
+        // all the other blocks have been factored into rsum.
+        if (diag_ptr != -1) {
+            for(I k=0; k<blocksize; k++) {
+                T diag = 1.0;
+                for(I kk=0; kk<blocksize; kk++) {
+                    if(k == kk){
+                        // diagonal entry
+                        diag = Ax[k*blocksize + kk + diag_ptr];
+                    }
+                    else{
+                        // off-diag entry
+                        rsum[k] -= Ax[k*blocksize + kk + diag_ptr] * temp[row*blocksize + kk];
+                    }
+                }
+
+                // Check for nonzero diagonal and update ith index
+                if (diag != (F) 0.0){
+                    x[row*blocksize + k] = (one - omega2) * temp[row*blocksize + k] + omega2 * rsum[k]/diag;
+                }
+                else {
+                    std::cout << "Warning : zero diagonal encountered in relaxation; ignored.\n";
+                }
+            }
+        }
+    }
+
+    delete[] rsum;
+    delete[] Axloc;
+}
+
+
+/*
  * Perform one iteration of Gauss-Seidel relaxation on the linear
  * system Ax = b, where A is stored in CSR format and x and b
  * are column vectors.
@@ -478,7 +668,7 @@ void gauss_seidel_indexed(const I Ap[], const int Ap_size,
 
 /*
  * Perform NE Jacobi on the linear system A x = b
- * This effectively carries out weighted-Jacobi on A A^T x = A^T b
+ * This effectively carries out weighted-Jacobi on A^TA x = A^T b
  * (also known as Cimmino's relaxation)
  *
  * Parameters
@@ -550,7 +740,8 @@ void jacobi_ne(const I Ap[], const int Ap_size,
 
 /*
  * Perform NE Gauss-Seidel on the linear system A x = b
- * This effectively carries out Gauss-Seidel on A A.H x = b
+ * This effectively carries out Gauss-Seidel on A A.H y = b,
+ * where x = A.h y.
  *
  * Parameters
  * ----------
@@ -789,6 +980,113 @@ void block_jacobi(const I Ap[], const int Ap_size,
     delete[] v;
     delete[] rsum;
 }
+
+
+/*
+ *  Perform one iteration of block Jacobi relaxation on the linear
+ *  system Ax = b for a given set of (block) row indices. A is
+ *  stored in BSR format and x and b are column vectors. Damping
+ *  is controlled by the parameter omega.
+ *
+ *  Parameters
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array, blocks assumed square
+ *  x : array
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  Tx : array
+ *      Inverse of each diagonal block of A stored
+ *      as a (n/blocksize, blocksize, blocksize) array
+ *  indices : array
+ *      Indices
+ *  omega : float
+ *      damping parameter
+ *  blocksize : int
+ *      dimension of square blocks in BSR matrix A
+ *
+ *  Returns
+ *  -------
+ *      Nothing, x will be modified in place
+ *
+ */
+template<class I, class T, class F>
+void block_jacobi_indexed(const I Ap[], const int Ap_size,
+                          const I Aj[], const int Aj_size,
+                          const T Ax[], const int Ax_size,
+                                T  x[], const int  x_size,
+                          const T  b[], const int  b_size,
+                          const T Tx[], const int Tx_size,
+                          const I indices[], const int indices_size,
+                          const T omega[], const int omega_size,
+                          const I blocksize)
+{
+    // Rename
+    const T * Dinv = Tx;
+    T zero = 0.0;
+    T one = 1.0;
+    T omega2 = omega[0];
+    T *rsum = new T[blocksize];
+    T *v = new T[blocksize];
+    I blocksize_sq = blocksize*blocksize;
+
+    // Copy x to temp vector
+    std::vector<T> temp(x_size);
+    for(I i=0; i<x_size; i++) {
+        temp[i] = x[i];
+    }
+
+    // Begin block Jacobi sweep
+    for(I i=0; i<indices_size; i++) {
+        I row = indices[i];
+        I start = Ap[row];
+        I end   = Ap[row+1];
+        std::fill(&(rsum[0]), &(rsum[blocksize]), zero);
+
+        // Carry out a block dot product between block row i and x
+        for(I jj = start; jj < end; jj++) {
+            I j = Aj[jj];
+            if (row == j) {
+                //diagonal, do nothing
+                continue;
+            }
+            else {
+                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
+                     &(temp[j*blocksize]),   blocksize, 1,         'F',
+                     &(v[0]),                blocksize, 1,         'F',
+                     'T');
+                for(I k=0; k<blocksize; k++) {
+                    rsum[k] += v[k];
+                }
+            }
+        }
+
+        // Compute b - Ax within block
+        for(I k = 0; k < blocksize; k++) {
+            rsum[k] = b[row*blocksize + k] - rsum[k];
+        }
+
+        // Apply D^{-1} for this block row to b - Ax
+        gemm(&(Dinv[row*blocksize_sq]), blocksize, blocksize, 'F',
+             &(rsum[0]),              blocksize, 1,         'F',
+             &(v[0]),                 blocksize, 1,         'F',
+             'T');
+
+        // Update each element in ith block
+        for(I k = 0; k < blocksize; k++) {
+            x[row*blocksize + k] = (one - omega2)*temp[row*blocksize + k] + omega2*v[k];
+        }
+    }
+
+    delete[] v;
+    delete[] rsum;
+}
+
 
 /*
  * Perform one iteration of block Gauss-Seidel relaxation on

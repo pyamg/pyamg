@@ -338,7 +338,7 @@ def symmetric_rescaling(A, copy=True):
             raise ValueError('expected square matrix')
 
         D = diag_sparse(A)
-        mask = (D != 0)
+        mask = D != 0
 
         if A.dtype != complex:
             D_sqrt = np.sqrt(abs(D))
@@ -583,7 +583,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
     if inv:
         Dinv = np.zeros_like(D)
-        mask = (D != 0.0)
+        mask = D != 0.0
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
 
@@ -662,7 +662,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
-    nonzero_mask = (diag_entries != -1)
+    nonzero_mask = diag_entries != -1
     diag_entries = diag_entries[nonzero_mask]
     if diag_entries.shape != (0,):
         block_diag[nonzero_mask, :, :] = A.data[diag_entries, :, :]
@@ -1672,7 +1672,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
         diag_dom_rows = np.sum(diag_dom_rows, axis=1)
-        diag_dom_rows = (diag_dom_rows == bsize)
+        diag_dom_rows = diag_dom_rows == bsize
 
     # Replace these rows/cols in # C with rows/cols of the identity.
     Id = eye(C.shape[0], C.shape[1], format='csr')
@@ -1998,7 +1998,7 @@ def filter_matrix_columns(A, theta):
     return A_filter
 
 
-def filter_matrix_rows(A, theta):
+def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     """Filter each row of A with tol.
 
     i.e., drop all entries in row k where
@@ -2010,12 +2010,19 @@ def filter_matrix_rows(A, theta):
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
+    diagonal : bool
+        If True, filter by diagonal entry. Otherwise, filter by maximum absolute
+        value in row.  This is in place.
+    lump : bool
+        If True, instead of removing entries, lump them to diagonal. Preserves
+        row sum of matrix.
 
     Returns
     -------
     A_filter : sparse_matrix
         Each row has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
+        If `diagonal == True`, then no return (None).
 
     Examples
     --------
@@ -2042,13 +2049,23 @@ def filter_matrix_rows(A, theta):
     if (theta < 0) or (theta >= 1.0):
         raise ValueError('theta must be in [0,1)')
 
+    # Filter by diagonal entry, A_ij = 0 if |A_ij| < theta*|A_ii|
+    if diagonal:
+        amg_core.filter_matrix_rows(A.shape[0], theta, A.indptr,
+                                    A.indices, A.data, lump)
+        A.eliminate_zeros()
+        if Aformat == 'bsr':
+            A = A.tobsr(blocksize=blocksize)
+        return None  # inplace
+
     # Apply drop-tolerance to each row of A.  We apply the drop-tolerance with
-    # amg_core.classical_strength_of_connection(), which ignores diagonal
+    # amg_core.classical_strength_of_connection_abs(), which ignores diagonal
     # entries, thus necessitating the trick where we add A.shape[0] to each of
     # the row indices
     A_filter = A.copy()
     A.indices += A.shape[0]
     A_filter.indices += A.shape[0]
+
     # classical_strength_of_connection takes an absolute value internally
     amg_core.classical_strength_of_connection_abs(A.shape[0],
                                                   theta,

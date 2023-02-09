@@ -15,7 +15,8 @@ from pyamg.strength import classical_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
-    lloyd_aggregation, balanced_lloyd_aggregation, metis_aggregation
+    lloyd_aggregation, balanced_lloyd_aggregation,\
+    metis_aggregation, pairwise_aggregation
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother,\
     richardson_prolongation_smoother, energy_prolongation_smoother
@@ -71,7 +72,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     aggregate : string or list
         Method used to aggregate nodes.
-        Choose from 'standard', 'lloyd', 'naive',
+        Choose from 'standard', 'lloyd', 'naive', 'pairwise',
         ('predefined', {'AggOp' : csr_matrix})
 
     smooth : list
@@ -354,6 +355,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'metis':
         AggOp = metis_aggregation(C, **kwargs)
+    elif fn == 'pairwise':
+        AggOp = pairwise_aggregation(A, **kwargs)[0]
     elif fn == 'predefined':
         AggOp = kwargs['AggOp'].tocsr()
     else:
@@ -423,7 +426,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P              # Galerkin operator
+    A = R @ A @ P              # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates
