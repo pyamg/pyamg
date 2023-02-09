@@ -51,7 +51,7 @@ def bellman_ford_reference(A, c):
 
 
 def bellman_ford_balanced_reference(A, c):
-    """Reference implementation of balanced Bellman-Ford.
+    """Calculate reference implementation of balanced Bellman-Ford.
 
     Parameters
     ---------

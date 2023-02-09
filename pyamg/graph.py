@@ -160,11 +160,11 @@ def bellman_ford(G, centers, method='standard'):
     num_clusters = len(centers)
 
     # allocate space for returns and working arrays
-    distances = np.full(n, np.inf, dtype=G.dtype) # distance to cluster center (inf)
-    nearest = np.full(n, -1, dtype=np.int32)      # nearest center or cluster membership or index (-1)
-    predecessors = np.full(n, -1, dtype=np.int32) # predecessor on the shortest path (-1)
-    distances[centers] = 0                        # distance = 0 at centers
-    nearest[centers] = np.arange(num_clusters)    # number the membership
+    distances = np.full(n, np.inf, dtype=G.dtype)  # distance to cluster center (inf)
+    nearest = np.full(n, -1, dtype=np.int32)       # nearest center, cluster membership (-1)
+    predecessors = np.full(n, -1, dtype=np.int32)  # predecessor on the shortest path (-1)
+    distances[centers] = 0                         # distance = 0 at centers
+    nearest[centers] = np.arange(num_clusters)     # number the membership
 
     if method == 'balanced':
         predecessors_count = np.full(n, 0, dtype=np.int32)
@@ -343,7 +343,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
     d[centers] = 0                                # distance = 0 at centers
     m[centers] = np.arange(num_clusters)          # number the membership
 
-    Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start of indices in C for each cluster
+    Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start in C for each cluster
     CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
 
     D = np.empty(maxsize*maxsize, dtype=G.dtype)     # FW distance array
@@ -371,12 +371,15 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
         d[centers] = 0
         m[centers] = np.arange(num_clusters)
         while (changed1 or changed2) and (it < maxiter):
-            changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
-                                                      d, m, p, pc, s)                           # OUT
+            changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data,
+                                                      centers, d, m, p, pc, s)
 
-            assert s.max() < maxsize, "maxsize (maximum cluster size) is too small"
-            assert m.min() >= 0, "Encountered a disconnected nodes from m."
-            assert d.min() >= 0, "Encountered a disconnected nodes from d."
+            if s.max() > maxsize:
+                raise ValueError('maxsize (maximum cluster size) is too small')
+
+            if m.min() < 0 or d.min() < 0:
+                raise ValueError('Encountered a disconnected nodes from m or d:  '
+                                 f'{m.min()=} {d.min()=})')
 
             changed2 = amg_core.center_nodes(n, G.indptr, G.indices, G.data,
                                              Cptr, D, P, CC, L, q,
@@ -385,7 +388,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
             it += 1
 
         # slow list version: [len(np.where(p==i)[0]) for i in range(len(p))]
-        truepc = np.bincount(p[p>-1], minlength=len(p))
+        truepc = np.bincount(p[p > -1], minlength=len(p))
         if np.count_nonzero(truepc - pc):
             raise ValueError('Predecessor count is incorrect.')
 
@@ -406,7 +409,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
                 _N = None
             P.fill(-1)
             amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
-                                    dist_all[a,:].ravel(), P, CC[Cptr[a]:_N], L,
+                                    dist_all[a, :].ravel(), P, CC[Cptr[a]:_N], L,
                                     m, a, N)
         # rebalance
         centers, rebalance_change = _rebalance(G, centers, m, d, dist_all, num_clusters)
@@ -419,7 +422,8 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
 
 
 def _rebalance(G, c, m, d, dist_all, num_clusters):
-    """
+    """Rebalance clusters.
+
     Parameters
     ----------
     G : sparse matrix
@@ -451,7 +455,7 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
 
     # calculate elimination and split measures
     E = _elimination_penalty(G, m, d, dist_all, num_clusters)
-    S, c1, c2 = _split_improvement(G, m, d, dist_all, num_clusters)
+    S, c1, c2 = _split_improvement(m, d, dist_all, num_clusters)
 
     # sort both ascending
     M = np.ones(num_clusters, dtype=bool)
@@ -467,11 +471,11 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
         a_e = Esortidx[i_e]
         a_s = Ssortidx[i_s]
 
-        if not M[a_e] or a_e == a_s:          # is cluster a_e modifiable and distinct from a_s?
+        if not M[a_e] or a_e == a_s:  # is cluster a_e modifiable and distinct from a_s?
             i_e += 1
             continue
 
-        if not M[a_s]:                        # is cluster a_s modifiable?
+        if not M[a_s]:                # is cluster a_s modifiable?
             i_s -= 1
             continue
 
@@ -488,7 +492,8 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
 
 
 def _elimination_penalty(A, m, d, dist_all, num_clusters):
-    """
+    """Calculate elimination penalty.
+
     see _rebalance()
     """
     # pylint: disable=too-many-nested-blocks
@@ -498,21 +503,22 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
         Va = np.int32(np.where(m == a)[0])
         N = len(Va)
 
-        for _i, i in enumerate(Va):  # pylint: disable=unused-variable
+        for iloc, _ in enumerate(Va):
             dmin = np.inf
-            for _j, j in enumerate(Va):
+            for jloc, j in enumerate(Va):
                 for k in A.getrow(j).indices:
                     if m[k] != m[j]:
-                        _ij = _i * N + _j
-                        if (d[k] + dist_all[a, _ij] + A[j, k]) < dmin:
-                            dmin = d[k] + dist_all[a, _ij] + A[j, k]
+                        ijloc = iloc * N + jloc
+                        if (d[k] + dist_all[a, ijloc] + A[j, k]) < dmin:
+                            dmin = d[k] + dist_all[a, ijloc] + A[j, k]
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
 
 
-def _split_improvement(A, m, d, dist_all, num_clusters):
-    """
+def _split_improvement(m, d, dist_all, num_clusters):
+    """Calculate split improvement.
+
     see _rebalance()
     """
     S = np.inf * np.ones(num_clusters)
@@ -523,16 +529,16 @@ def _split_improvement(A, m, d, dist_all, num_clusters):
         Va = np.int32(np.where(m == a)[0])
         N = len(Va)
 
-        for _i, i in enumerate(Va):
-            for _j, j in enumerate(Va):
+        for iloc, i in enumerate(Va):
+            for jloc, j in enumerate(Va):
                 Snew = 0
-                for _k, k in enumerate(Va):  # pylint: disable=unused-variable
-                    _ki = _k * N + _i
-                    _kj = _k * N + _j
-                    if dist_all[a, _ki] < dist_all[a, _kj]:
-                        Snew = Snew + dist_all[a, _ki]**2
+                for kloc, _ in enumerate(Va):
+                    kiloc = kloc * N + iloc
+                    kjloc = kloc * N + jloc
+                    if dist_all[a, kiloc] < dist_all[a, kjloc]:
+                        Snew = Snew + dist_all[a, kiloc]**2
                     else:
-                        Snew = Snew + dist_all[a, _kj]**2
+                        Snew = Snew + dist_all[a, kjloc]**2
                 if Snew < S[a]:
                     S[a] = Snew
                     I[a] = i
@@ -542,7 +548,8 @@ def _split_improvement(A, m, d, dist_all, num_clusters):
 
 
 def _choice(p):
-    """
+    """Random selection based on a distribution.
+
     Parameters
     ----------
     p : array
@@ -556,8 +563,6 @@ def _choice(p):
     Notes
     -----
     For efficiency, there are no checks.
-
-    TODO - needs testing
     """
     a = p / np.max(p)
     i = -1
@@ -569,7 +574,8 @@ def _choice(p):
 
 
 def kmeanspp_seed(G, nseeds):
-    """
+    """K-means++ seed.
+
     Parameters
     ----------
     G : sparse matrix
@@ -589,7 +595,7 @@ def kmeanspp_seed(G, nseeds):
 
     TODO - needs testing
     """
-    warn("kmeanspp_seed is O(n^3) -- use only for testing")
+    warn('kmeanspp_seed is O(n^3) -- use only for testing')
 
     n = G.shape[0]
     C = np.random.choice(n, 1, replace=False)
@@ -822,22 +828,21 @@ def metis_partition(G, nparts=5, seed=None):
         Array of n x 1 indices from 0 ... nparts-1.
     """
     G = sparse.csr_matrix(G)
-    n = G.shape[0]
 
     if G.dtype.kind != 'i':
         raise ValueError('METIS partitioning requires integer weights')
 
     if G.nnz > 0:
         if G.data.min() < 0:
-            raise ValueError('METIS partitioning is defined only for positive integer weights.')
+            raise ValueError('METIS partitioning requires positive integer weights.')
 
     if not isinstance(nparts, int) or nparts < 1:
         raise ValueError('nparts should be a positive integer')
 
     try:
-        import pymetis
-    except ImportError:
-        raise ImportError('pymetis required for METIS partitioning')
+        import pymetis  # pylint: disable=import-outside-toplevel
+    except ImportError as expt:
+        raise ImportError('pymetis required for METIS partitioning') from expt
 
     # set diagonal to zero and force reallocation
     G = G.tocoo()
@@ -849,7 +854,7 @@ def metis_partition(G, nparts=5, seed=None):
     opt.contig = 1
     if seed:
         opt.seed = seed
-    n_cuts, parts = pymetis.part_graph(nparts, xadj=G.indptr, adjncy=G.indices, eweights=G.data,
-                                       options=opt)
+    _, parts = pymetis.part_graph(nparts, xadj=G.indptr, adjncy=G.indices, eweights=G.data,
+                                  options=opt)
 
     return np.array(parts)
