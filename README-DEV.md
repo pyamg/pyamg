@@ -19,6 +19,3 @@ Testing notes:
 - do not use seeds such as 0, 1, 42, 100
 - for each needed seed, generate a "random" int
 - `python3 -c "import numpy as np; np.random.seed(); seeds = np.random.randint(0, 2**32 - 1, 5); print(seeds)"`
-- check memory leaks with `scripts/checkvalgrind.sh`
-- lint with `flake8 pyamg`
-- `pip install -e .` then lint `pylint --rcfile setup.cfg pyamg`
