@@ -1,7 +1,7 @@
 """Aggregation methods."""
 
 
-import warnings
+from warnings import warn
 import numpy as np
 from scipy import sparse
 from .. import amg_core
@@ -236,7 +236,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
         try:
             A = A.tocsr()
-            warnings.warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
+            warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
@@ -270,7 +270,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         if num_aggregates == 0:
             # all zero matrix
             T_temp = sparse.csr_matrix((num_rows, 1), dtype='int8')
-            warnings.warn('No pairwise aggregates found, T = 0.')
+            warn('No pairwise aggregates found, T = 0.')
         else:
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
@@ -406,10 +406,10 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     clusters, centers = lloyd_cluster(G, naggs, maxiter=maxiter)
 
     if np.any(clusters < 0):
-        warnings.warn('Lloyd aggregation encountered a point that is unaggregated.')
+        warn('Lloyd aggregation encountered a point that is unaggregated.')
 
     if clusters.min() < 0:
-        warnings.warn('Lloyd clustering did not cluster every point')
+        warn('Lloyd clustering did not cluster every point')
 
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
@@ -535,10 +535,10 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
                                                rebalance_iters=rebalance_iters)
 
     if np.any(clusters < 0):
-        warnings.warn('Lloyd aggregation encountered a point that is unaggregated.')
+        warn('Lloyd aggregation encountered a point that is unaggregated.')
 
     if clusters.min() < 0:
-        warnings.warn('Lloyd clustering did not cluster every point')
+        warn('Lloyd clustering did not cluster every point')
 
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
@@ -616,7 +616,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     parts = metis_partition(G, nparts=naggs, seed=None)
 
     if len(parts) != n:
-        warnings.warn('METIS aggregation encountered a point that is unaggregated.')
+        warn('METIS aggregation encountered a point that is unaggregated.')
 
     row = (parts >= 0).nonzero()[0]
     col = parts[row]
