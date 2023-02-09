@@ -38,6 +38,9 @@ from .smoothed_aggregation import (symmetric_strength_of_connection, standard_ag
                                    satisfy_constraints_helper, calc_BtB,
                                    incomplete_mat_mult_bsr, truncate_rows_csr)
 
+from .air import (one_point_interpolation, approx_ideal_restriction_pass1,
+                  approx_ideal_restriction_pass2, block_approx_ideal_restriction_pass2)
+
 __all__ = [
     'evolution_strength',
     'graph',
@@ -112,6 +115,11 @@ __all__ = [
     'satisfy_constraints_helper',
     'calc_BtB',
     'incomplete_mat_mult_bsr',
-    'truncate_rows_csr'
+    'truncate_rows_csr',
+    #
+    'one_point_interpolation',
+    'approx_ideal_restriction_pass1',
+    'approx_ideal_restriction_pass2',
+    'block_approx_ideal_restriction_pass2'
     #
 ]
