@@ -14,6 +14,7 @@ from .pairwise import pairwise_solver
 __all__ = ['adaptive_sa_solver',
            'standard_aggregation', 'naive_aggregation',
            'lloyd_aggregation', 'balanced_lloyd_aggregation',
+           'metis_aggregation',
            'smoothed_aggregation_solver',
            'fit_candidates',
            'jacobi_prolongation_smoother', 'richardson_prolongation_smoother',

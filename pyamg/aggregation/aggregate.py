@@ -236,7 +236,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
         try:
             A = A.tocsr()
-            warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
+            warnings.warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
         except BaseException as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
@@ -270,7 +270,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         if num_aggregates == 0:
             # all zero matrix
             T_temp = sparse.csr_matrix((num_rows, 1), dtype='int8')
-            warn('No pairwise aggregates found, T = 0.')
+            warnings.warn('No pairwise aggregates found, T = 0.')
         else:
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
