@@ -496,6 +496,8 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
 
     see _rebalance()
     """
+    Acol = A.tocsc()
+
     # pylint: disable=too-many-nested-blocks
     E = np.inf * np.ones(num_clusters)
     for a in range(num_clusters):
@@ -506,11 +508,11 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
         for iloc, _ in enumerate(Va):
             dmin = np.inf
             for jloc, j in enumerate(Va):
-                for k in A.getrow(j).indices:
+                for k in Acol.getcol(j).indices:
                     if m[k] != m[j]:
-                        ijloc = iloc * N + jloc
-                        if (d[k] + dist_all[a, ijloc] + A[j, k]) < dmin:
-                            dmin = d[k] + dist_all[a, ijloc] + A[j, k]
+                        jiloc = jloc * N + iloc
+                        if (d[k] + A[k, j] + dist_all[a, jiloc]) < dmin:
+                            dmin = d[k] + A[k, j] + dist_all[a, jiloc]
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
@@ -533,12 +535,12 @@ def _split_improvement(m, d, dist_all, num_clusters):
             for jloc, j in enumerate(Va):
                 Snew = 0
                 for kloc, _ in enumerate(Va):
-                    kiloc = kloc * N + iloc
-                    kjloc = kloc * N + jloc
-                    if dist_all[a, kiloc] < dist_all[a, kjloc]:
-                        Snew = Snew + dist_all[a, kiloc]**2
+                    ikloc = iloc * N + kloc
+                    jkloc = jloc * N + kloc
+                    if dist_all[a, ikloc] < dist_all[a, jkloc]:
+                        Snew = Snew + dist_all[a, ikloc]**2
                     else:
-                        Snew = Snew + dist_all[a, kjloc]**2
+                        Snew = Snew + dist_all[a, jkloc]**2
                 if Snew < S[a]:
                     S[a] = Snew
                     I[a] = i
