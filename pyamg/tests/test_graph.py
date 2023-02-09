@@ -1,7 +1,6 @@
 """Test graph routings."""
 import numpy as np
 from scipy import sparse
-from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 
 import pytest
 
@@ -462,9 +461,10 @@ def reference_connected_components(G):
 
     return components
 
+
 def test_metis():
     # check if pymetis is available before testing
-    metis = pytest.importorskip('pymetis')
+    metis = pytest.importorskip('pymetis')  # noqa: F841
 
     # 0        4
     # | \    / |

@@ -23,7 +23,7 @@ class TestAllPairs(TestCase):
                           [inf, 0,  3.,  4.],
                           [inf, inf, 0,  1.],
                           [inf, inf, inf, 0]])
-        P_ref = np.array([[ 0,  0,  1, 2],
+        P_ref = np.array([[0,  0,  1, 2],
                           [-1,  1,  1, 2],
                           [-1, -1,  2, 2],
                           [-1, -1, -1, 3]], dtype=np.int32)
@@ -38,11 +38,11 @@ class TestAllPairs(TestCase):
         A[4, 3] = 6
         A = sparse.csr_matrix(A)
 
-        D_ref = np.array([[ 0.,  1., -3.,  2., -4.],
-                          [ 3.,  0., -4.,  1., -1.],
-                          [ 7.,  4.,  0.,  5.,  3.],
-                          [ 2., -1., -5.,  0., -2.],
-                          [ 8.,  5.,  1.,  6.,  0.]])
+        D_ref = np.array([[0.,  1., -3.,  2., -4.],
+                          [3.,  0., -4.,  1., -1.],
+                          [7.,  4.,  0.,  5.,  3.],
+                          [2., -1., -5.,  0., -2.],
+                          [8.,  5.,  1.,  6.,  0.]])
         P_ref = np.array([[0, 2, 3, 4, 0],
                           [3, 1, 3, 1, 0],
                           [3, 2, 2, 1, 0],
@@ -60,9 +60,9 @@ class TestAllPairs(TestCase):
         A = sparse.csr_matrix(A)
 
         D_ref = np.array([[0., -1, -2, 0],
-                          [ 4,  0,  2, 4],
-                          [ 5,  1,  0, 2],
-                          [ 3, -1,  1, 0]])
+                          [4,  0,  2, 4],
+                          [5,  1,  0, 2],
+                          [3, -1,  1, 0]])
         P_ref = np.array([[0, 3, 0, 2],
                           [1, 1, 0, 2],
                           [1, 3, 2, 2],
@@ -72,7 +72,7 @@ class TestAllPairs(TestCase):
         self.cases = cases
 
     def test_floyd_warshall(self):
-        """Test Floyd-Warshall"""
+        """Test Floyd-Warshall."""
         for A, D_ref, P_ref in self.cases:
             num_nodes = A.shape[0]
             N = num_nodes

@@ -30,7 +30,7 @@ def construct_graph_laplacian():
 
 def _check_pc(p):
     p = np.array(p)
-    c = np.bincount(p[p>-1], minlength=len(p))
+    c = np.bincount(p[p > -1], minlength=len(p))
     return c
 
 
