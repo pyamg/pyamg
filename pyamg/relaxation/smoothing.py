@@ -674,7 +674,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 
 def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
-                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+                    iterations=iterations, omega=1.0, withrho=False):
     """Set up coarse-fine Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
@@ -683,13 +683,13 @@ def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     smoother = partial(relaxation.cf_jacobi, Cpts=Cpts, Fpts=Fpts,
                        f_iterations=f_iterations, c_iterations=c_iterations,
-                       iterations=DEFAULT_NITER, omega=omega)
+                       iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.cf_jacobi)  # set __name__
     return smoother
 
 
 def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
-                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+                    iterations=iterations, omega=1.0, withrho=False):
     """Set up fine-coarse Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
@@ -698,7 +698,7 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     smoother = partial(relaxation.fc_jacobi, Cpts=Cpts, Fpts=Fpts,
                        f_iterations=f_iterations, c_iterations=c_iterations,
-                       iterations=DEFAULT_NITER, omega=omega)
+                       iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.fc_jacobi)  # set __name__
     return smoother
 
