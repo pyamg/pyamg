@@ -689,7 +689,7 @@ def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
 
 def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
-                    iterations=iterations, omega=1.0, withrho=False):
+                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     """Set up fine-coarse Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
