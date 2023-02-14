@@ -1189,34 +1189,7 @@ blocksize int
     m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"),
 R"pbdoc(
-Perform one iteration of block Jacobi relaxation on the linear
- system Ax = b for a given set of (block) row indices. A is
- stored in BSR format and x and b are column vectors. Damping
- is controlled by the parameter omega.
-
- Parameters
- ----------
- Ap : array
-     BSR row pointer
- Aj : array
-     BSR index array
- Ax : array
-     BSR data array, blocks assumed square
- x : array
-     approximate solution
- b : array
-     right hand side
- Tx : array
-     Inverse of each diagonal block of A stored
-     as a (n/blocksize, blocksize, blocksize) array
- indices : array
-     Indices
- omega : float
-     damping parameter
- blocksize : int
-     dimension of square blocks in BSR matrix A
-
- Returns
+Returns
  -------
      Nothing, x will be modified in place)pbdoc");
 
