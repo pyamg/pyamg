@@ -674,7 +674,7 @@ def setup_gauss_seidel_nr(lvl, iterations=DEFAULT_NITER, sweep=DEFAULT_SWEEP,
 
 
 def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
-                    iterations=iterations, omega=1.0, withrho=False):
+                    iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     """Set up coarse-fine Jacobi."""
     if withrho:
         omega = omega/rho_D_inv_A(lvl.A)
