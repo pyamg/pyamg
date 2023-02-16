@@ -48,7 +48,8 @@ def plotaggs(AggOp, V, G, ax,
         if vmax is None or vmin is None:
             vmin = min(aggvals)
             vmax = max(aggvals)
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=vmax)
+        norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+        print(f'{vmin=} {vmax=}')
         aggcolor = [cmap(norm(v)) for v in aggvals]
         mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     else:
