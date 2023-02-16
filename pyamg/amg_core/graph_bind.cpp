@@ -317,7 +317,8 @@ bool _bellman_ford_balanced(
        py::array_t<I> & m,
        py::array_t<I> & p,
       py::array_t<I> & pc,
-       py::array_t<I> & s
+       py::array_t<I> & s,
+   const bool tiebreaking
                             )
 {
     auto py_Ap = Ap.unchecked();
@@ -349,7 +350,8 @@ bool _bellman_ford_balanced(
                        _m, m.shape(0),
                        _p, p.shape(0),
                       _pc, pc.shape(0),
-                       _s, s.shape(0)
+                       _s, s.shape(0),
+              tiebreaking
                                        );
 }
 
@@ -767,11 +769,11 @@ References
 http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"),
 R"pbdoc(
 Bellman-Ford with a heuristic to balance cluster sizes
 
