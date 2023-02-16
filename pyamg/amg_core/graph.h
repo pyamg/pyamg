@@ -709,7 +709,8 @@ bool bellman_ford_balanced(const I num_nodes,
                                  I  m[], const int  m_size,
                                  I  p[], const int  p_size,
                                  I pc[], const int pc_size,
-                                 I  s[], const int  s_size)
+                                 I  s[], const int  s_size,
+                           const bool tiebreaking)
 {
   bool done;            // did we make any changes during this iteration?
   bool changed = false; // indicate a change for the return
@@ -735,7 +736,7 @@ bool bellman_ford_balanced(const I num_nodes,
           swap = true;
         }
 
-        if(m[j] > -1){                            // if j is unassigned, do not consider the tie
+        if(m[j] > -1 && tiebreaking){             // if j is unassigned, do not consider the tie
           if(std::abs(d[i] + Aij - d[j]) < tol){  // if both are finite and close
             if((s[m[i]] + 1) < s[m[j]]){          // if the size of cluster j is larger
               if(pc[j] == 0){                     // if the predecessor count is zero

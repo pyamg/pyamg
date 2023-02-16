@@ -266,7 +266,7 @@ def lloyd_cluster(G, centers, maxiter=5):
     return clusters, centers
 
 
-def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
+def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking=True):
     """Perform Lloyd clustering on graph with weighted edges.
 
     Parameters
@@ -283,6 +283,8 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
         the clustering.
     rebalance_iters : int
         Number of post-Lloyd rebalancing iterations to run.
+    tiebreaking : bool, default True
+        Flag for triggering tiebreaking.
 
     Returns
     -------
@@ -372,7 +374,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5):
         m[centers] = np.arange(num_clusters)
         while (changed1 or changed2) and (it < maxiter):
             changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data,
-                                                      centers, d, m, p, pc, s)
+                                                      centers, d, m, p, pc, s, tiebreaking)
 
             if s.max() > maxsize:
                 raise ValueError('maxsize (maximum cluster size) is too small')
