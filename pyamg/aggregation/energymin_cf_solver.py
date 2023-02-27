@@ -22,11 +22,14 @@ from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation
 from .tentative import fit_candidates
 from .smooth import energy_prolongation_smoother, AIRplus
-from ..classical import split
+from ..classical import split, interpolate
 
 def energymin_cf_solver(A, B=None, BH=None,
-                        symmetry='hermitian', strength='symmetric',
-                        aggregate='standard', smooth='energy',
+                        symmetry='hermitian',
+                        strength='symmetric',
+                        aggregate='standard',
+                        restrict='energy',
+                        interpolation='energy',
                         presmoother=('block_gauss_seidel',
                                      {'sweep': 'symmetric'}),
                         postsmoother=('block_gauss_seidel',
@@ -76,11 +79,12 @@ def energymin_cf_solver(A, B=None, BH=None,
     aggregate : list
         Method used to aggregate nodes.
 
-    smooth : list
-        Method used to smooth the tentative prolongator.  Method-specific
-        parameters may be passed in using a tuple, e.g.  smooth=
-        ('energy',{'krylov' : 'gmres'}).  Only 'energy' and None are valid
-        prolongation smoothing options.
+    restrict, interpolation : list
+        Methods used to generate the prolongator and restriction.  
+        Method-specific parameters may be passed in using a tuple, e.g.  
+        restrict=('energy',{'krylov' : 'gmres'}).  Valid options include 'energy', 
+        AIRplus for restrict and interpolation.  For interpolation, you may 
+        also choose standard, distance_two, direct, one_point, inject
 
     presmoother : tuple, string, list
         Defines the presmoother for the multilevel cycling.  The default block
@@ -149,9 +153,6 @@ def energymin_cf_solver(A, B=None, BH=None,
            in the interpolation operator, P.  This identity block can represent
            root-nodes of aggregates, or be some other arbitrary CF splitting.
 
-         - Only smooth={'energy', None} is supported for prolongation
-           smoothing.  
-
          - The additional parameters are passed through as arguments to
            MultilevelSolver.  Refer to pyamg.MultilevelSolver for additional
            documentation.
@@ -170,15 +171,15 @@ def energymin_cf_solver(A, B=None, BH=None,
               scheme to improve the quality and extent of interpolation from the
               aggregates to fine nodes.
 
-         - The parameters smooth, strength, aggregate, presmoother, postsmoother
-           can be varied on a per level basis.  For different methods on
+         - The parameters interpolation, restrict, strength, aggregate, presmoother, 
+           postsmoother can be varied on a per level basis.  For different methods on
            different levels, use a list as input so that the i-th entry defines
            the method at the i-th level.  If there are more levels in the
            hierarchy than list entries, the last entry will define the method
            for all levels lower.
 
            Examples are:
-           smooth=[('jacobi', {'omega':1.0}), None, 'jacobi']
+           restrict=[('jacobi', {'omega':1.0}), None, 'jacobi']
            presmoother=[('block_gauss_seidel', {'sweep':symmetric}), 'sor']
            aggregate=['standard', 'naive']
            strength=[('symmetric', {'theta':0.25}), ('symmetric', {'theta':0.08})]
@@ -285,7 +286,8 @@ def energymin_cf_solver(A, B=None, BH=None,
         levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
     improve_candidates =\
         levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
-    smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
+    restrict = levelize_smooth_or_improve_candidates(restrict, max_levels)
+    interpolation = levelize_smooth_or_improve_candidates(interpolation, max_levels)
 
     # Construct multilevel structure
     levels = []
@@ -299,7 +301,7 @@ def energymin_cf_solver(A, B=None, BH=None,
 
     while len(levels) < max_levels and \
             int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
-        _extend_hierarchy(levels, strength, aggregate, smooth,
+        _extend_hierarchy(levels, strength, aggregate, restrict, interpolation,
                           improve_candidates, diagonal_dominance, keep, Rpattern, Ppattern)
 
     ml = MultilevelSolver(levels, **kwargs)
@@ -307,7 +309,7 @@ def energymin_cf_solver(A, B=None, BH=None,
     return ml
 
 
-def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
+def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, improve_candidates,
                       diagonal_dominance, keep, Rpattern, Ppattern):
     """Extend the multigrid hierarchy.
 
@@ -451,6 +453,10 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
         if A.symmetry == 'nonsymmetric':
             TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
+    #
+    # Make sure splitting exists
+    splitting = np.zeros((A.shape[0],), dtype=bool)
+    splitting[Cpt_params[1]['Cpts']] = True
      
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
@@ -458,9 +464,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     if A.symmetry == 'nonsymmetric':
         BH = Cpt_params[1]['P_I'].T*levels[-1].BH
 
-    # Smooth the tentative prolongator, so that it's accuracy is greatly
-    # improved for algebraically smooth error.
-    fn, kwargs = unpack_arg(smooth[len(levels)-1])
+    # Create prolongator through either smoothing, AIR, or a classical approach
+    fn, kwargs = unpack_arg(interpolation[len(levels)-1])
     if fn == 'energy':
         P = energy_prolongation_smoother(A, T, C, B, levels[-1].B,
                                          Cpt_params=Cpt_params, 
@@ -468,6 +473,16 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                                          **kwargs)
     elif fn == 'AIRplus':
         P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
+    elif fn == 'standard':
+        P = interpolate.standard_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'distance_two':
+        P = interpolate.distance_two_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'direct':
+        P = interpolate.direct_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'one_point':
+        P = interpolate.one_point_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'inject':
+        P = interpolate.injection_interpolation(A, splitting, **kwargs)
     elif fn is None:
         P = T
     else:
@@ -482,7 +497,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif symmetry == 'symmetric':
         R = P.T
     elif symmetry == 'nonsymmetric':
-        fn, kwargs = unpack_arg(smooth[len(levels)-1])
+        fn, kwargs = unpack_arg(restrict[len(levels)-1])
         if fn == 'energy':
             R = energy_prolongation_smoother(AH, TH, C, BH, levels[-1].BH,
                                              Cpt_params=Cpt_params, 
@@ -509,8 +524,6 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         levels[-1].I_F = Cpt_params[1]['I_F']    # Identity on F-pts
         levels[-1].I_C = Cpt_params[1]['I_C']    # Identity on C-pts
 
-    splitting = np.zeros((A.shape[0],), dtype=bool)
-    splitting[Cpt_params[1]['Cpts']] = True
     levels[-1].splitting = splitting             # Splitting
     levels[-1].P = P                             # smoothed prolongator
     levels[-1].R = R                             # restriction operator
