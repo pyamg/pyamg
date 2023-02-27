@@ -35,7 +35,7 @@ def energymin_cf_solver(A, B=None, BH=None,
                                             {'sweep': 'symmetric',
                                              'iterations': 4}),
                         max_levels=10, max_coarse=10,
-                        diagonal_dominance=False, keep=False, **kwargs):
+                        diagonal_dominance=False, keep=False, Rpattern=None, Ppattern=None, **kwargs):
     """Create a multilevel solver using energy-min AMG
 
     See the notes below, for the major differences with the classical-style
@@ -118,6 +118,10 @@ def energymin_cf_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
+
+    Rpattern, Ppattern : None, CSR matrix
+        Diagnostic parameter (to be removed later) that allows for the pattern 
+        of R and P on level 0 to be preset
 
     Other Parameters
     ----------------
@@ -296,7 +300,7 @@ def energymin_cf_solver(A, B=None, BH=None,
     while len(levels) < max_levels and \
             int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, smooth,
-                          improve_candidates, diagonal_dominance, keep)
+                          improve_candidates, diagonal_dominance, keep, Rpattern, Ppattern)
 
     ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -304,7 +308,7 @@ def energymin_cf_solver(A, B=None, BH=None,
 
 
 def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
-                      diagonal_dominance=False, keep=True):
+                      diagonal_dominance, keep, Rpattern, Ppattern):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,
@@ -463,7 +467,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                                          force_fit_candidates=classical_CF, 
                                          **kwargs)
     elif fn == 'AIRplus':
-        P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, **kwargs)
+        P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
     elif fn is None:
         P = T
     else:
@@ -486,7 +490,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
                                              **kwargs)
             R = R.H
         elif fn == 'AIRplus':
-            R = AIRplus(AH, TH, C, BH, levels[-1].BH, Cpt_params, **kwargs)
+            R = AIRplus(AH, TH, C, BH, levels[-1].BH, Cpt_params, Rpattern, **kwargs)
             R = R.H
         elif fn is None:
             R = T.H
