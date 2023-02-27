@@ -188,16 +188,16 @@ PYBIND11_MODULE(evolution_strength, m) {
     m.def("apply_absolute_distance_filter", &_apply_absolute_distance_filter<int, double>,
         py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
-Return a filtered strength-of-connection matrix by applying a drop tolerance
- Strength values are assumed to be "distance"-like, i.e. the smaller the
- value the stronger the connection
+Return a filtered strength-of-connection matrix by applying a drop tolerance.
 
-   Strength values are _Not_ evaluated relatively, i.e. an off-diagonal
-   entry A[i,j] is a strong connection iff
+Strength values are assumed to be "distance"-like, i.e. the smaller the
+value the stronger the connection.
+Strength values are _Not_ evaluated relatively, i.e. an off-diagonal
+entry A[i,j] is a strong connection iff::
 
-           S[i,j] <= epsilon,   where k != i
+    S[i,j] <= epsilon,   where k != i
 
-  Also, set the diagonal to 1.0, as each node is perfectly close to itself
+Also, set the diagonal to 1.0, as each node is perfectly close to itself.
 
 Parameters
 ----------
@@ -214,13 +214,14 @@ Sx : {float|complex array}
 
 Returns
 -------
-Sx is modified in place such that the above dropping strategy has been applied
-There will be explicit zero entries for each weak connection
+Sx : {float|complex array}
+     Modified in place such that the above dropping strategy has been applied
+     There will be explicit zero entries for each weak connection
 
 Notes
 -----
 Principle calling routines are strength of connection routines, e.g.,
-distance_strength_of_connection(.)
+`distance_strength_of_connection`
 
 Examples
 --------
@@ -266,8 +267,9 @@ Sx : {float|complex array}
 
 Returns
 -------
-Sx is modified in place such that the above dropping strategy has been applied
-There will be explicit zero entries for each weak connection
+Sx : {float|complex array}
+     Modified in place such that the above dropping strategy has been applied
+     There will be explicit zero entries for each weak connection
 
 Notes
 -----
@@ -311,8 +313,8 @@ Tx : {float|complex array}
 
 Returns
 -------
-Tx[i] modified in place, it holds
-the minimum nonzero value of block i of S
+Tx : {float|complex array}
+     Modified in place; Tx[i] holds the minimum nonzero value of block i of S
 
 Notes
 -----
@@ -400,8 +402,8 @@ tol : {float}
 
 Returns
 -------
-Sx is written in place and holds strength
-values reflecting the above minimization problem
+Sx : {float|complex array}
+     Modified inplace and holds strength values for the above minimization problem
 
 Notes
 -----
@@ -460,7 +462,8 @@ dimen: {int}
 
 Returns
 -------
-Sx is modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+Sx : {float|complex array}
+     Modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
 
 Notes
 -----

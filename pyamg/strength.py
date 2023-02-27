@@ -113,6 +113,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
 
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
+
              |A[i,j]| >= theta * max(|A[i,k]|), where k != i     (norm='abs')
              -A[i,j]  >= theta * max(-A[i,k]),  where k != i     (norm='min')
 
@@ -125,10 +126,13 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     block : bool, default True
         Compute strength of connection block-wise
     norm : 'string', default 'abs'
-        Measure used in computing the strength:
+        Measure used in computing the strength::
+
             'abs' : |C[i,j]| >= theta * max(|C[i,k]|), where k != i
             'min' : -C[i,j]  >= theta * max(-C[i,k]),  where k != i
-        where C = A for non-block-wise computations.  For block-wise:
+
+        where C = A for non-block-wise computations.  For block-wise::
+
             'abs'  : C[i, j] is the maximum absolute value in block A[i, j]
             'min'  : C[i, j] is the minimum (negative) value in block A[i, j]
             'fro'  : C[i, j] is the Frobenius norm of block A[i, j]
@@ -587,7 +591,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
             Dinv_A = (Dinv * A).tocsr()
         else:
             Dinv = np.zeros_like(D)
-            mask = (D != 0.0)
+            mask = D != 0.0
             Dinv[mask] = 1.0 / D[mask]
             Dinv[D == 0] = 1.0
             Dinv_A = scale_rows(A, Dinv, copy=True)
@@ -597,7 +601,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         numPDEs = 1
         D = A.diagonal()
         Dinv = np.zeros_like(D)
-        mask = (D != 0.0)
+        mask = D != 0.0
         Dinv[mask] = 1.0 / D[mask]
         Dinv[D == 0] = 1.0
         Dinv_A = scale_rows(A, Dinv, copy=True)
@@ -629,7 +633,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     # Calculate one time step
     Id = sparse.eye(dimen, dimen, format='csr', dtype=A.dtype)
-    Atilde = (Id - (1.0 / rho_DinvA) * Dinv_A)
+    Atilde = Id - (1.0 / rho_DinvA) * Dinv_A
     Atilde = Atilde.T.tocsr()
 
     # Construct a sparsity mask for Atilde that will restrict Atilde^T to the
@@ -755,7 +759,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         Atilde.data = Atilde.data / data
 
         # If approximation ratio is less than tol, then weak connection
-        weak_ratio = (np.abs(Atilde.data) < 1e-4)
+        weak_ratio = np.abs(Atilde.data) < 1e-4
 
         # Calculate Approximation error
         Atilde.data = abs(1.0 - Atilde.data)

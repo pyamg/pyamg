@@ -212,9 +212,9 @@ void maximum_row_value(const I n_row,
  * ----------
  * n_nodes : int
  *     number of rows in A
- * C_rowptr : array
+ * Sp : array
  *     CSR row pointer array for SOC matrix
- * C_colinds : array
+ * Sj : array
  *     CSR column index array for SOC matrix
  * Tp : array
  *     CSR row pointer array for transpose of SOC matrix
@@ -232,8 +232,8 @@ void maximum_row_value(const I n_row,
  */
 template<class I>
 void rs_cf_splitting(const I n_nodes,
-                     const I C_rowptr[], const int C_rowptr_size,
-                     const I C_colinds[], const int C_colinds_size,
+                     const I Sp[], const int Sp_size,
+                     const I Sj[], const int Sj_size,
                      const I Tp[], const int Tp_size,
                      const I Tj[], const int Tj_size,
                      const I influence[], const int influence_size,
@@ -342,8 +342,8 @@ void rs_cf_splitting(const I n_nodes,
                     splitting[j] = F_NODE;
 
                     // For each k in S_j /\ U, modify lambda value, lambda_k += 1
-                    for (I kk = C_rowptr[j]; kk < C_rowptr[j+1]; kk++){
-                        I k = C_colinds[kk];
+                    for (I kk = Sp[j]; kk < Sp[j+1]; kk++){
+                        I k = Sj[kk];
 
                         if(splitting[k] == U_NODE){
 
@@ -373,8 +373,8 @@ void rs_cf_splitting(const I n_nodes,
             }
 
             // For each j in S_i /\ U, set lambda_j -= 1
-            for (I jj = C_rowptr[i]; jj < C_rowptr[i+1]; jj++) {
-                I j = C_colinds[jj];
+            for (I jj = Sp[i]; jj < Sp[i+1]; jj++) {
+                I j = Sj[jj];
                 // Decrement lambda for node j
                 if (splitting[j] == U_NODE) {
                     if (lambda[j] == 0) {
@@ -414,8 +414,8 @@ void rs_cf_splitting(const I n_nodes,
 
 template<class I>
 void rs_cf_splitting_pass2(const I n_nodes,
-                           const I C_rowptr[], const int C_rowptr_size,
-                           const I C_colinds[], const int C_colinds_size,
+                           const I Sp[], const int Sp_size,
+                           const I Sj[], const int Sj_size,
                                  I splitting[], const int splitting_size)
 {
     // For each F-point
@@ -426,8 +426,8 @@ void rs_cf_splitting_pass2(const I n_nodes,
             I Cpt0 = -1;
 
             // For each j in S_row /\ F, test dependence of j on S_row /\ C
-            for (I jj=C_rowptr[row]; jj<C_rowptr[row+1]; jj++) {
-                I j = C_colinds[jj];
+            for (I jj=Sp[row]; jj<Sp[row+1]; jj++) {
+                I j = Sj[jj];
 
                 if (splitting[j] == F_NODE) {
 
@@ -435,11 +435,11 @@ void rs_cf_splitting_pass2(const I n_nodes,
                     // nonempty. This is simply checking that nodes j and row
                     // have a common strong C-point connection.
                     bool dependence = false;
-                    for (I ii=C_rowptr[row]; ii<C_rowptr[row+1]; ii++) {
-                        I row_ind = C_colinds[ii];
+                    for (I ii=Sp[row]; ii<Sp[row+1]; ii++) {
+                        I row_ind = Sj[ii];
                         if (splitting[row_ind] == C_NODE) {
-                            for (I kk=C_rowptr[j]; kk<C_rowptr[j+1]; kk++) {
-                                if (C_colinds[kk] == row_ind) {
+                            for (I kk=Sp[j]; kk<Sp[j+1]; kk++) {
+                                if (Sj[kk] == row_ind) {
                                     dependence = true;
                                 }
                             }
@@ -687,7 +687,7 @@ void cljp_naive_splitting(const I n,
  *     Strength matrix column index array
  * splitting : array
  *     C/F splitting
- * Bp : array, inplace
+ * Pp : array, inplace
  *     Row pointer array
  *
  * References
@@ -700,10 +700,10 @@ void rs_direct_interpolation_pass1(const I n_nodes,
                                    const I Sp[], const int Sp_size,
                                    const I Sj[], const int Sj_size,
                                    const I splitting[], const int splitting_size,
-                                         I Bp[], const int Bp_size)
+                                         I Pp[], const int Pp_size)
 {
     I nnz = 0;
-    Bp[0] = 0;
+    Pp[0] = 0;
     for(I i = 0; i < n_nodes; i++){
         if( splitting[i] == C_NODE ){
             nnz++;
@@ -713,7 +713,7 @@ void rs_direct_interpolation_pass1(const I n_nodes,
                     nnz++;
             }
         }
-        Bp[i+1] = nnz;
+        Pp[i+1] = nnz;
     }
 }
 
@@ -727,15 +727,15 @@ void rs_direct_interpolation_pass2(const I n_nodes,
                                    const I Sj[], const int Sj_size,
                                    const T Sx[], const int Sx_size,
                                    const I splitting[], const int splitting_size,
-                                   const I Bp[], const int Bp_size,
-                                         I Bj[], const int Bj_size,
-                                         T Bx[], const int Bx_size)
+                                   const I Pp[], const int Pp_size,
+                                         I Pj[], const int Pj_size,
+                                         T Px[], const int Px_size)
 {
 
     for(I i = 0; i < n_nodes; i++){
         if(splitting[i] == C_NODE){
-            Bj[Bp[i]] = i;
-            Bx[Bp[i]] = 1;
+            Pj[Pp[i]] = i;
+            Px[Pp[i]] = 1;
         } else {
             T sum_strong_pos = 0, sum_strong_neg = 0;
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
@@ -771,14 +771,14 @@ void rs_direct_interpolation_pass2(const I n_nodes,
             T neg_coeff = -alpha/diag;
             T pos_coeff = -beta/diag;
 
-            I nnz = Bp[i];
+            I nnz = Pp[i];
             for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                 if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
-                    Bj[nnz] = Sj[jj];
+                    Pj[nnz] = Sj[jj];
                     if (Sx[jj] < 0)
-                        Bx[nnz] = neg_coeff * Sx[jj];
+                        Px[nnz] = neg_coeff * Sx[jj];
                     else
-                        Bx[nnz] = pos_coeff * Sx[jj];
+                        Px[nnz] = pos_coeff * Sx[jj];
                     nnz++;
                 }
             }
@@ -791,22 +791,9 @@ void rs_direct_interpolation_pass2(const I n_nodes,
         map[i]  = sum;
         sum    += splitting[i];
     }
-    for(I i = 0; i < Bp[n_nodes]; i++){
-        Bj[i] = map[Bj[i]];
+    for(I i = 0; i < Pp[n_nodes]; i++){
+        Pj[i] = map[Pj[i]];
     }
-}
-
-
-
-
-template<class I, class T>
-void rs_standard_interpolation(const I n_nodes,
-                               const I Ap[], const I Aj[], const T Ax[],
-                               const I Sp[], const I Sj[], const T Sx[],
-                               const I Tp[], const I Tj[], const T Tx[],
-                                     I Bp[],       I Bj[],       T Bx[])
-{
-    // Not implemented
 }
 
 
@@ -815,9 +802,9 @@ void rs_standard_interpolation(const I n_nodes,
  *
  * Parameters
  * ----------
- * A_rowptr : array
+ * Ap : array
  *      Row pointer for sparse matrix in CSR format.
- * A_colinds : array
+ * Aj : array
  *      Column indices for sparse matrix in CSR format.
  * B : array
  *      Target near null space vector for computing candidate set measure.
@@ -839,13 +826,13 @@ void rs_standard_interpolation(const I n_nodes,
  * Nothing, updated C/F-splitting and corresponding indices modified in place.
  */
 template<class I, class T>
-void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
-               const I A_colinds[], const int A_colinds_size,
-               const T B[],         const int B_size,
-               T e[],               const int e_size,
-               I indices[],         const int indices_size,
-               I splitting[],       const int splitting_size,
-               T gamma[],           const int gamma_size,
+void cr_helper(const I Ap[], const int Ap_size,
+               const I Aj[], const int Aj_size,
+               const T  B[], const int  B_size,
+                     T         e[], const int e_size,
+                     I   indices[], const int indices_size,
+                     I splitting[], const int splitting_size,
+                     T     gamma[], const int gamma_size,
                const T thetacs)
 {
     I n = splitting_size;
@@ -880,10 +867,10 @@ void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
     for (I i=0; i<set_size; i++) {
         I pt = Uindex[i];
         I num_neighbors = 0;
-        I A_ind0 = A_rowptr[pt];
-        I A_ind1 = A_rowptr[pt+1];
+        I A_ind0 = Ap[pt];
+        I A_ind1 = Ap[pt+1];
         for (I j=A_ind0; j<A_ind1; j++) {
-            I neighbor = A_colinds[j];
+            I neighbor = Aj[j];
             if (splitting[neighbor] == 0) {
                 num_neighbors += 1;
             }
@@ -913,10 +900,10 @@ void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
         // 2. Remove from candidate set all nodes connected to
         // new C-point by marking weight zero.
         std::vector<I> neighbors;
-        I A_ind0 = A_rowptr[new_pt];
-        I A_ind1 = A_rowptr[new_pt+1];
+        I A_ind0 = Ap[new_pt];
+        I A_ind1 = Ap[new_pt+1];
         for (I i=A_ind0; i<A_ind1; i++) {
-            I temp = A_colinds[i];
+            I temp = Aj[i];
             neighbors.push_back(temp);
             omega[temp] = 0;
         }
@@ -926,10 +913,10 @@ void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
         I num_neighbors = neighbors.size();
         for (I i=0; i<num_neighbors; i++) {
             I pt = neighbors[i];
-            I A_ind0 = A_rowptr[pt];
-            I A_ind1 = A_rowptr[pt+1];
+            I A_ind0 = Ap[pt];
+            I A_ind1 = Ap[pt+1];
             for (I j=A_ind0; j<A_ind1; j++) {
-                I temp = A_colinds[j];
+                I temp = Aj[j];
                 if (omega[temp] != 0) {
                     omega[temp] += 1;
                 }
@@ -956,345 +943,319 @@ void cr_helper(const I A_rowptr[],  const int A_rowptr_size,
     }
 }
 
+/* First pass of classical AMG interpolation to build row pointer for
+ * P based on SOC matrix and CF-splitting.
+ *
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of rows in A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
+ * Pp : array
+ *     empty array to store row pointer for matrix P
+ *
+ * Returns
+ * -------
+ * Nothing, Pp is modified in place.
+ *
+ */
+template<class I>
+void rs_classical_interpolation_pass1(const I n_nodes,
+                                      const I Sp[], const int Sp_size,
+                                      const I Sj[], const int Sj_size,
+                                      const I splitting[], const int splitting_size,
+                                            I Pp[], const int Pp_size)
+{
+    I nnz = 0;
+    Pp[0] = 0;
+    for (I i = 0; i < n_nodes; i++){
+        if( splitting[i] == C_NODE ){
+            nnz++;
+        }
+        else {
+            for (I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) )
+                    nnz++;
+            }
+        }
+        Pp[i+1] = nnz;
+    }
+}
 
 
-//#define NodeType char
-// // The following function closely approximates the
-// // method described in the 1987 Ruge-Stuben paper
-//
-//template<class I, class T>
-//void rs_interpolation(const I n_nodes,
-//        const I Ap[], const I Aj[], const T Ax[],
-//        const I Sp[], const I Sj[], const T Sx[],
-//        const I Tp[], const I Tj[], const T Tx[],
-//        std::vector<I> * Bp, std::vector<I> * Bj, std::vector<T> * Bx){
-//
-//    std::vector<I> lambda(n_nodes,0);
-//
-//    //compute lambdas
-//    for(I i = 0; i < n_nodes; i++){
-//        lambda[i] = Tp[i+1] - Tp[i];
-//    }
-//
-//
-//    //for each value of lambda, create an interval of nodes with that value
-//    // ptr - is the first index of the interval
-//    // count - is the number of indices in that interval
-//    // index to node - the node located at a given index
-//    // node to index - the index of a given node
-//    std::vector<I> interval_ptr(n_nodes,0);
-//    std::vector<I> interval_count(n_nodes,0);
-//    std::vector<I> index_to_node(n_nodes);
-//    std::vector<I> node_to_index(n_nodes);
-//
-//    for(I i = 0; i < n_nodes; i++){
-//        interval_count[lambda[i]]++;
-//    }
-//    for(I i = 0, cumsum = 0; i < n_nodes; i++){
-//        interval_ptr[i] = cumsum;
-//        cumsum += interval_count[i];
-//        interval_count[i] = 0;
-//    }
-//    for(I i = 0; i < n_nodes; i++){
-//        I lambda_i = lambda[i];
-//        I index    = interval_ptr[lambda_i]+interval_count[lambda_i];
-//        index_to_node[index] = i;
-//        node_to_index[i]     = index;
-//        interval_count[lambda_i]++;
-//    }
-//
-//
-//
-//
-//
-//    std::vector<NodeType> NodeSets(n_nodes,U_NODE);
-//
-//    //Now add elements to C and F, in decending order of lambda
-//    for(I top_index = n_nodes - 1; top_index > -1; top_index--){
-//        I i        = index_to_node[top_index];
-//        I lambda_i = lambda[i];
-//#ifdef DEBUG
-//        {
-//#ifdef DEBUG_PRINT
-//            std::cout << "top_index " << top_index << std::endl;
-//            std::cout << "i         " << i << std::endl;
-//            std::cout << "lambda_i  " << lambda_i << std::endl;
-//
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "=";
-//                if(NodeSets[i] == U_NODE)
-//                    std::cout << "U";
-//                else if(NodeSets[i] == F_NODE)
-//                    std::cout << "F";
-//                else
-//                    std::cout << "C";
-//                std::cout << " ";
-//            }
-//            std::cout << std::endl;
-//
-//            std::cout << "node_to_index" << std::endl;
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "->" << node_to_index[i] << "  ";
-//            }
-//            std::cout << std::endl;
-//            std::cout << "index_to_node" << std::endl;
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << i << "->" << index_to_node[i] << "  ";
-//            }
-//            std::cout << std::endl;
-//
-//            std::cout << "interval_count ";
-//            for(I i = 0; i < n_nodes; i++){
-//                std::cout << interval_count[i] << " ";
-//            }
-//            std::cout << std::endl;
-//#endif
-//
-//            //make sure arrays are correct
-//            for(I n = 0; n < n_nodes; n++){
-//                assert(index_to_node[node_to_index[n]] == n);
-//            }
-//
-//            //make sure intervals are reasonable
-//            I sum_intervals = 0;
-//            for(I n = 0; n < n_nodes; n++){
-//                assert(interval_count[n] >= 0);
-//                if(interval_count[n] > 0){
-//                    assert(interval_ptr[n] == sum_intervals);
-//                }
-//                sum_intervals += interval_count[n];
-//            }
-//            assert(sum_intervals == top_index+1);
-//
-//
-//            if(interval_count[lambda_i] <= 0){
-//                std::cout << "top_index " << top_index << std::endl;
-//                std::cout << "lambda_i " << lambda_i << std::endl;
-//                std::cout << "interval_count[lambda_i] " << interval_count[lambda_i] << std::endl;
-//                std::cout << "top_index " << top_index << std::endl;
-//                std::cout << "i         " << i << std::endl;
-//                std::cout << "lambda_i  " << lambda_i << std::endl;
-//            }
-//
-//
-//            for(I n = 0; n <= top_index; n++){
-//                assert(NodeSets[index_to_node[n]] != C_NODE);
-//            }
-//        }
-//        assert(node_to_index[i] == top_index);
-//        assert(interval_ptr[lambda_i] + interval_count[lambda_i] - 1 == top_index);
-//        //max interval should have at least one element
-//        assert(interval_count[lambda_i] > 0);
-//#endif
-//
-//
-//        //remove i from its interval
-//        interval_count[lambda_i]--;
-//
-//
-//        if(NodeSets[i] == F_NODE){
-//            continue;
-//        } else {
-//            assert(NodeSets[i] == U_NODE);
-//
-//            NodeSets[i] = C_NODE;
-//
-//            //For each j in S^T_i /\ U
-//            for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
-//                I j = Tj[jj];
-//
-//                if(NodeSets[j] == U_NODE){
-//                    NodeSets[j] = F_NODE;
-//
-//                    //For each k in S_j /\ U
-//                    for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
-//                        I k = Sj[kk];
-//
-//                        if(NodeSets[k] == U_NODE){
-//                            //move k to the end of its current interval
-//                            assert(lambda[j] < n_nodes - 1);//this would cause problems!
-//
-//                            I lambda_k = lambda[k];
-//                            I old_pos  = node_to_index[k];
-//                            I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
-//
-//                            node_to_index[index_to_node[old_pos]] = new_pos;
-//                            node_to_index[index_to_node[new_pos]] = old_pos;
-//                            std::swap(index_to_node[old_pos],index_to_node[new_pos]);
-//
-//                            //update intervals
-//                            interval_count[lambda_k]   -= 1;
-//                            interval_count[lambda_k+1] += 1;
-//                            interval_ptr[lambda_k+1]    = new_pos;
-//
-//                            //increment lambda_k
-//                            lambda[k]++;
-//
-//#ifdef DEBUG
-//                            assert(interval_count[lambda_k]   >= 0);
-//                            assert(interval_count[lambda_k+1] >  0);
-//                            assert(interval_ptr[lambda[k]] <= node_to_index[k]);
-//                            assert(node_to_index[k] < interval_ptr[lambda[k]] + interval_count[lambda[k]]);
-//#endif
-//                        }
-//                    }
-//                }
-//            }
-//
-//            //For each j in S_i /\ U
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                if(NodeSets[j] == U_NODE){            //decrement lambda for node j
-//                    assert(lambda[j] > 0);//this would cause problems!
-//
-//                    //move j to the beginning of its current interval
-//                    I lambda_j = lambda[j];
-//                    I old_pos  = node_to_index[j];
-//                    I new_pos  = interval_ptr[lambda_j];
-//
-//                    node_to_index[index_to_node[old_pos]] = new_pos;
-//                    node_to_index[index_to_node[new_pos]] = old_pos;
-//                    std::swap(index_to_node[old_pos],index_to_node[new_pos]);
-//
-//                    //update intervals
-//                    interval_count[lambda_j]   -= 1;
-//                    interval_count[lambda_j-1] += 1;
-//                    interval_ptr[lambda_j]     += 1;
-//                    interval_ptr[lambda_j-1]    = interval_ptr[lambda_j] - interval_count[lambda_j-1];
-//
-//                    //decrement lambda_j
-//                    lambda[j]--;
-//
-//#ifdef DEBUG
-//                    assert(interval_count[lambda_j]   >= 0);
-//                    assert(interval_count[lambda_j-1] >  0);
-//                    assert(interval_ptr[lambda[j]] <= node_to_index[j]);
-//                    assert(node_to_index[j] < interval_ptr[lambda[j]] + interval_count[lambda[j]]);
-//#endif
-//                }
-//            }
-//        }
-//    }
-//
-//
-//
-//
-//#ifdef DEBUG
-//    //make sure each f-node has at least one strong c-node neighbor
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == F_NODE){
-//            I row_start = Sp[i];
-//            I row_end   = Sp[i+1];
-//            bool has_c_neighbor = false;
-//            for(I jj = row_start; jj < row_end; jj++){
-//                if(NodeSets[Sj[jj]] == C_NODE){
-//                    has_c_neighbor = true;
-//                    break;
-//                }
-//            }
-//            assert(has_c_neighbor);
-//        }
-//    }
-//#endif
-//
-//    //Now construct interpolation operator
-//    std::vector<T> d_k(n_nodes,0);
-//    std::vector<bool> C_i(n_nodes,0);
-//    Bp->push_back(0);
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == C_NODE){
-//            //interpolate directly
-//            Bj->push_back(i);
-//            Bx->push_back(1);
-//            Bp->push_back(Bj->size());
-//        } else {
-//            //F_NODE
-//
-//            //Step 4
-//            T d_i = 0; //denominator for this row
-//            for(I jj = Ap[i]; jj < Ap[i+1]; jj++){ d_i += Ax[jj]; }
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ d_i -= Sx[jj]; }
-//
-//            //Create C_i, initialize d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                if(NodeSets[j] == C_NODE){
-//                    C_i[j] = true;
-//                    d_k[j] = Sx[jj];
-//                }
-//            }
-//
-//            bool Sj_intersects_Ci = true; //in the case that i has no F-neighbors
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){ //for j in D^s_i
-//                I    j = Sj[jj];
-//                T   a_ij = Sx[jj];
-//                T   a_jl = 0;
-//
-//                if(NodeSets[j] != F_NODE){continue;}
-//
-//                //Step 5
-//                Sj_intersects_Ci = false;
-//
-//                //compute sum a_jl
-//                for(I ll = Sp[j]; ll < Sp[j+1]; ll++){
-//                    if(C_i[Sj[ll]]){
-//                        Sj_intersects_Ci = true;
-//                        a_jl += Sx[ll];
-//                    }
-//                }
-//
-//                if(!Sj_intersects_Ci){ break; }
-//
-//                for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
-//                    I   k = Sj[kk];
-//                    T  a_jk = Sx[kk];
-//                    if(C_i[k]){
-//                        d_k[k] += a_ij*a_jk / a_jl;
-//                    }
-//                }
-//            }
-//
-//            //Step 6
-//            if(Sj_intersects_Ci){
-//                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                    I j = Sj[jj];
-//                    if(NodeSets[j] == C_NODE){
-//                        Bj->push_back(j);
-//                        Bx->push_back(-d_k[j]/d_i);
-//                    }
-//                }
-//                Bp->push_back(Bj->size());
-//            } else { //make i a C_NODE
-//                NodeSets[i] = C_NODE;
-//                Bj->push_back(i);
-//                Bx->push_back(1);
-//                Bp->push_back(Bj->size());
-//            }
-//
-//
-//            //Clear C_i,d_k
-//            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
-//                I j = Sj[jj];
-//                C_i[j] = false;
-//                d_k[j] = 0;
-//            }
-//
-//        }
-//
-//    }
-//
-//    //for each c-node, determine its index in the coarser lvl
-//    std::vector<I> cnode_index(n_nodes,-1);
-//    I n_cnodes = 0;
-//    for(I i = 0; i < n_nodes; i++){
-//        if(NodeSets[i] == C_NODE){
-//            cnode_index[i] = n_cnodes++;
-//        }
-//    }
-//    //map old C indices to coarse indices
-//    for(typename std::vector<I>::iterator iter = Bj->begin(); iter != Bj->end(); iter++){
-//        *iter = cnode_index[*iter];
-//    }
-//}
+/* Remove strong F-to-F connections that do NOT have a common C-point from
+ * the set of strong connections. Specifically, set the data value in CSR
+ * format to 0. Removing zero entries afterwards will adjust row pointer
+ * and column indices.
+ *
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of rows in A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * Sx : array
+ *     Data array for SOC matrix, C
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
+ *
+ * Returns
+ * -------
+ * Nothing, Sx[] is set to zero to eliminate connections.
+ */
+template<class I, class T>
+void remove_strong_FF_connections(const I n_nodes,
+                                  const I Sp[], const int Sp_size,
+                                  const I Sj[], const int Sj_size,
+                                        T Sx[], const int Sx_size,
+                                  const I splitting[], const int splitting_size)
+{
+    // For each F-point
+    for (I row=0; row<n_nodes; row++) {
+        if (splitting[row] == F_NODE) {
+
+            // For each j in S_row /\ F, test dependence of j on S_row /\ C
+            for (I jj=Sp[row]; jj<Sp[row+1]; jj++) {
+                I j = Sj[jj];
+
+                if (splitting[j] == F_NODE) {
+
+                    // Test dependence, i.e. check that S_j /\ S_row /\ C is
+                    // nonempty. This is simply checking that nodes j and row
+                    // have a common strong C-point connection.
+                    bool dependence = false;
+                    for (I ii=Sp[row]; ii<Sp[row+1]; ii++) {
+                        I row_ind = Sj[ii];
+                        if (splitting[row_ind] == C_NODE) {
+                            for (I kk=Sp[j]; kk<Sp[j+1]; kk++) {
+                                if (Sj[kk] == row_ind) {
+                                    dependence = true;
+                                }
+                            }
+                        }
+                        if (dependence) {
+                            break;
+                        }
+                    }
+
+                    // Node j passed dependence test
+                    if (dependence) {
+                        continue;
+                    }
+                    // Node j did not pass dependence test. That is, the two F-points
+                    // do not have a common C neighbor, and we thus remove the strong
+                    // connection.
+                    else {
+                        Sx[jj] = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/* Produce a classical AMG interpolation operator for the case in which
+ * two strongly connected F -points do NOT have a common C-neighbor. Formula
+ * can be found in Sec. 3 Eq. (8) of [1] for modified=False and Eq. (9)
+ * for modified=True.
+ *
+ * Parameters
+ * ----------
+ * Ap : array
+ *     Row pointer for matrix A
+ * Aj : array
+ *     Column indices for matrix A
+ * Ax : array
+ *     Data array for matrix A
+ * Sp : array
+ *     Row pointer for SOC matrix, C
+ * Sj : array
+ *     Column indices for SOC matrix, C
+ * Sx : array
+ *     Data array for SOC matrix, C -- MUST HAVE VALUES OF A
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points
+ * Pp : array
+ *     Row pointer for matrix P
+ * Pj : array
+ *     Column indices for matrix P
+ * Px : array
+ *     Data array for matrix P
+ * modified : bool
+ *     Use modified interpolation formula
+ *
+ * Notes
+ * -----
+ * For modified interpolation, it is assumed that SOC matrix C is
+ * passed in WITHOUT any F-to-F connections that do not share a
+ * common C-point neighbor. Any SOC matrix C can be set as such by
+ * calling remove_strong_FF_connections().
+ *
+ * Returns
+ * -------
+ * Nothing, Pj[] and Px[] modified in place.
+ *
+ * References
+ * ----------
+ * [0] V. E. Henson and U. M. Yang, BoomerAMG: a parallel algebraic multigrid
+ *      solver and preconditioner, Applied Numerical Mathematics 41 (2002).
+ *
+ * [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
+ *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
+ */
+template<class I, class T>
+void rs_classical_interpolation_pass2(const I n_nodes,
+                                      const I Ap[], const int Ap_size,
+                                      const I Aj[], const int Aj_size,
+                                      const T Ax[], const int Ax_size,
+                                      const I Sp[], const int Sp_size,
+                                      const I Sj[], const int Sj_size,
+                                      const T Sx[], const int Sx_size,
+                                      const I splitting[], const int splitting_size,
+                                      const I Pp[], const int Pp_size,
+                                            I Pj[], const int Pj_size,
+                                            T Px[], const int Px_size,
+                                      const bool modified)
+{
+    for (I i = 0; i < n_nodes; i++) {
+        // If node i is a C-point, then set interpolation as injection
+        if(splitting[i] == C_NODE) {
+            Pj[Pp[i]] = i;
+            Px[Pp[i]] = 1;
+        }
+        // Otherwise, use RS classical interpolation formula
+        else {
+
+            // Calculate denominator
+            T denominator = 0;
+
+            // Start by summing entire row of A
+            for (I mm = Ap[i]; mm < Ap[i+1]; mm++) {
+                denominator += Ax[mm];
+            }
+
+            // Then subtract off the strong connections so that you are left with
+            // denominator = a_ii + sum_{m in weak connections} a_im
+            for (I mm = Sp[i]; mm < Sp[i+1]; mm++) {
+                if ( Sj[mm] != i ) {
+                    denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
+                }
+            }
+
+            // Set entries in P (interpolation weights w_ij from strongly connected C-points)
+            I nnz = Pp[i];
+            for (I jj = Sp[i]; jj < Sp[i+1]; jj++) {
+
+                if (splitting[Sj[jj]] == C_NODE) {
+
+                    // Set temporary value for Pj as global index, j. Will be mapped to
+                    // appropriate coarse-grid column index after all data is filled in.
+                    Pj[nnz] = Sj[jj];
+                    I j = Sj[jj];
+
+                    // Initialize numerator as a_ij
+                    T numerator = Sx[jj];
+
+                    // Sum over strongly connected fine points
+                    for (I kk = Sp[i]; kk < Sp[i+1]; kk++) {
+                        if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ) {
+
+                            // Get column k and value a_ik
+                            I k = Sj[kk];
+                            T a_ik = Sx[kk];
+
+                            // Get a_kj (have to search over k'th row in A for connection a_kj)
+                            T a_kj = 0;
+                            T a_kk = 0;
+                            if (modified) {
+                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
+                                    if (Aj[search_ind] == j) {
+                                        a_kj = Ax[search_ind];
+                                    }
+                                    else if (Aj[search_ind] == k) {
+                                        a_kk = Ax[search_ind];
+                                    }
+                                }
+                            }
+                            else {
+                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
+                                    if ( Aj[search_ind] == j ) {
+                                        a_kj = Ax[search_ind];
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // If sign of a_kj matches sign of a_kk, ignore a_kj in sum
+                            // (i.e. leave as a_kj = 0) for modified interpolation
+                            if ( modified && (signof(a_kj) == signof(a_kk)) ) {
+                                a_kj = 0;
+                            }
+
+                            // If a_kj == 0, then we don't need to do any more work, otherwise
+                            // proceed to account for node k's contribution
+                            if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
+
+                                // Calculate sum for inner denominator (loop over strongly connected C-points)
+                                T inner_denominator = 0;
+                                for (I ll = Sp[i]; ll < Sp[i+1]; ll++) {
+                                    if (splitting[Sj[ll]] == C_NODE) {
+
+                                        // Get column l
+                                        I l = Sj[ll];
+
+                                        // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                        // Only add if sign of a_kl does not equal sign of a_kk
+                                        for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
+                                            if (Aj[search_ind] == l) {
+                                                T a_kl = Ax[search_ind];
+                                                if ( (!modified) || (signof(a_kl) != signof(a_kk)) ) {
+                                                    inner_denominator += a_kl;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Add a_ik * a_kj / inner_denominator to the numerator
+                                if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
+                                    printf("Inner denominator was zero.\n");
+                                }
+                                numerator += a_ik * a_kj / inner_denominator;
+                            }
+                        }
+                    }
+
+                    // Set w_ij = -numerator/denominator
+                    if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
+                        printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
+                    }
+                    Px[nnz] = -numerator / denominator;
+                    nnz++;
+                }
+            }
+        }
+    }
+
+    // Column indices were initially stored as global indices. Build map to switch
+    // to C-point indices.
+    std::vector<I> map(n_nodes);
+    for (I i = 0, sum = 0; i < n_nodes; i++) {
+        map[i]  = sum;
+        sum    += splitting[i];
+    }
+    for (I i = 0; i < Pp[n_nodes]; i++) {
+        Pj[i] = map[Pj[i]];
+    }
+}
 
 #endif

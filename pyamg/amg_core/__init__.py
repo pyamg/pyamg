@@ -25,12 +25,18 @@ from .ruge_stuben import (classical_strength_of_connection_abs,
                           rs_cf_splitting, rs_cf_splitting_pass2,
                           cljp_naive_splitting,
                           rs_direct_interpolation_pass1, rs_direct_interpolation_pass2,
-                          cr_helper)
+                          cr_helper,
+                          rs_classical_interpolation_pass1,
+                          rs_classical_interpolation_pass2,
+                          remove_strong_FF_connections)
 from .smoothed_aggregation import (symmetric_strength_of_connection, standard_aggregation,
-                                   naive_aggregation,
+                                   naive_aggregation, pairwise_aggregation,
                                    fit_candidates,
                                    satisfy_constraints_helper, calc_BtB,
                                    incomplete_mat_mult_bsr, truncate_rows_csr)
+
+from .air import (one_point_interpolation, approx_ideal_restriction_pass1,
+                  approx_ideal_restriction_pass2, block_approx_ideal_restriction_pass2)
 
 __all__ = [
     'apply_absolute_distance_filter',
@@ -87,13 +93,23 @@ __all__ = [
     'rs_direct_interpolation_pass1',
     'rs_direct_interpolation_pass2',
     'cr_helper',
+    'rs_classical_interpolation_pass1',
+    'rs_classical_interpolation_pass2',
+    'remove_strong_FF_connections',
     #
     'symmetric_strength_of_connection',
     'standard_aggregation',
     'naive_aggregation',
+    'pairwise_aggregation',
     'fit_candidates',
     'satisfy_constraints_helper',
     'calc_BtB',
     'incomplete_mat_mult_bsr',
-    'truncate_rows_csr'
+    'truncate_rows_csr',
+    #
+    'one_point_interpolation',
+    'approx_ideal_restriction_pass1',
+    'approx_ideal_restriction_pass2',
+    'block_approx_ideal_restriction_pass2'
+    #
 ]

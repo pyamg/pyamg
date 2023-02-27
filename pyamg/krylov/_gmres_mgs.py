@@ -312,7 +312,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
             residuals.append(normr)
 
         # Has GMRES stagnated?
-        indices = (x != 0)
+        indices = x != 0
         if indices.any():
             change = np.max(np.abs(update[indices] / x[indices]))
             if change < 1e-12:

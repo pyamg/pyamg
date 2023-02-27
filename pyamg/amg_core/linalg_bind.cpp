@@ -92,7 +92,7 @@ void _filter_matrix_rows(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-             const I lump
+          const bool lump
                          )
 {
     auto py_Ap = Ap.unchecked();
@@ -252,7 +252,7 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"),
 R"pbdoc(
-Filter matrix rows by diagonal entry, that is set A_ij = 0 if
+Filter matrix rows by diagonal entry, that is set A_ij = 0 if::
 
    |A_ij| < theta * |A_ii|
 

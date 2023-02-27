@@ -100,6 +100,37 @@ I _naive_aggregation(
 }
 
 template <class I, class T>
+I _pairwise_aggregation(
+            const I n_row,
+      py::array_t<I> & Sp,
+      py::array_t<I> & Sj,
+      py::array_t<T> & Sx,
+       py::array_t<I> & x,
+       py::array_t<I> & y
+                        )
+{
+    auto py_Sp = Sp.unchecked();
+    auto py_Sj = Sj.unchecked();
+    auto py_Sx = Sx.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_y = y.mutable_unchecked();
+    const I *_Sp = py_Sp.data();
+    const I *_Sj = py_Sj.data();
+    const T *_Sx = py_Sx.data();
+    I *_x = py_x.mutable_data();
+    I *_y = py_y.mutable_data();
+
+    return pairwise_aggregation <I, T>(
+                    n_row,
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sx, Sx.shape(0),
+                       _x, x.shape(0),
+                       _y, y.shape(0)
+                                       );
+}
+
+template <class I, class T>
 void _fit_candidates_real(
             const I n_row,
             const I n_col,
@@ -340,6 +371,7 @@ PYBIND11_MODULE(smoothed_aggregation, m) {
     symmetric_strength_of_connection
     standard_aggregation
     naive_aggregation
+    pairwise_aggregation
     fit_candidates_real
     fit_candidates_complex
     satisfy_constraints_helper
@@ -455,6 +487,42 @@ If it has been aggregated, skip over.  Otherwise, put dof
 and any unaggregated neighbors in an aggregate.  Results
 in possibly much higher complexities.)pbdoc");
 
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, int>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, long>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, float>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int, double>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
+R"pbdoc(
+Compute aggregates for a matrix S stored in CSR format
+
+Parameters
+----------
+n_row : int
+    number of rows in S
+Sp : array, n_row+1
+    CSR row pointer
+Sj : array, nnz
+    CSR column indices
+Sx : array, nnz
+    CSR data array
+x : array, n_row, inplace
+    aggregate numbers for each node
+y : array, n_row, inplace
+    will hold Cpts upon return
+
+Returns
+-------
+int
+ The number of aggregates (== max(x[:]) + 1 )
+
+Notes
+-----
+S is the strength matrix. Assumes that the strength matrix is for
+classic strength with min norm.)pbdoc");
+
     m.def("fit_candidates", &_fit_candidates_real<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
     m.def("fit_candidates", &_fit_candidates_real<int, double>,
@@ -505,8 +573,8 @@ Sj : array
 Sx : array
      Value array for BSR matrix S
 
-Return
-------
+Returns
+-------
 Sx is modified such that S*B = 0.  S ends up being the
 update to the prolongator in the energy_minimization algorithm.
 

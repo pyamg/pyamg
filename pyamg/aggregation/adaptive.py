@@ -1,6 +1,5 @@
 """Adaptive Smoothed Aggregation."""
 
-
 from warnings import warn
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
@@ -24,7 +23,7 @@ from .tentative import fit_candidates
 
 
 def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
-    """Eliminate canidates locally.
+    """Eliminate candidates locally.
 
     Helper function that determines where to eliminate candidates locally
     on a per aggregate basis.
@@ -176,7 +175,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         to contain arguments to local elimination routine.  Given the rigid
         sparse data structures, this doesn't help much, if at all, with
         complexity.  Its more of a diagnostic utility.
-    keep: bool
+    keep : bool
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.

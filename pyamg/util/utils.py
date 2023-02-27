@@ -338,7 +338,7 @@ def symmetric_rescaling(A, copy=True):
             raise ValueError('expected square matrix')
 
         D = diag_sparse(A)
-        mask = (D != 0)
+        mask = D != 0
 
         if A.dtype != complex:
             D_sqrt = np.sqrt(abs(D))
@@ -583,7 +583,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
 
     if inv:
         Dinv = np.zeros_like(D)
-        mask = (D != 0.0)
+        mask = D != 0.0
         Dinv[mask] = 1.0 / D[mask]
         return Dinv
 
@@ -662,7 +662,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
     diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
-    nonzero_mask = (diag_entries != -1)
+    nonzero_mask = diag_entries != -1
     diag_entries = diag_entries[nonzero_mask]
     if diag_entries.shape != (0,):
         block_diag[nonzero_mask, :, :] = A.data[diag_entries, :, :]
@@ -1672,7 +1672,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = np.array(diag_dom_rows, dtype=int)
         diag_dom_rows = diag_dom_rows.reshape(-1, bsize)
         diag_dom_rows = np.sum(diag_dom_rows, axis=1)
-        diag_dom_rows = (diag_dom_rows == bsize)
+        diag_dom_rows = diag_dom_rows == bsize
 
     # Replace these rows/cols in # C with rows/cols of the identity.
     Id = eye(C.shape[0], C.shape[1], format='csr')
@@ -2142,28 +2142,52 @@ def truncate_rows(A, nz_per_row):
     return A
 
 
-# from functools import partial, update_wrapper
-# def dispatcher(name_to_handle):
-#    def dispatcher(arg):
-#        if isinstance(arg,tuple):
-#            fn,opts = arg[0],arg[1]
-#        else:
-#            fn,opts = arg,{}
-#
-#        if fn in name_to_handle:
-#            # convert string into function handle
-#            fn = name_to_handle[fn]
-#        #elif isinstance(fn, type(numpy.ones)):
-#        #    pass
-#        elif callable(fn):
-#            # if fn is itself a function handle
-#            pass
-#        else:
-#            raise TypeError('Expected function')
-#
-#        wrapped = partial(fn, **opts)
-#        update_wrapper(wrapped, fn)
-#
-#        return wrapped
-#
-#    return dispatcher
+def scale_block_inverse(A, blocksize):
+    """Get inverse of block diagonal of A and scale A, A = D^{-1}A.
+
+    Parameters
+    ----------
+    A : csr or bsr_matrix
+        Matrix to scale by block inverse.
+    blocksize : int
+        Blocksize of matrix.
+
+    Returns
+    -------
+    tuple, (D^{-1}*A, D^{-1})
+
+    Notes
+    -----
+    This is not a symmetric scaling.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.util.utils import scale_block_inverse
+    >>> A = poisson((4,), format='csr')
+    >>> A, Dinv = scale_block_inverse(A, 2)
+    >>> A.toarray()
+    array([[ 1.        ,  0.        , -0.33333333,  0.        ],
+           [ 0.        ,  1.        , -0.66666667,  0.        ],
+           [ 0.        , -0.66666667,  1.        ,  0.        ],
+           [ 0.        , -0.33333333,  0.        ,  1.        ]])
+    """
+    if not isspmatrix(A):
+        raise TypeError('Expected sparse matrix')
+    if A.shape[0] != A.shape[1]:
+        raise ValueError('Expected square matrix')
+    if np.mod(A.shape[0], blocksize) != 0:
+        raise ValueError('blocksize and A.shape must be compatible')
+
+    # Convert to BSR
+    if not isspmatrix_bsr(A):
+        A = bsr_matrix(A, blocksize=(blocksize, blocksize))
+    if A.blocksize != (blocksize, blocksize):
+        A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    # Get block diagonal inverse
+    N_block = A.shape[0] / blocksize
+    Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
+    scale = bsr_matrix((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
+                       blocksize=[blocksize, blocksize], shape=A.shape)
+    return scale * A, scale

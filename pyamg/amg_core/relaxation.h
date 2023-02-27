@@ -478,17 +478,27 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
  *  relaxation".
  *
  *  Parameters
- *      Ap[]       - BSR row pointer
- *      Aj[]       - BSR index array
- *      Ax[]       - BSR data array
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      indices[]  - list of row indices to perform Jacobi on, e.g., F-points.
- *                   Note, it is assumed that indices correspond to blocks in A.
- *      blocksize  - BSR blocksize (blocks must be square)
- *      omega      - damping parameter
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array
+ *  x : array
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  indices : array
+ *      list of row indices to perform Jacobi on, e.g., F-points.
+ *      Note, it is assumed that indices correspond to blocks in A.
+ *  blocksize : int
+ *      BSR blocksize (blocks must be square)
+ *  omega : float
+ *      damping parameter
  *
- *  Returns:
+ *  Returns
+ *  -------
  *      Nothing, x will be modified in place
  *
  */
@@ -979,18 +989,29 @@ void block_jacobi(const I Ap[], const int Ap_size,
  *  is controlled by the parameter omega.
  *
  *  Parameters
- *      Ap[]       - BSR row pointer
- *      Aj[]       - BSR index array
- *      Ax[]       - BSR data array, blocks assumed square
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      Tx[]       - Inverse of each diagonal block of A stored
- *                   as a (n/blocksize, blocksize, blocksize) array
- *      indices[]  -
- *      omega      - damping parameter
- *      blocksize  - dimension of sqare blocks in BSR matrix A
+ *  ----------
+ *  Ap : array
+ *      BSR row pointer
+ *  Aj : array
+ *      BSR index array
+ *  Ax : array
+ *      BSR data array, blocks assumed square
+ *  x : array
+ *      approximate solution
+ *  b : array
+ *      right hand side
+ *  Tx : array
+ *      Inverse of each diagonal block of A stored
+ *      as a (n/blocksize, blocksize, blocksize) array
+ *  indices : array
+ *      Indices
+ *  omega : float
+ *      damping parameter
+ *  blocksize : int
+ *      dimension of square blocks in BSR matrix A
  *
- *  Returns:
+ *  Returns
+ *  -------
  *      Nothing, x will be modified in place
  *
  */

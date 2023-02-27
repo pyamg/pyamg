@@ -136,8 +136,7 @@ class TestSolverMatrix(TestCase):
             ml = ruge_stuben_solver(A,
                                     presmoother=solver,
                                     postsmoother=None,
-                                    max_levels=2)
-
+                                    max_levels=2, max_coarse=1)
             assert ml.levels[0].presmoother.__name__ == solver
             assert ml.levels[0].A.data[0] == 2  # Poisson diagonal
 

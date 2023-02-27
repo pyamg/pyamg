@@ -14,6 +14,8 @@ extensions = ['sphinx.ext.autodoc',
               'm2r2',
               'numpydoc']
 
+numpydoc_show_inherited_class_members = False
+
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
@@ -33,7 +35,7 @@ author = '2022, Luke Olson and Jacob Schroder'
 version = pyamg.__version__
 release = version
 
-language = None
+language = 'en'
 exclude_patterns = ['README.md']
 
 pygments_style = 'sphinx'
@@ -46,6 +48,13 @@ todo_include_todos = False
 html_theme = 'pydata_sphinx_theme'
 html_logo = '../logo/pyamg_logo.png'
 html_static_path = ['_static']
+
+html_theme_options = {
+    'github_url': 'https://github.com/pyamg/pyamg',
+    'logo': {'image_light': 'pyamg_logo.png',
+             'image_dark': 'pyamg_logo.png',
+             }
+}
 
 htmlhelp_basename = 'PyAMGdoc'
 
