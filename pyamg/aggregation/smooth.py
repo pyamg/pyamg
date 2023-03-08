@@ -1248,7 +1248,53 @@ def get_block_inverses(A, subdomain, subdomain_ptr):
     return block_invs
 
 
-def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, **kwargs):
+def get_block_diag_inv(A, subdomain, subdomain_ptr):
+    """
+    Compute approximate block inverses to A, using just the diagonal of A,
+    where each block size is defined by subdomain and subdomain_ptr (CSR-like
+    data structure)
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+
+
+    Returns
+    -------
+    block_invs[i] = approximate block inverse for subdomain i
+
+    """
+
+    class new_array(np.ndarray):
+        ''' Hack of np array to allow for array.solve member function '''
+        def __new__(cls, input_array):
+            obj = np.asarray(input_array).view(cls)
+            obj.solve = input_array.__mul__
+            return obj
+
+        def __array_finalize__(self, obj):
+            if obj is None: return
+            self.your_new_attr = getattr(obj, 'solve', None)
+
+    ##
+    # Extract diagonal of A
+    D = (A.tocsr()).diagonal()
+
+    ##
+    # Grab each block's part of D
+    block_invs = []
+    for i in range(subdomain_ptr.shape[0]-1):
+        start = subdomain_ptr[i]
+        end = subdomain_ptr[i+1]
+        local_D_inv = D[ subdomain[start:end] ]
+        local_D_inv[ local_D_inv != 0] = 1.0 / local_D_inv[ local_D_inv != 0]
+        block_invs.append( new_array(local_D_inv) )
+
+    return block_invs
+
+
+
+def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, block_solver='exact', **kwargs):
     """Solve the AIR equations 
              A_FF^{-1} W = -A_FC 
        subject to mode interpolation constraints.
@@ -1288,6 +1334,12 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
         Beginning sparsity pattern for P based on ( Atilde^degree  [-A_FC;  I] )
         The degree should be > 0 when you need more nonzeros to satisfy the constraints
         in the initial P
+    block_solver : string
+        Type of solver to use when solving the local linear systems for each column of P via AIR
+        'exact' - use pseudoinverse of the block
+        'diag'  - use just the diagonal of the block
+        'splu' [to implement]
+        'tria' [to implement, choose upper or lower triag and use that]
 
     Returns
     -------
@@ -1377,7 +1429,12 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
     # Compute (approx) block inverses for corresponding windows of A_FF
     pattern_FF= (I_F*pattern).tocsc()
     pattern_FF.sort_indices()
-    block_invs = get_block_inverses(A, pattern_FF.indices, pattern_FF.indptr)
+    if block_solver == 'exact':
+        block_invs = get_block_inverses(A, pattern_FF.indices, pattern_FF.indptr)
+    elif block_solver == 'diag':
+        block_invs = get_block_diag_inv(A, pattern_FF.indices, pattern_FF.indptr)
+    else:
+        raise ValueError(f"Invalid block_solver option {block_solver}")
 
     ##
     # Update T to satisfy the constraints (T*B = Bf), have identity at C-pts, and the 
@@ -1411,7 +1468,7 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
         T_hat = RHS.copy()
         ## RHS, T_hat, and pattern_FF should have the exact same sparsity pattern and indices at this point
         for k, (start,end) in enumerate( zip(RHS.indptr[:-1], RHS.indptr[1:]) ):
-            T_hat.data[start:end] = block_invs[k].dot(RHS.data[start:end])
+            T_hat.data[start:end] = block_invs[k].solve(RHS.data[start:end])
             #T_hat.data[start:end] = 0.25*RHS.data[start:end]
         #
         T_hat = T_hat.tobsr(blocksize=(1,1))

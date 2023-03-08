@@ -356,6 +356,9 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     else:
         raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
 
+    # Avoid subtle reproducibility issues by sorting indices of C
+    C.sort_indices()
+
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
     if flag:
@@ -455,7 +458,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
             TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
     #
     # Make sure splitting exists
-    splitting = np.zeros((A.shape[0],), dtype=bool)
+    splitting = np.zeros((A.shape[0],), dtype=np.int32)
     splitting[Cpt_params[1]['Cpts']] = True
      
     # Set coarse grid near nullspace modes as injected fine grid near
@@ -473,12 +476,10 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
                                          **kwargs)
     elif fn == 'AIRplus':
         P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
-    elif fn == 'standard':
-        P = interpolate.standard_interpolation(A, C, splitting, **kwargs)
-    elif fn == 'distance_two':
-        P = interpolate.distance_two_interpolation(A, C, splitting, **kwargs)
+    elif fn == 'classical':
+        P = interpolate.classical_interpolation(A.tocsr(), C, splitting, **kwargs)
     elif fn == 'direct':
-        P = interpolate.direct_interpolation(A, C, splitting, **kwargs)
+        P = interpolate.direct_interpolation(A.tocsr(), C, splitting, **kwargs)
     elif fn == 'one_point':
         P = interpolate.one_point_interpolation(A, C, splitting, **kwargs)
     elif fn == 'inject':
@@ -524,6 +525,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
         levels[-1].I_F = Cpt_params[1]['I_F']    # Identity on F-pts
         levels[-1].I_C = Cpt_params[1]['I_C']    # Identity on C-pts
 
+    splitting = np.array(splitting, dtype=bool)
     levels[-1].splitting = splitting             # Splitting
     levels[-1].P = P                             # smoothed prolongator
     levels[-1].R = R                             # restriction operator

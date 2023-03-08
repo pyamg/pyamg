@@ -862,7 +862,6 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         title = title.split('\n')
         for t in title:
             table_str += str.center(t, ttwidth) + '\n'
-        table_str += '\n'
 
     # Choose centering scheme
     centering = centering.lower()
