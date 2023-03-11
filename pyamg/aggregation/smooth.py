@@ -14,6 +14,7 @@ from ..util.linalg import approximate_spectral_radius
 from ..util import upcast
 from ..util.params import set_tol
 from .. import amg_core
+from ..strength import classical_strength_of_connection
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
 def satisfy_constraints(U, B, BtBinv):
@@ -1294,7 +1295,7 @@ def get_block_diag_inv(A, subdomain, subdomain_ptr):
 
 
 
-def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, block_solver='exact', **kwargs):
+def AIRplus(A, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, block_solver='exact', strength='transpose', theta=0.05, norm='abs', **kwargs):
     """Solve the AIR equations 
              A_FF^{-1} W = -A_FC 
        subject to mode interpolation constraints.
@@ -1310,10 +1311,6 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
     ----------
     A : csr_matrix, bsr_matrix
         Sparse NxN matrix
-    T : bsr_matrix
-        Tentative prolongator, a NxM sparse matrix (M < N)
-    Atilde : csr_matrix
-        Strength of connection matrix
     B : array
         Near-nullspace modes for coarse grid.  Has shape (M,k) where
         k is the number of coarse candidate vectors.
@@ -1333,13 +1330,25 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
     degree : int
         Beginning sparsity pattern for P based on ( Atilde^degree  [-A_FC;  I] )
         The degree should be > 0 when you need more nonzeros to satisfy the constraints
-        in the initial P
+        in the initial P.  Atilde is the strength of connection matrix.
     block_solver : string
         Type of solver to use when solving the local linear systems for each column of P via AIR
         'exact' - use pseudoinverse of the block
         'diag'  - use just the diagonal of the block
         'splu' [to implement]
         'tria' [to implement, choose upper or lower triag and use that]
+    strength : string
+        'transpose' or 'no-transpose'
+        Decides whether to compute strength based on A or A.H
+        Note, for restriction, A.H is already passed in.
+        Note, for classic AIR, 'transpose' is the standard option.
+    theta : float
+        Strength of connection tolerance for computing interpolation neighborhood
+        See classical_strength_of_connection
+    norm : string
+        Typically 'abs' or 'min', used by strength of connection in block case
+        See classical_strength_of_connection
+
 
     Returns
     -------
@@ -1358,38 +1367,38 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
     if degree < 0:
         raise ValueError('degree must be > 0')
 
+    # Convert A to CSR
     if sparse.isspmatrix_csr(A):
         pass
     elif sparse.isspmatrix_bsr(A):
         A = A.tocsr(copy=False)
     else:
         raise TypeError('A must be csr_matrix or bsr_matrix')
+    if A.nnz == 0:
+        raise TypeError('A must have nonzeros')
 
-    if sparse.isspmatrix_csr(T):
-        pass
-    elif sparse.isspmatrix_bsr(T):
-        T = T.tocsr(copy=False)
+    ##
+    # Generate SOC
+    if strength == 'transpose':
+        # This will match the Atilde used by classic AIR
+        #   AIR uses Atilde[C,F], where Atilde is built based on A.  Since we
+        #   pass in A.T to this routine, these two lines will match the behavior
+        #   of AIR, but for an efficient implementation, we probably want to
+        #   avoid these transposes.
+        Atilde = classical_strength_of_connection(A=A.T.tocsr(), theta=theta, block=False, norm=norm)
+        Atilde = Atilde.T.tocsr()
     else:
-        raise TypeError('T must be csr_matrix or bsr_matrix')
+        Atilde = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
 
-    if B.shape[0] != T.shape[1]:
-        raise ValueError('B is the candidates for the coarse grid. '
-                         '  num_rows(B) = num_cols(T)')
-
-    if min(T.nnz, A.nnz) == 0:
-        return T
-
-    if not sparse.isspmatrix_csr(Atilde):
-        raise TypeError('Atilde must be csr_matrix')
-    
     ##
     # Extract needed C/F splitting information
     I_F = Cpt_params[1]['I_F'].tocsr()
     I_C = Cpt_params[1]['I_C'].tocsr()
     P_I = Cpt_params[1]['P_I'].tocsr()
     Cpts = Cpt_params[1]['Cpts']
-    AFC = ((I_F*A)[:,Cpts]).tocsr()
     AFF = I_F * A * I_F
+    AFC = ((I_F*A)[:,Cpts]).tocsr()            # Used to compute residual for AIR-type operator
+    AtildeFC = ((I_F*Atilde)[:,Cpts]).tocsr()  # Used for sparsity pattern (to match classic AIR)
 
     ##
     # Initialize T = [- A_FC; I]
@@ -1404,10 +1413,11 @@ def AIRplus(A, T, Atilde, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, deg
         else:
             pattern = PresetPattern.tocsr().copy()
     else:
-        pattern = AFC + P_I
+        pattern = AtildeFC + P_I
         pattern.data[:] = 1.0
         for _ in range(degree):
-            pattern = Atilde * pattern
+            #pattern = Atilde * pattern
+            pattern = (I_F*Atilde*I_F) * pattern
     #
     pattern.data[:] = 1.0
     #

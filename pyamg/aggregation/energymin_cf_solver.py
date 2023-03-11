@@ -475,7 +475,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
                                          force_fit_candidates=classical_CF, 
                                          **kwargs)
     elif fn == 'AIRplus':
-        P = AIRplus(A, T, C, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
+        P = AIRplus(A, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
     elif fn == 'classical':
         P = interpolate.classical_interpolation(A.tocsr(), C, splitting, **kwargs)
     elif fn == 'direct':
@@ -506,7 +506,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
                                              **kwargs)
             R = R.H
         elif fn == 'AIRplus':
-            R = AIRplus(AH, TH, C, BH, levels[-1].BH, Cpt_params, Rpattern, **kwargs)
+            R = AIRplus(AH, BH, levels[-1].BH, Cpt_params, Rpattern, **kwargs)
             R = R.H
         elif fn is None:
             R = T.H
