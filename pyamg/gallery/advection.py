@@ -1,11 +1,12 @@
+"""Generate matrix and right-hand side for upwind FD discretization of 2D advection."""
+
 import numpy as np
 from .stencil import stencil_grid
 
 
 def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     """
-    Generate matrix and right-hand side for upwind FD discretization of 2D
-    advection:
+    Generate matrix and RHS for upwind FD discretization of 2D advection.
 
         (cos(theta),sin(theta)) dot grad(u) = 0,
 
@@ -31,7 +32,7 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     Returns
     -------
     A : csr_matrix
-        Defines 2D FD upwind discretization, with boundary 
+        Defines 2D FD upwind discretization, with boundary
     rhs : array
         Defines right-hand-side with boundary contributions
 
@@ -42,7 +43,7 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     Examples
     --------
     >>> from numpy import pi
-    >>> from pyamg.gallery.advection import advection_2d
+    >>> from pyamg.gallery import advection_2d
     >>> A, rhs = advection_2d( (4,4), theta=0.1)
     >>> print(A.todense())
         [[ 1.41421356  0.         -0.70710678  0.        ]
@@ -53,42 +54,41 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     """
     grid = tuple(grid)
     if len(grid) != 2:
-        raise ValueError("grid must be a length 2 tuple, describe number of points in x and y")
+        raise ValueError('grid must be a length 2 tuple, \
+                describe number of points in x and y')
     if theta <= 0 or theta >= np.pi/2:
-        raise ValueError("theta must be in (0,pi/2)")
+        raise ValueError('theta must be in (0,pi/2)')
 
     # First-order upwind FD for dx and dy in (cos(theta),sin(theta)) \nabla u.
     w1 = np.cos(theta)
     w2 = np.sin(theta)
-    st = np.array([[0,0,0],[-w1,w1+w2,0],[0,-w2,0]])
+    st = np.array([[0, 0, 0], [-w1, w1+w2, 0], [0, -w2, 0]])
     A = stencil_grid(st, grid).tocsr()
 
     # Assume left and bottom of domain to be in-flow boundary
-    # From 
+    # From
     #   grid=(ny,nx)
     #   np.arange(np.prod(grid)).reshape((grid))
     # We get boundary DOFs
-    l_bdofs = np.array([i*grid[1] for i in range(0,grid[0])])
-    b_bdofs = np.array([grid[1]*(grid[0]-1)+i for i in range(0,grid[1])])
-    all_bdofs = np.concatenate((l_bdofs,b_bdofs))
-    int_dofs = [i for i in range(0,A.shape[0]) if i not in all_bdofs]
+    l_bdofs = np.array([i*grid[1] for i in range(0, grid[0])])
+    b_bdofs = np.array([grid[1]*(grid[0]-1)+i for i in range(0, grid[1])])
+    all_bdofs = np.concatenate((l_bdofs, b_bdofs))
+    int_dofs = [i for i in range(0, A.shape[0]) if i not in all_bdofs]
 
     # Convert boundary values to array
-    if not hasattr(l_bdry, "__len__"):
+    if not hasattr(l_bdry, '__len__'):
         l_bdry = l_bdry*np.ones((grid[0],))
     elif l_bdry.shape[0] != grid[0]:
-        raise ValueError("left boundary data does not match boundary size")
+        raise ValueError('left boundary data does not match boundary size')
 
-    if not hasattr(b_bdry, "__len__"):
+    if not hasattr(b_bdry, '__len__'):
         b_bdry = b_bdry*np.ones((grid[1],))
     elif b_bdry.shape[0] != grid[1]:
-        raise ValueError("bottom boundary data does not match boundary size")
+        raise ValueError('bottom boundary data does not match boundary size')
 
     # Eliminate boundary DOFs
-    bdry = np.concatenate((l_bdry.flatten(),b_bdry.flatten()))
-    rhs = -A[int_dofs,:][:,all_bdofs]*bdry
-    A = A[int_dofs,:][:,int_dofs]
+    bdry = np.concatenate((l_bdry.flatten(), b_bdry.flatten()))
+    rhs = -A[int_dofs, :][:, all_bdofs]*bdry
+    A = A[int_dofs, :][:, int_dofs]
 
     return A, rhs
-
-
