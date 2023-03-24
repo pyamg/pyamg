@@ -2,17 +2,58 @@ import numpy as np
 from .stencil import stencil_grid
 
 
-def advection_2d(grid, theta=np.pi/4.0, l_bdry=1, b_bdry=1):
+def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     """
-    Generate matrix and right-hand side for upwind FD
-    discretization of 2d advection:
-        (cos(theta),sin(theta)) cdot nabla u = 0,
-    with inflow boundaries on the left and bottom of
-    the domain. Assume uniform grid spacing, dx=dy,
-    even for grid[0] != grid[1].
+    Generate matrix and right-hand side for upwind FD discretization of 2D
+    advection:
+
+        (cos(theta),sin(theta)) dot grad(u) = 0,
+
+    with inflow boundaries on the left and bottom of the domain. Assume uniform
+    grid spacing, dx=dy, even for grid[0] != grid[1].
+
+    Parameters
+    ----------
+    grid  : tuple
+        (ny, nx) number of points in y and x
+    theta : float, optional
+        Rotation angle `theta` in radians defines direction of advection
+        (cos(theta),sin(theta))
+    l_bdry : float, array
+        left boundary value. If float, then constant in-flow boundary value
+        applied. If array, then length of array must be equal to ny = grid[0],
+        and this array defines non-constant boundary value on the left.
+    b_bdry : float, array
+        bottom boundary value. If float, then constant in-flow boundary value
+        applied. If array, then length of array must be equal to nx = grid[1],
+        and this array defines non-constant boundary value on the bottom.
+
+    Returns
+    -------
+    A : csr_matrix
+        Defines 2D FD upwind discretization, with boundary 
+    rhs : array
+        Defines right-hand-side with boundary contributions
+
+    See Also
+    --------
+    poisson
+
+    Examples
+    --------
+    >>> from numpy import pi
+    >>> from pyamg.gallery.advection import advection_2d
+    >>> A, rhs = advection_2d( (4,4), theta=0.1)
+    >>> print(A.todense())
+        [[ 1.41421356  0.         -0.70710678  0.        ]
+         [-0.70710678  1.41421356  0.         -0.70710678]
+         [ 0.          0.          1.41421356  0.        ]
+         [ 0.          0.         -0.70710678  1.41421356]]
 
     """
     grid = tuple(grid)
+    if len(grid) != 2:
+        raise ValueError("grid must be a length 2 tuple, describe number of points in x and y")
     if theta <= 0 or theta >= np.pi/2:
         raise ValueError("theta must be in (0,pi/2)")
 
@@ -22,7 +63,7 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1, b_bdry=1):
     st = np.array([[0,0,0],[-w1,w1+w2,0],[0,-w2,0]])
     A = stencil_grid(st, grid).tocsr()
 
-    # Assume left and bottom of domain to be in flow boundary
+    # Assume left and bottom of domain to be in-flow boundary
     # From 
     #   grid=(ny,nx)
     #   np.arange(np.prod(grid)).reshape((grid))
