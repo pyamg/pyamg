@@ -844,14 +844,18 @@ def divform(mesh):
         DX[ei, :] = DXelem.ravel()
         DXI[ei, :] = np.repeat(K[np.arange(m2)], m1)
         DXJ[ei, :] = np.tile(K[np.arange(m1)], m2)
-        BX = sparse.coo_matrix((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
-        BX.sum_duplicates()
 
         DY[ei, :] = DYelem.ravel()
         DYI[ei, :] = np.repeat(K[np.arange(m2)], m1)
         DYJ[ei, :] = np.tile(K[np.arange(m1)], m2)
-        BY = sparse.coo_matrix((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
-        BY.sum_duplicates()
+
+    # Convert representation to COO
+    BX = sparse.coo_matrix((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
+    BX.sum_duplicates()
+
+    BY = sparse.coo_matrix((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
+    BY.sum_duplicates()
+
     return BX, BY
 
 
