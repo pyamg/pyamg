@@ -87,7 +87,7 @@ class multilevel_solver:
             self.auxiliary = None
             self.SC = None
 
-    def __init__(self, levels, coarse_solver='pinv2'):
+    def __init__(self, levels, coarse_solver='pinv'):
         """Class constructor responsible for initializing the cycle and ensuring the list of levels is complete.
 
         Parameters
