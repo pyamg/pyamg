@@ -59,10 +59,10 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     """
     grid = tuple(grid)
     if len(grid) != 2:
-        raise ValueError('grid must be a length 2 tuple, \
-                describe number of points in x and y')
+        raise ValueError('grid must be a length 2 tuple, '
+                         'describe number of points in x and y')
     if theta <= 0 or theta >= np.pi/2:
-        raise ValueError('theta must be in (0,pi/2)')
+        raise ValueError('theta must be in (0, pi/2)')
 
     # First-order upwind FD for dx and dy in (cos(theta),sin(theta)) \nabla u.
     w1 = np.cos(theta)
