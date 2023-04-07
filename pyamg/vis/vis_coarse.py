@@ -256,7 +256,7 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None, mesh_type=
         if not np.issubdtype(E2V.dtype, np.integer):
             raise ValueError('E2V should be of type integer')
         if E2V.min() != 0:
-            warnings.warn(f'Element indices begin at {E2V.min()}')
+            warnings.warn(f'Element indices begin at {E2V.min()}', stacklevel=2)
 
     if AggOp is not None and AggOp.shape[1] > AggOp.shape[0]:
         raise ValueError('AggOp should be of size N x Nagg')
