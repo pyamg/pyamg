@@ -81,13 +81,13 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     int_dofs = [i for i in range(0, A.shape[0]) if i not in all_bdofs]
 
     # Convert boundary values to array
-    if not hasattr(l_bdry, '__len__'):
-        l_bdry = l_bdry*np.ones((grid[0],))
+    if np.isscalar(l_bdry):
+        l_bdry = np.full(grid[0], l_bdry)
     elif l_bdry.shape[0] != grid[0]:
         raise ValueError('left boundary data does not match boundary size')
 
-    if not hasattr(b_bdry, '__len__'):
-        b_bdry = b_bdry*np.ones((grid[1],))
+    if np.isscalar(b_bdry):
+        b_bdry = np.full(grid[0], b_bdry)
     elif b_bdry.shape[0] != grid[1]:
         raise ValueError('bottom boundary data does not match boundary size')
 
