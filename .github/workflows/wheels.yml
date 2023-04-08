@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
     branches:
       - main
-      - update-wheels
   release:
     types:
       - published
