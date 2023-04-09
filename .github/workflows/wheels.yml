@@ -31,7 +31,7 @@ jobs:
           CIBW_SKIP: pp*
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_LINUX: "x86_64"
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
