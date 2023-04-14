@@ -1,6 +1,15 @@
 # Changelog
 
-A summary of changes for pyamg.
+A summary of changes for PyAMG.
+
+## [5.0.0]
+- add AIR solver
+- add and extend classical AMG interpolation routines
+- add support for F/C relaxation
+- add block strength measures
+- refactor smoothing interface
+- add advection examples to the gallery
+- add pairwise aggregation
 
 ## [4.2.3]
 - add joss paper
