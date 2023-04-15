@@ -683,7 +683,7 @@ def setup_cf_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     smoother = partial(relaxation.cf_jacobi, Cpts=Cpts, Fpts=Fpts,
                        f_iterations=f_iterations, c_iterations=c_iterations,
-                       iterations=DEFAULT_NITER, omega=omega)
+                       iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.cf_jacobi)  # set __name__
     return smoother
 
@@ -698,7 +698,7 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
 
     smoother = partial(relaxation.fc_jacobi, Cpts=Cpts, Fpts=Fpts,
                        f_iterations=f_iterations, c_iterations=c_iterations,
-                       iterations=DEFAULT_NITER, omega=omega)
+                       iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.fc_jacobi)  # set __name__
     return smoother
 

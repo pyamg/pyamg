@@ -19,6 +19,7 @@ from .laplacian import poisson, gauge_laplacian
 from .stencil import stencil_grid
 from .mesh import regular_triangle_mesh
 from .diffusion import diffusion_stencil_2d
+from .advection import advection_2d
 
 from .random_sparse import sprand
 from .demo import demo
@@ -26,7 +27,7 @@ from .demo import demo
 __all__ = [
     'elasticity', 'laplacian', 'stencil', 'diffusion',
     'linear_elasticity', 'linear_elasticity_p1',
-    'load_example',
+    'load_example', 'advection_2d',
     'poisson', 'gauge_laplacian',
     'stencil_grid',
     'regular_triangle_mesh',
