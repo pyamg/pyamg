@@ -16,6 +16,9 @@ authors:
   - name: Jacob Schroder
     orcid: 0000-0002-1076-9206
     affiliation: 3
+  - name: Ben Southworth
+    orcid: 0000-0002-0283-4928
+    affiliation: 4
 affiliations:
  - name: Google, Mountain View, CA, USA
    index: 1
@@ -23,9 +26,11 @@ affiliations:
    index: 2
  - name: Department of Mathematics and Statistics, University of New Mexico, Albuquerque, NM USA 87131
    index: 3
+ - name: Los Alamos National Laboratory, Los Alamos, NM USA 87545
+   index: 4
 software_repository_url:
  - https://github.com/pyamg/pyamg
-date: 22 January 2022
+date: 17 April 2023
 bibliography: paper.bib
 ---
 \fvset{frame=lines}
