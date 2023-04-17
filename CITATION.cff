@@ -4,7 +4,7 @@ title: 'PyAMG: Algebraic Multigrid Solvers in Python'
 license: MIT
 repository-code: https://github.com/pyamg/pyamg
 type: software
-version: 4.2.3
+version: 5.0.0
 authors:
 - given-names: Nathan
   family-names: Bell
@@ -17,3 +17,7 @@ authors:
   family-names: Schroder
   orcid: https://orcid.org/0000-0002-1076-9206
   affiliation: Department of Mathematics and Statistics, University of New Mexico
+- given-names: Ben
+  family-names: Southworth
+  orcid: https://orcid.org/0000-0002-0283-4928
+  affiliation: Los Alamos National Laboratory
