@@ -54,7 +54,9 @@ are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
 solvers can be found in @encamg, in @encmg, and in @amgintro; a detailed description can be found
-in @mgtutorial and @mgbook.
+in @mgtutorial and @mgbook. PyAMG provides among the most comprehensive suite of various AMG
+solvers among available packages (see Methods), which is beneficial because many AMG
+solvers are specialized for particular problem types.
 
 # Summary
 
@@ -108,7 +110,7 @@ with PyBind11.  Roughly 26\% of PyAMG is in C++, with the rest in Python.
 
 # Methods
 
-`PyAMG` implements several base AMG methods, each with a range of options.  The base forms
+`PyAMG` implements among the most wide-ranging suites of base AMG methods, each with a range of options.  The base forms
 for a solver include
 
 - `ruge_stuben_solver()`: the classical form of C/F-type AMG [@cfamg:1987];
@@ -126,7 +128,7 @@ modified to tune the solver.  In addition, several cycles are available,
 including the standard V, F, and W cycles, for the solve phase.  The resulting
 method can also be used as a preconditioner within the Krylov
 methods available in `PyAMG` or with SciPy's Krylov methods.  The methods in
-`PyAMG` (generally) support complex data types and nonsymmetric matrices. 
+`PyAMG` generally support complex data types and nonsymmetric matrices. 
 All `MultiLevel` objects provide a detailed measure of the grid complexity
 (number of unknowns on all levels / number of unknowns on the finest level),
 operator complexity (number of nonzeros in the matrix on all levels /
