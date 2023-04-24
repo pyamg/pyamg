@@ -1,7 +1,10 @@
+name: JOSS draft build
+
 on:
   push:
     branches:
       - main
+      - '*joss*'
 
 jobs:
   paper:
