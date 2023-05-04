@@ -42,7 +42,7 @@ DEFAULT_NITER = 1
 
 # List of by-definition symmetric relaxation schemes, e.g. Jacobi.
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
-                        'jacobi_ne', 'chebyshev', None]
+                        'jacobi_ne', 'chebyshev', 'fcf_jacobi', None]
 
 # List of supported Krylov relaxation schemes
 KRYLOV_RELAXATION = ['cg', 'cgne', 'cgnr', 'gmres']
@@ -133,8 +133,10 @@ def change_smoothers(ml, presmoother, postsmoother):
         block_jacobi
         cf_jacobi
         fc_jacobi
+        fcf_jacobi
         cf_block_jacobi
         fc_block_jacobi
+        fcf_block_jacobi
         richardson
         sor
         chebyshev
@@ -703,6 +705,19 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
     return smoother
 
 
+def setup_fcf_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=False):
+    """Set up fine-coarse Jacobi."""
+    if withrho:
+        omega = omega/rho_D_inv_A(lvl.A)
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.fcf_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       iterations=iterations, omega=omega)
+    update_wrapper(smoother, relaxation.fcf_jacobi)  # set __name__
+    return smoother
+
+
 def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
                           iterations=DEFAULT_NITER, omega=1.0, Dinv=None, blocksize=None,
                           withrho=False):
@@ -789,6 +804,47 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     return smoother
 
 
+def setup_fcf_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
+                           blocksize=None, withrho=False):
+    """Set up coarse-fine block Jacobi."""
+    # Determine Blocksize
+    if blocksize is None and Dinv is None:
+        if sparse.isspmatrix_csr(lvl.A):
+            blocksize = 1
+        elif sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize is None:
+        if sparse.isspmatrix_bsr(Dinv):
+            blocksize = Dinv.blocksize[1]
+        else:
+            blocksize = 1
+
+    # Check for compatible dimensions
+    if (lvl.A.shape[0] % blocksize) != 0:
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
+
+    if blocksize == 1:
+        # Block Jacobi is equivalent to normal Jacobi
+        smoother = setup_fcf_jacobi(lvl, iterations=iterations, omega=omega, withrho=withrho)
+        update_wrapper(smoother, relaxation.fcf_block_jacobi)
+        return smoother
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    # Use Block Jacobi
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+    if withrho:
+        omega = omega/rho_block_D_inv_A(lvl.A, Dinv)
+
+    smoother = partial(relaxation.fcf_block_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       iterations=iterations, omega=omega, Dinv=Dinv, blocksize=blocksize)
+    update_wrapper(smoother, relaxation.fcf_block_jacobi)  # set __name__
+    return smoother
+
+
 def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
                 residuals=None):
     """Set up GMRES smoothing."""
@@ -853,8 +909,10 @@ def _setup_call(fn):
         'jacobi_ne':              setup_jacobi_ne,
         'gauss_seidel_ne':        setup_gauss_seidel_ne,
         'gauss_seidel_nr':        setup_gauss_seidel_nr,
+        'fcf_jacobi':             setup_fcf_jacobi,
         'cf_jacobi':              setup_cf_jacobi,
         'fc_jacobi':              setup_fc_jacobi,
+        'fcf_block_jacobi':       setup_fcf_block_jacobi,
         'cf_block_jacobi':        setup_cf_block_jacobi,
         'fc_block_jacobi':        setup_fc_block_jacobi,
         'gmres':                  setup_gmres,
