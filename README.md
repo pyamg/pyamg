@@ -50,6 +50,15 @@ Portions of the project were partially supported by the NSF under award DMS-0612
 If you use PyAMG in your work, please consider using the following citation:
 
 <pre>
+@article{BeOlSc2023,
+  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder and Ben S. Southworth},
+  title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
+  journal   = {Journal of Open Source Software},
+  year      = {2022},
+  publisher = {The Open Journal},
+  note      = {submitted},
+}
+
 @article{BeOlSc2022,
   author    = {Nathan Bell and Luke N. Olson and Jacob Schroder},
   title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
