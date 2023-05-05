@@ -21,7 +21,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          ref: v4.2.3
+          # uncomment to force a wheel build
+          # ref: v4.2.3
           fetch-depth: 1
 
       - name: Build wheels
