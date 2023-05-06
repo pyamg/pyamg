@@ -438,6 +438,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 
     if keep:
+        splitting = np.zeros((A.shape[0],), dtype=bool)
+        splitting[Cpt_params[1]['Cpts']] = True
+        levels[-1].splitting = splitting         # splitting
         levels[-1].C = C                         # strength of connection matrix
         levels[-1].AggOp = AggOp                 # aggregation operator
         levels[-1].T = T                         # tentative prolongator
