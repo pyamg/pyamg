@@ -1295,7 +1295,7 @@ def get_block_diag_inv(A, subdomain, subdomain_ptr):
 
 
 
-def AIRplus(A, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, block_solver='exact', strength='transpose', theta=0.05, norm='abs', **kwargs):
+def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, block_solver='exact', strength='transpose', theta=0.05, norm='abs', AggOp=None, **kwargs):
     """Solve the AIR equations 
              A_FF^{-1} W = -A_FC 
        subject to mode interpolation constraints.
@@ -1325,6 +1325,10 @@ def AIRplus(A, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, bloc
         injection matrix for the Cpts, (2) I_F is an identity matrix for only the
         F-points (i.e. I, but with zero rows and columns for C-points) and I_C is
         the C-point analogue to I_F.  See Notes below for more information.
+    InitialPattern : string, sparse matrix
+        'A_FC', then [ -A_FC, I ] is used as the initial pattern (based on strong connections)
+        'Aggregation', then use AggOp as the initial pattern
+        Sparse Matrix, diagnostic mode that uses a preset matrix as the patter (two-level only)
     maxiter : integer
         Number of iterations when solving for W 
     degree : int
@@ -1348,6 +1352,8 @@ def AIRplus(A, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, bloc
     norm : string
         Typically 'abs' or 'min', used by strength of connection in block case
         See classical_strength_of_connection
+    AggOp : None, CSR matrix
+        When InitialPattern='Aggregation', AggOp is used as the initial interpolation pattern
 
 
     Returns
@@ -1405,19 +1411,29 @@ def AIRplus(A, B, Bf, Cpt_params, PresetPattern=None,  maxiter=1, degree=1, bloc
     T = -AFC + P_I
 
     ##
-    # Compute initial sparsity pattern, using [ -A_FC; I] as the initial pattern
-    # and expanding the pattern through multiplication by Atilde
-    if PresetPattern is not None:
-        if PresetPattern.shape[0] < PresetPattern.shape[1]:
-            pattern = PresetPattern.T.tocsr().copy()
+    # Compute initial sparsity pattern, using preset or [ -A_FC; I]
+    if sparse.isspmatrix_csr(InitialPattern) or sparse.isspmatrix_bsr(InitialPattern):
+        if InitialPattern.shape[0] < InitialPattern.shape[1]:
+            pattern = InitialPattern.T.tocsr().copy()
         else:
-            pattern = PresetPattern.tocsr().copy()
-    else:
+            pattern = InitialPattern.tocsr().copy()
+    elif InitialPattern == "Aggregation":
+        if sparse.isspmatrix_csr(AggOp):
+            pattern = AggOp.copy()
+        else:
+            raise ValueError(f"Aggregation for InitialPattern is only compatible with aggregation-based C/F splittings, like 'standard' or 'naive'")
+    elif InitialPattern == "A_FC":
         pattern = AtildeFC + P_I
-        pattern.data[:] = 1.0
-        for _ in range(degree):
-            #pattern = Atilde * pattern
-            pattern = (I_F*Atilde*I_F) * pattern
+    else:
+        raise ValueError(f"InitialPattern {InitialPattern} is incorrect.  It should be a matrix of compatible dimension, 'Aggregation', or 'A_FC'")
+
+    ##
+    # Expanding the pattern through multiplication by Atilde
+    pattern.data[:] = 1.0
+    for _ in range(degree):
+        pattern = Atilde * pattern
+        #pattern = (I_F*Atilde*I_F) * pattern
+
     #
     pattern.data[:] = 1.0
     #

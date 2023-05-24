@@ -2,6 +2,7 @@
 
 
 from warnings import warn
+from copy import deepcopy
 import numpy as np
 from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
     csc_matrix, SparseEfficiencyWarning
@@ -13,7 +14,8 @@ from ..relaxation.utils import relaxation_as_linear_operator
 from ..util.utils import scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, get_blocksize, \
     levelize_strength_or_aggregation, \
-    levelize_smooth_or_improve_candidates
+    levelize_smooth_or_improve_candidates, \
+    filter_matrix_rows
 from ..strength import classical_strength_of_connection,\
     symmetric_strength_of_connection, evolution_strength_of_connection,\
     energy_based_strength_of_connection, distance_strength_of_connection,\
@@ -38,7 +40,8 @@ def energymin_cf_solver(A, B=None, BH=None,
                                             {'sweep': 'symmetric',
                                              'iterations': 4}),
                         max_levels=10, max_coarse=10,
-                        diagonal_dominance=False, keep=False, Rpattern=None, Ppattern=None, **kwargs):
+                        filter_operator=None, diagonal_dominance=False, 
+                        keep=False, **kwargs):
     """Create a multilevel solver using energy-min AMG
 
     See the notes below, for the major differences with the classical-style
@@ -110,6 +113,10 @@ def energymin_cf_solver(A, B=None, BH=None,
     max_coarse : integer
         Maximum number of variables permitted on the coarse grid.
 
+    filter_operator : (bool, tol) : default None
+        Remove small entries in operators on each level if True. Entries are
+        considered "small" if |a_ij| < tol |a_ii|.
+    
     diagonal_dominance : bool, tuple
         If True (or the first tuple entry is True), then avoid coarsening
         diagonally dominant rows.  The second tuple entry requires a
@@ -122,10 +129,6 @@ def energymin_cf_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
-
-    Rpattern, Ppattern : None, CSR matrix
-        Diagnostic parameter (to be removed later) that allows for the pattern 
-        of R and P on level 0 to be preset
 
     Other Parameters
     ----------------
@@ -302,7 +305,7 @@ def energymin_cf_solver(A, B=None, BH=None,
     while len(levels) < max_levels and \
             int(levels[-1].A.shape[0]/get_blocksize(levels[-1].A)) > max_coarse:
         _extend_hierarchy(levels, strength, aggregate, restrict, interpolation,
-                          improve_candidates, diagonal_dominance, keep, Rpattern, Ppattern)
+                          improve_candidates, diagonal_dominance, keep, filter_operator)
 
     ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -310,7 +313,7 @@ def energymin_cf_solver(A, B=None, BH=None,
 
 
 def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, improve_candidates,
-                      diagonal_dominance, keep, Rpattern, Ppattern):
+                      diagonal_dominance, keep, filter_operator):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,
@@ -323,7 +326,19 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
             return v[0], v[1]
         return v, {}
 
-    A = levels[-1].A
+    # Filter operator. Need to keep original matrix on finest level for
+    # computing residuals
+    if (filter_operator is not None) and (filter_operator[1] != 0):
+        if len(levels) == 1:
+            A = deepcopy(levels[-1].A)
+        else:
+            A = levels[-1].A
+        filter_matrix_rows(A, filter_operator[1], diagonal=True, lump=filter_operator[0])
+    else:
+        A = levels[-1].A
+
+    ##
+    # Grab B and AH if needed
     B = levels[-1].B
     if A.symmetry == 'nonsymmetric':
         AH = A.H.asformat(A.format)
@@ -368,6 +383,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
+    AggOp = None
     if fn == 'standard':
         AggOp, Cnodes = standard_aggregation(C, **kwargs)
     elif fn == 'naive':
@@ -475,7 +491,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
                                          force_fit_candidates=classical_CF, 
                                          **kwargs)
     elif fn == 'AIRplus':
-        P = AIRplus(A, B, levels[-1].B, Cpt_params, Ppattern, **kwargs)
+        P = AIRplus(A, B, levels[-1].B, Cpt_params, AggOp=AggOp, strength='notranspose', **kwargs)
     elif fn == 'classical':
         P = interpolate.classical_interpolation(A.tocsr(), C, splitting, **kwargs)
     elif fn == 'direct':
@@ -506,7 +522,7 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
                                              **kwargs)
             R = R.H
         elif fn == 'AIRplus':
-            R = AIRplus(AH, BH, levels[-1].BH, Cpt_params, Rpattern, **kwargs)
+            R = AIRplus(AH, BH, levels[-1].BH, Cpt_params, AggOp=AggOp, strength='transpose', **kwargs)
             R = R.H
         elif fn is None:
             R = T.H
