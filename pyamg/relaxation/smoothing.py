@@ -135,6 +135,10 @@ def change_smoothers(ml, presmoother, postsmoother):
         fc_jacobi
         cf_block_jacobi
         fc_block_jacobi
+        cf_gauss_seidel
+        fc_gauss_seidel
+        cf_block_gauss_seidel
+        fc_block_gauss_seidel
         richardson
         sor
         chebyshev
@@ -959,6 +963,10 @@ def _setup_call(fn):
         'fc_jacobi':              setup_fc_jacobi,
         'cf_block_jacobi':        setup_cf_block_jacobi,
         'fc_block_jacobi':        setup_fc_block_jacobi,
+        'cf_gauss_seidel':        setup_cf_gauss_seidel,
+        'fc_gauss_seidel':        setup_fc_gauss_seidel,
+        'cf_block_gauss_seidel':  setup_cf_block_gauss_seidel,
+        'fc_block_gauss_seidel':  setup_fc_block_gauss_seidel,
         'gmres':                  setup_gmres,
         'cg':                     setup_cg,
         'cgne':                   setup_cgne,

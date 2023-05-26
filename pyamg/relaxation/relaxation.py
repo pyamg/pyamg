@@ -1413,8 +1413,8 @@ def cf_gauss_seidel(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     CF Gauss Seidel executes
 
-        xc = (1-omega)xc + omega*Mff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-points, and Mff the lower (forward)
     or upper (backward) triangular part of Aff; likewise for c subscripts.
@@ -1477,12 +1477,11 @@ def fc_gauss_seidel(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     FC Gauss Seidel executes
 
-        xf = (1-omega)xf + omega*Mff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-points, and Mff the lower (forward)
     or upper (backward) triangular part of Aff; likewise for c subscripts.
-
 
     Parameters
     ----------
@@ -1543,13 +1542,12 @@ def cf_block_gauss_seidel(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iteration
 
     CF block Gauss Seidel executes
 
-        xc = (1-omega)xc + omega*Mff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
 
     where xf is x restricted to F-blocks, and Mff the block lower
     (forward) or upper (backward) triangular part of Aff; likewise
     for c subscripts.
-
 
     Parameters
     ----------
@@ -1623,8 +1621,8 @@ def fc_block_gauss_seidel(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iteration
 
     FC block Gauss Seidel executes
 
-        xf = (1-omega)xf + omega*Mff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
 
     where xf is x restricted to F-blocks, and Mff the block lower
     (forward) or upper (backward) triangular part of Aff; likewise
