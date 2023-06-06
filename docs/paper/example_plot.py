@@ -28,8 +28,7 @@ ax.grid(True)
 
 figname = 'example.pdf'
 import sys
-if len(sys.argv) > 1:
-    if sys.argv[1] == '--savefig':
-        plt.savefig(figname, bbox_inches='tight')
+if '--savefig' in sys.argv:
+    plt.savefig(figname, bbox_inches='tight')
 else:
     plt.show()
