@@ -146,7 +146,7 @@ import pyamg
 A = pyamg.gallery.poisson((1000,1000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
-For this case, with 100M unknowns, the following multilevel hierarchy
+For this case, with 1M unknowns, the following multilevel hierarchy
 is generated for smoothed aggregation (using `print(ml)`):
 ```
 MultilevelSolver
