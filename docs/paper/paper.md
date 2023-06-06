@@ -143,27 +143,25 @@ Poisson problem, $-\Delta u = f$, given in matrix form as $A x = b$.  The
 AMG setup phase is called with
 ```{.python .numberLines}
 import pyamg
-A = pyamg.gallery.poisson((10000,10000), format='csr')
+A = pyamg.gallery.poisson((1000,1000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
 For this case, with 100M unknowns, the following multilevel hierarchy
 is generated for smoothed aggregation (using `print(ml)`):
 ```
 MultilevelSolver
-Number of Levels:     9
-Operator Complexity:  1.338
-Grid Complexity:      1.188
+Number of Levels:     7
+Operator Complexity:   1.338
+Grid Complexity:       1.188
 Coarse Solver:        'pinv'
   level   unknowns     nonzeros
-     0   100000000    499960000 [74.76%]
-     1    16670000    149993328 [22.43%]
-     2     1852454     16670676 [2.49%]
-     3      205859      1852805 [0.28%]
-     4       22924       208516 [0.03%]
-     5        2539        23563 [0.00%]
-     6         289         2789 [0.00%]
-     7          34          332 [0.00%]
-     8           4           16 [0.00%]
+     0     1000000      4996000 [74.75%]
+     1      167000      1499328 [22.43%]
+     2       18579       167051 [2.50%]
+     3        2086        18870 [0.28%]
+     4         233         2109 [0.03%]
+     5          28          248 [0.00%]
+     6           3            9 [0.00%]
 ```
 In this case, the hierarchy consists of nine levels, with SciPy's pseudoinverse (`pinv`)
 being used on the coarsest level. Also displayed is the ratio of unknowns (nonzeros) on all levels
@@ -175,7 +173,7 @@ import numpy as np
 x0 = np.random.rand(A.shape[0])
 b = np.zeros(A.shape[0])
 res = []
-x = ml.solve(b, x0, tol=1e-8, residuals=res)
+x = ml.solve(b, x0, tol=1e-10, residuals=res)
 ```
 This leads to the residual history shown in \autoref{fig:example}.
 
