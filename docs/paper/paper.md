@@ -176,6 +176,9 @@ res = []
 x = ml.solve(b, x0, tol=1e-10, residuals=res)
 ```
 This leads to the residual history shown in \autoref{fig:example}.
+Additional examples can be found at
+[github.com/pyamg/pyamg-examples](https://github.com/pyamg/pyamg-examples),
+including examples with classical AMG using AIR, building solvers with rootnode, and nonsymmetric use cases.
 
 ![Algebraic multigrid convergence (relative residual).\label{fig:example}](example.pdf)
 
