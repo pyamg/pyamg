@@ -54,8 +54,8 @@ are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
 solvers can be found in @encamg, in @encmg, and in @amgintro; a detailed description can be found
-in @mgtutorial and @mgbook. PyAMG provides among the most comprehensive suite of various AMG
-solvers among available packages (see Methods), which is beneficial because many AMG
+in @mgtutorial and @mgbook. PyAMG provides a comprehensive suite of AMG
+solvers (see Methods), which is beneficial because many AMG
 solvers are specialized for particular problem types.
 
 # Summary
