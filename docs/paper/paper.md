@@ -163,7 +163,7 @@ Coarse Solver:        'pinv'
      5          28          248 [0.00%]
      6           3            9 [0.00%]
 ```
-In this case, the hierarchy consists of nine levels, with SciPy's pseudoinverse (`pinv`)
+In this case, the hierarchy consists of seven levels, with SciPy's pseudoinverse (`pinv`)
 being used on the coarsest level. Also displayed is the ratio of unknowns (nonzeros) on all levels
 compared to the fine level, also known as the grid (operator) complexity.
 
