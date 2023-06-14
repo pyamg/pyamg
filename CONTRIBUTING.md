@@ -30,7 +30,7 @@ following for general guidelines for contributing (and refer to
       style    linting and code formatting
       test     add/modify testing
       ```
-  - Write commit messages in imperative form
+  - Write commit messages in [imperative mood](https://git.kernel.org/pub/scm/git/git.git/tree/Documentation/SubmittingPatches#n183)
   - For general questions on PyAMG, performance problems, install failures etc, please file an [issue](https://github.com/pyamg/pyamg/issues).
 
 Contributing
