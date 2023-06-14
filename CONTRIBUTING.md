@@ -3,6 +3,36 @@ PyAMG is distributed under LICENSE.txt:
 Copyright (c) 2008-2022 PyAMG Developers
 License: MIT, http://opensource.org/licenses/MIT
 
+Guidelines
+---
+
+We welcome bug reports and general improvements to the code.  Please see the
+following for general guidelines for contributing (and refer to
+[organization.md](organization.md) for details on developer roles):
+  - For bugs, performance problems, install failures etc, please file an [issue](https://github.com/pyamg/pyamg/issues);
+  - For proposed changes to the code, please first open an issue followed by a [pull request](https://github.com/scikit-hep/awkward/pulls) that refers to a specific issue number.
+  - To initiate a pull request:
+    - fork the project
+    - create a descriptive branch, e.g. `git checkout -b fix-issue-999`
+    - initiate the pull request to `pyamg:main`
+  - Branches should avoid merge commits from main; instead please rebase before issuing a PR if possible.
+  - Commits messages should attempt to follow https://www.conventionalcommits.org/en/v1.0.0/
+      ```
+      <type>(<scope>): <description>
+      fix      bug fix
+      feat     new feature
+      build    build system
+      chore    general maintenance
+      ci       ci configuration
+      docs     documentation
+      perf     performance improvements
+      refactor refactoring code
+      style    linting and code formatting
+      test     add/modify testing
+      ```
+  - Write commit messages in imperative form
+  - For general questions on PyAMG, performance problems, install failures etc, please file an [issue](https://github.com/pyamg/pyamg/issues).
+
 Contributing
 ---
 
