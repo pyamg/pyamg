@@ -9,7 +9,7 @@ Guidelines
 We welcome bug reports and general improvements to the code.  Please see the
 following for general guidelines for contributing (and refer to
 [organization.md](organization.md) for details on developer roles):
-  - For bugs, performance problems, install failures etc, please file an [issue](https://github.com/pyamg/pyamg/issues);
+  - For bugs, performance problems, install failures, etc., please file an [issue](https://github.com/pyamg/pyamg/issues);
   - For proposed changes to the code, please first open an issue followed by a [pull request](https://github.com/scikit-hep/awkward/pulls) that refers to a specific issue number.
   - To initiate a pull request:
     - fork the project
