@@ -16,7 +16,7 @@ following for general guidelines for contributing (and refer to
     - create a descriptive branch, e.g. `git checkout -b fix-issue-999`
     - initiate the pull request to `pyamg:main`
   - Branches should avoid merge commits from main; instead please rebase before issuing a PR if possible.
-  - Commits messages should attempt to follow https://www.conventionalcommits.org/en/v1.0.0/
+  - Commit messages should attempt to follow https://www.conventionalcommits.org/en/v1.0.0/
       ```
       <type>(<scope>): <description>
       fix      bug fix
