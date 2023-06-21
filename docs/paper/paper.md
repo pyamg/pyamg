@@ -118,7 +118,7 @@ for a solver include
 - `pairwise_solver()`: pairwise (unsmoothed) aggregation based AMG as introduced in [@notay:2010];
 - `adaptive_sa_solver()`: a so-called adaptive form of smoothed aggregation from [@adaptiveamg:2005]; and
 - `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systems.
-- `air_solver()`: the nonsymmetric AMG method based on approximate ideal restriction (AIR) from [@air1],[@air2], which is highly effective for many upwind discretizations of advection-dominated problems.
+- `air_solver()`: the nonsymmetric AMG method based on approximate ideal restriction (AIR) from [@air1; @air2], which is highly effective for many upwind discretizations of advection-dominated problems.
 
 
 In each of these, the *base* algorithm is available but defaults may be
