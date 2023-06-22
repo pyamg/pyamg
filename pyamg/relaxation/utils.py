@@ -6,7 +6,7 @@ from ..multilevel import MultilevelSolver
 from .. import relaxation
 
 
-def relaxation_as_linear_operator(method, A, b):
+def relaxation_as_linear_operator(method, A, b, splitting=None):
     """Create a linear operator that applies a relaxation method to a right-hand-side.
 
     Parameters
@@ -17,6 +17,18 @@ def relaxation_as_linear_operator(method, A, b):
         and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
         {'sweep':symmetric}.  If string, must be that of a supported smoother,
         e.g., gauss_seidel.
+
+    A : {sparse matrix}
+        Matrix for which we define relaxation, i.e., the linear operator object
+        will carry out one iteration of relaxation with A on a vector
+
+    b : {array}
+        Right-hand-side for which we define relaxation (must be zero for the
+        operator to be linear and not affine)
+
+    splitting : {None or array}
+        If relaxation type is fc_jacobi or cf_jacobi, then this must be a 
+        boolean array defining the splitting
 
     Returns
     -------
@@ -51,17 +63,23 @@ def relaxation_as_linear_operator(method, A, b):
     accepted_methods = ['gauss_seidel', 'block_gauss_seidel', 'sor',
                         'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
                         'block_jacobi', 'richardson', 'schwarz',
-                        'strength_based_schwarz', 'jacobi_ne']
+                        'strength_based_schwarz', 'jacobi_ne',
+                        'fc_jacobi', 'cf_jacobi']
 
     b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
     lvl = MultilevelSolver.Level()
     lvl.A = A
+    lvl.splitting = splitting
 
     # Retrieve setup call from relaxation.smoothing for this relaxation method
     if fn not in accepted_methods:
         raise NameError(f'invalid relaxation method: {fn}')
     try:
+        if (fn == 'fc_jacobi') or (fn == 'cf_jacobi'):
+            if not isinstance(splitting, np.ndarray):
+                raise NameError(f'splitting must be array of C and F points CF-style relaxation used')
+
         setup_smoother = getattr(relaxation.smoothing, 'setup_' + fn)
     except NameError as e:
         raise NameError(f'invalid presmoother method: {fn}') from e

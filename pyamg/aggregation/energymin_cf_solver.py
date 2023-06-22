@@ -412,6 +412,13 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     else:
         raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
 
+    #
+    # Make sure splitting exists
+    if AggOp != None:
+        splitting = np.zeros((A.shape[0],), dtype=np.int32)
+        splitting[Cnodes] = True
+
+    #
     # If using classical splitting, construct needed Rootnode data structures: Cpt_params
     classical_CF = False
     if fn in ['RS', 'PMIS', 'PMISc', 'CLJP', 'CLJPc', 'CR']:
@@ -445,10 +452,10 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b, np.array(splitting, dtype=bool)) * B
         levels[-1].B = B
         if A.symmetry == 'nonsymmetric':
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b, np.array(splitting, dtype=bool)) * BH
             levels[-1].BH = BH
     
     # Compute tentative T
@@ -472,10 +479,6 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
         T = scale_T(T, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
         if A.symmetry == 'nonsymmetric':
             TH = scale_T(TH, Cpt_params[1]['P_I'], Cpt_params[1]['I_F'])
-    #
-    # Make sure splitting exists
-    splitting = np.zeros((A.shape[0],), dtype=np.int32)
-    splitting[Cpt_params[1]['Cpts']] = True
      
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
