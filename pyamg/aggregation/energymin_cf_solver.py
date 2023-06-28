@@ -551,7 +551,8 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P                                # Galerkin operator
+    A = (R * A * P).tocsr()                      # Galerkin operator
+                   # For now, we need A to be CSR, e.g., so that filter operator can work in-place on A
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B                             # right near nullspace candidates
