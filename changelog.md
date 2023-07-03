@@ -2,6 +2,9 @@
 
 A summary of changes for PyAMG.
 
+## [5.0.1]
+- update JOSS article
+
 ## [5.0.0]
 - add AIR solver
 - add and extend classical AMG interpolation routines
