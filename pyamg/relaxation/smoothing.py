@@ -42,7 +42,8 @@ DEFAULT_NITER = 1
 
 # List of by-definition symmetric relaxation schemes, e.g. Jacobi.
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
-                        'jacobi_ne', 'chebyshev', 'fcf_jacobi', None]
+                        'jacobi_ne', 'chebyshev', 'fcf_jacobi',
+                        'ff_l1_jacobi', None]
 
 # List of supported Krylov relaxation schemes
 KRYLOV_RELAXATION = ['cg', 'cgne', 'cgnr', 'gmres']
@@ -134,6 +135,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         cf_jacobi
         fc_jacobi
         fcf_jacobi
+        ff_l1_jacobi
         cf_block_jacobi
         fc_block_jacobi
         fcf_block_jacobi
@@ -704,7 +706,6 @@ def setup_fc_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
     update_wrapper(smoother, relaxation.fc_jacobi)  # set __name__
     return smoother
 
-
 def setup_fcf_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     """Set up fine-coarse Jacobi."""
     if withrho:
@@ -715,6 +716,16 @@ def setup_fcf_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=False):
     smoother = partial(relaxation.fcf_jacobi, Cpts=Cpts, Fpts=Fpts,
                        iterations=iterations, omega=omega)
     update_wrapper(smoother, relaxation.fcf_jacobi)  # set __name__
+    return smoother
+
+def setup_ff_l1_jacobi(lvl, iterations=DEFAULT_NITER):
+    """Set up fine-coarse l1 FF-Jacobi."""
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.ff_l1_jacobi, Cpts=Cpts, Fpts=Fpts,
+                       iterations=iterations)
+    update_wrapper(smoother, relaxation.ff_l1_jacobi)  # set __name__
     return smoother
 
 
@@ -909,6 +920,7 @@ def _setup_call(fn):
         'jacobi_ne':              setup_jacobi_ne,
         'gauss_seidel_ne':        setup_gauss_seidel_ne,
         'gauss_seidel_nr':        setup_gauss_seidel_nr,
+        'ff_l1_jacobi':           setup_ff_l1_jacobi,
         'fcf_jacobi':             setup_fcf_jacobi,
         'cf_jacobi':              setup_cf_jacobi,
         'fc_jacobi':              setup_fc_jacobi,

@@ -458,6 +458,12 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
             BH = relaxation_as_linear_operator((fn, kwargs), AH, b, np.array(splitting, dtype=bool)) * BH
             levels[-1].BH = BH
     
+   ## Normalize each column of B, not found to be useful, so far, could maybe be deleted
+   #for k in range(B.shape[1]):
+   #    B[:,k] /= np.abs(B[:,k]).max()
+   #    if A.symmetry == 'nonsymmetric':
+   #        BH[:,k] /= np.abs(BH[:,k]).max()
+
     # Compute tentative T
     if classical_CF:
         # For classical C/F splittings, energy_prolongation_smoother below will enforce T Bc = B
@@ -551,7 +557,9 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P                                # Galerkin operator
+    A = (R * A * P).tocsr()                      # Galerkin operator 
+    #A = R * A * P                                 # Galerkin operator (convert to CSR above, needed for filter_op to work)
+
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B                             # right near nullspace candidates

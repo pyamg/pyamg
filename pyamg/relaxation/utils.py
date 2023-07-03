@@ -64,7 +64,8 @@ def relaxation_as_linear_operator(method, A, b, splitting=None):
                         'gauss_seidel_ne', 'gauss_seidel_nr', 'jacobi',
                         'block_jacobi', 'richardson', 'schwarz',
                         'strength_based_schwarz', 'jacobi_ne',
-                        'fc_jacobi', 'cf_jacobi']
+                        'fc_jacobi', 'cf_jacobi', 'fcf_jacobi',
+                        'ff_l1_jacobi']
 
     b = np.array(b, dtype=A.dtype)
     fn, kwargs = unpack_arg(method)
@@ -76,7 +77,7 @@ def relaxation_as_linear_operator(method, A, b, splitting=None):
     if fn not in accepted_methods:
         raise NameError(f'invalid relaxation method: {fn}')
     try:
-        if (fn == 'fc_jacobi') or (fn == 'cf_jacobi'):
+        if (fn == 'fc_jacobi') or (fn == 'cf_jacobi') or (fn == 'fcf_jacobi') or (fn == 'ff_l1_jacobi'):
             if not isinstance(splitting, np.ndarray):
                 raise NameError(f'splitting must be array of C and F points CF-style relaxation used')
 

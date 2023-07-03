@@ -1136,6 +1136,54 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
             amg_core.bsr_jacobi_indexed(A.indptr, A.indices, A.data.ravel(), x, b,
                                         indices, R, omega)
 
+def ff_l1_jacobi(A, x, b, Cpts, Fpts, iterations=1):
+    """Perform FF L1-Jacobi iterations on the linear system Ax=b.
+
+    FF L1-Jacobi executes
+
+        xf = xf + D_{l1}^{-1}(bf - Aff*xf - Afc*xc)
+        xf = xf + D_{l1}^{-1}(bf - Aff*xf - Afc*xc)
+
+    where xf is x restricted to F-points, and D_{l1} are the l1 weights 
+    for that row (absolute row-sum).
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    Cpts : array ints
+        List of C-points
+    Fpts : array ints
+        List of F-points
+    iterations : int
+        Number of iterations to perform of total FF-cycle
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
+    from ..util.utils import scale_rows
+    # spectral radius estimate
+    D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+    D_inv = np.zeros_like(D)
+    D_inv[D != 0] = 1.0 / np.abs(D[D != 0])
+    D_inv_A = scale_rows(A, D_inv, copy=True)
+
+    for _iter in range(iterations):
+        #x[Cpts] = x[Cpts] - (D_inv_A*x)[Cpts]
+        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
+        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
+
+
 def fcf_jacobi(A, x, b, Cpts, Fpts, iterations=1, omega=1.0):
     """Perform FCF Jacobi iterations on the linear system Ax=b.
 
@@ -1172,27 +1220,39 @@ def fcf_jacobi(A, x, b, Cpts, Fpts, iterations=1, omega=1.0):
 
     Cpts = Cpts.astype(A.indptr.dtype)
     Fpts = Fpts.astype(A.indptr.dtype)
+    
+    from ..util.utils import scale_rows
+    # spectral radius estimate
+    D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+    D_inv = np.zeros_like(D)
+    D_inv[D != 0] = 1.0 / np.abs(D[D != 0])
+    D_inv_A = scale_rows(A, D_inv, copy=True)
+        
+    for _iter in range(iterations):
+        #x[Cpts] = x[Cpts] - (D_inv_A*x)[Cpts]
+        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
+        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
 
-    # Create uniform type, convert possibly complex scalars to length 1 arrays
-    [omega] = type_prep(A.dtype, [omega])
+   ## Create uniform type, convert possibly complex scalars to length 1 arrays
+   #[omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
-        for _iter in range(iterations):
-            amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
-            amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
-            amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
-    else:
-        R, C = A.blocksize
-        if R != C:
-            raise ValueError('BSR blocks must be square')
+   #if sparse.isspmatrix_csr(A):
+   #    for _iter in range(iterations):
+   #        amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
+   #        amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
+   #        amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
+   #else:
+   #    R, C = A.blocksize
+   #    if R != C:
+   #        raise ValueError('BSR blocks must be square')
 
-        for _iter in range(iterations):
-            amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
-                                        x, b, Fpts, R, omega)
-            amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
-                                        x, b, Cpts, R, omega)
-            amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
-                                        x, b, Fpts, R, omega)
+   #    for _iter in range(iterations):
+   #        amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
+   #                                    x, b, Fpts, R, omega)
+   #        amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
+   #                                    x, b, Cpts, R, omega)
+   #        amg_core.bsr_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
+   #                                    x, b, Fpts, R, omega)
 
 
 

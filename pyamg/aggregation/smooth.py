@@ -1407,6 +1407,11 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     AtildeFC = ((I_F*Atilde)[:,Cpts]).tocsr()  # Used for sparsity pattern (to match classic AIR)
 
     ##
+    # If no Cpts, then return zero matrix (P_I)
+    if Cpts.shape[0] == 0:
+        return P_I
+
+    ##
     # Initialize T = [- A_FC; I]
     T = -AFC + P_I
 
@@ -1482,8 +1487,14 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     for i in range(maxiter):
         # Compute right-hand-side, making sure to have same nonzero pattern as "pattern"
         RHS = -AFC - AFF*T
-        RHS = RHS.multiply(pattern) + 1e-12*pattern_FF
-        RHS.data[ RHS.data == 1e-12] = 0.0
+        if RHS.data.ravel().shape[0] > 0:
+            smallest = 1e-12*np.abs(RHS.data.ravel()).min()
+        elif A.data.ravel().shape[0] > 0:
+            smallest = 1e-12*np.abs(A.data.ravel()).min()
+        else:
+            smallest = 1e-12
+        RHS = RHS.multiply(pattern) + smallest*pattern_FF
+        RHS.data[ RHS.data == smallest] = 0.0
 
         if(RHS.nnz != num_ff_nnz):
             raise ValueError('RHS and W should have same nnz, perhaps some values canceled during computation of T')
