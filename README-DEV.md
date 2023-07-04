@@ -7,7 +7,6 @@ Release Steps:
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
 - remove untracked files `git clean -xdf`
 - the following can be done with a pre-release, `v4.2.3-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease` (below)
-- mark `fallback_version` in `pyproject.toml`
 - commit, push
 - `git tag -a v4.2.3 -m "version 4.2.3"`
 - `git push`
