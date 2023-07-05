@@ -1,7 +1,7 @@
 [![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC)](https://codecov.io/gh/pyamg/pyamg)
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.04142/status.svg)](https://doi.org/10.21105/joss.04142)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg)](https://doi.org/10.21105/joss.05495)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
@@ -50,26 +50,17 @@ Portions of the project were partially supported by the NSF under award DMS-0612
 If you use PyAMG in your work, please consider using the following citation:
 
 <pre>
-@article{BeOlScSo2023,
-  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder and Ben S. Southworth},
+@article{pyamg2023,
+  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder and Ben Southworth},
   title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
-  journal   = {Journal of Open Source Software},
+  journal   = {Journal of Open Source Software}
   year      = {2023},
   publisher = {The Open Journal},
-  note      = {submitted},
-}
-
-@article{BeOlSc2022,
-  author    = {Nathan Bell and Luke N. Olson and Jacob Schroder},
-  title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
-  journal   = {Journal of Open Source Software},
-  year      = {2022},
-  publisher = {The Open Journal},
-  volume    = {7},
-  number    = {72},
-  pages     = {4142},
-  doi       = {10.21105/joss.04142},
-  url       = {https://doi.org/10.21105/joss.04142},
+  volume    = {8},
+  number    = {87},
+  pages     = {5495},
+  doi       = {10.21105/joss.05495},
+  url       = {https://doi.org/10.21105/joss.05495},
 }
 </pre>
 

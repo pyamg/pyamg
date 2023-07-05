@@ -6,18 +6,39 @@ repository-code: https://github.com/pyamg/pyamg
 type: software
 version: 5.0.0
 authors:
-- given-names: Nathan
-  family-names: Bell
-  affiliation: Google
-- given-names: Luke
-  family-names: Olson
-  orcid: https://orcid.org/0000-0002-5283-6104
-  affiliation: Department of Computer Science, University of Illinois at Urbana-Champaign
-- given-names: Jacob
-  family-names: Schroder
-  orcid: https://orcid.org/0000-0002-1076-9206
-  affiliation: Department of Mathematics and Statistics, University of New Mexico
-- given-names: Ben
-  family-names: Southworth
-  orcid: https://orcid.org/0000-0002-0283-4928
-  affiliation: Los Alamos National Laboratory
+- family-names: Bell
+  given-names: Nathan
+- family-names: Olson
+  given-names: Luke N.
+  orcid: "https://orcid.org/0000-0002-5283-6104"
+- family-names: Schroder
+  given-names: Jacob
+  orcid: "https://orcid.org/0000-0002-1076-9206"
+- family-names: Southworth
+  given-names: Ben
+  orcid: "https://orcid.org/0000-0002-0283-4928"
+preferred-citation:
+  authors:
+  - family-names: Bell
+    given-names: Nathan
+  - family-names: Olson
+    given-names: Luke N.
+    orcid: "https://orcid.org/0000-0002-5283-6104"
+  - family-names: Schroder
+    given-names: Jacob
+    orcid: "https://orcid.org/0000-0002-1076-9206"
+  - family-names: Southworth
+    given-names: Ben
+    orcid: "https://orcid.org/0000-0002-0283-4928"
+  date-published: 2023-07-04
+  doi: 10.21105/joss.05495
+  issn: 2475-9066
+  issue: 87
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 5495
+  title: "PyAMG: Algebraic Multigrid Solvers in Python"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.05495"
+  volume: 8
