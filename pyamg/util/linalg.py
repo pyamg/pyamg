@@ -189,7 +189,7 @@ def _approximate_eigenvalues(A, maxiter, symmetric=None, initial_guess=None):
     # Important to type H based on v0, so that a real nonsymmetric matrix, can
     # have an imaginary initial guess for its Arnoldi Krylov space
     H = np.zeros((maxiter+1, maxiter),
-                 dtype=np.find_common_type([v0.dtype, A.dtype], []))
+                 dtype=np.result_type(v0.dtype, A.dtype)
 
     V = [v0]
 
