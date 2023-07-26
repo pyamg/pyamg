@@ -135,6 +135,10 @@ def change_smoothers(ml, presmoother, postsmoother):
         fc_jacobi
         cf_block_jacobi
         fc_block_jacobi
+        cf_gauss_seidel
+        fc_gauss_seidel
+        cf_block_gauss_seidel
+        fc_block_gauss_seidel
         richardson
         sor
         chebyshev
@@ -789,6 +793,108 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     return smoother
 
 
+def setup_cf_gauss_seidel(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                          iterations=DEFAULT_NITER, sweep='forward'):
+    """Set up coarse-fine Gauss Seidel."""
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.cf_gauss_seidel, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=iterations, sweep=sweep)
+    update_wrapper(smoother, relaxation.cf_gauss_seidel)  # set __name__
+    return smoother
+
+
+def setup_fc_gauss_seidel(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                    iterations=DEFAULT_NITER, sweep='forward'):
+    """Set up fine-coarse Gauss Seidel."""
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    smoother = partial(relaxation.fc_gauss_seidel, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations, c_iterations=c_iterations,
+                       iterations=iterations, sweep=sweep)
+    update_wrapper(smoother, relaxation.fc_gauss_seidel)  # set __name__
+    return smoother
+
+
+def setup_cf_block_gauss_seidel(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                          iterations=DEFAULT_NITER, sweep='forward', Dinv=None, blocksize=None):
+    """Set up coarse-fine block Gauss Seidel."""
+    # Determine Blocksize
+    if blocksize is None and Dinv is None:
+        if sparse.isspmatrix_csr(lvl.A):
+            # Apply normal CF Gauss Seidel to CSR matrix
+            smoother = setup_cf_gauss_seidel(lvl, f_iterations=f_iterations, 
+                c_iterations=c_iterations, iterations=iterations, sweep=sweep)
+            update_wrapper(smoother, relaxation.cf_gauss_seidel)
+            return smoother
+        elif sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize is None:
+        if sparse.isspmatrix_bsr(Dinv):
+            blocksize = Dinv.blocksize[1]
+        else:
+            blocksize = 1
+
+    # Check for compatible dimensions
+    if (lvl.A.shape[0] % blocksize) != 0:
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    # Use Block CF Gauss Seidel
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+
+    smoother = partial(relaxation.cf_block_gauss_seidel, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, Dinv=Dinv, blocksize=blocksize,
+                       sweep=sweep)
+    update_wrapper(smoother, relaxation.cf_block_gauss_seidel)  # set __name
+    return smoother
+
+
+def setup_fc_block_gauss_seidel(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_NITER,
+                          iterations=DEFAULT_NITER, sweep='forward', Dinv=None, blocksize=None):
+    """Set up coarse-fine block Gauss Seidel."""
+    # Determine Blocksize
+    if blocksize is None and Dinv is None:
+        if sparse.isspmatrix_csr(lvl.A):
+            # Apply normal FC Gauss Seidel to CSR matrix
+            smoother = setup_fc_gauss_seidel(lvl, f_iterations=f_iterations, 
+                c_iterations=c_iterations, iterations=iterations, sweep=sweep)
+            update_wrapper(smoother, relaxation.fc_gauss_seidel)
+            return smoother
+        elif sparse.isspmatrix_bsr(lvl.A):
+            blocksize = lvl.A.blocksize[0]
+    elif blocksize is None:
+        if sparse.isspmatrix_bsr(Dinv):
+            blocksize = Dinv.blocksize[1]
+        else:
+            blocksize = 1
+
+    # Check for compatible dimensions
+    if (lvl.A.shape[0] % blocksize) != 0:
+        raise ValueError('Blocksize does not divide size of matrix.')
+    if len(lvl.splitting)*blocksize != lvl.A.shape[0]:
+        raise ValueError('Blocksize not compatible with CF-splitting and matrix size.')
+
+    Fpts, Cpts = _extract_splitting(lvl)
+
+    # Use Block FC Gauss Seidel
+    if Dinv is None:
+        Dinv = get_block_diag(lvl.A, blocksize=blocksize, inv_flag=True)
+
+    smoother = partial(relaxation.fc_block_gauss_seidel, Cpts=Cpts, Fpts=Fpts,
+                       f_iterations=f_iterations,  c_iterations=c_iterations,
+                       iterations=iterations, Dinv=Dinv, blocksize=blocksize,
+                       sweep=sweep)
+    update_wrapper(smoother, relaxation.fc_block_gauss_seidel)  # set __name__
+    return smoother
+
+
 def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
                 residuals=None):
     """Set up GMRES smoothing."""
@@ -857,6 +963,10 @@ def _setup_call(fn):
         'fc_jacobi':              setup_fc_jacobi,
         'cf_block_jacobi':        setup_cf_block_jacobi,
         'fc_block_jacobi':        setup_fc_block_jacobi,
+        'cf_gauss_seidel':        setup_cf_gauss_seidel,
+        'fc_gauss_seidel':        setup_fc_gauss_seidel,
+        'cf_block_gauss_seidel':  setup_cf_block_gauss_seidel,
+        'fc_block_gauss_seidel':  setup_fc_block_gauss_seidel,
         'gmres':                  setup_gmres,
         'cg':                     setup_cg,
         'cgne':                   setup_cgne,

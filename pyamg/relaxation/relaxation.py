@@ -1405,3 +1405,290 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
             amg_core.block_jacobi_indexed(A.indptr, A.indices, np.ravel(A.data),
                                           x, b, np.ravel(Dinv), Cpts, omega,
                                           blocksize)
+
+
+def cf_gauss_seidel(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
+                    c_iterations=1, sweep='forward'):
+    """Perform CF Gauss Seidel iteration on the linear system Ax=b.
+
+    CF Gauss Seidel executes
+
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+
+    where xf is x restricted to F-points, and Mff the lower (forward)
+    or upper (backward) triangular part of Aff; likewise for c subscripts.
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    Cpts : array ints
+        List of C-points
+    Fpts : array ints
+        List of F-points
+    iterations : int
+        Number of iterations to perform of total CF-cycle
+    f_iterations : int
+        Number of sweeps of F-relaxation to perform
+    c_iterations : int
+        Number of sweeps of C-relaxation to perform
+    sweep : string
+        Direction of Gauss-Seidel sweep; options 'forward'
+        and 'backward'.
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
+    if sweep == 'forward':
+        crow_start, crow_stop, crow_step = 0, len(Cpts), 1
+        frow_start, frow_stop, frow_step = 0, len(Fpts), 1
+    elif sweep == 'backward':
+        crow_start, crow_stop, crow_step = len(Cpts)-1, -1, -1
+        frow_start, frow_stop, frow_step = len(Fpts)-1, -1, -1
+    else:
+        raise ValueError('Only forward or backward sweep supported for CF-Gauss-Seidel')
+
+    if sparse.isspmatrix_csr(A):
+        for _iter in range(iterations):
+            for _citer in range(c_iterations):
+                amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                    x, b, Cpts, crow_start, crow_stop, crow_step)
+            for _fiter in range(f_iterations):
+                amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                    x, b, Fpts, frow_start, frow_stop, frow_step)
+    else:
+        raise TypeError('Scalar CF-Gauss-Seidel not supported for BSR matrices; use Block CF-Gauss-Seidel.')
+
+
+def fc_gauss_seidel(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
+                    c_iterations=1, sweep='forward'):
+    """Perform FC Gauss Seidel iteration on the linear system Ax=b.
+
+    FC Gauss Seidel executes
+
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+
+    where xf is x restricted to F-points, and Mff the lower (forward)
+    or upper (backward) triangular part of Aff; likewise for c subscripts.
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    Cpts : array ints
+        List of C-points
+    Fpts : array ints
+        List of F-points
+    iterations : int
+        Number of iterations to perform of total FC-cycle
+    f_iterations : int
+        Number of sweeps of F-relaxation to perform
+    c_iterations : int
+        Number of sweeps of C-relaxation to perform
+    sweep : string
+        Direction of Gauss-Seidel sweep; options 'forward'
+        and 'backward'.
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
+    if sweep == 'forward':
+        crow_start, crow_stop, crow_step = 0, len(Cpts), 1
+        frow_start, frow_stop, frow_step = 0, len(Fpts), 1
+    elif sweep == 'backward':
+        crow_start, crow_stop, crow_step = len(Cpts)-1, -1, -1
+        frow_start, frow_stop, frow_step = len(Fpts)-1, -1, -1
+    else:
+        raise ValueError('Only forward or backward sweep supported for FC-Gauss-Seidel')
+
+    if sparse.isspmatrix_csr(A):
+        for _iter in range(iterations):
+            for _fiter in range(f_iterations):
+                amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                 x, b, Fpts, frow_start, frow_stop, frow_step)
+            for _citer in range(c_iterations):
+                amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
+                 x, b, Cpts, crow_start, crow_stop, crow_step)
+    else:
+        raise TypeError('Scalar FC-Gauss-Seidel not supported for BSR matrices; use Block FC-Gauss-Seidel.')
+
+
+
+def cf_block_gauss_seidel(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+                          f_iterations=1, c_iterations=1, sweep='forward'):
+    """Perform CF block Gauss Seidel iteration on the linear system Ax=b.
+
+    CF block Gauss Seidel executes
+
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+
+    where xf is x restricted to F-blocks, and Mff the block lower
+    (forward) or upper (backward) triangular part of Aff; likewise
+    for c subscripts.
+
+    Parameters
+    ----------
+    A : csr_matrix or bsr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    Cpts : array ints
+        List of C-blocks in A
+    Fpts : array ints
+        List of F-blocks in A
+    Dinv : array
+        Array holding block diagonal inverses of A
+        size (N/blocksize, blocksize, blocksize)
+    blocksize : int
+        Desired dimension of blocks
+    iterations : int
+        Number of iterations to perform of total CF-cycle
+    f_iterations : int
+        Number of sweeps of F-relaxation to perform
+    c_iterations : int
+        Number of sweeps of C-relaxation to perform
+    sweep : string
+        Direction of Gauss-Seidel sweep; options 'forward'
+        and 'backward'.
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+    A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
+    if sweep == 'forward':
+        crow_start, crow_stop, crow_step = 0, len(Cpts), 1
+        frow_start, frow_stop, frow_step = 0, len(Fpts), 1
+    elif sweep == 'backward':
+        crow_start, crow_stop, crow_step = len(Cpts)-1, -1, -1
+        frow_start, frow_stop, frow_step = len(Fpts)-1, -1, -1
+    else:
+        raise ValueError('Only forward or backward sweep supported for Block CF-Gauss-Seidel')
+
+    if Dinv is None:
+        Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
+    elif Dinv.shape[0] != int(A.shape[0]/blocksize):
+        raise ValueError('Dinv and A have incompatible dimensions')
+    elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
+        raise ValueError('Dinv and blocksize are incompatible')
+
+    # Perform block C-relaxation then block F-relaxation
+    for _iter in range(iterations):
+        for _citer in range(c_iterations):
+            amg_core.block_gauss_seidel_indexed(A.indptr, A.indices, np.ravel(A.data),
+                                          x, b, np.ravel(Dinv), Cpts, crow_start, 
+                                          crow_stop, crow_stepblocksize)
+        for _fiter in range(f_iterations):
+            amg_core.block_gauss_seidel_indexed(A.indptr, A.indices, np.ravel(A.data),
+                                          x, b, np.ravel(Dinv), Fpts, frow_start,
+                                          frow_stop, frow_step, blocksize)
+
+
+def fc_block_gauss_seidel(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
+                          f_iterations=1, c_iterations=1, sweep='forward'):
+    """Perform FC block Gauss Seidel iteration on the linear system Ax=b.
+
+    FC block Gauss Seidel executes
+
+        xf = Mff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = Mff^{-1}(bc - Acf*xf - Acc*xc)
+
+    where xf is x restricted to F-blocks, and Mff the block lower
+    (forward) or upper (backward) triangular part of Aff; likewise
+    for c subscripts.
+
+    Parameters
+    ----------
+    A : csr_matrix or bsr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    Cpts : array ints
+        List of C-blocks in A
+    Fpts : array ints
+        List of F-blocks in A
+    Dinv : array
+        Array holding block diagonal inverses of A
+        size (N/blocksize, blocksize, blocksize)
+    blocksize : int
+        Desired dimension of blocks
+    iterations : int
+        Number of iterations to perform of total FC-cycle
+    f_iterations : int
+        Number of sweeps of F-relaxation to perform
+    c_iterations : int
+        Number of sweeps of C-relaxation to perform
+    sweep : string
+        Direction of Gauss-Seidel sweep; options 'forward'
+        and 'backward'.
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+    A = A.tobsr(blocksize=(blocksize, blocksize))
+
+    Cpts = Cpts.astype(A.indptr.dtype)
+    Fpts = Fpts.astype(A.indptr.dtype)
+
+    if sweep == 'forward':
+        crow_start, crow_stop, crow_step = 0, len(Cpts), 1
+        frow_start, frow_stop, frow_step = 0, len(Fpts), 1
+    elif sweep == 'backward':
+        crow_start, crow_stop, crow_step = len(Cpts)-1, -1, -1
+        frow_start, frow_stop, frow_step = len(Fpts)-1, -1, -1
+    else:
+        raise ValueError('Only forward or backward sweep supported for Block FC-Gauss-Seidel')
+
+    if Dinv is None:
+        Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
+    elif Dinv.shape[0] != int(A.shape[0]/blocksize):
+        raise ValueError('Dinv and A have incompatible dimensions')
+    elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
+        raise ValueError('Dinv and blocksize are incompatible')
+
+    # Perform block C-relaxation then block F-relaxation
+    for _iter in range(iterations):
+        for _fiter in range(f_iterations):
+            amg_core.block_gauss_seidel_indexed(A.indptr, A.indices, np.ravel(A.data),
+                                          x, b, np.ravel(Dinv), Fpts, frow_start,
+                                          frow_stop, frow_step, blocksize)
+        for _citer in range(c_iterations):
+            amg_core.block_gauss_seidel_indexed(A.indptr, A.indices, np.ravel(A.data),
+                                          x, b, np.ravel(Dinv), Cpts, crow_start,
+                                          crow_stop, crow_step, blocksize)

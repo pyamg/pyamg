@@ -449,6 +449,10 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].P = P                             # smoothed prolongator
     levels[-1].R = R                             # restriction operator
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
+    
+    splitting = np.zeros((A.shape[0],),dtype=bool)
+    splitting[Cpts] = True
+    levels[-1].splitting = splitting             # C/F splitting
 
     levels.append(MultilevelSolver.Level())
     A = R * A * P                                # Galerkin operator
