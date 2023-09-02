@@ -8,3 +8,4 @@ flake8-use-fstring
 flake8-pytest-style
 flake8-docstrings
 pylint
+flake8
