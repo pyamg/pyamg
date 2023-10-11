@@ -12,8 +12,7 @@ from ..util.linalg import norm
 from .. import amg_core
 
 
-def make_system(A, x, b, formats=None):
-    """Return A,x,b suitable for relaxation or raise an exception.
+def make_system(A, x, b, formats=None, multivector=False):
 
     Parameters
     ----------
@@ -25,7 +24,9 @@ def make_system(A, x, b, formats=None):
         n-vector, right-hand side
     formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
         desired sparse matrix format
-        default is no change to A's format
+        default is no change to the format of A
+    multivector : bool
+        If True, then consider muliple vectors for x and b
 
     Returns
     -------
@@ -80,9 +81,9 @@ def make_system(A, x, b, formats=None):
     if M != N:
         raise ValueError('expected square matrix')
 
-    if x.shape not in [(M,), (M, 1)]:
+    if (not multivector and x.shape not in [(M,), (M, 1)]) or (multivector and x.shape[0] != M):
         raise ValueError('x has invalid dimensions')
-    if b.shape not in [(M,), (M, 1)]:
+    if (not multivector and b.shape not in [(M,), (M, 1)]) or (multivector and b.shape[0] != M):
         raise ValueError('b has invalid dimensions')
 
     if A.dtype != x.dtype or A.dtype != b.dtype:
@@ -90,9 +91,12 @@ def make_system(A, x, b, formats=None):
 
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
+    if not b.flags.carray:
+        raise ValueError('b must be contiguous in memory')
 
-    x = np.ravel(x)
-    b = np.ravel(b)
+    # TODO: needed?
+    # x = np.ravel(x)
+    # b = np.ravel(b)
 
     return A, x, b
 
@@ -406,8 +410,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     if A.format == 'csr':
         for _iter in range(iterations):
-            amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
-                            row_start, row_stop, row_step, omega)
+            amg_core.jacobi_m(A.indptr, A.indices, A.data, x, b, temp,
+                              row_start, row_stop, row_step, omega)
     else:
         R, C = A.blocksize
         if R != C:
