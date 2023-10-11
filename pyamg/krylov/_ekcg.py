@@ -12,10 +12,8 @@ __all__ = ['ekcg']
 
 
 def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, **kwargs):
+       callback=None, res_callback=None, residuals=None, **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
-
-    ****** LEFT PRECONDITIONING NOT SUPPORTED CURRENTLY ********
 
     Solves the linear system Ax = b. Left preconditioning is supported.
 
@@ -129,9 +127,22 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
     X = np.zeros_like(R)
     for i in range(t):
         X[:,i] = x
+    
+    # First check for callback functions    
+    if callback is not None:
+        #x = np.sum(X, axis=1)
+        callback(X)
+    
+    if res_callback is not None:
+        #r = np.sum(R, axis=1)
+        res_callback(R)
 
     # Precondition residual
-    Z = M * R
+    Z = np.zeros_like(R)
+    for i in range(R.shape[1]):
+        r = np.copy(R[:,i])
+        Z[:,i] = M * r
+    #Z = M * R
     
     # Initialize P and P_{k-1}
     P = np.zeros_like(Z, A.dtype)
@@ -150,14 +161,10 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         # P_k = Z_k (Z_k^T A Z_k)^1/2
         AZ = A * Z
         ZAZ = Z.conjugate().T.dot(AZ)
-        #L = dpotrf(ZAZ, lower=1)[0]
-        L = cholesky(ZAZ)
-        print L
-        print "----------"
-        # Solve upper triangular system for P 
-        P = dtrsm(1.0, L, Z, side=1, lower=1, diag=0)
-        # Solve upper triangular system for AP
-        AP = dtrsm(1.0, L, AZ, side=1, lower=1, diag=0)
+
+        u, s, vh = np.linalg.svd(ZAZ, full_matrices=True, hermitian=False)
+        P = Z.dot(vh.T @ np.diag(s**(-1/2)) @ u.T)
+        AP = A * P 
             
         # alpha_k = P_k^T R_{k-1}
         alpha = P.conjugate().T.dot(R)
@@ -180,8 +187,12 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
             residuals.append(res_norm)
 
         if callback is not None:
-            x = np.sum(X, axis=0)
-            callback(x)
+            #x = np.sum(X, axis=1)
+            callback(X)
+        
+        if res_callback is not None:
+            #r = np.sum(R, axis=1)
+            res_callback(R)
 
         # Check for convergence
         if res_norm < tol:
@@ -196,7 +207,11 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         k += 1
 
         # Precondition AP
-        MAP = M * AP
+        MAP = np.zeros_like(AP)
+        for i in range(AP.shape[1]):
+            ap = np.copy(AP[:,i])
+            MAP[:,i] = M * ap
+        #MAP = M * AP
 
         # Orthodir A-orthonormalization
         # gamma = (A P_k)^T * (M A P_k)
