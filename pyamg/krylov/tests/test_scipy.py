@@ -50,7 +50,7 @@ class TestScipy(TestCase):
             callback = partial(cb, normb=normb)
 
             _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm',
-                          tol=tol, atol=0, restrt=3, maxiter=2)
+                          tol=tol, atol=0, restart=3, maxiter=2)
 
             assert_array_almost_equal(mgsres[1:], scipyres)
             assert_array_almost_equal(hhres[1:], scipyres)

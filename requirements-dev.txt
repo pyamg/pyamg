@@ -1,5 +1,5 @@
 numpy
-scipy
+scipy>=1.7.0
 pytest
 pep8-naming
 flake8-quotes
