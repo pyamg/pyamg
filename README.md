@@ -1,7 +1,9 @@
-[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3Aci+branch%3Amain)
-[![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
-[![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC?style=flat-square)](https://codecov.io/gh/pyamg/pyamg)
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg?style=flat-square)](https://doi.org/10.21105/joss.05495)
+![ci](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/ci.yml?style=flat-square&label=tests)
+![lint](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/lint.yml?style=flat-square&label=lint)
+![PyPI - Version](https://img.shields.io/pypi/v/pyamg?style=flat-square)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyamg?style=flat-square)
+![Codecov](https://img.shields.io/codecov/c/github/pyamg/pyamg?style=flat-square)
+[![joss](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg?style=flat-square)](https://doi.org/10.21105/joss.05495)
 
 # Installation
 PyAMG requires `numpy` and `scipy`
