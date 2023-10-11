@@ -335,6 +335,51 @@ void jacobi_indexed(const I Ap[], const int Ap_size,
     }
 }
 
+/*
+ *  Perform one iteration of Jacobi relaxation on the linear
+ *  system Ax = b, where A is stored in CSR format and x and b
+ *  are multi-column vectors.
+ *
+ *  See jacobi() for more information
+ */
+template<class I, class T, class F>
+void jacobi_m(const I Ap[], const int Ap_size,
+            const I Aj[], const int Aj_size,
+            const T Ax[], const int Ax_size,
+                  T  x[], const int  x_size,
+            const T  b[], const int  b_size,
+                  T temp[], const int temp_size,
+            const I row_start,
+            const I row_stop,
+            const I row_step,
+            const T omega[], const int omega_size)
+{
+    T one = 1.0;
+    T omega2 = omega[0];
+
+    for(I i = row_start; i != row_stop; i += row_step) {
+        temp[i] = x[i];
+    }
+
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        T rsum = 0;
+        T diag = 0;
+
+        for(I jj = start; jj < end; jj++){
+            I j = Aj[jj];
+            if (i == j)
+                diag  = Ax[jj];
+            else
+                rsum += Ax[jj]*temp[j];
+        }
+
+        if (diag != (F) 0.0){
+            x[i] = (one - omega2) * temp[i] + omega2 * ((b[i] - rsum)/diag);
+        }
+    }
+}
 
 /*
  * Perform one iteration of Jacobi relaxation on the linear
