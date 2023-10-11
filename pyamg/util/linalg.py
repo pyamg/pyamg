@@ -626,3 +626,149 @@ def pinv_array(a, tol=None):
             gelssoutput = gelss(a[kk], RHS, cond=tol, lwork=lwork,
                                 overwrite_a=True, overwrite_b=False)
             a[kk] = gelssoutput[1]
+
+def BCGS(A, P_list, P):
+    """
+    Block Classical Gram-Schmidt for A-orthonormalization against previous P_k
+
+    Parameters
+    ----------
+         A : array_like
+             nxn spd matrix 
+    P_list : list of array_like objects
+             list of nxt matrices to A-orthonormalize W against
+         W : array_like 
+             nxt matrix of search directions to A-orthnormalize
+
+    Returns
+    -------
+    P : array_like
+        Input variable W is rewritten
+
+    Reference 
+    -----
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+    "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+    Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+    pp. 744-773, 2016.
+    """
+    t = P.shape[1]
+    
+    # Get fast access to underlying BLAS routines
+    # dotc is the conjugate dot, dotu does no conjugation
+    ptype = P.dtype
+    W = np.zeros(P.shape, dtype=ptype)
+    if np.iscomplexobj(W):
+        [dotc, scal] = get_blas_funcs(['dotc', 'scal'], [W[:,0]])
+    else:
+        [dotc, scal] = get_blas_funcs(['dotc', 'scal'], [W[:,0]])
+
+    if (len(P_list) > 1):
+        Q1 = P_list[0]
+        Q2 = P_list[1];
+        # Form Q here
+        Q = np.concatenate((Q1, Q2), axis=1)
+    else:
+        Q = P_list[0]
+
+    # W = A * P
+    W = A * P
+
+    # P = P - Q * (Q^T * W)
+    P = P - Q.dot( Q.conjugate().T.dot(W) )
+
+    # W = A * P
+    W = A * P
+
+    for i in range(t):
+        # P[:,i] = P[:,i] / ||P[:,i]||_A
+        scal(1.0/np.sqrt(dotc(P[:,i], W[:,i])), P[:,i]) 
+
+    return P
+
+def CGS(P, A):
+    """
+    Classical Gram-Schmidt with A-norm on vectors of P - alg 19 in appendix
+
+    Parameters
+    ----------
+         A : array_like
+             nxn spd matrix 
+         P : array_like 
+             nxt matrix of search directions to A-orthnormalize
+
+    Returns
+    -------
+    P : array_like
+        Input variable W is rewritten
+
+    Reference 
+    -----
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+    "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+    Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+    pp. 744-773, 2016.
+    """
+    n = P.shape[0]
+    t = P.shape[1]
+
+    # Get fast access to underlying BLAS routines
+    # dotc is the conjugate dot, dotu does no conjugation
+    ptype = P.dtype
+    APi = np.zeros((n,), dtype=ptype)
+    if np.iscomplexobj(APi):
+        [dotc, scal] = get_blas_funcs(['dotc', 'scal'], [APi])
+    else:
+        [dotc, scal] = get_blas_funcs(['dotc', 'scal'], [APi])
+
+    AP = A * P
+
+    for i in range(t):
+        APi = AP[:,i]
+        Pi = P[:,i]
+
+        for j in range(i):
+            Pj = P[:,j]
+            Pi = Pi - scal(dotc(Pj, APi), Pj)
+
+        # P[:,i] = P[:,i] / ||P[:,i]||_A
+        scal(1.0/np.sqrt(dotc(Pi, A * Pi)), Pi) 
+
+def split_residual(v, t):
+    """
+    Projects the nx1 vector v onto a nxt space by splitting the vector's
+    rows evenly across t new vectors
+
+    Parameters
+    ----------
+         v : array_like
+             nx1 vector to be projected
+         t : integer 
+             number of partitions in which to split v - assumed to evenly
+             divide n 
+
+    Returns
+    -------
+    z : array_like
+        nxt vector with v split across the t columns 
+
+    Reference 
+    -----
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+    "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+    Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+    pp. 744-773, 2016.
+    """
+    n = v.shape[0]
+    partition = n/t
+    start = 0
+    stop = partition
+
+    # Make sure z is given the same type as v -- could be complex
+    z = np.zeros((n,t), dtype=v.dtype)
+    for col in range(t):
+        z[start:stop, col] = v[start:stop]
+        start = stop
+        stop += partition
+
+    return z
