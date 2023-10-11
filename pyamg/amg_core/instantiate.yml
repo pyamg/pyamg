@@ -11,6 +11,7 @@ instantiate:
     - gauss_seidel
     - bsr_gauss_seidel
     - jacobi
+    - jacobi_m
     - bsr_jacobi
     - gauss_seidel_indexed
     - jacobi_ne
