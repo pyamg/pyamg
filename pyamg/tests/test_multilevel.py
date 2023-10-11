@@ -106,7 +106,10 @@ class TestMultilevel(TestCase):
         b = rand(A.shape[0], s)
 
         # Any AMG hierarchy -- rhs independent
-        ml = smoothed_aggregation_solver(A)
+        ml = smoothed_aggregation_solver(A,
+                                         max_coarse=10,
+                                         presmoother='jacobi_m',
+                                         postsmoother='jacobi_m')
 
         # initial guess
         residuals = []
