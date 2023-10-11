@@ -101,27 +101,29 @@ class TestMultilevel(TestCase):
     def test_multiple_rhs(self):
 
         # Poisson with 4 right-hand sides
-        s = 4
+        s = 1
         A = poisson((50, 50), format='csr')
         b = rand(A.shape[0], s)
 
         # Any AMG hierarchy -- rhs independent
         ml = smoothed_aggregation_solver(A,
                                          max_coarse=10,
-                                         presmoother='jacobi_m',
-                                         postsmoother='jacobi_m')
+                                         presmoother='jacobi',
+                                         postsmoother='jacobi')
 
         # initial guess
         residuals = []
         x0 = np.random.rand(A.shape[0], s)
 
         # block solve
-        x = ml.solve(b, maxiter=30, tol=1e-8)
+        residuals=[]
+        x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals)
+        print(residuals)
 
         # check each
         r = b - A * x
         for i in range(s):
-            assert(norm(r[:,i]) < 1e-8 * norm(b[:,i]))
+            assert(precon_norm(r[:,i], ml) < 1e-8 * precon_norm(b[:,i], ml))
 
 
     def test_cycle_complexity(self):

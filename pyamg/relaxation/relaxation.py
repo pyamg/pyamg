@@ -98,6 +98,8 @@ def make_system(A, x, b, formats=None, multivector=False):
     # TODO: needed?
     # x = np.ravel(x)
     # b = np.ravel(b)
+    x = x.reshape((M, -1))
+    b = b.reshape((M, -1))
 
     return A, x, b
 
@@ -399,7 +401,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
 
     """
-    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'], multivector=True)
 
     sweep = slice(None)
     (row_start, row_stop, row_step) = sweep.indices(A.shape[0])
