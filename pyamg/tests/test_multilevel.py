@@ -189,6 +189,7 @@ class TestComplexMultilevel(TestCase):
 
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
+                print(b.shape)
                 x = s(A, b)
                 assert_almost_equal(A*x, b)
 

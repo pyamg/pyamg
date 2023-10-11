@@ -584,7 +584,7 @@ class MultilevelSolver:
                     self.__solve(lvl + 1, coarse_x, coarse_b, 'V', 1)
             elif cycle == 'AMLI':
 
-                if coarse_b.shape[1] > 1:
+                if np.squeeze(coarse_b).ndim != 1:
                     raise ValueError('AMLI is not compatible multiple right-hand sides')
 
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
@@ -718,7 +718,7 @@ def coarse_grid_solver(solver):
             fn = getattr(sla, solver)
 
         def solve(_, A, b):
-            if b.shape[1] > 1:
+            if np.squeeze(b).ndim != 1:
                 raise ValueError('Krylov coarse solves are not compatible multiple right-hand sides')
 
             if 'tol' not in kwargs:
