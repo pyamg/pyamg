@@ -3,22 +3,16 @@
 from warnings import warn
 
 import scipy as sp
+from scipy.linalg import pinv
 import scipy.sparse.linalg as sla
 from scipy.sparse.linalg import LinearOperator
 import numpy as np
-
-from pkg_resources import parse_version  # included with setuptools
 
 from . import krylov
 from .util.utils import to_type
 from .util.params import set_tol
 from .relaxation import smoothing
 from .util import upcast
-
-if parse_version(sp.__version__) >= parse_version('1.7'):
-    from scipy.linalg import pinv           # pylint: disable=ungrouped-imports
-else:
-    from scipy.linalg import pinv2 as pinv  # pylint: disable=no-name-in-module
 
 
 class MultilevelSolver:
