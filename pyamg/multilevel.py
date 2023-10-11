@@ -461,6 +461,9 @@ class MultilevelSolver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
+
+        from pyamg.util.linalg import residual_norm
+
         if x0 is None:
             x = np.zeros_like(b)
         else:
@@ -512,13 +515,13 @@ class MultilevelSolver:
                 # history is desired
 
                 if residuals is not None:
-                    residuals[:] = [np.linalg.norm(b - A @ x)]
+                    residuals[:] = [np.linalg.norm(b - A @ x, axis=0)]
 
                     def callback_wrapper(x):
                         if np.isscalar(x):
                             residuals.append(x)
                         else:
-                            residuals.append(np.linalg.norm(b - A @ x))
+                            residuals.append(np.linalg.norm(b - A @ x, axis=0))
                         if callback is not None:
                             callback(x)
                 else:
@@ -537,12 +540,13 @@ class MultilevelSolver:
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
-            normb = np.linalg.norm(b)
+
+            normb = np.max(np.linalg.norm(b, axis=0))
             if normb == 0.0:
                 normb = 1.0  # set so that we have an absolute tolerance
 
         # Start cycling (no acceleration)
-        normr = np.linalg.norm(b - A @ x)
+        normr = np.linalg.norm(b - A @ x, axis=0)
         if residuals is not None:
             residuals[:] = [normr]  # initial residual
 
@@ -550,8 +554,6 @@ class MultilevelSolver:
         # Clearly, this logic doesn't handle the case of real A and complex b
         tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
-        b = np.ravel(b)
-        x = np.ravel(x)
 
         it = 0
 
@@ -564,7 +566,7 @@ class MultilevelSolver:
 
             it += 1
 
-            normr = np.linalg.norm(b - A @ x)
+            normr = np.linalg.norm(b - A @ x, axis=0)
             if residuals is not None:
                 residuals.append(normr)
 
@@ -626,6 +628,9 @@ class MultilevelSolver:
             for _ in range(0, cycles_per_level):
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V', 1)
         elif cycle == 'AMLI':
+            if coarse_b.shape[1] > 1:
+                raise ValueError('AMLI is not compatible multiple right-hand sides')
+
             # Run nAMLI AMLI cycles, which compute "optimal" corrections by
             # orthogonalizing the coarse-grid corrections in the A-norm
             nAMLI = 2
@@ -756,6 +761,9 @@ def coarse_grid_solver(solver):
             fn = getattr(sla, solver)
 
         def solve(_, A, b):
+            if b.shape[1] > 1:
+                raise ValueError('Krylov coarse solves are not compatible multiple right-hand sides')
+
             if 'tol' not in kwargs:
                 kwargs['tol'] = set_tol(A.dtype)
 
