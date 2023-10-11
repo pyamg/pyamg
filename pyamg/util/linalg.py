@@ -773,3 +773,34 @@ def split_residual(v, t):
         stop += partition
 
     return z
+
+def resplit(v):
+    """
+    Resplits the nxt vector v into the sparsity pattern
+    of the original splitting 
+
+    Parameters
+    ----------
+         v : array_like
+             nx1 vector to be projected
+
+    Returns
+    -------
+    z : array_like
+        nxt vector with v split across the t columns 
+    """
+    n = v.shape[0]
+    t = v.shape[1]
+    partition = int(n/t)
+    start = 0
+    stop = partition
+
+    # Make sure z is given the same type as v -- could be complex
+    w = np.sum(v, axis=0)
+    z = np.zeros((n,t), dtype=v.dtype)
+    for col in range(t):
+        z[start:stop, col] = w[start:stop]
+        start = stop
+        stop += partition
+
+    return z
