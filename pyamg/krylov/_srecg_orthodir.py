@@ -188,5 +188,5 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
         Z_half_inv = np.linalg.inv(Z_half)
         W = P.dot(Z_half_inv) 
 
-        print "iter ", k, " ---------------"
-        print W
+        print("iter ", k, " ---------------")
+        print(W)

@@ -198,7 +198,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
         # Do Cholesky of P^T A P
         #Z = np.linalg.cholesky(P.conjugate().T.dot(AP))
         Z = dpotrf(P.conjugate().T.dot(AP))[0]
-        print Z
+        print(Z)
         # Solve upper triangular system for W 
         W = dtrsm(1.0, Z.T, P, side=1, lower=1, diag=0)
         # Solve upper triangular system for AW

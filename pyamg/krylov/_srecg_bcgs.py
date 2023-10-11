@@ -153,7 +153,7 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
             W = BCGS(A, W_list, W)
             CGS(W, A)
 
-        print W
+        print(W)
 
         W_list.append(W)
         if len(W_list) > 2:
