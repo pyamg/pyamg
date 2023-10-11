@@ -2,22 +2,22 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr,\
+from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
     isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
-from ..strength import symmetric_strength_of_connection,\
+from ..strength import symmetric_strength_of_connection, \
     classical_strength_of_connection, evolution_strength_of_connection
 from ..krylov import gmres
 from ..util.linalg import norm, approximate_spectral_radius
 from ..util.utils import amalgamate, levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
 from ..relaxation.smoothing import change_smoothers, rho_D_inv_A
-from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr,\
+from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, \
     gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
 from .aggregation import smoothed_aggregation_solver
 from .aggregate import standard_aggregation, lloyd_aggregation
-from .smooth import jacobi_prolongation_smoother,\
+from .smooth import jacobi_prolongation_smoother, \
     energy_prolongation_smoother, richardson_prolongation_smoother
 from .tentative import fit_candidates
 

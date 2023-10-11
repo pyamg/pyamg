@@ -5,11 +5,11 @@ from scipy import sparse
 import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
-from numpy.testing import TestCase, assert_approx_equal,\
+from numpy.testing import TestCase, assert_approx_equal, \
     assert_array_almost_equal
 
 from pyamg.util.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian,\
+from pyamg.gallery import poisson, linear_elasticity, gauge_laplacian, \
     load_example
 
 from pyamg.aggregation.rootnode import rootnode_solver

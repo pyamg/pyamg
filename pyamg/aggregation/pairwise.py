@@ -3,7 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
     SparseEfficiencyWarning
 
 from pyamg.multilevel import MultilevelSolver

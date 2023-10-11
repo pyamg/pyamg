@@ -1,14 +1,14 @@
 """Test smoothed aggregation solver."""
 import warnings
 import numpy as np
-from numpy.testing import TestCase, assert_approx_equal,\
+from numpy.testing import TestCase, assert_approx_equal, \
     assert_array_almost_equal
 from scipy import sparse
 import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity,\
+from pyamg.gallery import poisson, linear_elasticity, \
     gauge_laplacian, load_example
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
 

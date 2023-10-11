@@ -3,7 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
+from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
     SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
@@ -13,9 +13,9 @@ from ..util.utils import scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, get_blocksize, \
     levelize_strength_or_aggregation, \
     levelize_smooth_or_improve_candidates
-from ..strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    energy_based_strength_of_connection, distance_strength_of_connection,\
+from ..strength import classical_strength_of_connection, \
+    symmetric_strength_of_connection, evolution_strength_of_connection, \
+    energy_based_strength_of_connection, distance_strength_of_connection, \
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation, pairwise_aggregation

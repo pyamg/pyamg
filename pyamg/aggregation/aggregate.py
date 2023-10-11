@@ -76,7 +76,7 @@ def standard_aggregation(C):
     # no nodes aggregated
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
-        return sparse.csr_matrix((num_rows, 1), dtype='int8'),\
+        return sparse.csr_matrix((num_rows, 1), dtype='int8'), \
             np.array([], dtype=index_type)
 
     shape = (num_rows, num_aggregates)
