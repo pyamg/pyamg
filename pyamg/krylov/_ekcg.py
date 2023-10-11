@@ -2,15 +2,16 @@ import numpy as np
 from scipy.linalg import get_blas_funcs
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import fractional_matrix_power
-from scipy.linalg.lapack import dpotrf
-from pyamg.util.linalg import norm, BCGS, CGS, split_residual
+from scipy.linalg.lapack import dpotrf, cpotrf
+from scipy.linalg.blas import ctrsm, dtrsm 
+from pyamg.util.linalg import norm, split_residual
 from warnings import warn
 
 
-__all__ = ['srecg_orthodir_new']
+__all__ = ['ekcg']
 
 
-def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
+def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
        callback=None, residuals=None, **kwargs):
     '''Short Recurrence Enlarged Conjugate Gradient algorithm
 
@@ -70,13 +71,13 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
 
     Examples
     --------
-    >>> from pyamg.krylov.srecg import srecg
+    >>> from pyamg.krylov.ekcg import ekcg 
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> from pyamg.gallery import poisson
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
-    >>> (x,flag) = srecg(A,b, maxiter=2, tol=1e-8)
+    >>> (x,flag) = ekcg(A,b, maxiter=2, tol=1e-8)
     >>> print norm(b - A*x)
     10.9370700187
 
@@ -92,7 +93,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
 
     # Ensure that warnings are always reissued from this function
     import warnings
-    warnings.filterwarnings('always', module='pyamg.krylov._srecg')
+    warnings.filterwarnings('always', module='pyamg.krylov._ekcg')
 
     # determine maxiter
     if maxiter is None:
@@ -102,17 +103,10 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
     
     # setup method
     r = b - A * x
-
-    # precondition residual
-    #z = M * r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        #z = M * r
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #residuals.append(precond_norm)
         residuals.append(res_norm)
 
     # Adjust tolerance
@@ -124,82 +118,93 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
     if res_norm < tol*normb:
         return (postprocess(x), 0)
 
-    # Scale tol by ||r_0||_M
+    # Scale tol by ||r_0||
     if res_norm != 0.0:
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #tol = tol * precond_norm
         tol = tol * res_norm
 
-    # Initialize list for previous search directions
-    W_list = []
+    # Split residual 
+    R = split_residual(r, t)
 
-    # k = 0
-    k = 0
+    # Initialize X to be 0
+    X = np.zeros_like(R)
+    for i in range(t):
+        X[:,i] = x
 
-    # Initial search directions
-    W = split_residual(r, t)
-    W_list.append(np.zeros(W.shape))
-    CGS(W, A)
+    # Precondition residual
+    Z = M * R
+    
+    # Initialize P and P_{k-1}
+    P = np.zeros_like(Z, A.dtype)
+    P_1 = np.zeros_like(Z, A.dtype)
+    
+    # Initialize A * P and A * P_{k-1}
+    AP = np.zeros_like(Z, A.dtype)
+    AP_1 = np.zeros_like(Z, A.dtype)
 
     # grab blas function to be used later for search directions solve
-    L = np.zeros((t, t), dtype=W.dtype) 
-    dtrsm = get_blas_funcs(['trsm'], [W, L])[0]
+    dtrsm = get_blas_funcs(['trsm'], [P, AP])[0]
 
-    AW = A * W
-    AW_list = []
-    AW_list.append(np.zeros(AW.shape))
+    # Iterations variable
+    k = 0
     while True:
-        # Append W to previous search directions
-        W_list.append(W)
-        AW_list.append(AW)
-        if len(W_list) > 2:
-            del W_list[0]
-            del AW_list[0]
+        # P_k = Z_k (Z_k^T A Z_k)^1/2
+        AZ = A * Z
+        L = dpotrf(Z.conjugate().T.dot(AZ))[0]
+        # Solve upper triangular system for P 
+        P = dtrsm(1.0, L, Z, side=1, lower=1, diag=0)
+        # Solve upper triangular system for AP
+        AP = dtrsm(1.0, L, AZ, side=1, lower=1, diag=0)
             
-        # alpha_k = W_k^T r_k
-        alpha = W.conjugate().T.dot(r)
+        # alpha_k = P_k^T R_{k-1}
+        alpha = P.conjugate().T.dot(R)
 
-        # W * alpha
-        W_alpha = W.dot(alpha)
+        # P_k * alpha_k
+        P_alpha = P.dot(alpha)
 
-        # x_k = X_k + W_k alpha_k
-        x += W_alpha
+        # X_k = X_{k-1} + P_k * alpha_k
+        X += P_alpha
 
-        #r = r - A * W_k * alpha_k
-        r -= AW.dot(alpha)
+        # R_k = R_{k-1} - A * P_k * alpha_k
+        R -= AP.dot(alpha)
 
+        # Sum columns of R
+        r = np.sum(R, axis=0)
         res_norm = norm(r)
-        k += 1
 
         # Append residual to list
         if residuals is not None:
             residuals.append(res_norm)
 
         if callback is not None:
+            x = np.sum(X, axis=0)
             callback(x)
 
         # Check for convergence
         if res_norm < tol:
+            x = np.sum(X, axis=1)
             return (postprocess(x), 0)
 
         if k == maxiter:
+            x = np.sum(X, axis=1)
             return (postprocess(x), k)
+        
+        # Update iteration
+        k += 1
 
-        # Update search directions
-        AW1 = AW_list[1]
-        AW2 = AW_list[0]
+        # Precondition AP
+        MAP = M * AP
 
-        gamma = AW1.conjugate().T.dot(AW1)
-        rho = AW2.conjugate().T.dot(AW1)
-        P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
+        # Orthodir A-orthonormalization
+        # gamma = (A P_k)^T * (M A P_k)
+        gamma = AP.conjugate().T.dot(MAP)
 
-        AP = A * P
-        # Do Cholesky of P^T A P
-        #Z = np.linalg.cholesky(P.conjugate().T.dot(AP))
-        Z = dpotrf(P.conjugate().T.dot(AP))[0]
-        print Z
-        # Solve upper triangular system for W 
-        W = dtrsm(1.0, Z.T, P, side=1, lower=1, diag=0)
-        # Solve upper triangular system for AW
-        AW = dtrsm(1.0, Z.T, AP, side=1, lower=1, diag=0)
+        # rho = (A P_{k-1})^T * (M A P_k)
+        rho = AP_1.conjugate().T.dot(MAP) 
+
+        # Z_{k+1} = M A P_k - P_k * gamma - P_{k-1} * rho
+        Z = MAP - P.dot(gamma) - P_1.dot(rho)
+
+        # Update P_1 and AP_1
+        P_1 = np.copy(P)
+        AP_1 = np.copy(AP)
+
