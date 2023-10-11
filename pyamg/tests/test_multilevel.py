@@ -98,6 +98,29 @@ class TestMultilevel(TestCase):
             # print residuals
             assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
 
+    def test_multiple_rhs(self):
+
+        # Poisson with 4 right-hand sides
+        s = 4
+        A = poisson((50, 50), format='csr')
+        b = rand(A.shape[0], s)
+
+        # Any AMG hierarchy -- rhs independent
+        ml = smoothed_aggregation_solver(A)
+
+        # initial guess
+        residuals = []
+        x0 = np.random.rand(A.shape[0], s)
+
+        # block solve
+        x = ml.solve(b, maxiter=30, tol=1e-8)
+
+        # check each
+        r = b - A * x
+        for i in range(s):
+            assert(norm(r[:,i]) < 1e-8 * norm(b[:,i]))
+
+
     def test_cycle_complexity(self):
         # four levels
         levels = []
