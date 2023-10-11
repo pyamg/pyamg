@@ -526,11 +526,11 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
         A = np.asarray(A)
 
     if fast_check:
-        x = np.random.rand(A.shape[0], 1)
-        y = np.random.rand(A.shape[0], 1)
+        x = np.random.rand(A.shape[0])
+        y = np.random.rand(A.shape[0])
         if A.dtype == complex:
-            x = x + 1.0j*np.random.rand(A.shape[0], 1)
-            y = y + 1.0j*np.random.rand(A.shape[0], 1)
+            x = x + 1.0j*np.random.rand(A.shape[0])
+            y = y + 1.0j*np.random.rand(A.shape[0])
         xAy = np.dot((A.dot(x)).conjugate().T, y)
         xAty = np.dot(x.conjugate().T, A.dot(y))
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
