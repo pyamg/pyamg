@@ -3,7 +3,6 @@
 from warnings import warn
 
 import scipy as sp
-from scipy.linalg import pinv
 import scipy.sparse.linalg as sla
 from scipy.sparse.linalg import LinearOperator
 import numpy as np
@@ -13,6 +12,14 @@ from .util.utils import to_type
 from .util.params import set_tol
 from .relaxation import smoothing
 from .util import upcast
+
+# hack to compare the version of scipy
+# int(''.join('1.7'.split('.')[:2])) = 17
+spversion = sp.__version__
+if int(''.join(spversion.split('.')[:2])) >= 17:
+    from scipy.linalg import pinv           # pylint: disable=ungrouped-imports
+else:
+    from scipy.linalg import pinv2 as pinv  # pylint: disable=no-name-in-module
 
 
 class MultilevelSolver:
