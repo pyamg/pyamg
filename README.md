@@ -1,4 +1,4 @@
-[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI+branch%3Amain)
+[![CI](https://github.com/pyamg/pyamg/workflows/CI/badge.svg)](https://github.com/pyamg/pyamg/actions?query=workflow%3Aci+branch%3Amain)
 [![PyPi](https://img.shields.io/pypi/pyversions/pyamg.svg?style=flat-square)](https://pypi.python.org/pypi/pyamg/)
 [![codecov](https://codecov.io/gh/pyamg/pyamg/branch/main/graph/badge.svg?token=JpRo1gdALC)](https://codecov.io/gh/pyamg/pyamg)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg)](https://doi.org/10.21105/joss.05495)
