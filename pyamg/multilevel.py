@@ -421,9 +421,6 @@ class MultilevelSolver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
-
-        from pyamg.util.linalg import residual_norm
-
         if x0 is None:
             x = np.zeros_like(b)
         else:

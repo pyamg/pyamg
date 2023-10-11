@@ -100,7 +100,6 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
     normr = np.linalg.norm(r)
     if residuals is not None:
-        #residuals[:] = [norm(b-A*x)]
         residuals[:] = [normr]  # initial residual
 
     # Check initial guess if b != 0,
@@ -170,7 +169,6 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         normr = np.linalg.norm(r)
 
         if residuals is not None:
-            #residuals.append(norm(b-A*x))
             residuals.append(normr)
 
         if callback is not None:

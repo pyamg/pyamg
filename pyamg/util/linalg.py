@@ -33,7 +33,6 @@ def norm(x, pnorm='2'):
       calls sqrt(numpy.sum(real((conjugate(x)*x)),axis=0)) resulting in an
       extra copy
     - only handles the 2-norm and infinity-norm for vectors
-    - numpy.linalg.norm is faster
 
     See Also
     --------
@@ -97,12 +96,6 @@ def infinity_norm(A):
         return (abs(A) * np.ones((A.shape[1]), dtype=A.dtype)).max()
 
     return np.dot(np.abs(A), np.ones((A.shape[1],), dtype=A.dtype)).max()
-
-
-def residual_norm(A, x, b):
-    """Compute ||b - A*x||"""
-
-    return np.linalg.norm(b - A * x, axis=0)
 
 
 def axpy(x, y, a=1.0):
