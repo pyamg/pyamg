@@ -2,6 +2,7 @@ import numpy as np
 from scipy.linalg import get_blas_funcs
 from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import fractional_matrix_power
+from scipy.linalg.lapack import dpotrf
 from pyamg.util.linalg import norm, BCGS, CGS, split_residual
 from warnings import warn
 
@@ -193,9 +194,12 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
+        AP = A * P
         # Do Cholesky of P^T A P
-        Z = np.linalg.cholesky(P.conjugate().T.dot(A * P))
+        #Z = np.linalg.cholesky(P.conjugate().T.dot(AP))
+        Z = dpotrf(P.conjugate().T.dot(AP))[0]
+        print Z
         # Solve upper triangular system for W 
         W = dtrsm(1.0, Z.T, P, side=1, lower=1, diag=0)
         # Solve upper triangular system for AW
-        AW = dtrsm(1.0, Z.T, A*P, side=1, lower=1, diag=0)
+        AW = dtrsm(1.0, Z.T, AP, side=1, lower=1, diag=0)
