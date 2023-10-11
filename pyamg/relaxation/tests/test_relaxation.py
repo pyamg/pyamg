@@ -10,10 +10,10 @@ from scipy.linalg import solve
 from pyamg.classical.split import RS
 from pyamg.classical import ruge_stuben_solver
 from pyamg.gallery import poisson, sprand, elasticity
-from pyamg.relaxation.relaxation import gauss_seidel, jacobi,\
-    block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor,\
-    gauss_seidel_indexed, polynomial, gauss_seidel_ne,\
-    gauss_seidel_nr,\
+from pyamg.relaxation.relaxation import gauss_seidel, jacobi, \
+    block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor, \
+    gauss_seidel_indexed, polynomial, gauss_seidel_ne, \
+    gauss_seidel_nr, \
     jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
 

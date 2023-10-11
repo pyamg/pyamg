@@ -1,11 +1,11 @@
 """Test prolongation smoothing."""
 import warnings
 import numpy as np
-from numpy.testing import TestCase, assert_array_almost_equal,\
+from numpy.testing import TestCase, assert_array_almost_equal, \
     assert_equal, assert_almost_equal
 from scipy import sparse
 
-from pyamg.gallery import poisson, linear_elasticity, load_example,\
+from pyamg.gallery import poisson, linear_elasticity, load_example, \
     gauge_laplacian
 from pyamg.aggregation import smoothed_aggregation_solver, rootnode_solver
 from pyamg.amg_core import incomplete_mat_mult_bsr
