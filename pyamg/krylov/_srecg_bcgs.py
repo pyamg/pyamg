@@ -1,16 +1,15 @@
+"""Short Recurrence Enlarged Conjugate Gradient algorithm."""
+import warnings
+
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
-from pyamg.util.linalg import norm, BCGS, CGS, split_residual
-from ._srecg_orthodir import srecg_orthodir 
-from warnings import warn
+
+from ..util import make_system
+from ..util.linalg import norm, bcgs, cgs, split_residual
 
 
-__all__ = ['srecg_bcgs']
-
-
-def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, **kwargs):
-    '''Short Recurrence Enlarged Conjugate Gradient algorithm
+def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
+               callback=None, residuals=None):
+    """Short Recurrence Enlarged Conjugate Gradient algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
 
@@ -78,16 +77,15 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     References
     ----------
-    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf. 
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
        "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
        Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
        pp. 744-773, 2016.
-    
-    '''
+
+    """
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._srecg')
 
     # determine maxiter
@@ -95,7 +93,7 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    
+
     # setup method
     r = b - A * x
 
@@ -105,10 +103,10 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Append residual to list
     if residuals is not None:
-        #z = M * r
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #residuals.append(precond_norm)
+        # z = M * r
+        # precond_norm = np.inner(r.conjugate(), z)
+        # precond_norm = np.sqrt(precond_norm)
+        # residuals.append(precond_norm)
         residuals.append(res_norm)
 
     # Adjust tolerance
@@ -122,9 +120,9 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # Scale tol by ||r_0||_M
     if res_norm != 0.0:
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #tol = tol * precond_norm
+        # precond_norm = np.inner(r.conjugate(), z)
+        # precond_norm = np.sqrt(precond_norm)
+        # tol = tol * precond_norm
         tol = tol * res_norm
 
     # Initialize list for previous search directions
@@ -132,26 +130,26 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
 
     # k = 0
     k = 0
-    #while (res_norm > tol) and (k < maxiter):
+    # while (res_norm > tol) and (k < maxiter):
     while True:
         # A-ortho the search directions for first iteration
         if k == 0:
             # W_0 = T(r_0)
             W = split_residual(z, t)
             # W_0 = A_orth(W_0)
-            CGS(W, A)
+            cgs(W, A)
         else:
             # W_k = A * W_{k-1}
             W = A * W
             # preconditioning step
-            #W = M * W
+            # W = M * W
             for i in range(t):
-                W_temp = np.copy(W[:,i])
+                W_temp = np.copy(W[:, i])
                 np.ascontiguousarray(W_temp, dtype=W.dtype)
                 W_temp = M * W_temp
-                W[:,i] = W_temp
-            W = BCGS(A, W_list, W)
-            CGS(W, A)
+                W[:, i] = W_temp
+            W = bcgs(A, W_list, W)
+            cgs(W, A)
 
         W_list.append(W)
         if len(W_list) > 2:
@@ -166,7 +164,7 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        #r = r - A * W_k * alpha_k
+        # r = r - A * W_k * alpha_k
         r -= A * W_alpha
 
         res_norm = norm(r)
@@ -174,10 +172,10 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
 
         # Append residual to list
         if residuals is not None:
-            #z = M * r
-            #precond_norm = np.inner(r.conjugate(), z)
-            #precond_norm = np.sqrt(precond_norm)
-            #residuals.append(precond_norm)
+            # z = M * r
+            # precond_norm = np.inner(r.conjugate(), z)
+            # precond_norm = np.sqrt(precond_norm)
+            # residuals.append(precond_norm)
             residuals.append(res_norm)
 
         if callback is not None:

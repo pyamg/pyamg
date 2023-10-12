@@ -160,6 +160,7 @@ ignore-names = [
     # well-known methods with acronyms
     "CF", "RS", "PMIS", "PMISc", "CLJP", "CLJPc", "CR", "MIS",
     "Cpts", "Fpts", "_CRsweep",
+    "P_list", "P",
 ]
 
 [tool.ruff.lint.flake8-quotes]

@@ -1,18 +1,16 @@
+"""Short recurrence Enlarged CG."""
+import warnings
+
 import numpy as np
-from scipy.sparse.linalg.isolve.utils import make_system
 from scipy.linalg import fractional_matrix_power
-from pyamg.util.linalg import norm, BCGS, CGS, split_residual
-from warnings import warn
+
+from ..util import make_system
+from ..util.linalg import norm, cgs, split_residual
 
 
-__all__ = ['srecg_orthodir']
-
-
-def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=None,
-       callback=None, residuals=None, **kwargs):
-    '''Short Recurrence Enlarged Conjugate Gradient algorithm
-
-    ****** LEFT PRECONDITIONING NOT SUPPORTED CURRENTLY ********
+def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
+                   callback=None, residuals=None):
+    """Short Recurrence Enlarged Conjugate Gradient algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
 
@@ -80,16 +78,18 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
 
     References
     ----------
-    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf. 
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
        "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
        Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
        pp. 744-773, 2016.
-    
-    '''
+
+    """
+    if M is None:
+        raise ValueError('Left preconditioning for ECG not supported.')
+
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    import warnings
     warnings.filterwarnings('always', module='pyamg.krylov._srecg')
 
     # determine maxiter
@@ -97,20 +97,20 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
         maxiter = int(1.3*len(b)) + 2
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
-    
+
     # setup method
     r = b - A * x
 
     # precondition residual
-    #z = M * r
+    # z = M * r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        #z = M * r
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #residuals.append(precond_norm)
+        # z = M * r
+        # precond_norm = np.inner(r.conjugate(), z)
+        # precond_norm = np.sqrt(precond_norm)
+        # residuals.append(precond_norm)
         residuals.append(res_norm)
 
     # Adjust tolerance
@@ -124,9 +124,9 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
 
     # Scale tol by ||r_0||_M
     if res_norm != 0.0:
-        #precond_norm = np.inner(r.conjugate(), z)
-        #precond_norm = np.sqrt(precond_norm)
-        #tol = tol * precond_norm
+        # precond_norm = np.inner(r.conjugate(), z)
+        # precond_norm = np.sqrt(precond_norm)
+        # tol = tol * precond_norm
         tol = tol * res_norm
 
     # Initialize list for previous search directions
@@ -138,14 +138,14 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
     # Initial search directions
     W = split_residual(r, t)
     W_list.append(np.zeros(W.shape))
-    CGS(W, A)
+    cgs(W, A)
 
     while True:
         # Append W to previous search directions
         W_list.append(W)
         if len(W_list) > 2:
             del W_list[0]
-            
+
         # alpha_k = W_k^T r_k
         alpha = W.conjugate().T.dot(r)
 
@@ -155,7 +155,7 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        #r = r - A * W_k * alpha_k
+        # r = r - A * W_k * alpha_k
         r -= A * W_alpha
 
         res_norm = norm(r)
@@ -186,7 +186,4 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, xtype=None, M=Non
         Z = P.conjugate().T.dot(A * P)
         Z_half = fractional_matrix_power(Z, 0.5)
         Z_half_inv = np.linalg.inv(Z_half)
-        W = P.dot(Z_half_inv) 
-
-        print("iter ", k, " ---------------")
-        print(W)
+        W = P.dot(Z_half_inv)
