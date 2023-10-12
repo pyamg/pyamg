@@ -125,7 +125,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     # 3.5 #
     # single node aggregates
     sums = np.array(AggOp.sum(axis=0)).ravel()
-    E2V_c = np.where(sums == 1)[0]
+    E2V_c = np.argwhere(np.isin(AggOp.indices, np.where(sums == 1)[0])).ravel()
     Nel_c = len(E2V_c)
 
     # 4 #
