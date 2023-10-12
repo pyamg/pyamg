@@ -13,6 +13,7 @@ from .. import amg_core
 
 
 def make_system(A, x, b, formats=None, multivector=False):
+    """Make a system from common inputs.
 
     Parameters
     ----------
@@ -82,9 +83,11 @@ def make_system(A, x, b, formats=None, multivector=False):
     if M != N:
         raise ValueError('expected square matrix')
 
-    if (not multivector and x.shape not in [(M,), (M, 1)]) or (multivector and x.shape[0] != M):
+    if (not multivector and x.shape not in [(M,), (M, 1)]) \
+            or (multivector and x.shape[0] != M):
         raise ValueError('x has invalid dimensions')
-    if (not multivector and b.shape not in [(M,), (M, 1)]) or (multivector and b.shape[0] != M):
+    if (not multivector and b.shape not in [(M,), (M, 1)]) \
+            or (multivector and b.shape[0] != M):
         raise ValueError('b has invalid dimensions')
 
     if A.dtype != x.dtype or A.dtype != b.dtype:
@@ -95,9 +98,6 @@ def make_system(A, x, b, formats=None, multivector=False):
     if not b.flags.carray:
         raise ValueError('b must be contiguous in memory')
 
-    # TODO: needed?
-    # x = np.ravel(x)
-    # b = np.ravel(b)
     x = x.reshape((M, -1))
     b = b.reshape((M, -1))
 
@@ -184,17 +184,17 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     iterations : int
         Number of iterations to perform
     subdomain : int array
-        Linear array containing each subdomain's elements
+        Linear array containing every element of each subdomain
     subdomain_ptr : int array
         Pointer in subdomain, such that
-        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]]
+        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]
         contains the _sorted_ indices in subdomain i
     inv_subblock : int_array
-        Linear array containing each subdomain's
+        Linear array containing each subdomains
         inverted diagonal block of A
     inv_subblock_ptr : int array
         Pointer in inv_subblock, such that
-        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
+        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]
         contains the inverted diagonal block of A for the
         i-th subdomain in _row_ major order
     sweep : {'forward','backward','symmetric'}
@@ -207,7 +207,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     Notes
     -----
     If subdomains is None, then a point-wise iteration takes place,
-    with the overlapping region defined by each degree-of-freedom's
+    with the overlapping region defined by each degree-of-freedoms
     neighbors in the matrix graph.
 
     If subdomains is not None, but subblocks is, then the subblocks
@@ -628,7 +628,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     - Quadratic smoother p(A) = c_2*A^2 + c_1*A + c_0:
         polynomial_smoother(A, x, b, [c_2, c_1, c_0])
 
-    Here, Horner's Rule is applied to avoid computing A^k directly.
+    Here, Horners Rule is applied to avoid computing A^k directly.
 
     For efficience, the method detects the case x = 0 one matrix-vector
     product is avoided (since (b - A*x) is b).
@@ -767,7 +767,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
     References
     ----------
-    .. [1] Brandt, Ta'asan.
+    .. [1] Brandt, Taasan.
        "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
        1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026;
        NASA-CR-178026;

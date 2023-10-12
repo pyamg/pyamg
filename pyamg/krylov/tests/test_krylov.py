@@ -7,7 +7,9 @@ import scipy.sparse as sparse
 
 import pyamg
 from pyamg.util.linalg import norm
-from pyamg.krylov import bicgstab, cg, cgne, cgnr, cr, fgmres, gmres, steepest_descent, srecg
+from pyamg.krylov import (bicgstab, cg, cgne, cgnr, cr,
+                          fgmres, gmres, steepest_descent,
+                          ekcg, srecg)
 from pyamg.krylov._gmres_householder import gmres_householder
 from pyamg.krylov._gmres_mgs import gmres_mgs
 
@@ -249,9 +251,9 @@ class TestKrylov(TestCase):
                                       maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
                 soln = solve(A, b)
-                assert_equal((norm(soln - xNew)/norm(soln - x0)) <
-                             case['reduction_factor'], True,
-                             err_msg='Enlarged Krylov Method Failed Test')
+                factor = case['reduction_factor'],
+                assert_equal((norm(soln - xNew)/norm(soln - x0)) < factor,
+                             True, err_msg='Enlarged Krylov Method Failed Test')
 
         # Assume that Inexact Methods reduce the residual for these examples
         for method in self.inexact:

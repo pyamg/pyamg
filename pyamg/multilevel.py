@@ -716,7 +716,8 @@ def coarse_grid_solver(solver):
 
         def solve(_, A, b):
             if np.squeeze(b).ndim != 1:
-                raise ValueError('Krylov coarse solves are not compatible multiple right-hand sides')
+                raise ValueError('Krylov coarse solves are not compatible '
+                                 'with multiple right-hand sides')
 
             if 'tol' not in kwargs:
                 kwargs['tol'] = set_tol(A.dtype)
