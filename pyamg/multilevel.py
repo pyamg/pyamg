@@ -570,7 +570,7 @@ class MultilevelSolver:
             if callback is not None:
                 callback(x)
 
-            if normr < tol * normb:
+            if np.max(normr) < tol * normb:
                 if return_info:
                     return x, 0
                 return x
