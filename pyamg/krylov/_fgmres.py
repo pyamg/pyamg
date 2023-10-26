@@ -19,8 +19,8 @@ def _mysign(x):
 
 
 def fgmres(A, b, x0=None, tol=1e-5,
-           restrt=None, maxiter=None,
-           M=None, callback=None, residuals=None):
+           restart=None, maxiter=None,
+           M=None, callback=None, residuals=None, restrt=None):
     """Flexible Generalized Minimum Residual Method (fGMRES).
 
     fGMRES iteratively refines the initial solution guess to the
@@ -39,16 +39,16 @@ def fgmres(A, b, x0=None, tol=1e-5,
         Tolerance for stopping criteria, let r=r_k
         ||r|| < tol ||b||
         if ||b||=0, then set ||b||=1 for these tests.
-    restrt : None, int
-        - if int, restrt is max number of inner iterations
+    restart : None, int
+        - if int, restart is max number of inner iterations
           and maxiter is the max number of outer iterations
         - if None, do not restart GMRES, and max number of inner iterations
           is maxiter
     maxiter : None, int
-        - if restrt is None, maxiter is the max number of inner iterations
+        - if restart is None, maxiter is the max number of inner iterations
           and GMRES does not restart
-        - if restrt is int, maxiter is the max number of outer iterations,
-          and restrt is the max number of inner iterations
+        - if restart is int, maxiter is the max number of outer iterations,
+          and restart is the max number of inner iterations
         - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
@@ -61,6 +61,8 @@ def fgmres(A, b, x0=None, tol=1e-5,
     reorth : boolean
         If True, then a check is made whether to re-orthogonalize the Krylov
         space each GMRES iteration
+    restrt : None, int
+        Deprecated.  See restart.
 
     Returns
     -------
@@ -108,6 +110,15 @@ def fgmres(A, b, x0=None, tol=1e-5,
        http://www-users.cs.umn.edu/~saad/books.html
 
     """
+    if restrt is None:
+        restrt = restart
+    elif restart is not None:
+        raise ValueError('Only use restart, not restrt (deprecated).')
+    else:
+        msg = ('The keyword argument "restrt" is deprecated and will '
+               'be removed in 2024.   Use "restart" instead.')
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     n = A.shape[0]
@@ -123,15 +134,15 @@ def fgmres(A, b, x0=None, tol=1e-5,
     #     then set max_inner=maxiter and max_outer=n
     # If restarts are set,
     #     then set max_inner=restart and max_outer=maxiter
-    if restrt:
+    if restart:
         if maxiter:
             max_outer = maxiter
         else:
             max_outer = 1
-        if restrt > n:
-            warn('Setting restrt to maximum allowed, n.')
-            restrt = n
-        max_inner = restrt
+        if restart > n:
+            warn('Setting restart to maximum allowed, n.')
+            restart = n
+        max_inner = restart
     else:
         max_outer = 1
         if maxiter is None:

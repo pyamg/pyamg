@@ -789,11 +789,11 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     return smoother
 
 
-def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
+def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restart=None, M=None, callback=None,
                 residuals=None):
     """Set up GMRES smoothing."""
     def smoother(A, x, b):
-        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
+        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restart=restart, M=M,
                      callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, gmres)  # set __name__
     return smoother

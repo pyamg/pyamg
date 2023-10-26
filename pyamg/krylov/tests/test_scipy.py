@@ -39,11 +39,11 @@ class TestScipy(TestCase):
 
             mgsres = []
             _ = gmres_mgs(A, b, x0, residuals=mgsres,
-                          tol=tol, restrt=3, maxiter=2)
+                          tol=tol, restart=3, maxiter=2)
 
             hhres = []
             _ = gmres_householder(A, b, x0, residuals=hhres,
-                                  tol=tol, restrt=3, maxiter=2)
+                                  tol=tol, restart=3, maxiter=2)
 
             scipyres = []
             normb = np.linalg.norm(b)

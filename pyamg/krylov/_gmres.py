@@ -1,11 +1,12 @@
 """Generalized Minimum Residual Method (GMRES) Krylov solver."""
 
+import warnings
 from ._gmres_mgs import gmres_mgs
 from ._gmres_householder import gmres_householder
 
 
-def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
-          M=None, callback=None, residuals=None, orthog='householder',
+def gmres(A, b, x0=None, tol=1e-5, restart=None, maxiter=None,
+          M=None, callback=None, residuals=None, orthog='householder', restrt=None,
           **kwargs):
     """Generalized Minimum Residual Method (GMRES).
 
@@ -24,16 +25,16 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         Tolerance for stopping criteria, let r=r_k
         ||M r|| < tol ||M b||
         if ||b||=0, then set ||M b||=1 for these tests.
-    restrt : None, int
-        - if int, restrt is max number of inner iterations
+    restart : None, int
+        - if int, restart is max number of inner iterations
           and maxiter is the max number of outer iterations
         - if None, do not restart GMRES, and max number of inner iterations
           is maxiter
     maxiter : None, int
-        - if restrt is None, maxiter is the max number of inner iterations
+        - if restart is None, maxiter is the max number of inner iterations
           and GMRES does not restart
-        - if restrt is int, maxiter is the max number of outer iterations,
-          and restrt is the max number of inner iterations
+        - if restart is int, maxiter is the max number of outer iterations,
+          and restart is the max number of inner iterations
         - defaults to min(n,40) if restart=None
     M : array, matrix, sparse matrix, LinearOperator
         n x n, inverted preconditioner, i.e. solve M A x = M b.
@@ -47,6 +48,8 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
         reflections to find the orthogonal basis for the Krylov space.
         'mgs' calls _gmres_mgs which uses modified Gram-Schmidt to find the
         orthogonal basis for the Krylov space
+    restrt : None, int
+        Deprecated.  See restart.
 
     Returns
     -------
@@ -96,14 +99,23 @@ def gmres(A, b, x0=None, tol=1e-5, restrt=None, maxiter=None,
        http://www-users.cs.umn.edu/~saad/books.html
 
     """
+    if restrt is None:
+        restrt = restart
+    elif restart is not None:
+        raise ValueError('Only use restart, not restrt (deprecated).')
+    else:
+        msg = ('The keyword argument "restrt" is deprecated and will '
+               'be removed in 2024.   Use "restart" instead.')
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
     # pass along **kwargs
     if orthog == 'householder':
-        (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restrt=restrt,
+        (x, flag) = gmres_householder(A, b, x0=x0, tol=tol, restart=restart,
                                       maxiter=maxiter, M=M,
                                       callback=callback, residuals=residuals,
                                       **kwargs)
     elif orthog == 'mgs':
-        (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restrt=restrt,
+        (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restart=restart,
                               maxiter=maxiter, M=M,
                               callback=callback, residuals=residuals, **kwargs)
 
