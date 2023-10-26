@@ -165,7 +165,7 @@ class TestKrylov(TestCase):
                     residuals2 = []
                     (x2, flag2) = gmres_mgs(A_symm, b_symm, x0=x0_symm,
                                             maxiter=maxiter,
-                                            restrt=None,
+                                            restart=None,
                                             residuals=residuals2)
                     residuals3 = []
                     (x3, flag2) = cr(A_symm, b_symm, x0=x0_symm,
