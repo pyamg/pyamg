@@ -28,25 +28,6 @@ extra_link_args = []
 openmp_flags = get_openmp_flags()
 openmpworks = check_openmp_support(openmp_flags=openmp_flags)
 if openmpworks:
-    compile_flags = openmp_flags.get('compiler_flags')
-    link_flags = openmp_flags.get('linker_flags')
-
-print(f'\n\nUsing openmp flag {extra_compile_args}\n\n')
-# 2. try replacing -fopenmp with mac specific flags
-if not openmpworks:
-    compile_flags = openmp_flags.get('compiler_flags')
-    link_flags = openmp_flags.get('linker_flags')
-    for i, flag in enumerate(compile_flags):
-        if flag == '-fopenmp':
-            compile_flags[i] = '-Xpreprocessor -fopenmp'
-    for i, flag in enumerate(link_flags):
-        if flag == '-fopenmp':
-            link_flags[i] = '-lomp'
-    openmpworks = check_openmp_support(openmp_flags=openmp_flags)
-
-if openmpworks:
-    extra_compile_args = compile_flags
-    extra_link_args = link_flags
     extra_compile_args = openmp_flags.get('compiler_flags')
     extra_link_args = openmp_flags.get('linker_flags')
 
