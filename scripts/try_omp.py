@@ -2,10 +2,10 @@ import pyamg
 import numpy as np
 from timeit import default_timer as timer
 
-n = 200
+n = 10000
 
 t0 = timer()
-A = pyamg.gallery.poisson((n,n,n), format='csr')
+A = pyamg.gallery.poisson((n,n), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 b = np.random.rand(A.shape[0])
 u = np.random.rand(A.shape[0])

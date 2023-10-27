@@ -26,8 +26,9 @@ for cflag, lflag in [('-fopenmp', '-fopenmp'),
                      ('-Xpreprocessor -fopenmp', '-lomp')] :
     try:
         openmp = has_flag(build_ext.compiler, cflag)
-        extra_compile_args.append(cflag)
-        extra_link_args.append(lflag)
+        if openmp:
+            extra_compile_args.append(cflag)
+            extra_link_args.append(lflag)
     except:
         openmp = False
 

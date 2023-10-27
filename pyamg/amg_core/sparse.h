@@ -1,7 +1,11 @@
 #include <complex>
 #include <iostream>
 #include <stdio.h>
-#include <omp.h>
+
+#ifdef _OPENMP
+#   include <omp.h>
+#endif
+
 //
 // Threaded SpMV
 //
@@ -38,14 +42,9 @@ void csr_matvec(const I n_row,
 {
     I i, jj;
     T sum;
-    //int nthreads, tid;
-    //nthreads = omp_get_num_threads();
 
     #pragma omp parallel for default(shared) schedule(static) private(i, sum, jj)
     for(i = 0; i < n_row; i++){
-        //tid = omp_get_thread_num();
-        //printf("row %d, thread %d\n", i, tid+1);
-        //std::cout << "thread " << tid+1 << " of " << nthreads << "     (row " << i << ")" << std::endl;
         sum = Yx[i];
         #pragma GCC ivdep
         for(jj = Ap[i]; jj < Ap[i+1]; jj++){
@@ -59,14 +58,19 @@ void csr_matvec(const I n_row,
 //
 // OMP analytics
 //
-void omp_info()
+template <class I>
+void omp_info(const I m)
 {
-    int nthreads, tid;
+    I nthreads, tid;
 
     #pragma omp parallel private(nthreads, tid)
     {
+#ifdef _OPENMP
         tid = omp_get_thread_num();
         nthreads = omp_get_num_threads();
         printf("Thread %d of %d total threads\n", tid, nthreads);
+#else
+        printf("OpenMP not available.\n");
+#endif
     }
 }

@@ -41,6 +41,16 @@ void _csr_matvec(
                              );
 }
 
+template <class I>
+void _omp_info(
+                const I m
+               )
+{
+    return omp_info <I>(
+                        m
+                        );
+}
+
 PYBIND11_MODULE(sparse, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for sparse.h
@@ -86,6 +96,11 @@ Notes
 -----
 Requires GCC 4.9 for ivdep
 Requires a compiler with OMP)pbdoc");
+
+    m.def("omp_info", &_omp_info<int>,
+        py::arg("m"),
+R"pbdoc(
+OMP analytics)pbdoc");
 
 }
 

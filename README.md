@@ -179,18 +179,28 @@ conda search pyamg --channel conda-forge
 
 # OpenMP
 
-- To enable OpenMP on macOS, `brew install libomp`
+PyAMG handles OpenMP in the following way
 
-- Then set environment variables, following https://scikit-learn.org/dev/developers/advanced_installation.html#macos-compilers-from-homebrew :
-```
-export CC=/usr/bin/clang
-export CXX=/usr/bin/clang++
-export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
-export CFLAGS="$CFLAGS -I$(brew --prefix libomp)/include"
-export CXXFLAGS="$CXXFLAGS -I$(brew --prefix libomp)/include"
-export LDFLAGS="$LDFLAGS -Wl,-rpath,$(brew --prefix libomp)/lib -L$(brew --prefix libomp)/lib -lomp"
-```
+    - The `has_flag()` function of `pybind11` is called, with either `-fopenmp` (Linux) or `-Xpreprocessor -fopenmp` (MacOS).  Then added to the build if present.
 
-- Then `setup.py` will attempt to add `-Xpreprocessor -fopenmp` to the compiler and `-lomp` to the linker.
+    - Every instance of OpenMP is limited to `#pragma` or `#ifdef _OPENMP`.  Each kernel in `amg_core` that has OpenMP should be buildable without.
 
-- To test, try `export OMP_NUM_THREADS=4; python test_omp.py` in `scripts/`
+    - To test, try `export OMP_NUM_THREADS=4; python test_omp.py` in `scripts/`
+
+    - The AMG solve phase add threading by rewriting the sparse matrix-vector multiplications of `A`, `P`, and `R`, with `ml.solve(...., openmp=True)`.
+
+#### MacOS
+    - To enable OpenMP on macOS, `brew install libomp`
+
+    - Then set environment variables, following https://scikit-learn.org/dev/developers/advanced_installation.html#macos-compilers-from-homebrew :
+    ```
+    export CC=/usr/bin/clang
+    export CXX=/usr/bin/clang++
+    export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
+    export CFLAGS="$CFLAGS -I$(brew --prefix libomp)/include"
+    export CXXFLAGS="$CXXFLAGS -I$(brew --prefix libomp)/include"
+    export LDFLAGS="$LDFLAGS -Wl,-rpath,$(brew --prefix libomp)/lib -L$(brew --prefix libomp)/lib -lomp"
+    ```
+
+    - Then `setup.py` will attempt to add `-Xpreprocessor -fopenmp` to the compiler and `-lomp` to the linker.
+
