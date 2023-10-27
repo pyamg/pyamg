@@ -12,7 +12,7 @@ from . import krylov
 from .util.utils import to_type
 from .util.params import set_tol
 from .relaxation import smoothing
-from .util import upcast
+from .util import upcast, sparse
 
 
 class MultilevelSolver:
@@ -355,19 +355,18 @@ class MultilevelSolver:
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def _enable_omp(self):
-        """Enable OpenMP (if available) by calling pyamg.amg_core.sparse.csr_matvec
+        """Enable OpenMP (if available) by calling pyamg.amg_core.sparse.csr_matvec.
 
         See Also
         --------
         scipy.sparse.csr.csr_matvec, pyamg.amg_core.sparse.csr_matvec, pyamg.util.sparse.csr
         """
-        import pyamg.util
         for l in self.levels:
-            l.A = pyamg.util.sparse.csr(l.A)
+            l.A = sparse.csr(l.A)
             if hasattr(l, 'P'):
-                l.P = pyamg.util.sparse.csr(l.P)
+                l.P = sparse.csr(l.P)
             if hasattr(l, 'R'):
-                l.R = pyamg.util.sparse.csr(l.R)
+                l.R = sparse.csr(l.R)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
               callback=None, residuals=None, cycles_per_level=1, return_info=False,
