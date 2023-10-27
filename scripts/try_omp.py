@@ -2,7 +2,7 @@ import pyamg
 import numpy as np
 from timeit import default_timer as timer
 
-n = 10000
+n = 1000
 
 t0 = timer()
 A = pyamg.gallery.poisson((n,n), format='csr')

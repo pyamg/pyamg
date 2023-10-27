@@ -19,31 +19,12 @@ supporting C++ code for performance critical operations.
 from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
-# extra_compile_args = []
-# extra_link_args = []
-#
-# for cflag, lflag in [('-fopenmp', '-fopenmp'),
-#                      ('-Xpreprocessor -fopenmp', '-lomp')]:
-#     try:
-#         openmp = has_flag(build_ext.compiler, cflag)
-#         if openmp:
-#             extra_compile_args.append(cflag)
-#             extra_link_args.append(lflag)
-#     except:
-#         openmp = False
-#
-# print('------------------------------------------')
-# print(extra_compile_args)
-# print(extra_link_args)
-# print('------------------------------------------')
-
-
 # OpenMP support
 from extension_helpers._openmp_helpers import get_openmp_flags, check_openmp_support
+
+# try the automatic flags
 extra_compile_args = []
 extra_link_args = []
-
-# 1. try the automatic flags
 openmp_flags = get_openmp_flags()
 openmpworks = check_openmp_support(openmp_flags=openmp_flags)
 if openmpworks:
@@ -66,6 +47,8 @@ if not openmpworks:
 if openmpworks:
     extra_compile_args = compile_flags
     extra_link_args = link_flags
+    extra_compile_args = openmp_flags.get('compiler_flags')
+    extra_link_args = openmp_flags.get('linker_flags')
 
 amg_core_headers = ['air',
                     'evolution_strength',
