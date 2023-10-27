@@ -63,10 +63,10 @@ void omp_info()
 {
     int nthreads, tid;
 
-    #pragma ommp parallel private(nthreads, tid)
+    #pragma omp parallel private(nthreads, tid)
     {
         tid = omp_get_thread_num();
-        nthreads omp_get_num_threads();
-        printff("Thread %d of %d total threads", tid, nthreads);
+        nthreads = omp_get_num_threads();
+        printf("Thread %d of %d total threads\n", tid, nthreads);
     }
 }

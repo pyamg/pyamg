@@ -41,6 +41,15 @@ void _csr_matvec(
                              );
 }
 
+void _omp_info(
+
+               )
+{
+    return omp_info(
+
+                    );
+}
+
 PYBIND11_MODULE(sparse, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for sparse.h
@@ -48,19 +57,20 @@ PYBIND11_MODULE(sparse, m) {
     Methods
     -------
     csr_matvec
+    omp_info
     )pbdoc";
 
     py::options options;
     options.disable_function_signatures();
 
-    m.def("csr_matvec", &_csr_matvec<int, float>,
-        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
-    m.def("csr_matvec", &_csr_matvec<int, double>,
-        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
-    m.def("csr_matvec", &_csr_matvec<int, std::complex<float>>,
-        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
-    m.def("csr_matvec", &_csr_matvec<int, std::complex<double>>,
-        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert(),
+    m.def("csr_matvec", &_csr_matvec<int, float>    ,
+    py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
+    m.def("csr_matvec", &_csr_matvec<int, double>    ,
+    py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
+    m.def("csr_matvec", &_csr_matvec<int, std::complex<float>>    ,
+    py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert());
+    m.def("csr_matvec", &_csr_matvec<int, std::complex<double>>    ,
+    py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(), py::arg("Yx").noconvert(),
 R"pbdoc(
 Threaded SpMV
 
@@ -85,6 +95,10 @@ Notes
 -----
 Requires GCC 4.9 for ivdep
 Requires a compiler with OMP)pbdoc");
+
+    m.def("omp_info", &_omp_info        ,
+R"pbdoc(
+OMP analytics)pbdoc");
 
 }
 
