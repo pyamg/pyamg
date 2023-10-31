@@ -102,11 +102,10 @@ def gmres(A, b, x0=None, tol=1e-5, restart=None, maxiter=None,
     if restrt is not None:
         if restart is not None:
             raise ValueError('Only use restart, not restrt (deprecated).')
-        else:
-            restart = restrt
-            msg = ('The keyword argument "restrt" is deprecated and will '
-                   'be removed in 2024.   Use "restart" instead.')
-            warnings.warn(msg, DeprecationWarning, stacklevel=1)
+        restart = restrt
+        msg = ('The keyword argument "restrt" is deprecated and will '
+               'be removed in 2024.   Use "restart" instead.')
+        warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
     # pass along **kwargs
     if orthog == 'householder':

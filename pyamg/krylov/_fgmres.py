@@ -113,11 +113,10 @@ def fgmres(A, b, x0=None, tol=1e-5,
     if restrt is not None:
         if restart is not None:
             raise ValueError('Only use restart, not restrt (deprecated).')
-        else:
-            restart = restrt
-            msg = ('The keyword argument "restrt" is deprecated and will '
-                   'be removed in 2024.   Use "restart" instead.')
-            warnings.warn(msg, DeprecationWarning, stacklevel=1)
+        restart = restrt
+        msg = ('The keyword argument "restrt" is deprecated and will '
+               'be removed in 2024.   Use "restart" instead.')
+        warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
