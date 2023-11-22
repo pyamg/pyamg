@@ -1,7 +1,7 @@
-![ci](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/ci.yml?style=flat-square&label=tests)
-![lint](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/lint.yml?style=flat-square&label=lint)
-![PyPI - Version](https://img.shields.io/pypi/v/pyamg?style=flat-square)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyamg?style=flat-square)
+[![ci](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/ci.yml?style=flat-square&label=tests)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI-test+branch%3Amain)
+[![lint](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/lint.yml?style=flat-square&label=lint)](https://github.com/pyamg/pyamg/actions?query=workflow%3ACI-lint+branch%3Amain)
+[![PyPI - Version](https://img.shields.io/pypi/v/pyamg?style=flat-square)](https://pypi.org/project/pyamg/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyamg?style=flat-square)](https://pypi.org/project/pyamg/)
 [![Codecov](https://img.shields.io/codecov/c/github/pyamg/pyamg?style=flat-square)](https://app.codecov.io/gh/pyamg/pyamg)
 [![joss](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg?style=flat-square)](https://doi.org/10.21105/joss.05495)
 
