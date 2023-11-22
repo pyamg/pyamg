@@ -2,7 +2,7 @@
 ![lint](https://img.shields.io/github/actions/workflow/status/pyamg/pyamg/lint.yml?style=flat-square&label=lint)
 ![PyPI - Version](https://img.shields.io/pypi/v/pyamg?style=flat-square)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyamg?style=flat-square)
-![Codecov](https://img.shields.io/codecov/c/github/pyamg/pyamg?style=flat-square)
+[![Codecov](https://img.shields.io/codecov/c/github/pyamg/pyamg?style=flat-square)](https://app.codecov.io/gh/pyamg/pyamg)
 [![joss](https://joss.theoj.org/papers/10.21105/joss.05495/status.svg?style=flat-square)](https://doi.org/10.21105/joss.05495)
 
 # Installation
