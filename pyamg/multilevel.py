@@ -355,7 +355,7 @@ class MultilevelSolver:
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
-              callback=None, residuals=None, cycles_per_level=1, return_info=False):
+              callback=None, residuals=None, cycles_per_level=1, return_info=False, **kwargs):
         """Execute multigrid cycling.
 
         Parameters

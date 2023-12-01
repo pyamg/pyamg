@@ -52,6 +52,7 @@ instantiate:
     - one_point_interpolation
     - approx_ideal_restriction_pass2
     - block_approx_ideal_restriction_pass2
+    - sh_approx_ideal_restriction_pass2
 
 - types:
     - [int,float,"std::complex<float>"]

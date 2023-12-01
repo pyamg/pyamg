@@ -17,4 +17,5 @@ __all__ = [
     'cr',
     'ruge_stuben_solver',
     'air_solver',
+    'air_schwarz_solver'
 ]

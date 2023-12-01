@@ -567,4 +567,170 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 }
 
 
+/* Build column indices and data array for approximate ideal restriction
+ * in CSR format.
+ * 
+ * Parameters
+ * ----------
+ *      Rp : const array<int> 
+ *          Pre-determined row-pointer for R in CSR format
+ *      Rj : array<int>
+ *          Empty array for column indices for R in CSR format
+ *      Rx : array<float>
+ *          Empty array for data for R in CSR format
+ *      Sp : array<int> 
+ *          Empty array for Schwarz subdomain pointer
+ *      Sj : array<int>
+ *          Empty array for Schwarz subdomain indices
+ *      Mp : array<int> 
+ *          Empty array for Schwarz inverse pointer
+ *      Mx : array<float>
+ *          Empty array for Schwarz inverse data
+ *      Ap : const array<int>
+ *          Row pointer for matrix A
+ *      Aj : const array<int>
+ *          Column indices for matrix A
+ *      Ax : const array<float>
+ *          Data array for matrix A
+ *      Cp : const array<int>
+ *          Row pointer for SOC matrix, C
+ *      Cj : const array<int>
+ *          Column indices for SOC matrix, C
+ *      Cx : const array<float>
+ *          Data array for SOC matrix, C
+ *      Cpts : array<int>
+ *          List of global C-point indices
+ *      splitting : const array<int>
+ *          Boolean array with 1 denoting C-points and 0 F-points
+ *      distance : int, default 2
+ *          Distance of F-point neighborhood to consider, options are 1 and 2.
+ *
+ * Returns
+ * -------
+ * Nothing, Rj[] and Rx[] modified in place.
+ *
+ * Notes
+ * -----
+ * Rx[] must be passed in initialized to zero.
+ */
+template<class I, class T>
+void sh_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
+                            I Rj[], const int Rj_size,
+                            I Rx[], const int Rx_size,
+                            I Sp[], const int Sp_size,
+                            I Sj[], const int Sj_size,
+                            I Mp[], const int Mp_size,
+                            T Mx[], const int Mx_size,
+                      const I Ap[], const int Ap_size,
+                      const I Aj[], const int Aj_size,
+                      const T Ax[], const int Ax_size,
+                      const I Cp[], const int Cp_size,
+                      const I Cj[], const int Cj_size,
+                      const T Cx[], const int Cx_size,
+                      const I Cpts[], const int Cpts_size,
+                      const I splitting[], const int splitting_size,
+                      const I distance = 2)
+{
+    // Build local system and inverse for each C-point ~ row of R
+    for (I row=0; row<Cpts_size; row++) {
+
+        I cpoint = Cpts[row];
+        I ind = Rp[row];
+        I nfpoints = Rp[row+1]-1-Rp[row];
+
+        // Schwarz sparse subdomain pointer (NOT INCLUDING C-POINTS!)
+        Sp[row+1] = Sp[row] + nfpoints; 
+        // Schwarz sparse inverse pointer
+        Mp[row+1] = Mp[row] + nfpoints*nfpoints;
+        I sh_ind = Sp[row];
+
+        // Set column indices for R as strongly connected F-points.
+        for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
+            I this_point = Cj[i];
+            if (splitting[this_point] == F_NODE) {
+                Rj[ind] = Cj[i];
+                Sj[ind] = Cj[i];
+                ind +=1 ;
+                sh_ind +=1 ;
+
+                // Strong distance-two F-to-F connections
+                if (distance == 2) {
+                    for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
+                        if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
+                            Rj[ind] = Cj[kk];
+                            Sj[ind] = Cj[kk];
+                            ind +=1 ;
+                            sh_ind +=1 ;
+                        }
+                    } 
+                }
+            }
+        }
+
+        if (ind != (Rp[row+1]-1)) {
+            std::cerr << "Error get_schwarz_binv: Row pointer does not agree with neighborhood size.\n\t"
+                         "ind = " << ind << ", Rp[row] = " << Rp[row] <<
+                         ", Rp[row+1] = " << Rp[row+1] << "\n";
+        }
+
+        // Build local linear system as the submatrix A restricted to the neighborhood,
+        // Nf, of strongly connected F-points to the current C-point, that is A0 =
+        // A[Nf, Nf] stored in row major form.
+        I size_N = ind - Rp[row];
+        std::vector<T> A0(size_N*size_N);
+        I temp_A = 0;
+        for (I j=Rp[row]; j<ind; j++) { 
+            I this_ind = Rj[j];
+            for (I i=Rp[row]; i<ind; i++) {
+                // Search for indice in row of A
+                I found_ind = 0;
+                for (I k=Ap[this_ind]; k<Ap[this_ind+1]; k++) {
+                    if (Rj[i] == Aj[k]) {
+                        A0[temp_A] = Ax[k];
+                        found_ind = 1;
+                        temp_A += 1;
+                        break;
+                    }
+                }
+                // If indice not found, set element to zero
+                if (found_ind == 0) {
+                    A0[temp_A] = 0.0;
+                    temp_A += 1;
+                }
+            }
+        }
+        // Get and store dense matrix inverse in row major form
+        std::vector<T> Ainv = matInverse(&A0[0], size_N);
+        for (I i=0; i<size_N*size_N; i++) {
+            Mx[Mp[row]+i] = Ainv[i];
+        }
+
+        // Build local right hand side given by b_j = -A_{cpt,N_j}, where N_j
+        // is the jth indice in the neighborhood of strongly connected F-points
+        // to the current C-point. 
+        I temp_b = 0;
+        std::vector<T> b0(size_N, 0);
+        for (I i=Rp[row]; i<ind; i++) {
+            // Search for indice in row of A. If indice not found, b0 has been
+            // intitialized to zero.
+            for (I k=Ap[cpoint]; k<Ap[cpoint+1]; k++) {
+                if (Rj[i] == Aj[k]) {
+                    b0[temp_b] = -Ax[k];
+                    break;
+                }
+            }
+            temp_b += 1;
+        }
+
+        // Solve AIR system by applying inverse transpose
+        if (size_N > 0) {
+            matvecT(&Ainv[0], size_N, size_N, &b0[0], &Rx[Rp[row]], false);
+        }
+
+        // Add identity for C-point in this row
+        Rj[ind] = cpoint;
+        Rx[ind] = 1.0;
+    }
+}
+
 #endif

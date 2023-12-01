@@ -21,7 +21,7 @@ __all__ = ['__version_tuple__', '__version__',
            'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation',
            'util', 'vis',
            'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
-           'air_solver', 'coarse_grid_solver', 'multilevel_solver', 'MultilevelSolver',
+           'air_solver', 'air_schwarz_solver', 'coarse_grid_solver', 'multilevel_solver', 'MultilevelSolver',
            'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',
            'pairwise_solver', 'demo', 'solve', 'solver', 'solver_configuration']
 

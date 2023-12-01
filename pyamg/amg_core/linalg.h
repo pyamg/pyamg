@@ -1470,4 +1470,126 @@ void least_squares(T A[],
     upper_tri_solve(A,&rhs[0],x,m,n,is_col_major);
 }
 
+
+/* Compute Ax=b for dense mxn matrix A. 
+*/
+template<class I, class T>
+inline void matvec(const T A[], const I m, const I n,
+    const T x[], T b[], const I is_col_major)
+{
+    // Function pointer for row or column major matrices
+    I (*get_ind)(const I, const I, const I);
+    const I *C;
+    if (is_col_major) {
+        get_ind = &col_major;
+        C = &m;
+    }
+    else {
+        get_ind = &row_major;
+        C = &n;
+    }
+
+    // Multiply right hand side, b:= A*x.
+    for (I i=0; i<m; i++) {
+        b[i] = 0;
+        for (I k=0; k<n; k++) {
+            b[i] += x[k] * A[get_ind(i,k,*C)];
+        }
+    }
+}
+
+
+/* Compute A^Tx=b for dense mxn matrix A. 
+*/
+template<class I, class T>
+inline void matvecT(const T A[], const I m, const I n,
+    const T x[], T b[], const I is_col_major)
+{
+    // Function pointer for row or column major matrices
+    I (*get_ind)(const I, const I, const I);
+    const I *C;
+    if (is_col_major) {
+        get_ind = &col_major;
+        C = &m;
+    }
+    else {
+        get_ind = &row_major;
+        C = &n;
+    }
+
+    // Multiply right hand side, b:= A^t*x.
+    for (I i=0; i<m; i++) {
+        b[i] = 0;
+        for (I k=0; k<n; k++) {
+            b[i] += x[k] * A[get_ind(k,i,*C)];
+        }
+    }
+}
+
+// Construct inverse of upper triangular matrix
+template<class I, class T>
+std::vector<T> inverseUpperTriangular(const T U[], I n,
+    bool is_col_major = false) {
+
+    // Function pointer for row or column major matrices
+    I (*get_ind)(const I, const I, const I);
+    if (is_col_major) {
+        get_ind = &col_major;
+    }
+    else {
+        get_ind = &row_major;
+    }
+
+    std::vector<T> invT(n * n, 0.0);
+
+    // Construct the identity matrix
+    for (I i = 0; i < n; ++i) {
+        invT[get_ind(i,i,n)] = 1.0;
+    }
+
+    // Perform back substitution to find the inverse
+    for (I j = n - 1; j >= 0; --j) {
+        T diagonalElement = U[get_ind(j,j,n)];
+
+        // Scale the row to make the diagonal element 1
+        for (I k = 0; k < n; ++k) {
+            invT[get_ind(j,k,n)] /= diagonalElement;
+        }
+
+        // Update the rest of the matrix
+        for (I i = j - 1; i >= 0; --i) {
+            T factor = U[get_ind(i,j,n)];
+            for (I k = 0; k < n; ++k) {
+                invT[get_ind(i,k,n)] -= factor * invT[get_ind(j,k,n)];
+            }
+        }
+    }
+
+    return invT;
+}
+
+// 
+// Notes: *** ONLY WORKS FOR ROW MAJOR MATRICES *** 
+// A is modified in place for QR decomp
+template<class I, class T>
+std::vector<double> matInverse(T A[], const I &n)
+{
+    // Function pointer for row or column major matrices
+    I (*get_ind)(const I, const I, const I);
+    get_ind = &row_major;
+    bool is_col_major = false;
+
+    // Take QR of A
+    std::vector<T> Q = QR<I,T>(A,n,n,is_col_major);
+
+    // Form A^(-1) = (QR)^(-1) = R^(-1)Q^T
+    std::vector<T> Ainv(n*n);
+    std::vector<T> Rinv = inverseUpperTriangular<I,T>(A, n, is_col_major);
+    // Compute R^(-1)Q^T mat-mat
+    gemm(&Rinv[0], n, n, 'F' ,&Q[0], n, n, 'F',&Ainv[0], n, n, 'F', 'T');
+
+    return Ainv;
+}
+
+
 #endif

@@ -411,3 +411,100 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     R.eliminate_zeros()
     return R
+
+
+def schwartz_air(A, splitting, theta=0.1, norm='abs', degree=1):
+    """Compute approx ideal restriction by setting RA = 0, within sparsity pattern of R.
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        NxN matrix in CSR or BSR format
+    splitting : array
+        C/F splitting stored in an array of length N
+    theta : float, default 0.1
+        Solve local system for each row of R for all values
+            |A_ij| >= 0.1 * max_{i!=k} |A_ik|
+    degree : int, default 1
+        Expand sparsity pattern for R by considering strongly connected
+        neighbors within 'degree' of a given node. Only supports degree 1 and 2.
+
+    Returns
+    -------
+    Approximate ideal restriction, R, in same sparse format as A.
+
+    Notes
+    -----
+    Supports BSR (block) matrices, in addition to CSR.
+
+    Sparsity pattern of R for the ith row (i.e. ith C-point) is the set of all
+    strongly connected F-points, or the max_row *most* strongly connected
+    F-points
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.interpolate import local_air
+    >>> import numpy as np
+    >>> A = poisson((5,),format='csr')
+    >>> splitting = np.array([1,0,1,0,1], dtype='intc')
+    >>> R = local_air(A, splitting)
+    >>> print(R.todense())
+    [[1.  0.5 0.  0.  0. ]
+     [0.  0.5 1.  0.5 0. ]
+     [0.  0.  0.  0.5 1. ]]
+    """
+    # Get SOC matrix containing neighborhood to be included in local solve
+    if isspmatrix_bsr(A):
+        C = classical_strength_of_connection(A=A, theta=theta, block=True, norm=norm)
+        blocksize = A.blocksize[0]
+    elif isspmatrix_csr(A):
+        blocksize = 1
+        C = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
+    else:
+        try:
+            A = A.tocsr()
+            warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
+            C = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
+            blocksize = 1
+        except BaseException as e:
+            raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
+
+    Cpts = np.array(np.where(splitting == 1)[0], dtype=A.indptr.dtype)
+    nc = Cpts.shape[0]
+
+    R_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
+    S_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
+    M_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
+    amg_core.approx_ideal_restriction_pass1(R_rowptr, C.indptr, C.indices,
+                                            Cpts, splitting, degree)
+
+    # Build restriction operator
+    nnz = R_rowptr[-1]
+    R_colinds = np.zeros(nnz, dtype=A.indptr.dtype)
+    S_colinds = np.zeros(nnz-nc, dtype=A.indptr.dtype)
+
+    # Block matrix
+    if isspmatrix_bsr(A):
+        # R_data = np.zeros(nnz*blocksize*blocksize, dtype=A.dtype)
+        # amg_core.block_approx_ideal_restriction_pass2(R_rowptr, R_colinds, R_data, A.indptr,
+        #                                               A.indices, A.data.ravel(), C.indptr,
+        #                                               C.indices, C.data, Cpts, splitting,
+        #                                               blocksize, degree)
+        # R = bsr_matrix((R_data.reshape((nnz, blocksize, blocksize)), R_colinds, R_rowptr),
+        #                blocksize=[blocksize, blocksize], shape=[nc*blocksize, A.shape[0]])
+        raise TypeError("schwartz_air not implemented for bsr")
+    # Not block matrix
+    else:
+        R_data = np.zeros(nnz, dtype=A.dtype)
+        M_data = np.zeros(nnz, dtype=A.dtype)
+        amg_core.sh_approx_ideal_restriction_pass2(R_rowptr, R_colinds, R_data,
+                                                S_rowptr, S_colinds,
+                                                M_rowptr, M_data, 
+                                                A.indptr, A.indices, A.data,
+                                                C.indptr, C.indices, C.data,
+                                                Cpts, splitting, degree)
+        R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
+
+    R.eliminate_zeros()
+    return R, S_rowptr, S_colinds, M_rowptr, M_data
