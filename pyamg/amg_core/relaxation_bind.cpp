@@ -1048,7 +1048,7 @@ x is modified inplace in an additive, not overwriting fashion
 
 Notes
 -----
-Primary calling routine is gass_seidel_ne in relaxation.py)pbdoc");
+Primary calling routine is gauss_seidel_ne in relaxation.py)pbdoc");
 
     m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));

@@ -200,6 +200,77 @@ py::array_t<I> & splitting,
                                                       );
 }
 
+template<class I, class T>
+void _sh_approx_ideal_restriction_pass2(
+      py::array_t<I> & Rp,
+      py::array_t<I> & Rj,
+      py::array_t<T> & Rx,
+      py::array_t<I> & Sp,
+      py::array_t<I> & Sj,
+      py::array_t<I> & Mp,
+      py::array_t<T> & Mx,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+      py::array_t<I> & Cp,
+      py::array_t<I> & Cj,
+      py::array_t<T> & Cx,
+    py::array_t<I> & Cpts,
+py::array_t<I> & splitting,
+         const I distance
+                                        )
+{
+    auto py_Rp = Rp.unchecked();
+    auto py_Rj = Rj.mutable_unchecked();
+    auto py_Rx = Rx.mutable_unchecked();
+    auto py_Sp = Sp.mutable_unchecked();
+    auto py_Sj = Sj.mutable_unchecked();
+    auto py_Mp = Mp.mutable_unchecked();
+    auto py_Mx = Mx.mutable_unchecked();
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_Cp = Cp.unchecked();
+    auto py_Cj = Cj.unchecked();
+    auto py_Cx = Cx.unchecked();
+    auto py_Cpts = Cpts.unchecked();
+    auto py_splitting = splitting.unchecked();
+    const I *_Rp = py_Rp.data();
+    I *_Rj = py_Rj.mutable_data();
+    T *_Rx = py_Rx.mutable_data();
+    I *_Sp = py_Sp.mutable_data();
+    I *_Sj = py_Sj.mutable_data();
+    I *_Mp = py_Mp.mutable_data();
+    T *_Mx = py_Mx.mutable_data();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    const I *_Cp = py_Cp.data();
+    const I *_Cj = py_Cj.data();
+    const T *_Cx = py_Cx.data();
+    const I *_Cpts = py_Cpts.data();
+    const I *_splitting = py_splitting.data();
+
+    return sh_approx_ideal_restriction_pass2<I, T>(
+                      _Rp, Rp.shape(0),
+                      _Rj, Rj.shape(0),
+                      _Rx, Rx.shape(0),
+                      _Sp, Sp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Mp, Mp.shape(0),
+                      _Mx, Mx.shape(0),
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                      _Cp, Cp.shape(0),
+                      _Cj, Cj.shape(0),
+                      _Cx, Cx.shape(0),
+                    _Cpts, Cpts.shape(0),
+               _splitting, splitting.shape(0),
+                 distance
+                                                   );
+}
+
 PYBIND11_MODULE(air, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for air.h
@@ -207,10 +278,10 @@ PYBIND11_MODULE(air, m) {
     Methods
     -------
     one_point_interpolation
-    sort_2nd
     approx_ideal_restriction_pass1
     approx_ideal_restriction_pass2
     block_approx_ideal_restriction_pass2
+    sh_approx_ideal_restriction_pass2
     )pbdoc";
 
     py::options options;
@@ -322,7 +393,7 @@ Rx[] must be passed in initialized to zero.)pbdoc");
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 Build column indices and data array for approximate ideal restriction
-in CSR format.
+in BSR format.
 
 Parameters
 ----------
@@ -358,6 +429,57 @@ Parameters
          Maximum GMRES iterations
      precondition : bool, default True
          Diagonally precondition GMRES
+
+Returns
+-------
+Nothing, Rj[] and Rx[] modified in place.
+
+Notes
+-----
+Rx[] must be passed in initialized to zero.)pbdoc");
+
+    m.def("sh_approx_ideal_restriction_pass2", &_sh_approx_ideal_restriction_pass2<int, float>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Mp").noconvert(), py::arg("Mx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"));
+    m.def("sh_approx_ideal_restriction_pass2", &_sh_approx_ideal_restriction_pass2<int, double>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Mp").noconvert(), py::arg("Mx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"),
+R"pbdoc(
+Build column indices and data array for approximate ideal restriction
+in CSR format.
+
+Parameters
+----------
+     Rp : const array<int>
+         Pre-determined row-pointer for R in CSR format
+     Rj : array<int>
+         Empty array for column indices for R in CSR format
+     Rx : array<float>
+         Empty array for data for R in CSR format
+     Sp : array<int>
+         Empty array for Schwarz subdomain pointer
+     Sj : array<int>
+         Empty array for Schwarz subdomain indices
+     Mp : array<int>
+         Empty array for Schwarz inverse pointer
+     Mx : array<float>
+         Empty array for Schwarz inverse data
+     Ap : const array<int>
+         Row pointer for matrix A
+     Aj : const array<int>
+         Column indices for matrix A
+     Ax : const array<float>
+         Data array for matrix A
+     Cp : const array<int>
+         Row pointer for SOC matrix, C
+     Cj : const array<int>
+         Column indices for SOC matrix, C
+     Cx : const array<float>
+         Data array for SOC matrix, C
+     Cpts : array<int>
+         List of global C-point indices
+     splitting : const array<int>
+         Boolean array with 1 denoting C-points and 0 F-points
+     distance : int, default 2
+         Distance of F-point neighborhood to consider, options are 1 and 2.
 
 Returns
 -------

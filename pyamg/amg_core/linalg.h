@@ -1572,7 +1572,7 @@ std::vector<T> inverseUpperTriangular(const T U[], I n,
 // Notes: *** ONLY WORKS FOR ROW MAJOR MATRICES *** 
 // A is modified in place for QR decomp
 template<class I, class T>
-std::vector<double> matInverse(T A[], const I &n)
+std::vector<T> matInverse(T A[], const I &n)
 {
     // Function pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);

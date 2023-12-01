@@ -616,7 +616,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 template<class I, class T>
 void sh_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                             I Rj[], const int Rj_size,
-                            I Rx[], const int Rx_size,
+                            T Rx[], const int Rx_size,
                             I Sp[], const int Sp_size,
                             I Sj[], const int Sj_size,
                             I Mp[], const int Mp_size,
@@ -724,7 +724,7 @@ void sh_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
         // Solve AIR system by applying inverse transpose
         if (size_N > 0) {
-            matvecT(&Ainv[0], size_N, size_N, &b0[0], &Rx[Rp[row]], false);
+            matvecT(&Ainv[0], size_N, size_N, &b0[0], &Rx[Rp[row]], 0);
         }
 
         // Add identity for C-point in this row
