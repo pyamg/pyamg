@@ -13,7 +13,7 @@ from ..strength import (classical_strength_of_connection,
 from ..util.utils import filter_matrix_rows
 from ..classical.interpolate import (direct_interpolation, classical_interpolation,
                                      injection_interpolation, one_point_interpolation,
-                                     schwartz_air)
+                                     schwarz_air)
 from .split import RS, PMIS, PMISc, CLJP, CLJPc
 from .cr import CR
 
@@ -210,7 +210,7 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     # Build restriction operator
     fn, kwargs = unpack_arg(restrict)
     if fn == 'air':
-        R, Sp, Sj, Mp, Mx = schwartz_air(A, splitting, **kwargs)
+        R, Sp, Sj, Mp, Mx = schwarz_air(A, splitting, **kwargs)
     else:
         raise ValueError(f'Unknown restriction method {fn}')
 
@@ -223,12 +223,12 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     levels[-1].R = R                               # restriction operator
 
     # Schwarz relax data
-    schwarz_smoother[-1] = ['schwarz',
+    schwarz_smoother = tuple(('schwarz',
         {'subdomain': Sj,
          'subdomain_ptr': Sp,
          'inv_subblock': Mx,
          'inv_subblock_ptr': Mp,
-         'sweep': 'forward'} ]
+         'sweep': 'forward'} ))
 
     # RAP = R*(A*P)
     A = R * A * P

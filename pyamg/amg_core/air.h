@@ -640,6 +640,7 @@ void sh_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
         // Schwarz sparse subdomain pointer (NOT INCLUDING C-POINTS!)
         Sp[row+1] = Sp[row] + nfpoints; 
+
         // Schwarz sparse inverse pointer
         Mp[row+1] = Mp[row] + nfpoints*nfpoints;
         I sh_ind = Sp[row];

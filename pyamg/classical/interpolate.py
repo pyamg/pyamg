@@ -413,7 +413,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
     return R
 
 
-def schwartz_air(A, splitting, theta=0.1, norm='abs', degree=1):
+def schwarz_air(A, splitting, theta=0.1, norm='abs', degree=1):
     """Compute approx ideal restriction by setting RA = 0, within sparsity pattern of R.
 
     Parameters
@@ -473,9 +473,9 @@ def schwartz_air(A, splitting, theta=0.1, norm='abs', degree=1):
     Cpts = np.array(np.where(splitting == 1)[0], dtype=A.indptr.dtype)
     nc = Cpts.shape[0]
 
-    R_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
-    S_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
-    M_rowptr = np.empty(nc+1, dtype=A.indptr.dtype)
+    R_rowptr = np.zeros(nc+1, dtype=A.indptr.dtype)
+    S_rowptr = np.zeros(nc+1, dtype=A.indptr.dtype)
+    M_rowptr = np.zeros(nc+1, dtype=A.indptr.dtype)
     amg_core.approx_ideal_restriction_pass1(R_rowptr, C.indptr, C.indices,
                                             Cpts, splitting, degree)
 
@@ -493,18 +493,23 @@ def schwartz_air(A, splitting, theta=0.1, norm='abs', degree=1):
         #                                               blocksize, degree)
         # R = bsr_matrix((R_data.reshape((nnz, blocksize, blocksize)), R_colinds, R_rowptr),
         #                blocksize=[blocksize, blocksize], shape=[nc*blocksize, A.shape[0]])
-        raise TypeError("schwartz_air not implemented for bsr")
+        raise TypeError("schwarz_air not implemented for bsr")
     # Not block matrix
     else:
         R_data = np.zeros(nnz, dtype=A.dtype)
-        M_data = np.zeros(nnz, dtype=A.dtype)
+        nnz_M = (R_rowptr[1:]-1-R_rowptr[:-1]) # number of F-points in each row sparsity
+        nnz_M = np.sum(nnz_M*nnz_M)
+        M_data = np.zeros(nnz_M, dtype=A.dtype)
         amg_core.sh_approx_ideal_restriction_pass2(R_rowptr, R_colinds, R_data,
                                                 S_rowptr, S_colinds,
                                                 M_rowptr, M_data, 
                                                 A.indptr, A.indices, A.data,
                                                 C.indptr, C.indices, C.data,
                                                 Cpts, splitting, degree)
-        R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
+        try:
+            R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
+        except:
+            import pdb; pdb.set_trace()
 
     R.eliminate_zeros()
     return R, S_rowptr, S_colinds, M_rowptr, M_data

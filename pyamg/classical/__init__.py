@@ -8,6 +8,7 @@ from . import cr
 
 from .classical import ruge_stuben_solver
 from .air import air_solver
+from .air_schwarz import air_schwarz_solver
 
 __all__ = [
     'air',
