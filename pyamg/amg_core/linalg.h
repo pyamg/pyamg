@@ -1060,7 +1060,7 @@ void csc_scale_rows(const I n_row,
  * num_rows : int
  *     number of rows in A
  * theta : float
- *     stength of connection tolerance
+ *     strength of connection tolerance
  * Ap : array
  *     CSR row pointer
  * Aj : array
@@ -1176,7 +1176,7 @@ std::vector<T> QR(T A[],
                   const I &n,
                   const I is_col_major)
 {
-    // Funciton pointer for row or column major matrices
+    // Function pointer for row or column major matrices
     I (*get_ind)(const I, const I, const I);
     const I *C;
     if (is_col_major) {
@@ -1429,7 +1429,7 @@ void lower_tri_solve(const T L[],
  * Returns
  * -------
  * x : vector<double>
- *    Solution to constrained least sqaures problem.
+ *    Solution to constrained least squares problem.
  *
  * Notes
  * -----
@@ -1458,7 +1458,7 @@ void least_squares(T A[],
     // Take QR of A
     std::vector<T> Q = QR(A,m,n,is_col_major);
 
-    // Multiply right hand side, b:= Q^T*b. Have to make new vetor, rhs.
+    // Multiply right hand side, b:= Q^T*b. Have to make new vector, rhs.
     std::vector<T> rhs(m,0);
     for (I i=0; i<m; i++) {
         for (I k=0; k<m; k++) {

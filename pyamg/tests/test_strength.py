@@ -73,7 +73,7 @@ class TestStrengthOfConnection(TestCase):
         result = classical_soc(BSRtest, 0.9, block=True, norm='fro')
         assert_equal(result.nnz, 6)
 
-        # Check that abs chooses largest magnitue entry in a block
+        # Check that abs chooses largest magnitude entry in a block
         # scaled by largest entry in the row
         result = classical_soc(BSRtest, 0.1, block=True, norm='abs').toarray()
         assert_allclose(result[0, 0], 4 / 9.5)

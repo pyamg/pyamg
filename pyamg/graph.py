@@ -393,7 +393,7 @@ def pseudo_peripheral_node(A):
     Returns
     -------
     x : int
-        Locaiton of the node
+        Location of the node
     order : array
         BFS ordering
     level : array

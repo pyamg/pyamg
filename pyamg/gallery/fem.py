@@ -39,12 +39,12 @@ def generate_quadratic(V, E, return_edges=False):
         ne2 x 6 list of vertices
 
     Edges : ndarray
-        ned x 2 list of edges where the midpoint is generated
+        nedge x 2 list of edges where the midpoint is generated
 
     Notes
     -----
         - midpoints are introduced and globally numbered at the end of the vertex list
-        - the element list includes the new list beteen v0-v1, v1-v2, and v2-v0
+        - the element list includes the new list between v0-v1, v1-v2, and v2-v0
 
     Examples
     --------
@@ -277,7 +277,7 @@ def refine2dtri(V, E, marked_elements=None):
 
 
 def l2norm(u, mesh):
-    """Calculate the L2 norm of a funciton on mesh (V,E).
+    """Calculate the L2 norm of a function on mesh (V,E).
 
     Parameters
     ----------
@@ -393,7 +393,7 @@ class Mesh:
     """Simple mesh object that holds vertices and mesh functions."""
 
     # pylint: disable=too-many-instance-attributes
-    # This is reasonble for this class
+    # This is reasonable for this class
 
     def __init__(self, V, E, degree=1):
         """Initialize mesh.
@@ -897,7 +897,7 @@ def applybc(A, b, mesh, bc):
             c['var'] = 0
 
     # now extend the BC
-    # for each new id, are the orignal neighboring ids in a bc?
+    # for each new id, are the original neighboring ids in a bc?
     for c in bc:
         if c['degree'] == 2:
             idx = c['id']

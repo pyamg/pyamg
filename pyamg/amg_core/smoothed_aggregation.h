@@ -30,7 +30,7 @@
  * num_rows : int
  *     number of rows in A
  * theta : float
- *     stength of connection tolerance
+ *     strength of connection tolerance
  * Ap : array
  *     CSR row pointer
  * Aj : array
@@ -1034,7 +1034,7 @@ void incomplete_mat_mult_bsr(const I Ap[], const int Ap_size,
 
 /* Swap x[i] and x[j], and
  *      y[i] and y[j]
- * Use in the qsort_twoarrays funcion
+ * Use in the qsort_twoarrays function
  */
 template<class I, class T>
 inline void swap(T x[], I y[], I i, I j )

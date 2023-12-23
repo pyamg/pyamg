@@ -261,7 +261,7 @@ Parameters
 num_rows : int
     number of rows in A
 theta : float
-    stength of connection tolerance
+    strength of connection tolerance
 Ap : array
     CSR row pointer
 Aj : array

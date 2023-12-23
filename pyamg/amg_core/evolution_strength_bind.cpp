@@ -287,9 +287,9 @@ Examples
 >>> indices = array([0,1,2,0,1,2,0,1,2])
 >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
 >>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
->>> print "Matrix BEfore Applying Filter\n" + str(S.todense())
+>>> print "Matrix before Applying Filter\n" + str(S.todense())
 >>> apply_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
->>> print "Matrix AFter Applying Filter\n" + str(S.todense()))pbdoc");
+>>> print "Matrix after Applying Filter\n" + str(S.todense()))pbdoc");
 
     m.def("min_blocks", &_min_blocks<int, float>,
         py::arg("n_blocks"), py::arg("blocksize"), py::arg("Sx").noconvert(), py::arg("Tx").noconvert());
@@ -333,10 +333,10 @@ Examples
 >>> data = round(10*rand(6,2,2), decimals=1)
 >>> S = bsr_matrix( (data,col,row), shape=(6,6) )
 >>> T = zeros(data.shape[0])
->>> print "Matrix BEfore\n" + str(S.todense())
+>>> print "Matrix before\n" + str(S.todense())
 >>> min_blocks(6, 4, ravel(S.data), T)
 >>> S2 = csr_matrix((T, S.indices, S.indptr), shape=(3,3))
->>> print "Matrix AFter\n" + str(S2.todense()))pbdoc");
+>>> print "Matrix after\n" + str(S2.todense()))pbdoc");
 
     m.def("evolution_strength_helper", &_evolution_strength_helper<int, float, float>,
         py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));

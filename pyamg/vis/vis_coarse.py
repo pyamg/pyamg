@@ -172,7 +172,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
 
         - writes a file (or opens a window) for each dof
 
-        - for Ndof>1, they are assumed orderd [...dof1..., ...dof2..., etc]
+        - for Ndof>1, they are assumed ordered [...dof1..., ...dof2..., etc]
 
     Examples
     --------

@@ -50,7 +50,7 @@ def make_csr(A):
 
 
 def solver_configuration(A, B=None, verb=True):
-    """Generate a dictionary of SA parameters for an arbitray matrix A.
+    """Generate a dictionary of SA parameters for an arbitrary matrix A.
 
     Parameters
     ----------

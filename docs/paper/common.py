@@ -21,7 +21,7 @@ def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
     alternatively, '\message{Column width: \the\columnwidth}' will print to the log
 
     \linewidth should be used in place of \columnwidth if the figure is used
-    within special enviroments (e.g. minipage)
+    within special environments (e.g. minipage)
 
     https://matplotlib.org/stable/tutorials/introductory/customizing.html
     https://scipy-cookbook.readthedocs.io/items/Matplotlib_LaTeX_Examples.html

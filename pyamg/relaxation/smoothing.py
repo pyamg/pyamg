@@ -478,7 +478,7 @@ def matrix_asformat(lvl, name, format, blocksize=None):
         setattr(lvl, desired_matrix, M)
     elif M.format == format and format == 'bsr':
         # convert to bsr with the right blocksize
-        # tobsr() will not do anything extra if this is uneeded
+        # tobsr() will not do anything extra if this is unneeded
         setattr(lvl, desired_matrix, M.tobsr(blocksize=blocksize))
     else:
         # convert

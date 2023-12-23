@@ -131,9 +131,9 @@ void apply_absolute_distance_filter(const I n_row,
  * >>> indices = array([0,1,2,0,1,2,0,1,2])
  * >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
  * >>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
- * >>> print "Matrix BEfore Applying Filter\n" + str(S.todense())
+ * >>> print "Matrix before Applying Filter\n" + str(S.todense())
  * >>> apply_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
- * >>> print "Matrix AFter Applying Filter\n" + str(S.todense())
+ * >>> print "Matrix after Applying Filter\n" + str(S.todense())
  */
 template<class I, class T>
 void apply_distance_filter(const I n_row,
@@ -207,10 +207,10 @@ void apply_distance_filter(const I n_row,
  * >>> data = round(10*rand(6,2,2), decimals=1)
  * >>> S = bsr_matrix( (data,col,row), shape=(6,6) )
  * >>> T = zeros(data.shape[0])
- * >>> print "Matrix BEfore\n" + str(S.todense())
+ * >>> print "Matrix before\n" + str(S.todense())
  * >>> min_blocks(6, 4, ravel(S.data), T)
  * >>> S2 = csr_matrix((T, S.indices, S.indptr), shape=(3,3))
- * >>> print "Matrix AFter\n" + str(S2.todense())
+ * >>> print "Matrix after\n" + str(S2.todense())
  */
 template<class I, class T>
 void min_blocks(const I n_blocks,
@@ -541,7 +541,7 @@ void evolution_strength_helper(      T Sx[], const int Sx_size,
 
 
 /* For use in incomplete_mat_mult_csr(...)
- * Calcuate <A_{row,:}, B_{:, col}>
+ * Calculate <A_{row,:}, B_{:, col}>
  *
  * Parameters
  * ----------

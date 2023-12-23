@@ -86,7 +86,7 @@ class MultilevelSolver:
         def __init__(self):
             """Raise deprecation warning on use, not import."""
             super().__init__()
-            warn('level() is deprectated.  use Level()',
+            warn('level() is deprecated.  use Level()',
                  category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
@@ -444,7 +444,7 @@ class MultilevelSolver:
                      'detected, due to presmoother/postsmoother combination. '
                      'CG requires SPD preconditioner, not just SPD matrix.')
 
-            # Check for AMLI compatability
+            # Check for AMLI compatibility
             if (accel != 'fgmres') and (cycle == 'AMLI'):
                 raise ValueError('AMLI cycles require acceleration (accel) '
                                  'to be fgmres, or no acceleration')
@@ -792,5 +792,5 @@ class multilevel_solver(MultilevelSolver):  # noqa: N801
     def __init__(self, *args, **kwargs):
         """Raise deprecation warning on use, not import."""
         super().__init__(*args, **kwargs)
-        warn('multilevel_solver is deprectated.  use MultilevelSolver()',
+        warn('multilevel_solver is deprecated.  use MultilevelSolver()',
              category=DeprecationWarning, stacklevel=2)

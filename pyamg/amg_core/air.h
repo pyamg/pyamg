@@ -128,7 +128,7 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
     I nnz = 0;
     Rp[0] = 0;
 
-    // Deterimine number of nonzeros in each row of R.
+    // Determine number of nonzeros in each row of R.
     for (I row=0; row<Cpts_size; row++) {
         I cpoint = Cpts[row];
 
@@ -288,7 +288,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         std::vector<T> b0(size_N, 0);
         for (I i=Rp[row]; i<ind; i++) {
             // Search for indice in row of A. If indice not found, b0 has been
-            // intitialized to zero.
+            // initialized to zero.
             for (I k=Ap[cpoint]; k<Ap[cpoint+1]; k++) {
                 if (Rj[i] == Aj[k]) {
                     b0[temp_b] = -Ax[k];

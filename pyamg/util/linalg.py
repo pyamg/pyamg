@@ -369,7 +369,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
                 break
 
             if breakdown_flag:
-                warn(f'Breakdown occured in step {j}')
+                warn(f'Breakdown occurred in step {j}')
                 break
         # end j-loop
 

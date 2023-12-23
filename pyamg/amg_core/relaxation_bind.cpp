@@ -1048,7 +1048,7 @@ x is modified inplace in an additive, not overwriting fashion
 
 Notes
 -----
-Primary calling routine is gass_seidel_ne in relaxation.py)pbdoc");
+Primary calling routine is gauss_seidel_ne in relaxation.py)pbdoc");
 
     m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
@@ -1132,7 +1132,7 @@ row_step : int
 omega : float
     damping parameter
 blocksize int
-    dimension of sqare blocks in BSR matrix A)pbdoc");
+    dimension of square blocks in BSR matrix A)pbdoc");
 
     m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
