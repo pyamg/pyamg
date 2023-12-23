@@ -207,7 +207,6 @@ PYBIND11_MODULE(air, m) {
     Methods
     -------
     one_point_interpolation
-    sort_2nd
     approx_ideal_restriction_pass1
     approx_ideal_restriction_pass2
     block_approx_ideal_restriction_pass2
@@ -322,7 +321,7 @@ Rx[] must be passed in initialized to zero.)pbdoc");
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 Build column indices and data array for approximate ideal restriction
-in CSR format.
+in BSR format.
 
 Parameters
 ----------

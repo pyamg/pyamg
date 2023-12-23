@@ -908,7 +908,7 @@ void gauss_seidel_nr(const I Ap[], const int Ap_size,
  * omega : float
  *     damping parameter
  * blocksize int
- *     dimension of sqare blocks in BSR matrix A
+ *     dimension of square blocks in BSR matrix A
  */
 template<class I, class T, class F>
 void block_jacobi(const I Ap[], const int Ap_size,
