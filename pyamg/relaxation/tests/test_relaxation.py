@@ -1681,7 +1681,7 @@ class TestBlockRelaxation(TestCase):
             assert_almost_equal(x, gold(A, x_copy, b, blocksize, 'symmetric'),
                                 decimal=4)
 
-        # check for aggreement between gauss_seidel and block gauss-seidel
+        # check for agreement between gauss_seidel and block gauss-seidel
         # with blocksize=1
         A = poisson((4, 5), format='csr')
         b = np.random.rand(A.shape[0])

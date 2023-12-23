@@ -323,7 +323,7 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
         update = np.zeros(x.shape, dtype=x.dtype)
         # for j in range(inner,-1,-1):
         #    update[j] += y[j]
-        #    # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*upadate
+        #    # Apply j-th reflector, (I - 2.0*w_j*w_j.T)*update
         #    update -= 2.0*dot(conjugate(W[j,:]), update)*W[j,:]
         amg_core.householder_hornerscheme(update, np.ravel(W), np.ravel(y),
                                           n, inner, -1, -1)
