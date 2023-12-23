@@ -1630,7 +1630,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         Sparse MxM matrix, where M is the number of nodes in A.  M=N if A
         is CSR or is BSR with blocksize 1.  Otherwise M = N/blocksize.
     theta : {float}
-        determines diagonal dominance threshhold
+        determines diagonal dominance threshold
 
     Returns
     -------

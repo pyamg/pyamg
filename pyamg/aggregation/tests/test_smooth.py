@@ -619,7 +619,7 @@ class TestEnergyMin(TestCase):
             assert_equal(ml_nofilter.levels[0].P.nnz
                          > ml_filter.levels[0].P.nnz, True)
 
-# class TestSatisfyConstaints(TestCase):
+# class TestSatisfyConstraints(TestCase):
 #    def test_scalar(self):
 #
 #        U = bsr_matrix([[1,2],[2,1]], blocksize=(1,1))
