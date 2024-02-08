@@ -55,7 +55,7 @@ class TestMultilevel(TestCase):
 
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, tol=1e-8, maxiter=30, M=M, atol='legacy')
+            x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M)
             # cg satisfies convergence in the preconditioner norm
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
@@ -78,24 +78,16 @@ class TestMultilevel(TestCase):
 
         # cg halts based on the preconditioner norm
         for accel in ['cg', cg]:
-            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
             residuals = []
-            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
-                         accel=accel)
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
-            # print residuals
             assert_almost_equal(precon_norm(b - A*x, ml), residuals[-1])
 
         # cgs and bicgstab use the Euclidean norm
         for accel in ['bicgstab', 'cgs', bicgstab]:
-            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
             residuals = []
-            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
-                         accel=accel)
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
             assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
-            # print residuals
             assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
 
     def test_cycle_complexity(self):
