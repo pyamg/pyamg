@@ -4,7 +4,6 @@ import numpy as np
 from numpy.testing import TestCase, assert_approx_equal, \
     assert_array_almost_equal
 from scipy import sparse
-import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse

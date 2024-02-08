@@ -279,4 +279,4 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None, mesh_type=
     if mesh_type is not None:
         valid_mesh_types = ('vertex', 'tri', 'quad', 'tet', 'hex')
         if mesh_type not in valid_mesh_types:
-            raise ValueError(f'mesh_type should be {" or ".join(valid_mesh_types)}')
+            raise ValueError(f'mesh_type should one of {valid_mesh_types}')

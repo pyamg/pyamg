@@ -2,7 +2,6 @@
 import warnings
 import numpy as np
 from scipy import sparse
-import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
 from numpy.testing import TestCase, assert_approx_equal, \
