@@ -1,4 +1,6 @@
 """Test utils."""
+import inspect
+
 import numpy as np
 from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
                           bsr_matrix, isspmatrix_bsr,
@@ -167,8 +169,12 @@ class TestUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg})
-        opts.append({'accel': cg, 'rtol': 1e-10})
+        opts.append({'accel': cg, 'atol': 0})
+
+        # does cg have rtol?
+        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 0})
+        if 'rtol' in inspect.getfullargspec(cg).args:
+            opts.append({'accel': cg, 'rtol': 1e-10, 'atol': 0})
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
@@ -1194,8 +1200,12 @@ class TestComplexUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg})
-        opts.append({'accel': cg, 'rtol': 1e-10})
+        opts.append({'accel': cg, 'atol': 0})
+
+        # does cg have rtol?
+        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 0})
+        if 'rtol' in inspect.getfullargspec(cg).args:
+            opts.append({'accel': cg, 'rtol': 1e-10, 'atol': 0})
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
