@@ -215,7 +215,7 @@ def injection_interpolation(A, splitting):
             warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             n = A.shape[0]
             blocksize = 1
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     P_rowptr = np.append(np.array([0], dtype=A.indptr.dtype),
@@ -286,7 +286,7 @@ def one_point_interpolation(A, C, splitting, by_val=False):
             warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             n = A.shape[0]
             blocksize = 1
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     nc = np.sum(splitting)
@@ -376,7 +376,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
             warn('Implicit conversion of A to csr', SparseEfficiencyWarning)
             C = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
             blocksize = 1
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     Cpts = np.array(np.where(splitting == 1)[0], dtype=A.indptr.dtype)

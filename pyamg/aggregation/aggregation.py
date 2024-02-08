@@ -213,7 +213,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         try:
             A = csr_matrix(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
                             'or be convertible to csr_matrix') from e
 
