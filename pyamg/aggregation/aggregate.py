@@ -237,7 +237,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         try:
             A = A.tocsr()
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     index_type = A.indptr.dtype

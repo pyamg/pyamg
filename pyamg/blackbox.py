@@ -37,7 +37,7 @@ def make_csr(A):
         try:
             A = csr_matrix(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Argument A must have type csr_matrix or '
                             'bsr_matrix, or be convertible to csr_matrix') from e
 
@@ -201,7 +201,7 @@ def solver(A, config):
                                         presmoother=config['presmoother'],
                                         postsmoother=config['postsmoother'],
                                         keep=config['keep'])
-    except BaseException as e:
+    except Exception as e:
         raise TypeError('Failed generating smoothed_aggregation_solver') from e
 
 
