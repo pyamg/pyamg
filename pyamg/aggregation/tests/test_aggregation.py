@@ -30,11 +30,9 @@ class TestParameters(TestCase):
             b = A * np.random.rand(A.shape[0])
 
             residuals = []
-            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
-                             residuals=residuals)
+            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10, residuals=residuals)
             del x_sol
-            convergence_ratio =\
-                (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
+            convergence_ratio = (residuals[-1] / residuals[0])**(1.0 / len(residuals))
             assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
@@ -109,11 +107,9 @@ class TestComplexParameters(TestCase):
             b = A * np.random.rand(A.shape[0])
             residuals = []
 
-            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
-                             residuals=residuals)
+            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10, residuals=residuals)
             del x_sol
-            convergence_ratio =\
-                (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
+            convergence_ratio = (residuals[-1] / residuals[0])**(1.0 / len(residuals))
             assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
