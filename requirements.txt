@@ -1,2 +1,2 @@
 numpy
-scipy>=1.7.0
+scipy>=1.8.0

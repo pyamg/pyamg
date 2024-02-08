@@ -388,12 +388,7 @@ class TestSolverPerformance(TestCase):
                                      {'iterations': 30}), 'gauss_seidel'))
         coarse_solver_pairs.append(('gauss_seidel', 'jacobi'))
         coarse_solver_pairs.append(('cg', ('cg', {'tol': 10.0})))
-        # scipy >= 1.7: pinv takes 'rtol'
-        # scipy <  1.7: pinv takes 'cond'
-        kword = 'rtol'
-        if kword not in sla.pinv.__code__.co_varnames:
-            kword = 'cond'
-        coarse_solver_pairs.append(('pinv', ('pinv', {kword: 1.0})))
+        coarse_solver_pairs.append(('pinv', ('pinv', {'rtol': 1.0})))
 
         for coarse1, coarse2 in coarse_solver_pairs:
             r1 = []

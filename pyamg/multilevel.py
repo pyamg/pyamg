@@ -457,7 +457,6 @@ class MultilevelSolver:
                     accel = getattr(krylov, accel)
                 else:
                     accel = getattr(sla, accel)
-                    kwargs['atol'] = 'legacy'
 
             M = self.aspreconditioner(cycle=cycle)
 
@@ -485,7 +484,7 @@ class MultilevelSolver:
                 else:
                     callback_wrapper = callback
 
-                x, info = accel(A, b, x0=x0, tol=tol, maxiter=maxiter, M=M,
+                x, info = accel(A, b, x0=x0, rtol=tol, maxiter=maxiter, M=M,
                                 callback=callback_wrapper, **kwargs)
                 if return_info:
                     return x, info
