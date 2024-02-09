@@ -1,4 +1,5 @@
 """Test scipy methods."""
+import inspect
 from functools import partial
 
 import numpy as np
@@ -37,20 +38,24 @@ class TestScipy(TestCase):
             x0 = case['x0']
             tol = case['tol']
 
+            kwargs = dict(tol=tol, restart=3, maxiter=2)
+
             mgsres = []
-            _ = gmres_mgs(A, b, x0, residuals=mgsres,
-                          tol=tol, restart=3, maxiter=2)
+            _ = gmres_mgs(A, b, x0, residuals=mgsres, **kwargs)
 
             hhres = []
-            _ = gmres_householder(A, b, x0, residuals=hhres,
-                                  tol=tol, restart=3, maxiter=2)
+            _ = gmres_householder(A, b, x0, residuals=hhres, **kwargs)
 
             scipyres = []
             normb = np.linalg.norm(b)
             callback = partial(cb, normb=normb)
 
-            _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm',
-                          rtol=tol, atol=0, restart=3, maxiter=2)
+            # check if scipy gmres has rtol
+            kwargs['atol'] = 0
+            if 'rtol' in inspect.getfullargspec(sla.gmres).args:
+                kwargs['rtol'] = kwargs.pop(tol)
+
+            _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm', **kwargs)
 
             assert_array_almost_equal(mgsres[1:], scipyres)
             assert_array_almost_equal(hhres[1:], scipyres)

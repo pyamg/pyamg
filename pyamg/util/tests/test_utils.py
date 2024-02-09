@@ -169,12 +169,12 @@ class TestUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg, 'atol': 0})
 
         # does cg have rtol?
-        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 0})
+        nextopt = dict(accel=cg, tol=1e-10, atol=0)
         if 'rtol' in inspect.getfullargspec(cg).args:
-            opts.append({'accel': cg, 'rtol': 1e-10, 'atol': 0})
+            nextopt['rtol'] = nextopt.pop('tol')
+        opts.append(nextopt)
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
@@ -1200,12 +1200,12 @@ class TestComplexUtils(TestCase):
 
         opts = []
         opts.append({})
-        opts.append({'accel': cg, 'atol': 0})
 
         # does cg have rtol?
-        opts.append({'accel': cg, 'tol': 1e-10, 'atol': 0})
+        nextopt = dict(accel=cg, tol=1e-10, atol=0)
         if 'rtol' in inspect.getfullargspec(cg).args:
-            opts.append({'accel': cg, 'rtol': 1e-10, 'atol': 0})
+            nextopt['rtol'] = nextopt.pop('tol')
+        opts.append(nextopt)
 
         for kwargs in opts:
             residuals = profile_solver(ml, **kwargs)
