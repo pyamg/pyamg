@@ -484,7 +484,7 @@ class MultilevelSolver:
                             callback(x)
                 else:
                     callback_wrapper = callback
-            
+
                 # for scipy solvers, see if rtol is available
                 kwargs['tol'] = tol
                 kwargs['atol'] = 0
