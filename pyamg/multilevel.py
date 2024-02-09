@@ -1,4 +1,5 @@
 """Generic AMG solver."""
+import inspect
 
 from warnings import warn
 
@@ -483,8 +484,14 @@ class MultilevelSolver:
                             callback(x)
                 else:
                     callback_wrapper = callback
+            
+                # for scipy solvers, see if rtol is available
+                kwargs['tol'] = tol
+                kwargs['atol'] = 0
+                if 'rtol' in inspect.getfullargspec(accel).args:
+                    kwargs['rtol'] = kwargs.pop(tol)
 
-                x, info = accel(A, b, x0=x0, rtol=tol, maxiter=maxiter, M=M,
+                x, info = accel(A, b, x0=x0, maxiter=maxiter, M=M,
                                 callback=callback_wrapper, **kwargs)
                 if return_info:
                     return x, info
