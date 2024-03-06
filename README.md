@@ -55,7 +55,7 @@ If you use PyAMG in your work, please consider using the following citation:
 @article{pyamg2023,
   author    = {Nathan Bell and Luke N. Olson and Jacob Schroder and Ben Southworth},
   title     = {{PyAMG}: Algebraic Multigrid Solvers in Python},
-  journal   = {Journal of Open Source Software}
+  journal   = {Journal of Open Source Software},
   year      = {2023},
   publisher = {The Open Journal},
   volume    = {8},
