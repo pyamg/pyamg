@@ -38,6 +38,8 @@ from .smoothed_aggregation import (symmetric_strength_of_connection, standard_ag
 from .air import (one_point_interpolation, approx_ideal_restriction_pass1,
                   approx_ideal_restriction_pass2, block_approx_ideal_restriction_pass2)
 
+from .sparse import csr_matvec, omp_info
+
 __all__ = [
     'apply_absolute_distance_filter',
     'apply_distance_filter',
@@ -112,4 +114,6 @@ __all__ = [
     'approx_ideal_restriction_pass2',
     'block_approx_ideal_restriction_pass2'
     #
+    'csr_matvec',
+    'omp_info'
 ]

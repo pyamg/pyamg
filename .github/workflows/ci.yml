@@ -28,7 +28,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Install
-      run: pip install -e .
+      run: pip install -v -e .
 
     - name: Test
       run: |

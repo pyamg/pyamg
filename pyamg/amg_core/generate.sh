@@ -6,3 +6,4 @@
 ./bindthem.py relaxation.h
 ./bindthem.py ruge_stuben.h
 ./bindthem.py smoothed_aggregation.h
+./bindthem.py sparse.h

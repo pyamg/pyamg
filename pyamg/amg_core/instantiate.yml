@@ -101,6 +101,7 @@ instantiate:
     - rs_classical_interpolation_pass1
     - cluster_node_incidence
     - print_it
+    - omp_info
 
 - types:
     - [int, float]
