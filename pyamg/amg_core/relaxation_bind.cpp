@@ -161,6 +161,49 @@ void _jacobi_indexed(
 }
 
 template<class I, class T, class F>
+void _jacobi_m(
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+       py::array_t<T> & b,
+    py::array_t<T> & temp,
+        const I row_start,
+         const I row_stop,
+         const I row_step,
+   py::array_t<T> & omega
+               )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_b = b.unchecked();
+    auto py_temp = temp.mutable_unchecked();
+    auto py_omega = omega.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    const T *_b = py_b.data();
+    T *_temp = py_temp.mutable_data();
+    const T *_omega = py_omega.data();
+
+    return jacobi_m<I, T, F>(
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0), x.shape(1),
+                       _b, b.shape(0), b.shape(1),
+                    _temp, temp.shape(0), temp.shape(1),
+                row_start,
+                 row_stop,
+                 row_step,
+                   _omega, omega.shape(0)
+                             );
+}
+
+template<class I, class T, class F>
 void _bsr_jacobi(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
@@ -651,6 +694,7 @@ PYBIND11_MODULE(relaxation, m) {
     bsr_gauss_seidel
     jacobi
     jacobi_indexed
+    jacobi_m
     bsr_jacobi
     bsr_jacobi_indexed
     gauss_seidel_indexed
@@ -825,6 +869,21 @@ Perform one iteration of Jacobi relaxation on the linear
 
  Returns:
      Nothing, x will be modified in place)pbdoc");
+
+    m.def("jacobi_m", &_jacobi_m<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_m", &_jacobi_m<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_m", &_jacobi_m<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_m", &_jacobi_m<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
+R"pbdoc(
+Perform one iteration of Jacobi relaxation on the linear
+ system Ax = b, where A is stored in CSR format and x and b
+ are multi-column vectors.
+
+ See jacobi() for more information)pbdoc");
 
     m.def("bsr_jacobi", &_bsr_jacobi<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());

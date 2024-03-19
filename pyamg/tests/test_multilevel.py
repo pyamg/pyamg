@@ -5,6 +5,7 @@ import numpy as np
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 from scipy import sparse
 
+from pyamg import smoothed_aggregation_solver
 from pyamg.gallery import poisson
 from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
 
@@ -96,6 +97,32 @@ class TestMultilevel(TestCase):
             assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
             assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
 
+    def test_multiple_rhs(self):
+
+        # Poisson with 4 right-hand sides
+        s = 1
+        A = poisson((50, 50), format='csr')
+        b = np.random.rand(A.shape[0], s)
+
+        # Any AMG hierarchy -- rhs independent
+        ml = smoothed_aggregation_solver(A,
+                                         max_coarse=10,
+                                         presmoother='jacobi',
+                                         postsmoother='jacobi')
+
+        # initial guess
+        residuals = []
+        x0 = np.random.rand(A.shape[0], s)
+
+        # block solve
+        x = ml.solve(b, x0=x0, maxiter=30, tol=1e-8, residuals=residuals)
+        print(residuals)
+
+        # check each
+        r = b - A * x
+        for i in range(s):
+            assert precon_norm(r[:, i], ml) < 1e-8 * precon_norm(b[:, i], ml)
+
     def test_cycle_complexity(self):
         # four levels
         levels = []
@@ -159,6 +186,7 @@ class TestComplexMultilevel(TestCase):
 
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
+                print(b.shape)
                 x = s(A, b)
                 assert_almost_equal(A*x, b)
 
