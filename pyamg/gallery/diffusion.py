@@ -31,10 +31,10 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     theta : float, optional
         Rotation angle `theta` in radians defines -div Q A Q^T grad,
         where Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].
+        The default is `theta` = 0.0
     type : {'FE','FD'}
         Specifies the discretization as Q1 finite element (FE) or 2nd order
-        finite difference (FD)
-        The default is `theta` = 0.0
+        finite difference (FD).  The default is `type` = 'FE'.
 
     Returns
     -------
