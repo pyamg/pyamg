@@ -2,6 +2,14 @@
 
 A summary of changes for PyAMG.
 
+## [5.1.0]
+- use rtol, if it exists, in Krylov solvers
+- spellcheck!
+- add python 3.12 support
+- require scipy >= 1.8.0
+- require python >= 3.8
+- address numpy/scipy deprecations
+
 ## [5.0.1]
 - update JOSS article
 
