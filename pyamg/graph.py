@@ -335,7 +335,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
 
     # create work arrays for C++
     # empty() values are initialized in the kernel
-    maxsize = int(8*np.ceil((n / num_clusters)))
+    maxsize = int(12*np.ceil((n / num_clusters)))
 
     d = np.full(n, np.inf, dtype=G.dtype)         # distance to cluster center (inf)
     m = np.full(n, -1, dtype=np.int32)            # cluster membership or index (-1)
