@@ -19,6 +19,18 @@ supporting C++ code for performance critical operations.
 from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
+# OpenMP support
+from extension_helpers._openmp_helpers import get_openmp_flags, check_openmp_support
+
+# try the automatic flags
+extra_compile_args = []
+extra_link_args = []
+openmp_flags = get_openmp_flags()
+openmpworks = check_openmp_support(openmp_flags=openmp_flags)
+if openmpworks:
+    extra_compile_args = openmp_flags.get('compiler_flags')
+    extra_link_args = openmp_flags.get('linker_flags')
+
 amg_core_headers = ['air',
                     'evolution_strength',
                     'graph',
@@ -26,10 +38,13 @@ amg_core_headers = ['air',
                     'linalg',
                     'relaxation',
                     'ruge_stuben',
-                    'smoothed_aggregation']
+                    'smoothed_aggregation',
+                    'sparse']
 
 ext_modules = [
     Pybind11Extension(f'pyamg.amg_core.{f}',
+                      extra_compile_args=extra_compile_args,
+                      extra_link_args=extra_link_args,
                       sources=[f'pyamg/amg_core/{f}_bind.cpp'],
                      )
     for f in amg_core_headers]
@@ -44,3 +59,10 @@ setup(
     ext_modules=ext_modules,
     cmdclass={'build_ext': build_ext},
 )
+
+if openmpworks:
+    print('+++++++++++++++++\n   OpenMP enabled\n+++++++++++++++++')
+else:
+    print('-----------------\n   OpenMP not enabled\n-----------------')
+print(extra_compile_args)
+print(extra_link_args)
