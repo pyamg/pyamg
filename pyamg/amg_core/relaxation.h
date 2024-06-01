@@ -71,6 +71,36 @@ void gauss_seidel(const I Ap[], const int Ap_size,
     }
 }
 
+template<class I, class T, class F>
+void sor_gauss_seidel(const I Ap[], const int Ap_size,
+                  const I Aj[], const int Aj_size,
+                  const T Ax[], const int Ax_size,
+                        T  x[], const int  x_size,
+                  const T  b[], const int  b_size,
+                  const I row_start,
+                  const I row_stop,
+                  const I row_step,
+                  const F omega)
+{
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I start = Ap[i];
+        I end   = Ap[i+1];
+        T rsum = 0;
+        T diag = 0;
+
+        for(I jj = start; jj < end; jj++){
+            I j = Aj[jj];
+            if (i == j)
+                diag  = Ax[jj];
+            else
+                rsum += Ax[jj]*x[j];
+        }
+
+        if (diag != (F) 0.0){
+            x[i] = omega*((b[i] - rsum)/diag) + (1-omega)*x[i];
+        }
+    }
+}
 
 /*
  * Perform one iteration of Gauss-Seidel relaxation on the linear
