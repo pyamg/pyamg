@@ -153,14 +153,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     x_old = np.empty_like(x)
 
     for _i in range(iterations):
-        x_old[:] = x
-
-        gauss_seidel(A, x, b, iterations=1, sweep=sweep)
-
-        x *= omega
-        x_old *= (1-omega)
-        x += x_old
-
+        gauss_seidel(A, x, b, iterations=1, sweep=sweep, omega=omega)
 
 def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
             inv_subblock=None, inv_subblock_ptr=None, sweep='forward'):
@@ -270,7 +263,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                                          row_start, row_stop, row_step)
 
 
-def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
+def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
     """Perform Gauss-Seidel iteration on the linear system Ax=b.
 
     Parameters
@@ -338,9 +331,14 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     if sparse.issparse(A) and A.format == 'csr':
-        for _iter in range(iterations):
-            amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
-                                  row_start, row_stop, row_step)
+        if omega != 1.0:
+            for _iter in range(iterations):
+                amg_core.sor_gauss_seidel(A.indptr, A.indices, A.data, x, b,
+                                      row_start, row_stop, row_step, omega)
+        else:    
+            for _iter in range(iterations):
+                amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
+                                      row_start, row_stop, row_step)
     else:
         for _iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),

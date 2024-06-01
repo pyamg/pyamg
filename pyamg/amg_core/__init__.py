@@ -13,7 +13,7 @@ from .graph import (maximal_independent_set_serial, maximal_independent_set_para
 
 from .krylov import (apply_householders, householder_hornerscheme, apply_givens)
 from .linalg import (pinv_array, csc_scale_columns, csc_scale_rows, filter_matrix_rows)
-from .relaxation import (gauss_seidel, bsr_gauss_seidel, gauss_seidel_indexed,
+from .relaxation import (gauss_seidel, sor_gauss_seidel, bsr_gauss_seidel, gauss_seidel_indexed,
                          jacobi, bsr_jacobi,
                          jacobi_ne, gauss_seidel_ne, gauss_seidel_nr,
                          block_jacobi, block_gauss_seidel,
@@ -70,6 +70,7 @@ __all__ = [
     'filter_matrix_rows',
     # relaxation
     'gauss_seidel',
+    'sor_gauss_seidel',
     'bsr_gauss_seidel',
     'jacobi',
     'bsr_jacobi',
