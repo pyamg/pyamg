@@ -150,7 +150,7 @@ class TestComplexMultilevel(TestCase):
 
         # Make cases complex
         cases = [G+1e-5j*G for G in cases]
-        cases = [0.5*(G + G.H) for G in cases]
+        cases = [0.5*(G + G.T.conjugate()) for G in cases]
 
         # method should be almost exact for small matrices
         for A in cases:

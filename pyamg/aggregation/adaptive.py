@@ -504,7 +504,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         if symmetry == 'symmetric':
             A_l = P_l.T.asformat(P_l.format) * A_l * P_l
         elif symmetry == 'hermitian':
-            A_l = P_l.H.asformat(P_l.format) * A_l * P_l
+            A_l = P_l.T.conjugate().asformat(P_l.format) * A_l * P_l
         else:
             raise ValueError(f'aSA not implemented for symmetry={symmetry}.')
 
@@ -666,7 +666,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i].R = levels[i].P.T.asformat(levels[i].P.format)
         elif symmetry == 'hermitian':
-            levels[i].R = levels[i].P.H.asformat(levels[i].P.format)
+            levels[i].R = levels[i].P.T.conjugate().asformat(levels[i].P.format)
 
         # construct coarse A
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
@@ -701,7 +701,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
         elif symmetry == 'hermitian':
-            levels[i+1].R = levels[i+1].P.H.asformat(levels[i+1].P.format)
+            levels[i+1].R = levels[i+1].P.T.conjugate().asformat(levels[i+1].P.format)
 
         # run solver on candidate
         solver = MultilevelSolver(levels[i+1:], coarse_solver=coarse_solver)

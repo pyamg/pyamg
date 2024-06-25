@@ -173,7 +173,7 @@ class MultilevelSolver:
 
         for level in levels[:-1]:
             if not hasattr(level, 'R'):
-                level.R = level.P.H
+                level.R = level.P.T.conjugate()
 
     def __repr__(self):
         """Print basic statistics about the multigrid hierarchy."""

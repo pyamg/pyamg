@@ -1179,12 +1179,12 @@ class TestComplexUtils(TestCase):
             D = 1.0/D
             assert_almost_equal(D, D_A_inv)
 
-            D = np.diag((A.H*A).toarray())
+            D = np.diag((A.T.conjugate()*A).toarray())
             assert_almost_equal(D, D_AA)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv)
 
-            D = np.diag((A*A.H).toarray())
+            D = np.diag((A*A.T.conjugate()).toarray())
             assert_almost_equal(D, D_AA2)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv2)
