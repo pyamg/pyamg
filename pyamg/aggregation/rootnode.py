@@ -323,7 +323,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     A = levels[-1].A
     B = levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        AH = A.H.asformat(A.format)
+        AH = A.T.conjugate().asformat(A.format)
         BH = levels[-1].BH
 
     # Compute the strength-of-connection matrix C, where larger
@@ -423,7 +423,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     # based on A.H.  Otherwise R = P.H or P.T.
     symmetry = A.symmetry
     if symmetry == 'hermitian':
-        R = P.H
+        R = P.T.conjugate()
     elif symmetry == 'symmetric':
         R = P.T
     elif symmetry == 'nonsymmetric':
@@ -431,9 +431,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         if fn == 'energy':
             R = energy_prolongation_smoother(AH, TH, C, BH, levels[-1].BH,
                                              Cpt_params=Cpt_params, **kwargs)
-            R = R.H
+            R = R.T.conjugate()
         elif fn is None:
-            R = T.H
+            R = T.T.conjugate()
         else:
             raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
 

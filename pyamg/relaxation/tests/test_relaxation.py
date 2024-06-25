@@ -203,9 +203,9 @@ class TestRelaxation(TestCase):
                                  [0, -1, 1], N, N).tocsr())
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             divisors =\
@@ -229,9 +229,9 @@ class TestRelaxation(TestCase):
                                  [0, -1, 1], N, N).tocsr())
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             for sweep in sweeps:
@@ -890,11 +890,11 @@ class TestComplexRelaxation(TestCase):
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
             #
             C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             #
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
                 eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             n = A.shape[0]
@@ -924,11 +924,11 @@ class TestComplexRelaxation(TestCase):
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
             #
             C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             #
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
                 eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             n = A.shape[0]

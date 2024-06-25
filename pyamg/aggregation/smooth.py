@@ -495,7 +495,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     # For non-SPD system, apply CG on Normal Equations with Diagonal
     # Preconditioning (requires transpose)
-    Ah = A.H
+    Ah = A.T.conjugate()
     Ah.sort_indices()
 
     # Preallocate
