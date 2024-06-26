@@ -1,6 +1,4 @@
 """Test utils."""
-import inspect
-
 import numpy as np
 from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
                           bsr_matrix, isspmatrix_bsr,
@@ -170,10 +168,7 @@ class TestUtils(TestCase):
         opts = []
         opts.append({})
 
-        # does cg have rtol?
-        nextopt = dict(accel=cg, tol=1e-10, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            nextopt['rtol'] = nextopt.pop('tol')
+        nextopt = dict(accel=cg, rtol=1e-10, atol=0)
         opts.append(nextopt)
 
         for kwargs in opts:
@@ -1201,10 +1196,7 @@ class TestComplexUtils(TestCase):
         opts = []
         opts.append({})
 
-        # does cg have rtol?
-        nextopt = dict(accel=cg, tol=1e-10, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            nextopt['rtol'] = nextopt.pop('tol')
+        nextopt = dict(accel=cg, rtol=1e-10, atol=0)
         opts.append(nextopt)
 
         for kwargs in opts:
