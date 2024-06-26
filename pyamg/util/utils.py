@@ -7,6 +7,7 @@ from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.linalg import eigvals
 
+# pylint: disable=no-name-in-module
 from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
                                        csr_scale_columns, bsr_scale_columns)
 
@@ -1944,6 +1945,7 @@ def filter_matrix_columns(A, theta):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
@@ -2026,6 +2028,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
@@ -2106,6 +2109,7 @@ def truncate_rows(A, nz_per_row):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     if isspmatrix_csr(A):
