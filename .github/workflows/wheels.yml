@@ -39,6 +39,7 @@ jobs:
       - name: Save wheels
         uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ matrix.runs-on }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -59,16 +60,17 @@ jobs:
       - name: Save sdist
         uses: actions/upload-artifact@v4
         with:
+          name: artifact-sdist
           path: dist/*.tar.gz
 
   upload_all:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: artifact
+        pattern: artifact-*
+        merge-multiple: true
         path: dist
 
     - uses: pypa/gh-action-pypi-publish@v1.9.0
