@@ -53,12 +53,9 @@ class TestMultilevel(TestCase):
 
         ml = smoothed_aggregation_solver(A)
 
-        kwargs = dict(tol=1e-8, maxiter=30, atol=0)
-        kwargscg = dict(rtol=1e-8, maxiter=30, atol=0)
-
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, M=M, **kwargscg)
+            x, info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
             # cg satisfies convergence in the preconditioner norm
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
