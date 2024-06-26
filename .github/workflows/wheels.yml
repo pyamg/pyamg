@@ -39,7 +39,7 @@ jobs:
       - name: Save wheels
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-${{ matrix.runs-on }}
+          name: artifact-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
