@@ -412,7 +412,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         else:
             raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
     else:
-        raise ValueError(f'Unrecognized symmetry.')
+        raise ValueError('Unrecognized symmetry.')
 
     if keep:
         levels[-1].C = C  # strength of connection matrix

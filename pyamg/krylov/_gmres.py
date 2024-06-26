@@ -117,5 +117,7 @@ def gmres(A, b, x0=None, tol=1e-5, restart=None, maxiter=None,
         (x, flag) = gmres_mgs(A, b, x0=x0, tol=tol, restart=restart,
                               maxiter=maxiter, M=M,
                               callback=callback, residuals=residuals, **kwargs)
+    else:
+        raise ValueError('orthog must be either "mgs" or "householder"')
 
     return (x, flag)
