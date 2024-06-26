@@ -148,6 +148,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         stencil = np.array([[a, b, c],
                             [d, e, d],
                             [c, b, a]])
+    else:
+        raise ValueError('only stencil types "FE" and "FD" are supported')
 
     return stencil
 

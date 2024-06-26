@@ -208,7 +208,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     if len(a) < 2:
         fname1 = a[0]
         fname2 = '.vtu'
-    elif len(a) >= 2:
+    else:
         fname1 = ''.join(a[:-1])
         fname2 = a[-1]
 
