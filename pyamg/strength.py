@@ -308,9 +308,6 @@ def symmetric_strength_of_connection(A, theta=0):
     if theta < 0:
         raise ValueError('expected a positive theta')
 
-    if not sparse.isspmatrix_csr(A) and not sparse.isspmatrix_bsr(A):
-        raise TypeError('expected csr_matrix or bsr_matrix')
-
     if sparse.isspmatrix_csr(A):
         # if theta == 0:
         #     return A
@@ -343,6 +340,8 @@ def symmetric_strength_of_connection(A, theta=0):
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
+    else:
+        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
@@ -427,6 +426,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
             raise ValueError('expected square blocks in BSR matrix A')
     else:
         bsr_flag = False
+        numPDEs = 1
 
     # Convert A to csc and Atilde to csr
     if sparse.isspmatrix_csr(A):
