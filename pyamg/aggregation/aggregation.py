@@ -301,6 +301,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     A = levels[-1].A
     B = levels[-1].B
+    AH = None
+    BH = None
+    TH = None
     if A.symmetry == 'nonsymmetric':
         AH = A.T.conjugate().asformat(A.format)
         BH = levels[-1].BH
@@ -408,6 +411,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
             R = T.T.conjugate()
         else:
             raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
+    else:
+        raise ValueError(f'Unrecognized symmetry.')
 
     if keep:
         levels[-1].C = C  # strength of connection matrix
