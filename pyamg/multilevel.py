@@ -486,10 +486,8 @@ class MultilevelSolver:
                     callback_wrapper = callback
 
                 # for scipy solvers, see if rtol is available
-                kwargs['tol'] = tol
+                kwargs['rtol'] = tol
                 kwargs['atol'] = 0
-                if 'rtol' in inspect.getfullargspec(accel).args:
-                    kwargs['rtol'] = kwargs.pop(tol)
 
                 x, info = accel(A, b, x0=x0, maxiter=maxiter, M=M,
                                 callback=callback_wrapper, **kwargs)

@@ -1,5 +1,4 @@
 """Test scipy methods."""
-import inspect
 from functools import partial
 
 import numpy as np
@@ -37,6 +36,7 @@ class TestScipy(TestCase):
             b = case['b']
             x0 = case['x0']
             tol = case['tol']
+            rtol = tol
 
             kwargs = dict(tol=tol, restart=3, maxiter=2)
 
@@ -52,8 +52,8 @@ class TestScipy(TestCase):
 
             # check if scipy gmres has rtol
             kwargs['atol'] = 0
-            if 'rtol' in inspect.getfullargspec(sla.gmres).args:
-                kwargs['rtol'] = kwargs.pop(tol)
+            kwargs['rtol'] = rtol
+            del kwargs['tol']
 
             _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm', **kwargs)
 

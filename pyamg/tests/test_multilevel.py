@@ -1,6 +1,4 @@
 """Test MultilevelSolver class."""
-import inspect
-
 import numpy as np
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 from scipy import sparse
@@ -56,12 +54,11 @@ class TestMultilevel(TestCase):
         ml = smoothed_aggregation_solver(A)
 
         kwargs = dict(tol=1e-8, maxiter=30, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            kwargs['rtol'] = kwargs.pop('tol')
+        kwargscg = dict(rtol=1e-8, maxiter=30, atol=0)
 
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, M=M, **kwargs)
+            x, info = cg(A, b, M=M, **kwargscg)
             # cg satisfies convergence in the preconditioner norm
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
