@@ -42,7 +42,7 @@ def norm(x, pnorm='2'):
     x = np.ravel(x)
 
     if pnorm == '2':
-        return np.sqrt(np.inner(x.conj(), x).real) # pylint: disable=no-member
+        return np.sqrt(np.inner(x.conj(), x).real)  # pylint: disable=no-member
 
     if pnorm == 'inf':
         return np.max(np.abs(x))
