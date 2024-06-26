@@ -319,10 +319,11 @@ def l2norm(u, mesh):
     if mesh.degree == 1:
         V = mesh.V
         E = mesh.E
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         V = mesh.V2
         E = mesh.E2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     if not isinstance(u, np.ndarray):
         raise ValueError('u must be ndarray')
@@ -361,8 +362,7 @@ def l2norm(u, mesh):
                              x,
                              y])
         basis = basis1
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         I = np.arange(6)
 
         def basis2(x, y):
@@ -373,6 +373,8 @@ def l2norm(u, mesh):
                              4*x*y,
                              4*y*(1-x-y)])
         basis = basis2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     for e in E:
         x = V[e, 0]
@@ -663,11 +665,12 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         E = mesh.E
         X = mesh.X
         Y = mesh.Y
-
-    if degree == 2:
+    elif degree == 2:
         E = mesh.E2
         X = mesh.X2
         Y = mesh.Y2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     # allocate sparse matrix arrays
     m = 3 if degree == 1 else 6
@@ -918,6 +921,8 @@ def applybc(A, b, mesh, bc):
         elif c['degree'] == 2:
             X = mesh.X2
             Y = mesh.Y2
+        else:
+            raise ValueError('only mesh.degree 1 or 2 supported')
         u0[idx] = c['g'](X[idx], Y[idx])
 
     # lift (2 of 3)
