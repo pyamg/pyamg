@@ -1,6 +1,4 @@
 """Generic AMG solver."""
-import inspect
-
 from warnings import warn
 
 import scipy as sp

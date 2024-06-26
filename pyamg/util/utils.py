@@ -11,7 +11,7 @@ from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
                                        csr_scale_columns, bsr_scale_columns)
 
 # pylint: disable=unused-import
-from scipy.sparse.linalg._isolve.utils import make_system
+from scipy.sparse.linalg._isolve.utils import make_system  # noqa: F401
 from scipy.sparse._sputils import upcast
 
 from .. import amg_core
