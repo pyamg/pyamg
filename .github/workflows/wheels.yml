@@ -49,6 +49,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
+          ref: v5.2.1
           fetch-depth: 0
 
       - name: Install pypa/build
