@@ -9,4 +9,4 @@ requires = [
 
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"
-write_to = "pyamg/version.py"
+version_file = "pyamg/version.py"
