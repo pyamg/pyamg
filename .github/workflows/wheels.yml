@@ -49,6 +49,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
+          # uncomment to force a wheel build
           ref: v5.2.1
           fetch-depth: 0
 
@@ -82,3 +83,6 @@ jobs:
         path: dist
     - name: publish to pypi
       uses: pypa/gh-action-pypi-publish@v1.9.0
+      with:
+        # uncomment to force a wheel build
+        skip-existing: true
