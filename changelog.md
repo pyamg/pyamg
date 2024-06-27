@@ -2,6 +2,9 @@
 
 A summary of changes for PyAMG.
 
+## [5.2.1]
+- update wheel building and versioning
+
 ## [5.2.0]
 - use rtol, in Krylov solvers
 - require scipy >= 1.11.0
