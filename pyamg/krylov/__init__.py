@@ -42,15 +42,15 @@ from ._steepest_descent import steepest_descent
 from ._minimal_residual import minimal_residual
 
 __all__ = [
+    'bicgstab',
+    'cg',
+    'cgne',
+    'cgnr',
+    'cr',
+    'fgmres',
     'gmres',
     'gmres_householder',
     'gmres_mgs',
-    'fgmres',
-    'cg',
-    'cr',
-    'cgnr',
-    'cgne',
-    'bicgstab',
-    'steepest_descent',
-    'minimal_residual'
+    'minimal_residual',
+    'steepest_descent'
 ]
