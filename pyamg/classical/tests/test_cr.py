@@ -10,8 +10,6 @@ class TestCR(TestCase):
     def setUp(self):
         self.cases = []
 
-        #
-
         # Random matrices, cases 0-2
         np.random.seed(0)
         for N in [2, 3, 5]:

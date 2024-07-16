@@ -436,7 +436,6 @@ class TestEnergyMin(TestCase):
                       'maxiter': 3, 'prefilter': {'theta': 0.05}}),
                      name))
 
-        #
         name = 'linear elasticity'
         A, B = linear_elasticity((10, 10))
         cases.append((A, B, ('jacobi',
