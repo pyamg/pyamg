@@ -1165,6 +1165,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
@@ -1229,6 +1230,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 

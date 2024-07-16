@@ -44,6 +44,7 @@ def poisson(grid, dtype=float, format=None, type='FD'):
            [-1.,  0.,  0.,  4., -1.,  0.],
            [ 0., -1.,  0., -1.,  4., -1.],
            [ 0.,  0., -1.,  0., -1.,  4.]])
+
     """
     grid = tuple(grid)
 

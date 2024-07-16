@@ -49,6 +49,7 @@ class MultilevelSolver:
         grid.  This can be used, for example, to precondition a
         quadratic finite element discretization with AMG built from
         a linear discretization on quadratic quadrature points.
+
     """
 
     class Level:
@@ -303,6 +304,7 @@ class MultilevelSolver:
         This also changes the corresponding relaxation routines on the fine
         grid.  This can be used, for example, to precondition a
         quadratic finite element discretization with linears.
+
         """
         self.levels[0].A = A
 
@@ -560,6 +562,7 @@ class MultilevelSolver:
             cycle = 'AMLI', AMLI-cycle
         cycles_per_level : int, default 1
             Number of V-cycles on each level of an F-cycle
+
         """
         A = self.levels[lvl].A
 

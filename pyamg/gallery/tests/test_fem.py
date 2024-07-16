@@ -71,6 +71,7 @@ class TestL2Norm(np.testing.TestCase):
         - testing formed with sympy
           from sympy import *
           x, y = symbols("x y")
+
     """
 
     def test_l2norm(self):

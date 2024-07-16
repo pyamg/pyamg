@@ -2156,6 +2156,7 @@ def scale_block_inverse(A, blocksize):
            [ 0.        ,  1.        , -0.66666667,  0.        ],
            [ 0.        , -0.66666667,  1.        ,  0.        ],
            [ 0.        , -0.33333333,  0.        ,  1.        ]])
+
     """
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')

@@ -231,6 +231,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
     method. Electronic transactions on numerical analysis, 37(6),
     123-146.
+
     """
     # Get SOC matrix
     if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):

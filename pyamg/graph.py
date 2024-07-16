@@ -141,6 +141,7 @@ def bellman_ford(G, seeds):
     See Also
     --------
     scipy.sparse.csgraph.bellman_ford
+
     """
     G = asgraph(G)
     N = G.shape[0]
