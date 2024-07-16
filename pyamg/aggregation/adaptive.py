@@ -462,7 +462,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             C_l = A_l.tocsr()
         else:
-            raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
+            raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
 
         # In SA, strength represents 'distance', so we take magnitude of
         # complex values
@@ -483,7 +483,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn == 'predefined':
             AggOp = kwargs['AggOp'].tocsr()
         else:
-            raise ValueError(f'Unrecognized aggregation method {str(fn)}')
+            raise ValueError(f'Unrecognized aggregation method {fn!s}')
 
         T_l, x = fit_candidates(AggOp, x)  # step 4c
 
@@ -498,7 +498,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             P_l = T_l
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
         # R should reflect A's structure # step 4e
         if symmetry == 'symmetric':
@@ -660,7 +660,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i].P = T
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
         # construct R
         if symmetry == 'symmetric':  # R should reflect A's structure
@@ -695,7 +695,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i+1].P = T_bridge
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method {fn!s}')
 
         # construct the 'bridging' R
         if symmetry == 'symmetric':  # R should reflect A's structure

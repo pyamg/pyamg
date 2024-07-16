@@ -351,7 +351,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
+        raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -374,7 +374,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
     else:
-        raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
+        raise ValueError(f'Unrecognized aggregation method: {fn!s}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
@@ -416,7 +416,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+        raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     # Compute the restriction matrix R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
@@ -435,7 +435,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         elif fn is None:
             R = T.T.conjugate()
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     if keep:
         levels[-1].C = C                         # strength of connection matrix
