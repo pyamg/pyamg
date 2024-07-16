@@ -168,7 +168,7 @@ class TestUtils(TestCase):
         opts = []
         opts.append({})
 
-        nextopt = dict(accel=cg, rtol=1e-10, atol=0)
+        nextopt = {'accel': cg, 'rtol': 1e-10, 'atol': 0}
         opts.append(nextopt)
 
         for kwargs in opts:
@@ -261,7 +261,7 @@ class TestUtils(TestCase):
                 for (A, x, b) in zip(As, xs, bs):
                     kwargs_linop = dict(kwargs)
                     # run relaxation as a linear operator
-                    if kwargs_linop == dict():
+                    if kwargs_linop == {}:
                         relax = relaxation_as_linear_operator(method, A, b)
                     else:
                         fmethod = (method, kwargs_linop)
@@ -1196,7 +1196,7 @@ class TestComplexUtils(TestCase):
         opts = []
         opts.append({})
 
-        nextopt = dict(accel=cg, rtol=1e-10, atol=0)
+        nextopt = {'accel': cg, 'rtol': 1e-10, 'atol': 0}
         opts.append(nextopt)
 
         for kwargs in opts:
