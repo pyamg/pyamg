@@ -1,8 +1,8 @@
 """Test clustering."""
 import numpy as np
-import pyamg.amg_core as amg_core
+from pyamg import amg_core
 from pyamg.gallery import load_example
-import scipy.sparse as sparse
+from scipy import sparse
 
 from numpy.testing import TestCase, assert_equal, assert_array_equal
 

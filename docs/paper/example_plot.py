@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from common import set_figure
@@ -27,7 +28,6 @@ ax.set_yticklabels([rf'10\textsuperscript{{{y}}}' for y in yticks])
 ax.grid(True)
 
 figname = 'example.pdf'
-import sys
 if '--savefig' in sys.argv:
     plt.savefig(figname, bbox_inches='tight')
 else:

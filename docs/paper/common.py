@@ -1,10 +1,10 @@
 import matplotlib
 import numpy as np
-from cycler import cycler
 
 
 def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
-    r"""
+    r"""Set figure settings.
+
     Parameters
     ----------
     fontsize : float

@@ -236,7 +236,7 @@ def reference_pairwise_aggregation(C):
     while (count < n):
         for k in range(0, max_m+1):
             if mmap[k]:
-                i = list(mmap[k].keys())[0]
+                i = next(iter(mmap[k].keys()))
                 break
 
         row = S[i]
