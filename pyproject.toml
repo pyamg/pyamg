@@ -55,6 +55,7 @@ ignore = [
     "PLR2004", # magic-value-comparison
     "PLR1702", # too-many-nested-blocks
     "PLW2901", # redefined-loop-name
+    "PLR6201", # literal-membership 
     #disable=invalid-name
     #too-many-lines
     #too-many-statements
