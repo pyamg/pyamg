@@ -833,8 +833,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
         # Update colwidths if row[j] is wider than colwidth[j]
         for j, r in enumerate(row):
-            if len(r) > colwidths[j]:
-                colwidths[j] = len(r)
+            colwidths[j] = max(len(r), colwidths[j])
 
     # Factor in extra column padding
     for i, _ in enumerate(colwidths):

@@ -551,8 +551,7 @@ def reference_classical_soc(A, theta, norm='abs'):
     for i in range(S.shape[0]):
         for j in range(S.indptr[i], S.indptr[i+1]):
             val = abs(S.data[j])
-            if val > largest_row_entry[i]:
-                largest_row_entry[i] = val
+            largest_row_entry[i] = max(val, largest_row_entry[i])
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
@@ -599,8 +598,7 @@ def reference_symmetric_soc(A, theta):
     for i in range(S.shape[0]):
         for j in range(S.indptr[i], S.indptr[i+1]):
             val = abs(S.data[j])
-            if val > largest_row_entry[i]:
-                largest_row_entry[i] = val
+            largest_row_entry[i] = max(val, largest_row_entry[i])
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
@@ -794,8 +792,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     for i in range(Atilde.shape[0]):
         for j in range(Atilde.indptr[i], Atilde.indptr[i+1]):
             val = abs(Atilde.data[j])
-            if val > largest_row_entry[i]:
-                largest_row_entry[i] = val
+            largest_row_entry[i] = max(val, largest_row_entry[i])
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
@@ -862,8 +859,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     for i in range(C.shape[0]):
         for j in range(C.indptr[i], C.indptr[i+1]):
             val = abs(C.data[j])
-            if val > largest_row_entry[i]:
-                largest_row_entry[i] = val
+            largest_row_entry[i] = max(val, largest_row_entry[i])
 
     largest_row_entry[largest_row_entry != 0] =\
         1.0 / largest_row_entry[largest_row_entry != 0]
