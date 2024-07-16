@@ -1,3 +1,4 @@
+"""Common figure settings."""
 import matplotlib
 import numpy as np
 

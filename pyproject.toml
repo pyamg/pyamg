@@ -84,4 +84,4 @@ ignore-names = [
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
 inline-quotes = "single"
-multiline-quotes = "single"
+multiline-quotes = "double"

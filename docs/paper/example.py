@@ -1,3 +1,4 @@
+"""Example for the paper."""
 import pyamg
 import numpy as np
 

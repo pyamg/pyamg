@@ -9,8 +9,7 @@ from .util.linalg import ishermitian
 
 
 def make_csr(A):
-    """
-    Convert A to CSR, if A is not a CSR or BSR matrix already.
+    """Convert A to CSR, if A is not a CSR or BSR matrix already.
 
     Parameters
     ----------
