@@ -49,6 +49,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
      [0.  1.  0. ]
      [0.  0.5 0.5]
      [0.  0.  1. ]]
+
     """
     if not isspmatrix_csr(A):
         raise TypeError('expected csr_matrix for A')
@@ -127,6 +128,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
      [ 0.   1.   0. ]
      [ 0.   0.5  0.5]
      [ 0.   0.   1. ]]
+
     """
     if not isspmatrix_csr(A):
         raise TypeError('expected csr_matrix for A')
@@ -202,6 +204,7 @@ def injection_interpolation(A, splitting):
      [0. 1. 0.]
      [0. 0. 0.]
      [0. 0. 1.]]
+
     """
     if isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
@@ -273,6 +276,7 @@ def one_point_interpolation(A, C, splitting, by_val=False):
      [0. 1. 0.]
      [0. 1. 0.]
      [0. 0. 1.]]
+
     """
     if isspmatrix_bsr(A):
         blocksize = A.blocksize[0]
@@ -362,6 +366,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
     [[1.  0.5 0.  0.  0. ]
      [0.  0.5 1.  0.5 0. ]
      [0.  0.  0.  0.5 1. ]]
+
     """
     # Get SOC matrix containing neighborhood to be included in local solve
     if isspmatrix_bsr(A):

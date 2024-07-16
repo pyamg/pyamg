@@ -436,6 +436,7 @@ class TestComplexSolverPerformance(TestCase):
         "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
+
     """
 
     def setUp(self):

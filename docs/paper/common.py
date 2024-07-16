@@ -27,6 +27,7 @@ def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
     https://matplotlib.org/stable/tutorials/introductory/customizing.html
     https://scipy-cookbook.readthedocs.io/items/Matplotlib_LaTeX_Examples.html
     https://tex.stackexchange.com/questions/16942/difference-between-textwidth-linewidth-and-hsize
+
     """
     fig_width_pt = width
     inches_per_pt = 1.0/72.27               # Convert pt to inch

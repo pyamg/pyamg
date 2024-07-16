@@ -22,6 +22,7 @@ Function pointer for the appropriate relaxation method for level=lvl
 Examples
 --------
 See change_smoothers above
+
 """
 
 from functools import partial, update_wrapper
@@ -888,6 +889,7 @@ def rebuild_smoother(lvl):
     This rebuilds a smoother on level lvl using the existing pre
     and post smoothers.  If different methods are needed, see
     `change_smoothers`.
+
     """
     try:
         fn1 = lvl.presmoother.__name__

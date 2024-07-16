@@ -66,6 +66,7 @@ def generate_quadratic(V, E, return_edges=False):
     >>> print(E2)
     [[0 1 2 4 5 6]
      [2 3 1 7 8 5]]
+
     """
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
@@ -183,6 +184,7 @@ def refine2dtri(V, E, marked_elements=None):
         /    \    / |
       /       \  /  |
     n0 --------n3-- n1
+
     """
     Nel = E.shape[0]
     Nv = V.shape[0]
@@ -315,6 +317,7 @@ def l2norm(u, mesh):
     >>> unorm = fem.l2norm(u, mesh)
     >>> print(f'{unorm:2.6}')
     1.08012
+
     """
     if mesh.degree == 1:
         V = mesh.V
@@ -407,6 +410,7 @@ class Mesh:
 
         E : ndarray
             ne x 3 list of vertices
+
         """
         # check to see if E is numbered 0 ... nv
         ids = np.full((E.max()+1,), False)
@@ -458,6 +462,7 @@ class Mesh:
         ----------
         levels : int
             Number of refinement levels.
+
         """
         self.V2 = None
         self.E2 = None
@@ -644,6 +649,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     [0.  0.  0.  0.5 1.  0.5 0.  0.  0. ]
     >>> print(u)
     [0.  0.  0.  0.5 0.5 0.5 0.  0.  0. ]
+
     """
     if degree not in [1, 2]:
         raise ValueError('degree = 1 or 2 supported')
@@ -779,6 +785,7 @@ def divform(mesh):
     -------
     BX, BY : ndarray
         div block B = [BX, BY].T in [[A, B], [B.T 0]]
+
     """
     if mesh.V2 is None:
         mesh.generate_quadratic()
@@ -888,6 +895,7 @@ def applybc(A, b, mesh, bc):
         Modified, assembled sparse matrix
     b : ndarray
         Modified, assembled right-hand side
+
     """
     for c in bc:
         if not callable(c['g']):
@@ -986,5 +994,6 @@ def model(num=0):
     See Also
     --------
     poissonfem - build the FE matrix and right hand side
+
     """
     raise NotImplementedError(f'model (num={num}) is unimplemented')

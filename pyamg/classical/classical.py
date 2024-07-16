@@ -87,6 +87,7 @@ def ruge_stuben_solver(A,
     --------
     aggregation.smoothed_aggregation_solver, MultilevelSolver,
     aggregation.rootnode_solver
+
     """
     levels = [MultilevelSolver.Level()]
 
