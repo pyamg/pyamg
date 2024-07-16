@@ -38,7 +38,7 @@ class TestScipy(TestCase):
             tol = case['tol']
             rtol = tol
 
-            kwargs = dict(tol=tol, restart=3, maxiter=2)
+            kwargs = {'tol': tol, 'restart': 3, 'maxiter': 2}
 
             mgsres = []
             _ = gmres_mgs(A, b, x0, residuals=mgsres, **kwargs)
