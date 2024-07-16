@@ -735,8 +735,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
                                   4*y*(1-x-y)])
 
                 dbasis = np.array([
-                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                    [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                    [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
                 ])
 
                 # Step 4
@@ -833,8 +833,8 @@ def divform(mesh):
             #                   4*y*(1-x-y)])
 
             dbasis = np.array([
-                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
             ])
 
             dphi = invJ.dot(dbasis)

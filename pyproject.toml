@@ -65,7 +65,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
     "pyamg/gallery/tests/test_fem.py" = ["E201", "E202", "E203"]
-    "test*.py" = ["N802", "N803", "D101", "D102", "D103"]
+    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221"]
     "**/tests/__init__.py" = ["D104"]
     "docs/logo/pyamg_logo.py" = ["PLR0916"]
     "pyamg/util/utils.py" = ["PLC2701"]
