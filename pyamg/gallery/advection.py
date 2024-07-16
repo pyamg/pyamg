@@ -5,8 +5,7 @@ from .stencil import stencil_grid
 
 
 def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
-    """
-    Generate matrix and RHS for upwind FD discretization of 2D advection.
+    """Generate matrix and RHS for upwind FD discretization of 2D advection.
 
         (cos(theta),sin(theta)) dot grad(u) = 0,
 

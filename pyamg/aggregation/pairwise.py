@@ -21,8 +21,7 @@ def pairwise_solver(A,
                                   {'sweep': 'symmetric'}),
                     max_levels=20, max_coarse=10,
                     **kwargs):
-    """
-    Create a multilevel solver using Pairwise Aggregation.
+    """Create a multilevel solver using Pairwise Aggregation.
 
     Parameters
     ----------
