@@ -18,7 +18,7 @@ ax.semilogy(res, marker='o', color='tab:gray',
 ax.set_xlabel('V-cycle iterations')
 ax.set_ylabel('residual')
 
-xticks = [0,5,10,15,20,25]
+xticks = [0, 5, 10, 15, 20, 25]
 ax.set_xticks(xticks)
 ax.set_xticklabels([f'{x}' for x in xticks])
 
