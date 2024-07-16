@@ -55,14 +55,14 @@ class TestMultilevel(TestCase):
 
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
+            x, _info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
             # cg satisfies convergence in the preconditioner norm
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
             res = []
-            x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
+            x, _info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
             assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
 

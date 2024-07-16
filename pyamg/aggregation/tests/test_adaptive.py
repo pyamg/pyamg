@@ -16,7 +16,7 @@ class TestAdaptiveSA(TestCase):
     def test_poisson(self):
         A = poisson((50, 50), format='csr')
 
-        [asa, work] = adaptive_sa_solver(A, num_candidates=1)
+        [asa, _work] = adaptive_sa_solver(A, num_candidates=1)
         sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0], 1)))
 
         b = np.random.rand(A.shape[0])
@@ -41,7 +41,7 @@ class TestAdaptiveSA(TestCase):
         A, B = linear_elasticity((35, 35), format='bsr')
 
         smoother = ('gauss_seidel', {'sweep': 'symmetric', 'iterations': 2})
-        [asa, work] = adaptive_sa_solver(A, num_candidates=3,
+        [asa, _work] = adaptive_sa_solver(A, num_candidates=3,
                                          improvement_iters=5,
                                          prepostsmoother=smoother)
         sa = smoothed_aggregation_solver(A, B=B)
@@ -107,7 +107,7 @@ class TestComplexAdaptiveSA(TestCase):
         # cases.append((Ai,0.8))
 
         for A, rratio in cases:
-            [asa, work] = adaptive_sa_solver(A, num_candidates=1, symmetry='symmetric')
+            [asa, _work] = adaptive_sa_solver(A, num_candidates=1, symmetry='symmetric')
             # sa = smoothed_aggregation_solver(A, B = np.ones((A.shape[0],1)) )
 
             b = np.zeros((A.shape[0],))
