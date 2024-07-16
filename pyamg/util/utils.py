@@ -1066,15 +1066,14 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
                 for jj in range(3, 6):
                     if ii == (jj-3):
                         rbm[dof+ii, jj] = 0.0
+                    elif (ii+jj) == 4:
+                        rbm[dof+ii, jj] = z[node]
+                    elif (ii+jj) == 5:
+                        rbm[dof+ii, jj] = y[node]
+                    elif (ii+jj) == 6:
+                        rbm[dof+ii, jj] = x[node]
                     else:
-                        if (ii+jj) == 4:
-                            rbm[dof+ii, jj] = z[node]
-                        elif (ii+jj) == 5:
-                            rbm[dof+ii, jj] = y[node]
-                        elif (ii+jj) == 6:
-                            rbm[dof+ii, jj] = x[node]
-                        else:
-                            rbm[dof+ii, jj] = 0.0
+                        rbm[dof+ii, jj] = 0.0
 
             ii = 0
             jj = 5
@@ -1827,12 +1826,10 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
             # to_levelize is a list that ends with a predefined operator
             max_levels = len(to_levelize) + 1
             max_coarse = 0
-        else:
-            # to_levelize a list that __doesn't__ end with 'predefined'
-            if len(to_levelize) < max_levels-1:
-                mlz = max_levels - 1 - len(to_levelize)
-                toext = [to_levelize[-1] for i in range(mlz)]
-                to_levelize.extend(toext)
+        elif len(to_levelize) < max_levels-1:
+            mlz = max_levels - 1 - len(to_levelize)
+            toext = [to_levelize[-1] for i in range(mlz)]
+            to_levelize.extend(toext)
 
     elif to_levelize is None:
         to_levelize = [(None, {}) for i in range(max_levels-1)]

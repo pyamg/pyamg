@@ -65,11 +65,10 @@ def make_system(A, x, b, formats=None):
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
+    elif sparse.isspmatrix(A) and A.format in formats:
+        pass
     else:
-        if sparse.isspmatrix(A) and A.format in formats:
-            pass
-        else:
-            A = sparse.csr_matrix(A).asformat(formats[0])
+        A = sparse.csr_matrix(A).asformat(formats[0])
 
     if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')

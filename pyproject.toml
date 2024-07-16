@@ -72,7 +72,7 @@ ignore = [
 ignore-names = [
     # matrix and set-like names
     "A", "M", "Dinv", "G", "S", "B", "T", "V", "E", "C", "R", "W", "F", "AggOp",
-    "U", "Q", ", ", "Binv", "B_old", "BH", "scale_T", "Cnodes",
+    "U", "Q", "BtBinv", "B_old", "BH", "scale_T", "Cnodes",
     "Cpt_params", "get_Cpt_params", "compute_P", "E2V",
     "compute_BtBinv", "Atilde", "Findex", "Cindex",
     "Bf", "P_I", "I_F", "rho_D_inv_A", "rho_block_D_inv_A",
