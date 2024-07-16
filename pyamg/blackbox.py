@@ -277,10 +277,9 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         # Generate solver
         existing_solver = solver(A, config)
 
-    else:
-        if existing_solver.levels[0].A.shape[0] != A.shape[0]:
-            raise TypeError('Argument existing_solver must have level 0 matrix\
-                             of same size as A')
+    elif existing_solver.levels[0].A.shape[0] != A.shape[0]:
+        raise TypeError('Argument existing_solver must have level 0 matrix\
+                         of same size as A')
 
     # Krylov acceleration depends on symmetry of A
     if existing_solver.levels[0].A.symmetry == 'hermitian':
