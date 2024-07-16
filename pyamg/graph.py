@@ -375,7 +375,7 @@ def symmetric_rcm(A):
     pseudo_peripheral_node
 
     """
-    dummy_root, order, dummy_level = pseudo_peripheral_node(A)
+    _dummy_root, order, _dummy_level = pseudo_peripheral_node(A)
 
     p = order[::-1]
 

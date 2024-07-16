@@ -156,7 +156,7 @@ class TestComplexLinalg(TestCase):
         # method should be almost exact for small matrices
         for A in cases:
             Asp = csr_matrix(A)
-            [E, V] = linalg.eig(A)
+            [E, _V] = linalg.eig(A)
             E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
@@ -179,7 +179,7 @@ class TestComplexLinalg(TestCase):
 
             AA = A.conj().T.dot(A)
             AAsp = csr_matrix(AA)
-            [E, V] = linalg.eig(AA)
+            [E, _V] = linalg.eig(AA)
             E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
             expected_eig = E[largest_eig]
@@ -235,7 +235,7 @@ class TestComplexLinalg(TestCase):
             cases.append(A)
 
         for A in cases:
-            U, Sigma, Vh = svd(A)
+            _U, Sigma, _Vh = svd(A)
             exact = max(Sigma)/min(Sigma)
             c = cond(A)
             assert_almost_equal(exact, c)
@@ -261,7 +261,7 @@ class TestComplexLinalg(TestCase):
             cases.append(A)
 
         for A in cases:
-            U, Sigma, Vh = svd(A)
+            _U, Sigma, _Vh = svd(A)
             exact = max(Sigma)/min(Sigma)
             c = condest(A, symmetric=True)
             assert_almost_equal(exact, c)
@@ -275,7 +275,7 @@ class TestComplexLinalg(TestCase):
             cases.append(A)
 
         for A in cases:
-            U, Sigma, Vh = svd(A)
+            _U, Sigma, _Vh = svd(A)
             exact = max(Sigma)/min(Sigma)
             c = condest(A, symmetric=False)
             assert_almost_equal(exact, c)
