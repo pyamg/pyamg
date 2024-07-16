@@ -986,7 +986,5 @@ def model(num=0):
     See Also
     --------
     poissonfem - build the FE matrix and right hand side
-    Notes
-    -----
     """
     raise NotImplementedError(f'model (num={num}) is unimplemented')

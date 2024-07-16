@@ -83,7 +83,7 @@ def stencil_grid(S, grid, dtype=None, format=None):
     diags = np.zeros(N_s, dtype=int)
 
     # compute index offset of each dof within the stencil
-    strides = np.cumprod([1] + list(reversed(grid)))[:-1]
+    strides = np.cumprod([1] + list(reversed(grid)))[:-1]  # noqa: RUF005
     indices = tuple(i.copy() for i in S.nonzero())
     for i, s in zip(indices, S.shape):
         i -= s // 2

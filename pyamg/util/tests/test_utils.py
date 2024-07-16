@@ -261,7 +261,7 @@ class TestUtils(TestCase):
                 for (A, x, b) in zip(As, xs, bs):
                     kwargs_linop = dict(kwargs)
                     # run relaxation as a linear operator
-                    if kwargs_linop == dict({}):
+                    if kwargs_linop == dict():
                         relax = relaxation_as_linear_operator(method, A, b)
                     else:
                         fmethod = (method, kwargs_linop)

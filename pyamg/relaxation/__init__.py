@@ -31,4 +31,4 @@ from . import relaxation
 from . import smoothing
 # from . import utils
 
-__all__ = ['chebyshev', 'relaxation', 'smoothing', 'utils']
+__all__ = ['chebyshev', 'relaxation', 'smoothing']
