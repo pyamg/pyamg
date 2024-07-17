@@ -56,6 +56,7 @@ ignore = [
     "PLR1702", # too-many-nested-blocks
     "PLW2901", # redefined-loop-name
     "PLR6201", # literal-membership 
+    "B028",    # no-explicit-stacklevel
     #disable=invalid-name
     #too-many-lines
     #too-many-statements
@@ -66,7 +67,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
     "pyamg/gallery/tests/test_fem.py" = ["E201", "E202", "E203"]
-    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221"]
+    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221", "PLC0415"]
     "**/tests/__init__.py" = ["D104"]
     "docs/logo/pyamg_logo.py" = ["PLR0916"]
     "pyamg/util/utils.py" = ["PLC2701"]
