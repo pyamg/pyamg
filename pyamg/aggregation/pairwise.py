@@ -43,6 +43,8 @@ def pairwise_solver(A,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
+    kwargs : dict
+        Extra keywords passed to the Multilevel class
 
     Other Parameters
     ----------------

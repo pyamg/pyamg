@@ -54,6 +54,8 @@ def ruge_stuben_solver(A,
     keep : bool, default False
         Flag to indicate keeping strength of connection (C) in the
         hierarchy for diagnostics.
+    kwargs : dict
+        Extra keywords passed to Multilevel class
 
     Returns
     -------

@@ -30,6 +30,8 @@ def maximal_independent_set(G, algo='serial', k=None):
         Algorithm used to compute the MIS
             * serial   : greedy serial algorithm
             * parallel : variant of Luby's parallel MIS algorithm
+    k : int
+        Minimum separation between MIS vertices
 
     Returns
     -------

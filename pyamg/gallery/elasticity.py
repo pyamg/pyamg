@@ -140,6 +140,8 @@ def q12d_local(vertices, lame, mu):
 
     Parameters
     ----------
+    vertices : array
+        List of vertices
     lame : Float
         Lame's first parameter
     mu : Float

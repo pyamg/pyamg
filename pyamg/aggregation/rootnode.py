@@ -117,6 +117,8 @@ def rootnode_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
+    kwargs : dict
+        Extra keywords passed to the Multilevel class
 
     Other Parameters
     ----------------

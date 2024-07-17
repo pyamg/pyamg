@@ -1011,7 +1011,16 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A {csr_matrix}
+    A : csr_matrix
+        System matrix for relaxation
+    subdomain : array 
+        Indices of each subdomain must be sorted over each subdomain
+    subdomain_ptr : array 
+        Pointer array indicating where each subdomain starts and stops
+    inv_subblock : array 
+        Inverse of each diagonal block of A, stored in row major
+    inv_subblock_ptr : array 
+        Pointer array into Tx indicating where the diagonal blocks start and stop
 
     Returns
     -------

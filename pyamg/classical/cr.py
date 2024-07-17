@@ -20,6 +20,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
     Parameters
     ----------
     A : csr_matrix
+        Target system matrix
     B : array like
         Target near null space mode
     Findex : array like
@@ -30,6 +31,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         minimum number of relaxation sweeps to do
     thetacr
         Desired convergence factor
+    method : {'concurrent', 'habituated'}
+        CR method
 
     Returns
     -------
@@ -251,9 +254,9 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     References
     ----------
-    .. [1] Livne, Golub, "Scaling by Binormalization"
-       Tech Report SCCM-03-12, SCCM, Stanford, 2003
-       http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.3.1679
+    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
+       Numerical Algorithms 35, 97–120 (2004).
+       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
     if not isspmatrix(A):
@@ -326,7 +329,10 @@ def rowsum_stdev(x, beta):
     Parameters
     ----------
     x : array
+        Target array for computing the std dev
     beta : array
+        Row-wise beta values
+        
 
     Returns
     -------
@@ -334,7 +340,13 @@ def rowsum_stdev(x, beta):
 
     Notes
     -----
-    equation (7) in Livne/Golub
+    Equation (7) in [1]
+
+    References
+    ----------
+    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
+       Numerical Algorithms 35, 97–120 (2004).
+       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
     n = x.size

@@ -75,6 +75,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         exactly reproduces the fine grid near nullspace modes
     omega : scalar
         Damping parameter
+    degree : int
+        Number of passes
     filter_entries : boolean
         If true, filter S before smoothing T.  This option can greatly control
         complexity.
@@ -215,6 +217,8 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         Tentative prolongator
     omega : scalar
         Damping parameter
+    degree : int
+        Number of passes 
 
     Returns
     -------

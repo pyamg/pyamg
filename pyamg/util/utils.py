@@ -35,6 +35,8 @@ def profile_solver(ml, accel=None, **kwargs):
         Fully constructed multilevel object
     accel : function pointer
         Pointer to a valid Krylov solver (e.g. gmres, cg)
+    kwargs: dictionary
+        Any keyword options sent to the solve()
 
     Returns
     -------
@@ -890,9 +892,11 @@ def hierarchy_spectrum(mg, filter_entries=True):
 
     Parameters
     ----------
-    mg { pyamg multilevel hierarchy }
+    mg : Multilevel
         e.g. generated with smoothed_aggregation_solver(...) or
         ruge_stuben_solver(...)
+    filter_entries : bool
+        Toggle filtering zero rows of each matrix
 
     Returns
     -------
@@ -1723,6 +1727,7 @@ def scale_rows_by_largest_entry(S):
     Parameters
     ----------
     S : csr_matrix
+        Target matrix for row scaling
 
     Returns
     -------
@@ -1911,6 +1916,7 @@ def filter_matrix_columns(A, theta):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix for filtering
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the columns
@@ -1990,6 +1996,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix for filtering
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
@@ -2079,6 +2086,7 @@ def truncate_rows(A, nz_per_row):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix  for truncating
 
     nz_per_row : int
         Determines how many entries in each row to keep
