@@ -57,17 +57,14 @@ ignore = [
     "PLW2901", # redefined-loop-name
     "PLR6201", # literal-membership 
     "B028",    # no-explicit-stacklevel
-    #disable=invalid-name
-    #too-many-lines
-    #too-many-statements
-    #too-few-public-methods
-    #too-few-public-methods
-    #duplicate-code
+    "PLR6104", # non-augmented-assignment
+    "NPY002",  # numpy-legacy-random
 ]
 
 [tool.ruff.lint.per-file-ignores]
     "pyamg/gallery/tests/test_fem.py" = ["E201", "E202", "E203"]
-    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221", "PLC0415"]
+    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221", "PLC0415", "PLR6301",
+                  "NPY002"]
     "**/tests/__init__.py" = ["D104"]
     "docs/logo/pyamg_logo.py" = ["PLR0916"]
     "pyamg/util/utils.py" = ["PLC2701"]
