@@ -21,12 +21,12 @@ def poisson(grid, dtype=float, format=None, type='FD'):
     ----------
     grid : tuple of integers
         Grid dimensions e.g. (100,100)
-    dtype : dtype 
+    dtype : dtype
         Target dtype
     format : string
         Sparse matrix format to return, e.g. "csr", "coo", etc.
     type : string
-        Discretization type, either finite difference (FD) or finite element (FE) 
+        Discretization type, either finite difference (FD) or finite element (FE)
 
     Notes
     -----

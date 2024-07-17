@@ -218,7 +218,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     omega : scalar
         Damping parameter
     degree : int
-        Number of passes 
+        Number of passes
 
     Returns
     -------

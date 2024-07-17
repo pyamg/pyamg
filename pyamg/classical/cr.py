@@ -255,7 +255,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     References
     ----------
     .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
-       Numerical Algorithms 35, 97–120 (2004).
+       Numerical Algorithms 35, 97-120 (2004).
        https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
@@ -332,7 +332,6 @@ def rowsum_stdev(x, beta):
         Target array for computing the std dev
     beta : array
         Row-wise beta values
-        
 
     Returns
     -------
@@ -345,7 +344,7 @@ def rowsum_stdev(x, beta):
     References
     ----------
     .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
-       Numerical Algorithms 35, 97–120 (2004).
+       Numerical Algorithms 35, 97-120 (2004).
        https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
