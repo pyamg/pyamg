@@ -229,7 +229,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
             try:
-                import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+                import matplotlib.pyplot as plt  # noqa: PLC0415
                 cdataF = np.where(cdata == 0)[0]
                 cdataC = np.where(cdata == 1)[0]
                 xC = V[cdataC, 0]

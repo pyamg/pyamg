@@ -84,9 +84,9 @@ def test(verbose=False):
         Turn on verbose output.
 
     """
-    import sys     # pylint: disable=import-outside-toplevel
+    import sys     # noqa: PLC0415
     try:
-        import pytest  # pylint: disable=import-outside-toplevel
+        import pytest  # noqa: PLC0415
     except ModuleNotFoundError as e:
         raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
 

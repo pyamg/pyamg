@@ -157,7 +157,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 def _symbolic_rotation_helper():
     """Use SymPy to generate the 3D matrices for diffusion_stencil_3d."""
     # pylint: disable=import-error,import-outside-toplevel
-    from sympy import symbols, Matrix
+    from sympy import symbols, Matrix  # noqa: PLC0415
 
     cpsi, spsi = symbols('cpsi, spsi')
     cth, sth = symbols('cth, sth')
@@ -180,8 +180,7 @@ def _symbolic_rotation_helper():
 
 def _symbolic_product_helper():
     """Use SymPy to generate the 3D products for diffusion_stencil_3d."""
-    # pylint: disable=import-error,import-outside-toplevel
-    from sympy import symbols, Matrix
+    from sympy import symbols, Matrix  # noqa: PLC0415
 
     D11, D12, D13, D21, D22, D23, D31, D32, D33 =\
         symbols('D11, D12, D13, D21, D22, D23, D31, D32, D33')
