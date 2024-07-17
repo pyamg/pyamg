@@ -407,9 +407,10 @@ class Mesh:
         ----------
         V : ndarray
             nv x 2 list of coordinates
-
         E : ndarray
             ne x 3 list of vertices
+        degree : int
+            Polynomial degree, either 1 or 2
 
         """
         # check to see if E is numbered 0 ... nv
@@ -555,12 +556,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     Parameters
     ----------
-    V : ndarray
-        nv x 2 list of coordinates
-
-    E : ndarray
-        ne x 3 or 6 list of vertices
-
+    mesh : Mesh
+        Mesh object defining vertices and elements
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
         can either return a scalar value or a 2x2 matrix that transforms <grad u>

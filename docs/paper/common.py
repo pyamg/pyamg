@@ -9,10 +9,13 @@ def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
     Parameters
     ----------
     fontsize : float
-        sets the intended fontsize
-
+        Sets the intended fontsize
     width : float
-        sets the intended width in pts
+        Sets the intended width in pts
+    heightratio : float
+        Sets the ratio of the height
+    height : float
+        Sets the height
 
     Notes
     -----

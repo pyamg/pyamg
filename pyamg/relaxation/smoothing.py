@@ -374,7 +374,8 @@ def rho_D_inv_A(A):
 
     Parameters
     ----------
-    A : sparse-matrix
+    A : sparse matrix
+        Target matrix for computing the spectral radius
 
     Returns
     -------
@@ -883,6 +884,7 @@ def rebuild_smoother(lvl):
     Parameters
     ----------
     lvl : Level object
+        Single level of the hierarchy
 
     Notes
     -----

@@ -30,6 +30,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         Square, sparse matrix in CSR or BSR format
     V : array
         Coordinates of the vertices of the graph of A
+    theta : float
+        Drop tolerance (distance)
     relative_drop : bool
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
@@ -531,6 +533,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     block_flag : boolean
         If True, use a block D inverse as preconditioner for A during
         weighted-Jacobi
+    symmetrize_measure : boolean
+        Symmetrize the strength as (A + A.T) / 2
 
     Returns
     -------

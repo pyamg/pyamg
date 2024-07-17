@@ -331,6 +331,9 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
     theta : float, default 0.1
         Solve local system for each row of R for all values
             |A_ij| >= 0.1 * max_{i!=k} |A_ik|
+    norm : string
+        Norm used in redefining classical SOC. Options are 'min' and
+        'abs' for CSR matrices. See strength.py for more information.
     degree : int, default 1
         Expand sparsity pattern for R by considering strongly connected
         neighbors within 'degree' of a given node. Only supports degree 1 and 2.

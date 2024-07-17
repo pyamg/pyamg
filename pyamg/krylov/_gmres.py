@@ -50,6 +50,8 @@ def gmres(A, b, x0=None, tol=1e-5, restart=None, maxiter=None,
         orthogonal basis for the Krylov space
     restrt : None, int
         Deprecated.  See restart.
+    kwargs : dict
+        Keyword arguments passed to _gmres_householder or _gmres_mgs
 
     Returns
     -------
