@@ -51,7 +51,7 @@ def plotaggs(AggOp, V, E, G,
             for j1 in nbrs:                                # for each neighbor
                 found = False                              # mark if triangle is found
                 for j2 in nbrs:
-                    if (j1 != j2 and i != j1 and i != j2 and  # i-j-j not a triangle
+                    if (j1 != j2 and i not in (j1, j2) and    # i-j-j not a triangle
                         j1 in aggids and j2 in aggids and     # j1/j2 are in the aggregate
                         G[j1, j2]                             # j1/j2 are connected
                        ):
