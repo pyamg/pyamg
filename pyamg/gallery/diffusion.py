@@ -16,6 +16,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     """Rotated Anisotropic diffusion in 2d of the form.
 
         -div Q A Q^T grad u
+        = - (C^2 + eps S^2) u_xx - 2(1 - eps) C S u_xy - (eps C^2 + S^2) u_yy
+
+        where
 
         Q = [cos(theta) -sin(theta)]
             [sin(theta)  cos(theta)]
@@ -29,12 +32,13 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         Anisotropic diffusion coefficient: -div A grad u,
         where A = [1 0; 0 epsilon].  The default is isotropic, epsilon=1.0
     theta : float, optional
-        Rotation angle `theta` in radians defines -div Q A Q^T grad,
-        where Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].
+        Rotation angle `theta` from the positive x-axis in radians.
+        Defines -div Q A Q^T grad, where
+        Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].
+        The default is `theta` = 0.0
     type : {'FE','FD'}
         Specifies the discretization as Q1 finite element (FE) or 2nd order
         finite difference (FD)
-        The default is `theta` = 0.0
 
     Returns
     -------
@@ -48,6 +52,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     Notes
     -----
     Not all combinations are supported.
+
+    The stencil is ordered with y varying first; see `stencil_grid` for more details.
 
     Examples
     --------
@@ -123,21 +129,44 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
                             [c, b, a]]) / 6.0
 
     elif type == 'FD':
-        # FD approximation to:
+        # discretizing
+        # -div Q A Q^T grad u
+        #     = - (C^2 + eps S^2) u_xx - 2(1 - eps) C S u_xy - (eps C^2 + S^2) u_yy
+        #     = - E u_xx - F u_xy - G u_yy
+        # with hx = hy = h = 1 gives
+        #     = E   (- u_{i-1,j} + 2 u_{i,j} - u_{i+1, j})
+        #     + F/4 (- u_{i+1,j+1} + u_{i+1,j-1} + u_{i-1,j+1} - u_{i-1,j-1})
+        #     + G   (- u_{i,j-1} + 2 u_{i,j} - u_{i,j+1})
 
-        # - (eps c^2 +     s^2) u_xx +
-        # -2(eps - 1) c s       u_xy +
-        # - (    c^2 + eps s^2) u_yy
+        # For a stencil centered at [i,j] this leads to
+        # [i-1,j+1] ---- [i,j+1] ---- [i+1,j+1]   [ F/4] ---- [   -G   ] ---- [-F/4]
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        # [i-1,j  ] ---- [i,j  ] ---- [i+1,j+1] = [ -E ] ---- [2 E + 2F] ---- [-E  ]
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        # [i-1,j-1] ---- [i,j-1] ---- [i+1,j+1]   [-F/4] ---- [   -G   ] ---- [ F/4]
 
-        #   c = cos(theta)
-        #   s = sin(theta)
+        # And the stencil, with y varying first:
+        # stencil = [-F/4  -E  F/4]  # column 0: [i-1,j-1] [i-1,j] [i-1,j+1]
+        #           [-G  2E+2F  -G]  # column 1: [i,j-1]   [i,j]   [i,j+1]
+        #           [ F/4  -E -F/4]  # column 2: [i+1,j-1] [i+1,j] [i+1,j+1]
 
-        # A = [ 1/2(eps - 1) c s    -(c^2 + eps s^2)    -1/2(eps - 1) c s  ]
-        #     [                                                            ]
-        #     [ -(eps c^2 + s^2)       2 (eps + 1)    -(eps c^2 + s^2)     ]
-        #     [                                                            ]
-        #     [  -1/2(eps - 1) c s    -(c^2 + eps s^2)  1/2(eps - 1) c s   ]
-        #
+        #           [                 |                    |                  ]
+        #           [0.5(eps-1) C S   |  -(C^2 + eps S^2)  |  0.5(1-eps) C S  ]
+        #           [_________________________________________________________]
+        #           [                 |                    |                  ]
+        #         = [-(eps C^2 + S^2) |  2 (eps + 1)       |  -(eps C^2 + S^2)]
+        #           [_________________________________________________________]
+        #           [                 |                    |                  ]
+        #           [0.5(1-eps) C S   |  -(C^2 + eps S^2)  |  0.5(eps-1) C S  ]
+        #           [                 |                    |                  ]
+
+        #         = [a, b, c]
+        #           [d, e, d]
+        #           [c, b, a]
 
         a = 0.5*(eps - 1)*CS
         b = -(eps*SS + CC)
