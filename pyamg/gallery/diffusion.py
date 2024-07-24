@@ -165,9 +165,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
     return stencil
 
+
 def _symbolic_fe_helper():
-    """Generate the stencil for 2D FE using SymPy.
-    """
+    """Generate the stencil for 2D FE using SymPy."""
     from sympy import symbols, integrate, Matrix   # noqa: PLC0415
     from sympy.vector import CoordSys3D, gradient  # noqa: PLC0415
     C, S, eps = symbols('C S eps')
@@ -189,18 +189,19 @@ def _symbolic_fe_helper():
     phi3 = x*y
 
     # Make space for a 3x3 stencil
-    sten = np.empty((3,3), dtype=object)
+    sten = np.empty((3, 3), dtype=object)
 
     # Define a weak form
     def a(phi_l, phi_r):
-        """
+        """Define the weak form.
+
         weak form form -div K grad u = (K grad u, grad v)
         """
         gradu = gradient(phi_l)
         gradv = gradient(phi_r)
         Kgradu = K @ Matrix([gradu.coeff(N.i), gradu.coeff(N.j)])
         Kgradu = Kgradu[0]*N.i + Kgradu[1]*N.j
-        I = integrate(Kgradu.dot(gradv), (N.x,0,1), (N.y,0,1))
+        I = integrate(Kgradu.dot(gradv), (N.x, 0, 1), (N.y, 0, 1))
         return I
 
     # Consider a four element mesh to create the stencil at [4]
@@ -209,16 +210,16 @@ def _symbolic_fe_helper():
     # 1--4--7
     # |  |  |
     # 0--3--6
-    sten[0, 0] = a(phi3, phi0)                 # 4-0
-    sten[0, 1] = a(phi3, phi2) + a(phi1, phi0) # 4-1
-    sten[0, 2] = a(phi1, phi2)                 # 4-2
-    sten[1, 0] = a(phi3, phi1) + a(phi2, phi0) # 4-3
+    sten[0, 0] = a(phi3, phi0)                  # 4-0
+    sten[0, 1] = a(phi3, phi2) + a(phi1, phi0)  # 4-1
+    sten[0, 2] = a(phi1, phi2)                  # 4-2
+    sten[1, 0] = a(phi3, phi1) + a(phi2, phi0)  # 4-3
     sten[1, 1] = a(phi3, phi3) + a(phi1, phi1) \
-               + a(phi2, phi2) + a(phi0, phi0) # 4-4
-    sten[1, 2] = a(phi1, phi3) + a(phi0, phi2) # 4-5
-    sten[2, 0] = a(phi2, phi1)                 # 4-6
-    sten[2, 1] = a(phi2, phi3) + a(phi0, phi1) # 4-7
-    sten[2, 2] = a(phi0, phi3)                 # 4-8
+               + a(phi2, phi2) + a(phi0, phi0)  # 4-4
+    sten[1, 2] = a(phi1, phi3) + a(phi0, phi2)  # 4-5
+    sten[2, 0] = a(phi2, phi1)                  # 4-6
+    sten[2, 1] = a(phi2, phi3) + a(phi0, phi1)  # 4-7
+    sten[2, 2] = a(phi0, phi3)                  # 4-8
 
     # now set a, b, c, d, and e
     a = 6 * sten[0, 0]
@@ -232,6 +233,7 @@ def _symbolic_fe_helper():
     print(f'{c=}')
     print(f'{d=}')
     print(f'{e=}')
+
 
 def _symbolic_rotation_helper():
     """Use SymPy to generate the 3D matrices for diffusion_stencil_3d."""
