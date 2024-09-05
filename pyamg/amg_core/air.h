@@ -152,7 +152,7 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
         }
 
         // Set row-pointer for this row of R (including identity on C-points).
-        nnz += colinds.size();
+        nnz += colinds.size() + 1;
         Rp[row+1] = nnz; 
     }
     if ((distance != 1) && (distance != 2)) {
@@ -254,7 +254,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
             ind += 1;
         }
 
-        if (ind != (Rp[row+1])) {
+        if (ind != (Rp[row+1]-1)) {
             std::cerr << "Error approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n\t"
                          "ind = " << ind << ", Rp[row] = " << Rp[row] <<
                          ", Rp[row+1] = " << Rp[row+1] << "\n";
@@ -420,7 +420,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
             ind += 1;
         }
 
-        if (ind != (Rp[row+1])) {
+        if (ind != (Rp[row+1]-1)) {
             std::cerr << "Error block_approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n";
         }
 
