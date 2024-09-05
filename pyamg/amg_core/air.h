@@ -8,6 +8,7 @@
 #include <cassert>
 #include <limits>
 #include <algorithm>
+#include <set>
 
 #include "linalg.h"
 #include "graph.h"
@@ -130,19 +131,20 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
 
     // Determine number of nonzeros in each row of R.
     for (I row=0; row<Cpts_size; row++) {
+        std::set<I> colinds;
         I cpoint = Cpts[row];
 
         // Determine number of strongly connected F-points in sparsity for R.
         for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
             I this_point = Cj[i];
             if (splitting[this_point] == F_NODE) {
-                nnz++;
+                colinds.insert(this_point);
 
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
                         if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
-                            nnz++;
+                            colinds.insert(Cj[kk]);
                         }
                     } 
                 }
@@ -150,7 +152,7 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
         }
 
         // Set row-pointer for this row of R (including identity on C-points).
-        nnz += 1;
+        nnz += colinds.size();
         Rp[row+1] = nnz; 
     }
     if ((distance != 1) && (distance != 2)) {
@@ -227,27 +229,32 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
         I cpoint = Cpts[row];
         I ind = Rp[row];
+        std::set<I> colinds;
 
         // Set column indices for R as strongly connected F-points.
         for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
             I this_point = Cj[i];
             if (splitting[this_point] == F_NODE) {
-                Rj[ind] = Cj[i];
-                ind +=1 ;
+                colinds.insert(this_point);
 
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
                         if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
-                            Rj[ind] = Cj[kk];
-                            ind +=1 ;
+                            colinds.insert(Cj[kk]);
                         }
                     } 
                 }
             }
         }
 
-        if (ind != (Rp[row+1]-1)) {
+        // Loop over unique distance two neighbors and add to column indices
+        for (const I &cc : colinds) {
+            Rj[ind] = cc;
+            ind += 1;
+        }
+
+        if (ind != (Rp[row+1])) {
             std::cerr << "Error approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n\t"
                          "ind = " << ind << ", Rp[row] = " << Rp[row] <<
                          ", Rp[row+1] = " << Rp[row+1] << "\n";
@@ -388,27 +395,32 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 
         I cpoint = Cpts[row];
         I ind = Rp[row];
+        std::set<I> colinds;
 
         // Set column indices for R as strongly connected F-points.
         for (I i=Cp[cpoint]; i<Cp[cpoint+1]; i++) {
             I this_point = Cj[i];
             if (splitting[this_point] == F_NODE) {
-                Rj[ind] = Cj[i];
-                ind += 1 ;
+                colinds.insert(this_point);
 
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
                         if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
-                            Rj[ind] = Cj[kk];
-                            ind += 1 ;
+                            colinds.insert(Cj[kk]);
                         }
                     } 
                 }
             }
         }
 
-        if (ind != (Rp[row+1]-1)) {
+        // Loop over unique distance two neighbors and add to column indices
+        for (const I &cc : colinds) {
+            Rj[ind] = cc;
+            ind += 1;
+        }
+
+        if (ind != (Rp[row+1])) {
             std::cerr << "Error block_approx_ideal_restriction_pass2: Row pointer does not agree with neighborhood size.\n";
         }
 
