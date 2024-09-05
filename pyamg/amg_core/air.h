@@ -143,7 +143,7 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
-                        if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
+                        if (splitting[Cj[kk]] == F_NODE) {
                             colinds.insert(Cj[kk]);
                         }
                     } 
@@ -240,7 +240,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
-                        if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
+                        if (splitting[Cj[kk]] == F_NODE) {
                             colinds.insert(Cj[kk]);
                         }
                     } 
@@ -406,7 +406,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                 // Strong distance-two F-to-F connections
                 if (distance == 2) {
                     for (I kk = Cp[this_point]; kk < Cp[this_point+1]; kk++){
-                        if ((splitting[Cj[kk]] == F_NODE) && (this_point != cpoint)) {
+                        if (splitting[Cj[kk]] == F_NODE) {
                             colinds.insert(Cj[kk]);
                         }
                     } 
