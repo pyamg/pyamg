@@ -249,7 +249,7 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         }
 
         // Loop over unique distance two neighbors and add to column indices
-        for (const I &cc : colinds) {
+        for (const I cc : colinds) {
             Rj[ind] = cc;
             ind += 1;
         }
@@ -415,7 +415,7 @@ void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
         }
 
         // Loop over unique distance two neighbors and add to column indices
-        for (const I &cc : colinds) {
+        for (const I cc : colinds) {
             Rj[ind] = cc;
             ind += 1;
         }
