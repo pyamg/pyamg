@@ -44,6 +44,43 @@ void _gauss_seidel(
 }
 
 template<class I, class T, class F>
+void _sor_gauss_seidel(
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+       py::array_t<T> & b,
+        const I row_start,
+         const I row_stop,
+         const I row_step,
+            const F omega
+                       )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_b = b.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    const T *_b = py_b.data();
+
+    return sor_gauss_seidel<I, T, F>(
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0),
+                       _b, b.shape(0),
+                row_start,
+                 row_stop,
+                 row_step,
+                    omega
+                                     );
+}
+
+template<class I, class T, class F>
 void _bsr_gauss_seidel(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
@@ -648,6 +685,7 @@ PYBIND11_MODULE(relaxation, m) {
     Methods
     -------
     gauss_seidel
+    sor_gauss_seidel
     bsr_gauss_seidel
     jacobi
     jacobi_indexed
@@ -712,6 +750,17 @@ only a subset of the unknowns.  A forward sweep is implemented
 with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the
 number of rows in matrix A.  Similarly, a backward sweep is
 implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).)pbdoc");
+
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"),
+R"pbdoc(
+)pbdoc");
 
     m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
