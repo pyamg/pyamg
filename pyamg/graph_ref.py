@@ -1,24 +1,23 @@
 """Reference implementations of graph algorithms."""
 import numpy as np
 
-
-def bellman_ford_reference(A, c):
+def bellman_ford_reference(adjacency_matrix, cluster_centers):
     """Execute reference implementation of Bellman-Ford.
 
     Parameters
     ----------
-    A : coo sparse matrix
+    adjacency_matrix : coo sparse matrix
         n x n directed graph with positive weights
 
-    c : array_like
+    cluster_centers : array_like
         list of cluster centers
 
     Returns
     -------
-    m : ndarray
+    cluster_index : ndarray
         cluster index
 
-    d : ndarray
+    distances : ndarray
         distance to cluster center
 
     See Also
@@ -26,20 +25,20 @@ def bellman_ford_reference(A, c):
     amg_core.graph.bellman_ford
 
     """
-    Nnode = A.shape[0]
-    d = np.full((Nnode,), np.inf)
-    m = np.full((Nnode,), -1.0, dtype=np.int32)
+    n_node = adjacency_matrix.shape[0]
+    distances = np.full((n_node,), np.inf)
+    cluster_index = np.full((n_node,), -1.0, dtype=np.int32)
 
-    d[c] = 0  # distance
-    m[c] = c  # index
+    distances[cluster_centers] = 0  # distance
+    cluster_index[cluster_centers] = cluster_centers  # index
 
     done = False
     while not done:
         done = True
-        for i, j, Aij in zip(A.row, A.col, A.data):
-            if Aij > 0 and d[i] + Aij < d[j]:
-                d[j] = d[i] + Aij
-                m[j] = m[i]
+        for i, j, adjacency_value in zip(adjacency_matrix.row, adjacency_matrix.col, adjacency_matrix.data):
+            if adjacency_value > 0 and distances[i] + adjacency_value < distances[j]:
+                distances[j] = distances[i] + adjacency_value
+                cluster_index[j] = cluster_index[i]
                 done = False
 
-    return (d, m)
+    return (distances, cluster_index)
