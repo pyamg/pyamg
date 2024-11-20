@@ -4,6 +4,8 @@ import re
 import warnings
 import numpy as np
 import scipy as sp
+import sys
+import pytest
 
 from .version import version_tuple as __version_tuple__
 from .version import version as __version__
@@ -58,22 +60,21 @@ __version__  pyamg version string
 """
 
 # Warn on old numpy or scipy.  Two digits.
-npreq = '1.6'
-npmin = [int(j) for j in npreq.split('.')]
+NPREQ = '1.6'
+npmin = [int(j) for j in NPREQ.split('.')]
 m = re.match(r'(\d+)\.(\d+).*', np.__version__)
 npver = [int(m.group(1)), int(m.group(2))]
 if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
     warnings.warn(f'Numpy {npmin} or above is recommended for this version of'
                   f'PyAMG (detected version {npver})', UserWarning, stacklevel=2)
 
-spreq = '0.11'
-spmin = [int(j) for j in spreq.split('.')]
+SPREQ = '0.11'
+spmin = [int(j) for j in SPREQ.split('.')]
 m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
 spver = [int(m.group(1)), int(m.group(2))]
 if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
     warnings.warn(f'SciPy {spmin} or above is recommended for this version of'
                   f'PyAMG (detected version {spver})', UserWarning, stacklevel=2)
-
 
 def test(verbose=False):
     """Test runner for pytest.
@@ -84,12 +85,6 @@ def test(verbose=False):
         Turn on verbose output.
 
     """
-    import sys     # noqa: PLC0415
-    try:
-        import pytest  # noqa: PLC0415
-    except ModuleNotFoundError as e:
-        raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
-
     sysversion = sys.version.replace('\n', '')
     print(f'Python version: {sysversion}')
     print(f'pytest version: {pytest.__version__}')
@@ -107,5 +102,5 @@ def test(verbose=False):
 
     try:
         return pytest.main(args)
-    except SystemExit as e:
-        return e.code
+    except SystemExit as exc:
+        return exc.code
