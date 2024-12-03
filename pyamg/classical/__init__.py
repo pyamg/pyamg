@@ -11,10 +11,10 @@ from .air import air_solver
 
 __all__ = [
     'air',
-    'classical',
-    'split',
-    'interpolate',
-    'cr',
-    'ruge_stuben_solver',
     'air_solver',
+    'classical',
+    'cr',
+    'interpolate',
+    'ruge_stuben_solver',
+    'split',
 ]

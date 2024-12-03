@@ -16,6 +16,9 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     """Rotated Anisotropic diffusion in 2d of the form.
 
         -div Q A Q^T grad u
+        = - (C^2 + eps S^2) u_xx - 2(1 - eps) C S u_xy - (eps C^2 + S^2) u_yy
+
+        where
 
         Q = [cos(theta) -sin(theta)]
             [sin(theta)  cos(theta)]
@@ -48,6 +51,8 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     Notes
     -----
     Not all combinations are supported.
+
+    The stencil is ordered with y varying first; see `stencil_grid` for more details.
 
     Examples
     --------
@@ -90,27 +95,10 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
     SS = S**2
 
     if type == 'FE':
-        # FE approximation to::
-
-        # - (eps c^2 +     s^2) u_xx +
-        # -2(eps - 1) c s       u_xy +
-        # - (    c^2 + eps s^2) u_yy
-
-        # [ -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps,
-        #   2*c^2*eps+2*s^2-4*c^2-4*s^2*eps,
-        #   -c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps]
-
-        # [-4*c^2*eps-4*s^2+2*c^2+2*s^2*eps,
-        #  8*c^2*eps+8*s^2+8*c^2+8*s^2*eps,
-        #  -4*c^2*eps-4*s^2+2*c^2+2*s^2*eps]
-
-        # [-c^2*eps-s^2-3*c*s*(eps-1)-c^2-s^2*eps,
-        #  2*c^2*eps+2*s^2-4*c^2-4*s^2*eps,
-        #  -c^2*eps-s^2+3*c*s*(eps-1)-c^2-s^2*eps]
-
-        # c = cos(theta)
-        # s = sin(theta)
-        #
+        # FE approximation to
+        # -div K grad u
+        # using the weak form (K grad u, grad v)
+        # see _symbolic_fe_helper() for more details
 
         a = (-1*eps - 1)*CC + (-1*eps - 1)*SS + (3*eps - 3)*CS
         b = (2*eps - 4)*CC + (-4*eps + 2)*SS
@@ -123,21 +111,44 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
                             [c, b, a]]) / 6.0
 
     elif type == 'FD':
-        # FD approximation to:
+        # discretizing
+        # -div Q A Q^T grad u
+        #     = - (C^2 + eps S^2) u_xx - 2(1 - eps) C S u_xy - (eps C^2 + S^2) u_yy
+        #     = - E u_xx - F u_xy - G u_yy
+        # with hx = hy = h = 1 gives
+        #     = E   (- u_{i-1,j} + 2 u_{i,j} - u_{i+1, j})
+        #     + F/4 (- u_{i+1,j+1} + u_{i+1,j-1} + u_{i-1,j+1} - u_{i-1,j-1})
+        #     + G   (- u_{i,j-1} + 2 u_{i,j} - u_{i,j+1})
 
-        # - (eps c^2 +     s^2) u_xx +
-        # -2(eps - 1) c s       u_xy +
-        # - (    c^2 + eps s^2) u_yy
+        # For a stencil centered at [i,j] this leads to
+        # [i-1,j+1] ---- [i,j+1] ---- [i+1,j+1]   [ F/4] ---- [   -G   ] ---- [-F/4]
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        # [i-1,j  ] ---- [i,j  ] ---- [i+1,j+1] = [ -E ] ---- [2 E + 2G] ---- [-E  ]
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        #   |             |            |            |             |            |
+        # [i-1,j-1] ---- [i,j-1] ---- [i+1,j+1]   [-F/4] ---- [   -G   ] ---- [ F/4]
 
-        #   c = cos(theta)
-        #   s = sin(theta)
+        # And the stencil, with y varying first:
+        # stencil = [-F/4  -E  F/4]  # column 0: [i-1,j-1] [i-1,j] [i-1,j+1]
+        #           [-G  2E+2G  -G]  # column 1: [i,j-1]   [i,j]   [i,j+1]
+        #           [ F/4  -E -F/4]  # column 2: [i+1,j-1] [i+1,j] [i+1,j+1]
 
-        # A = [ 1/2(eps - 1) c s    -(c^2 + eps s^2)    -1/2(eps - 1) c s  ]
-        #     [                                                            ]
-        #     [ -(eps c^2 + s^2)       2 (eps + 1)    -(eps c^2 + s^2)     ]
-        #     [                                                            ]
-        #     [  -1/2(eps - 1) c s    -(c^2 + eps s^2)  1/2(eps - 1) c s   ]
-        #
+        #           [                 |                    |                  ]
+        #           [0.5(eps-1) C S   |  -(C^2 + eps S^2)  |  0.5(1-eps) C S  ]
+        #           [_________________________________________________________]
+        #           [                 |                    |                  ]
+        #         = [-(eps C^2 + S^2) |  2 (eps + 1)       |  -(eps C^2 + S^2)]
+        #           [_________________________________________________________]
+        #           [                 |                    |                  ]
+        #           [0.5(1-eps) C S   |  -(C^2 + eps S^2)  |  0.5(eps-1) C S  ]
+        #           [                 |                    |                  ]
+
+        #         = [a, b, c]
+        #           [d, e, d]
+        #           [c, b, a]
 
         a = 0.5*(eps - 1)*CS
         b = -(eps*SS + CC)
@@ -148,14 +159,85 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         stencil = np.array([[a, b, c],
                             [d, e, d],
                             [c, b, a]])
+    else:
+        raise ValueError('only stencil types "FE" and "FD" are supported')
 
     return stencil
+
+
+def _symbolic_fe_helper():
+    """Generate the stencil for 2D FE using SymPy."""
+    from sympy import symbols, integrate, Matrix   # noqa: PLC0415
+    from sympy.vector import CoordSys3D, gradient  # noqa: PLC0415
+    C, S, eps = symbols('C S eps')
+    N = CoordSys3D('N')
+    x, y = N.x, N.y
+
+    # Define the rotation and anisotropy
+    Q = Matrix([[C, -S], [S, C]])
+    A = Matrix([[1, 0], [0, eps]])
+    K = Q @ A @ Q.T
+
+    # Start with a reference element ordering:
+    # [2  3]
+    # [0  1]
+    # And defeine four basis functions
+    phi0 = (1-x)*(1-y)
+    phi1 = x*(1-y)
+    phi2 = (1-x)*y
+    phi3 = x*y
+
+    # Make space for a 3x3 stencil
+    sten = np.empty((3, 3), dtype=object)
+
+    # Define a weak form
+    def a(phi_l, phi_r):
+        """Define the weak form.
+
+        weak form form -div K grad u = (K grad u, grad v)
+        """
+        gradu = gradient(phi_l)
+        gradv = gradient(phi_r)
+        Kgradu = K @ Matrix([gradu.coeff(N.i), gradu.coeff(N.j)])
+        Kgradu = Kgradu[0]*N.i + Kgradu[1]*N.j
+        I = integrate(Kgradu.dot(gradv), (N.x, 0, 1), (N.y, 0, 1))
+        return I
+
+    # Consider a four element mesh to create the stencil at [4]
+    # 2--5--8
+    # |  |  |
+    # 1--4--7
+    # |  |  |
+    # 0--3--6
+    sten[0, 0] = a(phi3, phi0)                  # 4-0
+    sten[0, 1] = a(phi3, phi2) + a(phi1, phi0)  # 4-1
+    sten[0, 2] = a(phi1, phi2)                  # 4-2
+    sten[1, 0] = a(phi3, phi1) + a(phi2, phi0)  # 4-3
+    sten[1, 1] = a(phi3, phi3) + a(phi1, phi1) \
+               + a(phi2, phi2) + a(phi0, phi0)  # 4-4
+    sten[1, 2] = a(phi1, phi3) + a(phi0, phi2)  # 4-5
+    sten[2, 0] = a(phi2, phi1)                  # 4-6
+    sten[2, 1] = a(phi2, phi3) + a(phi0, phi1)  # 4-7
+    sten[2, 2] = a(phi0, phi3)                  # 4-8
+
+    # now set a, b, c, d, and e
+    a = 6 * sten[0, 0]
+    b = 6 * sten[0, 1]
+    c = 6 * sten[0, 2]
+    d = 6 * sten[1, 0]
+    e = 6 * sten[1, 1]
+
+    print(f'{a=}')
+    print(f'{b=}')
+    print(f'{c=}')
+    print(f'{d=}')
+    print(f'{e=}')
 
 
 def _symbolic_rotation_helper():
     """Use SymPy to generate the 3D matrices for diffusion_stencil_3d."""
     # pylint: disable=import-error,import-outside-toplevel
-    from sympy import symbols, Matrix
+    from sympy import symbols, Matrix  # noqa: PLC0415
 
     cpsi, spsi = symbols('cpsi, spsi')
     cth, sth = symbols('cth, sth')
@@ -178,8 +260,7 @@ def _symbolic_rotation_helper():
 
 def _symbolic_product_helper():
     """Use SymPy to generate the 3D products for diffusion_stencil_3d."""
-    # pylint: disable=import-error,import-outside-toplevel
-    from sympy import symbols, Matrix
+    from sympy import symbols, Matrix  # noqa: PLC0415
 
     D11, D12, D13, D21, D22, D23, D31, D32, D33 =\
         symbols('D11, D12, D13, D21, D22, D23, D31, D32, D33')

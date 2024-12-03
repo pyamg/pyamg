@@ -66,6 +66,7 @@ def generate_quadratic(V, E, return_edges=False):
     >>> print(E2)
     [[0 1 2 4 5 6]
      [2 3 1 7 8 5]]
+
     """
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
@@ -183,6 +184,7 @@ def refine2dtri(V, E, marked_elements=None):
         /    \    / |
       /       \  /  |
     n0 --------n3-- n1
+
     """
     Nel = E.shape[0]
     Nv = V.shape[0]
@@ -315,14 +317,16 @@ def l2norm(u, mesh):
     >>> unorm = fem.l2norm(u, mesh)
     >>> print(f'{unorm:2.6}')
     1.08012
+
     """
     if mesh.degree == 1:
         V = mesh.V
         E = mesh.E
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         V = mesh.V2
         E = mesh.E2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     if not isinstance(u, np.ndarray):
         raise ValueError('u must be ndarray')
@@ -361,8 +365,7 @@ def l2norm(u, mesh):
                              x,
                              y])
         basis = basis1
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         I = np.arange(6)
 
         def basis2(x, y):
@@ -373,6 +376,8 @@ def l2norm(u, mesh):
                              4*x*y,
                              4*y*(1-x-y)])
         basis = basis2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     for e in E:
         x = V[e, 0]
@@ -402,9 +407,11 @@ class Mesh:
         ----------
         V : ndarray
             nv x 2 list of coordinates
-
         E : ndarray
             ne x 3 list of vertices
+        degree : int
+            Polynomial degree, either 1 or 2
+
         """
         # check to see if E is numbered 0 ... nv
         ids = np.full((E.max()+1,), False)
@@ -456,6 +463,7 @@ class Mesh:
         ----------
         levels : int
             Number of refinement levels.
+
         """
         self.V2 = None
         self.E2 = None
@@ -548,12 +556,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     Parameters
     ----------
-    V : ndarray
-        nv x 2 list of coordinates
-
-    E : ndarray
-        ne x 3 or 6 list of vertices
-
+    mesh : Mesh
+        Mesh object defining vertices and elements
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
         can either return a scalar value or a 2x2 matrix that transforms <grad u>
@@ -642,6 +646,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     [0.  0.  0.  0.5 1.  0.5 0.  0.  0. ]
     >>> print(u)
     [0.  0.  0.  0.5 0.5 0.5 0.  0.  0. ]
+
     """
     if degree not in [1, 2]:
         raise ValueError('degree = 1 or 2 supported')
@@ -663,11 +668,12 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         E = mesh.E
         X = mesh.X
         Y = mesh.Y
-
-    if degree == 2:
+    elif degree == 2:
         E = mesh.E2
         X = mesh.X2
         Y = mesh.Y2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     # allocate sparse matrix arrays
     m = 3 if degree == 1 else 6
@@ -732,8 +738,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
                                   4*y*(1-x-y)])
 
                 dbasis = np.array([
-                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                    [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                    [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
                 ])
 
                 # Step 4
@@ -776,6 +782,7 @@ def divform(mesh):
     -------
     BX, BY : ndarray
         div block B = [BX, BY].T in [[A, B], [B.T 0]]
+
     """
     if mesh.V2 is None:
         mesh.generate_quadratic()
@@ -830,8 +837,8 @@ def divform(mesh):
             #                   4*y*(1-x-y)])
 
             dbasis = np.array([
-                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
             ])
 
             dphi = invJ.dot(dbasis)
@@ -885,6 +892,7 @@ def applybc(A, b, mesh, bc):
         Modified, assembled sparse matrix
     b : ndarray
         Modified, assembled right-hand side
+
     """
     for c in bc:
         if not callable(c['g']):
@@ -918,6 +926,8 @@ def applybc(A, b, mesh, bc):
         elif c['degree'] == 2:
             X = mesh.X2
             Y = mesh.Y2
+        else:
+            raise ValueError('only mesh.degree 1 or 2 supported')
         u0[idx] = c['g'](X[idx], Y[idx])
 
     # lift (2 of 3)
@@ -981,7 +991,6 @@ def model(num=0):
     See Also
     --------
     poissonfem - build the FE matrix and right hand side
-    Notes
-    -----
+
     """
     raise NotImplementedError(f'model (num={num}) is unimplemented')

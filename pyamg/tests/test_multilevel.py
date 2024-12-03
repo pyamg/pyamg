@@ -1,6 +1,4 @@
 """Test MultilevelSolver class."""
-import inspect
-
 import numpy as np
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 from scipy import sparse
@@ -55,20 +53,16 @@ class TestMultilevel(TestCase):
 
         ml = smoothed_aggregation_solver(A)
 
-        kwargs = dict(tol=1e-8, maxiter=30, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            kwargs['rtol'] = kwargs.pop('tol')
-
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, M=M, **kwargs)
+            x, _info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
             # cg satisfies convergence in the preconditioner norm
             assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
             res = []
-            x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
+            x, _info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
             assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
 
@@ -150,7 +144,7 @@ class TestComplexMultilevel(TestCase):
 
         # Make cases complex
         cases = [G+1e-5j*G for G in cases]
-        cases = [0.5*(G + G.H) for G in cases]
+        cases = [0.5*(G + G.T.conjugate()) for G in cases]
 
         # method should be almost exact for small matrices
         for A in cases:

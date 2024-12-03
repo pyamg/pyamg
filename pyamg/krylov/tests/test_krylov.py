@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import (TestCase, assert_array_almost_equal,
                            assert_equal, assert_almost_equal)
 from scipy.linalg import solve
-import scipy.sparse as sparse
+from scipy import sparse
 
 import pyamg
 from pyamg.util.linalg import norm

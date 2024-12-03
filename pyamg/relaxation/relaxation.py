@@ -65,11 +65,10 @@ def make_system(A, x, b, formats=None):
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
+    elif sparse.isspmatrix(A) and A.format in formats:
+        pass
     else:
-        if sparse.isspmatrix(A) and A.format in formats:
-            pass
-        else:
-            A = sparse.csr_matrix(A).asformat(formats[0])
+        A = sparse.csr_matrix(A).asformat(formats[0])
 
     if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')
@@ -246,9 +245,6 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         schwarz_parameters(A, subdomain, subdomain_ptr,
                            inv_subblock, inv_subblock_ptr)
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, subdomain_ptr.shape[0]-1, 1
     elif sweep == 'backward':
@@ -262,6 +258,8 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='backward')
         return
+    else:
+        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
 
     # Call C code, need to make sure that subdomains are sorted and unique
     for _iter in range(iterations):
@@ -327,9 +325,6 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             raise ValueError('BSR blocks must be square')
         blocksize = R
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
@@ -339,6 +334,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     if sparse.isspmatrix_csr(A):
         for _iter in range(iterations):
@@ -566,9 +563,6 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
@@ -580,6 +574,8 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
             block_gauss_seidel(A, x, b, iterations=1, sweep='backward',
                                blocksize=blocksize, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _iter in range(iterations):
         amg_core.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
@@ -716,9 +712,6 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     # if indices.max() >= A.shape[0]
     #     raise ValueError('row index (%d) is invalid' % indices.max())
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(indices), 1
     elif sweep == 'backward':
@@ -730,6 +723,8 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='backward')
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _iter in range(iterations):
         amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
@@ -887,9 +882,6 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(x), 1
     elif sweep == 'backward':
@@ -901,6 +893,8 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _i in range(iterations):
         amg_core.gauss_seidel_ne(A.indptr, A.indices, A.data,
@@ -972,9 +966,6 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=1, inv=True))
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         col_start, col_stop, col_step = 0, len(x), 1
     elif sweep == 'backward':
@@ -986,6 +977,8 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     # Calculate initial residual
     r = b - A*x
@@ -1018,7 +1011,16 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A {csr_matrix}
+    A : csr_matrix
+        System matrix for relaxation
+    subdomain : array
+        Indices of each subdomain must be sorted over each subdomain
+    subdomain_ptr : array
+        Pointer array indicating where each subdomain starts and stops
+    inv_subblock : array
+        Inverse of each diagonal block of A, stored in row major
+    inv_subblock_ptr : array
+        Pointer array into Tx indicating where the diagonal blocks start and stop
 
     Returns
     -------
@@ -1172,6 +1174,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
@@ -1236,6 +1239,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 

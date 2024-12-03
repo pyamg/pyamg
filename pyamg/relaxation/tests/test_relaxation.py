@@ -203,9 +203,9 @@ class TestRelaxation(TestCase):
                                  [0, -1, 1], N, N).tocsr())
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             divisors =\
@@ -229,9 +229,9 @@ class TestRelaxation(TestCase):
                                  [0, -1, 1], N, N).tocsr())
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             for sweep in sweeps:
@@ -881,20 +881,18 @@ class TestComplexRelaxation(TestCase):
     def test_jacobi_bsr(self):
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            #
             C = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
                         N, N).tocsr()
             C.data = C.data + 1.0j*1e-3*np.random.rand(C.data.shape[0],)
             cases.append(C)
-            #
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
-            #
+
             C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
-            cases.append(C*C.H)
-            #
+            cases.append(C*C.T.conjugate())
+
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
                 eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             n = A.shape[0]
@@ -915,20 +913,18 @@ class TestComplexRelaxation(TestCase):
         sweeps = ['forward', 'backward', 'symmetric']
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            #
             C = spdiags([2*np.ones(N), -np.ones(N), -np.ones(N)], [0, -1, 1],
                         N, N).tocsr()
             C.data = C.data + 1.0j*1e-3*np.random.rand(C.data.shape[0],)
             cases.append(C)
-            #
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
-            #
+
             C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
-            cases.append(C*C.H)
-            #
+            cases.append(C*C.T.conjugate())
+
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
                 eye(N*2, N*2)
-            cases.append(C*C.H)
+            cases.append(C*C.T.conjugate())
 
         for A in cases:
             n = A.shape[0]
@@ -1056,7 +1052,6 @@ class TestComplexRelaxation(TestCase):
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
                                         sweep='symmetric'))
 
-            ##
             # Indexed Gauss-Seidel Tests
             x_copy = x.copy()
             gauss_seidel_indexed(A, x, b, indices=np.arange(A.shape[0]),

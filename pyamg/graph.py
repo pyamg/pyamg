@@ -30,6 +30,8 @@ def maximal_independent_set(G, algo='serial', k=None):
         Algorithm used to compute the MIS
             * serial   : greedy serial algorithm
             * parallel : variant of Luby's parallel MIS algorithm
+    k : int
+        Minimum separation between MIS vertices
 
     Returns
     -------
@@ -141,6 +143,7 @@ def bellman_ford(G, seeds):
     See Also
     --------
     scipy.sparse.csgraph.bellman_ford
+
     """
     G = asgraph(G)
     N = G.shape[0]
@@ -375,7 +378,7 @@ def symmetric_rcm(A):
     pseudo_peripheral_node
 
     """
-    dummy_root, order, dummy_level = pseudo_peripheral_node(A)
+    _dummy_root, order, _dummy_level = pseudo_peripheral_node(A)
 
     p = order[::-1]
 

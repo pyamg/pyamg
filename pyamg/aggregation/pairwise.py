@@ -21,8 +21,7 @@ def pairwise_solver(A,
                                   {'sweep': 'symmetric'}),
                     max_levels=20, max_coarse=10,
                     **kwargs):
-    """
-    Create a multilevel solver using Pairwise Aggregation.
+    """Create a multilevel solver using Pairwise Aggregation.
 
     Parameters
     ----------
@@ -44,6 +43,8 @@ def pairwise_solver(A,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : {integer} : default 500
         Maximum number of variables permitted on the coarse grid.
+    kwargs : dict
+        Extra keywords passed to the Multilevel class
 
     Other Parameters
     ----------------
@@ -129,7 +130,7 @@ def _extend_hierarchy(levels, aggregate):
     # Compute pairwise interpolation and restriction matrices, R=P^*
     _, kwargs = unpack_arg(aggregate[len(levels)-1])
     P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
-    R = P.H
+    R = P.T.conjugate()
     if isspmatrix_csr(P):
         # In this case, R will be CSC, which must be changed
         R = R.tocsr()

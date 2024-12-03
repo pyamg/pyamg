@@ -66,6 +66,8 @@ def air_solver(A,
     keep: {bool} : default False
         Flag to indicate keeping strength of connection matrix (C) in
         hierarchy.
+    kwargs : dict
+        Extra keywords passed to the Multilevel class
 
     Returns
     -------

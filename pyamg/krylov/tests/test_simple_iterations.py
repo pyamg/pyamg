@@ -155,7 +155,6 @@ class TestSimpleIterations(TestCase):
                 fvals = []
 
                 callback = partial(cb, A=A)
-                #
                 x, _ = minimal_residual(A, b, x0=x0,
                                         tol=1e-16, maxiter=maxiter,
                                         callback=callback)
@@ -174,7 +173,6 @@ class TestSimpleIterations(TestCase):
         fvals = []
 
         callback = partial(cb, A=A)
-        #
         resvec = []
         sa = pyamg.smoothed_aggregation_solver(A)
         x, _ = minimal_residual(A, b, x0, tol=1e-8, maxiter=20,

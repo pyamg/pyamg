@@ -7,27 +7,13 @@ from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
     isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.linalg import eigvals
 
-try:
-    from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
-                                           csr_scale_columns, bsr_scale_columns)
-except ImportError:
-    from scipy.sparse.sparsetools import (csr_scale_rows, bsr_scale_rows,
-                                          csr_scale_columns, bsr_scale_columns)
+# pylint: disable=no-name-in-module
+from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
+                                       csr_scale_columns, bsr_scale_columns)
 
-try:
-    # scipy >=1.8
-    # pylint: disable=unused-import
-    from scipy.sparse.linalg._isolve.utils import make_system
-except ImportError:
-    # scipy <1.8
-    from scipy.sparse.linalg.isolve.utils import make_system  # noqa: F401
-
-try:
-    # scipy >=1.8
-    from scipy.sparse._sputils import upcast
-except ImportError:
-    # scipy <1.8
-    from scipy.sparse.sputils import upcast
+# pylint: disable=unused-import
+from scipy.sparse.linalg._isolve.utils import make_system  # noqa: F401
+from scipy.sparse._sputils import upcast
 
 from .. import amg_core
 from . import linalg
@@ -49,6 +35,8 @@ def profile_solver(ml, accel=None, **kwargs):
         Fully constructed multilevel object
     accel : function pointer
         Pointer to a valid Krylov solver (e.g. gmres, cg)
+    kwargs: dictionary
+        Any keyword options sent to the solve()
 
     Returns
     -------
@@ -847,8 +835,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
         # Update colwidths if row[j] is wider than colwidth[j]
         for j, r in enumerate(row):
-            if len(r) > colwidths[j]:
-                colwidths[j] = len(r)
+            colwidths[j] = max(len(r), colwidths[j])
 
     # Factor in extra column padding
     for i, _ in enumerate(colwidths):
@@ -905,9 +892,11 @@ def hierarchy_spectrum(mg, filter_entries=True):
 
     Parameters
     ----------
-    mg { pyamg multilevel hierarchy }
+    mg : Multilevel
         e.g. generated with smoothed_aggregation_solver(...) or
         ruge_stuben_solver(...)
+    filter_entries : bool
+        Toggle filtering zero rows of each matrix
 
     Returns
     -------
@@ -1081,15 +1070,14 @@ def coord_to_rbm(nnodes, ndof, x, y, z):
                 for jj in range(3, 6):
                     if ii == (jj-3):
                         rbm[dof+ii, jj] = 0.0
+                    elif (ii+jj) == 4:
+                        rbm[dof+ii, jj] = z[node]
+                    elif (ii+jj) == 5:
+                        rbm[dof+ii, jj] = y[node]
+                    elif (ii+jj) == 6:
+                        rbm[dof+ii, jj] = x[node]
                     else:
-                        if (ii+jj) == 4:
-                            rbm[dof+ii, jj] = z[node]
-                        elif (ii+jj) == 5:
-                            rbm[dof+ii, jj] = y[node]
-                        elif (ii+jj) == 6:
-                            rbm[dof+ii, jj] = x[node]
-                        else:
-                            rbm[dof+ii, jj] = 0.0
+                        rbm[dof+ii, jj] = 0.0
 
             ii = 0
             jj = 5
@@ -1739,6 +1727,7 @@ def scale_rows_by_largest_entry(S):
     Parameters
     ----------
     S : csr_matrix
+        Target matrix for row scaling
 
     Returns
     -------
@@ -1833,7 +1822,7 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
         if to_levelize == 'predefined':
             raise ValueError('predefined to_levelize requires a user-provided '
                              'CSR matrix representing strength or aggregation '
-                             'i.e., ("predefined", {"C" : CSR_MAT}).')  # noqa: FS003
+                             'i.e., ("predefined", {"C" : CSR_MAT}).')
         to_levelize = [to_levelize for i in range(max_levels-1)]
 
     elif isinstance(to_levelize, list):
@@ -1842,12 +1831,10 @@ def levelize_strength_or_aggregation(to_levelize, max_levels, max_coarse):
             # to_levelize is a list that ends with a predefined operator
             max_levels = len(to_levelize) + 1
             max_coarse = 0
-        else:
-            # to_levelize a list that __doesn't__ end with 'predefined'
-            if len(to_levelize) < max_levels-1:
-                mlz = max_levels - 1 - len(to_levelize)
-                toext = [to_levelize[-1] for i in range(mlz)]
-                to_levelize.extend(toext)
+        elif len(to_levelize) < max_levels-1:
+            mlz = max_levels - 1 - len(to_levelize)
+            toext = [to_levelize[-1] for i in range(mlz)]
+            to_levelize.extend(toext)
 
     elif to_levelize is None:
         to_levelize = [(None, {}) for i in range(max_levels-1)]
@@ -1929,6 +1916,7 @@ def filter_matrix_columns(A, theta):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix for filtering
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the columns
@@ -1959,6 +1947,7 @@ def filter_matrix_columns(A, theta):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
@@ -2007,6 +1996,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix for filtering
 
     theta : float
         In range [0,1) and defines drop-tolerance used to filter the row of A
@@ -2041,6 +2031,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     Aformat = A.format
@@ -2095,6 +2086,7 @@ def truncate_rows(A, nz_per_row):
     Parameters
     ----------
     A : sparse_matrix
+        Target matrix  for truncating
 
     nz_per_row : int
         Determines how many entries in each row to keep
@@ -2121,6 +2113,7 @@ def truncate_rows(A, nz_per_row):
     """
     if not isspmatrix(A):
         raise ValueError('Sparse matrix input needed')
+    blocksize = 1
     if isspmatrix_bsr(A):
         blocksize = A.blocksize
     if isspmatrix_csr(A):
@@ -2171,6 +2164,7 @@ def scale_block_inverse(A, blocksize):
            [ 0.        ,  1.        , -0.66666667,  0.        ],
            [ 0.        , -0.66666667,  1.        ,  0.        ],
            [ 0.        , -0.33333333,  0.        ,  1.        ]])
+
     """
     if not isspmatrix(A):
         raise TypeError('Expected sparse matrix')

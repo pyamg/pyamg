@@ -11,5 +11,10 @@ from . import vis_coarse
 from .vtk_writer import write_vtu, write_basic_mesh
 from .vis_coarse import vis_aggregate_groups
 
-__all__ = ['vtk_writer', 'vis_coarse',
-           'vis_aggregate_groups', 'write_vtu', 'write_basic_mesh']
+__all__ = [
+    'vis_aggregate_groups',
+    'vis_coarse',
+    'vtk_writer',
+    'write_basic_mesh',
+    'write_vtu',
+]

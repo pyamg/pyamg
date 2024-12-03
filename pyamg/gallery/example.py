@@ -42,4 +42,4 @@ def load_example(name):
 
 
 # insert the example names into the docstring
-load_example.__doc__ %= ('\n' + ' ' * 8).join([''] + example_names)
+load_example.__doc__ += ('\n' + ' ' * 8).join(['', *example_names])

@@ -1,6 +1,4 @@
 """Test utils."""
-import inspect
-
 import numpy as np
 from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
                           bsr_matrix, isspmatrix_bsr,
@@ -170,10 +168,7 @@ class TestUtils(TestCase):
         opts = []
         opts.append({})
 
-        # does cg have rtol?
-        nextopt = dict(accel=cg, tol=1e-10, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            nextopt['rtol'] = nextopt.pop('tol')
+        nextopt = {'accel': cg, 'rtol': 1e-10, 'atol': 0}
         opts.append(nextopt)
 
         for kwargs in opts:
@@ -266,7 +261,7 @@ class TestUtils(TestCase):
                 for (A, x, b) in zip(As, xs, bs):
                     kwargs_linop = dict(kwargs)
                     # run relaxation as a linear operator
-                    if kwargs_linop == dict({}):
+                    if kwargs_linop == {}:
                         relax = relaxation_as_linear_operator(method, A, b)
                     else:
                         fmethod = (method, kwargs_linop)
@@ -1179,12 +1174,12 @@ class TestComplexUtils(TestCase):
             D = 1.0/D
             assert_almost_equal(D, D_A_inv)
 
-            D = np.diag((A.H*A).toarray())
+            D = np.diag((A.T.conjugate()*A).toarray())
             assert_almost_equal(D, D_AA)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv)
 
-            D = np.diag((A*A.H).toarray())
+            D = np.diag((A*A.T.conjugate()).toarray())
             assert_almost_equal(D, D_AA2)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv2)
@@ -1201,10 +1196,7 @@ class TestComplexUtils(TestCase):
         opts = []
         opts.append({})
 
-        # does cg have rtol?
-        nextopt = dict(accel=cg, tol=1e-10, atol=0)
-        if 'rtol' in inspect.getfullargspec(cg).args:
-            nextopt['rtol'] = nextopt.pop('tol')
+        nextopt = {'accel': cg, 'rtol': 1e-10, 'atol': 0}
         opts.append(nextopt)
 
         for kwargs in opts:

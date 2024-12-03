@@ -8,7 +8,7 @@ PyAMG features implementations of:
 
 - Ruge-Stuben (RS) or Classical AMG
 - AMG based on Smoothed Aggregation (SA)
-- Adaptive Smoothed Aggregation (αSA)
+- Adaptive Smoothed Aggregation (aSA)
 - Compatible Relaxation (CR)
 - Krylov methods such as CG, GMRES, FGMRES, BiCGStab, MINRES, etc
 

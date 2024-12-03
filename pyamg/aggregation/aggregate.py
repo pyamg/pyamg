@@ -231,6 +231,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
     method. Electronic transactions on numerical analysis, 37(6),
     123-146.
+
     """
     # Get SOC matrix
     if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
@@ -286,11 +287,10 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Form aggregation matrix, need to make sure is CSR/BSR
         if i == 0:
             T = T_temp
+        elif sparse.isspmatrix_bsr(A):
+            T = sparse.bsr_matrix(T * T_temp)
         else:
-            if sparse.isspmatrix_bsr(A):
-                T = sparse.bsr_matrix(T * T_temp)
-            else:
-                T = sparse.csr_matrix(T * T_temp)
+            T = sparse.csr_matrix(T * T_temp)
 
         # Break loop if zero aggregates were found
         if num_aggregates == 0:

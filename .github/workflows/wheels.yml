@@ -15,29 +15,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-11]
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # uncomment to force a wheel build
-          # ref: v4.2.3
-          fetch-depth: 1
+          ref: v5.2.1
+          fetch-depth: 0
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.19.1
         env:
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: pp*
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_ARCHS_MACOS: "auto"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -45,9 +47,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # uncomment to force a wheel build
+          ref: v5.2.1
+          fetch-depth: 0
 
       - name: Install pypa/build
         run: pip install 'build[virtualenv]'
@@ -56,21 +60,29 @@ jobs:
         run: python -m build --sdist
 
       - name: Save sdist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: artifact-sdist
           path: dist/*.tar.gz
 
   upload_all:
+    name: upload to PyPI
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    environment:
+      name: publish_pypi
+      url: https://pypi.org/p/pyamg
+    permissions:
+      id-token: write
     steps:
-    - uses: actions/download-artifact@v3
+    - name: retrieve artifacts
+      uses: actions/download-artifact@v4
       with:
-        name: artifact
+        pattern: artifact-*
+        merge-multiple: true
         path: dist
-
-    - uses: pypa/gh-action-pypi-publish@v1.8.5
+    - name: publish to pypi
+      uses: pypa/gh-action-pypi-publish@v1.9.0
       with:
-        user: __token__
-        password: ${{ secrets.pypi_token }}
+        # uncomment to force a wheel build
+        skip-existing: true

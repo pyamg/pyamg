@@ -23,6 +23,7 @@ def set_tol(dtype):
     See Also
     --------
     numpy.typecodes, numpy.sctypes
+
     """
     if dtype.char.lower() == 'f':
         tol = 1e3 * np.finfo(np.single).eps

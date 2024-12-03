@@ -30,6 +30,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
         Square, sparse matrix in CSR or BSR format
     V : array
         Coordinates of the vertices of the graph of A
+    theta : float
+        Drop tolerance (distance)
     relative_drop : bool
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
@@ -308,9 +310,6 @@ def symmetric_strength_of_connection(A, theta=0):
     if theta < 0:
         raise ValueError('expected a positive theta')
 
-    if not sparse.isspmatrix_csr(A) and not sparse.isspmatrix_bsr(A):
-        raise TypeError('expected csr_matrix or bsr_matrix')
-
     if sparse.isspmatrix_csr(A):
         # if theta == 0:
         #     return A
@@ -343,6 +342,8 @@ def symmetric_strength_of_connection(A, theta=0):
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
+    else:
+        raise TypeError('expected csr_matrix or bsr_matrix')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)
@@ -427,6 +428,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
             raise ValueError('expected square blocks in BSR matrix A')
     else:
         bsr_flag = False
+        numPDEs = 1
 
     # Convert A to csc and Atilde to csr
     if sparse.isspmatrix_csr(A):
@@ -499,10 +501,11 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     return Atilde
 
 
-@np.deprecate
 def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
                                block_flag=False, symmetrize_measure=True):
     """Use evolution_strength_of_connection instead (deprecated)."""
+    warn('ode_strength_of_connection method is deprecated. '
+         'Use evolution_strength_of_connection.', DeprecationWarning, stacklevel=2)
     return evolution_strength_of_connection(A, B, epsilon, k, proj_type,
                                             block_flag, symmetrize_measure)
 
@@ -530,6 +533,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     block_flag : boolean
         If True, use a block D inverse as preconditioner for A during
         weighted-Jacobi
+    symmetrize_measure : boolean
+        Symmetrize the strength as (A + A.T) / 2
 
     Returns
     -------

@@ -25,13 +25,19 @@ from .random_sparse import sprand
 from .demo import demo
 
 __all__ = [
-    'elasticity', 'laplacian', 'stencil', 'diffusion',
-    'linear_elasticity', 'linear_elasticity_p1',
-    'load_example', 'advection_2d',
-    'poisson', 'gauge_laplacian',
-    'stencil_grid',
-    'regular_triangle_mesh',
-    'diffusion_stencil_2d',
-    'sprand',
+    'advection_2d',
     'demo',
+    'diffusion',
+    'diffusion_stencil_2d',
+    'elasticity',
+    'gauge_laplacian',
+    'laplacian',
+    'linear_elasticity',
+    'linear_elasticity_p1',
+    'load_example',
+    'poisson',
+    'regular_triangle_mesh',
+    'sprand',
+    'stencil',
+    'stencil_grid',
 ]

@@ -140,6 +140,8 @@ def q12d_local(vertices, lame, mu):
 
     Parameters
     ----------
+    vertices : array
+        List of vertices
     lame : Float
         Lame's first parameter
     mu : Float
@@ -260,13 +262,12 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
-    if D not in (2, 3):
-        raise ValueError('only dimension 2 and 3 are supported')
-
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
+    else:
+        raise ValueError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D

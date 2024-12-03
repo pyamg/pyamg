@@ -40,6 +40,8 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         Tentative prolongation operator for the level that x was generated for
     thresh : scalar
         Constant threshold parameter to decide when to drop candidates
+    kwargs : dict
+        Extra keywords; currently unused.
 
     Returns
     -------
@@ -179,6 +181,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
+    kwargs : dict
+        Extra keywords passed to Mulilevel class
 
     Returns
     -------
@@ -361,10 +365,38 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
     Parameters
     ----------
-    candidate_iters
-        number of test relaxation iterations
-    epsilon
-        minimum acceptable relaxation convergence factor
+    A : sparse matrix
+        Target system matrix in A x = b
+    symmetry : string
+        'symmetric' refers to both real and complex symmetric
+        'hermitian' refers to both complex Hermitian and real Hermitian
+    pdef : bool
+        True or False, whether A is known to be positive definite.
+    candidate_iters : int
+        Number of test relaxation iterations
+    epsilon : float
+        Minimum acceptable relaxation convergence factor
+    max_levels : integer
+        Maximum number of levels to be used in the multilevel solver
+    max_coarse : integer
+        Maximum number of variables permitted on the coarse grid
+    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_matrix})]
+        Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
+        documentation.
+    prepostsmoother : string or dict
+        Pre- and post-smoother used in the adaptive method
+    smooth : ['jacobi', 'richardson', 'energy', None]
+        Method used used to smooth the tentative prolongator.  See
+        smoothed_aggregation_solver(...) documentation
+    strength : ['symmetric', 'classical', 'evolution', None]
+        Method used to determine the strength of connection between unknowns of
+        the linear system.  See smoothed_aggregation_solver(...) documentation.
+        Predefined strength may be used with ('predefined', {'C': csr_matrix}).
+    work : float
+        A measure of the total complexity
+    initial_candidate : array
+        Initial near-nullspace candidates
+
 
     Notes
     -----
@@ -462,7 +494,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             C_l = A_l.tocsr()
         else:
-            raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
+            raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
 
         # In SA, strength represents 'distance', so we take magnitude of
         # complex values
@@ -483,7 +515,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn == 'predefined':
             AggOp = kwargs['AggOp'].tocsr()
         else:
-            raise ValueError(f'Unrecognized aggregation method {str(fn)}')
+            raise ValueError(f'Unrecognized aggregation method {fn!s}')
 
         T_l, x = fit_candidates(AggOp, x)  # step 4c
 
@@ -498,13 +530,13 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         elif fn is None:
             P_l = T_l
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
         # R should reflect A's structure # step 4e
         if symmetry == 'symmetric':
             A_l = P_l.T.asformat(P_l.format) * A_l * P_l
         elif symmetry == 'hermitian':
-            A_l = P_l.H.asformat(P_l.format) * A_l * P_l
+            A_l = P_l.T.conjugate().asformat(P_l.format) * A_l * P_l
         else:
             raise ValueError(f'aSA not implemented for symmetry={symmetry}.')
 
@@ -574,10 +606,31 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
 
     Parameters
     ----------
+    ml : Multilevel
+        Muligrid hierarchy
+    symmetry : string
+        'symmetric' refers to both real and complex symmetric
+        'hermitian' refers to both complex Hermitian and real Hermitian
     candidate_iters
-        number of test relaxation iterations
-    epsilon
-        minimum acceptable relaxation convergence factor
+        Number of test relaxation iterations
+    prepostsmoother : string or dict
+        Pre- and post-smoother used in the adaptive method
+    smooth : ['jacobi', 'richardson', 'energy', None]
+        Method used used to smooth the tentative prolongator.  See
+        smoothed_aggregation_solver(...) documentation
+    eliminate_local : tuple
+        Length 2 tuple.  If the first entry is True, then eliminate candidates
+        where they aren't needed locally, using the second entry of the tuple
+        to contain arguments to local elimination routine.  Given the rigid
+        sparse data structures, this doesn't help much, if at all, with
+        complexity.  Its more of a diagnostic utility.
+    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+        Solver used at the coarsest level of the MG hierarchy.
+        Optionally, may be a tuple (fn, args), where fn is a string such as
+        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        arguments to be passed to fn.
+    work : float
+        A measure of the total complexity
 
     Notes
     -----
@@ -660,13 +713,13 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i].P = T
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
         # construct R
         if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i].R = levels[i].P.T.asformat(levels[i].P.format)
         elif symmetry == 'hermitian':
-            levels[i].R = levels[i].P.H.asformat(levels[i].P.format)
+            levels[i].R = levels[i].P.T.conjugate().asformat(levels[i].P.format)
 
         # construct coarse A
         levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
@@ -695,13 +748,13 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         elif fn is None:
             levels[i+1].P = T_bridge
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method {fn!s}')
 
         # construct the 'bridging' R
         if symmetry == 'symmetric':  # R should reflect A's structure
             levels[i+1].R = levels[i+1].P.T.asformat(levels[i+1].P.format)
         elif symmetry == 'hermitian':
-            levels[i+1].R = levels[i+1].P.H.asformat(levels[i+1].P.format)
+            levels[i+1].R = levels[i+1].P.T.conjugate().asformat(levels[i+1].P.format)
 
         # run solver on candidate
         solver = MultilevelSolver(levels[i+1:], coarse_solver=coarse_solver)

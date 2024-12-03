@@ -117,6 +117,8 @@ def rootnode_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
+    kwargs : dict
+        Extra keywords passed to the Multilevel class
 
     Other Parameters
     ----------------
@@ -323,7 +325,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     A = levels[-1].A
     B = levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        AH = A.H.asformat(A.format)
+        AH = A.T.conjugate().asformat(A.format)
         BH = levels[-1].BH
 
     # Compute the strength-of-connection matrix C, where larger
@@ -351,7 +353,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
+        raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -374,7 +376,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
     else:
-        raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
+        raise ValueError(f'Unrecognized aggregation method: {fn!s}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
@@ -416,14 +418,14 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+        raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     # Compute the restriction matrix R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
     # based on A.H.  Otherwise R = P.H or P.T.
     symmetry = A.symmetry
     if symmetry == 'hermitian':
-        R = P.H
+        R = P.T.conjugate()
     elif symmetry == 'symmetric':
         R = P.T
     elif symmetry == 'nonsymmetric':
@@ -431,11 +433,11 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         if fn == 'energy':
             R = energy_prolongation_smoother(AH, TH, C, BH, levels[-1].BH,
                                              Cpt_params=Cpt_params, **kwargs)
-            R = R.H
+            R = R.T.conjugate()
         elif fn is None:
-            R = T.H
+            R = T.T.conjugate()
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     if keep:
         levels[-1].C = C                         # strength of connection matrix
