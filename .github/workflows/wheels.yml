@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           # uncomment to force a wheel build
-          # ref: v5.2.1
+          ref: v5.2.1
           fetch-depth: 0
 
       - name: Build wheels
@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           # uncomment to force a wheel build
-          # ref: v5.2.1
+          ref: v5.2.1
           fetch-depth: 0
 
       - name: Install pypa/build
