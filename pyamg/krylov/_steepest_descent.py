@@ -8,9 +8,17 @@ from ..util.linalg import norm
 from ..util import make_system
 
 
-def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
-                     maxiter=None, M=None,
-                     callback=None, residuals=None):
+def steepest_descent(
+    A,
+    b,
+    x0=None,
+    tol=1e-5,
+    criteria="rr",
+    maxiter=None,
+    M=None,
+    callback=None,
+    residuals=None,
+):
     """Steepest descent algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
@@ -87,13 +95,13 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
     A, M, x, b, postprocess = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
-    warnings.filterwarnings('always', module='pyamg.krylov._steepest_descent')
+    warnings.filterwarnings("always", module="pyamg.krylov._steepest_descent")
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(len(b))
+        maxiter = len(b)
     elif maxiter < 1:
-        raise ValueError('Number of iterations must be positive')
+        raise ValueError("Number of iterations must be positive")
 
     # setup method
     r = b - A @ x
@@ -111,25 +119,25 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         normb = 1.0  # reset so that tol is unscaled
 
     # set the stopping criteria (see the docstring)
-    if criteria == 'rr':
+    if criteria == "rr":
         rtol = tol * normb
-    elif criteria == 'rr+':
+    elif criteria == "rr+":
         if sparse.issparse(A.A):
             normA = norm(A.A.data)
         elif isinstance(A.A, np.ndarray):
             normA = norm(np.ravel(A.A))
         else:
-            raise ValueError('Unable to use ||A||_F with the current matrix format.')
+            raise ValueError("Unable to use ||A||_F with the current matrix format.")
         rtol = tol * (normA * np.linalg.norm(x) + normb)
-    elif criteria == 'MrMr':
+    elif criteria == "MrMr":
         normr = norm(z)
         normMb = norm(M @ b)
         rtol = tol * normMb
-    elif criteria == 'rMr':
+    elif criteria == "rMr":
         normr = np.sqrt(rz)
         rtol = tol
     else:
-        raise ValueError('Invalid stopping criteria.')
+        raise ValueError("Invalid stopping criteria.")
 
     # How often should r be recomputed
     recompute_r = 50
@@ -138,12 +146,12 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
     while True:
         q = A @ z
-        zAz = np.inner(z.conjugate(), q)                # check curvature of A
+        zAz = np.inner(z.conjugate(), q)  # check curvature of A
         if zAz < 0.0:
-            warn('\nIndefinite matrix detected in steepest descent, aborting\n')
+            warn("\nIndefinite matrix detected in steepest descent, aborting\n")
             return (postprocess(x), -1)
 
-        alpha = rz / zAz                            # step size
+        alpha = rz / zAz  # step size
         x = x + alpha * z
 
         it += 1
@@ -155,8 +163,8 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         z = M @ r
         rz = np.inner(r.conjugate(), z)
 
-        if rz < 0.0:                                # check curvature of M
-            warn('\nIndefinite preconditioner detected in steepest descent, stopping.\n')
+        if rz < 0.0:  # check curvature of M
+            warn("\nIndefinite preconditioner detected in steepest descent, stopping.\n")
             return (postprocess(x), -1)
 
         normr = norm(r)
@@ -168,14 +176,14 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
             callback(x)
 
         # set the stopping criteria (see the docstring)
-        if criteria == 'rr':
+        if criteria == "rr":
             rtol = tol * normb
-        elif criteria == 'rr+':
+        elif criteria == "rr+":
             rtol = tol * (normA * np.linalg.norm(x) + normb)
-        elif criteria == 'MrMr':
+        elif criteria == "MrMr":
             normr = norm(z)
             rtol = tol * normMb
-        elif criteria == 'rMr':
+        elif criteria == "rMr":
             normr = np.sqrt(rz)
             rtol = tol
 
@@ -185,7 +193,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         if rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
-            warn('\nSingular preconditioner detected in steepest descent, stopping.\n')
+            warn("\nSingular preconditioner detected in steepest descent, stopping.\n")
             return (postprocess(x), -1)
 
         if it == maxiter:
