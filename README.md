@@ -18,13 +18,17 @@ or from source:
 pip install .
 ```
 
-(`python setup.py install` will no longer work)
-
 or with conda (see details below)
 
 ```
 conda config --add channels conda-forge
 conda install pyamg
+```
+
+For an editable install use:
+```
+pip install meson-python meson ninja pybind11 versioningit pytest
+pip install --no-build-isolation -e .
 ```
 
 # Introduction
