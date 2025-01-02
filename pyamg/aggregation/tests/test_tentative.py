@@ -181,5 +181,5 @@ class TestFitCandidates(TestCase):
             Q, coarse_candidates = fit_candidates(AggOp, fine_candidates)
 
             # each fine level candidate should be fit (almost) exactly
-            assert_almost_equal(fine_candidates, Q * coarse_candidates)
-            assert_almost_equal(Q * (Q.T.conjugate() * fine_candidates), fine_candidates)
+            assert_almost_equal(fine_candidates, Q @ coarse_candidates)
+            assert_almost_equal(Q @ (Q.T.conjugate() @ fine_candidates), fine_candidates)

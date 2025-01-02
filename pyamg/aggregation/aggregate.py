@@ -56,7 +56,7 @@ def standard_aggregation(C):
     amg_core.standard_aggregation
 
     """
-    if not sparse.isspmatrix_csr(C):
+    if not sparse.issparse(C) or C.format != 'csr':
         raise TypeError('expected csr_matrix')
 
     if C.shape[0] != C.shape[1]:
@@ -149,7 +149,7 @@ def naive_aggregation(C):
     standard aggregation.
 
     """
-    if not sparse.isspmatrix_csr(C):
+    if not sparse.issparse(C) or C.format != 'csr':
         raise TypeError('expected csr_matrix')
 
     if C.shape[0] != C.shape[1]:
@@ -234,7 +234,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
     """
     # Get SOC matrix
-    if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
+    if A.format not in ('bsr', 'csr'):
         try:
             A = A.tocsr()
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
@@ -250,7 +250,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     for i in range(0, matchings):
 
         # Compute SOC matrix for this matching
-        if sparse.isspmatrix_bsr(A):
+        if A.format == 'bsr':
             C = classical_strength_of_connection(A=Ac, theta=theta, block=True, norm=norm)
         else:
             C = classical_strength_of_connection(A=Ac, theta=theta, block=False, norm=norm)
@@ -276,7 +276,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
             # If A is not BSR
-            if not sparse.isspmatrix_bsr(A):
+            if A.format != 'bsr':
                 Tx = np.ones(len(Tj), dtype='int8')
                 T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
             else:
@@ -287,10 +287,10 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Form aggregation matrix, need to make sure is CSR/BSR
         if i == 0:
             T = T_temp
-        elif sparse.isspmatrix_bsr(A):
-            T = sparse.bsr_matrix(T * T_temp)
+        elif A.format == 'bsr':
+            T = sparse.bsr_matrix(T @ T_temp)
         else:
-            T = sparse.csr_matrix(T * T_temp)
+            T = sparse.csr_matrix(T @ T_temp)
 
         # Break loop if zero aggregates were found
         if num_aggregates == 0:
@@ -298,10 +298,10 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
         # Form coarse grid operator for next matching
         if i < (matchings-1):
-            if sparse.isspmatrix_csr(T_temp):
-                Ac = T_temp.T.tocsr() * Ac * T_temp
+            if T_temp.format == 'csr':
+                Ac = T_temp.T.tocsr() @ Ac @ T_temp
             else:
-                Ac = T_temp.T * Ac * T_temp
+                Ac = T_temp.T @ Ac @ T_temp
 
     # Convert T to dtype int if only used for aggregation
     if compute_P:
@@ -370,7 +370,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 
-    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
+    if not sparse.issparse(C) or C.format not in ('csc', 'csr'):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if distance == 'unit':
@@ -446,7 +446,7 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     if num_clusters < 1 or num_clusters > C.shape[0]:
         raise ValueError('num_clusters must be between 1 and n')
 
-    if not (sparse.isspmatrix_csr(C) or sparse.isspmatrix_csc(C)):
+    if not sparse.issparse(C) or C.format not in ('csc', 'csr'):
         raise TypeError('expected csr_matrix or csc_matrix')
 
     if C.data.min() <= 0:

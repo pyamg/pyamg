@@ -2,7 +2,7 @@
 
 
 import numpy as np
-from scipy.sparse import isspmatrix_csr, bsr_matrix
+from scipy.sparse import issparse, bsr_matrix
 from pyamg import amg_core
 
 
@@ -114,7 +114,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
            [1.        ]])
 
     """
-    if not isspmatrix_csr(AggOp):
+    if not issparse(AggOp) or AggOp.format != 'csr':
         raise TypeError('expected csr_matrix for argument AggOp')
 
     B = np.asarray(B)

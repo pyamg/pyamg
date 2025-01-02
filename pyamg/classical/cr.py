@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
+from scipy.sparse import issparse, diags
 
 from pyamg import amg_core
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
@@ -148,7 +148,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     if (thetacr >= 1) or (thetacr <= 0):
         raise ValueError('Must have 0 < thetacr < 1')
 
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         raise TypeError('expecting csr sparse matrix A')
 
     if A.dtype == complex:
@@ -259,7 +259,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
        https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise TypeError('expecting sparse matrix A')
 
     if A.dtype == complex:
@@ -274,7 +274,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     d = B.diagonal().ravel()
 
     # 2.
-    beta = B * x
+    beta = B @ x
     betabar = (1.0/n) * np.dot(x, beta)
     stdev = rowsum_stdev(x, beta)
 
@@ -311,8 +311,8 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     # rescale for unit 2-norm
     d = np.sqrt(x)
-    D = spdiags(d.ravel(), [0], n, n)
-    C = D * A * D
+    D = diags([d.ravel()], offsets=[0], shape=(n, n))
+    C = D @ A @ D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)
     scale = np.sqrt((1.0/n) * np.sum(beta))

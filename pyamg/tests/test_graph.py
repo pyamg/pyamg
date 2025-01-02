@@ -33,7 +33,7 @@ def assert_is_mis(G, mis):
     if G.nnz > 0:
         assert (mis[G.row] + mis[G.col]).max() <= 1
     # all non-set vertices have set neighbor
-    assert (mis + G*mis).min() == 1
+    assert (mis + G@mis).min() == 1
 
 
 def assert_is_vertex_coloring(G, c):

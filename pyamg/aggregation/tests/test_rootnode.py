@@ -29,7 +29,7 @@ class TestParameters(TestCase):
             np.random.seed(0)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -107,7 +107,7 @@ class TestComplexParameters(TestCase):
             np.random.seed(0)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
@@ -200,7 +200,7 @@ class TestSolverPerformance(TestCase):
             np.random.seed(0)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -226,14 +226,14 @@ class TestSolverPerformance(TestCase):
         D = D.tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
-        # DAD = D * A * D
+        # DAD = D @ A @ D
 
         B = np.ones((A.shape[0], 1))
 
         # TODO force 2 level method and check that result is the same
         kwargs = {'max_coarse': 1, 'max_levels': 2, 'coarse_solver': 'splu'}
 
-        sa = rootnode_solver(D * A * D, D_inv * B, **kwargs)
+        sa = rootnode_solver(D @ A @ D, D_inv @ B, **kwargs)
 
         residuals = []
         x_sol = sa.solve(b, x0=x, maxiter=10, tol=1e-12, residuals=residuals)
@@ -309,7 +309,7 @@ class TestSolverPerformance(TestCase):
                 P = ml.aspreconditioner()
                 x = np.random.rand(n,)
                 y = np.random.rand(n,)
-                assert_approx_equal(np.dot(P * x, y), np.dot(x, P * y))
+                assert_approx_equal(np.dot(P @ x, y), np.dot(x, P @ y))
 
     def test_nonsymmetric(self):
         # problem data
@@ -318,7 +318,7 @@ class TestSolverPerformance(TestCase):
         B = data['B']
         np.random.seed(625)
         x0 = np.random.rand(A.shape[0])
-        b = A * np.random.rand(A.shape[0])
+        b = A @ np.random.rand(A.shape[0])
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',
@@ -471,7 +471,7 @@ class TestComplexSolverPerformance(TestCase):
             np.random.seed(0)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,

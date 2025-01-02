@@ -33,7 +33,7 @@ class TestLinearElasticityP1(TestCase):
         """Check that rigid body modes lie in nullspace."""
         for V, E in self.cases:
             A, B = linear_elasticity_p1(V, E)
-            assert_almost_equal(A*B, 0*B)
+            assert_almost_equal(A @ B, 0*B)
 
 
 class TestLinearElasticityGrid(TestCase):

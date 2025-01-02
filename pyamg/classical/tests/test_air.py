@@ -17,14 +17,14 @@ class TestAIR(TestCase):
 
         for n in sizes:
             # CSR case
-            A = diags([np.ones((n,)), -1*np.ones((n-1,))], [0, -1]).tocsr()
+            A = diags([np.ones((n,)), -1*np.ones((n-1,))], offsets=[0, -1], format='csr')
             f_relax = ('fc_jacobi', {'iterations': 1, 'f_iterations': 1,
                        'c_iterations': 0})
             ml = air_solver(A, postsmoother=f_relax, max_levels=2)
 
             res = []
             x = np.random.rand(A.shape[0])
-            b = A*np.random.rand(A.shape[0])  # zeros_like(x)
+            b = A@np.random.rand(A.shape[0])  # zeros_like(x)
             x_sol = ml.solve(b, x0=x, maxiter=1, tol=1e-12, residuals=res)
             del x_sol
             assert (res[1] < 1e-12)
@@ -44,7 +44,7 @@ class TestAIR(TestCase):
 
             res = []
             xb = np.random.rand(Ab.shape[0])
-            bb = Ab*np.random.rand(Ab.shape[0])  # zeros_like(x)
+            bb = Ab@np.random.rand(Ab.shape[0])  # zeros_like(x)
             x_sol = ml.solve(bb, x0=xb, maxiter=1, tol=1e-12, residuals=res)
             del x_sol
             assert (res[1] < 1e-12)
@@ -65,7 +65,7 @@ class TestAIR(TestCase):
 
                     np.random.seed(0)  # make tests repeatable
                     x = np.random.rand(A.shape[0])
-                    b = A*np.random.rand(A.shape[0])  # zeros_like(x)
+                    b = A@np.random.rand(A.shape[0])  # zeros_like(x)
 
                     ml = air_solver(A, interpolation=interp, restrict=restr, max_coarse=50)
 

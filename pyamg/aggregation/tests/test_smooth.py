@@ -26,7 +26,7 @@ class TestEnergyMin(TestCase):
             S = S.copy()   # don't overwrite the original S
 
             S.data[:] = 1.0
-            SS = A * B
+            SS = A @ B
             SS = SS.multiply(S)
 
             # Union the sparsity patterns of SS and S, storing
@@ -457,11 +457,11 @@ class TestEnergyMin(TestCase):
             P = ml.levels[0].P
             B = ml.levels[0].B
             R = ml.levels[1].B
-            assert_almost_equal(P * R, B)
+            assert_almost_equal(P @ R, B)
 
         def _get_blocksize(A):
             # Helper Function: return the blocksize of a matrix
-            if sparse.isspmatrix_bsr(A):
+            if A.format == 'bsr':
                 return A.blocksize[0]
 
             return 1
@@ -496,8 +496,8 @@ class TestEnergyMin(TestCase):
                 # P should preserve B in its range, wherever P
                 # has enough nonzeros
                 mask = ((P.indptr[1:] - P.indptr[:-1]) >= B.shape[1])
-                assert_almost_equal((P*Bc)[mask, :], Bf[mask, :])
-                assert_almost_equal((P*Bc)[mask, :], Bf_H[mask, :])
+                assert_almost_equal((P@Bc)[mask, :], Bf[mask, :])
+                assert_almost_equal((P@Bc)[mask, :], Bf_H[mask, :])
 
                 # P should be the identity at Cpts
                 I1 = sparse.eye(T.shape[1], T.shape[1], format='csr', dtype=T.dtype)

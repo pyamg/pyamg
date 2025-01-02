@@ -3,8 +3,7 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
-    isspmatrix_bsr, SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, bsr_matrix, issparse, SparseEfficiencyWarning
 
 from .. import amg_core
 from ..strength import classical_strength_of_connection
@@ -51,10 +50,10 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
      [0.  0.  1. ]]
 
     """
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         raise TypeError('expected csr_matrix for A')
 
-    if not isspmatrix_csr(C):
+    if not issparse(C) or C.format != 'csr':
         raise TypeError('expected csr_matrix for C')
 
     if theta is not None:
@@ -130,10 +129,10 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
      [ 0.   0.   1. ]]
 
     """
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         raise TypeError('expected csr_matrix for A')
 
-    if not isspmatrix_csr(C):
+    if not issparse(C) or C.format != 'csr':
         raise TypeError('Expected csr_matrix SOC matrix, C.')
 
     nc = np.sum(splitting)
@@ -206,10 +205,12 @@ def injection_interpolation(A, splitting):
      [0. 0. 1.]]
 
     """
-    if isspmatrix_bsr(A):
+    if not issparse(A):
+        raise TypeError('Invalid sparse matrix type, not sparse.')
+    if A.format == 'bsr':
         blocksize = A.blocksize[0]
         n = A.shape[0] / blocksize
-    elif isspmatrix_csr(A):
+    elif A.format == 'csr':
         n = A.shape[0]
         blocksize = 1
     else:
@@ -278,10 +279,12 @@ def one_point_interpolation(A, C, splitting, by_val=False):
      [0. 0. 1.]]
 
     """
-    if isspmatrix_bsr(A):
+    if not issparse(A):
+        raise TypeError('Invalid sparse matrix type, not sparse.')
+    if A.format == 'bsr':
         blocksize = A.blocksize[0]
         n = int(A.shape[0] / blocksize)
-    elif isspmatrix_csr(A):
+    elif A.format == 'csr':
         n = A.shape[0]
         blocksize = 1
     else:
@@ -372,10 +375,12 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     """
     # Get SOC matrix containing neighborhood to be included in local solve
-    if isspmatrix_bsr(A):
+    if not issparse(A):
+        raise TypeError('Invalid sparse matrix type, not sparse.')
+    if A.format == 'bsr':
         C = classical_strength_of_connection(A=A, theta=theta, block=True, norm=norm)
         blocksize = A.blocksize[0]
-    elif isspmatrix_csr(A):
+    elif A.format == 'csr':
         blocksize = 1
         C = classical_strength_of_connection(A=A, theta=theta, block=False, norm=norm)
     else:
@@ -399,7 +404,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
     R_colinds = np.zeros(nnz, dtype=A.indptr.dtype)
 
     # Block matrix
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         R_data = np.zeros(nnz*blocksize*blocksize, dtype=A.dtype)
         amg_core.block_approx_ideal_restriction_pass2(R_rowptr, R_colinds, R_data, A.indptr,
                                                       A.indices, A.data.ravel(), C.indptr,

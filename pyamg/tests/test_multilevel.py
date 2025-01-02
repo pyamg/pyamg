@@ -36,11 +36,11 @@ class TestMultilevel(TestCase):
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
                 # subsequent calls use cached data
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
@@ -57,14 +57,14 @@ class TestMultilevel(TestCase):
             M = ml.aspreconditioner(cycle=cycle)
             x, _info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
             # cg satisfies convergence in the preconditioner norm
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
+            assert precon_norm(b - A@x, ml) < 1e-8*precon_norm(b, ml)
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
             res = []
             x, _info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
+            assert np.linalg.norm(b - A@x) < 1e-8*np.linalg.norm(b)
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
@@ -80,15 +80,15 @@ class TestMultilevel(TestCase):
         for accel in ['cg', cg]:
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
-            assert_almost_equal(precon_norm(b - A*x, ml), residuals[-1])
+            assert precon_norm(b - A@x, ml) < 1e-8*precon_norm(b, ml)
+            assert_almost_equal(precon_norm(b - A@x, ml), residuals[-1])
 
         # cgs and bicgstab use the Euclidean norm
         for accel in ['bicgstab', 'cgs', bicgstab]:
             residuals = []
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
-            assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
+            assert np.linalg.norm(b - A@x) < 1e-8*np.linalg.norm(b)
+            assert_almost_equal(np.linalg.norm(b - A@x), residuals[-1])
 
     def test_cycle_complexity(self):
         # four levels
@@ -154,8 +154,8 @@ class TestComplexMultilevel(TestCase):
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
                 # subsequent calls use cached data
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)

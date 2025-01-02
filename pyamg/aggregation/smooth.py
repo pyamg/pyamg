@@ -25,12 +25,12 @@ def satisfy_constraints(U, B, BtBinv):
     B : array
         n x k array of the coarse grid near nullspace vectors
     BtBinv : array
-        Local inv(B_i.H*B_i) matrices for each supernode, i
+        Local inv(B_i.H@B_i) matrices for each supernode, i
         B_i is B restricted to the sparsity pattern of supernode i in U
 
     Returns
     -------
-    Updated U, so that U*B = 0.
+    Updated U, so that U@B = 0.
     Update is computed by orthogonally (in 2-norm) projecting
     out the components of span(B) in U in a row-wise fashion.
 
@@ -44,7 +44,7 @@ def satisfy_constraints(U, B, BtBinv):
     cols_per_block = U.blocksize[1]
     num_block_rows = int(U.shape[0]/rows_per_block)
 
-    UB = np.ravel(U*B)
+    UB = np.ravel(U@B)
 
     # Apply constraints, noting that we need the conjugate of B
     # for use as Bi.H in local projection
@@ -132,17 +132,19 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     """
     # preprocess weighting
     if weighting == 'block':
-        if sparse.isspmatrix_csr(S):
+        if S.format == 'csr':
             weighting = 'diagonal'
-        elif sparse.isspmatrix_bsr(S):
+        elif S.format == 'bsr':
             if S.blocksize[0] == 1:
                 weighting = 'diagonal'
+        else:
+            raise TypeError('S must be sparse BSR or CSR format')
 
     if filter_entries:
         # Implement filtered prolongation smoothing for the general case by
         # utilizing satisfy constraints
 
-        if sparse.isspmatrix_bsr(S):
+        if S.format == 'bsr':
             numPDEs = S.blocksize[0]
         else:
             numPDEs = 1
@@ -163,12 +165,12 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         D_inv = sparse.bsr_matrix((D_inv, np.arange(D_inv.shape[0]),
                                    np.arange(D_inv.shape[0]+1)),
                                   shape=S.shape)
-        D_inv_S = D_inv*S
+        D_inv_S = D_inv@S
         D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
     elif weighting == 'local':
         # Use the Gershgorin estimate as each row's weight, instead of a global
         # spectral radius estimate
-        D = np.abs(S)*np.ones((S.shape[0], 1), dtype=S.dtype)
+        D = np.abs(S)@np.ones((S.shape[0], 1), dtype=S.dtype)
         D_inv = np.zeros_like(D)
         D_inv[D != 0] = 1.0 / np.abs(D[D != 0])
 
@@ -179,12 +181,12 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
 
     if filter_entries:
         # Carry out Jacobi, but after calculating the prolongator update, U,
-        # apply satisfy constraints so that U*B = 0
+        # apply satisfy constraints so that U@B = 0
         P = T
         for _ in range(degree):
-            U = (D_inv_S*P).tobsr(blocksize=P.blocksize)
+            U = (D_inv_S@P).tobsr(blocksize=P.blocksize)
 
-            # Enforce U*B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
+            # Enforce U@B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in pattern. This
             # array is used multiple times in satisfy_constraints(...).
             BtBinv = compute_BtBinv(B, U)
@@ -199,7 +201,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # Carry out Jacobi as normal
         P = T
         for _ in range(degree):
-            P = P - (D_inv_S*P)
+            P = P - (D_inv_S @ P)
 
     return P
 
@@ -223,7 +225,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     Returns
     -------
     P : csr_matrix, bsr_matrix
-        Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) * T
+        Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) @ T
         where rho(S) is an approximation to the spectral radius of S.
 
     Notes
@@ -266,7 +268,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     P = T
     for _ in range(degree):
-        P = P - weight*(S*P)
+        P = P - weight*(S@P)
 
     return P
 
@@ -337,14 +339,14 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
                                  shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate
-        D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+        D = np.abs(A)@np.ones((A.shape[0], 1), dtype=A.dtype)
         Dinv = np.zeros_like(D)
         Dinv[D != 0] = 1.0 / np.abs(D[D != 0])
     else:
         raise ValueError('weighting value is invalid')
 
     # Calculate initial residual
-    #   Equivalent to R = -A*T;    R = R.multiply(pattern)
+    #   Equivalent to R = -A@T;    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
@@ -363,7 +365,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
                                      T.blocksize[1])
     R.data *= -1.0
 
-    # Enforce R*B = 0
+    # Enforce R@B = 0
     satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
@@ -382,7 +384,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         if weighting in ('local', 'diagonal'):
             Z = scale_rows(R, Dinv)
         else:
-            Z = Dinv*R
+            Z = Dinv@R
 
         # Frobenius inner-product of (R,Z) = sum( np.conjugate(rk).*zk)
         newsum = (R.conjugate().multiply(Z)).sum()
@@ -415,7 +417,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
                                          A.blocksize[0], A.blocksize[1],
                                          P.blocksize[1])
 
-        # Enforce AP*B = 0
+        # Enforce AP@B = 0
         satisfy_constraints(AP, B, BtBinv)
 
         # Frobenius inner-product of (P, AP)
@@ -426,7 +428,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
         # Ensure identity at C-pts
         if Cpt_params[0]:
-            T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+            T = Cpt_params[1]['I_F']@T + Cpt_params[1]['P_I']
 
         # Update residual
         R = R - alpha*AP
@@ -507,17 +509,17 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     AP = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
                            shape=pattern.shape)
 
-    # D for A.H*A
+    # D for A.H@A
     Dinv = get_diagonal(A, norm_eq=1, inv=True)
 
     # Calculate initial residual
-    #   Equivalent to R = -Ah*(A*T);    R = R.multiply(pattern)
+    #   Equivalent to R = -Ah@(A@T);    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
     R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
                           shape=pattern.shape)
-    AT = -1.0*A*T
+    AT = -1.0*A@T
     R.data[:] = 0.0
     amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
                                      np.ravel(Ah.data),
@@ -530,7 +532,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                      Ah.blocksize[0], Ah.blocksize[1],
                                      T.blocksize[1])
 
-    # Enforce R*B = 0
+    # Enforce R@B = 0
     satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
@@ -546,7 +548,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     i = 0
     while i < maxiter and resid > tol:
 
-        # vect = np.ravel((A*T).data)
+        # vect = np.ravel((A@T).data)
         # print "Iteration " + str(i) + "   \
         # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
 
@@ -569,10 +571,10 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         oldsum = newsum
 
         # Calculate new direction
-        #  Equivalent to:  AP = Ah*(A*P);    AP = AP.multiply(pattern)
+        #  Equivalent to:  AP = Ah@(A@P);    AP = AP.multiply(pattern)
         #  with the added constraint that explicit zeros are in AP wherever
         #  AP = 0 and pattern does not
-        AP_temp = A*P
+        AP_temp = A@P
         AP.data[:] = 0.0
         amg_core.incomplete_mat_mult_bsr(Ah.indptr, Ah.indices,
                                          np.ravel(Ah.data),
@@ -586,7 +588,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                          Ah.blocksize[1], T.blocksize[1])
         del AP_temp
 
-        # Enforce AP*B = 0
+        # Enforce AP@B = 0
         satisfy_constraints(AP, B, BtBinv)
 
         # Frobenius inner-product of (P, AP)
@@ -597,7 +599,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
         # Ensure identity at C-pts
         if Cpt_params[0]:
-            T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+            T = Cpt_params[1]['I_F']@T + Cpt_params[1]['P_I']
 
         # Update residual
         R = R - alpha*AP
@@ -609,7 +611,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         # print "Energy Minimization of Prolongator \
         # --- Iteration " + str(i) + " --- r = " + str(resid)
 
-    # vect = np.ravel((A*T).data)
+    # vect = np.ravel((A@T).data)
     # print "Final Iteration " + str(i) + "   \
     # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
 
@@ -722,14 +724,14 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
                                  shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate
-        D = np.abs(A)*np.ones((A.shape[0], 1), dtype=A.dtype)
+        D = np.abs(A)@np.ones((A.shape[0], 1), dtype=A.dtype)
         Dinv = np.zeros_like(D)
         Dinv[D != 0] = 1.0 / np.abs(D[D != 0])
     else:
         raise ValueError('weighting value is invalid')
 
     # Calculate initial residual
-    #   Equivalent to R = -A*T;    R = R.multiply(pattern)
+    #   Equivalent to R = -A@T;    R = R.multiply(pattern)
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
@@ -751,9 +753,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     if weighting in ('local', 'diagonal'):
         R = scale_rows(R, Dinv)
     else:
-        R = Dinv*R
+        R = Dinv@R
 
-    # Enforce R*B = 0
+    # Enforce R@B = 0
     satisfy_constraints(R, B, BtBinv)
 
     if R.nnz == 0:
@@ -866,7 +868,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     # Ensure identity at C-pts
     if Cpt_params[0]:
-        T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+        T = Cpt_params[1]['I_F']@T + Cpt_params[1]['P_I']
 
     return T
 
@@ -1008,19 +1010,19 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if tol > 1:
         raise ValueError('tol must be <= 1')
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         A = A.tobsr(blocksize=(1, 1), copy=False)
-    elif sparse.isspmatrix_bsr(A):
+    elif A.format == 'bsr':
         pass
     else:
-        raise TypeError('A must be csr_matrix or bsr_matrix')
+        raise TypeError('A must be sparse BSR or CSR')
 
-    if sparse.isspmatrix_csr(T):
+    if T.format == 'csr':
         T = T.tobsr(blocksize=(1, 1), copy=False)
-    elif sparse.isspmatrix_bsr(T):
+    elif T.format == 'bsr':
         pass
     else:
-        raise TypeError('T must be csr_matrix or bsr_matrix')
+        raise TypeError('T must be sparse BSR or CSR')
 
     if T.blocksize[0] != A.blocksize[0]:
         raise ValueError('T row-blocksize should be the same as A blocksize')
@@ -1032,7 +1034,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if min(T.nnz, A.nnz) == 0:
         return T
 
-    if not sparse.isspmatrix_csr(Atilde):
+    if not sparse.issparse(Atilde) or Atilde.format != 'csr':
         raise TypeError('Atilde must be csr_matrix')
 
     if prefilter is None:
@@ -1070,7 +1072,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
         AtildeCopy = Atilde.copy()
         for _ in range(degree):
-            pattern = AtildeCopy * pattern
+            pattern = AtildeCopy @ pattern
 
         # Optional filtering of sparsity pattern before smoothing
         if 'theta' in prefilter and 'k' in prefilter:
@@ -1109,7 +1111,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
-        pattern = Cpt_params[1]['I_F'] * pattern
+        pattern = Cpt_params[1]['I_F'] @ pattern
         pattern = Cpt_params[1]['P_I'] + pattern
 
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's
@@ -1125,7 +1127,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         T = filter_operator(T, pattern, B, Bf, BtBinv)
         # Ensure identity at C-pts
         if Cpt_params[0]:
-            T = Cpt_params[1]['I_F']*T + Cpt_params[1]['P_I']
+            T = Cpt_params[1]['I_F']@T + Cpt_params[1]['P_I']
 
     # Iteratively minimize the energy of T subject to the constraints of
     # pattern and maintaining T's effect on B, i.e. T*B =

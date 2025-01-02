@@ -79,7 +79,7 @@ def generate_quadratic(V, E, return_edges=False):
     # make a vertext-to-vertex graph
     ID = np.kron(np.arange(0, ne), np.ones((3,), dtype=int))
     G = sparse.coo_matrix((np.ones((ne*3,), dtype=int), (E.ravel(), ID,)))
-    V2V = G * G.T
+    V2V = G @ G.T
 
     # from the vertex graph, get the edges and create new midpoints
     V2Vmid = sparse.tril(V2V, -1)
@@ -199,7 +199,7 @@ def refine2dtri(V, E, marked_elements=None):
     row = np.kron(np.arange(0, Nel), [1, 1, 1])
     data = np.ones((Nel*3,))
     V2V = sparse.coo_matrix((data, (row, col)), shape=(Nel, Nv))
-    V2V = V2V.T * V2V
+    V2V = V2V.T @ V2V
 
     # compute interior edges list
     V2V.data = np.ones(V2V.data.shape)
@@ -931,7 +931,7 @@ def applybc(A, b, mesh, bc):
         u0[idx] = c['g'](X[idx], Y[idx])
 
     # lift (2 of 3)
-    b = b - A * u0
+    b = b - A @ u0
 
     # fix the values (3 of 3)
     for c in bc:

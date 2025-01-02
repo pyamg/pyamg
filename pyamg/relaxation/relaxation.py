@@ -58,14 +58,14 @@ def make_system(A, x, b, formats=None):
     if formats is None:
         pass
     elif formats == ['csr']:
-        if sparse.isspmatrix_csr(A):
+        if A.format == 'csr':
             pass
-        elif sparse.isspmatrix_bsr(A):
+        elif A.format == 'bsr':
             A = A.tocsr()
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
-    elif sparse.isspmatrix(A) and A.format in formats:
+    elif sparse.issparse(A) and A.format in formats:
         pass
     else:
         A = sparse.csr_matrix(A).asformat(formats[0])
@@ -134,7 +134,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     3.039
     >>> #
     >>> # Use SOR as the multigrid smoother
@@ -219,7 +219,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     0.1263
     >>> #
     >>> # Schwarz as the Multigrid Smoother
@@ -301,7 +301,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     4.007
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
@@ -317,7 +317,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         blocksize = 1
     else:
         R, C = A.blocksize
@@ -337,7 +337,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     else:
         raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
@@ -378,7 +378,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     5.835
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
@@ -405,7 +405,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
                             row_start, row_stop, row_step, omega)
@@ -457,7 +457,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     4.665
     >>> #
     >>> # Use block Jacobi as the Multigrid Smoother
@@ -538,7 +538,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     0.9583
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
@@ -605,7 +605,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
 
     Notes
     -----
-    The smoother has the form  x[:] = x + p(A) (b - A*x) where p(A) is a
+    The smoother has the form  x[:] = x + p(A) (b - A@x) where p(A) is a
     polynomial in A whose scalar coefficients are specified (in descending
     order) by argument 'coefficients'.
 
@@ -621,7 +621,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     Here, Horner's Rule is applied to avoid computing A^k directly.
 
     For efficience, the method detects the case x = 0 one matrix-vector
-    product is avoided (since (b - A*x) is b).
+    product is avoided (since (b - A@x) is b).
 
     Examples
     --------
@@ -650,12 +650,12 @@ def polynomial(A, x, b, coefficients, iterations=1):
         if norm(x) == 0:
             residual = b
         else:
-            residual = b - A*x
+            residual = b - A @ x
 
         h = coefficients[0]*residual
 
         for c in coefficients[1:]:
-            h = c*residual + A*h
+            h = c*residual + A@h
 
         x += h
 
@@ -778,7 +778,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     49.39
     >>> #
     >>> # Use NE Jacobi as the Multigrid Smoother
@@ -807,7 +807,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     for _i in range(iterations):
-        delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
+        delta = (np.ravel(b - A@x)*np.ravel(Dinv)).astype(A.dtype)
         amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                            x, b, delta, temp, row_start,
                            row_stop, row_step, omega)
@@ -862,7 +862,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     8.476
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
@@ -946,7 +946,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     8.45
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
@@ -981,7 +981,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
         raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     # Calculate initial residual
-    r = b - A*x
+    r = b - A @ x
 
     for _i in range(iterations):
         amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,
@@ -1125,7 +1125,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, indices, omega)
     else:
@@ -1145,8 +1145,8 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     CF Jacobi executes
 
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1184,7 +1184,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             for _citer in range(c_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
@@ -1210,8 +1210,8 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     FC Jacobi executes
 
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
@@ -1249,7 +1249,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             for _fiter in range(f_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
@@ -1275,8 +1275,8 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     CF block Jacobi executes
 
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
@@ -1346,8 +1346,8 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     FC block Jacobi executes
 
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.

@@ -2,7 +2,7 @@
 
 
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
 import numpy as np
 
 from pyamg.multilevel import MultilevelSolver
@@ -94,16 +94,19 @@ def ruge_stuben_solver(A,
     levels = [MultilevelSolver.Level()]
 
     # convert A to csr
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         try:
             A = csr_matrix(A)
-            warn('Implicit conversion of A to CSR',
-                 SparseEfficiencyWarning)
+            warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except Exception as e:
             raise TypeError('Argument A must have type csr_matrix, '
                             'or be convertible to csr_matrix') from e
     # preprocess A
-    A = A.asfptype()
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -199,6 +202,6 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
 
     # Form next level through Galerkin product
     levels.append(MultilevelSolver.Level())
-    A = R * A * P
+    A = R @ A @ P
     levels[-1].A = A
     return False

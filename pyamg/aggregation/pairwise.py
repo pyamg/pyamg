@@ -3,8 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -84,7 +83,7 @@ def pairwise_solver(A,
     123-146.
 
     """
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = csr_matrix(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
@@ -92,7 +91,12 @@ def pairwise_solver(A,
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
                             'or be convertible to csr_matrix') from e
 
-    A = A.asfptype()
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
@@ -131,7 +135,7 @@ def _extend_hierarchy(levels, aggregate):
     _, kwargs = unpack_arg(aggregate[len(levels)-1])
     P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
     R = P.T.conjugate()
-    if isspmatrix_csr(P):
+    if P.format == 'csr':
         # In this case, R will be CSC, which must be changed
         R = R.tocsr()
 
@@ -139,5 +143,5 @@ def _extend_hierarchy(levels, aggregate):
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P              # Galerkin operator
+    A = R @ A @ P              # Galerkin operator
     levels[-1].A = A

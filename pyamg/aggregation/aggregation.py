@@ -3,8 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -211,7 +210,7 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
        http://citeseer.ist.psu.edu/vanek96algebraic.html
 
     """
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = csr_matrix(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
@@ -219,7 +218,12 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
                             'or be convertible to csr_matrix') from e
 
-    A = A.asfptype()
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
 
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
@@ -363,10 +367,10 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b) @ B
         levels[-1].B = B
         if A.symmetry == 'nonsymmetric':
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) @ BH
             levels[-1].BH = BH
 
     # Compute the tentative prolongator, T, which is a tentative interpolation

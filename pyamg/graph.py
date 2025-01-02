@@ -9,7 +9,7 @@ from . import amg_core
 
 def asgraph(G):
     """Return (square) matrix as sparse."""
-    if not (sparse.isspmatrix_csr(G) or sparse.isspmatrix_csc(G)):
+    if not sparse.issparse(G) or G.format not in ('csc', 'csr'):
         G = sparse.csr_matrix(G)
 
     if G.shape[0] != G.shape[1]:

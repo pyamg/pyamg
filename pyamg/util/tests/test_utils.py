@@ -1,8 +1,6 @@
 """Test utils."""
 import numpy as np
-from scipy.sparse import (csr_matrix, csc_matrix, isspmatrix,
-                          bsr_matrix, isspmatrix_bsr,
-                          spdiags)
+from scipy.sparse import bsr_matrix, csr_matrix, csc_matrix, issparse, diags
 
 from numpy.testing import (TestCase, assert_equal, assert_almost_equal,
                            assert_array_almost_equal, assert_array_equal)
@@ -94,11 +92,11 @@ class TestUtils(TestCase):
         A = csr_matrix(A)
         cases.append(A)
         P = diag_sparse([1, 0, 1])
-        cases.append(P*A*P)
+        cases.append(P@A@P)
         P = diag_sparse([0, 1, 0])
-        cases.append(P*A*P)
+        cases.append(P@A@P)
         P = diag_sparse([1, -1, 1])
-        cases.append(P*A*P)
+        cases.append(P@A@P)
 
         # test csc
         A = csc_matrix(A)
@@ -111,7 +109,7 @@ class TestUtils(TestCase):
             assert_almost_equal(diag_sparse(DAD), D_sqrt*D_sqrt_inv)
 
             D_sqrt, D_sqrt_inv = diag_sparse(D_sqrt), diag_sparse(D_sqrt_inv)
-            assert_almost_equal((D_sqrt_inv*A*D_sqrt_inv).toarray(),
+            assert_almost_equal((D_sqrt_inv@A@D_sqrt_inv).toarray(),
                                 DAD.toarray())
 
     def test_symmetric_rescaling_sa(self):
@@ -119,7 +117,7 @@ class TestUtils(TestCase):
         # case 1
         e = np.ones((5, 1)).ravel()
         data = [-1*e, 2*e, -1*e]
-        A = spdiags(data, [-1, 0, 1], 5, 5).tocsr()
+        A = diags(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
         B = e.copy().reshape(-1, 1)
         DAD_answer = np.array([[1., -0.5, 0., 0., 0.],
                                [-0.5, 1., -0.5, 0., 0.],
@@ -266,7 +264,7 @@ class TestUtils(TestCase):
                     else:
                         fmethod = (method, kwargs_linop)
                         relax = relaxation_as_linear_operator(fmethod, A, b)
-                    x_linop = relax * x
+                    x_linop = relax @ x
 
                     # manually run the relaxation routine
                     relax2 = getattr(pyamg.relaxation.relaxation, method)
@@ -274,7 +272,7 @@ class TestUtils(TestCase):
                     blockflag = False
                     kwargs_gold = dict(kwargs)
                     # deal with block matrices
-                    if method.startswith('block') and isspmatrix_bsr(A):
+                    if method.startswith('block') and A.format == 'bsr':
                         blockflag = True
                         kwargs_gold['blocksize'] = A.blocksize[0]
                     # deal with omega and jacobi
@@ -418,12 +416,12 @@ class TestUtils(TestCase):
         B = np.ones((A.shape[0], 1))
         Bf = np.ones((A.shape[0], 1))
         A_filter = filter_operator(A, C, B, Bf)
-        assert_array_almost_equal(A_filter*B, Bf)
+        assert_array_almost_equal(A_filter@B, Bf)
         # second test, constants and linears
         B = np.hstack((B, np.arange(B.shape[0]).reshape(-1, 1)))
         Bf = np.hstack((Bf, np.arange(Bf.shape[0]).reshape(-1, 1)))
         A_filter = filter_operator(A, C, B, Bf)
-        assert_array_almost_equal(A_filter*B, Bf)
+        assert_array_almost_equal(A_filter@B, Bf)
 
     def test_scale_T(self):
         from scipy.sparse import bsr_matrix
@@ -1115,17 +1113,17 @@ class TestComplexUtils(TestCase):
         A = csr_matrix(A)
         cases.append(A)
         P = diag_sparse([1, 0, 1.0j])
-        cases.append(P*A*P)
+        cases.append(P@A@P)
         P = diag_sparse([0, 1+1.0j, 0])
-        cases.append(P*A*P)
+        cases.append(P@A@P)
 
         for A in cases:
             D_sqrt, D_sqrt_inv, DAD = symmetric_rescaling(A)
             assert_almost_equal(diag_sparse(A) != 0, np.real(diag_sparse(DAD)))
-            assert_almost_equal(diag_sparse(DAD), D_sqrt*D_sqrt_inv)
+            assert_almost_equal(diag_sparse(DAD), D_sqrt * D_sqrt_inv)
 
             D_sqrt, D_sqrt_inv = diag_sparse(D_sqrt), diag_sparse(D_sqrt_inv)
-            assert_almost_equal((D_sqrt_inv*A*D_sqrt_inv).toarray(),
+            assert_almost_equal((D_sqrt_inv@A@D_sqrt_inv).toarray(),
                                 DAD.toarray())
 
     def test_symmetric_rescaling_sa(self):
@@ -1133,7 +1131,7 @@ class TestComplexUtils(TestCase):
         # case 1
         e = 1.0j*np.ones((5, 1)).ravel()
         data = [-1*e, 2*e, -1*e]
-        A = 1.0j*spdiags(data, [-1, 0, 1], 5, 5).tocsr()
+        A = 1.0j * diags(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
         B = e.copy().reshape(-1, 1)
         DAD_answer = np.array([[1., -0.5, 0., 0., 0.],
                                [-0.5, 1., -0.5, 0., 0.],
@@ -1174,12 +1172,12 @@ class TestComplexUtils(TestCase):
             D = 1.0/D
             assert_almost_equal(D, D_A_inv)
 
-            D = np.diag((A.T.conjugate()*A).toarray())
+            D = np.diag((A.T.conjugate()@A).toarray())
             assert_almost_equal(D, D_AA)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv)
 
-            D = np.diag((A*A.T.conjugate()).toarray())
+            D = np.diag((A@A.T.conjugate()).toarray())
             assert_almost_equal(D, D_AA2)
             D = 1.0/D
             assert_almost_equal(D, D_AA_inv2)
@@ -1213,7 +1211,7 @@ class TestComplexUtils(TestCase):
         out = to_type(complex, inlist)
         for i in range(len(out)):
             assert out[i].dtype == complex
-            if isspmatrix(out[i]):
+            if issparse(out[i]):
                 diff = np.ravel(out[i].data - inlist[i].data)
             else:
                 diff = out[i] - inlist[i]
@@ -1230,7 +1228,7 @@ class TestComplexUtils(TestCase):
         for i in range(len(out)):
             assert out[i].dtype == complex
             assert not np.isscalar(out[i])
-            if isspmatrix(out[i]):
+            if issparse(out[i]):
                 diff = np.ravel(out[i].data - inlist[i].data)
             else:
                 diff = out[i] - inlist[i]

@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import numpy as np
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -110,7 +109,11 @@ def air_solver(A,
 
     """
     # preprocess A
-    A = A.asfptype()
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
     if np.iscomplexobj(A.data):
@@ -226,12 +229,12 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     levels[-1].R = R                               # restriction operator
 
     # RAP = R*(A*P)
-    A = R * A * P
+    A = R @ A @ P
 
     # Make sure coarse-grid operator is in correct sparse format
-    if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):
+    if P.format == 'csr' and A.format != 'csr':
         A = A.tocsr()
-    elif (isspmatrix_bsr(P) and (not isspmatrix_bsr(A))):
+    elif P.format == 'bsr' and A.format != 'bsr':
         A = A.tobsr()
 
     levels.append(MultilevelSolver.Level())
