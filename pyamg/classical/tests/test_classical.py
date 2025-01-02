@@ -48,7 +48,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
             # THIS IS NOT STRICTLY ENFORCED!
             # check that all strong connections S[i, j] satisfy either:
@@ -72,9 +72,9 @@ class TestRugeStubenFunctions(TestCase):
 
             # X now consists of strong F->F edges only
             #
-            # (S * S.T)[i, j] is the # of C nodes on which both i and j
+            # (S @ S.T)[i, j] is the # of C nodes on which both i and j
             # strongly depend (i.e. the number of k's where (2) holds)
-            # Y = (S*S.T) - X
+            # Y = (S @ S.T) - X
             # assert(Y.nnz == 0 or Y.data.min() > 0)
 
     def test_cljp_splitting(self):
@@ -89,7 +89,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
     def test_cljpc_splitting(self):
         for A in self.cases:
@@ -103,7 +103,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
     def test_direct_interpolation(self):
         for A in self.cases:
@@ -177,7 +177,7 @@ class TestSolverPerformance(TestCase):
 
                 np.random.seed(0)  # make tests repeatable
                 x = np.random.rand(A.shape[0])
-                b = A*np.random.rand(A.shape[0])  # zeros_like(x)
+                b = A @ np.random.rand(A.shape[0])  # zeros_like(x)
 
                 ml = ruge_stuben_solver(A, interpolation=interp, max_coarse=50)
 

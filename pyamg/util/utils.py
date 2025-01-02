@@ -3,8 +3,7 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import isspmatrix, isspmatrix_csr, isspmatrix_csc, \
-    isspmatrix_bsr, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
+from scipy.sparse import issparse, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
 from scipy.linalg import eigvals
 
 # pylint: disable=no-name-in-module
@@ -21,7 +20,7 @@ from . import linalg
 
 def get_blocksize(A):
     """Return the block size of a matrix."""
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         return A.blocksize[0]
     return 1
 
@@ -50,28 +49,28 @@ def profile_solver(ml, accel=None, **kwargs):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags, csr_matrix
+    >>> from scipy.sparse import diags
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = csr_matrix(spdiags(data,[-1,0,1],n,n))
-    >>> b = A*np.ones(A.shape[0])
+    >>> A = diags(data, offsets=[-1,0,1], shape=(n,n), format='csr')
+    >>> b = A @ np.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
 
     """
     A = ml.levels[0].A
-    b = A * np.random.rand(A.shape[0], 1)
+    b = A @ np.random.rand(A.shape[0], 1)
     residuals = []
 
     if accel is None:
         ml.solve(b, residuals=residuals, **kwargs)
     else:
         def callback(x):
-            residuals.append(linalg.norm(np.ravel(b) - np.ravel(A*x)))
+            residuals.append(linalg.norm(np.ravel(b) - np.ravel(A@x)))
         M = ml.aspreconditioner(cycle=kwargs.get('cycle', 'V'))
         accel(A, b, M=M, callback=callback, **kwargs)
 
@@ -109,7 +108,7 @@ def diag_sparse(A):
      [0. 0. 2.]]
 
     """
-    if isspmatrix(A):
+    if issparse(A):
         return A.diagonal()
 
     if np.ndim(A) != 1:
@@ -152,20 +151,20 @@ def scale_rows(A, v, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags
     >>> from pyamg.util.utils import scale_rows
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> B = scale_rows(A,5*np.ones((A.shape[0],1)))
+    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> B = scale_rows(A, 5 * np.ones((A.shape[0], 1)))
 
     """
     v = np.ravel(v)
 
     M, N = A.shape
 
-    if not isspmatrix(A):
+    if not issparse(A):
         raise ValueError('scale rows needs a sparse matrix')
 
     if M != len(v):
@@ -177,13 +176,13 @@ def scale_rows(A, v, copy=True):
     else:
         v = np.asarray(v, dtype=A.dtype)
 
-    if isspmatrix_csr(A):
+    if issparse(A) and A.format == 'csr':
         csr_scale_rows(M, N, A.indptr, A.indices, A.data, v)
-    elif isspmatrix_bsr(A):
+    elif issparse(A) and A.format == 'bsr':
         R, C = A.blocksize
         bsr_scale_rows(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                        np.ravel(A.data), v)
-    elif isspmatrix_csc(A):
+    elif issparse(A) and A.format == 'csc':
         amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
@@ -225,13 +224,13 @@ def scale_columns(A, v, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags
     >>> from pyamg.util.utils import scale_columns
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n-1).tocsr()
-    >>> print(scale_columns(A,5*np.ones((A.shape[1],1))).toarray())
+    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> print(scale_columns(A, 5 * np.ones((A.shape[1], 1))).toarray())
     [[10. -5.  0.  0.]
      [-5. 10. -5.  0.]
      [ 0. -5. 10. -5.]
@@ -243,7 +242,7 @@ def scale_columns(A, v, copy=True):
 
     M, N = A.shape
 
-    if not isspmatrix(A):
+    if not issparse(A):
         raise ValueError('scale columns needs a sparse matrix')
 
     if N != len(v):
@@ -255,13 +254,13 @@ def scale_columns(A, v, copy=True):
     else:
         v = np.asarray(v, dtype=A.dtype)
 
-    if isspmatrix_csr(A):
+    if issparse(A) and A.format == 'csr':
         csr_scale_columns(M, N, A.indptr, A.indices, A.data, v)
-    elif isspmatrix_bsr(A):
+    elif issparse(A) and A.format == 'bsr':
         R, C = A.blocksize
         bsr_scale_columns(int(M/R), int(N/C), R, C, A.indptr, A.indices,
                           np.ravel(A.data), v)
-    elif isspmatrix_csc(A):
+    elif issparse(A) and A.format == 'csc':
         amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
@@ -306,12 +305,12 @@ def symmetric_rescaling(A, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags
     >>> from pyamg.util.utils import symmetric_rescaling
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
+    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
     >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
@@ -321,7 +320,7 @@ def symmetric_rescaling(A, copy=True):
      [ 0.   0.   0.  -0.5  1. ]]
 
     """
-    if isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A):
+    if issparse(A) and A.format in ('csr', 'csc', 'bsr'):
         if A.shape[0] != A.shape[1]:
             raise ValueError('expected square matrix')
 
@@ -342,6 +341,7 @@ def symmetric_rescaling(A, copy=True):
 
         return D_sqrt, D_sqrt_inv, DAD
 
+#    print(A)
     return symmetric_rescaling(csr_matrix(A))
 
 
@@ -380,12 +380,12 @@ def symmetric_rescaling_sa(A, B, BH=None):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags
     >>> from pyamg.util.utils import symmetric_rescaling_sa
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n).tocsr()
+    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
     >>> print(DAD.toarray())
@@ -552,8 +552,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
     [0.2        0.16666667 0.16666667 0.16666667 0.2       ]
 
     """
-    # if not isspmatrix(A):
-    if not (isspmatrix_csr(A) or isspmatrix_csc(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csc', 'csr'):
         warn('Implicit conversion to sparse matrix')
         A = csr_matrix(A)
 
@@ -563,9 +562,9 @@ def get_diagonal(A, norm_eq=False, inv=False):
         # This transpose involves almost no work, use csr data structures as
         # csc, or vice versa
         At = A.T
-        D = (At.multiply(At.conjugate()))*np.ones((At.shape[0],))
+        D = (At.multiply(At.conjugate()))@np.ones((At.shape[0],))
     elif norm_eq == 2:
-        D = (A.multiply(A.conjugate()))*np.ones((A.shape[0],))
+        D = (A.multiply(A.conjugate()))@np.ones((A.shape[0],))
     else:
         D = A.diagonal()
 
@@ -615,7 +614,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=True)
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
         raise ValueError('Expected square matrix')
@@ -635,14 +634,20 @@ def get_block_diag(A, blocksize, inv_flag=True):
             return A.block_D
 
     # Convert to BSR
-    if not isspmatrix_bsr(A):
+    if A.format != 'bsr':
         A = bsr_matrix(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
+
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
-    A = A.asfptype()
     block_diag = np.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
@@ -1163,23 +1168,23 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if A.shape[1] != C.shape[1]:
         raise ValueError('A and C must be the same size')
 
-    if isspmatrix_bsr(C):
+    if C.format == 'bsr':
         isBSR = True
         cols_per_block = C.blocksize[1]
         rows_per_block = C.blocksize[0]
         Nnodes = int(Nfine/rows_per_block)
-        if not isspmatrix_bsr(A):
+        if A.format != 'bsr':
             raise ValueError('A and C must either both be CSR or BSR')
 
         if (cols_per_block != A.blocksize[1]) or (rows_per_block != A.blocksize[0]):
             raise ValueError('A and C must have same BSR blocksizes')
 
-    elif isspmatrix_csr(C):
+    elif C.format == 'csr':
         isBSR = False
         cols_per_block = 1
         rows_per_block = 1
         Nnodes = int(Nfine/rows_per_block)
-        if not isspmatrix_csr(A):
+        if A.format != 'csr':
             raise ValueError('A and C must either both be CSR or BSR')
     else:
         raise ValueError('A and C must either both be CSR or BSR')
@@ -1231,11 +1236,11 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     else:
         A = A.tocsr()
 
-    # Calculate difference between A*B and Bf
-    diff = A*B - Bf
+    # Calculate difference between A @ B and Bf
+    diff = A @ B - Bf
 
     # Right multiply each row i of A with
-    # A_i <--- A_i - diff_i*inv(B_i.T B_i)*Bi.T
+    # A_i <--- A_i - diff_i @ inv(B_i.T B_i) @ Bi.T
     # where A_i, and diff_i denote restriction to just row i, and B_i denotes
     # restriction to multiple rows corresponding to the the allowed nz's for
     # row i in A_i.  A_i also represents just the nonzeros for row i.
@@ -1320,19 +1325,19 @@ def scale_T(T, P_I, I_F):
     equal coarse-grid injection applied to the fine-grid nullspace vectors.
 
     """
-    if not isspmatrix_bsr(T):
+    if not issparse(T) or T.format != 'bsr':
         raise TypeError('Expected BSR matrix T')
 
     if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected BSR matrix T with square blocks')
 
-    if not isspmatrix_bsr(P_I):
+    if not issparse(P_I) or P_I.format != 'bsr':
         raise TypeError('Expected BSR matrix P_I')
 
     if P_I.blocksize[0] != P_I.blocksize[1]:
         raise TypeError('Expected BSR matrix P_I with square blocks')
 
-    if not isspmatrix_bsr(I_F):
+    if not issparse(I_F) or I_F.format != 'bsr':
         raise TypeError('Expected BSR matrix I_F')
 
     if I_F.blocksize[0] != I_F.blocksize[1]:
@@ -1345,16 +1350,16 @@ def scale_T(T, P_I, I_F):
     # Only do if we have a non-trivial coarse-grid
     if P_I.nnz > 0:
         # Construct block diagonal inverse D
-        D = P_I.T*T
+        D = P_I.T @ T
         if D.nnz > 0:
             # changes D in place
             linalg.pinv_array(D.data)
 
         # Scale T to be identity at root-nodes
-        T = T*D
+        T = T @ D
 
         # Ensure coarse-grid injection
-        T = I_F*T + P_I
+        T = I_F @ T + P_I
 
     return T
 
@@ -1432,11 +1437,13 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     prolongation smoothing
 
     """
-    if not isspmatrix_bsr(A) and not isspmatrix_csr(A):
+    if not issparse(A):
+        raise TypeError('Expected sparse matrix A')
+    if A.format not in ('bsr', 'csr'):
         raise TypeError('Expected BSR or CSR matrix A')
-    if not isspmatrix_csr(AggOp):
+    if AggOp.format != 'csr':
         raise TypeError('Expected CSR matrix AggOp')
-    if not isspmatrix_bsr(T):
+    if T.format != 'bsr':
         raise TypeError('Expected BSR matrix T')
     if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected square blocksize for BSR matrix T')
@@ -1450,7 +1457,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
             raise TypeError('Number of columns in AggOp must equal number\
                              of Cnodes')
 
-    if isspmatrix_bsr(A) and A.blocksize[0] > 1:
+    if A.format == 'bsr' and A.blocksize[0] > 1:
         # Expand the list of Cpt nodes to a list of Cpt dofs
         blocksize = A.blocksize[0]
         Cpts = np.repeat(blocksize*Cnodes, blocksize)
@@ -1498,7 +1505,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     P_I = P_I.tobsr(T.blocksize)
 
     # Use same blocksize as A
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         I_C = I_C.tobsr(A.blocksize)
         I_F = I_F.tobsr(A.blocksize)
     else:
@@ -1559,13 +1566,13 @@ def compute_BtBinv(B, C):
     these projection operators that BtBinv is part of.
 
     """
-    if not isspmatrix_bsr(C) and not isspmatrix_csr(C):
+    if not issparse(C) or C.format not in ('csr', 'bsr'):
         raise TypeError('Expected bsr_matrix or csr_matrix for C')
     if C.shape[1] != B.shape[0]:
-        raise TypeError('Expected matching dimensions such that C*B')
+        raise TypeError('Expected matching dimensions such that C @ B')
 
     # Problem parameters
-    if isspmatrix_bsr(C):
+    if C.format == 'bsr':
         cols_per_block = C.blocksize[1]
         rows_per_block = C.blocksize[0]
     else:
@@ -1651,8 +1658,8 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     A_abs = A.copy()
     A_abs.data = np.abs(A_abs.data)
     D_abs = get_diagonal(A_abs, norm_eq=0, inv=False)
-    diag_dom_rows = (D_abs > (theta*(A_abs*np.ones((A_abs.shape[0],),
-                                                   dtype=A_abs) - D_abs)))
+    diag_dom_rows = (D_abs > (theta*(A_abs @ np.ones((A_abs.shape[0],),
+                                                     dtype=A_abs) - D_abs)))
 
     # Account for BSR matrices and translate diag_dom_rows from dofs to nodes
     bsize = get_blocksize(A_abs)
@@ -1665,7 +1672,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
     # Replace these rows/cols in # C with rows/cols of the identity.
     Id = eye(C.shape[0], C.shape[1], format='csr')
     Id.data[diag_dom_rows] = 0.0
-    C = Id * C * Id
+    C = Id @ C @ Id
     Id.data[diag_dom_rows] = 1.0
     Id.data[np.where(diag_dom_rows == 0)[0]] = 0.0
     C = C + Id
@@ -1706,7 +1713,7 @@ def remove_diagonal(S):
            [ 0.,  0., -1.,  0.]])
 
     """
-    if not isspmatrix_csr(S):
+    if not issparse(S) or S.format != 'csr':
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:
@@ -1748,7 +1755,7 @@ def scale_rows_by_largest_entry(S):
            [ 0. ,  0. , -0.5,  1. ]])
 
     """
-    if not isspmatrix_csr(S):
+    if not issparse(S) or S.format != 'csr':
         raise TypeError('expected csr_matrix')
 
     # Scale S by the largest magnitude entry in each row
@@ -1945,10 +1952,10 @@ def filter_matrix_columns(A, theta):
            [ 0. ,  0. , -0.5]])
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise ValueError('Sparse matrix input needed')
     blocksize = 1
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         blocksize = A.blocksize
     Aformat = A.format
 
@@ -2029,10 +2036,10 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
            [ 0. , -0.5,  1. , -0.5]])
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise ValueError('Sparse matrix input needed')
     blocksize = 1
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         blocksize = A.blocksize
     Aformat = A.format
     A = A.tocsr()
@@ -2111,12 +2118,12 @@ def truncate_rows(A, nz_per_row):
            [ 0.  ,  0.  ,  1.  ,  0.5 ]])
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise ValueError('Sparse matrix input needed')
     blocksize = 1
-    if isspmatrix_bsr(A):
+    if A.format == 'bsr':
         blocksize = A.blocksize
-    if isspmatrix_csr(A):
+    if A.format == 'csr':
         A = A.copy()    # don't modify A in-place
     Aformat = A.format
     A = A.tocsr()
@@ -2147,7 +2154,7 @@ def scale_block_inverse(A, blocksize):
 
     Returns
     -------
-    tuple, (D^{-1}*A, D^{-1})
+    tuple, (D^{-1}@A, D^{-1})
 
     Notes
     -----
@@ -2166,7 +2173,7 @@ def scale_block_inverse(A, blocksize):
            [ 0.        , -0.33333333,  0.        ,  1.        ]])
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise TypeError('Expected sparse matrix')
     if A.shape[0] != A.shape[1]:
         raise ValueError('Expected square matrix')
@@ -2174,7 +2181,7 @@ def scale_block_inverse(A, blocksize):
         raise ValueError('blocksize and A.shape must be compatible')
 
     # Convert to BSR
-    if not isspmatrix_bsr(A):
+    if A.format != 'bsr':
         A = bsr_matrix(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
@@ -2184,4 +2191,4 @@ def scale_block_inverse(A, blocksize):
     Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
     scale = bsr_matrix((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
                        blocksize=[blocksize, blocksize], shape=A.shape)
-    return scale * A, scale
+    return scale @ A, scale

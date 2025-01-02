@@ -370,7 +370,7 @@ def change_smoothers(ml, presmoother, postsmoother):
 
 
 def rho_D_inv_A(A):
-    """Return the (approx.) spectral radius of D^-1 * A.
+    """Return the (approx.) spectral radius of D^-1 @ A.
 
     Parameters
     ----------
@@ -401,7 +401,7 @@ def rho_D_inv_A(A):
 
 
 def rho_block_D_inv_A(A, Dinv):
-    """Return the (approx.) spectral radius of block D^-1 * A.
+    """Return the (approx.) spectral radius of block D^-1 @ A.
 
     Parameters
     ----------
@@ -438,9 +438,9 @@ def rho_block_D_inv_A(A, Dinv):
                                   np.arange(Dinv.shape[0]+1)),
                                  shape=A.shape)
 
-        # Don't explicitly form Dinv*A
+        # Don't explicitly form Dinv @ A
         def matvec(x):
-            return Dinv*(A*x)
+            return Dinv @ (A @ x)
         D_inv_A = LinearOperator(A.shape, matvec, dtype=A.dtype)
 
         A.rho_block_D_inv = approximate_spectral_radius(D_inv_A)
@@ -554,9 +554,9 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
     """Set up block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -585,9 +585,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
     """Set up block Gauss-Seidel."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -711,12 +711,12 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if sparse.isspmatrix_bsr(Dinv):
+        if Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1
@@ -754,12 +754,12 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if sparse.isspmatrix_bsr(Dinv):
+        if Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1

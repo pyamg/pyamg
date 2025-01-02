@@ -89,7 +89,7 @@ References
 
 """
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr
+from scipy.sparse import csr_matrix, issparse
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
@@ -132,7 +132,7 @@ def RS(S, second_pass=False):
        SIAM: Philadelphia, PA, 1987; 73-130.
 
     """
-    if not isspmatrix_csr(S):
+    if not issparse(S) or S.format != 'csr':
         raise TypeError('expected csr_matrix')
     S = remove_diagonal(S)
 
@@ -270,7 +270,7 @@ def CLJP(S, color=False):
        Numerical Linear Algebra with Applications 2007; 14:611-643.
 
     """
-    if not isspmatrix_csr(S):
+    if not issparse(S) or S.format != 'csr':
         raise TypeError('expected csr_matrix')
     S = remove_diagonal(S)
 
@@ -360,7 +360,7 @@ def MIS(G, weights, maxiter=None):
     fn = amg_core.maximal_independent_set_parallel
 
     """
-    if not isspmatrix_csr(G):
+    if not issparse(G) or G.format != 'csr':
         raise TypeError('expected csr_matrix')
     G = remove_diagonal(G)
 
@@ -416,7 +416,7 @@ def _preprocess(S, coloring_method=None):
         - Augments weights with graph coloring (if use_color == True)
 
     """
-    if not isspmatrix_csr(S):
+    if not issparse(S) or S.format != 'csr':
         raise TypeError('expected csr_matrix')
 
     if S.shape[0] != S.shape[1]:

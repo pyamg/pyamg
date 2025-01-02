@@ -43,7 +43,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.diags([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = standard_aggregation(S)
         expected = np.array([[0], [0], [0], [0]])
         assert_equal(result.toarray(), expected)
@@ -61,7 +61,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.diags([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = naive_aggregation(S)
         expected = np.eye(4)
         assert_equal(result.toarray(), expected)
@@ -78,7 +78,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1.0, 1.0, 1.0, 1.0]], [0], 4, 4, format='csr')
+        S = sparse.diags([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = pairwise_aggregation(S, matchings=1, theta=0.25, norm='min')
         expected = np.eye(4)
         assert_equal(result.todense(), expected)

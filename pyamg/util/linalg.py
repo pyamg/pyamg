@@ -76,24 +76,22 @@ def infinity_norm(A):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags
     >>> from pyamg.util.linalg import infinity_norm
     >>> n=10
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n)
+    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n))
     >>> print(infinity_norm(A))
     4.0
 
     """
-    if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
-        # avoid copying index and ptr arrays
-        abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr),
-                            shape=A.shape)
-        return (abs_A * np.ones((A.shape[1]), dtype=A.dtype)).max()
-
-    if sparse.isspmatrix(A):
-        return (abs(A) * np.ones((A.shape[1]), dtype=A.dtype)).max()
+    if sparse.issparse(A):
+        if A.format in ('csc', 'csr'):
+            # avoid copying index and ptr arrays
+            abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr), shape=A.shape)
+            return (abs_A @ np.ones((A.shape[1]), dtype=A.dtype)).max()
+        return (abs(A) @ np.ones((A.shape[1]), dtype=A.dtype)).max()
 
     return np.dot(np.abs(A), np.ones((A.shape[1],), dtype=A.dtype)).max()
 
@@ -374,7 +372,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
         # end j-loop
 
         rho = np.abs(ev[max_index])
-        if sparse.isspmatrix(A):
+        if sparse.issparse(A):
             A.rho = rho
 
         if return_vector:
@@ -470,7 +468,7 @@ def cond(A):
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    if sparse.isspmatrix(A):
+    if sparse.issparse(A):
         A = A.toarray()
 
     U, Sigma, Vh = svd(A)
@@ -522,7 +520,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
     """
     # convert to array type
-    if not sparse.isspmatrix(A):
+    if not sparse.issparse(A):
         A = np.asarray(A)
 
     if fast_check:
@@ -537,7 +535,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
     else:
         # compute the difference, A - A.conj().T
-        if sparse.isspmatrix(A):
+        if sparse.issparse(A):
             diff = np.ravel((A - A.conj().T).data)
         else:
             diff = np.ravel(A - A.conj().T)

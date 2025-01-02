@@ -2,8 +2,8 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, bsr_matrix, isspmatrix_csr, \
-    isspmatrix_csc, isspmatrix_bsr, eye, SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, bsr_matrix, issparse, \
+    eye, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
 from ..strength import symmetric_strength_of_connection, \
@@ -48,7 +48,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     Nothing, x is modified in place
 
     """
-    if not (isspmatrix_csr(AggOp) or isspmatrix_csc(AggOp)):
+    if not issparse(AggOp) or AggOp.format not in ('csc', 'csr'):
         raise TypeError('AggOp must be a CSR or CSC matrix')
 
     if kwargs:  # process any needed kwargs for elimination
@@ -219,7 +219,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
        SIAM Review Volume 47,  Issue 2  (2005)
 
     """
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = csr_matrix(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
@@ -227,7 +227,13 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
             raise TypeError('Argument A must have type csr_matrix or '
                             'bsr_matrix, or be convertible to csr_matrix') from e
 
-    A = A.asfptype()
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
+
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -481,7 +487,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             C_l = classical_strength_of_connection(A_l, **kwargs)
             # Diagonal must be nonzero
             C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
-            if isspmatrix_bsr(A_l):
+            if A_l.format == 'bsr':
                 C_l = amalgamate(C_l, A_l.blocksize[0])
         elif fn in ('ode', 'evolution'):
             C_l = evolution_strength_of_connection(A_l,
@@ -534,9 +540,9 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
 
         # R should reflect A's structure # step 4e
         if symmetry == 'symmetric':
-            A_l = P_l.T.asformat(P_l.format) * A_l * P_l
+            A_l = P_l.T.asformat(P_l.format) @ A_l @ P_l
         elif symmetry == 'hermitian':
-            A_l = P_l.T.conjugate().asformat(P_l.format) * A_l * P_l
+            A_l = P_l.T.conjugate().asformat(P_l.format) @ A_l @ P_l
         else:
             raise ValueError(f'aSA not implemented for symmetry={symmetry}.')
 
@@ -554,15 +560,15 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             relax(A_l, x)  # step 4h
             work[:] += A_l.nnz*candidate_iters*2
             if pdef is True:
-                x_A_x = np.dot(np.conjugate(x).T, A_l*x)
-                xhat_A_xhat = np.dot(np.conjugate(x_hat).T, A_l*x_hat)
+                x_A_x = np.dot(np.conjugate(x).T, A_l@x)
+                xhat_A_xhat = np.dot(np.conjugate(x_hat).T, A_l@x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
             else:
                 # use A.H A inner-product
-                Ax = A_l * x
-                # Axhat = A_l * x_hat
+                Ax = A_l @ x
+                # Axhat = A_l @ x_hat
                 x_A_x = np.dot(np.conjugate(Ax).T, Ax)
-                xhat_A_xhat = np.dot(np.conjugate(x_hat).T, A_l*x_hat)
+                xhat_A_xhat = np.dot(np.conjugate(x_hat).T, A_l@x_hat)
                 err_ratio = (x_A_x/xhat_A_xhat)**(1.0/candidate_iters)
 
             if err_ratio < epsilon:  # step 4i
@@ -586,7 +592,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     for lev in range(len(Ps)-2, -1, -1):  # lev = coarsest ... finest-1
         P = Ps[lev]                     # I: lev --> lev+1
         A = As[lev]                     # A on lev+1
-        x = P * x
+        x = P @ x
         relax(A, x)
         work[:] += A.nnz*candidate_iters*2
 
@@ -722,7 +728,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
             levels[i].R = levels[i].P.T.conjugate().asformat(levels[i].P.format)
 
         # construct coarse A
-        levels[i+1].A = levels[i].R * levels[i].A * levels[i].P
+        levels[i+1].A = levels[i].R @ levels[i].A @ levels[i].P
 
         # construct bridging P
         T_bridge = make_bridge(levels[i+1].T)
@@ -773,7 +779,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
     # note that we only use the x from the second coarsest level
     fn, kwargs = unpack_arg(prepostsmoother)
     for lvl in reversed(levels[:-2]):
-        x = lvl.P * x
+        x = lvl.P @ x
         work[:] += lvl.A.nnz*candidate_iters*2
 
         if fn == 'gauss_seidel':

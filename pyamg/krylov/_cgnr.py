@@ -84,7 +84,7 @@ def cgnr(A, b, x0=None, tol=1e-5, criteria='rr',
 
     """
     # Store the conjugate transpose explicitly as it will be used much later on
-    if sparse.isspmatrix(A):
+    if sparse.issparse(A):
         AH = A.T.conjugate()
     else:
         # avoid doing this since A may be a different sparse type

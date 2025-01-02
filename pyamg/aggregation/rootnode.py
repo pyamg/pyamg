@@ -3,8 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr, \
-    SparseEfficiencyWarning
+from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -231,7 +230,7 @@ def rootnode_solver(A, B=None, BH=None,
        966--991, 2011.
 
     """
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = csr_matrix(A)
             warn('Implicit conversion of A to CSR',
@@ -240,7 +239,12 @@ def rootnode_solver(A, B=None, BH=None,
             raise TypeError('Argument A must have type csr_matrix, '
                             'bsr_matrix, or be convertible to csr_matrix') from e
 
-    A = A.asfptype()
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
 
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" '
@@ -405,9 +409,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
-    B = Cpt_params[1]['P_I'].T*levels[-1].B
+    B = Cpt_params[1]['P_I'].T@levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        BH = Cpt_params[1]['P_I'].T*levels[-1].BH
+        BH = Cpt_params[1]['P_I'].T@levels[-1].BH
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
@@ -453,7 +457,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P                                # Galerkin operator
+    A = R @ A @ P                                # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B                             # right near nullspace candidates

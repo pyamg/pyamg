@@ -271,7 +271,7 @@ class TestStrengthOfConnection(TestCase):
                                     B.indices, B.data, result.indptr,
                                     result.indices, result.data, A.shape[0])
             result.eliminate_zeros()
-            exact = (A*B).multiply(mask)
+            exact = (A@B).multiply(mask)
             exact.sort_indices()
             exact.eliminate_zeros()
             assert_array_almost_equal(exact.data, result.data)
@@ -293,8 +293,8 @@ class TestStrengthOfConnection(TestCase):
         # strength stencil
         for N in [3, 6, 7]:
             u = np.ones(N*N)
-            A = sparse.spdiags([-u, -0.001*u, 2.002*u, -0.001*u, -u],
-                               [-N, -1, 0, 1, N], N*N, N*N, format='csr')
+            A = sparse.diags([-u, -0.001*u, 2.002*u, -0.001*u, -u],
+                             offsets=[-N, -1, 0, 1, N], shape=(N*N, N*N), format='csr')
             B = np.ones((A.shape[0], 1))
             cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
                           'k': 2, 'proj': 'l2'})
@@ -353,13 +353,13 @@ class TestStrengthOfConnection(TestCase):
                                         k=2, proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                           [0], A.shape[0], A.shape[0], format='csr')
-        Dinv = sparse.spdiags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                              [0], A.shape[0], A.shape[0], format='csr')
+        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
         np.random.seed(3969802542)  # make results deterministic
-        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)),
-                                      Dinv*B, epsilon=4.0, k=2,
+        result_scaled = evolution_soc((D@A@D).tobsr(blocksize=(2, 2)),
+                                      Dinv@B, epsilon=4.0, k=2,
                                       proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
@@ -455,12 +455,12 @@ class TestComplexStrengthOfConnection(TestCase):
                                         proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                           [0], A.shape[0], A.shape[0], format='csr')
-        Dinv = sparse.spdiags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                              [0], A.shape[0], A.shape[0], format='csr')
+        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
         np.random.seed(743434914)  # make results deterministic
-        result_scaled = evolution_soc(D*A*D, Dinv*B, epsilon=4.0, k=2,
+        result_scaled = evolution_soc(D@A@D, Dinv@B, epsilon=4.0, k=2,
                                       proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
@@ -468,11 +468,11 @@ class TestComplexStrengthOfConnection(TestCase):
 
         # Test that the l2 and D_A are the same for the 1 candidate case
         np.random.seed(2417151167)  # make results deterministic
-        resultDA = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
+        resultDA = evolution_soc(D@A@D, Dinv@B, epsilon=4.0,
                                  k=2, proj_type='D_A',
                                  symmetrize_measure=False)
         np.random.seed(2866319482)  # make results deterministic
-        resultl2 = evolution_soc(D*A*D, Dinv*B, epsilon=4.0,
+        resultl2 = evolution_soc(D@A@D, Dinv@B, epsilon=4.0,
                                  k=2, proj_type='l2',
                                  symmetrize_measure=False)
         assert_array_almost_equal(resultDA.toarray(), resultl2.toarray())
@@ -486,12 +486,12 @@ class TestComplexStrengthOfConnection(TestCase):
                                         proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.spdiags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                           [0], A.shape[0], A.shape[0], format='csr')
-        Dinv = sparse.spdiags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                              [0], A.shape[0], A.shape[0], format='csr')
+        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
         np.random.seed(1944403548)  # make results deterministic
-        result_scaled = evolution_soc((D*A*D).tobsr(blocksize=(2, 2)), Dinv*B,
+        result_scaled = evolution_soc((D@A@D).tobsr(blocksize=(2, 2)), Dinv@B,
                                       epsilon=4.0, k=2, proj_type='D_A',
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
@@ -616,7 +616,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     --> This does the "unsymmetrized" version of the ode measure
     """
     # number of PDEs per point is defined implicitly by block size
-    csrflag = sparse.isspmatrix_csr(A)
+    csrflag = A.format == 'csr'
     if csrflag:
         numPDEs = 1
     else:
@@ -645,7 +645,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     S = (sparse.eye(dimen, dimen, format='csr') - (1.0/rho_DinvA)*Dinv_A)
     Atilde = sparse.eye(dimen, dimen, format='csr')
     for _i in range(k):
-        Atilde = S * Atilde
+        Atilde = S @ Atilde
 
     # Strength Info should be row-based, so transpose Atilde
     Atilde = Atilde.T.tocsr()
@@ -805,7 +805,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
 def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     """Construct reference distance based strength of connection."""
     # deal with the supernode case
-    if sparse.isspmatrix_bsr(A):
+    if A.format == 'bsr':
         dimen = int(A.shape[0]/A.blocksize[0])
         C = sparse.csr_matrix((np.ones((A.data.shape[0],)), A.indices, A.indptr),
                               shape=(dimen, dimen))

@@ -599,12 +599,12 @@ class MultilevelSolver:
 
                 # Orthogonalize new search direction to old directions
                 for j in range(k):  # loops from j = 0...(k-1)
-                    beta[k, j] = np.inner(p[j, :].conj(), Ac * p[k, :]) /\
-                            np.inner(p[j, :].conj(), Ac * p[j, :])
+                    beta[k, j] = np.inner(p[j, :].conj(), Ac @ p[k, :]) /\
+                            np.inner(p[j, :].conj(), Ac @ p[j, :])
                     p[k, :] -= beta[k, j] * p[j, :]
 
                 # Compute step size
-                Ap = Ac * p[k, :]
+                Ap = Ac @ p[k, :]
                 alpha = np.inner(p[k, :].conj(), np.ravel(coarse_b)) /\
                         np.inner(p[k, :].conj(), Ap)
 
@@ -657,7 +657,6 @@ def coarse_grid_solver(solver):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
     >>> from pyamg.gallery import poisson
     >>> from pyamg import coarse_grid_solver
     >>> A = poisson((10, 10), format='csr')
@@ -703,11 +702,11 @@ def coarse_grid_solver(solver):
                 nonzero_cols = (diffptr != 0).nonzero()[0]
                 Map = sp.sparse.eye(Acsc.shape[0], Acsc.shape[1], format='csc')
                 Map = Map[:, nonzero_cols]
-                Acsc = Map.T.tocsc() * Acsc * Map
+                Acsc = Map.T.tocsc() @ Acsc @ Map
                 self.LU = sp.sparse.linalg.splu(Acsc, **kwargs)
                 self.LU_Map = Map
 
-            return self.LU_Map * self.LU.solve(np.ravel(self.LU_Map.T * b))
+            return self.LU_Map @ self.LU.solve(np.ravel(self.LU_Map.T @ b))
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
         if hasattr(krylov, solver):

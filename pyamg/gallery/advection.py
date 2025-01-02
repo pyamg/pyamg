@@ -92,7 +92,7 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
 
     # Eliminate boundary DOFs
     bdry = np.concatenate((l_bdry.flatten(), b_bdry.flatten()))
-    rhs = -A[int_dofs, :][:, all_bdofs]*bdry
+    rhs = -A[int_dofs, :][:, all_bdofs] @ bdry
     A = A[int_dofs, :][:, int_dofs]
 
     return A, rhs

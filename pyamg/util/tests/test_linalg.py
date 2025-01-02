@@ -171,7 +171,7 @@ class TestComplexLinalg(TestCase):
             rayleigh = abs(np.dot(Avec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(Asp, return_vector=True)[1]
-            Aspvec = Asp * vec
+            Aspvec = Asp @ vec
             Aspvec = np.ravel(Aspvec)
             vec = np.ravel(vec)
             rayleigh = abs(np.dot(Aspvec, vec) / np.dot(vec, vec))
@@ -196,7 +196,7 @@ class TestComplexLinalg(TestCase):
             rayleigh = abs(np.dot(AAvec, vec) / np.dot(vec, vec))
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
             vec = approximate_spectral_radius(AAsp, return_vector=True)[1]
-            AAspvec = AAsp * vec
+            AAspvec = AAsp @ vec
             AAspvec = np.ravel(AAspvec)
             vec = np.ravel(vec)
             rayleigh = abs(np.dot(AAspvec, vec) / np.dot(vec, vec))

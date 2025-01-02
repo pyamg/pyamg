@@ -2,7 +2,7 @@
 
 
 import numpy as np
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
+from scipy.sparse import issparse, csr_matrix
 
 from .aggregation import smoothed_aggregation_solver
 from .util.linalg import ishermitian
@@ -32,7 +32,7 @@ def make_csr(A):
 
     """
     # Convert to CSR or BSR if necessary
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = csr_matrix(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
@@ -43,7 +43,12 @@ def make_csr(A):
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
 
-    A = A.asfptype()
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char not in 'fdFD':
+        for fp_type in 'fdFD':
+            if A.dtype <= np.dtype(fp_type):
+                A = A.astype(fp_type)
+                break
 
     return A
 
@@ -116,7 +121,7 @@ def solver_configuration(A, B=None, verb=True):
     # Determine near null-space modes B
     if B is None:
         # B is the constant for each variable in a node
-        if isspmatrix_bsr(A) and A.blocksize[0] > 1:
+        if A.format == 'bsr' and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
             config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
                                           dtype=A.dtype), np.eye(bsize))
