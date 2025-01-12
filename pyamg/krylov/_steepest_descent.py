@@ -91,7 +91,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
     # determine maxiter
     if maxiter is None:
-        maxiter = int(len(b))
+        maxiter = len(b)
     elif maxiter < 1:
         raise ValueError('Number of iterations must be positive')
 
