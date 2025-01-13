@@ -112,7 +112,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     if len(row) != len(col):
         raise ValueError('Problem constructing vertex-to-vertex map')
     V2V = coo_matrix((data, (row, col)), shape=(E2V.shape[0], E2V.max()+1))
-    V2V = V2V.T * V2V
+    V2V = V2V.T @ V2V
     V2V = triu(V2V, 1).tocoo()
 
     # get all the edges
