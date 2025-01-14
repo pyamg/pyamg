@@ -91,7 +91,7 @@ def gmres(A, b, x0=None, tol=1e-5, restart=None, maxiter=None,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = gmres(A,b, maxiter=2, tol=1e-8)
-    >>> print(f'{norm(b - A*x):.6}')
+    >>> print(f'{norm(b - A@x):.6}')
     6.54282
 
     References

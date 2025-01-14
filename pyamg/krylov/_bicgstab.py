@@ -67,7 +67,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = bicgstab(A,b, maxiter=2, tol=1e-8)
-    >>> print(f'{norm(b - A*x):.6}')
+    >>> print(f'{norm(b - A@x):.6}')
     4.68163
 
     References
