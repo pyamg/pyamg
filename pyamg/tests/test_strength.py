@@ -9,7 +9,7 @@ from pyamg.gallery import poisson, linear_elasticity, load_example, \
     stencil_grid
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
-    distance_strength_of_connection
+    distance_strength_of_connection, energy_based_strength_of_connection
 from pyamg.amg_core import incomplete_mat_mult_csr
 from pyamg.util.linalg import approximate_spectral_radius
 from pyamg.util.utils import scale_rows
@@ -17,6 +17,7 @@ from pyamg.util.params import set_tol
 
 classical_soc = classical_strength_of_connection
 symmetric_soc = symmetric_strength_of_connection
+energy_soc = energy_based_strength_of_connection
 evolution_soc = evolution_strength_of_connection
 distance_soc = distance_strength_of_connection
 
@@ -496,6 +497,17 @@ class TestComplexStrengthOfConnection(TestCase):
                                       symmetrize_measure=False)
         assert_array_almost_equal(result_scaled.toarray(),
                                   result_unscaled.toarray(), decimal=2)
+
+    def test_energy_based_strength_of_connection(self):
+        A = poisson((10,), format='coo')
+        S = energy_based_strength_of_connection(A, k=100)
+        S.setdiag(0.0)
+        S.eliminate_zeros()
+
+        # check if every neighbor is a strong connection
+        for i in range(1, A.shape[0]-1):
+            idx = S.getrow(i)
+            assert set(idx.indices) == {i-1, i+1}
 
 
 # reference implementations for unittests  #
