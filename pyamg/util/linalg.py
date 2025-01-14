@@ -193,7 +193,7 @@ def _approximate_eigenvalues(A, maxiter, symmetric=None, initial_guess=None):
 
     beta = 0.0
     for j in range(maxiter):
-        w = A * V[-1]
+        w = A @ V[-1]
 
         if symmetric:
             if j >= 1:
