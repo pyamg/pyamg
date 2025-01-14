@@ -712,12 +712,12 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     del Dinv, Dinv_A, mask
 
     # Calculate strength based on constrained min problem of
-    # min( z - B*x ), such that
-    # (B*x)|_i = z|_i, i.e. they are equal at point i
+    # min( z - B@x ), such that
+    # (B@x)|_i = z|_i, i.e. they are equal at point i
     # z = (I - (t/k) Dinv A)^k delta_i
     #
     # Strength is defined as the relative point-wise approx. error between
-    # B*x and z.  We don't use the full z in this problem, only that part of
+    # B@x and z.  We don't use the full z in this problem, only that part of
     # z that is in the sparsity pattern of A.
     #
     # Can use either the D-norm, and inner product, or l2-norm and inner-prod
@@ -780,7 +780,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         del data, weak_ratio, angle
 
     else:
-        # For use in computing local B_i^H*B, precompute the element-wise
+        # For use in computing local B_i^H@B, precompute the element-wise
         # multiply of each column of B with each other column.  We also scale
         # by 2.0 to account for BDB's eventual use in a constrained
         # minimization problem
