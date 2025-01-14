@@ -39,7 +39,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     -----
         Assuming that each row of AggOp contains exactly one non-zero entry,
         i.e. all unknowns belong to an aggregate, then Q and R satisfy the
-        relationship B = Q*R.  In other words, the near-nullspace candidates
+        relationship B = Q@R.  In other words, the near-nullspace candidates
         are represented exactly by the tentative prolongator.
 
         If AggOp contains rows with no non-zero entries, then the range of the

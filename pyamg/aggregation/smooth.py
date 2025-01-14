@@ -15,7 +15,7 @@ from ..util import upcast
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
 def satisfy_constraints(U, B, BtBinv):
-    """U is the prolongator update.  Project out components of U such that U*B = 0.
+    """U is the prolongator update.  Project out components of U such that U@B = 0.
 
     Parameters
     ----------
@@ -71,7 +71,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     C : csr_matrix, bsr_matrix
         Strength-of-connection matrix
     B : array
-        Near nullspace modes for the coarse grid such that T*B
+        Near nullspace modes for the coarse grid such that T@B
         exactly reproduces the fine grid near nullspace modes
     omega : scalar
         Damping parameter
@@ -91,8 +91,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     Returns
     -------
     P : csr_matrix, bsr_matrix
-        Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) * T
-        where K = diag(S)^-1 * S and rho(K) is an approximation to the
+        Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) @ T
+        where K = diag(S)^-1 @ S and rho(K) is an approximation to the
         spectral radius of K.
 
     Notes
@@ -402,7 +402,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         oldsum = newsum
 
         # Calculate new direction and enforce constraints
-        #   Equivalent to:  AP = A*P;    AP = AP.multiply(pattern)
+        #   Equivalent to:  AP = A@P;    AP = AP.multiply(pattern)
         #   with the added constraint that explicit zeros are in AP wherever
         #   AP = 0 and pattern does not  !!!!
         AP.data[:] = 0.0
@@ -776,7 +776,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     # print "Energy Minimization of Prolongator \
     # --- Iteration 0 --- r = " + str(normr)
     i = -1
-    # vect = np.ravel((A*T).data)
+    # vect = np.ravel((A@T).data)
     # print "Iteration " + str(i+1) + "   \
     # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
     # print "Iteration " + str(i+1) + "   Normr  %1.3e"%normr
@@ -784,7 +784,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         i = i+1
 
         # Calculate new search direction
-        #   Equivalent to:  AV = A*V;    AV = AV.multiply(pattern)
+        #   Equivalent to:  AV = A@V;    AV = AV.multiply(pattern)
         #   with the added constraint that explicit zeros are in AP wherever
         #   AP = 0 and pattern does not
         AV.data[:] = 0.0
@@ -802,9 +802,9 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         if weighting in ('local', 'diagonal'):
             AV = scale_rows(AV, Dinv)
         else:
-            AV = Dinv*AV
+            AV = Dinv@AV
 
-        # Enforce AV*B = 0
+        # Enforce AV@B = 0
         satisfy_constraints(AV, B, BtBinv)
         V.append(AV.copy())
 
@@ -862,7 +862,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         for j in range(i+1):
             T = T + y[j]*V[j]
 
-    # vect = np.ravel((A*T).data)
+    # vect = np.ravel((A@T).data)
     # print "Final Iteration " + str(i) + "   \
     # Energy = %1.3e"%np.sqrt( (vect.conjugate()*vect).sum() )
 
@@ -1120,7 +1120,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     BtBinv = compute_BtBinv(B, pattern)
 
     # If using root nodes and B has more columns that A's blocksize, then
-    # T must be updated so that T*B = Bfine.  Note, if this is a 'secondpass'
+    # T must be updated so that T@B = Bfine.  Note, if this is a 'secondpass'
     # after dropping entries in P, then we must re-enforce the constraints
     if ((Cpt_params[0] and (B.shape[1] > A.blocksize[0]))
        or ('secondpass' in postfilter)):
@@ -1130,8 +1130,8 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
             T = Cpt_params[1]['I_F']@T + Cpt_params[1]['P_I']
 
     # Iteratively minimize the energy of T subject to the constraints of
-    # pattern and maintaining T's effect on B, i.e. T*B =
-    # (T+Update)*B, i.e. Update*B = 0
+    # pattern and maintaining T's effect on B, i.e. T@B =
+    # (T+Update)@B, i.e. Update@B = 0
     if krylov == 'cg':
         T = cg_prolongation_smoothing(A, T, B, BtBinv, pattern,
                                       maxiter, tol, weighting, Cpt_params)
