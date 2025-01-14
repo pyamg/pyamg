@@ -416,7 +416,7 @@ class MultilevelSolver:
         >>> from pyamg import ruge_stuben_solver
         >>> from pyamg.gallery import poisson
         >>> A = poisson((100, 100), format='csr')
-        >>> b = A * ones(A.shape[0])
+        >>> b = A @ ones(A.shape[0])
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
         >>> residuals = []
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
@@ -592,7 +592,7 @@ class MultilevelSolver:
             p = np.zeros((nAMLI, coarse_b.shape[0]), dtype=coarse_b.dtype)
             beta = np.zeros((nAMLI, nAMLI), dtype=coarse_b.dtype)
             for k in range(nAMLI):
-                # New search direction --> M^{-1}*residual
+                # New search direction --> M^{-1}@residual
                 p[k, :] = 1
                 self.__solve(lvl + 1, p[k, :].reshape(coarse_b.shape),
                              coarse_b, cycle)
@@ -660,7 +660,7 @@ def coarse_grid_solver(solver):
     >>> from pyamg.gallery import poisson
     >>> from pyamg import coarse_grid_solver
     >>> A = poisson((10, 10), format='csr')
-    >>> b = A * np.ones(A.shape[0])
+    >>> b = A @ np.ones(A.shape[0])
     >>> cgs = coarse_grid_solver('lu')
     >>> x = cgs(A, b)
 
