@@ -2186,7 +2186,22 @@ def scale_block_inverse(A, blocksize):
 
 
 def asfptype(A):
-    """Upcast array to a floating point format (if necessary)"""
+    """Upcast array to a floating point format (if necessary).
+
+    Parameters
+    ----------
+    A : array_like
+        Non-floating point or floating point array
+
+    Returns
+    -------
+    A : array_like
+        Floating point array
+
+    Notes
+    -----
+    see https://github.com/scipy/scipy/blob/4cc4d140efde4a33a77cd602c0d2f8698cf9b800/scipy/sparse/_base.py#L244
+    """
     # convert to smallest compatible dtype if needed
     if A.dtype.char in 'fdFD':
         return A
@@ -2195,4 +2210,4 @@ def asfptype(A):
         if A.dtype <= np.dtype(fp_type):
             return A.astype(fp_type)
 
-    raise TypeError(f'cannot upcast [{self.dtype}] to a floating point format')
+    raise TypeError(f'cannot upcast [{A.dtype}] to a floating point format')
