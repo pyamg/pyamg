@@ -2201,6 +2201,7 @@ def asfptype(A):
     Notes
     -----
     see https://github.com/scipy/scipy/blob/4cc4d140efde4a33a77cd602c0d2f8698cf9b800/scipy/sparse/_base.py#L244
+
     """
     # convert to smallest compatible dtype if needed
     if A.dtype.char in 'fdFD':
