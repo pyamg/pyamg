@@ -272,7 +272,7 @@ class TestUtils(TestCase):
                     blockflag = False
                     kwargs_gold = dict(kwargs)
                     # deal with block matrices
-                    if method.startswith('block') and A.format == 'bsr':
+                    if method.startswith('block') and issparse(A) and A.format == 'bsr':
                         blockflag = True
                         kwargs_gold['blocksize'] = A.blocksize[0]
                     # deal with omega and jacobi

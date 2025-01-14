@@ -20,7 +20,7 @@ from . import linalg
 
 def get_blocksize(A):
     """Return the block size of a matrix."""
-    if A.format == 'bsr':
+    if issparse(A) and A.format == 'bsr':
         return A.blocksize[0]
     return 1
 
@@ -341,7 +341,6 @@ def symmetric_rescaling(A, copy=True):
 
         return D_sqrt, D_sqrt_inv, DAD
 
-#    print(A)
     return symmetric_rescaling(csr_matrix(A))
 
 
@@ -634,20 +633,14 @@ def get_block_diag(A, blocksize, inv_flag=True):
             return A.block_D
 
     # Convert to BSR
-    if A.format != 'bsr':
+    if not issparse(A) or A.format != 'bsr':
         A = bsr_matrix(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
-    # convert to smallest compatible dtype if needed
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
-
     # Peel off block diagonal by extracting block entries from the now BSR
     # matrix A
+    A = asfptype(A)
     block_diag = np.zeros((int(A.shape[0]/blocksize), blocksize, blocksize),
                           dtype=A.dtype)
 
@@ -1168,23 +1161,23 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     if A.shape[1] != C.shape[1]:
         raise ValueError('A and C must be the same size')
 
-    if C.format == 'bsr':
+    if issparse(C) and C.format == 'bsr':
         isBSR = True
         cols_per_block = C.blocksize[1]
         rows_per_block = C.blocksize[0]
         Nnodes = int(Nfine/rows_per_block)
-        if A.format != 'bsr':
+        if not issparse(A) or A.format != 'bsr':
             raise ValueError('A and C must either both be CSR or BSR')
 
         if (cols_per_block != A.blocksize[1]) or (rows_per_block != A.blocksize[0]):
             raise ValueError('A and C must have same BSR blocksizes')
 
-    elif C.format == 'csr':
+    elif issparse(C) and C.format == 'csr':
         isBSR = False
         cols_per_block = 1
         rows_per_block = 1
         Nnodes = int(Nfine/rows_per_block)
-        if A.format != 'csr':
+        if not issparse(A) or A.format != 'csr':
             raise ValueError('A and C must either both be CSR or BSR')
     else:
         raise ValueError('A and C must either both be CSR or BSR')
@@ -1437,13 +1430,11 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     prolongation smoothing
 
     """
-    if not issparse(A):
-        raise TypeError('Expected sparse matrix A')
-    if A.format not in ('bsr', 'csr'):
-        raise TypeError('Expected BSR or CSR matrix A')
-    if AggOp.format != 'csr':
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
+        raise TypeError('Expected BSR or CSR sparse matrix A')
+    if not issparse(AggOp) or AggOp.format != 'csr':
         raise TypeError('Expected CSR matrix AggOp')
-    if T.format != 'bsr':
+    if not issparse(T) or T.format != 'bsr':
         raise TypeError('Expected BSR matrix T')
     if T.blocksize[0] != T.blocksize[1]:
         raise TypeError('Expected square blocksize for BSR matrix T')
@@ -2192,3 +2183,16 @@ def scale_block_inverse(A, blocksize):
     scale = bsr_matrix((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
                        blocksize=[blocksize, blocksize], shape=A.shape)
     return scale @ A, scale
+
+
+def asfptype(A):
+    """Upcast array to a floating point format (if necessary)"""
+    # convert to smallest compatible dtype if needed
+    if A.dtype.char in 'fdFD':
+        return A
+
+    for fp_type in 'fdFD':
+        if A.dtype <= np.dtype(fp_type):
+            return A.astype(fp_type)
+
+    raise TypeError(f'cannot upcast [{self.dtype}] to a floating point format')

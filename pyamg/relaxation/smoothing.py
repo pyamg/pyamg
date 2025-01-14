@@ -554,9 +554,9 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
     """Set up block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if lvl.A.format == 'csr':
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif lvl.A.format == 'bsr':
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -585,9 +585,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
     """Set up block Gauss-Seidel."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if lvl.A.format == 'csr':
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif lvl.A.format == 'bsr':
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -711,12 +711,12 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if lvl.A.format == 'csr':
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif lvl.A.format == 'bsr':
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if Dinv.format == 'bsr':
+        if sparse.issparse(Dinv) and Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1
@@ -754,12 +754,12 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if lvl.A.format == 'csr':
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif lvl.A.format == 'bsr':
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if Dinv.format == 'bsr':
+        if sparse.issparse(Dinv) and Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1

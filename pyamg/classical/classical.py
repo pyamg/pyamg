@@ -14,6 +14,7 @@ from pyamg.strength import classical_strength_of_connection, \
 from pyamg.classical.interpolate import direct_interpolation, classical_interpolation
 from . import split
 from .cr import CR
+from ..util.utils import asfptype
 
 
 def ruge_stuben_solver(A,
@@ -102,11 +103,7 @@ def ruge_stuben_solver(A,
             raise TypeError('Argument A must have type csr_matrix, '
                             'or be convertible to csr_matrix') from e
     # preprocess A
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
+    A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 

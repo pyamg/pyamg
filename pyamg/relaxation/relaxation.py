@@ -58,9 +58,9 @@ def make_system(A, x, b, formats=None):
     if formats is None:
         pass
     elif formats == ['csr']:
-        if A.format == 'csr':
+        if sparse.issparse(A) and A.format == 'csr':
             pass
-        elif A.format == 'bsr':
+        elif sparse.issparse(A) and A.format == 'bsr':
             A = A.tocsr()
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
@@ -317,7 +317,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         blocksize = 1
     else:
         R, C = A.blocksize
@@ -337,7 +337,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     else:
         raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         for _iter in range(iterations):
             amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                   row_start, row_stop, row_step)
@@ -1125,7 +1125,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         for _iter in range(iterations):
             amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, indices, omega)
     else:
@@ -1249,7 +1249,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         for _iter in range(iterations):
             for _fiter in range(f_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)

@@ -10,7 +10,7 @@ from ..relaxation.smoothing import change_smoothers
 from ..relaxation.utils import relaxation_as_linear_operator
 from ..util.utils import scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, get_blocksize, \
-    levelize_strength_or_aggregation, \
+    levelize_strength_or_aggregation, asfptype, \
     levelize_smooth_or_improve_candidates
 from ..strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
@@ -239,12 +239,7 @@ def rootnode_solver(A, B=None, BH=None,
             raise TypeError('Argument A must have type csr_matrix, '
                             'bsr_matrix, or be convertible to csr_matrix') from e
 
-    # convert to smallest compatible dtype if needed
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
+    A = asfptype(A)
 
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" '

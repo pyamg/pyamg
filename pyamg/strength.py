@@ -182,7 +182,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     >>> S = classical_strength_of_connection(A, 0.0)
 
     """
-    if A.format == 'bsr':
+    if sparse.issparse(A) and A.format == 'bsr':
         if (A.blocksize[0] != A.blocksize[1]) or (A.blocksize[0] < 1):
             raise ValueError('Matrix must have square blocks')
         blocksize = A.blocksize[0]
@@ -193,7 +193,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
         raise ValueError('expected theta in [0,1]')
 
     # Block structure considered before computing SOC
-    if block and A.format == 'bsr':
+    if block and sparse.issparse(A) and A.format == 'bsr':
         N = int(A.shape[0] / blocksize)
 
         # SOC based on maximum absolute value element in each block
@@ -212,7 +212,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
         # drop small numbers
         data[np.abs(data) < 1e-16] = 0.0
     else:
-        if A.format != 'csr':
+        if not sparse.issparse(A) or A.format != 'csr':
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
             A = sparse.csr_matrix(A)
         data = A.data
@@ -310,9 +310,7 @@ def symmetric_strength_of_connection(A, theta=0):
     if theta < 0:
         raise ValueError('expected a positive theta')
 
-    if not sparse.issparse(A) or A.format not in ('csr', 'bsr'):
-        raise TypeError('expected csr_matrix or bsr_matrix')
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         # if theta == 0:
         #     return A
 
@@ -325,7 +323,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
         S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
-    else:  # A.format == 'bsr':
+    elif sparse.issparse(A) and A.format == 'bsr':
         M, N = A.shape
         R, C = A.blocksize
 
@@ -344,6 +342,8 @@ def symmetric_strength_of_connection(A, theta=0):
             A = sparse.csr_matrix((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
+    else:
+        raise TypeError('expected CSR or BSR sparse format')
 
     # Strength represents "distance", so take the magnitude
     S.data = np.abs(S.data)

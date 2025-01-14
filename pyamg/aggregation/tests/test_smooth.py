@@ -461,7 +461,7 @@ class TestEnergyMin(TestCase):
 
         def _get_blocksize(A):
             # Helper Function: return the blocksize of a matrix
-            if A.format == 'bsr':
+            if sparse.issparse(A) and A.format == 'bsr':
                 return A.blocksize[0]
 
             return 1

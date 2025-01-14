@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import numpy as np
+from scipy.sparse import issparse
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -9,7 +10,7 @@ from ..strength import (classical_strength_of_connection,
                         symmetric_strength_of_connection, evolution_strength_of_connection,
                         distance_strength_of_connection, algebraic_distance,
                         affinity_distance, energy_based_strength_of_connection)
-from ..util.utils import filter_matrix_rows
+from ..util.utils import filter_matrix_rows, asfptype
 from ..classical.interpolate import (direct_interpolation, classical_interpolation,
                                      injection_interpolation, one_point_interpolation,
                                      local_air)
@@ -109,11 +110,7 @@ def air_solver(A,
 
     """
     # preprocess A
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
+    A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
     if np.iscomplexobj(A.data):
@@ -232,9 +229,9 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     A = R @ A @ P
 
     # Make sure coarse-grid operator is in correct sparse format
-    if P.format == 'csr' and A.format != 'csr':
+    if issparse(P) and P.format == 'csr' and issparse(A) and A.format != 'csr':
         A = A.tocsr()
-    elif P.format == 'bsr' and A.format != 'bsr':
+    elif issparse(P) and P.format == 'bsr' and issparse(A) and A.format != 'bsr':
         A = A.tobsr()
 
     levels.append(MultilevelSolver.Level())
