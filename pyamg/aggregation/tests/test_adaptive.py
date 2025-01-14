@@ -189,7 +189,7 @@ class TestComplexAdaptiveSA(TestCase):
 #                assert_almost_equal(R_expected,R_result)
 #
 # each fine level candidate should be fit exactly
-#                assert_almost_equal(fine_candidates[:,:i+1],Q_result*R_result)
+#                assert_almost_equal(fine_candidates[:,:i+1],Q_result@R_result)
 #                assert_almost_equal(
-#                   Q_result*(Q_result.T*fine_candidates[:, :i+1]),
+#                   Q_result@(Q_result.T@fine_candidates[:, :i+1]),
 #                   fine_candidates[:, :i+1])

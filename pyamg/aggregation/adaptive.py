@@ -69,7 +69,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         z = np.ravel(z)*np.ravel(z)
         innerp = np.zeros((1, AggOp.shape[1]), dtype=z.dtype)
         for j in range(npde):
-            innerp += z[slice(j, ndof, npde)].reshape(1, -1) * AggOp
+            innerp += z[slice(j, ndof, npde)].reshape(1, -1) @ AggOp
 
         return innerp.reshape(-1, 1)
 
@@ -83,7 +83,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
         """
         _ = ndof
         rho = approximate_spectral_radius(A)
-        zAz = np.dot(z.reshape(1, -1), A*z.reshape(-1, 1))
+        zAz = np.dot(z.reshape(1, -1), A@z.reshape(-1, 1))
         card = npde * (AggOp.indptr[1:]-AggOp.indptr[:-1])
         weights = (np.ravel(card)*zAz)/(A.shape[0]*rho)
         return weights.reshape(-1, 1)
@@ -94,7 +94,7 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
 
     # Run test 2, which finds where x is already approximated
     # accurately by the existing T
-    projected_x = x - T*(T.T*x)
+    projected_x = x - T@(T.T@x)
     mask2 = aggregate_wise_inner_product(projected_x,
                                          AggOp, npde, ndof) <= weights
 
