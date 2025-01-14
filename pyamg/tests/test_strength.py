@@ -616,7 +616,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     --> This does the "unsymmetrized" version of the ode measure
     """
     # number of PDEs per point is defined implicitly by block size
-    csrflag = A.format == 'csr'
+    csrflag = sparse.issparse(A) and A.format == 'csr'
     if csrflag:
         numPDEs = 1
     else:
@@ -805,7 +805,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
 def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     """Construct reference distance based strength of connection."""
     # deal with the supernode case
-    if A.format == 'bsr':
+    if sparse.issparse(A) and A.format == 'bsr':
         dimen = int(A.shape[0]/A.blocksize[0])
         C = sparse.csr_matrix((np.ones((A.data.shape[0],)), A.indices, A.indptr),
                               shape=(dimen, dimen))

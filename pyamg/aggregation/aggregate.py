@@ -234,7 +234,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
     """
     # Get SOC matrix
-    if A.format not in ('bsr', 'csr'):
+    if not sparse.issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = A.tocsr()
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
@@ -250,7 +250,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     for i in range(0, matchings):
 
         # Compute SOC matrix for this matching
-        if A.format == 'bsr':
+        if sparse.issparse(A) and A.format == 'bsr':
             C = classical_strength_of_connection(A=Ac, theta=theta, block=True, norm=norm)
         else:
             C = classical_strength_of_connection(A=Ac, theta=theta, block=False, norm=norm)
@@ -276,7 +276,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
             # If A is not BSR
-            if A.format != 'bsr':
+            if not sparse.issparse(A) or A.format != 'bsr':
                 Tx = np.ones(len(Tj), dtype='int8')
                 T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
             else:
@@ -287,7 +287,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Form aggregation matrix, need to make sure is CSR/BSR
         if i == 0:
             T = T_temp
-        elif A.format == 'bsr':
+        elif sparse.issparse(A) and A.format == 'bsr':
             T = sparse.bsr_matrix(T @ T_temp)
         else:
             T = sparse.csr_matrix(T @ T_temp)
@@ -298,7 +298,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
         # Form coarse grid operator for next matching
         if i < (matchings-1):
-            if T_temp.format == 'csr':
+            if sparse.issparse(T_temp) and T_temp.format == 'csr':
                 Ac = T_temp.T.tocsr() @ Ac @ T_temp
             else:
                 Ac = T_temp.T @ Ac @ T_temp

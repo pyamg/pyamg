@@ -6,6 +6,7 @@ from scipy.sparse import issparse, csr_matrix
 
 from .aggregation import smoothed_aggregation_solver
 from .util.linalg import ishermitian
+from .util.utils import asfptype
 
 
 def make_csr(A):
@@ -43,12 +44,7 @@ def make_csr(A):
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
 
-    # convert to smallest compatible dtype if needed
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
+    A = asfptype(A)
 
     return A
 
@@ -121,7 +117,7 @@ def solver_configuration(A, B=None, verb=True):
     # Determine near null-space modes B
     if B is None:
         # B is the constant for each variable in a node
-        if A.format == 'bsr' and A.blocksize[0] > 1:
+        if issparse(A) and A.format == 'bsr' and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
             config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
                                           dtype=A.dtype), np.eye(bsize))

@@ -7,7 +7,7 @@ from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import get_blocksize, levelize_strength_or_aggregation
+from pyamg.util.utils import get_blocksize, levelize_strength_or_aggregation, asfptype
 from .aggregate import pairwise_aggregation
 
 
@@ -91,12 +91,7 @@ def pairwise_solver(A,
             raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
                             'or be convertible to csr_matrix') from e
 
-    # convert to smallest compatible dtype if needed
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
+    A = asfptype(A)
 
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
@@ -135,7 +130,7 @@ def _extend_hierarchy(levels, aggregate):
     _, kwargs = unpack_arg(aggregate[len(levels)-1])
     P = pairwise_aggregation(A, **kwargs, compute_P=True)[0]
     R = P.T.conjugate()
-    if P.format == 'csr':
+    if issparse(P) and P.format == 'csr':
         # In this case, R will be CSC, which must be changed
         R = R.tocsr()
 

@@ -11,7 +11,7 @@ from ..strength import symmetric_strength_of_connection, \
 from ..krylov import gmres
 from ..util.linalg import norm, approximate_spectral_radius
 from ..util.utils import amalgamate, levelize_strength_or_aggregation, \
-    levelize_smooth_or_improve_candidates
+    levelize_smooth_or_improve_candidates, asfptype
 from ..relaxation.smoothing import change_smoothers, rho_D_inv_A
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_nr, \
     gauss_seidel_ne, gauss_seidel_indexed, jacobi, polynomial
@@ -226,14 +226,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         except Exception as e:
             raise TypeError('Argument A must have type csr_matrix or '
                             'bsr_matrix, or be convertible to csr_matrix') from e
-
-    # convert to smallest compatible dtype if needed
-    if A.dtype.char not in 'fdFD':
-        for fp_type in 'fdFD':
-            if A.dtype <= np.dtype(fp_type):
-                A = A.astype(fp_type)
-                break
-
+    A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -487,7 +480,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
             C_l = classical_strength_of_connection(A_l, **kwargs)
             # Diagonal must be nonzero
             C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
-            if A_l.format == 'bsr':
+            if issparse(A_l) and A_l.format == 'bsr':
                 C_l = amalgamate(C_l, A_l.blocksize[0])
         elif fn in ('ode', 'evolution'):
             C_l = evolution_strength_of_connection(A_l,

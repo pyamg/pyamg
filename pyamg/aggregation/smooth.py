@@ -132,9 +132,9 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     """
     # preprocess weighting
     if weighting == 'block':
-        if S.format == 'csr':
+        if sparse.issparse(S) and S.format == 'csr':
             weighting = 'diagonal'
-        elif S.format == 'bsr':
+        elif sparse.issparse(S) and S.format == 'bsr':
             if S.blocksize[0] == 1:
                 weighting = 'diagonal'
         else:
@@ -144,7 +144,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # Implement filtered prolongation smoothing for the general case by
         # utilizing satisfy constraints
 
-        if S.format == 'bsr':
+        if sparse.issparse(S) and S.format == 'bsr':
             numPDEs = S.blocksize[0]
         else:
             numPDEs = 1
@@ -1010,16 +1010,16 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     if tol > 1:
         raise ValueError('tol must be <= 1')
 
-    if A.format == 'csr':
+    if sparse.issparse(A) and A.format == 'csr':
         A = A.tobsr(blocksize=(1, 1), copy=False)
-    elif A.format == 'bsr':
+    elif sparse.issparse(A) and A.format == 'bsr':
         pass
     else:
         raise TypeError('A must be sparse BSR or CSR')
 
-    if T.format == 'csr':
+    if sparse.issparse(T) and T.format == 'csr':
         T = T.tobsr(blocksize=(1, 1), copy=False)
-    elif T.format == 'bsr':
+    elif sparse.issparse(T) and T.format == 'bsr':
         pass
     else:
         raise TypeError('T must be sparse BSR or CSR')
