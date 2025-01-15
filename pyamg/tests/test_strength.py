@@ -506,7 +506,7 @@ class TestComplexStrengthOfConnection(TestCase):
 
         # check if every neighbor is a strong connection
         for i in range(1, A.shape[0]-1):
-            idx = S.getrow(i)
+            idx = S[i, :]
             assert set(idx.indices) == {i-1, i+1}
 
 
