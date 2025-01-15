@@ -46,7 +46,7 @@ def plotaggs(AggOp, V, E, G,
             todraw.append(newobj)
 
         for i in aggids:                                   # for each point in the aggregate
-            nbrs = G.getrow(i).indices                     # get the neighbors in the graph
+            nbrs = G[i, :].indices                         # get the neighbors in the graph
 
             for j1 in nbrs:                                # for each neighbor
                 found = False                              # mark if triangle is found
