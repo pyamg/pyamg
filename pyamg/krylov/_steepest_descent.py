@@ -8,9 +8,17 @@ from ..util.linalg import norm
 from ..util import make_system
 
 
-def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
-                     maxiter=None, M=None,
-                     callback=None, residuals=None):
+def steepest_descent(
+    A,
+    b,
+    x0=None,
+    tol=1e-5,
+    criteria='rr',
+    maxiter=None,
+    M=None,
+    callback=None,
+    residuals=None,
+):
     """Steepest descent algorithm.
 
     Solves the linear system Ax = b. Left preconditioning is supported.
@@ -138,12 +146,12 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
     while True:
         q = A @ z
-        zAz = np.inner(z.conjugate(), q)                # check curvature of A
+        zAz = np.inner(z.conjugate(), q)  # check curvature of A
         if zAz < 0.0:
             warn('\nIndefinite matrix detected in steepest descent, aborting\n')
             return (postprocess(x), -1)
 
-        alpha = rz / zAz                            # step size
+        alpha = rz / zAz  # step size
         x = x + alpha * z
 
         it += 1
@@ -155,7 +163,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         z = M @ r
         rz = np.inner(r.conjugate(), z)
 
-        if rz < 0.0:                                # check curvature of M
+        if rz < 0.0:  # check curvature of M
             warn('\nIndefinite preconditioner detected in steepest descent, stopping.\n')
             return (postprocess(x), -1)
 
