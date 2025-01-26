@@ -366,7 +366,7 @@ class TestEnergyMin(TestCase):
 
         # Simple, imaginary-valued problems
         name = 'random imaginary + I'
-        iA = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        iA = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
 
         cases.append((iA, B, ('jacobi',
                               {'filter_entries': True, 'weighting': 'local'}), name))
@@ -500,7 +500,7 @@ class TestEnergyMin(TestCase):
                 assert_almost_equal((P@Bc)[mask, :], Bf_H[mask, :])
 
                 # P should be the identity at Cpts
-                I1 = sparse.eye(T.shape[1], T.shape[1], format='csr', dtype=T.dtype)
+                I1 = sparse.eye_array(T.shape[1], format='csr', dtype=T.dtype)
                 I2 = P[Cpts, :]
                 assert_almost_equal(I1.data, I2.data)
                 assert_equal(I1.indptr, I2.indptr)

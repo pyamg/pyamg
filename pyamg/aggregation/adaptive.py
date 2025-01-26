@@ -3,7 +3,7 @@
 from warnings import warn
 import numpy as np
 from scipy.sparse import csr_matrix, bsr_matrix, issparse, \
-    eye, SparseEfficiencyWarning
+    eye_array, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
 from ..strength import symmetric_strength_of_connection, \
@@ -475,11 +475,11 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         if fn == 'symmetric':
             C_l = symmetric_strength_of_connection(A_l, **kwargs)
             # Diagonal must be nonzero
-            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
+            C_l = C_l + eye_array(C_l.shape[0], C_l.shape[1], format='csr')
         elif fn == 'classical':
             C_l = classical_strength_of_connection(A_l, **kwargs)
             # Diagonal must be nonzero
-            C_l = C_l + eye(C_l.shape[0], C_l.shape[1], format='csr')
+            C_l = C_l + eye_array(C_l.shape[0], C_l.shape[1], format='csr')
             if issparse(A_l) and A_l.format == 'bsr':
                 C_l = amalgamate(C_l, A_l.blocksize[0])
         elif fn in ('ode', 'evolution'):

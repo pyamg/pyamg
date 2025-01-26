@@ -94,10 +94,10 @@ class TestComplexParameters(TestCase):
         # well.  There are better near nullspace vectors than the default, but
         # a constant should give a convergent solver, nonetheless.
         A = poisson((100,), format='csr')
-        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((A, None))
         A = poisson((10, 10), format='csr')
-        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((A, None))
 
     def run_cases(self, opts):
@@ -433,14 +433,14 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 1
         A = poisson((5000,), format='csr')
-        Ai = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 0.12, 'symmetric',
                            ('energy', {'krylov': 'gmres'})))
 
         # Test 2
         A = poisson((71, 71), format='csr')
         Ai = A + (0.625 / 0.01) * 1.0j *\
-            sparse.eye(A.shape[0], A.shape[1])
+            sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('energy', {'krylov': 'cgnr',
                                        'weighting': 'diagonal'})))

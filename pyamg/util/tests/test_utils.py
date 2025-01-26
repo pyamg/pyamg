@@ -1,6 +1,6 @@
 """Test utils."""
 import numpy as np
-from scipy.sparse import bsr_matrix, csr_matrix, csc_matrix, issparse, diags
+from scipy.sparse import bsr_matrix, csr_matrix, csc_matrix, issparse, diags_array
 
 from numpy.testing import (TestCase, assert_equal, assert_almost_equal,
                            assert_array_almost_equal, assert_array_equal)
@@ -117,7 +117,7 @@ class TestUtils(TestCase):
         # case 1
         e = np.ones((5, 1)).ravel()
         data = [-1*e, 2*e, -1*e]
-        A = diags(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
+        A = diags_array(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
         B = e.copy().reshape(-1, 1)
         DAD_answer = np.array([[1., -0.5, 0., 0., 0.],
                                [-0.5, 1., -0.5, 0., 0.],
@@ -1131,7 +1131,7 @@ class TestComplexUtils(TestCase):
         # case 1
         e = 1.0j*np.ones((5, 1)).ravel()
         data = [-1*e, 2*e, -1*e]
-        A = 1.0j * diags(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
+        A = 1.0j * diags_array(data, offsets=[-1, 0, 1], shape=(5, 5), format='csr')
         B = e.copy().reshape(-1, 1)
         DAD_answer = np.array([[1., -0.5, 0., 0., 0.],
                                [-0.5, 1., -0.5, 0., 0.],

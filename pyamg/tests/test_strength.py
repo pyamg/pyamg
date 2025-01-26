@@ -294,8 +294,9 @@ class TestStrengthOfConnection(TestCase):
         # strength stencil
         for N in [3, 6, 7]:
             u = np.ones(N*N)
-            A = sparse.diags([-u, -0.001*u, 2.002*u, -0.001*u, -u],
-                             offsets=[-N, -1, 0, 1, N], shape=(N*N, N*N), format='csr')
+            A = sparse.diags_array([-u, -0.001*u, 2.002*u, -0.001*u, -u],
+                                   offsets=[-N, -1, 0, 1, N], shape=(N*N, N*N),
+                                   format='csr')
             B = np.ones((A.shape[0], 1))
             cases.append({'A': A.copy(), 'B': B.copy(), 'epsilon': 4.0,
                           'k': 2, 'proj': 'l2'})
@@ -354,10 +355,12 @@ class TestStrengthOfConnection(TestCase):
                                         k=2, proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
-        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        D = sparse.diags_array([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                               offsets=[0], shape=(A.shape[0], A.shape[0]),
+                               format='csr')
+        Dinv = sparse.diags_array([1/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                                  offsets=[0], shape=(A.shape[0], A.shape[0]),
+                                  format='csr')
         np.random.seed(3969802542)  # make results deterministic
         result_scaled = evolution_soc((D@A@D).tobsr(blocksize=(2, 2)),
                                       Dinv@B, epsilon=4.0, k=2,
@@ -456,10 +459,12 @@ class TestComplexStrengthOfConnection(TestCase):
                                         proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
-        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        D = sparse.diags_array([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                               offsets=[0], shape=(A.shape[0], A.shape[0]),
+                               format='csr')
+        Dinv = sparse.diags_array([1/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                                  offsets=[0], shape=(A.shape[0], A.shape[0]),
+                                  format='csr')
         np.random.seed(743434914)  # make results deterministic
         result_scaled = evolution_soc(D@A@D, Dinv@B, epsilon=4.0, k=2,
                                       proj_type='D_A',
@@ -487,10 +492,12 @@ class TestComplexStrengthOfConnection(TestCase):
                                         proj_type='D_A',
                                         symmetrize_measure=False)
         # create scaled A
-        D = sparse.diags([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                         offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
-        Dinv = sparse.diags([1.0/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
-                            offsets=[0], shape=(A.shape[0], A.shape[0]), format='csr')
+        D = sparse.diags_array([np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                               offsets=[0], shape=(A.shape[0], A.shape[0]),
+                               format='csr')
+        Dinv = sparse.diags_array([1/np.arange(A.shape[0], 2*A.shape[0], dtype=float)],
+                                  offsets=[0], shape=(A.shape[0], A.shape[0]),
+                                  format='csr')
         np.random.seed(1944403548)  # make results deterministic
         result_scaled = evolution_soc((D@A@D).tobsr(blocksize=(2, 2)), Dinv@B,
                                       epsilon=4.0, k=2, proj_type='D_A',
@@ -551,7 +558,7 @@ def reference_classical_soc(A, theta, norm='abs'):
     S.data = S.data[mask]
 
     # Add back diagonal
-    D = sparse.eye(S.shape[0], S.shape[0], format='csr', dtype=A.dtype)
+    D = sparse.eye_array(S.shape[0], format='csr', dtype=A.dtype)
     D.data[:] = sparse.csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
@@ -598,7 +605,7 @@ def reference_symmetric_soc(A, theta):
     S.data = S.data[mask]
 
     # Add back diagonal
-    D = sparse.eye(S.shape[0], S.shape[0], format='csr', dtype=A.dtype)
+    D = sparse.eye_array(S.shape[0], format='csr', dtype=A.dtype)
     D.data[:] = sparse.csr_matrix(A).diagonal()
     S = S.tocsr() + D
 
@@ -654,8 +661,8 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     rho_DinvA = approximate_spectral_radius(Dinv_A)
 
     # Calculate (Atilde^k) naively
-    S = (sparse.eye(dimen, dimen, format='csr') - (1.0/rho_DinvA)*Dinv_A)
-    Atilde = sparse.eye(dimen, dimen, format='csr')
+    S = (sparse.eye_array(dimen, format='csr') - (1.0/rho_DinvA)*Dinv_A)
+    Atilde = sparse.eye_array(dimen, format='csr')
     for _i in range(k):
         Atilde = S @ Atilde
 
@@ -776,7 +783,7 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     Atilde.data = np.array(np.real(Atilde.data), dtype=float)
 
     # Set diagonal to 1.0, as each point is strongly connected to itself.
-    Id = sparse.eye(dimen, dimen, format='csr')
+    Id = sparse.eye_array(dimen, format='csr')
     Id.data -= Atilde.diagonal()
     Atilde = Atilde + Id
 
@@ -860,7 +867,7 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
         C.data[rowstart:rowend] = this_row
 
     C.eliminate_zeros()
-    C = C + 2.0*sparse.eye(C.shape[0], C.shape[1], format='csr')
+    C = C + 2.0*sparse.eye_array(C.shape[0], C.shape[1], format='csr')
 
     # Standardized strength values require small values be weak and large
     # values be strong.  So, we invert the distances.

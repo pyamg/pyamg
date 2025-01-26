@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from numpy.testing import TestCase, assert_almost_equal
 import scipy
-from scipy.sparse import csr_matrix, bsr_matrix, diags, eye
+from scipy.sparse import csr_matrix, bsr_matrix, diags_array, eye_array
 from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
@@ -114,8 +114,8 @@ class TestCommonRelaxation(TestCase):
 class TestRelaxation(TestCase):
     def test_polynomial(self):
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                         shape=(N, N), format='csr')
         x0 = np.arange(N, dtype=A.dtype)
         x = x0.copy()
         b = np.zeros(N, dtype=A.dtype)
@@ -147,48 +147,48 @@ class TestRelaxation(TestCase):
 
     def test_jacobi(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi(A, x, b)
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.zeros(N)
         b = np.arange(N).astype(np.float64)
         jacobi(A, x, b)
         assert_almost_equal(x, np.array([0.0, 0.5, 1.0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi(A, x, b)
         assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10], dtype=A.dtype)
         jacobi(A, x, b)
         assert_almost_equal(x, np.array([5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10, 20, 30], dtype=A.dtype)
         jacobi(A, x, b)
         assert_almost_equal(x, np.array([5.5, 11.0, 15.5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         x_copy = x.copy()
         b = np.array([10, 20, 30], dtype=A.dtype)
@@ -199,12 +199,12 @@ class TestRelaxation(TestCase):
     def test_jacobi_bsr(self):
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            cases.append(diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+            cases.append(diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
                                offsets=[0, -1, 1], shape=(N, N), format='csr'))
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
-            C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
+            C = sprand(N*2, N*2, 0.3) + eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
 
         for A in cases:
@@ -225,12 +225,12 @@ class TestRelaxation(TestCase):
         sweeps = ['forward', 'backward', 'symmetric']
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            cases.append(diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+            cases.append(diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
                                offsets=[0, -1, 1], shape=(N, N), format='csr'))
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
             C = csr_matrix(np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
-            C = sprand(N*2, N*2, 0.3) + eye(N*2, N*2)
+            C = sprand(N*2, N*2, 0.3) + eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
 
         for A in cases:
@@ -298,48 +298,48 @@ class TestRelaxation(TestCase):
 
     def test_gauss_seidel_csr(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel(A, x, b)
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel(A, x, b)
         assert_almost_equal(x, np.array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel(A, x, b, sweep='backward')
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel(A, x, b, sweep='backward')
         assert_almost_equal(x, np.array([1.0/8.0, 1.0/4.0, 1.0/2.0]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10], dtype=A.dtype)
         gauss_seidel(A, x, b)
         assert_almost_equal(x, np.array([5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10, 20, 30], dtype=A.dtype)
         gauss_seidel(A, x, b)
@@ -348,8 +348,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel(A, x, b, iterations=200, sweep='forward')
@@ -363,48 +363,48 @@ class TestRelaxation(TestCase):
 
     def test_gauss_seidel_indexed(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0])
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 1, 2])
         assert_almost_equal(x, np.array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [2, 1, 0], sweep='backward')
         assert_almost_equal(x, np.array([1.0/2.0, 5.0/4.0, 5.0/8.0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 1, 2], sweep='backward')
         assert_almost_equal(x, np.array([1.0/8.0, 1.0/4.0, 1.0/2.0]))
 
         N = 4
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 3])
         assert_almost_equal(x, np.array([1.0/2.0, 1.0, 1.0, 1.0/2.0]))
 
         N = 4
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_indexed(A, x, b, [0, 0])
@@ -412,40 +412,40 @@ class TestRelaxation(TestCase):
 
     def test_jacobi_indexed(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi_indexed(A, x, b, [0])
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi_indexed(A, x, b, [0, 1, 2])
         assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi_indexed(A, x, b, [2, 1, 0])
         assert_almost_equal(x, np.array([0.5, 1.0, 0.5]))
 
         N = 4
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         jacobi_indexed(A, x, b, [0, 3])
         assert_almost_equal(x, np.array([0.5, 1.0, 1.0, 0.5]))
 
         N = 4
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         jacobi_indexed(A, x, b, [0, 0])
@@ -453,48 +453,48 @@ class TestRelaxation(TestCase):
 
     def test_jacobi_ne(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.zeros(N)
         b = np.arange(N).astype(np.float64)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, np.array([-1./6., -1./15., 19./30.]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, np.array([2./5., 7./5., 4./5.]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10], dtype=A.dtype)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, np.array([5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10, 20, 30], dtype=A.dtype)
         jacobi_ne(A, x, b)
         assert_almost_equal(x, np.array([16./15., 1./15., (9 + 7./15.)]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         x_copy = x.copy()
         b = np.array([10, 20, 30], dtype=A.dtype)
@@ -504,8 +504,8 @@ class TestRelaxation(TestCase):
 
     def test_gauss_seidel_ne_bsr(self):
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
 
@@ -569,56 +569,56 @@ class TestRelaxation(TestCase):
 
     def test_gauss_seidel_ne_csr(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_ne(A, x, b)
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(np.float64)
         b = np.zeros(N)
         gauss_seidel_ne(A, x, b)
         assert_almost_equal(x, np.array([4./15., 8./5., 4./5.]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.zeros(N, dtype=A.dtype)
         gauss_seidel_ne(A, x, b, sweep='backward')
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.zeros(N, dtype=A.dtype)
         gauss_seidel_ne(A, x, b, sweep='backward')
         assert_almost_equal(x, np.array([2./5., 4./5., 6./5.]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10], dtype=A.dtype)
         gauss_seidel_ne(A, x, b)
         assert_almost_equal(x, np.array([5]))
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10], dtype=A.dtype)
         gauss_seidel_ne(A, x, b, sweep='backward')
         assert_almost_equal(x, np.array([5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N, dtype=A.dtype)
         b = np.array([10, 20, 30], dtype=A.dtype)
         gauss_seidel_ne(A, x, b)
@@ -627,8 +627,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_ne(A, x, b, iterations=200, sweep='forward')
@@ -643,8 +643,8 @@ class TestRelaxation(TestCase):
     def test_gauss_seidel_nr_bsr(self):
 
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
 
@@ -716,8 +716,8 @@ class TestRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.ones(N)
         b = np.zeros(N)
         gauss_seidel_nr(A, x, b, iterations=200, sweep='forward')
@@ -810,8 +810,8 @@ class TestRelaxation(TestCase):
 class TestComplexRelaxation(TestCase):
     def test_jacobi(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.zeros(N).astype(A.dtype)
@@ -825,8 +825,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([-3.5]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.zeros(N).astype(A.dtype)
         b = np.arange(N).astype(A.dtype)
@@ -836,8 +836,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -847,8 +847,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.array([10]).astype(A.dtype)
@@ -856,8 +856,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([2.5 - 2.5j]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -867,8 +867,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -881,8 +881,8 @@ class TestComplexRelaxation(TestCase):
     def test_jacobi_bsr(self):
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            C = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            C = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
             C.data = C.data + 1.0j*1e-3*np.random.rand(C.data.shape[0],)
             cases.append(C)
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
@@ -891,7 +891,7 @@ class TestComplexRelaxation(TestCase):
             cases.append(C @ C.T.conjugate())
 
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
-                eye(N*2, N*2)
+                eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
 
         for A in cases:
@@ -913,8 +913,8 @@ class TestComplexRelaxation(TestCase):
         sweeps = ['forward', 'backward', 'symmetric']
         cases = []
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            C = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            C = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
             C.data = C.data + 1.0j*1e-3*np.random.rand(C.data.shape[0],)
             cases.append(C)
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
@@ -923,7 +923,7 @@ class TestComplexRelaxation(TestCase):
             cases.append(C @ C.T.conjugate())
 
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
-                eye(N*2, N*2)
+                eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
 
         for A in cases:
@@ -1073,8 +1073,8 @@ class TestComplexRelaxation(TestCase):
 
     def test_gauss_seidel_csr(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1083,8 +1083,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1095,8 +1095,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1105,8 +1105,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1117,8 +1117,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.array([10]).astype(A.dtype)
@@ -1126,8 +1126,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([2.5 - 2.5j]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([3.0 - 2.0j, 7.5 - 5.0j, 11.25 - 10.0j])
         x = np.arange(N).astype(A.dtype)
@@ -1139,8 +1139,8 @@ class TestComplexRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.ones(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1157,8 +1157,8 @@ class TestComplexRelaxation(TestCase):
 
     def test_jacobi_ne(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.zeros(N).astype(A.dtype)
@@ -1166,8 +1166,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([-1./6., -1./15., 19./30.])
         x = np.zeros(N).astype(A.dtype)
@@ -1177,8 +1177,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([2./5. + 2.0j/5., 7./5. + 7.0j/5., 4./5. + 4.0j/5.])
         x = np.arange(N).astype(A.dtype)
@@ -1188,8 +1188,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.array([10]).astype(A.dtype)
@@ -1197,8 +1197,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([2.5 - 2.5j]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([11./15. + 1.0j/15.,
                          11./15. + 31.0j/15,
@@ -1210,8 +1210,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1227,8 +1227,8 @@ class TestComplexRelaxation(TestCase):
 
     def test_gauss_seidel_ne_bsr(self):
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
             A.data = A.data + 1.0j*1e-3*np.random.rand(A.data.shape[0],)
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
@@ -1301,8 +1301,8 @@ class TestComplexRelaxation(TestCase):
 
     def test_gauss_seidel_ne_csr(self):
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
         A.data = A.data + 1.0j*A.data
@@ -1311,8 +1311,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([4./15., 8./5., 4./5.])
         soln = soln + 1.0j*soln
@@ -1323,8 +1323,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1333,8 +1333,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([0]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([2./5., 4./5., 6./5.])
         soln = soln + 1.0j*soln
@@ -1345,8 +1345,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, soln)
 
         N = 1
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.arange(N).astype(A.dtype)
         b = np.array([10]).astype(A.dtype)
@@ -1354,8 +1354,8 @@ class TestComplexRelaxation(TestCase):
         assert_almost_equal(x, np.array([2.5 - 2.5j]))
 
         N = 3
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         soln = np.array([-1./15.+0.6j, 0.6+2.6j, 7.8-6.2j])
         x = np.arange(N).astype(A.dtype)
@@ -1367,8 +1367,8 @@ class TestComplexRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.ones(N).astype(A.dtype)
         x = x + 1.0j*x
@@ -1386,8 +1386,8 @@ class TestComplexRelaxation(TestCase):
 
     def test_gauss_seidel_nr_bsr(self):
         for N in [1, 2, 3, 4, 5, 6, 10]:
-            A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)],
-                      offsets=[0, -1, 1], shape=(N, N), format='csr')
+            A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
+                            offsets=[0, -1, 1], shape=(N, N), format='csr')
             A.data = A.data + 1.0j*1e-3*np.random.rand(A.data.shape[0],)
 
             divisors = [n for n in range(1, N+1) if N % n == 0]
@@ -1463,8 +1463,8 @@ class TestComplexRelaxation(TestCase):
         # forward and backward passes should give same result with
         # x=np.ones(N),b=np.zeros(N)
         N = 100
-        A = diags([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
-                  shape=(N, N), format='csr')
+        A = diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)], offsets=[0, -1, 1],
+                        shape=(N, N), format='csr')
         A.data = A.data + 1.0j*A.data
         x = np.ones(N).astype(A.dtype)
         x = x + 1.0j*x

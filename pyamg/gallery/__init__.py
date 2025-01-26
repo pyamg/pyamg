@@ -21,7 +21,7 @@ from .mesh import regular_triangle_mesh
 from .diffusion import diffusion_stencil_2d
 from .advection import advection_2d
 
-from .random_sparse import sprand
+from .random_sparse import sprand  # note: could use scipy.sparse.random_array
 from .demo import demo
 
 __all__ = [

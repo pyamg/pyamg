@@ -962,9 +962,9 @@ def stokes(mesh, fu, fv):
     Av, bv = gradgradform(mesh, f=fv, degree=2)
     BX, BY = divform(mesh)
 
-    C = sparse.bmat([[Au, None, BX.T],
-                     [None, Av, BY.T],
-                     [BX, BY, None]])
+    C = sparse.block_array([[Au, None, BX.T],
+                            [None, Av, BY.T],
+                            [BX, BY, None]])
     b = np.hstack((bu, bv, np.zeros((BX.shape[0],))))
 
     return C, b

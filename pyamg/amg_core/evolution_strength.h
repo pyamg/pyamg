@@ -201,7 +201,7 @@ void apply_distance_filter(const I n_row,
  * >>> from scipy.sparse import bsr_matrix, csr_matrix
  * >>> from pyamg.amg_core import min_blocks
  * >>> from numpy import zeros, array, ravel, round
- * >>> from scipy import rand
+ * >>> from numpy import rand
  * >>> row  = array([0,2,4,6])
  * >>> col  = array([0,2,2,0,1,2])
  * >>> data = round(10*rand(6,2,2), decimals=1)
@@ -663,7 +663,7 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  * Examples
  * --------
  * >>> from pyamg.amg_core import incomplete_mat_mult_csr
- * >>> from scipy import arange, eye, ones
+ * >>> from numpy import arange, eye, ones
  * >>> from scipy.sparse import csr_matrix, csc_matrix
  * >>>
  * >>> A = csr_matrix(arange(1,10,dtype=float).reshape(3,3))
