@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from scipy.linalg import norm
-from scipy.sparse import issparse, diags
+from scipy.sparse import issparse, diags_array
 
 from pyamg import amg_core
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
@@ -311,7 +311,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     # rescale for unit 2-norm
     d = np.sqrt(x)
-    D = diags([d.ravel()], offsets=[0], shape=(n, n))
+    D = diags_array([d.ravel()], offsets=[0], shape=(n, n))
     C = D @ A @ D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)

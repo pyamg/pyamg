@@ -3,7 +3,8 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import issparse, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
+from scipy.sparse import (issparse, eye_array,
+                          csr_matrix, csc_matrix, bsr_matrix, coo_matrix,)
 from scipy.linalg import eigvals
 
 # pylint: disable=no-name-in-module
@@ -49,14 +50,14 @@ def profile_solver(ml, accel=None, **kwargs):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1,0,1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1,0,1], shape=(n,n), format='csr')
     >>> b = A @ np.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
@@ -151,12 +152,12 @@ def scale_rows(A, v, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import scale_rows
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
     >>> B = scale_rows(A, 5 * np.ones((A.shape[0], 1)))
 
     """
@@ -224,12 +225,12 @@ def scale_columns(A, v, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import scale_columns
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
     >>> print(scale_columns(A, 5 * np.ones((A.shape[1], 1))).toarray())
     [[10. -5.  0.  0.]
      [-5. 10. -5.  0.]
@@ -305,12 +306,12 @@ def symmetric_rescaling(A, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import symmetric_rescaling
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
     >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
@@ -379,12 +380,12 @@ def symmetric_rescaling_sa(A, B, BH=None):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import symmetric_rescaling_sa
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
     >>> print(DAD.toarray())
@@ -1471,7 +1472,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
 
     # Create two maps, one for F points and one for C points
     ncoarse = T.shape[1]
-    I_C = eye(A.shape[0], A.shape[1], format='csr')
+    I_C = eye_array(A.shape[0], A.shape[1], format='csr')
     I_F = I_C.copy()
     I_F.data[Cpts] = 0.0
     I_F.eliminate_zeros()
@@ -1661,7 +1662,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = diag_dom_rows == bsize
 
     # Replace these rows/cols in # C with rows/cols of the identity.
-    Id = eye(C.shape[0], C.shape[1], format='csr')
+    Id = eye_array(C.shape[0], C.shape[1], format='csr')
     Id.data[diag_dom_rows] = 0.0
     C = Id @ C @ Id
     Id.data[diag_dom_rows] = 1.0
