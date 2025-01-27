@@ -449,7 +449,7 @@ def type_prep(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import type_prep
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> z = 2.3
@@ -489,7 +489,7 @@ def to_type(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import to_type
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
