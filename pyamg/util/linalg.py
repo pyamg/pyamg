@@ -55,7 +55,7 @@ def infinity_norm(A):
 
     Parameters
     ----------
-    A : csr_matrix, csc_matrix, sparse, or numpy matrix
+    A : csr_array, csc_array, sparse, or numpy matrix
         Sparse or dense matrix
 
     Returns
@@ -129,7 +129,7 @@ def axpy(x, y, a=1.0):
 #    ----------
 #
 #    A : {dense or sparse matrix}
-#        E.g. csr_matrix, csc_matrix, ndarray, etc.
+#        E.g. csr_array, csc_array, ndarray, etc.
 #    tol : {scalar}
 #        Tolerance of approximation
 #    maxiter : {integer}
@@ -260,7 +260,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     Parameters
     ----------
     A : {dense or sparse matrix}
-        E.g. csr_matrix, csc_matrix, ndarray, etc.
+        E.g. csr_array, csc_array, ndarray, etc.
     tol : {scalar}
         Relative tolerance of approximation, i.e., the error divided
         by the approximate spectral radius is compared to tol.
@@ -387,7 +387,7 @@ def condest(A, maxiter=25, symmetric=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     maxiter: {int}
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
@@ -439,7 +439,7 @@ def cond(A):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
 
     Returns
     -------
@@ -482,7 +482,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
         for random vectors x and y to check for conjugate symmetry.

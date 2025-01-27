@@ -78,7 +78,7 @@ def generate_quadratic(V, E, return_edges=False):
 
     # make a vertext-to-vertex graph
     ID = np.kron(np.arange(0, ne), np.ones((3,), dtype=int))
-    G = sparse.coo_matrix((np.ones((ne*3,), dtype=int), (E.ravel(), ID,)))
+    G = sparse.coo_array((np.ones((ne*3,), dtype=int), (E.ravel(), ID,)))
     V2V = G @ G.T
 
     # from the vertex graph, get the edges and create new midpoints
@@ -198,7 +198,7 @@ def refine2dtri(V, E, marked_elements=None):
     col = E.ravel()
     row = np.kron(np.arange(0, Nel), [1, 1, 1])
     data = np.ones((Nel*3,))
-    V2V = sparse.coo_matrix((data, (row, col)), shape=(Nel, Nv))
+    V2V = sparse.coo_array((data, (row, col)), shape=(Nel, Nv))
     V2V = V2V.T @ V2V
 
     # compute interior edges list
@@ -498,7 +498,7 @@ class Mesh:
         edge0 = self.E[:, [0, 0, 1, 1, 2, 2]].ravel()
         edge1 = self.E[:, [1, 2, 0, 2, 0, 1]].ravel()
         data = np.ones((edge0.shape[0],), dtype=int)
-        G = sparse.coo_matrix((data, (edge0, edge1)), shape=(nv, nv))
+        G = sparse.coo_array((data, (edge0, edge1)), shape=(nv, nv))
         G.sum_duplicates()
         G.eliminate_zeros()
 
@@ -762,9 +762,9 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         jb[ei, :] = 0
 
     # convert matrices
-    A = sparse.coo_matrix((AA.ravel(), (IA.ravel(), JA.ravel())))
+    A = sparse.coo_array((AA.ravel(), (IA.ravel(), JA.ravel())))
     A.sum_duplicates()
-    b = sparse.coo_matrix((bb.ravel(), (ib.ravel(), jb.ravel()))).toarray().ravel()
+    b = sparse.coo_array((bb.ravel(), (ib.ravel(), jb.ravel()))).toarray().ravel()
 
     # A = A.tocsr()
     return A, b
@@ -857,10 +857,10 @@ def divform(mesh):
         DYJ[ei, :] = np.tile(K[np.arange(m1)], m2)
 
     # Convert representation to COO
-    BX = sparse.coo_matrix((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
+    BX = sparse.coo_array((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
     BX.sum_duplicates()
 
-    BY = sparse.coo_matrix((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
+    BY = sparse.coo_array((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
     BY.sum_duplicates()
 
     return BX, BY

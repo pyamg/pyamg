@@ -2,7 +2,7 @@
 
 
 from warnings import warn
-from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
+from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 import numpy as np
 
 from pyamg.multilevel import MultilevelSolver
@@ -28,7 +28,7 @@ def ruge_stuben_solver(A,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Square matrix in CSR format
     strength : str
         Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
@@ -97,11 +97,11 @@ def ruge_stuben_solver(A,
     # convert A to csr
     if not issparse(A) or A.format != 'csr':
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except Exception as e:
-            raise TypeError('Argument A must have type csr_matrix, '
-                            'or be convertible to csr_matrix') from e
+            raise TypeError('Argument A must have type csr_array, '
+                            'or be convertible to csr_array') from e
     # preprocess A
     A = asfptype(A)
     if A.shape[0] != A.shape[1]:

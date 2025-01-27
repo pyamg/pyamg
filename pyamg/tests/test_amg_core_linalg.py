@@ -12,12 +12,12 @@ def test_real():
     A0 = A.copy()
 
     # no lumping, threshold 0.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 0.0, A.indptr, A.indices, A.data, 0)
     np.testing.assert_array_equal(A.toarray(), A0)
 
     # no lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, 0)
     B = np.array([[1.,  2.,  0.0,  0.],
                   [0.,  2.,  0.0,  3.],
@@ -26,7 +26,7 @@ def test_real():
     np.testing.assert_array_equal(A.toarray(), B)
 
     # lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, True)
     B = np.array([[1.5,  2.0,  0.0,  0.0],
                   [0.0,  4.5,  0.0,  3.0],
@@ -43,12 +43,12 @@ def test_imag():
     A0 = A.copy()
 
     # no lumping, threshold 0.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 0.0, A.indptr, A.indices, A.data, 0)
     np.testing.assert_array_equal(A.toarray(), A0)
 
     # no lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, 0)
     B = np.array([[1.,  2.,  0.0,  0.0],
                   [0.,  2.,  0.0,  3.0],
@@ -57,7 +57,7 @@ def test_imag():
     np.testing.assert_array_equal(A.toarray(), B)
 
     # lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, True)
     B = np.array([[1.5,  2.0,  0.0,  0.0],
                   [0.0,  4.5,  0.0,  3.0],
@@ -74,12 +74,12 @@ def test_complex():
     A0 = A.copy()
 
     # no lumping, threshold 0.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 0.0, A.indptr, A.indices, A.data, 0)
     np.testing.assert_array_equal(A.toarray(), A0)
 
     # no lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, 0)
     B = np.array([[1. + 3.0j,  0. + 0.0j,  0.0 + 0.0j,  4.1 + 0.0j],
                   [0. + 0.0j,  2. + 0.0j,  0.0 + 0.0j,  3.0 + 0.0j],
@@ -88,7 +88,7 @@ def test_complex():
     np.testing.assert_array_equal(A.toarray(), B)
 
     # lumping, threshold 1.0
-    A = sparse.csr_matrix(A0.copy())
+    A = sparse.csr_array(A0.copy())
     amg_core.linalg.filter_matrix_rows(4, 1.0, A.indptr, A.indices, A.data, True)
     B = np.array([[3.5 + 6.0j,  0.0 + 0.0j,  0.0 + 0.0j,  4.1 + 0.0j],
                   [0.0 + 0.0j,  4.5 + 0.0j,  0.0 + 0.0j,  3.0 + 0.0j],

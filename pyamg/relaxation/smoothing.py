@@ -385,9 +385,9 @@ def rho_D_inv_A(A):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> import numpy as np
-    >>> A = csr_matrix(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
+    >>> A = csr_array(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
     >>> print(f'{rho_D_inv_A(A):2.2}')
     1.0
 
@@ -433,7 +433,7 @@ def rho_block_D_inv_A(A, Dinv):
         if Dinv.shape[0] != int(A.shape[0]/blocksize):
             raise ValueError('Dinv and A have incompatible dimensions')
 
-        Dinv = sparse.bsr_matrix((Dinv,
+        Dinv = sparse.bsr_array((Dinv,
                                   np.arange(Dinv.shape[0]),
                                   np.arange(Dinv.shape[0]+1)),
                                  shape=A.shape)

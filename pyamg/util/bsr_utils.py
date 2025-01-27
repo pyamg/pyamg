@@ -11,7 +11,7 @@ def bsr_getrow(A, i):
 
     Parameters
     ----------
-    A : bsr_matrix
+    A : bsr_array
         Input matrix
     i : int
         Row number
@@ -25,12 +25,12 @@ def bsr_getrow(A, i):
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import bsr_matrix
+    >>> from scipy.sparse import bsr_array
     >>> from pyamg.util.bsr_utils import bsr_getrow
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
-    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> B = bsr_array( (data,indices,indptr), shape=(6,6) )
     >>> Brow = bsr_getrow(B,2)
     >>> print(Brow[1])
     [4 5]
@@ -64,7 +64,7 @@ def bsr_row_setscalar(A, i, x):
 
     Parameters
     ----------
-    A : bsr_matrix
+    A : bsr_array
         Input matrix
     i : int
         Row number
@@ -73,7 +73,7 @@ def bsr_row_setscalar(A, i, x):
 
     Returns
     -------
-    A : bsr_matrix
+    A : bsr_array
         All nonzeros in row i of A have been overwritten with x.
         If x is a vector, the first length(x) nonzeros in row i
         of A have been overwritten with entries from x
@@ -81,12 +81,12 @@ def bsr_row_setscalar(A, i, x):
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import bsr_matrix
+    >>> from scipy.sparse import bsr_array
     >>> from pyamg.util.bsr_utils import bsr_row_setscalar
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
-    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> B = bsr_array( (data,indices,indptr), shape=(6,6) )
     >>> bsr_row_setscalar(B,5,22)
 
     """
@@ -112,7 +112,7 @@ def bsr_row_setvector(A, i, x):
 
     Parameters
     ----------
-    A : bsr_matrix
+    A : bsr_array
         Matrix assumed to be in BSR format
     i : int
         Row number
@@ -121,7 +121,7 @@ def bsr_row_setvector(A, i, x):
 
     Returns
     -------
-    A : bsr_matrix
+    A : bsr_array
         The nonzeros in row i of A have been
         overwritten with entries from x.  x must be same
         length as nonzeros of row i.  This is guaranteed
@@ -131,12 +131,12 @@ def bsr_row_setvector(A, i, x):
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import bsr_matrix
+    >>> from scipy.sparse import bsr_array
     >>> from pyamg.util.bsr_utils import bsr_row_setvector
     >>> indptr  = array([0,2,3,6])
     >>> indices = array([0,2,2,0,1,2])
     >>> data    = array([1,2,3,4,5,6]).repeat(4).reshape(6,2,2)
-    >>> B = bsr_matrix( (data,indices,indptr), shape=(6,6) )
+    >>> B = bsr_array( (data,indices,indptr), shape=(6,6) )
     >>> bsr_row_setvector(B,5,array([11,22,33,44,55,66]))
 
     """

@@ -463,7 +463,7 @@ class TestComplexSolverPerformance(TestCase):
     def test_basic(self):
         """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
-            A = sparse.csr_matrix(A)
+            A = sparse.csr_array(A)
 
             ml = rootnode_solver(A, B, symmetry=symmetry, smooth=smooth,
                                  max_coarse=10)

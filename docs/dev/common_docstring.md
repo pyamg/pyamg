@@ -1,6 +1,6 @@
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Square, sparse matrix in CSR or BSR format
     B : array_like
         Right near-nullspace candidates stored in the columns of an NxK array.
@@ -16,13 +16,13 @@
         'nonsymmetric' i.e. nonsymmetric in a hermitian sense
         For the real case, symmetric and hermitian are the same.
     strength : {'symmetric', 'classical', 'distance', 'evolution',
-                ('predefined', {'C': csr_matrix}), None}
+                ('predefined', {'C': csr_array}), None}
         Method used to determine the strength of connection in the graph of A.
         Method-specific parameters are passed using a
         tuple, e.g. strength=('symmetric',{'theta': 0.25 }). If strength=None,
         all nonzero entries of the matrix are considered strong.
     aggregate : {'standard', 'naive', 'lloyd',
-                 ('predefined', {'AggOp': csr_matrix})}
+                 ('predefined', {'AggOp': csr_array})}
         Method used to aggregate nodes.
     smooth : {'jacobi', 'richardson', 'energy', None}
         Method used to improve the tentative prolongator.  Method-specific

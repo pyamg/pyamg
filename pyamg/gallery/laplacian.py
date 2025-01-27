@@ -184,6 +184,6 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
     data = np.hstack((A.data, np.array(new_data)))
     row = np.hstack((A.row, np.array(new_r)))
     col = np.hstack((A.col, np.array(new_c)))
-    A = sp.sparse.coo_matrix((data, (row, col)), shape=(N*N, N*N)).tocsr()
+    A = sp.sparse.coo_array((data, (row, col)), shape=(N*N, N*N)).tocsr()
 
     return (1.0/spacing**2)*A

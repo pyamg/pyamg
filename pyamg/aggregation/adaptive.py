@@ -2,7 +2,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, bsr_matrix, issparse, \
+from scipy.sparse import csr_array, bsr_array, issparse, \
     eye_array, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
@@ -127,7 +127,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Square matrix in CSR or BSR format
     initial_candidates : None, n x m dense matrix
         If a matrix, then this forms the basis for the first m candidates.
@@ -159,8 +159,8 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     strength : ['symmetric', 'classical', 'evolution', None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  See smoothed_aggregation_solver(...) documentation.
-        Predefined strength may be used with ('predefined', {'C': csr_matrix}).
-    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_matrix})]
+        Predefined strength may be used with ('predefined', {'C': csr_array}).
+    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_array})]
         Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
         documentation.
     smooth : ['jacobi', 'richardson', 'energy', None]
@@ -221,11 +221,11 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except Exception as e:
-            raise TypeError('Argument A must have type csr_matrix or '
-                            'bsr_matrix, or be convertible to csr_matrix') from e
+            raise TypeError('Argument A must have type csr_array or '
+                            'bsr_array, or be convertible to csr_array') from e
     A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
@@ -379,7 +379,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
         Maximum number of levels to be used in the multilevel solver
     max_coarse : integer
         Maximum number of variables permitted on the coarse grid
-    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_matrix})]
+    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_array})]
         Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
         documentation.
     prepostsmoother : string or dict
@@ -390,7 +390,7 @@ def initial_setup_stage(A, symmetry, pdef, candidate_iters, epsilon,
     strength : ['symmetric', 'classical', 'evolution', None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  See smoothed_aggregation_solver(...) documentation.
-        Predefined strength may be used with ('predefined', {'C': csr_matrix}).
+        Predefined strength may be used with ('predefined', {'C': csr_array}).
     work : float
         A measure of the total complexity
     initial_candidate : array
@@ -651,7 +651,7 @@ def general_setup_stage(ml, symmetry, candidate_iters, prepostsmoother,
         # bridge 'T' ignores this new dof and just maps zeros there
         data = np.zeros((bnnz, K+1, K), dtype=T.dtype)
         data[:, :-1, :] = T.data
-        return bsr_matrix((data, T.indices, T.indptr),
+        return bsr_array((data, T.indices, T.indptr),
                           shape=((K + 1) * int(M / K), N))
 
     def expand_candidates(B_old, nodesize):  # pylint: disable=unused-variable

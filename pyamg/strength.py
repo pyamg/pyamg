@@ -26,7 +26,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Square, sparse matrix in CSR or BSR format
     V : array
         Coordinates of the vertices of the graph of A
@@ -40,7 +40,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         C(i,j) = distance(point_i, point_j)
         Strength of connection matrix where strength values are
         distances, i.e. the smaller the value, the stronger the connection.
@@ -65,11 +65,11 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     if sparse.issparse(A) and A.format == 'bsr':
         sn = int(A.shape[0] / A.blocksize[0])
         u = np.ones((A.data.shape[0],))
-        A = sparse.csr_matrix((u, A.indices, A.indptr), shape=(sn, sn))
+        A = sparse.csr_array((u, A.indices, A.indptr), shape=(sn, sn))
 
     if not sparse.issparse(A) or A.format != 'csr':
         warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
     dim = V.shape[1]
 
@@ -85,7 +85,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     C = np.sqrt(C)
     C[C < 1e-6] = 1e-6
 
-    C = sparse.csr_matrix((C, A.indices.copy(), A.indptr.copy()),
+    C = sparse.csr_array((C, A.indices.copy(), A.indptr.copy()),
                           shape=A.shape)
 
     # Apply drop tolerance
@@ -121,7 +121,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Square, sparse matrix in CSR or BSR format
     theta : float
         Threshold parameter in [0,1]
@@ -141,7 +141,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
 
     Returns
     -------
-    S : csr_matrix
+    S : csr_array
         Matrix graph defining strong connections.  S[i,j] ~ 1.0 if vertex i
         is strongly influenced by vertex j, or block i is strongly influenced
         by block j if block=True.
@@ -214,7 +214,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     else:
         if not sparse.issparse(A) or A.format != 'csr':
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
-            A = sparse.csr_matrix(A)
+            A = sparse.csr_array(A)
         data = A.data
         N = A.shape[0]
 
@@ -231,7 +231,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     else:
         raise ValueError('Unrecognized option for norm for strength.')
 
-    S = sparse.csr_matrix((Sx, Sj, Sp), shape=[N, N])
+    S = sparse.csr_array((Sx, Sj, Sp), shape=[N, N])
 
     # Take magnitude and scale by largest entry
     S.data = np.abs(S.data)
@@ -255,7 +255,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Matrix graph defined in sparse format.  Entry A[i,j] describes the
         strength of edge [i,j]
     theta : float
@@ -263,7 +263,7 @@ def symmetric_strength_of_connection(A, theta=0):
 
     Returns
     -------
-    S : csr_matrix
+    S : csr_array
         Matrix graph defining strong connections.  S[i,j]=1 if vertex i
         is strongly influenced by vertex j.
 
@@ -321,7 +321,7 @@ def symmetric_strength_of_connection(A, theta=0):
         fn = amg_core.symmetric_strength_of_connection
         fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
 
-        S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
+        S = sparse.csr_array((Sx, Sj, Sp), shape=A.shape)
 
     elif sparse.issparse(A) and A.format == 'bsr':
         M, N = A.shape
@@ -332,14 +332,14 @@ def symmetric_strength_of_connection(A, theta=0):
 
         if theta == 0:
             data = np.ones(len(A.indices), dtype=A.dtype)
-            S = sparse.csr_matrix((data, A.indices.copy(), A.indptr.copy()),
+            S = sparse.csr_array((data, A.indices.copy(), A.indptr.copy()),
                                   shape=(int(M / R), int(N / C)))
         else:
             # the strength of connection matrix is based on the
             # Frobenius norms of the blocks
             data = (np.conjugate(A.data) * A.data).reshape(-1, R * C)
             data = np.sqrt(data.sum(axis=1))
-            A = sparse.csr_matrix((data, A.indices, A.indptr),
+            A = sparse.csr_array((data, A.indices, A.indptr),
                                   shape=(int(M / R), int(N / C)))
             return symmetric_strength_of_connection(A, theta)
     else:
@@ -370,7 +370,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
 
     Returns
     -------
-    S : csr_matrix
+    S : csr_array
         Matrix graph defining strong connections.  The sparsity pattern
         of S matches that of A.  For BSR matrices, S is a reduced strength
         of connection matrix that describes connections between supernodes.
@@ -443,14 +443,14 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     D = A.diagonal()
     Dinv = 1.0 / D
     Dinv[D == 0] = 0.0
-    Dinv = sparse.csc_matrix((Dinv, (np.arange(A.shape[0]),
+    Dinv = sparse.csc_array((Dinv, (np.arange(A.shape[0]),
                                      np.arange(A.shape[1]))), shape=A.shape)
     DinvA = Dinv @ A
     omega = 1.0 / approximate_spectral_radius(DinvA)
     del DinvA
 
     # Approximate A-inverse with k steps of w-Jacobi and a zero initial guess
-    S = sparse.csc_matrix(A.shape, dtype=A.dtype)  # empty matrix
+    S = sparse.csc_array(A.shape, dtype=A.dtype)  # empty matrix
     Id = sparse.eye_array(A.shape[0], A.shape[1], format='csc')
     for _i in range(k + 1):
         S = S + omega * (Dinv @ (Id - A @ S))
@@ -491,7 +491,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
         nblocks = Atilde.indices.shape[0]
         uone = np.ones((nblocks,))
-        Atilde = sparse.csr_matrix((uone, Atilde.indices, Atilde.indptr),
+        Atilde = sparse.csr_array((uone, Atilde.indices, Atilde.indptr),
                                    shape=(int(Atilde.shape[0] / numPDEs),
                                           int(Atilde.shape[1] / numPDEs)))
 
@@ -519,7 +519,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     B : string, array
         If B=None, then the near nullspace vector used is all ones.  If B is
@@ -538,7 +538,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
     Returns
     -------
-    Atilde : csr_matrix
+    Atilde : csr_array
         Sparse matrix of strength values
 
     See [2008OlScTu]_ for more details.
@@ -571,7 +571,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
     if proj_type not in ['l2', 'D_A']:
         raise ValueError('proj_type must be "l2" or "D_A"')
     if not sparse.issparse(A) or A.format not in ('csr', 'bsr'):
-        raise TypeError('expected csr_matrix or bsr_matrix')
+        raise TypeError('expected csr_array or bsr_array')
 
     # ====================================================================
     # Format A and B correctly.
@@ -590,7 +590,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Calculate Dinv@A
         if block_flag:
             Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
-            Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
+            Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
                                       np.arange(Dinv.shape[0] + 1)),
                                      shape=A.shape)
             Dinv_A = (Dinv @ A).tocsr()
@@ -837,8 +837,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         CSRdata = np.zeros((n_blocks,))
         amg_core.min_blocks(n_blocks, blocksize,
                             np.ravel(np.asarray(Atilde.data)), CSRdata)
-        # Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
-        Atilde = sparse.csr_matrix((CSRdata, Atilde.indices, Atilde.indptr),
+        # Atilde = sparse.csr_array((data, row, col), shape=(*,*))
+        Atilde = sparse.csr_array((CSRdata, Atilde.indices, Atilde.indptr),
                                    shape=(int(Atilde.shape[0] / numPDEs),
                                           int(Atilde.shape[1] / numPDEs)))
 
@@ -857,7 +857,7 @@ def relaxation_vectors(A, R, k, alpha):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -892,7 +892,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -905,7 +905,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         Sparse matrix of strength values
 
     References
@@ -923,7 +923,7 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     """
     if not sparse.issparse(A) or A.format != 'csr':
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
     if alpha < 0:
         raise ValueError('expected alpha>0')
@@ -950,7 +950,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     alpha : scalar
         Weight for Jacobi
@@ -965,7 +965,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         Sparse matrix of strength values
 
     References
@@ -983,7 +983,7 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     """
     if not sparse.issparse(A) or A.format != 'csr':
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
     if alpha < 0:
         raise ValueError('expected alpha>0')
@@ -1023,7 +1023,7 @@ def distance_measure_common(A, func, alpha, R, k, epsilon):
     (rows, cols) = A.nonzero()
     weak = np.where(rows == cols)[0]
     d[weak] = 0
-    C = sparse.csr_matrix((d, (rows, cols)), shape=A.shape)
+    C = sparse.csr_array((d, (rows, cols)), shape=A.shape)
     C.eliminate_zeros()
 
     # remove weak connections

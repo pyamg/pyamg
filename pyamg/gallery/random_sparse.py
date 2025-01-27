@@ -14,7 +14,7 @@ def _rand_sparse(m, n, density):
     data = np.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together
-    return sp.sparse.csr_matrix((data, (row, col)), shape=(m, n))
+    return sp.sparse.csr_array((data, (row, col)), shape=(m, n))
 
 
 def sprand(m, n, density, format='csr'):
