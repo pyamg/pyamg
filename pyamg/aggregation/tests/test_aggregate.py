@@ -19,7 +19,7 @@ class TestAggregate(TestCase):
         # random matrices
         np.random.seed(2006482792)
         for N in [2, 3, 5]:
-            self.cases.append(sparse.csr_matrix(np.random.rand(N, N)))
+            self.cases.append(sparse.csr_array(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -174,7 +174,7 @@ def reference_standard_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_naive_aggregation(C):
@@ -207,7 +207,7 @@ def reference_naive_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_pairwise_aggregation(C):
@@ -281,4 +281,4 @@ def reference_pairwise_aggregation(C):
     Pp = np.arange(n+1)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)

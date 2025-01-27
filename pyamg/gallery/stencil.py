@@ -131,5 +131,5 @@ def stencil_grid(S, grid, dtype=None, format=None):
         diags = new_diags
         data = new_data
 
-    return sparse.dia_matrix((data, diags),
+    return sparse.dia_array((data, diags),
                              shape=(N_v, N_v)).asformat(format)

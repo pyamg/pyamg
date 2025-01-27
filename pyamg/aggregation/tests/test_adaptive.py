@@ -132,7 +132,7 @@ class TestComplexAdaptiveSA(TestCase):
 #
 # block candidates
 # self.cases.append((
-#   csr_matrix((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
+#   csr_array((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
 #   shape=(9,3)), np.vstack((array([1]*9 + [0]*9),arange(2*9))).T ))
 #
 #    def test_first_level(self):
@@ -140,30 +140,30 @@ class TestComplexAdaptiveSA(TestCase):
 #
 # tests where AggOp includes all DOFs
 #        cases.append((
-#           csr_matrix((np.ones(4),array([0,0,1,1]),arange(5)),
+#           csr_array((np.ones(4),array([0,0,1,1]),arange(5)),
 #           shape=(4,2)), np.vstack((np.ones(4),arange(4))).T ))
 #        cases.append((
-#           csr_matrix((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
+#           csr_array((np.ones(9),array([0,0,0,1,1,1,2,2,2]),arange(10)),
 #           shape=(9,3)), np.vstack((np.ones(9),arange(9))).T ))
 #        cases.append((
-#           csr_matrix((np.ones(9),array([0,0,1,1,2,2,3,3,3]),arange(10)),
+#           csr_array((np.ones(9),array([0,0,1,1,2,2,3,3,3]),arange(10)),
 #           shape=(9,4)), np.vstack((np.ones(9),arange(9))).T ))
 #
 # tests where AggOp excludes some DOFs
 #        cases.append((
-#           csr_matrix((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
+#           csr_array((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
 #           shape=(5,2)), np.vstack((np.ones(5),arange(5))).T ))
 #
 # overdetermined blocks
 #        cases.append((
-#           csr_matrix((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
+#           csr_array((np.ones(4),array([0,0,1,1]),array([0,1,2,2,3,4])),
 #           shape=(5,2)), np.vstack((np.ones(5),arange(5),arange(5)**2)).T  ))
 #        cases.append((
-#           csr_matrix(
+#           csr_array(
 #               (np.ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
 #           shape=(9,4)), np.vstack((np.ones(9),arange(9),arange(9)**2)).T ))
 #        cases.append((
-#           csr_matrix(
+#           csr_array(
 #               (np.ones(6),array([1,3,0,2,1,0]),array([0,0,1,2,2,3,4,5,5,6])),
 #           shape=(9,4)), np.vstack((np.ones(9),arange(9))).T ))
 #

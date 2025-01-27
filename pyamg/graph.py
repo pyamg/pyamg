@@ -10,7 +10,7 @@ from . import amg_core
 def asgraph(G):
     """Return (square) matrix as sparse."""
     if not sparse.issparse(G) or G.format not in ('csc', 'csr'):
-        G = sparse.csr_matrix(G)
+        G = sparse.csr_array(G)
 
     if G.shape[0] != G.shape[1]:
         raise ValueError('expected square matrix')
@@ -172,7 +172,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
     Parameters
     ----------
-    G : csr_matrix, csc_matrix
+    G : csr_array, csc_array
         A sparse NxN matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
     seeds : int array
@@ -241,7 +241,7 @@ def breadth_first_search(G, seed):
 
     Parameters
     ----------
-    G : csr_matrix, csc_matrix
+    G : csr_array, csc_array
         A sparse NxN matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
     seed : int
@@ -273,7 +273,7 @@ def breadth_first_search(G, seed):
     ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
-    >>> A = sparse.coo_matrix((data, (edges[:,0], edges[:,1])), shape=(N,N))
+    >>> A = sparse.coo_array((data, (edges[:,0], edges[:,1])), shape=(N,N))
     >>> c, l = pyamg.graph.breadth_first_search(A, 0)
     >>> print(l)
     [0 1 1 2 2 3 3 3 4 5]

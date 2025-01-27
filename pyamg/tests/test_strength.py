@@ -29,7 +29,7 @@ class TestStrengthOfConnection(TestCase):
         # random matrices
         np.random.seed(222352579)
         for N in [2, 3, 5]:
-            self.cases.append(sparse.csr_matrix(np.random.rand(N, N)))
+            self.cases.append(sparse.csr_array(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -54,12 +54,12 @@ class TestStrengthOfConnection(TestCase):
         # Test BSR capabilities
         import warnings
         warnings.filterwarnings(action='ignore', message='Implicit conversion*')
-        CSRtest = sparse.csr_matrix(np.array([[4.0,  -1.0, -1.1,  1.0,  0.0, 0.0],
-                                              [-0.9, -1.1, -1.0,  0.0,  9.5, 0.0],
-                                              [-1.9,  4.1,  5.0, -4.0,  0.0, 0.0],
-                                              [0.0,  -0.1, -1.0,  0.0,  0.0, 5.0],
-                                              [0.0,   0.0,  1.0,  0.0, -9.5, 1.0],
-                                              [0.0,   0.0,  0.0, -1.0, -1.0, 1.0]]))
+        CSRtest = sparse.csr_array(np.array([[4.0,  -1.0, -1.1,  1.0,  0.0, 0.0],
+                                             [-0.9, -1.1, -1.0,  0.0,  9.5, 0.0],
+                                             [-1.9,  4.1,  5.0, -4.0,  0.0, 0.0],
+                                             [0.0,  -0.1, -1.0,  0.0,  0.0, 5.0],
+                                             [0.0,   0.0,  1.0,  0.0, -9.5, 1.0],
+                                             [0.0,   0.0,  0.0, -1.0, -1.0, 1.0]]))
         BSRtest = CSRtest.tobsr(blocksize=(2, 2))
 
         # Check that entry equals Frobenius norm of that block,
@@ -147,36 +147,36 @@ class TestStrengthOfConnection(TestCase):
         cases = []
 
         # 1x1 tests
-        A = sparse.csr_matrix(np.array([[1.1]]))
-        B = sparse.csr_matrix(np.array([[1.0]]))
-        A2 = sparse.csr_matrix(np.array([[0.]]))
-        mask = sparse.csr_matrix(np.array([[1.]]))
+        A = sparse.csr_array(np.array([[1.1]]))
+        B = sparse.csr_array(np.array([[1.0]]))
+        A2 = sparse.csr_array(np.array([[0.]]))
+        mask = sparse.csr_array(np.array([[1.]]))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A, A2, mask))
         cases.append((A2, A2, mask))
 
         # 2x2 tests
-        A = sparse.csr_matrix(np.array([[1., 2.], [2., 4.]]))
-        B = sparse.csr_matrix(np.array([[1.3, 2.], [2.8, 4.]]))
-        A2 = sparse.csr_matrix(np.array([[1.3, 0.], [0., 4.]]))
-        B2 = sparse.csr_matrix(np.array([[1.3, 0.], [2., 4.]]))
-        mask = sparse.csr_matrix((np.ones(4), (np.array([0, 0, 1, 1]),
-                                               np.array([0, 1, 0, 1]))), shape=(2, 2))
+        A = sparse.csr_array(np.array([[1., 2.], [2., 4.]]))
+        B = sparse.csr_array(np.array([[1.3, 2.], [2.8, 4.]]))
+        A2 = sparse.csr_array(np.array([[1.3, 0.], [0., 4.]]))
+        B2 = sparse.csr_array(np.array([[1.3, 0.], [2., 4.]]))
+        mask = sparse.csr_array((np.ones(4), (np.array([0, 0, 1, 1]),
+                                              np.array([0, 1, 0, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = sparse.csr_matrix((np.ones(3), (np.array([0, 0, 1]),
-                                               np.array([0, 1, 1]))), shape=(2, 2))
+        mask = sparse.csr_array((np.ones(3), (np.array([0, 0, 1]),
+                                              np.array([0, 1, 1]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = sparse.csr_matrix((np.ones(2), (np.array([0, 1]),
-                                               np.array([0, 0]))), shape=(2, 2))
+        mask = sparse.csr_array((np.ones(2), (np.array([0, 1]),
+                                              np.array([0, 0]))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
@@ -195,10 +195,10 @@ class TestStrengthOfConnection(TestCase):
         A2[1, :] = 0.0
         A3 = A2.copy()
         A3[:, 1] = 0.0
-        A = sparse.csr_matrix(A)
-        A2 = sparse.csr_matrix(A2)
-        A3 = sparse.csr_matrix(A3)
-        C = sparse.csr_matrix(C)
+        A = sparse.csr_array(A)
+        A2 = sparse.csr_array(A2)
+        A3 = sparse.csr_array(A3)
+        C = sparse.csr_array(C)
 
         mask = A.copy()
         mask.data[:] = 1.0
@@ -231,7 +231,7 @@ class TestStrengthOfConnection(TestCase):
         B.data[1] = 3.5
         B.data[11] = 11.6
         B.data[28] = -3.2
-        C = sparse.csr_matrix(np.zeros(A.shape))
+        C = sparse.csr_array(np.zeros(A.shape))
         mask = A.copy()
         mask.data[:] = 1.0
         cases.append((A, A, mask))
@@ -250,8 +250,8 @@ class TestStrengthOfConnection(TestCase):
         C = A.copy()
         C[1, 0] = 3.1j - 1.3
         C[3, 2] = -10.1j + 9.7
-        A = sparse.csr_matrix(A)
-        C = sparse.csr_matrix(C)
+        A = sparse.csr_array(A)
+        C = sparse.csr_array(C)
 
         mask = A.copy()
         mask.data[:] = 1.0
@@ -378,8 +378,8 @@ class TestComplexStrengthOfConnection(TestCase):
         # random matrices
         np.random.seed(954619597)
         for N in [2, 3, 5]:
-            self.cases.append(sparse.csr_matrix(np.random.rand(N, N))
-                              + sparse.csr_matrix(1.0j*np.random.rand(N, N)))
+            self.cases.append(sparse.csr_array(np.random.rand(N, N))
+                              + sparse.csr_array(1.0j*np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -529,7 +529,7 @@ def reference_classical_soc(A, theta, norm='abs'):
     A connection is strong if,
       | a_ij| >= theta * max_{k != i} |a_ik|
     """
-    S = sparse.coo_matrix(A)
+    S = sparse.coo_array(A)
 
     # remove diagonals
     mask = S.row != S.col
@@ -559,7 +559,7 @@ def reference_classical_soc(A, theta, norm='abs'):
 
     # Add back diagonal
     D = sparse.eye_array(S.shape[0], format='csr', dtype=A.dtype)
-    D.data[:] = sparse.csr_matrix(A).diagonal()
+    D.data[:] = sparse.csr_array(A).diagonal()
     S = S.tocsr() + D
 
     # Strength represents "distance", so take the magnitude
@@ -591,7 +591,7 @@ def reference_symmetric_soc(A, theta):
 
     D = np.abs(A.diagonal())
 
-    S = sparse.coo_matrix(A)
+    S = sparse.coo_array(A)
 
     mask = S.row != S.col
     DD = np.array(D[S.row] * D[S.col]).reshape(-1,)
@@ -606,7 +606,7 @@ def reference_symmetric_soc(A, theta):
 
     # Add back diagonal
     D = sparse.eye_array(S.shape[0], format='csr', dtype=A.dtype)
-    D.data[:] = sparse.csr_matrix(A).diagonal()
+    D.data[:] = sparse.csr_array(A).diagonal()
     S = S.tocsr() + D
 
     # Strength represents "distance", so take the magnitude
@@ -792,13 +792,13 @@ def reference_evolution_soc(A, B, epsilon=4.0, k=2, proj_type='l2'):
     if not csrflag:
         Atilde = Atilde.tobsr(blocksize=(numPDEs, numPDEs))
 
-        # Atilde = sparse.csr_matrix((data, row, col), shape=(*,*))
+        # Atilde = sparse.csr_array((data, row, col), shape=(*,*))
         At = []
         for i in range(Atilde.indices.shape[0]):
             Atmin = Atilde.data[i, :, :][Atilde.data[i, :, :].nonzero()]
             At.append(Atmin.min())
 
-        Atilde = sparse.csr_matrix((np.array(At), Atilde.indices, Atilde.indptr),
+        Atilde = sparse.csr_array((np.array(At), Atilde.indices, Atilde.indptr),
                                    shape=(int(Atilde.shape[0]/numPDEs),
                                           int(Atilde.shape[1]/numPDEs)))
 
@@ -826,8 +826,8 @@ def reference_distance_soc(A, V, theta=2.0, relative_drop=True):
     # deal with the supernode case
     if sparse.issparse(A) and A.format == 'bsr':
         dimen = int(A.shape[0]/A.blocksize[0])
-        C = sparse.csr_matrix((np.ones((A.data.shape[0],)), A.indices, A.indptr),
-                              shape=(dimen, dimen))
+        C = sparse.csr_array((np.ones((A.data.shape[0],)), A.indices, A.indptr),
+                             shape=(dimen, dimen))
     else:
         A = A.tocsr()
         dimen = A.shape[0]

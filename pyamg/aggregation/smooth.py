@@ -19,7 +19,7 @@ def satisfy_constraints(U, B, BtBinv):
 
     Parameters
     ----------
-    U : bsr_matrix
+    U : bsr_array
         m x n sparse bsr matrix
         Update to the prolongator
     B : array
@@ -64,11 +64,11 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
 
     Parameters
     ----------
-    S : csr_matrix, bsr_matrix
+    S : csr_array, bsr_array
         Sparse NxN matrix used for smoothing.  Typically, A.
-    T : csr_matrix, bsr_matrix
+    T : csr_array, bsr_array
         Tentative prolongator
-    C : csr_matrix, bsr_matrix
+    C : csr_array, bsr_array
         Strength-of-connection matrix
     B : array
         Near nullspace modes for the coarse grid such that T@B
@@ -90,7 +90,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
 
     Returns
     -------
-    P : csr_matrix, bsr_matrix
+    P : csr_array, bsr_array
         Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) @ T
         where K = diag(S)^-1 @ S and rho(K) is an approximation to the
         spectral radius of K.
@@ -106,12 +106,12 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     --------
     >>> from pyamg.aggregation import jacobi_prolongation_smoother
     >>> from pyamg.gallery import poisson
-    >>> from scipy.sparse import coo_matrix
+    >>> from scipy.sparse import coo_array
     >>> import numpy as np
     >>> data = np.ones((6,))
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
+    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
     array([[1., 0.],
            [1., 0.],
@@ -162,7 +162,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     elif weighting == 'block':
         # Use block diagonal of S
         D_inv = get_block_diag(S, blocksize=S.blocksize[0], inv_flag=True)
-        D_inv = sparse.bsr_matrix((D_inv, np.arange(D_inv.shape[0]),
+        D_inv = sparse.bsr_array((D_inv, np.arange(D_inv.shape[0]),
                                    np.arange(D_inv.shape[0]+1)),
                                   shape=S.shape)
         D_inv_S = D_inv@S
@@ -211,11 +211,11 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     Parameters
     ----------
-    S : csr_matrix, bsr_matrix
+    S : csr_array, bsr_array
         Sparse NxN matrix used for smoothing.  Typically, A or the
         "filtered matrix" obtained from A by lumping weak connections
         onto the diagonal of A.
-    T : csr_matrix, bsr_matrix
+    T : csr_array, bsr_array
         Tentative prolongator
     omega : scalar
         Damping parameter
@@ -224,7 +224,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     Returns
     -------
-    P : csr_matrix, bsr_matrix
+    P : csr_array, bsr_array
         Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) @ T
         where rho(S) is an approximation to the spectral radius of S.
 
@@ -240,12 +240,12 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     --------
     >>> from pyamg.aggregation import richardson_prolongation_smoother
     >>> from pyamg.gallery import poisson
-    >>> from scipy.sparse import coo_matrix
+    >>> from scipy.sparse import coo_array
     >>> import numpy as np
     >>> data = np.ones((6,))
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
+    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
     >>> T.toarray()
     array([[1., 0.],
            [1., 0.],
@@ -279,9 +279,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         SPD sparse NxN matrix
-    T : bsr_matrix
+    T : bsr_array
         Tentative prolongator, a NxM sparse matrix (M < N).
         This is initial guess for the equation A T = 0.
         Assumed that T B_c = B_f
@@ -292,7 +292,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    pattern : csr_matrix, bsr_matrix
+    pattern : csr_array, bsr_array
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -313,7 +313,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
     Returns
     -------
-    T : bsr_matrix
+    T : bsr_array
         Smoothed prolongator using conjugate gradients to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
         outside of the sparsity pattern in pattern.
@@ -325,7 +325,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
 
     """
     # Preallocate
-    AP = sparse.bsr_matrix((np.zeros(pattern.data.shape, dtype=T.dtype),
+    AP = sparse.bsr_array((np.zeros(pattern.data.shape, dtype=T.dtype),
                             pattern.indices, pattern.indptr),
                            shape=pattern.shape)
 
@@ -334,7 +334,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
                                   np.arange(Dinv.shape[0]+1)),
                                  shape=A.shape)
     elif weighting == 'local':
@@ -350,7 +350,7 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, pattern.indices,
+    R = sparse.bsr_array((uones, pattern.indices,
                            pattern.indptr),
                           shape=pattern.shape)
     amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
@@ -449,10 +449,10 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         SPD sparse NxN matrix
         Should be at least nonsymmetric or indefinite
-    T : bsr_matrix
+    T : bsr_array
         Tentative prolongator, a NxM sparse matrix (M < N).
         This is initial guess for the equation A T = 0.
         Assumed that T B_c = B_f
@@ -463,7 +463,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    pattern : csr_matrix, bsr_matrix
+    pattern : csr_array, bsr_array
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -485,7 +485,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     Returns
     -------
-    T : bsr_matrix
+    T : bsr_array
         Smoothed prolongator using CGNR to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
         outside of the sparsity pattern in pattern.
@@ -506,7 +506,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     # Preallocate
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
-    AP = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+    AP = sparse.bsr_array((uones, pattern.indices, pattern.indptr),
                            shape=pattern.shape)
 
     # D for A.H@A
@@ -517,7 +517,7 @@ def cgnr_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+    R = sparse.bsr_array((uones, pattern.indices, pattern.indptr),
                           shape=pattern.shape)
     AT = -1.0*A@T
     R.data[:] = 0.0
@@ -652,10 +652,10 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         SPD sparse NxN matrix
         Should be at least nonsymmetric or indefinite
-    T : bsr_matrix
+    T : bsr_array
         Tentative prolongator, a NxM sparse matrix (M < N).
         This is initial guess for the equation A T = 0.
         Assumed that T B_c = B_f
@@ -666,7 +666,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         3 dimensional array such that,
         BtBinv[i] = pinv(B_i.H Bi), and B_i is B restricted
         to the neighborhood (in the matrix graph) of dof of i.
-    pattern : csr_matrix, bsr_matrix
+    pattern : csr_array, bsr_array
         Sparse NxM matrix
         This is the sparsity pattern constraint to enforce on the
         eventual prolongator
@@ -687,7 +687,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     Returns
     -------
-    T : bsr_matrix
+    T : bsr_array
         Smoothed prolongator using GMRES to solve A T = 0,
         subject to the constraints, T B_c = B_f, and T has no nonzero
         outside of the sparsity pattern in pattern.
@@ -702,7 +702,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
 
     # Preallocate space for new search directions
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
-    AV = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+    AV = sparse.bsr_array((uones, pattern.indices, pattern.indptr),
                            shape=pattern.shape)
 
     # Preallocate for Givens Rotations, Hessenberg matrix and Krylov Space
@@ -719,7 +719,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_matrix((Dinv, np.arange(Dinv.shape[0]),
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
                                   np.arange(Dinv.shape[0]+1)),
                                  shape=A.shape)
     elif weighting == 'local':
@@ -735,7 +735,7 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
     #   with the added constraint that R has an explicit 0 wherever
     #   R is 0 and pattern is not
     uones = np.zeros(pattern.data.shape, dtype=T.dtype)
-    R = sparse.bsr_matrix((uones, pattern.indices, pattern.indptr),
+    R = sparse.bsr_array((uones, pattern.indices, pattern.indptr),
                           shape=pattern.shape)
     amg_core.incomplete_mat_mult_bsr(A.indptr, A.indices,
                                      np.ravel(A.data),
@@ -884,11 +884,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
-    T : bsr_matrix
+    T : bsr_array
         Tentative prolongator, a NxM sparse matrix (M < N)
-    Atilde : csr_matrix
+    Atilde : csr_array
         Strength of connection matrix
     B : array
         Near-nullspace modes for coarse grid.  Has shape (M,k) where
@@ -943,7 +943,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     Returns
     -------
-    T : bsr_matrix
+    T : bsr_array
         Smoothed prolongator
 
     Notes
@@ -966,12 +966,12 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     --------
     >>> from pyamg.aggregation import energy_prolongation_smoother
     >>> from pyamg.gallery import poisson
-    >>> from scipy.sparse import coo_matrix
+    >>> from scipy.sparse import coo_array
     >>> import numpy as np
     >>> data = np.ones((6,))
     >>> row = np.arange(0,6)
     >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_matrix((data,(row,col)),shape=(6,2)).tocsr()
+    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
     >>> print(T.toarray())
     [[1. 0.]
      [1. 0.]
@@ -1035,7 +1035,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         return T
 
     if not sparse.issparse(Atilde) or Atilde.format != 'csr':
-        raise TypeError('Atilde must be csr_matrix')
+        raise TypeError('Atilde must be csr_array')
 
     if prefilter is None:
         prefilter = {}
@@ -1051,7 +1051,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     # Prepocess Atilde, the strength matrix
     if Atilde is None:
-        Atilde = sparse.csr_matrix((np.ones(len(A.indices)),
+        Atilde = sparse.csr_array((np.ones(len(A.indices)),
                                     A.indices.copy(), A.indptr.copy()),
                                    shape=(A.shape[0]/A.blocksize[0],
                                           A.shape[1]/A.blocksize[1]))
@@ -1067,7 +1067,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         T.sort_indices()
         shape = (int(T.shape[0]/T.blocksize[0]),
                  int(T.shape[1]/T.blocksize[1]))
-        pattern = sparse.csr_matrix((np.ones(T.indices.shape), T.indices, T.indptr),
+        pattern = sparse.csr_array((np.ones(T.indices.shape), T.indices, T.indptr),
                                     shape=shape)
 
         AtildeCopy = Atilde.copy()

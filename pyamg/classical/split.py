@@ -89,7 +89,7 @@ References
 
 """
 import numpy as np
-from scipy.sparse import csr_matrix, issparse
+from scipy.sparse import csr_array, issparse
 
 from pyamg.graph import vertex_coloring
 from pyamg import amg_core
@@ -101,7 +101,7 @@ def RS(S, second_pass=False):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
     second_pass : bool, default False
@@ -133,7 +133,7 @@ def RS(S, second_pass=False):
 
     """
     if not issparse(S) or S.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
     S = remove_diagonal(S)
 
     T = S.T.tocsr()  # transpose S for efficient column access
@@ -157,7 +157,7 @@ def PMIS(S):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
 
@@ -198,7 +198,7 @@ def PMISc(S, method='JP'):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
     method : string
@@ -241,7 +241,7 @@ def CLJP(S, color=False):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
     color : bool
@@ -271,7 +271,7 @@ def CLJP(S, color=False):
 
     """
     if not issparse(S) or S.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
     S = remove_diagonal(S)
 
     colorid = 0
@@ -298,7 +298,7 @@ def CLJPc(S):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix indicating the strength between nodes i
         and j (S_ij)
 
@@ -334,7 +334,7 @@ def MIS(G, weights, maxiter=None):
 
     Parameters
     ----------
-    G : csr_matrix
+    G : csr_array
         Matrix graph, G[i,j] != 0 indicates an edge
     weights : ndarray
         Array of weights for each vertex in the graph G
@@ -361,7 +361,7 @@ def MIS(G, weights, maxiter=None):
 
     """
     if not issparse(G) or G.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
     G = remove_diagonal(G)
 
     mis = np.empty(G.shape[0], dtype='intc')
@@ -386,7 +386,7 @@ def _preprocess(S, coloring_method=None):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Strength of connection matrix
     coloring_method : string
         Algorithm used to compute the vertex coloring:
@@ -398,11 +398,11 @@ def _preprocess(S, coloring_method=None):
     -------
     weights: ndarray
         Weights from a graph coloring of G
-    S : csr_matrix
+    S : csr_array
         Strength matrix with ones
-    T : csr_matrix
+    T : csr_array
         transpose of S
-    G : csr_matrix
+    G : csr_array
         union of S and T
 
     Notes
@@ -417,13 +417,13 @@ def _preprocess(S, coloring_method=None):
 
     """
     if not issparse(S) or S.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
 
     if S.shape[0] != S.shape[1]:
         raise ValueError(f'expected square matrix, shape={S.shape}')
 
     N = S.shape[0]
-    S = csr_matrix((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
+    S = csr_array((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
                    shape=(N, N))
     T = S.T.tocsr()  # transpose S for efficient column access
 

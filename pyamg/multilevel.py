@@ -63,11 +63,11 @@ class MultilevelSolver:
 
         Attributes
         ----------
-        A : csr_matrix
+        A : csr_array
             Problem matrix for Ax=b
-        R : csr_matrix
+        R : csr_array
             Restriction matrix between levels (often R = P.T)
-        P : csr_matrix
+        P : csr_array
             Prolongation or Interpolation matrix.
 
         Notes
@@ -296,7 +296,7 @@ class MultilevelSolver:
 
         Parameters
         ----------
-        A : csr_matrix
+        A : csr_array
             Target solution matrix
 
         Notes

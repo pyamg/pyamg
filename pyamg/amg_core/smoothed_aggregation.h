@@ -701,7 +701,7 @@ void fit_candidates_complex(const I n_row,
  *        num_block_rows x cols_per_block x cols_per_block
  *   B  = asarray(B).reshape(-1,cols_per_block,B.shape[1])
  *   UB = asarray(UB).reshape(-1,rows_per_block,UB.shape[1])
- *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
+ *   rows = csr_array((U.indices,U.indices,U.indptr), \
  *           shape=(U.shape[0]/rows_per_block,U.shape[1]/cols_per_block)).tocoo(copy=False).row
  *   for n,j in enumerate(U.indices):
  *      i = rows[n]

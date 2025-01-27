@@ -16,7 +16,7 @@ def canonical_graph(G):
     # convert to expected format
     # - remove diagonal entries
     # - all nonzero values = 1
-    G = sparse.coo_matrix(G)
+    G = sparse.coo_array(G)
 
     mask = G.row != G.col
     G.row = G.row[mask]
@@ -133,7 +133,7 @@ class TestGraph(TestCase):
                           [1, 2],
                           [4, 3]])
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
-        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         distances_FROM_seed = np.array([[0.,     1.,     4., 3.,     3.],
                                         [np.inf, 0.,     3., 2.,     2.],
                                         [np.inf, np.inf, 0., np.inf, np.inf],
@@ -211,7 +211,7 @@ class TestVertexColorings(TestCase):
                        [0, 1, 0, 0, 1],
                        [1, 1, 0, 0, 1],
                        [0, 1, 1, 1, 0]])
-        self.G0 = sparse.csr_matrix(G0)
+        self.G0 = sparse.csr_array(G0)
         # make sure graph is symmetric
         assert_equal((self.G0 - self.G0.T).nnz, 0)
 
@@ -224,7 +224,7 @@ class TestVertexColorings(TestCase):
                        [0, 1, 0, 0, 1, 1],
                        [0, 0, 0, 1, 0, 1],
                        [0, 0, 0, 1, 1, 0]])
-        self.G1 = sparse.csr_matrix(G1)
+        self.G1 = sparse.csr_array(G1)
         # make sure graph is symmetric
         assert_equal((self.G1 - self.G1.T).nnz, 0)
 
@@ -264,20 +264,20 @@ def test_breadth_first_search():
 
     BFS = breadth_first_search
 
-    G = sparse.csr_matrix([[0, 1, 0, 0],
-                           [1, 0, 1, 0],
-                           [0, 1, 0, 1],
-                           [0, 0, 1, 0]])
+    G = sparse.csr_array([[0, 1, 0, 0],
+                          [1, 0, 1, 0],
+                          [0, 1, 0, 1],
+                          [0, 0, 1, 0]])
 
     assert_equal(BFS(G, 0)[1], [0, 1, 2, 3])
     assert_equal(BFS(G, 1)[1], [1, 0, 1, 2])
     assert_equal(BFS(G, 2)[1], [2, 1, 0, 1])
     assert_equal(BFS(G, 3)[1], [3, 2, 1, 0])
 
-    G = sparse.csr_matrix([[0, 1, 0, 0],
-                           [1, 0, 1, 0],
-                           [0, 1, 0, 0],
-                           [0, 0, 0, 0]])
+    G = sparse.csr_array([[0, 1, 0, 0],
+                          [1, 0, 1, 0],
+                          [0, 1, 0, 0],
+                          [0, 0, 0, 0]])
 
     assert_equal(BFS(G, 0)[1], [0, 1, 2, -1])
     assert_equal(BFS(G, 1)[1], [1, 0, 1, -1])
@@ -288,55 +288,55 @@ def test_breadth_first_search():
 def test_connected_components():
 
     cases = []
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 1, 0],
-                                    [0, 1, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 1, 0],
+                                   [0, 1, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
-    cases.append(sparse.csr_matrix([[0, 0, 1, 0, 0, 0],
-                                    [0, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 1, 0, 0, 0],
+                                   [0, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 0, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 0, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 0, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     # Compare to reference implementation #
     for G in cases:
@@ -362,55 +362,55 @@ def test_connected_components():
 def test_complex_connected_components():
 
     cases = []
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 1, 0],
-                                    [0, 1, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 1, 0],
+                                   [0, 1, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
-    cases.append(sparse.csr_matrix([[0, 0, 1, 0, 0, 0],
-                                    [0, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 1, 0, 0, 0],
+                                   [0, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 0, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 0, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 0, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     # Create complex data entries
     cases = [G+1.0j*G for G in cases]

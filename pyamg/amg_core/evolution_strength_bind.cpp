@@ -225,14 +225,14 @@ Principle calling routines are strength of connection routines, e.g.,
 
 Examples
 --------
->>> from scipy.sparse import csr_matrix
+>>> from scipy.sparse import csr_array
 >>> from pyamg.amg_core import apply_absolute_distance_filter
 >>> from scipy import array
 >>> # Graph in CSR where entries in row i represent distances from dof i
 >>> indptr = array([0,3,6,9])
 >>> indices = array([0,1,2,0,1,2,0,1,2])
 >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
->>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
+>>> S = csr_array( (data,indices,indptr), shape=(3,3) )
 >>> print "Matrix Before Applying Filter\n" + str(S.todense())
 >>> apply_absolute_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
 >>> print "Matrix After Applying Filter\n" + str(S.todense()))pbdoc");
@@ -279,14 +279,14 @@ a drop tolerance.
 
 Examples
 --------
->>> from scipy.sparse import csr_matrix
+>>> from scipy.sparse import csr_array
 >>> from pyamg.amg_core import apply_distance_filter
 >>> from scipy import array
 >>> # Graph in CSR where entries in row i represent distances from dof i
 >>> indptr = array([0,3,6,9])
 >>> indices = array([0,1,2,0,1,2,0,1,2])
 >>> data = array([1.,2.,3.,4.,1.,2.,3.,9.,1.])
->>> S = csr_matrix( (data,indices,indptr), shape=(3,3) )
+>>> S = csr_array( (data,indices,indptr), shape=(3,3) )
 >>> print "Matrix before Applying Filter\n" + str(S.todense())
 >>> apply_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
 >>> print "Matrix after Applying Filter\n" + str(S.todense()))pbdoc");
@@ -324,18 +324,18 @@ supernodes by setting the strength value to be the minimum nonzero in a block.
 
 Examples
 --------
->>> from scipy.sparse import bsr_matrix, csr_matrix
+>>> from scipy.sparse import bsr_array, csr_array
 >>> from pyamg.amg_core import min_blocks
 >>> from numpy import zeros, array, ravel, round
 >>> from numpy import rand
 >>> row  = array([0,2,4,6])
 >>> col  = array([0,2,2,0,1,2])
 >>> data = round(10*rand(6,2,2), decimals=1)
->>> S = bsr_matrix( (data,col,row), shape=(6,6) )
+>>> S = bsr_array( (data,col,row), shape=(6,6) )
 >>> T = zeros(data.shape[0])
 >>> print "Matrix before\n" + str(S.todense())
 >>> min_blocks(6, 4, ravel(S.data), T)
->>> S2 = csr_matrix((T, S.indices, S.indptr), shape=(3,3))
+>>> S2 = csr_array((T, S.indices, S.indptr), shape=(3,3))
 >>> print "Matrix after\n" + str(S2.todense()))pbdoc");
 
     m.def("evolution_strength_helper", &_evolution_strength_helper<int, float, float>,
@@ -485,11 +485,11 @@ Examples
 --------
 >>> from pyamg.amg_core import incomplete_mat_mult_csr
 >>> from numpy import arange, eye, ones
->>> from scipy.sparse import csr_matrix, csc_matrix
+>>> from scipy.sparse import csr_array, csc_array
 >>>
->>> A = csr_matrix(arange(1,10,dtype=float).reshape(3,3))
->>> B = csc_matrix(ones((3,3),dtype=float))
->>> AB = csr_matrix(eye(3,3,dtype=float))
+>>> A = csr_array(arange(1,10,dtype=float).reshape(3,3))
+>>> B = csc_array(ones((3,3),dtype=float))
+>>> AB = csr_array(eye(3,3,dtype=float))
 >>> A.sort_indices()
 >>> B.sort_indices()
 >>> AB.sort_indices()

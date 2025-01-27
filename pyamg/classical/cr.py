@@ -19,7 +19,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Target system matrix
     B : array like
         Target near null space mode
@@ -84,7 +84,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n) usually matrix A of Ax=b
     method : {'habituated','concurrent'}
         Method used during relaxation:
@@ -223,7 +223,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n)
     tol : float
         tolerance
@@ -234,7 +234,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         diagonally scaled A, C=DAD
 
     Notes

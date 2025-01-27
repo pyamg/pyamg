@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from numpy.testing import TestCase, assert_almost_equal
 import scipy
-from scipy.sparse import csr_matrix, bsr_matrix, diags_array, eye_array
+from scipy.sparse import csr_array, bsr_array, diags_array, eye_array
 from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
@@ -202,7 +202,7 @@ class TestRelaxation(TestCase):
             cases.append(diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
                                offsets=[0, -1, 1], shape=(N, N), format='csr'))
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
-            C = csr_matrix(np.random.rand(N, N))
+            C = csr_array(np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
@@ -228,7 +228,7 @@ class TestRelaxation(TestCase):
             cases.append(diags_array([2 * np.ones(N), -np.ones(N), -np.ones(N)],
                                offsets=[0, -1, 1], shape=(N, N), format='csr'))
             cases.append(elasticity.linear_elasticity((N, N))[0].tocsr())
-            C = csr_matrix(np.random.rand(N, N))
+            C = csr_array(np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
             C = sprand(N*2, N*2, 0.3) + eye_array(N*2, N*2)
             cases.append(C @ C.T.conjugate())
@@ -256,7 +256,7 @@ class TestRelaxation(TestCase):
         cases.append(poisson((4, 4), format='csr'))
 
         temp = np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -527,7 +527,7 @@ class TestRelaxation(TestCase):
         cases.append(poisson((4, 4), format='csr'))
 
         temp = np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -666,13 +666,13 @@ class TestRelaxation(TestCase):
         cases.append(poisson((4, 4), format='csr'))
 
         temp = np.random.rand(1, 1)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
 
         temp = np.random.rand(2, 2)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
 
         temp = np.random.rand(4, 4)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -742,17 +742,17 @@ class TestRelaxation(TestCase):
         cases.append(A)
 
         temp = np.random.rand(1, 1)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         temp = np.random.rand(2, 2)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         temp = np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep='forward'):
-            A = csr_matrix(A)
+            A = csr_array(A)
             n = A.shape[0]
 
             # Default is point-wise iteration with each subdomain a point's
@@ -887,7 +887,7 @@ class TestComplexRelaxation(TestCase):
             cases.append(C)
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
 
-            C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
+            C = csr_array(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
 
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
@@ -919,7 +919,7 @@ class TestComplexRelaxation(TestCase):
             cases.append(C)
             cases.append(1.0j*elasticity.linear_elasticity((N, N))[0].tocsr())
 
-            C = csr_matrix(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
+            C = csr_array(np.random.rand(N, N) + 1.0j*np.random.rand(N, N))
             cases.append(C @ C.T.conjugate())
 
             C = sprand(N*2, N*2, 0.3) + 1.0j*sprand(N*2, N*2, 0.3) +\
@@ -954,17 +954,17 @@ class TestComplexRelaxation(TestCase):
         cases.append(A)
 
         temp = np.random.rand(1, 1) + 1.0j*np.random.rand(1, 1)
-        cases.append(csr_matrix(temp.conj().T.dot(temp)))
+        cases.append(csr_array(temp.conj().T.dot(temp)))
 
         temp = np.random.rand(2, 2) + 1.0j*np.random.rand(2, 2)
-        cases.append(csr_matrix(temp.conj().T.dot(temp)))
+        cases.append(csr_array(temp.conj().T.dot(temp)))
 
         temp = np.random.rand(4, 4) + 1.0j*np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.conj().T.dot(temp)))
+        cases.append(csr_array(temp.conj().T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations):
-            A = csr_matrix(A)
+            A = csr_array(A)
             n = A.shape[0]
 
             # Default is point-wise iteration with each subdomain a point's
@@ -1011,7 +1011,7 @@ class TestComplexRelaxation(TestCase):
         cases.append(A)
 
         temp = np.random.rand(4, 4) + 1.0j*np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.conj().T.dot(temp)))
+        cases.append(csr_array(temp.conj().T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -1256,7 +1256,7 @@ class TestComplexRelaxation(TestCase):
         cases.append(A.tobsr(blocksize=(2, 2)))
 
         temp = np.random.rand(4, 4) + 1.0j*np.random.rand(4, 4)
-        cases.append(csr_matrix(temp.T.dot(temp)))
+        cases.append(csr_array(temp.T.dot(temp)))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -1415,11 +1415,11 @@ class TestComplexRelaxation(TestCase):
         cases.append(A.tobsr(blocksize=(2, 2)))
 
         temp = np.random.rand(1, 1) + 1.0j*np.random.rand(1, 1)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
         temp = np.random.rand(2, 2) + 1.0j*np.random.rand(2, 2)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
         temp = np.random.rand(4, 4) + 1.0j*np.random.rand(4, 4)
-        cases.append(csr_matrix(temp))
+        cases.append(csr_array(temp))
 
         # reference implementation
         def gold(A, x, b, iterations, sweep):
@@ -1490,20 +1490,20 @@ class TestBlockRelaxation(TestCase):
 
         # All real valued tests
         cases = []
-        A = csr_matrix(np.zeros((1, 1)))
+        A = csr_array(np.zeros((1, 1)))
         cases.append((A, 1))
-        A = csr_matrix(np.random.rand(1, 1))
+        A = csr_array(np.random.rand(1, 1))
         cases.append((A, 1))
-        A = csr_matrix(np.zeros((2, 2)))
-        cases.append((A, 1))
-        cases.append((A, 2))
-        A = csr_matrix(np.random.rand(2, 2))
+        A = csr_array(np.zeros((2, 2)))
         cases.append((A, 1))
         cases.append((A, 2))
-        A = csr_matrix(np.zeros((3, 3)))
+        A = csr_array(np.random.rand(2, 2))
+        cases.append((A, 1))
+        cases.append((A, 2))
+        A = csr_array(np.zeros((3, 3)))
         cases.append((A, 1))
         cases.append((A, 3))
-        A = csr_matrix(np.random.rand(3, 3))
+        A = csr_array(np.random.rand(3, 3))
         cases.append((A, 1))
         cases.append((A, 3))
         A = poisson((4, 4), format='csr')
@@ -1516,7 +1516,7 @@ class TestBlockRelaxation(TestCase):
                       [0., 0., 0., 0., 0., 0.],
                       [0., 0., 0., 4.2, 1., 1.1],
                       [0., 0., 9.1, 0., 0., 9.3]])
-        A = csr_matrix(A)
+        A = csr_array(A)
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 3))
@@ -1524,14 +1524,14 @@ class TestBlockRelaxation(TestCase):
         # reference implementation of 1 iteration
         def gold(A, x, b, blocksize, omega):
 
-            A = csr_matrix(A)
+            A = csr_array(A)
             temp = x.copy()
             Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
             D = get_block_diag(A, blocksize=blocksize, inv_flag=False)
             I0 = np.arange(Dinv.shape[0])
             I1 = np.arange(Dinv.shape[0] + 1)
-            A_no_D = A - bsr_matrix((D, I0, I1), shape=A.shape)
-            A_no_D = csr_matrix(A_no_D)
+            A_no_D = A - bsr_array((D, I0, I1), shape=A.shape)
+            A_no_D = csr_array(A_no_D)
 
             for i in range(0, A.shape[0], blocksize):
                 r = A_no_D[i:(i+blocksize), :] @ temp
@@ -1560,7 +1560,7 @@ class TestBlockRelaxation(TestCase):
 
         # complex valued tests
         cases = []
-        A = csr_matrix(np.random.rand(3, 3) + 1.0j*np.random.rand(3, 3))
+        A = csr_array(np.random.rand(3, 3) + 1.0j*np.random.rand(3, 3))
         cases.append((A, 1))
         cases.append((A, 3))
         A = poisson((4, 4), format='csr')
@@ -1574,7 +1574,7 @@ class TestBlockRelaxation(TestCase):
                       [0., 0., 0., 0., 0., 0.],
                       [0., 0., 0., 4.2, 1.0j, 1.1],
                       [0., 0., 9.1, 0., 0., 9.3]])
-        A = csr_matrix(A)
+        A = csr_array(A)
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 3))
@@ -1592,20 +1592,20 @@ class TestBlockRelaxation(TestCase):
 
         # All real valued tests
         cases = []
-        A = csr_matrix(np.zeros((1, 1)))
+        A = csr_array(np.zeros((1, 1)))
         cases.append((A, 1))
-        A = csr_matrix(np.random.rand(1, 1))
+        A = csr_array(np.random.rand(1, 1))
         cases.append((A, 1))
-        A = csr_matrix(np.zeros((2, 2)))
-        cases.append((A, 1))
-        cases.append((A, 2))
-        A = csr_matrix(np.random.rand(2, 2))
+        A = csr_array(np.zeros((2, 2)))
         cases.append((A, 1))
         cases.append((A, 2))
-        A = csr_matrix(np.zeros((3, 3)))
+        A = csr_array(np.random.rand(2, 2))
+        cases.append((A, 1))
+        cases.append((A, 2))
+        A = csr_array(np.zeros((3, 3)))
         cases.append((A, 1))
         cases.append((A, 3))
-        A = csr_matrix(np.random.rand(3, 3))
+        A = csr_array(np.random.rand(3, 3))
         cases.append((A, 1))
         cases.append((A, 3))
         A = poisson((4, 4), format='csr')
@@ -1618,7 +1618,7 @@ class TestBlockRelaxation(TestCase):
                       [0., 0., 0., 0., 0., 0.],
                       [0., 0., 0., 4.2, 1., 1.1],
                       [0., 0., 9.1, 0., 0., 9.3]])
-        A = csr_matrix(A)
+        A = csr_array(A)
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 3))
@@ -1626,13 +1626,13 @@ class TestBlockRelaxation(TestCase):
         # reference implementation of 1 iteration
         def gold(A, x, b, blocksize, sweep):
 
-            A = csr_matrix(A)
+            A = csr_array(A)
             Dinv = get_block_diag(A, blocksize=blocksize, inv_flag=True)
             D = get_block_diag(A, blocksize=blocksize, inv_flag=False)
             I0 = np.arange(Dinv.shape[0])
             I1 = np.arange(Dinv.shape[0] + 1)
-            A_no_D = A - bsr_matrix((D, I0, I1), shape=A.shape)
-            A_no_D = csr_matrix(A_no_D)
+            A_no_D = A - bsr_array((D, I0, I1), shape=A.shape)
+            A_no_D = csr_array(A_no_D)
 
             if sweep == 'symmetric':
                 x = gold(A, x, b, blocksize, 'forward')
@@ -1704,7 +1704,7 @@ class TestBlockRelaxation(TestCase):
 
         # complex valued tests
         cases = []
-        A = csr_matrix(np.random.rand(3, 3) + 1.0j*np.random.rand(3, 3))
+        A = csr_array(np.random.rand(3, 3) + 1.0j*np.random.rand(3, 3))
         cases.append((A, 1))
         cases.append((A, 3))
         A = poisson((4, 4), format='csr')
@@ -1718,7 +1718,7 @@ class TestBlockRelaxation(TestCase):
                       [0., 0., 0., 0., 0., 0.],
                       [0., 0., 0., 4.2, 1.0j, 1.1],
                       [0., 0., 9.1, 0., 0., 9.3]])
-        A = csr_matrix(A)
+        A = csr_array(A)
         cases.append((A, 1))
         cases.append((A, 2))
         cases.append((A, 3))
