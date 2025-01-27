@@ -198,8 +198,6 @@ def reference_naive_aggregation(C):
             R = np.union1d(R, unaggregated_neighbors)
             R = np.union1d(R, np.array([i]))
             Cpts.append(i)
-        else:
-            pass
 
     assert np.unique(R).shape[0] == n
 

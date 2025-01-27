@@ -591,7 +591,8 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Calculate Dinv@A
         if block_flag:
             Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
-            Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=Dinv.indptr.dtype),
+            Dinv = sparse.bsr_array((Dinv,
+                                     np.arange(Dinv.shape[0], dtype=Dinv.indptr.dtype),
                                      np.arange(Dinv.shape[1], dtype=Dinv.indptr.dtype)),
                                     shape=A.shape)
             Dinv_A = (Dinv @ A).tocsr()

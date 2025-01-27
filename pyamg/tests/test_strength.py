@@ -170,14 +170,16 @@ class TestStrengthOfConnection(TestCase):
         cases.append((A2, B2, mask))
 
         mask = sparse.csr_array((np.ones(3), (np.array([0, 0, 1], dtype=np.int32),
-                                              np.array([0, 1, 1], dtype=np.int32))), shape=(2, 2))
+                                              np.array([0, 1, 1], dtype=np.int32))),
+                                shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
         mask = sparse.csr_array((np.ones(2), (np.array([0, 1], dtype=np.int32),
-                                              np.array([0, 0], dtype=np.int32))), shape=(2, 2))
+                                              np.array([0, 0], dtype=np.int32))),
+                                shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
