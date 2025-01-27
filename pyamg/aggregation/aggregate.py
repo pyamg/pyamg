@@ -429,6 +429,7 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
 
     Examples
     --------
+    >>> import numpy as np
     >>> import pyamg
     >>> from pyamg.aggregation.aggregate import balanced_lloyd_aggregation
     >>> data = pyamg.gallery.load_example('unit_square')
