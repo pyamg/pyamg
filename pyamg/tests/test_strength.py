@@ -161,22 +161,23 @@ class TestStrengthOfConnection(TestCase):
         B = sparse.csr_array(np.array([[1.3, 2.], [2.8, 4.]]))
         A2 = sparse.csr_array(np.array([[1.3, 0.], [0., 4.]]))
         B2 = sparse.csr_array(np.array([[1.3, 0.], [2., 4.]]))
-        mask = sparse.csr_array((np.ones(4), (np.array([0, 0, 1, 1]),
-                                              np.array([0, 1, 0, 1]))), shape=(2, 2))
+        mask = sparse.csr_array((np.ones(4), (np.array([0, 0, 1, 1], dtype=np.int32),
+                                              np.array([0, 1, 0, 1], dtype=np.int32))),
+                                shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = sparse.csr_array((np.ones(3), (np.array([0, 0, 1]),
-                                              np.array([0, 1, 1]))), shape=(2, 2))
+        mask = sparse.csr_array((np.ones(3), (np.array([0, 0, 1], dtype=np.int32),
+                                              np.array([0, 1, 1], dtype=np.int32))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
         cases.append((A2, B2, mask))
 
-        mask = sparse.csr_array((np.ones(2), (np.array([0, 1]),
-                                              np.array([0, 0]))), shape=(2, 2))
+        mask = sparse.csr_array((np.ones(2), (np.array([0, 1], dtype=np.int32),
+                                              np.array([0, 0], dtype=np.int32))), shape=(2, 2))
         cases.append((A, A, mask))
         cases.append((A, B, mask))
         cases.append((A2, A2, mask))
@@ -513,7 +514,7 @@ class TestComplexStrengthOfConnection(TestCase):
 
         # check if every neighbor is a strong connection
         for i in range(1, A.shape[0]-1):
-            idx = S[i, :]
+            idx = S[[i], :]
             assert set(idx.indices) == {i-1, i+1}
 
 

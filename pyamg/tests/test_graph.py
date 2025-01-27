@@ -82,7 +82,7 @@ class TestGraph(TestCase):
             for k in [1, 2, 3, 4]:
                 mis = maximal_independent_set(G, k=k)
                 if k > 1:
-                    G = (G + np.eye(G.shape[0]))**k
+                    G = sparse.linalg.matrix_power(G + np.eye(G.shape[0]), k)
                     G = canonical_graph(G)
                 assert_is_mis(G, mis)
 
@@ -131,7 +131,7 @@ class TestGraph(TestCase):
                           [0, 2],
                           [3, 2],
                           [1, 2],
-                          [4, 3]])
+                          [4, 3]], dtype=np.int32)
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
         G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         distances_FROM_seed = np.array([[0.,     1.,     4., 3.,     3.],

@@ -110,8 +110,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     >>> import numpy as np
     >>> data = np.ones((6,))
     >>> row = np.arange(0,6)
-    >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
+    >>> col = np.kron([0, 1], np.ones(3, dtype=int))
+    >>> T = coo_array((data,(row, col)),shape=(6, 2)).tocsr()
     >>> T.toarray()
     array([[1., 0.],
            [1., 0.],
@@ -162,8 +162,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     elif weighting == 'block':
         # Use block diagonal of S
         D_inv = get_block_diag(S, blocksize=S.blocksize[0], inv_flag=True)
-        D_inv = sparse.bsr_array((D_inv, np.arange(D_inv.shape[0]),
-                                   np.arange(D_inv.shape[0]+1)),
+        D_inv = sparse.bsr_array((D_inv, np.arange(D_inv.shape[0], dtype=np.int32),
+                                   np.arange(D_inv.shape[0] + 1, dtype=np.int32)),
                                   shape=S.shape)
         D_inv_S = D_inv@S
         D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
@@ -243,9 +243,9 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     >>> from scipy.sparse import coo_array
     >>> import numpy as np
     >>> data = np.ones((6,))
-    >>> row = np.arange(0,6)
-    >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
+    >>> row = np.arange(0, 6, dtype=np.int32)
+    >>> col = np.kron([0, 1], np.ones(3, dtype=int))
+    >>> T = coo_array((data,(row, col)),shape=(6, 2)).tocsr()
     >>> T.toarray()
     array([[1., 0.],
            [1., 0.],
@@ -334,9 +334,9 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
-                                  np.arange(Dinv.shape[0]+1)),
-                                 shape=A.shape)
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=np.int32),
+                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
+                                shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate
         D = np.abs(A)@np.ones((A.shape[0], 1), dtype=A.dtype)
@@ -719,8 +719,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
-                                  np.arange(Dinv.shape[0]+1)),
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=np.int32),
+                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
                                  shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate
@@ -969,9 +969,9 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     >>> from scipy.sparse import coo_array
     >>> import numpy as np
     >>> data = np.ones((6,))
-    >>> row = np.arange(0,6)
-    >>> col = np.kron([0,1],np.ones((3,)))
-    >>> T = coo_array((data,(row,col)),shape=(6,2)).tocsr()
+    >>> row = np.arange(0, 6, dtype=np.int32)
+    >>> col = np.kron([0, 1], np.ones(3)).astype(np.int32)
+    >>> T = coo_array((data,(row, col)),shape=(6, 2)).tocsr()
     >>> print(T.toarray())
     [[1. 0.]
      [1. 0.]

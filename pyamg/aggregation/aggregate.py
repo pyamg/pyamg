@@ -397,7 +397,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
     _, clusters, seeds = lloyd_cluster(G, num_seeds, maxiter=maxiter)
 
-    row = (clusters >= 0).nonzero()[0]
+    row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
     data = np.ones(len(row), dtype='int8')
     AggOp = sparse.coo_array((data, (row, col)),
@@ -475,7 +475,7 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
                                  d, cm, seeds)
 
     col = cm
-    row = np.arange(len(cm))
+    row = np.arange(len(cm), dtype=np.int32)
     data = np.ones(len(row), dtype=np.int32)
     AggOp = sparse.coo_array((data, (row, col)),
                               shape=(G.shape[0], num_clusters)).tocsr()
