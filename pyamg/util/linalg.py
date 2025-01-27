@@ -55,7 +55,7 @@ def infinity_norm(A):
 
     Parameters
     ----------
-    A : csr_matrix, csc_matrix, sparse, or numpy matrix
+    A : csr_array, csc_array, sparse, or numpy matrix
         Sparse or dense matrix
 
     Returns
@@ -76,12 +76,12 @@ def infinity_norm(A):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.linalg import infinity_norm
     >>> n=10
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n))
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n))
     >>> print(infinity_norm(A))
     4.0
 
@@ -129,7 +129,7 @@ def axpy(x, y, a=1.0):
 #    ----------
 #
 #    A : {dense or sparse matrix}
-#        E.g. csr_matrix, csc_matrix, ndarray, etc.
+#        E.g. csr_array, csc_array, ndarray, etc.
 #    tol : {scalar}
 #        Tolerance of approximation
 #    maxiter : {integer}
@@ -260,7 +260,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     Parameters
     ----------
     A : {dense or sparse matrix}
-        E.g. csr_matrix, csc_matrix, ndarray, etc.
+        E.g. csr_array, csc_array, ndarray, etc.
     tol : {scalar}
         Relative tolerance of approximation, i.e., the error divided
         by the approximate spectral radius is compared to tol.
@@ -354,11 +354,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             error = H[nvecs, nvecs-1] * evect[-1, max_index]
 
             # error is a fast way of calculating the following line
-            # error2 = ( A - ev[max_index]*sp.mat(
-            #           sp.eye(A.shape[0],A.shape[1])) )*\
-            #           ( sp.mat(sp.hstack(V[:-1]))*\
-            #           evect[:,max_index].reshape(-1,1) )
-            # print(str(error) + "    " + str(sp.linalg.norm(e2)))
+            # error2 = ( A - ev[max_index]*np.eye(A.shape[0],A.shape[1]) )* \
+            #          ( np.mat(np.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) )
+            # print(str(error) + "    " + str(np.linalg.norm(e2)))
 
             v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
 
@@ -389,7 +387,7 @@ def condest(A, maxiter=25, symmetric=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     maxiter: {int}
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
@@ -441,7 +439,7 @@ def cond(A):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
 
     Returns
     -------
@@ -484,7 +482,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
         for random vectors x and y to check for conjugate symmetry.

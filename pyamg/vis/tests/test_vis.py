@@ -3,7 +3,7 @@
 import tempfile
 import os
 
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_array
 from numpy import array, ones, uint32
 
 from numpy.testing import TestCase
@@ -49,7 +49,7 @@ class TestVis(TestCase):
         col = array([1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1])
         data = ones((1, 12), dtype=uint32).ravel()
 
-        AggOp = csr_matrix((data, (row, col)), shape=(12, 2))
+        AggOp = csr_array((data, (row, col)), shape=(12, 2))
 
         vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tri',
                              fname=self.file_name)
@@ -102,7 +102,7 @@ class TestVis(TestCase):
                      1, 3, 4, 0, 0, 0, 2, 4, 4])
         data = ones((1, 18), dtype=uint32).ravel()
 
-        AggOp = csr_matrix((data, (row, col)), shape=(18, 5))
+        AggOp = csr_array((data, (row, col)), shape=(18, 5))
 
         vis_aggregate_groups(V=V, E2V=E2V, AggOp=AggOp, mesh_type='tri',
                              fname=self.file_name)

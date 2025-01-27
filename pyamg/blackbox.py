@@ -2,7 +2,7 @@
 
 
 import numpy as np
-from scipy.sparse import issparse, csr_matrix
+from scipy.sparse import issparse, csr_array
 
 from .aggregation import smoothed_aggregation_solver
 from .util.linalg import ishermitian
@@ -19,8 +19,8 @@ def make_csr(A):
 
     Returns
     -------
-    A : csr_matrix, bsr_matrix
-        If A is csr_matrix or bsr_matrix, then do nothing and return A.
+    A : csr_array, bsr_array
+        If A is csr_array or bsr_array, then do nothing and return A.
         Else, convert A to CSR if possible and return.
 
     Examples
@@ -35,11 +35,11 @@ def make_csr(A):
     # Convert to CSR or BSR if necessary
     if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
         except Exception as e:
-            raise TypeError('Argument A must have type csr_matrix or '
-                            'bsr_matrix, or be convertible to csr_matrix') from e
+            raise TypeError('Argument A must have type csr_array or '
+                            'bsr_array, or be convertible to csr_array') from e
 
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
@@ -54,7 +54,7 @@ def solver_configuration(A, B=None, verb=True):
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         (n x n) matrix to invert, CSR or BSR format preferred for efficiency
     B : None, array
         Near null-space modes used to construct the smoothed aggregation solver
@@ -156,7 +156,7 @@ def solver(A, config):
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         Matrix to invert, CSR or BSR format preferred for efficiency
     config : dict
         A dictionary of solver configuration parameters that is used to
@@ -217,7 +217,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         Matrix to invert, CSR or BSR format preferred for efficiency
     b : array
         Right hand side.

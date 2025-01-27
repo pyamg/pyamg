@@ -3,7 +3,8 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import issparse, csr_matrix, csc_matrix, bsr_matrix, coo_matrix, eye
+from scipy.sparse import (issparse, eye_array,
+                          csr_array, csc_array, bsr_array, coo_array,)
 from scipy.linalg import eigvals
 
 # pylint: disable=no-name-in-module
@@ -49,14 +50,14 @@ def profile_solver(ml, accel=None, **kwargs):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from scipy.sparse.linalg import cg
     >>> from pyamg.classical import ruge_stuben_solver
     >>> from pyamg.util.utils import profile_solver
     >>> n=100
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1,0,1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1,0,1], shape=(n,n), format='csr')
     >>> b = A @ np.ones(A.shape[0])
     >>> ml = ruge_stuben_solver(A, max_coarse=10)
     >>> res = profile_solver(ml,accel=cg)
@@ -80,11 +81,11 @@ def profile_solver(ml, accel=None, **kwargs):
 def diag_sparse(A):
     """Return a diagonal.
 
-    If A is a sparse matrix (e.g. csr_matrix or csc_matrix)
+    If A is a sparse matrix (e.g. csr_array or csc_array)
        - return the diagonal of A as an array
 
     Otherwise
-       - return a csr_matrix with A on the diagonal
+       - return a csr_array with A on the diagonal
 
     Parameters
     ----------
@@ -114,8 +115,9 @@ def diag_sparse(A):
     if np.ndim(A) != 1:
         raise ValueError('input diagonal array expected to be 1d')
 
-    return csr_matrix((np.asarray(A), np.arange(len(A)),
-                       np.arange(len(A)+1)), (len(A), len(A)))
+    N = len(A)
+    return csr_array((np.asarray(A), np.arange(N, dtype=np.int32),
+                      np.arange(N+1, dtype=np.int32)), shape=(N, N))
 
 
 def scale_rows(A, v, copy=True):
@@ -144,19 +146,19 @@ def scale_rows(A, v, copy=True):
 
     Notes
     -----
-    - if A is a csc_matrix, the transpose A.T is passed to scale_columns
+    - if A is a csc_array, the transpose A.T is passed to scale_columns
     - if A is not csr, csc, or bsr, it is converted to csr and sent
       to scale_rows
 
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import scale_rows
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
     >>> B = scale_rows(A, 5 * np.ones((A.shape[0], 1)))
 
     """
@@ -186,7 +188,7 @@ def scale_rows(A, v, copy=True):
         amg_core.csc_scale_rows(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
-        A = scale_rows(csr_matrix(A), v).asformat(fmt)
+        A = scale_rows(csr_array(A), v).asformat(fmt)
 
     return A
 
@@ -217,19 +219,19 @@ def scale_columns(A, v, copy=True):
 
     Notes
     -----
-    - if A is a csc_matrix, the transpose A.T is passed to scale_rows
+    - if A is a csc_array, the transpose A.T is passed to scale_rows
     - if A is not csr, csc, or bsr, it is converted to csr and sent to
       scale_rows
 
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import scale_columns
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n-1), format='csr')
     >>> print(scale_columns(A, 5 * np.ones((A.shape[1], 1))).toarray())
     [[10. -5.  0.  0.]
      [-5. 10. -5.  0.]
@@ -264,7 +266,7 @@ def scale_columns(A, v, copy=True):
         amg_core.csc_scale_columns(M, N, A.indptr, A.indices, A.data, v)
     else:
         fmt = A.format
-        A = scale_columns(csr_matrix(A), v).asformat(fmt)
+        A = scale_columns(csr_array(A), v).asformat(fmt)
 
     return A
 
@@ -295,7 +297,7 @@ def symmetric_rescaling(A, copy=True):
         Array of sqrt(diag(A))
     D_sqrt_inv : array
         Array of 1/sqrt(diag(A))
-    DAD    : csr_matrix
+    DAD    : csr_array
         Symmetrically scaled A
 
     Notes
@@ -305,12 +307,12 @@ def symmetric_rescaling(A, copy=True):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import symmetric_rescaling
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> Ds, Dsi, DAD = symmetric_rescaling(A)
     >>> print(DAD.toarray())
     [[ 1.  -0.5  0.   0.   0. ]
@@ -341,7 +343,7 @@ def symmetric_rescaling(A, copy=True):
 
         return D_sqrt, D_sqrt_inv, DAD
 
-    return symmetric_rescaling(csr_matrix(A))
+    return symmetric_rescaling(csr_array(A))
 
 
 def symmetric_rescaling_sa(A, B, BH=None):
@@ -379,12 +381,12 @@ def symmetric_rescaling_sa(A, B, BH=None):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import diags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.utils import symmetric_rescaling_sa
     >>> n=5
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = diags(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n), format='csr')
     >>> B = e.copy().reshape(-1,1)
     >>> [DAD, DB, DBH] = symmetric_rescaling_sa(A,B,BH=None)
     >>> print(DAD.toarray())
@@ -449,7 +451,7 @@ def type_prep(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import type_prep
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> z = 2.3
@@ -489,7 +491,7 @@ def to_type(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import to_type
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
@@ -520,7 +522,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     norm_eq : {0, 1, 2}
         0 ==> D = diag(A)
         1 ==> D = diag(A.H A)
@@ -553,7 +555,7 @@ def get_diagonal(A, norm_eq=False, inv=False):
     """
     if not issparse(A) or A.format not in ('bsr', 'csc', 'csr'):
         warn('Implicit conversion to sparse matrix')
-        A = csr_matrix(A)
+        A = csr_array(A)
 
     # critical to sort the indices of A
     A.sort_indices()
@@ -581,7 +583,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         assumed to be square
     blocksize : int
         square block size for the diagonal
@@ -597,9 +599,9 @@ def get_block_diag(A, blocksize, inv_flag=True):
     Examples
     --------
     >>> from numpy import arange
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.util.utils import get_block_diag
-    >>> A = csr_matrix(arange(36).reshape(6,6))
+    >>> A = csr_array(arange(36).reshape(6,6))
     >>> block_diag_inv = get_block_diag(A, blocksize=2, inv_flag=False)
     >>> print(block_diag_inv)
     [[[ 0.  1.]
@@ -634,7 +636,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
     # Convert to BSR
     if not issparse(A) or A.format != 'bsr':
-        A = bsr_matrix(A, blocksize=(blocksize, blocksize))
+        A = bsr_array(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
@@ -646,7 +648,7 @@ def get_block_diag(A, blocksize, inv_flag=True):
 
     AAIJ = (np.arange(1, A.indices.shape[0]+1), A.indices, A.indptr)
     shape = (int(A.shape[0]/blocksize), int(A.shape[0]/blocksize))
-    diag_entries = csr_matrix(AAIJ, shape=shape).diagonal()
+    diag_entries = csr_array(AAIJ, shape=shape).diagonal()
     diag_entries -= 1
     nonzero_mask = diag_entries != -1
     diag_entries = diag_entries[nonzero_mask]
@@ -673,14 +675,14 @@ def amalgamate(A, blocksize):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Matrix to amalgamate
     blocksize : int
         blocksize to use while amalgamating
 
     Returns
     -------
-    A_amal : csr_matrix
+    A_amal : csr_array
         Amalgamated  matrix A, first, convert A to BSR with square blocksize
         and then return a CSR matrix of ones using the resulting BSR indptr and
         indices
@@ -692,12 +694,12 @@ def amalgamate(A, blocksize):
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.util.utils import amalgamate
     >>> row = array([0,0,1])
     >>> col = array([0,2,1])
     >>> data = array([1,2,3])
-    >>> A = csr_matrix( (data,(row,col)), shape=(4,4) )
+    >>> A = csr_array( (data,(row,col)), shape=(4,4) )
     >>> A.toarray()
     array([[1, 0, 2, 0],
            [0, 3, 0, 0],
@@ -719,7 +721,7 @@ def amalgamate(A, blocksize):
     subI = (np.ones(A.indices.shape), A.indices, A.indptr)
     shape = (int(A.shape[0]/A.blocksize[0]),
              int(A.shape[1]/A.blocksize[1]))
-    return csr_matrix(subI, shape=shape)
+    return csr_array(subI, shape=shape)
 
 
 def unamal(A, rows_per_block, cols_per_block):
@@ -732,7 +734,7 @@ def unamal(A, rows_per_block, cols_per_block):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Amalgamted matrix
     rows_per_block : int
         Give A blocks of size (rows_per_block, cols_per_block)
@@ -741,19 +743,19 @@ def unamal(A, rows_per_block, cols_per_block):
 
     Returns
     -------
-    A : bsr_matrix
+    A : bsr_array
         Returns A.data[:] = 1, followed by a Kronecker product of A and
         ones(rows_per_block, cols_per_block)
 
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.util.utils import unamal
     >>> row = array([0,0,1,2,2,2])
     >>> col = array([0,2,2,0,1,2])
     >>> data = array([1,2,3,4,5,6])
-    >>> A = csr_matrix( (data,(row,col)), shape=(3,3) )
+    >>> A = csr_array( (data,(row,col)), shape=(3,3) )
     >>> A.toarray()
     array([[1, 0, 2],
            [0, 0, 3],
@@ -770,7 +772,7 @@ def unamal(A, rows_per_block, cols_per_block):
     data = np.ones((A.indices.shape[0], rows_per_block, cols_per_block))
     blockI = (data, A.indices, A.indptr)
     shape = (rows_per_block*A.shape[0], cols_per_block*A.shape[1])
-    return bsr_matrix(blockI, shape=shape)
+    return bsr_array(blockI, shape=shape)
 
 
 def print_table(table, title='', delim='|', centering='center', col_padding=2,
@@ -1097,9 +1099,9 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
 
     Ensure that the new, filtered A satisfies:  A_new*B = Bf.
 
-    A : {csr_matrix, bsr_matrix}
+    A : {csr_array, bsr_array}
         n x m matrix to filter
-    C : {csr_matrix, bsr_matrix}
+    C : {csr_array, bsr_array}
         n x m matrix representing the couplings in A to keep
     B : {array}
         m x k array of near nullspace vectors
@@ -1139,13 +1141,13 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     Examples
     --------
     >>> from numpy import ones, array
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.util.utils import filter_operator
     >>> A = array([ [1.,1,1],[1,1,1],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
     >>> C = array([ [1.,1,0],[1,1,0],[0,1,0],[0,1,0],[0,0,1],[0,0,1]])
     >>> B = ones((3,1))
     >>> Bf = ones((6,1))
-    >>> filter_operator(csr_matrix(A), csr_matrix(C), B, Bf).toarray()
+    >>> filter_operator(csr_array(A), csr_array(C), B, Bf).toarray()
     array([[0.5, 0.5, 0. ],
            [0.5, 0.5, 0. ],
            [0. , 1. , 0. ],
@@ -1256,24 +1258,24 @@ def scale_T(T, P_I, I_F):
 
     Parameters
     ----------
-    T : {bsr_matrix}
+    T : {bsr_array}
         Tentative prolongator, with square blocks in the BSR data structure,
         and a non-overlapping block-diagonal structure
-    P_I : {bsr_matrix}
+    P_I : {bsr_array}
         Interpolation operator that carries out only simple injection from the
         coarse grid to fine grid Cpts nodes
-    I_F : {bsr_matrix}
+    I_F : {bsr_array}
         Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
 
     Returns
     -------
-    T : {bsr_matrix}
+    T : {bsr_array}
         Tentative prolongator scaled to be identity at C-pt nodes
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix, bsr_matrix
+    >>> from scipy.sparse import csr_array, bsr_array
     >>> import numpy as np
     >>> from pyamg.util.utils import scale_T
     >>> T = np.array([[ 1.0,  0.,   0. ],
@@ -1294,7 +1296,7 @@ def scale_T(T, P_I, I_F):
     ...                 [ 0.,  0.,  0.,  1.,  0.,  0.],
     ...                 [ 0.,  0.,  0.,  0.,  1.,  0.],
     ...                 [ 0.,  0.,  0.,  0.,  0.,  0.]])
-    >>> scale_T(bsr_matrix(T), bsr_matrix(P_I), bsr_matrix(I_F)).toarray()
+    >>> scale_T(bsr_array(T), bsr_array(P_I), bsr_array(I_F)).toarray()
     array([[2. , 0. , 0. ],
            [1. , 0. , 0. ],
            [0. , 1. , 0. ],
@@ -1365,28 +1367,28 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : {csr_array, bsr_array}
         Operator
     Cnodes : {array}
         Array of all root node indices.  This is an array of nodal indices,
         not degree-of-freedom indices.  If the blocksize of T is 1, then
         nodal indices and degree-of-freedom indices coincide.
-    AggOp : {csr_matrix}
+    AggOp : {csr_array}
         Aggregation operator corresponding to A
-    T : {bsr_matrix}
+    T : {bsr_array}
         Tentative prolongator based on AggOp
 
     Returns
     -------
     Dictionary containing these parameters:
 
-    P_I : {bsr_matrix}
+    P_I : {bsr_array}
         Interpolation operator that carries out only simple injection from the
         coarse grid to fine grid Cpts nodes
-    I_F : {bsr_matrix}
+    I_F : {bsr_array}
         Identity operator on Fpts, i.e., the action of this matrix zeros
         out entries in a vector at all Cpts, leaving Fpts untouched
-    I_C : {bsr_matrix}
+    I_C : {bsr_array}
         Identity operator on Cpts nodes, i.e., the action of this matrix zeros
         out entries in a vector at all Fpts, leaving Cpts untouched
     Cpts : {array}
@@ -1399,7 +1401,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     >>> from numpy import array
     >>> from pyamg.util.utils import get_Cpt_params
     >>> from pyamg.gallery import poisson
-    >>> from scipy.sparse import csr_matrix, bsr_matrix
+    >>> from scipy.sparse import csr_array, bsr_array
     >>> A = poisson((10,), format='csr')
     >>> Cpts = array([3, 7])
     >>> AggOp = ([[ 1., 0.], [ 1., 0.],
@@ -1407,7 +1409,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     ...           [ 1., 0.], [ 0., 1.],
     ...           [ 0., 1.], [ 0., 1.],
     ...           [ 0., 1.], [ 0., 1.]])
-    >>> AggOp = csr_matrix(AggOp)
+    >>> AggOp = csr_array(AggOp)
     >>> T = AggOp.copy().tobsr()
     >>> params = get_Cpt_params(A, Cpts, AggOp, T)
     >>> params['P_I'].toarray()
@@ -1457,7 +1459,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         blocksize = 1
         Cpts = Cnodes
-    Cpts = np.array(Cpts, dtype=int)
+    Cpts = np.array(Cpts, dtype=np.int32)
 
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
@@ -1471,7 +1473,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
 
     # Create two maps, one for F points and one for C points
     ncoarse = T.shape[1]
-    I_C = eye(A.shape[0], A.shape[1], format='csr')
+    I_C = eye_array(A.shape[0], A.shape[1], format='csr')
     I_F = I_C.copy()
     I_F.data[Cpts] = 0.0
     I_F.eliminate_zeros()
@@ -1486,12 +1488,12 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     # in Cpts
     if I_C.nnz > 0:
         indices = Cpts.copy()
-        indptr = np.arange(indices.shape[0]+1)
+        indptr = np.arange(indices.shape[0]+1, dtype=indices.dtype)
     else:
         indices = np.zeros((0,), dtype=T.indices.dtype)
         indptr = np.zeros((ncoarse+1,), dtype=T.indptr.dtype)
 
-    P_I = csc_matrix((I_C.data.copy(), indices, indptr),
+    P_I = csc_array((I_C.data.copy(), indices, indptr),
                      shape=(I_C.shape[0], ncoarse))
     P_I = P_I.tobsr(T.blocksize)
 
@@ -1516,7 +1518,7 @@ def compute_BtBinv(B, C):
     ----------
     B : {array}
         (M,k) array, typically near-nullspace modes for coarse grid, i.e., B_c.
-    C : {csr_matrix, bsr_matrix}
+    C : {csr_array, bsr_array}
         Sparse NxM matrix, whose sparsity structure (i.e., matrix graph)
         is used to determine BtBinv.
 
@@ -1529,13 +1531,13 @@ def compute_BtBinv(B, C):
     Examples
     --------
     >>> from numpy import array
-    >>> from scipy.sparse import bsr_matrix
+    >>> from scipy.sparse import bsr_array
     >>> from pyamg.util.utils import compute_BtBinv
     >>> T = array([[ 1.,  0.],
     ...            [ 1.,  0.],
     ...            [ 0.,  .5],
     ...            [ 0.,  .25]])
-    >>> T = bsr_matrix(T)
+    >>> T = bsr_array(T)
     >>> B = array([[1.],[2.]])
     >>> compute_BtBinv(B, T)
     array([[[1.  ]],
@@ -1558,7 +1560,7 @@ def compute_BtBinv(B, C):
 
     """
     if not issparse(C) or C.format not in ('csr', 'bsr'):
-        raise TypeError('Expected bsr_matrix or csr_matrix for C')
+        raise TypeError('Expected bsr_array or csr_array for C')
     if C.shape[1] != B.shape[0]:
         raise TypeError('Expected matching dimensions such that C @ B')
 
@@ -1588,7 +1590,7 @@ def compute_BtBinv(B, C):
     amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
                       np.ravel(np.asarray(Bsq)),
                       BsqCols, np.ravel(np.asarray(BtBinv)),
-                      C.indptr, C.indices)
+                      C.indptr.astype(np.int32), C.indices.astype(np.int32))
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
@@ -1610,9 +1612,9 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : {csr_array, bsr_array}
         Sparse NxN matrix
-    C : {csr_matrix}
+    C : {csr_array}
         Sparse MxM matrix, where M is the number of nodes in A.  M=N if A
         is CSR or is BSR with blocksize 1.  Otherwise M = N/blocksize.
     theta : {float}
@@ -1620,7 +1622,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
 
     Returns
     -------
-    C : {csr_matrix}
+    C : {csr_array}
         C updated such that the rows and columns corresponding to diagonally
         dominant rows in A have been eliminated and replaced with rows and
         columns of the identity.
@@ -1661,7 +1663,7 @@ def eliminate_diag_dom_nodes(A, C, theta=1.02):
         diag_dom_rows = diag_dom_rows == bsize
 
     # Replace these rows/cols in # C with rows/cols of the identity.
-    Id = eye(C.shape[0], C.shape[1], format='csr')
+    Id = eye_array(C.shape[0], C.shape[1], format='csr')
     Id.data[diag_dom_rows] = 0.0
     C = Id @ C @ Id
     Id.data[diag_dom_rows] = 1.0
@@ -1677,12 +1679,12 @@ def remove_diagonal(S):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Square matrix
 
     Returns
     -------
-    S : csr_matrix
+    S : csr_array
         Strength matrix with the diagonal removed
 
     Notes
@@ -1705,12 +1707,12 @@ def remove_diagonal(S):
 
     """
     if not issparse(S) or S.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
 
     if S.shape[0] != S.shape[1]:
         raise ValueError(f'expected square matrix, shape={S.shape}')
 
-    S = coo_matrix(S)
+    S = coo_array(S)
     mask = S.row != S.col
     S.row = S.row[mask]
     S.col = S.col[mask]
@@ -1724,12 +1726,12 @@ def scale_rows_by_largest_entry(S):
 
     Parameters
     ----------
-    S : csr_matrix
+    S : csr_array
         Target matrix for row scaling
 
     Returns
     -------
-    S : csr_matrix
+    S : csr_array
         Each row has been scaled by it's largest in magnitude entry
 
     Examples
@@ -1747,7 +1749,7 @@ def scale_rows_by_largest_entry(S):
 
     """
     if not issparse(S) or S.format != 'csr':
-        raise TypeError('expected csr_matrix')
+        raise TypeError('expected csr_array')
 
     # Scale S by the largest magnitude entry in each row
     largest_row_entry = np.zeros((S.shape[0],), dtype=S.dtype)
@@ -1913,7 +1915,7 @@ def filter_matrix_columns(A, theta):
 
     Parameters
     ----------
-    A : sparse_matrix
+    A : sparse matrix
         Target matrix for filtering
 
     theta : float
@@ -1922,7 +1924,7 @@ def filter_matrix_columns(A, theta):
 
     Returns
     -------
-    A_filter : sparse_matrix
+    A_filter : sparse matrix
         Each column has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
 
@@ -1931,8 +1933,8 @@ def filter_matrix_columns(A, theta):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_columns
     >>> from numpy import array
-    >>> from scipy.sparse import csr_matrix
-    >>> A = csr_matrix( array([[ 0.24,  1.  ,  0.  ],
+    >>> from scipy.sparse import csr_array
+    >>> A = csr_array( array([[ 0.24,  1.  ,  0.  ],
     ...                        [-0.5 ,  1.  , -0.5 ],
     ...                        [ 0.  ,  0.49,  1.  ],
     ...                        [ 0.  ,  0.  , -0.5 ]]) )
@@ -1972,7 +1974,7 @@ def filter_matrix_columns(A, theta):
                                                   A_filter.indices,
                                                   A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[1]
-    A_filter = csc_matrix((A_filter.data[:A_filter.indptr[-1]],
+    A_filter = csc_array((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
                            A_filter.indptr), shape=A_filter.shape)
     del A
@@ -1993,7 +1995,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
 
     Parameters
     ----------
-    A : sparse_matrix
+    A : sparse matrix
         Target matrix for filtering
 
     theta : float
@@ -2007,7 +2009,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
 
     Returns
     -------
-    A_filter : sparse_matrix
+    A_filter : sparse matrix
         Each row has been filtered by dropping all entries where
         abs(A[i,k]) < tol max( abs(A[:,k]) )
         If `diagonal == True`, then no return (None).
@@ -2017,8 +2019,8 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import filter_matrix_rows
     >>> from numpy import array
-    >>> from scipy.sparse import csr_matrix
-    >>> A = csr_matrix( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
+    >>> from scipy.sparse import csr_array
+    >>> A = csr_array( array([[ 0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  ,  1.  ,  0.49,  0.  ],
     ...                        [ 0.  , -0.5 ,  1.  , -0.5 ]])  )
     >>> filter_matrix_rows(A, 0.5).toarray()
@@ -2065,7 +2067,7 @@ def filter_matrix_rows(A, theta, diagonal=False, lump=False):
                                                   A_filter.indices,
                                                   A_filter.data)
     A_filter.indices[:A_filter.indptr[-1]] -= A_filter.shape[0]
-    A_filter = csr_matrix((A_filter.data[:A_filter.indptr[-1]],
+    A_filter = csr_array((A_filter.data[:A_filter.indptr[-1]],
                            A_filter.indices[:A_filter.indptr[-1]],
                            A_filter.indptr), shape=A_filter.shape)
 
@@ -2083,7 +2085,7 @@ def truncate_rows(A, nz_per_row):
 
     Parameters
     ----------
-    A : sparse_matrix
+    A : sparse matrix
         Target matrix  for truncating
 
     nz_per_row : int
@@ -2091,7 +2093,7 @@ def truncate_rows(A, nz_per_row):
 
     Returns
     -------
-    A : sparse_matrix
+    A : sparse matrix
         Each row has been truncated to at most nz_per_row entries
 
     Examples
@@ -2099,8 +2101,8 @@ def truncate_rows(A, nz_per_row):
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import truncate_rows
     >>> from numpy import array
-    >>> from scipy.sparse import csr_matrix
-    >>> A = csr_matrix( array([[-0.24, -0.5 ,  0.  ,  0.  ],
+    >>> from scipy.sparse import csr_array
+    >>> A = csr_array( array([[-0.24, -0.5 ,  0.  ,  0.  ],
     ...                        [ 1.  , -1.1 ,  0.49,  0.1 ],
     ...                        [ 0.  ,  0.4 ,  1.  ,  0.5 ]])  )
     >>> truncate_rows(A, 2).toarray()
@@ -2138,7 +2140,7 @@ def scale_block_inverse(A, blocksize):
 
     Parameters
     ----------
-    A : csr or bsr_matrix
+    A : csr or bsr_array
         Matrix to scale by block inverse.
     blocksize : int
         Blocksize of matrix.
@@ -2173,15 +2175,15 @@ def scale_block_inverse(A, blocksize):
 
     # Convert to BSR
     if A.format != 'bsr':
-        A = bsr_matrix(A, blocksize=(blocksize, blocksize))
+        A = bsr_array(A, blocksize=(blocksize, blocksize))
     if A.blocksize != (blocksize, blocksize):
         A = A.tobsr(blocksize=(blocksize, blocksize))
 
     # Get block diagonal inverse
     N_block = A.shape[0] / blocksize
     Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
-    scale = bsr_matrix((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
-                       blocksize=[blocksize, blocksize], shape=A.shape)
+    scale = bsr_array((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
+                      blocksize=[blocksize, blocksize], shape=A.shape)
     return scale @ A, scale
 
 

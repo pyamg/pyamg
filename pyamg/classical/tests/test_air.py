@@ -2,7 +2,7 @@
 import numpy as np
 
 from numpy.testing import TestCase, assert_array_almost_equal
-from scipy.sparse import bsr_matrix, diags
+from scipy.sparse import bsr_array, diags_array
 from pyamg.classical.air import air_solver
 from pyamg.gallery import poisson
 
@@ -17,7 +17,8 @@ class TestAIR(TestCase):
 
         for n in sizes:
             # CSR case
-            A = diags([np.ones((n,)), -1*np.ones((n-1,))], offsets=[0, -1], format='csr')
+            A = diags_array([np.ones((n,)), -1*np.ones((n-1,))],
+                            offsets=[0, -1], format='csr')
             f_relax = ('fc_jacobi', {'iterations': 1, 'f_iterations': 1,
                        'c_iterations': 0})
             ml = air_solver(A, postsmoother=f_relax, max_levels=2)
@@ -37,7 +38,7 @@ class TestAIR(TestCase):
             data = np.concatenate((np.tile(bb, n-1), b1)).reshape((2*n-1, 2, 2))
             rowptr = A.indptr
             colinds = A.indices
-            Ab = bsr_matrix((data, colinds, rowptr), blocksize=[2, 2])
+            Ab = bsr_array((data, colinds, rowptr), blocksize=[2, 2])
             f_relax = ('fc_block_jacobi', {'iterations': 1, 'f_iterations': 1,
                        'c_iterations': 0})
             ml = air_solver(Ab, postsmoother=f_relax, max_levels=2)

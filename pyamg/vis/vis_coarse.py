@@ -10,7 +10,7 @@ vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 
 import warnings
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix, triu
+from scipy.sparse import csr_array, coo_array, triu
 from .vtk_writer import write_basic_mesh, write_vtu
 
 
@@ -26,7 +26,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
         coordinate array (N x D)
     E2V : {array}
         element index array (Nel x Nelnodes)
-    AggOp : {csr_matrix}
+    AggOp : {csr_array}
         sparse matrix for the aggregate-vertex relationship (N x Nagg)
     mesh_type : {string}
         type of elements: vertex, tri, quad, tet, hex (all 3d)
@@ -74,7 +74,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
         raise ValueError(f'Unknown mesh_type={mesh_type}')
     key = map_type_to_key[mesh_type]
 
-    AggOp = csr_matrix(AggOp)
+    AggOp = csr_array(AggOp)
 
     # remove elements with dirichlet BCs
     if E2V.max() >= AggOp.shape[0]:
@@ -111,7 +111,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     data = np.ones((len(col),))
     if len(row) != len(col):
         raise ValueError('Problem constructing vertex-to-vertex map')
-    V2V = coo_matrix((data, (row, col)), shape=(E2V.shape[0], E2V.max()+1))
+    V2V = coo_array((data, (row, col)), shape=(E2V.shape[0], E2V.max()+1))
     V2V = V2V.T @ V2V
     V2V = triu(V2V, 1).tocoo()
 

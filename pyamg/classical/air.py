@@ -34,7 +34,7 @@ def air_solver(A,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Square (non)symmetric matrix in CSR format
     strength : ['symmetric', 'classical', 'evolution', 'distance',
                 'algebraic_distance','affinity', 'energy_based', None]

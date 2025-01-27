@@ -109,7 +109,7 @@ class TestSolverMatrix(TestCase):
         Relaxation parameters should change.  This is not checked.
         """
         A = poisson((20,), format='csr')
-        Anew = sparse.identity(A.shape[0], format='csr')
+        Anew = sparse.eye_array(A.shape[0], format='csr')
         register = ['gauss_seidel',
                     'jacobi',
                     'schwarz',

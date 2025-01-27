@@ -1,7 +1,7 @@
 """Test internal linalg."""
 import numpy as np
 from scipy import linalg
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_array
 from scipy.linalg import svd, pinv
 
 from numpy.testing import (TestCase, assert_almost_equal, assert_equal,
@@ -46,7 +46,7 @@ class TestLinalg(TestCase):
         # method should be almost exact for small matrices
         for A in cases:
             A = A.astype(float)
-            Asp = csr_matrix(A)
+            Asp = csr_array(A)
 
             [E, V] = linalg.eig(A)
             E = np.abs(E)
@@ -69,7 +69,7 @@ class TestLinalg(TestCase):
         for A in cases:
             A = A + A.transpose()
             A = A.astype(float)
-            Asp = csr_matrix(A)
+            Asp = csr_array(A)
 
             [E, V] = linalg.eig(A)
             E = np.abs(E)
@@ -124,16 +124,16 @@ class TestLinalg(TestCase):
 
     def test_infinity_norm(self):
         A = np.array([[-4]])
-        assert_equal(infinity_norm(csr_matrix(A)), 4)
+        assert_equal(infinity_norm(csr_array(A)), 4)
 
         A = np.array([[1, 0, -5], [-2, 5, 0]])
-        assert_equal(infinity_norm(csr_matrix(A)), 7)
+        assert_equal(infinity_norm(csr_array(A)), 7)
 
         A = np.array([[0, 1], [0, -5]])
-        assert_equal(infinity_norm(csr_matrix(A)), 5)
+        assert_equal(infinity_norm(csr_array(A)), 5)
 
         A = np.array([[1.3, -4.7, 0], [-2.23, 5.5, 0], [9, 0, -2]])
-        assert_equal(infinity_norm(csr_matrix(A)), 11)
+        assert_equal(infinity_norm(csr_array(A)), 11)
 
 
 class TestComplexLinalg(TestCase):
@@ -155,7 +155,7 @@ class TestComplexLinalg(TestCase):
 
         # method should be almost exact for small matrices
         for A in cases:
-            Asp = csr_matrix(A)
+            Asp = csr_array(A)
             [E, _V] = linalg.eig(A)
             E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
@@ -178,7 +178,7 @@ class TestComplexLinalg(TestCase):
             assert_almost_equal(rayleigh, expected_eig, decimal=4)
 
             AA = A.conj().T.dot(A)
-            AAsp = csr_matrix(AA)
+            AAsp = csr_array(AA)
             [E, _V] = linalg.eig(AA)
             E = np.abs(E)
             largest_eig = (E == E.max()).nonzero()[0]
@@ -204,13 +204,13 @@ class TestComplexLinalg(TestCase):
 
     def test_infinity_norm(self):
         A = np.array([[-4-3.0j]])
-        assert_equal(infinity_norm(csr_matrix(A)), 5.0)
+        assert_equal(infinity_norm(csr_array(A)), 5.0)
 
         A = np.array([[1, 0, 4.0-3.0j], [-2, 5, 0]])
-        assert_equal(infinity_norm(csr_matrix(A)), 7)
+        assert_equal(infinity_norm(csr_array(A)), 7)
 
         A = np.array([[0, 1], [0, -4.0+3.0j]])
-        assert_equal(infinity_norm(csr_matrix(A)), 5.0)
+        assert_equal(infinity_norm(csr_array(A)), 5.0)
 
     def test_cond(self):
         # make tests repeatable
@@ -311,7 +311,7 @@ class TestComplexLinalg(TestCase):
             assert_equal(ishermitian(A, fast_check=True), True)
 
             # csr arrays
-            A = csr_matrix(A)
+            A = csr_array(A)
             assert_equal(ishermitian(A, fast_check=False), True)
             assert_equal(ishermitian(A, fast_check=True), True)
 
@@ -321,7 +321,7 @@ class TestComplexLinalg(TestCase):
             assert_equal(ishermitian(A, fast_check=True), False)
 
             # csr arrays
-            A = csr_matrix(A)
+            A = csr_array(A)
             assert_equal(ishermitian(A, fast_check=False), False)
             assert_equal(ishermitian(A, fast_check=True), False)
 

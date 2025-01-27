@@ -25,7 +25,7 @@ class TestStoppingCriteria(TestCase):
         x0 = np.random.rand(n)
         A = 0.5 * (A + A.T) + n*np.eye(n, n)
         self.cases.append({'A': A, 'b': b, 'x0': x0, 'tol': 1e-8})
-        self.cases.append({'A': sparse.csr_matrix(A), 'b': b, 'x0': x0, 'tol': 1e-8})
+        self.cases.append({'A': sparse.csr_array(A), 'b': b, 'x0': x0, 'tol': 1e-8})
 
     def test_stoppingcriteria(self):
         for method, crits in [

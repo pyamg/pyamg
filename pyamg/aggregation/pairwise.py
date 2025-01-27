@@ -3,7 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
+from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -24,7 +24,7 @@ def pairwise_solver(A,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : {csr_array, bsr_array}
         Sparse NxN matrix in CSR or BSR format
     aggregate : {tuple, string, list} : default ('pairwise',
             {'theta': 0.25, 'norm':'min', 'matchings': 2})
@@ -85,11 +85,11 @@ def pairwise_solver(A,
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
         except Exception as e:
-            raise TypeError('Argument A must have type csr_matrix or bsr_matrix, '
-                            'or be convertible to csr_matrix') from e
+            raise TypeError('Argument A must have type csr_array or bsr_array, '
+                            'or be convertible to csr_array') from e
 
     A = asfptype(A)
 

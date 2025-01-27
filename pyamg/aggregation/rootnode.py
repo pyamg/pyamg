@@ -3,7 +3,7 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, issparse, SparseEfficiencyWarning
+from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -41,7 +41,7 @@ def rootnode_solver(A, B=None, BH=None,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix in CSR or BSR format
 
     B : None, array_like
@@ -189,7 +189,7 @@ def rootnode_solver(A, B=None, BH=None,
 
            For predefined strength of connection, use a list consisting of
            tuples of the form ('predefined', {'C' : C0}), where C0 is a
-           csr_matrix and each degree-of-freedom in C0 represents a supernode.
+           csr_array and each degree-of-freedom in C0 represents a supernode.
            For instance to predefine a three-level hierarchy, use
            [('predefined', {'C' : C0}), ('predefined', {'C' : C1}) ].
 
@@ -198,7 +198,7 @@ def rootnode_solver(A, B=None, BH=None,
            {'AggOp' : Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the
            dimensions of A, Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] ==
            A.shape[0] and Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a
-           csr_matrix.
+           csr_array.
 
            Because this is a root-nodes solver, if a member of the predefined
            aggregation list is predefined, it must be of the form
@@ -232,12 +232,12 @@ def rootnode_solver(A, B=None, BH=None,
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
         except Exception as e:
-            raise TypeError('Argument A must have type csr_matrix, '
-                            'bsr_matrix, or be convertible to csr_matrix') from e
+            raise TypeError('Argument A must have type csr_array, '
+                            'bsr_array, or be convertible to csr_array') from e
 
     A = asfptype(A)
 

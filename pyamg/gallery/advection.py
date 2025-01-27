@@ -30,7 +30,7 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
 
     Returns
     -------
-    A : csr_matrix
+    A : csr_array
         Defines 2D FD upwind discretization, with boundary
     rhs : array
         Defines right-hand-side with boundary contributions

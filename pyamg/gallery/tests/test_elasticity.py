@@ -1,6 +1,6 @@
 """Test elasticity example."""
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_array
 from pyamg.gallery.elasticity import linear_elasticity, \
     linear_elasticity_p1, \
     q12d_local, p12d_local, p13d_local
@@ -73,7 +73,7 @@ class TestLinearElasticityGrid(TestCase):
                         3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7,
                         7, 7, 7, 7])
 
-        A_expected = coo_matrix((data, (row, col)), shape=(8, 8)).toarray()
+        A_expected = coo_array((data, (row, col)), shape=(8, 8)).toarray()
         B_expected = np.array([[1., 0., 0.5],
                                [0., 1., -0.5],
                                [1., 0., 0.5],

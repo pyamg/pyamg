@@ -63,11 +63,11 @@ class MultilevelSolver:
 
         Attributes
         ----------
-        A : csr_matrix
+        A : csr_array
             Problem matrix for Ax=b
-        R : csr_matrix
+        R : csr_array
             Restriction matrix between levels (often R = P.T)
-        P : csr_matrix
+        P : csr_array
             Prolongation or Interpolation matrix.
 
         Notes
@@ -296,7 +296,7 @@ class MultilevelSolver:
 
         Parameters
         ----------
-        A : csr_matrix
+        A : csr_array
             Target solution matrix
 
         Notes
@@ -700,7 +700,7 @@ def coarse_grid_solver(solver):
                 Acsc.eliminate_zeros()
                 diffptr = Acsc.indptr[:-1] - Acsc.indptr[1:]
                 nonzero_cols = (diffptr != 0).nonzero()[0]
-                Map = sp.sparse.eye(Acsc.shape[0], Acsc.shape[1], format='csc')
+                Map = sp.sparse.eye_array(Acsc.shape[0], Acsc.shape[1], format='csc')
                 Map = Map[:, nonzero_cols]
                 Acsc = Map.T.tocsc() @ Acsc @ Map
                 self.LU = sp.sparse.linalg.splu(Acsc, **kwargs)

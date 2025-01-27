@@ -64,11 +64,11 @@ def make_system(A, x, b, formats=None):
             A = A.tocsr()
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
-            A = sparse.csr_matrix(A)
+            A = sparse.csr_array(A)
     elif sparse.issparse(A) and A.format in formats:
         pass
     else:
-        A = sparse.csr_matrix(A).asformat(formats[0])
+        A = sparse.csr_array(A).asformat(formats[0])
 
     if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')
@@ -102,7 +102,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -168,7 +168,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -275,7 +275,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -352,7 +352,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -426,7 +426,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -506,7 +506,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -671,7 +671,7 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -739,7 +739,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -821,7 +821,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -908,7 +908,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1011,7 +1011,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         System matrix for relaxation
     subdomain : array
         Indices of each subdomain must be sorted over each subdomain
@@ -1087,7 +1087,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1152,7 +1152,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1217,7 +1217,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1283,7 +1283,7 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1354,7 +1354,7 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)

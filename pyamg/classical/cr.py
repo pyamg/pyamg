@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from scipy.linalg import norm
-from scipy.sparse import issparse, diags
+from scipy.sparse import issparse, diags_array
 
 from pyamg import amg_core
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
@@ -19,7 +19,7 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Target system matrix
     B : array like
         Target near null space mode
@@ -84,7 +84,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n) usually matrix A of Ax=b
     method : {'habituated','concurrent'}
         Method used during relaxation:
@@ -223,7 +223,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n)
     tol : float
         tolerance
@@ -234,7 +234,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         diagonally scaled A, C=DAD
 
     Notes
@@ -311,7 +311,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     # rescale for unit 2-norm
     d = np.sqrt(x)
-    D = diags([d.ravel()], offsets=[0], shape=(n, n))
+    D = diags_array([d.ravel()], offsets=[0], shape=(n, n))
     C = D @ A @ D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)

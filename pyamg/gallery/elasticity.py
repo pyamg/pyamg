@@ -24,7 +24,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
 
     Returns
     -------
-    A : csr_matrix
+    A : csr_array
         FE Q1 stiffness matrix
 
     B : array
@@ -92,7 +92,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     vertices = np.array([[0, 0], [DX, 0], [DX, DY], [0, DY]])
     K = q12d_local(vertices, lame, mu)
 
-    nodes = np.arange((X+1)*(Y+1)).reshape(X+1, Y+1)
+    nodes = np.arange((X+1)*(Y+1), dtype=np.int32).reshape(X+1, Y+1)
     LL = nodes[:-1, :-1]
     Id = (2*LL).repeat(K.size).reshape(-1, 8, 8)
     J = Id.copy()
@@ -105,7 +105,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     V = np.ravel(V)
 
     # sum duplicates
-    A = sparse.coo_matrix((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
+    A = sparse.coo_array((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
     A = A.tobsr(blocksize=(2, 2))
 
     del Id, J, V, LL, nodes
@@ -123,9 +123,9 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         data = np.zeros(((X-1)*(Y-1), 2, 2))
         data[:, 0, 0] = 1
         data[:, 1, 1] = 1
-        indices = np.arange((X-1)*(Y-1))
-        indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
-        P = sparse.bsr_matrix((data, indices, indptr),
+        indices = np.arange((X-1)*(Y-1), dtype=np.int32)
+        indptr = np.concatenate((np.array([0]), np.cumsum(mask)), dtype=np.int32)
+        P = sparse.bsr_array((data, indices, indptr),
                               shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
         A = P.T @ A @ P
@@ -225,7 +225,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     Returns
     -------
-    A : csr_matrix
+    A : csr_array
         FE Q1 stiffness matrix
 
     Notes
@@ -271,7 +271,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D
-    row += np.arange(D)
+    row += np.arange(D, dtype=row.dtype)
     row = row.reshape(-1, D*(D+1)).repeat(D*(D+1), axis=0)
     row = row.reshape(-1, D*(D+1), D*(D+1))
     col = row.swapaxes(1, 2)
@@ -289,7 +289,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     data = data.ravel()
 
     # sum duplicates
-    A = sparse.coo_matrix((data, (row, col)), shape=(DoF, DoF)).tocsr()
+    A = sparse.coo_array((data, (row, col)), shape=(DoF, DoF)).tocsr()
     A = A.tobsr(blocksize=(D, D))
 
     # compute rigid body modes

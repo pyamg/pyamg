@@ -3,7 +3,7 @@
 from warnings import warn
 
 import numpy as np
-from scipy.sparse import csr_matrix, bsr_matrix, issparse, SparseEfficiencyWarning
+from scipy.sparse import csr_array, bsr_array, issparse, SparseEfficiencyWarning
 
 from .. import amg_core
 from ..strength import classical_strength_of_connection
@@ -14,9 +14,9 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         NxN matrix in CSR format
-    C : csr_matrix
+    C : csr_array
         Strength-of-Connection matrix
         Must have zero diagonal
     theta : float in [0, 1), default None
@@ -31,7 +31,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     Returns
     -------
-    P : csr_matrix
+    P : csr_array
         Prolongator using direct interpolation
 
     Examples
@@ -51,10 +51,10 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     """
     if not issparse(A) or A.format != 'csr':
-        raise TypeError('expected csr_matrix for A')
+        raise TypeError('expected csr_array for A')
 
     if not issparse(C) or C.format != 'csr':
-        raise TypeError('expected csr_matrix for C')
+        raise TypeError('expected csr_array for C')
 
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
@@ -80,7 +80,7 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
 
     nc = np.sum(splitting)
     n = A.shape[0]
-    return csr_matrix((P_data, P_indices, P_indptr), shape=[n, nc])
+    return csr_array((P_data, P_indices, P_indptr), shape=[n, nc])
 
 
 def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=True):
@@ -88,9 +88,9 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         NxN matrix in CSR format
-    C : csr_matrix
+    C : csr_array
         Strength-of-Connection matrix
         Must have zero diagonal
     splitting : array
@@ -109,7 +109,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     Returns
     -------
-    P : csr_matrix
+    P : csr_array
         Prolongator using classical interpolation; see Sec. 3 Eq. (8)
         of [0] for modified=False and Eq. (9) for modified=True.
 
@@ -130,10 +130,10 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     """
     if not issparse(A) or A.format != 'csr':
-        raise TypeError('expected csr_matrix for A')
+        raise TypeError('expected csr_array for A')
 
     if not issparse(C) or C.format != 'csr':
-        raise TypeError('Expected csr_matrix SOC matrix, C.')
+        raise TypeError('Expected csr_array SOC matrix, C.')
 
     nc = np.sum(splitting)
     n = A.shape[0]
@@ -168,7 +168,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
                                               C.data, splitting, P_indptr,
                                               P_indices, P_data, modified)
 
-    return csr_matrix((P_data, P_indices, P_indptr), shape=[n, nc])
+    return csr_array((P_data, P_indices, P_indptr), shape=[n, nc])
 
 
 def injection_interpolation(A, splitting):
@@ -176,7 +176,7 @@ def injection_interpolation(A, splitting):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : {csr_array}
         NxN matrix in CSR format or BSR format
     splitting : array
         C/F splitting stored in an array of length N
@@ -228,11 +228,11 @@ def injection_interpolation(A, splitting):
     P_colinds = np.arange(start=0, stop=nc, step=1, dtype=A.indptr.dtype)
 
     if blocksize == 1:
-        P = csr_matrix((np.ones((nc,), dtype=A.dtype),
+        P = csr_array((np.ones((nc,), dtype=A.dtype),
                        P_colinds, P_rowptr), shape=[n, nc])
     else:
         P_data = np.array(nc*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
-        P = bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
+        P = bsr_array((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
                        shape=[n*blocksize, nc*blocksize])
 
     return P
@@ -243,9 +243,9 @@ def one_point_interpolation(A, C, splitting, by_val=False):
 
     Parameters
     ----------
-    A : {csr_matrix}
+    A : {csr_array}
         NxN matrix in CSR format
-    C : {csr_matrix}
+    C : {csr_array}
         Strength-of-Connection matrix (does not need zero diagonal)
     splitting : array
         C/F splitting stored in an array of length N
@@ -305,17 +305,17 @@ def one_point_interpolation(A, C, splitting, by_val=False):
         if by_val:
             amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, A.indptr,
                                              A.indices, A.data, splitting)
-            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[n, nc])
+            P = csr_array((P_data, P_colinds, P_rowptr), shape=[n, nc])
         else:
             amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, C.indptr,
                                              C.indices, C.data, splitting)
             P_data = np.ones((n,), dtype=A.dtype)
-            P = csr_matrix((P_data, P_colinds, P_rowptr), shape=[n, nc])
+            P = csr_array((P_data, P_colinds, P_rowptr), shape=[n, nc])
     else:
         amg_core.one_point_interpolation(P_rowptr, P_colinds, P_data, C.indptr,
                                          C.indices, C.data, splitting)
         P_data = np.array(n*[np.identity(blocksize, dtype=A.dtype)], dtype=A.dtype)
-        P = bsr_matrix((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
+        P = bsr_array((P_data, P_colinds, P_rowptr), blocksize=[blocksize, blocksize],
                        shape=[blocksize*n, blocksize*nc])
 
     return P
@@ -327,7 +327,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
 
     Parameters
     ----------
-    A : {csr_matrix, bsr_matrix}
+    A : {csr_array, bsr_array}
         NxN matrix in CSR or BSR format
     splitting : array
         C/F splitting stored in an array of length N
@@ -411,7 +411,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
                                                       C.indices, C.data, Cpts, splitting,
                                                       blocksize, degree, use_gmres, maxiter,
                                                       precondition)
-        R = bsr_matrix((R_data.reshape((nnz, blocksize, blocksize)), R_colinds, R_rowptr),
+        R = bsr_array((R_data.reshape((nnz, blocksize, blocksize)), R_colinds, R_rowptr),
                        blocksize=[blocksize, blocksize], shape=[nc*blocksize, A.shape[0]])
     # Not block matrix
     else:
@@ -420,7 +420,7 @@ def local_air(A, splitting, theta=0.1, norm='abs', degree=1,
                                                 A.indices, A.data, C.indptr, C.indices,
                                                 C.data, Cpts, splitting, degree, use_gmres,
                                                 maxiter, precondition)
-        R = csr_matrix((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
+        R = csr_array((R_data, R_colinds, R_rowptr), shape=[nc, A.shape[0]])
 
     R.eliminate_zeros()
     return R
