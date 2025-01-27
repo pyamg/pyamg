@@ -48,6 +48,6 @@ def regular_triangle_mesh(nx, ny):
 
     E2V1 = np.vstack((Vert1, Vert2, Vert3)).transpose()
     E2V2 = np.vstack((Vert1, Vert4, Vert2)).transpose()
-    E2V = np.vstack((E2V1, E2V2))
+    E2V = np.vstack((E2V1, E2V2)).astype(np.int32)
 
     return Vert, E2V

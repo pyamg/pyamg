@@ -76,7 +76,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     # Create two arrays for differencing the different coordinates such
     # that C(i,j) = distance(point_i, point_j)
     cols = A.indices
-    rows = np.repeat(np.arange(A.shape[0]), A.indptr[1:] - A.indptr[0:-1])
+    rows = np.repeat(np.arange(A.shape[0], dtype=cols.dtype), A.indptr[1:] - A.indptr[0:-1])
 
     # Insert difference for each coordinate into C
     C = (V[rows, 0] - V[cols, 0])**2
@@ -443,8 +443,9 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     D = A.diagonal()
     Dinv = 1.0 / D
     Dinv[D == 0] = 0.0
-    Dinv = sparse.csc_array((Dinv, (np.arange(A.shape[0]),
-                                     np.arange(A.shape[1]))), shape=A.shape)
+    Dinv = sparse.csc_array((Dinv, (np.arange(A.shape[0], dtype=A.indptr.dtype),
+                                    np.arange(A.shape[1], dtype=A.indptr.dtype))),
+                            shape=A.shape)
     DinvA = Dinv @ A
     omega = 1.0 / approximate_spectral_radius(DinvA)
     del DinvA
@@ -458,7 +459,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
     for i in range(Atilde.shape[0]):
-        v = S[:, i].toarray()
+        v = S[:, [i]].toarray()
         v = v.ravel()
         Av = A @ v
         denom = np.sqrt(np.inner(v.conj(), Av))
@@ -590,9 +591,9 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Calculate Dinv@A
         if block_flag:
             Dinv = get_block_diag(A, blocksize=numPDEs, inv_flag=True)
-            Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0]),
-                                      np.arange(Dinv.shape[0] + 1)),
-                                     shape=A.shape)
+            Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=Dinv.indptr.dtype),
+                                     np.arange(Dinv.shape[1], dtype=Dinv.indptr.dtype)),
+                                    shape=A.shape)
             Dinv_A = (Dinv @ A).tocsr()
         else:
             Dinv = np.zeros_like(D)

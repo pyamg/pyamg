@@ -9,8 +9,8 @@ def _rand_sparse(m, n, density):
     """Construct base function for sprand, sprandn."""
     nnz = max(min(int(m*n*density), m*n), 0)
 
-    row = np.random.randint(low=0, high=m-1, size=nnz)
-    col = np.random.randint(low=0, high=n-1, size=nnz)
+    row = np.random.randint(low=0, high=m-1, size=nnz, dtype=np.int32)
+    col = np.random.randint(low=0, high=n-1, size=nnz, dtype=np.int32)
     data = np.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together

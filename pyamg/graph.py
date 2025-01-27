@@ -270,7 +270,7 @@ def breadth_first_search(G, seed):
     >>> import pyamg
     >>> import scipy.sparse as sparse
     >>> edges = np.array([[0,1],[0,2],[1,2],[1,3],[1,4],[3,4],[3,5],
-    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]])
+    ...                   [4,6], [4,7], [6,7], [7,8], [8,9]], dtype=np.int32)
     >>> N = np.max(edges.ravel())+1
     >>> data = np.ones((edges.shape[0],))
     >>> A = sparse.coo_array((data, (edges[:,0], edges[:,1])), shape=(N,N))

@@ -115,8 +115,9 @@ def diag_sparse(A):
     if np.ndim(A) != 1:
         raise ValueError('input diagonal array expected to be 1d')
 
-    return csr_array((np.asarray(A), np.arange(len(A)),
-                       np.arange(len(A)+1)), (len(A), len(A)))
+    N = len(A)
+    return csr_array((np.asarray(A), np.arange(N, dtype=np.int32),
+                      np.arange(N+1, dtype=np.int32)), shape=(N, N))
 
 
 def scale_rows(A, v, copy=True):
@@ -450,7 +451,7 @@ def type_prep(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import type_prep
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> z = 2.3
@@ -490,7 +491,7 @@ def to_type(upcast_type, varlist):
     --------
     >>> import numpy as np
     >>> from pyamg.util.utils import to_type
-    >>> from scipy.sparse.sputils import upcast
+    >>> from scipy.sparse._sputils import upcast
     >>> x = np.ones((5,1))
     >>> y = 2.0j*np.ones((5,1))
     >>> varlist = to_type(upcast(x.dtype, y.dtype), [x, y])
@@ -1458,7 +1459,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         blocksize = 1
         Cpts = Cnodes
-    Cpts = np.array(Cpts, dtype=int)
+    Cpts = np.array(Cpts, dtype=np.int32)
 
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
@@ -1589,7 +1590,7 @@ def compute_BtBinv(B, C):
     amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
                       np.ravel(np.asarray(Bsq)),
                       BsqCols, np.ravel(np.asarray(BtBinv)),
-                      C.indptr, C.indices)
+                      C.indptr.astype(np.int32), C.indices.astype(np.int32))
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
@@ -2182,7 +2183,7 @@ def scale_block_inverse(A, blocksize):
     N_block = A.shape[0] / blocksize
     Dinv = get_block_diag(A=A, blocksize=blocksize, inv_flag=True)
     scale = bsr_array((Dinv, np.arange(0, N_block), np.arange(0, N_block+1)),
-                       blocksize=[blocksize, blocksize], shape=A.shape)
+                      blocksize=[blocksize, blocksize], shape=A.shape)
     return scale @ A, scale
 
 

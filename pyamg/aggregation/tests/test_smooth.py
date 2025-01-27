@@ -118,10 +118,12 @@ class TestEnergyMin(TestCase):
         A2 = sparse.csr_array(np.array([[1.3, 0.], [0., 4.]])).tobsr(blocksize=(2, 2))
         B2 = sparse.csr_array(np.array([[1.3, 0.], [2., 4.]])).tobsr(blocksize=(2, 1))
         mask = sparse.csr_array((np.array([1., 1., 1., 1.]),
-                                 (np.array([0, 0, 1, 1]), np.array([0, 1, 0, 1]))),
+                                 (np.array([0, 0, 1, 1], dtype=np.int32),
+                                  np.array([0, 1, 0, 1], dtype=np.int32))),
                                  shape=(2, 2)).tobsr(blocksize=(2, 2))
         mask2 = sparse.csr_array((np.array([1., 0., 1., 0.]),
-                                  (np.array([0, 0, 1, 1]), np.array([0, 1, 0, 1]))),
+                                  (np.array([0, 0, 1, 1], dtype=np.int32),
+                                   np.array([0, 1, 0, 1], dtype=np.int32))),
                                   shape=(2, 2)).tobsr(blocksize=(2, 1))
         mask2.eliminate_zeros()
         cases.append((A, A, mask))                                  # 2x2,  2x2
@@ -137,7 +139,8 @@ class TestEnergyMin(TestCase):
         mask = A.copy()
         mask2 = A2.copy()
         mask3 = sparse.csr_array((np.ones(2, dtype=float),
-                                  (np.array([0, 1]), np.array([0, 0]))),
+                                  (np.array([0, 1], dtype=np.int32),
+                                   np.array([0, 0], dtype=np.int32))),
                                   shape=(2, 2)).tobsr(blocksize=(1, 1))
         cases.append((A, B, mask))                                  # 2x2,  2x2
         cases.append((A2, B2, mask2))                               # 2x2,  2x2

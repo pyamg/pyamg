@@ -171,7 +171,7 @@ def reference_standard_aggregation(C):
     assert len(R) == 0
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
     return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
@@ -204,7 +204,7 @@ def reference_naive_aggregation(C):
     assert np.unique(R).shape[0] == n
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
     return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
@@ -278,7 +278,7 @@ def reference_pairwise_aggregation(C):
     assert (np.unique(R).shape[0] == n)
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
     return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)

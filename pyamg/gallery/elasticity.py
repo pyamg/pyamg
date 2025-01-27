@@ -92,7 +92,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     vertices = np.array([[0, 0], [DX, 0], [DX, DY], [0, DY]])
     K = q12d_local(vertices, lame, mu)
 
-    nodes = np.arange((X+1)*(Y+1)).reshape(X+1, Y+1)
+    nodes = np.arange((X+1)*(Y+1), dtype=np.int32).reshape(X+1, Y+1)
     LL = nodes[:-1, :-1]
     Id = (2*LL).repeat(K.size).reshape(-1, 8, 8)
     J = Id.copy()
@@ -123,8 +123,8 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         data = np.zeros(((X-1)*(Y-1), 2, 2))
         data[:, 0, 0] = 1
         data[:, 1, 1] = 1
-        indices = np.arange((X-1)*(Y-1))
-        indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
+        indices = np.arange((X-1)*(Y-1), dtype=np.int32)
+        indptr = np.concatenate((np.array([0]), np.cumsum(mask)), dtype=np.int32)
         P = sparse.bsr_array((data, indices, indptr),
                               shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
@@ -271,7 +271,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D
-    row += np.arange(D)
+    row += np.arange(D, dtype=row.dtype)
     row = row.reshape(-1, D*(D+1)).repeat(D*(D+1), axis=0)
     row = row.reshape(-1, D*(D+1), D*(D+1))
     col = row.swapaxes(1, 2)

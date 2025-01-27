@@ -176,6 +176,8 @@ class TestFitCandidates(TestCase):
             candidates[np.where(np.diff(AggOp.indptr) == 0)[0], :] = 0
 
         for AggOp, fine_candidates in self.cases:
+            AggOp.indptr = AggOp.indptr.astype(np.int32)
+            AggOp.indices = AggOp.indices.astype(np.int32)
             mask_candidate(AggOp, fine_candidates)
 
             Q, coarse_candidates = fit_candidates(AggOp, fine_candidates)
