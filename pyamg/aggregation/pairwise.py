@@ -74,7 +74,7 @@ def pairwise_solver(A,
     >>> b = np.ones((A.shape[0]))                   # RHS
     >>> ml = pairwise_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')          # preconditioner
-    >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
+    >>> x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M)   # solve with CG
 
     References
     ----------

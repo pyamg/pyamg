@@ -126,10 +126,11 @@ def diameter(V, E):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> dx = 1
     >>> V = np.array([[0,0], [dx,0], [0,dx], [dx,dx]])
     >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> h = diameter(V, E)
+    >>> h = fem.diameter(V, E)
     >>> print(h)
     1.4142135623730951
 
@@ -305,13 +306,13 @@ def l2norm(u, mesh):
     >>> from pyamg.gallery import fem
     >>> V = np.array([[0,0], [1,0], [0,1], [1,1]])
     >>> E = np.array([[0,1,2], [1,3,2]])
-    >>> mesh = Mesh(V, E, degree=1)
+    >>> mesh = fem.Mesh(V, E, degree=1)
     >>> X, Y = mesh.V[:, 0], mesh.V[:, 1]
     >>> u = X + Y
     >>> unorm = fem.l2norm(u, mesh)
     >>> print(f'{unorm:2.6}')
     1.08012
-    >>> mesh = Mesh(V, E, degree=2)
+    >>> mesh = fem.Mesh(V, E, degree=2)
     >>> X, Y = mesh.V2[:, 0], mesh.V2[:, 1]
     >>> u = X + Y
     >>> unorm = fem.l2norm(u, mesh)
@@ -605,7 +606,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     ...  [4, 5, 7],
     ...  [4, 7, 6],
     ...  [5, 8, 7]])
-    >>> mesh = Mesh(V, E)
+    >>> mesh = fem.Mesh(V, E)
     >>> A, b = fem.gradgradform(mesh)
     >>> print(A.toarray())
     [[ 1.  -0.5  0.  -0.5  0.   0.   0.   0.   0. ]

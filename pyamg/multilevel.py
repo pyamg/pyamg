@@ -340,11 +340,12 @@ class MultilevelSolver:
         >>> from pyamg.gallery import poisson
         >>> from scipy.sparse.linalg import cg
         >>> import scipy as sp
+        >>> import numpy as np
         >>> A = poisson((100, 100), format='csr')          # matrix
         >>> b = np.random.rand(A.shape[0])                 # random RHS
         >>> ml = smoothed_aggregation_solver(A)            # AMG solver
         >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
-        >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)  # solve with CG
+        >>> x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M) # solve with CG
 
         """
         shape = self.levels[0].A.shape
