@@ -75,7 +75,7 @@ if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
                   f'PyAMG (detected version {spver})', UserWarning, stacklevel=2)
 
 
-def test(verbose=False):
+def test(verbose=False):  # noqa: PT028
     """Test runner for pytest.
 
     Parameters
