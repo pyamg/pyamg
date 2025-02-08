@@ -2156,7 +2156,7 @@ def scale_block_inverse(A, blocksize):
     Examples
     --------
     >>> import numpy as np
-    >>> np.set_printoptions(precision=8)
+    >>> np.set_printoptions(suppress=True)
     >>> from pyamg.gallery import poisson
     >>> from pyamg.util.utils import scale_block_inverse
     >>> A = poisson((4,), format='csr')
