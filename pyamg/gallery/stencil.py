@@ -133,3 +133,83 @@ def stencil_grid(S, grid, dtype=None, format=None):
 
     return sparse.dia_array((data, diags),
                              shape=(N_v, N_v)).asformat(format)
+
+
+def stencil_grid_bc(stencil, offsets, grid_shape, dtype=np.double, boundary='periodic'):
+    """
+    Create sparse d-D matrix from a stencil.
+
+    Parameters
+    ----------
+    stencil : ndarray
+        matrix stencil stored in d-D array
+    offsets: list
+        corresponding diagonal offsets. 0 corresponds to the middle of the stencil.
+    grid_shape : tuple
+        tuple containing the d grid dimensions
+    dtype : numpy dtype
+        data type of the result
+    boundary : string
+        type of boundary condition.
+            'dirichlet': stencil is truncated to zero outside domain.
+            'periodic': periodic boundary conditions.
+
+    Returns
+    -------
+    A : csr_matrix
+        n x n sparse matrix with vals[i, j] on diagonal offsets[i, j]
+
+    Examples
+    --------
+    >>> stencil_grid([2, -1, -1], [(0, ), (-1, ), (1, )], (6, ),
+                     boundary='dirichlet').toarray()
+    array([[ 2., -1.,  0.,  0.,  0., 0.],
+           [-1.,  2., -1.,  0.,  0.,  0.],
+           [ 0., -1.,  2., -1.,  0.,  0.],
+           [ 0.,  0., -1.,  2., -1.,  0.],
+           [ 0.,  0.,  0., -1.,  2., -1.],
+           [ 0.,  0.,  0.,  0., -1.,  2.]])
+    >>> stencil_grid([4, -1, -1, -1, -1], [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)],
+                     (4, 4), boundary='periodic').toarray()
+    array([[ 4., -1.,  0., -1., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  0.],
+           [-1.,  4., -1.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0.],
+           [ 0., -1.,  4., -1.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.],
+           [-1.,  0., -1.,  4.,  0.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.],
+           [-1.,  0.,  0.,  0.,  4., -1.,  0., -1., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0., -1.,  0.,  0., -1.,  4., -1.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0., -1.,  0.,  0., -1.,  4., -1.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0., -1., -1.,  0., -1.,  4.,  0.,  0.,  0., -1.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0., -1.,  0.,  0.,  0.,  4., -1.,  0., -1., -1.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0., -1.,  0.,  0., -1.,  4., -1.,  0.,  0., -1.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0., -1.,  4., -1.,  0.,  0., -1.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0., -1., -1.,  0., -1.,  4.,  0.,  0.,  0., -1.],
+           [-1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0.,  0.,  4., -1.,  0., -1.],
+           [ 0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0., -1.,  4., -1.,  0.],
+           [ 0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1.,  0.,  0., -1.,  4., -1.],
+           [ 0.,  0.,  0., -1.,  0.,  0.,  0.,  0.,  0.,  0.,  0., -1., -1.,  0., -1.,  4.]])
+    """
+    grid_size = np.prod(grid_shape)
+
+    # Gridpoint coordinates.
+    x = np.unravel_index(np.arange(grid_size, dtype=int), grid_shape)
+    row = np.concatenate(tuple(np.arange(grid_size) for _ in range(len(stencil))))
+    data = np.concatenate(tuple([v] * grid_size for v in stencil))
+
+    if boundary == 'periodic':
+        col_sub = np.array([np.concatenate(tuple(np.mod(xd + offset[d], grid_shape[d])
+                                                 for offset in offsets))
+                            for d, xd in enumerate(x)]).T
+    elif boundary == 'dirichlet':
+        col_sub = np.array([np.concatenate(tuple(xd + offset[d]
+                                                 for offset in offsets))
+                            for d, xd in enumerate(x)]).T
+        in_domain = np.logical_and.reduce(np.array([
+            (0 <= col_sub[:, d]) & (col_sub[:, d] < grid_shape[d])
+            for d in range(len(grid_shape))]))
+        row, col_sub, data = row[in_domain], col_sub[in_domain], data[in_domain]
+    else:
+        raise Exception(f'Unsupported boundary conditions {boundary}')
+
+    col = np.array([np.ravel_multi_index(sub, grid_shape) for sub in col_sub])
+
+    return sparse.csr_matrix((data, (row, col)), shape=(grid_size, grid_size), dtype=dtype)
