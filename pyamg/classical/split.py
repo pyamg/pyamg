@@ -187,7 +187,13 @@ def PMIS(S):
     S = remove_diagonal(S)
     weights, G, S, T = _preprocess(S)
     del S, T
-    return MIS(G, weights)
+
+    splitting = MIS(G, weights)
+    print(splitting)
+    _set_dirichlet(G, splitting)
+    print(splitting)
+
+    return splitting
 
 
 def PMISc(S, method='JP'):
@@ -442,3 +448,8 @@ def _preprocess(S, coloring_method=None):
                    / num_colors)
 
     return (weights, G, S, T)
+
+def _set_dirichlet(G, splitting):
+    # For rows of zero-length (Dirichlet), set as Fine.
+    I = np.where(np.diff(G.indptr)==0)[0]
+    splitting[I] = 0
