@@ -58,7 +58,8 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     >>> from pyamg.strength import distance_strength_of_connection
     >>> data = load_example('airfoil')
     >>> A = data['A'].tocsr()
-    >>> S = distance_strength_of_connection(data['A'], data['vertices'])
+    >>> vertices = data['vertices']
+    >>> S = distance_strength_of_connection(A, vertices)
 
     """
     # Amalgamate for the supernode case

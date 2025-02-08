@@ -433,10 +433,9 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     >>> import pyamg
     >>> from pyamg.aggregation.aggregate import balanced_lloyd_aggregation
     >>> data = pyamg.gallery.load_example('unit_square')
-    >>> G = data['A']
+    >>> G = data['A'].tocsr()
     >>> xy = data['vertices'][:,:2]
     >>> G.data[:] = np.ones(len(G.data))
-
     >>> np.random.seed(787888)
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 

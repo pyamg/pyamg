@@ -157,8 +157,8 @@ class MultilevelSolver:
         >>> print(ml)
         MultilevelSolver
         Number of Levels:     2
-        Operator Complexity:  1.891
-        Grid Complexity:      1.500
+        Operator Complexity:   1.891
+        Grid Complexity:       1.500
         Coarse Solver:        'splu'
           level   unknowns     nonzeros
              0       10000        49600 [52.88%]

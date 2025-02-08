@@ -122,11 +122,11 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
     >>> splitting = np.array([1,0,1,0,1], dtype='intc')
     >>> P = classical_interpolation(A, A, splitting, 0.25)
     >>> print(P.todense())
-    [[ 1.   0.   0. ]
-     [ 0.5  0.5  0. ]
-     [ 0.   1.   0. ]
-     [ 0.   0.5  0.5]
-     [ 0.   0.   1. ]]
+    [[1.  0.  0. ]
+     [0.5 0.5 0. ]
+     [0.  1.  0. ]
+     [0.  0.5 0.5]
+     [0.  0.  1. ]]
 
     """
     if not issparse(A) or A.format != 'csr':
