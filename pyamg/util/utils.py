@@ -2161,11 +2161,11 @@ def scale_block_inverse(A, blocksize):
     >>> from pyamg.util.utils import scale_block_inverse
     >>> A = poisson((4,), format='csr')
     >>> A, Dinv = scale_block_inverse(A, 2)
-    >>> A.toarray()
-    array([[ 1.        ,  0.        , -0.33333333,  0.        ],
-           [ 0.        ,  1.        , -0.66666667,  0.        ],
-           [ 0.        , -0.66666667,  1.        ,  0.        ],
-           [ 0.        , -0.33333333,  0.        ,  1.        ]])
+    >>> print(A.toarray())
+    [[ 1.        ,  0.        , -0.33333333,  0.        ],
+     [ 0.        ,  1.        , -0.66666667,  0.        ],
+     [ 0.        , -0.66666667,  1.        ,  0.        ],
+     [ 0.        , -0.33333333,  0.        ,  1.        ]]
 
     """
     if not issparse(A):
