@@ -9,8 +9,8 @@ on:
     - main
 
 jobs:
-  ruff:
-    name: ruff
+  docstrings:
+    name: docstrings
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
