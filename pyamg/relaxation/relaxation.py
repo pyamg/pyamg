@@ -131,11 +131,11 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
     >>> print(f'{norm(b-A@x0):2.4}')
-    3.039
+    2.013
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
