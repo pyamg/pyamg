@@ -150,10 +150,9 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    x_old = np.empty_like(x)
-
     for _i in range(iterations):
         gauss_seidel(A, x, b, iterations=1, sweep=sweep, omega=omega)
+
 
 def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
             inv_subblock=None, inv_subblock_ptr=None, sweep='forward'):
@@ -278,6 +277,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
+    omega : scalar
+        Damping parameter. If omega != 1.0, then the method is SOR.
 
     Returns
     -------
@@ -335,7 +336,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
             for _iter in range(iterations):
                 amg_core.sor_gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                       row_start, row_stop, row_step, omega)
-        else:    
+        else:
             for _iter in range(iterations):
                 amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
                                       row_start, row_stop, row_step)
