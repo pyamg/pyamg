@@ -804,12 +804,13 @@ class TestRelaxation(TestCase):
             schwarz(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
                                         sweep='symmetric'))
+
     def test_sor(self):
         # https://en.wikipedia.org/wiki/Successive_over-relaxation#Example
-        A = np.array([[ 4, -1, -6,  0],
-                      [-5, -4, 10,  8],
-                      [ 0,  9,  4, -2],
-                      [ 1,  0, -7,  5.]])
+        A = np.array([[4, -1, -6, 0],
+                      [-5, -4, 10, 8],
+                      [0, 9,  4, -2],
+                      [1, 0, -7, 5.]])
         b = np.array([2, 21, -12, -6.])
 
         x1 = np.array([0.25, -2.78125, 1.6289062, 0.5152344])
@@ -818,19 +819,19 @@ class TestRelaxation(TestCase):
         x38 = np.array([3.0, -2.0, 2.0, 1.0])
 
         x = np.array([0, 0, 0, 0.])
-        sor(A, x, b, 0.5, iterations=1) 
+        sor(A, x, b, 0.5, iterations=1)
         assert_allclose(x, x1, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
-        sor(A, x, b, 0.5, iterations=2) 
+        sor(A, x, b, 0.5, iterations=2)
         assert_allclose(x, x2, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
-        sor(A, x, b, 0.5, iterations=3) 
+        sor(A, x, b, 0.5, iterations=3)
         assert_allclose(x, x3, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
-        sor(A, x, b, 0.5, iterations=38) 
+        sor(A, x, b, 0.5, iterations=38)
         assert_allclose(x, x38, rtol=1e-6)
 
 
