@@ -1,7 +1,7 @@
 """Test relaxation."""
 import warnings
 import numpy as np
-from numpy.testing import TestCase, assert_almost_equal
+from numpy.testing import TestCase, assert_almost_equal, assert_allclose
 import scipy
 from scipy.sparse import csr_array, bsr_array, diags_array, eye_array
 from scipy.sparse import SparseEfficiencyWarning
@@ -819,19 +819,19 @@ class TestRelaxation(TestCase):
 
         x = np.array([0, 0, 0, 0.])
         sor(A, x, b, 0.5, iterations=1) 
-        assert_almost_equal(x, x1)
+        assert_allclose(x, x1, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
         sor(A, x, b, 0.5, iterations=2) 
-        assert_almost_equal(x, x2)
+        assert_allclose(x, x2, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
         sor(A, x, b, 0.5, iterations=3) 
-        assert_almost_equal(x, x3)
+        assert_allclose(x, x3, rtol=1e-6)
 
         x = np.array([0, 0, 0, 0.])
         sor(A, x, b, 0.5, iterations=38) 
-        assert_almost_equal(x, x38)
+        assert_allclose(x, x38, rtol=1e-6)
 
 
 # Test complex arithmetic
