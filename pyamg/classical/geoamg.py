@@ -2,9 +2,9 @@
 
 
 from warnings import warn
-from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 import numpy as np
 import scipy as sp
+from scipy import sparse
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -19,6 +19,15 @@ def _unpack_arg(v):
     if isinstance(v, tuple):
         return v[0], v[1]
     return v, {}
+
+def _interpolation1d(nc, nf):
+    d = np.repeat([[1., 2, 1]], nc, axis=0).T
+    I = np.zeros((3, nc), dtype=np.int32)
+    for i in range(nc):
+        I[:, i] = [2*i, 2*i+1, 2*i+2]
+    J = np.repeat([np.arange(nc, dtype=np.int32)], 3, axis=0)
+    P = sparse.coo_array((d.ravel(), (I.ravel(), J.ravel()))).tocsr()
+    return 0.5 * P
 
 
 def geoamg_solver(A: sp.sparse.base.spmatrix,
@@ -61,10 +70,10 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
     levels = [MultilevelSolver.Level()]
 
     # convert A to csr
-    if not issparse(A) or A.format != 'csr':
+    if not sparse.issparse(A) or A.format != 'csr':
         try:
-            A = csr_array(A)
-            warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
+            A = sparse.csr_array(A)
+            warn('Implicit conversion of A to CSR', sparse.SparseEfficiencyWarning)
         except Exception as e:
             raise TypeError('Argument A must have type csr_array, '
                             'or be convertible to csr_array') from e
@@ -79,7 +88,7 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
 
         A = levels[-1].A
 
-        splitting = np.zeros(A.shape[0], dtype=np.bool)
+        splitting = np.zeros(A.shape[0], dtype=np.int32)
         splitting[cpts] = True
 
         # Generate the interpolation matrix that maps from the coarse-grid to the fine-grid
@@ -88,6 +97,9 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
             P = classical_interpolation(A, C, splitting, **kwargs)
         elif fn == 'direct':
             P = direct_interpolation(A, C, splitting, **kwargs)
+        elif fn == 'geometric':
+            P1d = _interpolation1d(int(np.sqrt(len(cpts))), int(np.sqrt(A.shape[0])))
+            P = sparse.kron(P1d, P1d).tocsr()
         else:
             raise ValueError(f'Unknown interpolation method {interpolation}')
 
@@ -106,7 +118,6 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
         levels.append(MultilevelSolver.Level())
         A = R @ A @ P
         levels[-1].A = A
-        return False
 
     ml = MultilevelSolver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
