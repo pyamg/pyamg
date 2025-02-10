@@ -804,6 +804,34 @@ class TestRelaxation(TestCase):
             schwarz(A, x, b, iterations=1, sweep='symmetric')
             assert_almost_equal(x, gold(A, x_copy, b, iterations=1,
                                         sweep='symmetric'))
+    def test_sor(self):
+        # https://en.wikipedia.org/wiki/Successive_over-relaxation#Example
+        A = np.array([[ 4, -1, -6,  0],
+                      [-5, -4, 10,  8],
+                      [ 0,  9,  4, -2],
+                      [ 1,  0, -7,  5.]])
+        b = np.array([2, 21, -12, -6.])
+
+        x1 = np.array([0.25, -2.78125, 1.6289062, 0.5152344])
+        x2 = np.array([1.2490234, -2.2448974, 1.9687712, 0.9108547])
+        x3 = np.array([2.070478, -1.6696789, 1.5904881, 0.76172125])
+        x38 = np.array([3.0, -2.0, 2.0, 1.0])
+
+        x = np.array([0, 0, 0, 0.])
+        sor(A, x, b, 0.5, iterations=1) 
+        assert_almost_equal(x, x1)
+
+        x = np.array([0, 0, 0, 0.])
+        sor(A, x, b, 0.5, iterations=2) 
+        assert_almost_equal(x, x2)
+
+        x = np.array([0, 0, 0, 0.])
+        sor(A, x, b, 0.5, iterations=3) 
+        assert_almost_equal(x, x3)
+
+        x = np.array([0, 0, 0, 0.])
+        sor(A, x, b, 0.5, iterations=38) 
+        assert_almost_equal(x, x38)
 
 
 # Test complex arithmetic
