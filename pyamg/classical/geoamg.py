@@ -20,13 +20,14 @@ def _unpack_arg(v):
         return v[0], v[1]
     return v, {}
 
+
 def _interpolation1d(nc, nf):
     d = np.repeat([[1., 2, 1]], nc, axis=0).T
     I = np.zeros((3, nc), dtype=np.int32)
     for i in range(nc):
         I[:, i] = [2*i, 2*i+1, 2*i+2]
     J = np.repeat([np.arange(nc, dtype=np.int32)], 3, axis=0)
-    P = sparse.coo_array((d.ravel(), (I.ravel(), J.ravel()))).tocsr()
+    P = sparse.coo_array((d.ravel(), (I.ravel(), J.ravel())), shape=(nf, nc)).tocsr()
     return 0.5 * P
 
 
@@ -43,6 +44,10 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
     ----------
     A : csr_array
         Square matrix in CSR format
+    cpts_list : list of ndarray
+        A list of C-points for each level
+    C_list : list of csr_array
+        A list of strong connections for each level
     interpolation : str, default 'classical'
         Method for interpolation. Options include 'direct', 'classical'.
     presmoother : str or dict
@@ -84,7 +89,7 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
 
     levels[-1].A = A
 
-    for i, (cpts, C) in enumerate(zip(cpts_list, C_list)):
+    for _, (cpts, C) in enumerate(zip(cpts_list, C_list)):
 
         A = levels[-1].A
 
