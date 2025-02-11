@@ -19,16 +19,46 @@ class MultilevelSolver:
 
     The class constructs the cycling process and points to the methods for
     coarse grid solves.  A MultilevelSolver object is typically returned from a
-    particular AMG method (see ruge_stuben_solver or smoothed_aggregation_solver
-    for example).  A call to MultilevelSolver.solve() is a typical access
+    particular AMG method (see ``ruge_stuben_solver`` or ``smoothed_aggregation_solver``
+    for example).  A call to ``MultilevelSolver.solve()`` is a typical access
     point.  The class also defines methods for constructing operator, cycle, and
     grid complexities.
+
+    Parameters
+    ----------
+    levels : list of Level
+        Array of level objects that contain A, R, and P.
+    coarse_solver : str, callable, tuple
+        The solver method is either (1) a string such as 'splu' or 'pinv'
+        of a callable object which receives only parameters (A, b) and
+        returns an (approximate or exact) solution to the linear system Ax
+        = b, or (2) a callable object that takes parameters (A,b) and
+        returns an (approximate or exact) solution to Ax = b, or (3) a
+        tuple of the form (str|callable, args), where args is a
+        dictionary of arguments to be passed to the function denoted by
+        string or callable.
+
+        Sparse direct methods:
+
+        * splu         : sparse LU solver
+
+        Sparse iterative methods:
+
+        * any method in scipy.sparse.linalg or pyamg.krylov (e.g. 'cg').
+        * Methods in pyamg.krylov take precedence.
+        * relaxation method, such as 'gauss_seidel' or 'jacobi',
+
+        Dense methods:
+
+        * pinv     : pseudoinverse (SVD)
+        * lu       : LU factorization
+        * cholesky : Cholesky factorization
 
     Attributes
     ----------
     levels : level array
         Array of level objects that contain A, R, and P.
-    coarse_solver : string
+    coarse_solver : str
         String passed to coarse_grid_solver indicating the solve type
 
     Methods
@@ -49,6 +79,49 @@ class MultilevelSolver:
         grid.  This can be used, for example, to precondition a
         quadratic finite element discretization with AMG built from
         a linear discretization on quadratic quadrature points.
+
+    Notes
+    -----
+    If not defined, the R attribute on each level is set to
+    the transpose of P.
+
+    Examples
+    --------
+    >>> # manual construction of a two-level AMG hierarchy
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.multilevel import MultilevelSolver
+    >>> from pyamg.strength import classical_strength_of_connection
+    >>> from pyamg.classical.interpolate import direct_interpolation
+    >>> from pyamg.classical.split import RS
+    >>> # compute necessary operators
+    >>> A = poisson((100, 100), format='csr')
+    >>> C = classical_strength_of_connection(A)
+    >>> splitting = RS(A)
+    >>> P = direct_interpolation(A, C, splitting)
+    >>> R = P.T
+    >>> # store first level data
+    >>> levels = []
+    >>> levels.append(MultilevelSolver.Level())
+    >>> levels.append(MultilevelSolver.Level())
+    >>> levels[0].A = A
+    >>> levels[0].C = C
+    >>> levels[0].splitting = splitting
+    >>> levels[0].P = P
+    >>> levels[0].R = R
+    >>> # store second level data
+    >>> levels[1].A = R @ A @ P                      # coarse-level matrix
+    >>> # create MultilevelSolver
+    >>> ml = MultilevelSolver(levels, coarse_solver='splu')
+    >>> print(ml)
+    MultilevelSolver
+    Number of Levels:     2
+    Operator Complexity:   1.891
+    Grid Complexity:       1.500
+    Coarse Solver:        'splu'
+        level   unknowns     nonzeros
+            0       10000        49600 [52.88%]
+            1        5000        44202 [47.12%]
+    <BLANKLINE>
 
     """
 
@@ -90,80 +163,14 @@ class MultilevelSolver:
                  category=DeprecationWarning, stacklevel=2)
 
     def __init__(self, levels, coarse_solver='pinv'):
-        """Class constructor to initialize the cycle and ensure list of levels is complete.
+        """Initialize the cycle and ensure complete list of levels.
 
         Parameters
         ----------
-        levels : level array
+        levels : list of Level
             Array of level objects that contain A, R, and P.
-        coarse_solver: string, callable, tuple
-            The solver method is either (1) a string such as 'splu' or 'pinv'
-            of a callable object which receives only parameters (A, b) and
-            returns an (approximate or exact) solution to the linear system Ax
-            = b, or (2) a callable object that takes parameters (A,b) and
-            returns an (approximate or exact) solution to Ax = b, or (3) a
-            tuple of the form (string|callable, args), where args is a
-            dictionary of arguments to be passed to the function denoted by
-            string or callable.
-
-            Sparse direct methods:
-
-            * splu         : sparse LU solver
-
-            Sparse iterative methods:
-
-            * any method in scipy.sparse.linalg or pyamg.krylov (e.g. 'cg').
-            * Methods in pyamg.krylov take precedence.
-            * relaxation method, such as 'gauss_seidel' or 'jacobi',
-
-            Dense methods:
-
-            * pinv     : pseudoinverse (SVD)
-            * lu       : LU factorization
-            * cholesky : Cholesky factorization
-
-        Notes
-        -----
-        If not defined, the R attribute on each level is set to
-        the transpose of P.
-
-        Examples
-        --------
-        >>> # manual construction of a two-level AMG hierarchy
-        >>> from pyamg.gallery import poisson
-        >>> from pyamg.multilevel import MultilevelSolver
-        >>> from pyamg.strength import classical_strength_of_connection
-        >>> from pyamg.classical.interpolate import direct_interpolation
-        >>> from pyamg.classical.split import RS
-        >>> # compute necessary operators
-        >>> A = poisson((100, 100), format='csr')
-        >>> C = classical_strength_of_connection(A)
-        >>> splitting = RS(A)
-        >>> P = direct_interpolation(A, C, splitting)
-        >>> R = P.T
-        >>> # store first level data
-        >>> levels = []
-        >>> levels.append(MultilevelSolver.Level())
-        >>> levels.append(MultilevelSolver.Level())
-        >>> levels[0].A = A
-        >>> levels[0].C = C
-        >>> levels[0].splitting = splitting
-        >>> levels[0].P = P
-        >>> levels[0].R = R
-        >>> # store second level data
-        >>> levels[1].A = R @ A @ P                      # coarse-level matrix
-        >>> # create MultilevelSolver
-        >>> ml = MultilevelSolver(levels, coarse_solver='splu')
-        >>> print(ml)
-        MultilevelSolver
-        Number of Levels:     2
-        Operator Complexity:   1.891
-        Grid Complexity:       1.500
-        Coarse Solver:        'splu'
-          level   unknowns     nonzeros
-             0       10000        49600 [52.88%]
-             1        5000        44202 [47.12%]
-        <BLANKLINE>
+        coarse_solver : str, callable, tuple
+            The coarsest level solver. (See the class documentation).
 
         """
         self.symmetric_smoothing = False  # force change_smoothers to set to True
@@ -175,7 +182,14 @@ class MultilevelSolver:
                 level.R = level.P.T.conjugate()
 
     def __repr__(self):
-        """Print basic statistics about the multigrid hierarchy."""
+        """Print basic statistics about the multigrid hierarchy.
+
+        Returns
+        -------
+        str
+            Information about each level of the hierarchy.
+
+        """
         output = 'MultilevelSolver\n'
         output += f'Number of Levels:     {len(self.levels)}\n'
         output += f'Operator Complexity:  {self.operator_complexity():6.3f}\n'
@@ -208,7 +222,7 @@ class MultilevelSolver:
 
         Returns
         -------
-        cc : float
+        float
             Defined as F_sum / F_0, where
             F_sum is the total number of nonzeros in the matrix on all
             levels encountered during a cycle and F_0 is the number of
@@ -272,9 +286,15 @@ class MultilevelSolver:
     def operator_complexity(self):
         """Operator complexity of this multigrid hierarchy.
 
-        Defined as:
+        Defined as::
+
             Number of nonzeros in the matrix on all levels /
             Number of nonzeros in the matrix on the finest level
+
+        Returns
+        -------
+        scalar
+            Measure of the operator complexity.
 
         """
         return sum(level.A.nnz for level in self.levels) /\
@@ -283,9 +303,15 @@ class MultilevelSolver:
     def grid_complexity(self):
         """Grid complexity of this multigrid hierarchy.
 
-        Defined as:
+        Defined as::
+
             Number of unknowns on all levels /
             Number of unknowns on the finest level
+
+        Returns
+        -------
+        scalar
+            Measure of the grid complexity.
 
         """
         return sum(level.A.shape[0] for level in self.levels) /\
@@ -297,7 +323,7 @@ class MultilevelSolver:
         Parameters
         ----------
         A : csr_array
-            Target solution matrix
+            Target solution matrix.
 
         Notes
         -----
@@ -311,7 +337,19 @@ class MultilevelSolver:
         smoothing.rebuild_smoother(self.levels[0])
 
     def psolve(self, b):
-        """Legacy solve interface."""
+        """Legacy solve interface.
+
+        Parameters
+        ----------
+        b : array
+            Right-hand side.
+
+        Returns
+        -------
+        array
+            Solution after one iteration.
+
+        """
         return self.solve(b, maxiter=1)
 
     def aspreconditioner(self, cycle='V'):
@@ -324,15 +362,16 @@ class MultilevelSolver:
 
         Returns
         -------
-        precond : LinearOperator
+        LinearOperator
             Preconditioner suitable for the iterative solvers in defined in
             the scipy.sparse.linalg module (e.g. cg, gmres) and any other
             solver that uses the LinearOperator interface.  Refer to the
-            LinearOperator documentation in scipy.sparse.linalg
+            LinearOperator documentation in :obj:`scipy.sparse.linalg`.
 
         See Also
         --------
-        MultilevelSolver.solve, scipy.sparse.linalg.LinearOperator
+        MultilevelSolver.solve
+        scipy.sparse.linalg.LinearOperator
 
         Examples
         --------
@@ -373,7 +412,7 @@ class MultilevelSolver:
             Stopping criteria: maximum number of allowable iterations.
         cycle : {'V','W','F','AMLI'}
             Type of multigrid cycle to perform in each iteration.
-        accel : string, function
+        accel : str, function
             Defines acceleration method.  Can be a string such as 'cg'
             or 'gmres' which is the name of an iterative solver in
             pyamg.krylov (preferred) or scipy.sparse.linalg.
@@ -387,25 +426,24 @@ class MultilevelSolver:
             will be the residuals from the Krylov iteration -- see the `accel`
             method to see verify whether this ||r|| or ||Mr|| (as in the case of
             GMRES).
-        cycles_per_level: int, default 1
-            Number of V-cycles on each level of an F-cycle
+        cycles_per_level : int, default 1
+            Number of V-cycles on each level of an F-cycle.
         return_info : bool
-            If true, will return (x, info)
-            If false, will return x (default)
+            If true, will return ``(x, info)``.
+            If false, will return ``x`` (default).
 
         Returns
         -------
-        x : array
-            Approximate solution to Ax=b after k iterations
+        array
+            Approximate solution to Ax=b after k iterations.
 
-        info : string
-            Halting status
+        str
+            Halting status::
 
-            ==  =======================================
-            0   successful exit
-            >0  convergence to tolerance not achieved,
-                return iteration count instead.
-            ==  =======================================
+                 0: successful exit
+                >0: convergence to tolerance not achieved
+                    return iteration count instead.
+
 
         See Also
         --------
@@ -549,20 +587,22 @@ class MultilevelSolver:
         Parameters
         ----------
         lvl : int
-            Solve problem on level `lvl`
+            Solve problem on level ``lvl``.
         x : numpy array
-            Initial guess `x` and return correction
+            Initial guess ``x``.
         b : numpy array
-            Right-hand side for Ax=b
+            Right-hand side for ``Ax=b``.
         cycle : {'V','W','F','AMLI'}
             Recursively called cycling function.  The
-            Defines the cycling used:
-            cycle = 'V',    V-cycle
-            cycle = 'W',    W-cycle
-            cycle = 'F',    F-cycle
-            cycle = 'AMLI', AMLI-cycle
+            Defines the cycling used::
+
+                cycle='V':    V-cycle
+                cycle='W':    W-cycle
+                cycle='F':    F-cycle
+                cycle='AMLI': AMLI-cycle
+
         cycles_per_level : int, default 1
-            Number of V-cycles on each level of an F-cycle
+            Number of V-cycles on each level of an F-cycle.
 
         """
         A = self.levels[lvl].A
@@ -627,7 +667,7 @@ def coarse_grid_solver(solver):
 
     Parameters
     ----------
-    solver : string, callable, tuple
+    solver : str, callable, tuple
         The solver method is either (1) a string such as 'splu' or 'pinv' of a
         callable object which receives only parameters (A, b) and returns an
         (approximate or exact) solution to the linear system Ax = b, or (2) a
@@ -652,8 +692,8 @@ def coarse_grid_solver(solver):
 
     Returns
     -------
-    ptr : GenericSolver
-        A class for use as a standalone or coarse grids solver
+    GenericSolver
+        A class for use as a standalone or coarse grids solver.
 
     Examples
     --------
