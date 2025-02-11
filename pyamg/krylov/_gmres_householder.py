@@ -30,45 +30,45 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     Parameters
     ----------
     A : array, matrix, sparse matrix, LinearOperator
-        n x n, linear system to solve
+        Linear system of size (n,n) to solve.
     b : array, matrix
-        right hand side, shape is (n,) or (n,1)
+        Right hand side of size (n,) or (n,1).
     x0 : array, matrix
-        initial guess, default is a vector of zeros
+        Initial guess, default is a vector of zeros.
     tol : float
         Tolerance for stopping criteria, let r=r_k
-        ||M r|| < tol ||M b||
+
+            ||M r|| < tol ||M b||
+
         if ||b||=0, then set ||M b||=1 for these tests.
     restart : None, int
-        - if int, restart is max number of inner iterations
-          and maxiter is the max number of outer iterations
-        - if None, do not restart GMRES, and max number of inner iterations
-          is maxiter
+        - If int, restart is max number of inner iterations
+          and maxiter is the max number of outer iterations.
+        - If None, do not restart GMRES, and max number of inner iterations
+          is maxiter.
     maxiter : None, int
-        - if restart is None, maxiter is the max number of inner iterations
-          and GMRES does not restart
-        - if restart is int, maxiter is the max number of outer iterations,
-          and restart is the max number of inner iterations
-        - defaults to min(n,40) if restart=None
+        - If restart is None, maxiter is the max number of inner iterations
+          and GMRES does not restart.
+        - If restart is int, maxiter is the max number of outer iterations,
+          and restart is the max number of inner iterations.
+        - Defaults to min(n,40) if ``restart=None``.
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
+        Inverted preconditioner of size (n,n), i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
-        callback(xk), where xk is the current solution vector
+        ``callback(xk)``, where xk is the current solution vector.
     residuals : list
-        preconditioned residual history in the 2-norm,
-        including the initial preconditioned residual
-    reorth : boolean
-        If True, then a check is made whether to re-orthogonalize the Krylov
-        space each GMRES iteration
+        Preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual.
     restrt : None, int
         Deprecated.  See restart.
 
     Returns
     -------
-    (xk, info)
-    xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status
+    array
+        Updated guess after k iterations to the solution of Ax = b.
+    int
+        Halting status
 
             ==  =======================================
             0   successful exit
@@ -89,6 +89,12 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
 
     The residual is the *preconditioned* residual.
 
+    References
+    ----------
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
+       Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
+
     Examples
     --------
     >>> from pyamg.krylov import gmres
@@ -100,12 +106,6 @@ def gmres_householder(A, b, x0=None, tol=1e-5,
     >>> (x, flag) = gmres(A, b, maxiter=2, tol=1e-8, orthog='householder')
     >>> print(f'{norm(b - A@x):.6}')
     6.54282
-
-    References
-    ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
-       Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
-       http://www-users.cs.umn.edu/~saad/books.html
 
     """
     if restrt is not None:
