@@ -22,17 +22,18 @@ def sprand(m, n, density, format='csr'):
 
     Parameters
     ----------
-    m, n : int
-        shape of the result
+    m, n : int, int
+        Shape of the result.
     density : float
-        target a matrix with nnz(A) = m*n*density, 0<=density<=1
-    format : string
-        sparse matrix format to return, e.g. 'csr', 'coo', etc.
+        Target a matrix density with ``nnz(A) = m*n*density`` and
+        ``0<=density<=1``.
+    format : str
+        Sparse array format to return, e.g. 'csr', 'coo', etc.
 
     Returns
     -------
-    A : sparse matrix
-        m x n sparse matrix
+    sparray
+        Sparse matrix of size (m, n).
 
     Examples
     --------
