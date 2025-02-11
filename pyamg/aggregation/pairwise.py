@@ -26,33 +26,30 @@ def pairwise_solver(A,
     ----------
     A : {csr_array, bsr_array}
         Sparse NxN matrix in CSR or BSR format
-    aggregate : {tuple, string, list} : default ('pairwise',
-            {'theta': 0.25, 'norm':'min', 'matchings': 2})
+    aggregate : {tuple, string, list}
         Method choice must be 'pairwise'; inner pairwise options including
         matchings, theta, and norm can be modified,
-    presmoother : {tuple, string, list} : default ('block_gauss_seidel',
-        {'sweep':'symmetric'})
+    presmoother : {tuple, string, list}
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
         varying this parameter on a per level basis.
     postsmoother : {tuple, string, list}
         Same as presmoother, except defines the postsmoother.
-    max_levels : {integer} : default 10
+    max_levels : {integer}
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse : {integer} : default 500
+    max_coarse : {integer}
         Maximum number of variables permitted on the coarse grid.
     kwargs : dict
         Extra keywords passed to the Multilevel class
 
     Other Parameters
     ----------------
-    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+    coarse_solver : {'splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel'}
         Solver used at the coarsest level of the MG hierarchy.
         Optionally, may be a tuple (fn, args), where fn is a string such as
-        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
+        'splu' or a callable function, and args is a dictionary of
         arguments to be passed to fn.
-
 
     Returns
     -------

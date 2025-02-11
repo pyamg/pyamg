@@ -7,14 +7,19 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.intersphinx',
               'sphinx.ext.viewcode',
+              'sphinx.ext.coverage',
+              'sphinx.ext.doctest',
               'sphinx.ext.autosummary',
               'sphinx.ext.mathjax',
               'sphinx_automodapi.automodapi',
               'm2r2',
-              'numpydoc']
+              'numpydoc'
+             ]
 
 numpydoc_show_inherited_class_members = False
+numpydoc_validation_checks = {'all'}
 
 autodoc_default_options = {
     'members': True,
@@ -80,6 +85,14 @@ texinfo_documents = [
      author, 'PyAMG', 'Algebraic Multigrid Solvers in Python.',
      'Miscellaneous'),
 ]
+
+python_version = '.'.join(map(str, sys.version_info[0:2]))
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/' + python_version, None),
+    'matplotlib': ('https://matplotlib.org', None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+}
 
 
 def autodoc_skip_member(_app, _what, name, _obj, skip, _options):

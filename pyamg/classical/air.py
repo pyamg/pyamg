@@ -36,8 +36,8 @@ def air_solver(A,
     ----------
     A : csr_array
         Square (non)symmetric matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance',
-                'algebraic_distance','affinity', 'energy_based', None]
+    strength : {'symmetric', 'classical', 'evolution', 'distance', \
+               'algebraic_distance','affinity', 'energy_based', None}
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -58,7 +58,7 @@ def air_solver(A,
         postsmoother=('fc_jacobi', ... ) with 2 F-sweeps, 1 C-sweep is default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
-        considered "small" if |a_ij| < tol |a_ii|.
+        considered *small* if `|a_ij| < tol |a_ii|`.
     max_levels: {integer} : default 20
         Maximum number of levels to be used in the multilevel solver.
     max_coarse: {integer} : default 20
@@ -83,30 +83,34 @@ def air_solver(A,
 
     Notes
     -----
-    "coarse_solver" is an optional argument and is the solver used at the
+    `coarse_solver` is an optional argument and is the solver used at the
     coarsest grid.  The default is a pseudo-inverse.  Most simply,
-    coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
-    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
-    (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
+    coarse_solver can be one of {'splu', 'lu', 'cholesky, 'pinv',
+    'gauss_seidel'}.  Additionally, `coarse_solver` may be a tuple
+    `(fn, args)`, where `fn` is a string such as 'splu' or a callable
     function, and args is a dictionary of arguments to be passed to fn.
-    See [2001TrOoSc]_ for additional details.
-
+    See [3]_ for additional details.
 
     References
     ----------
-    [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
-    (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM
-    Journal on Scientific Computing, 41(5), S242-S268.
+    .. [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
+           (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM
+           Journal on Scientific Computing, 41(5), S242-S268.
 
-    [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
-    Nonsymmetric algebraic multigrid based on local approximate ideal
-    restriction (lAIR). SIAM Journal on Scientific Computing, 40(6),
-    A4105-A4130.
+    .. [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
+           Nonsymmetric algebraic multigrid based on local approximate ideal
+           restriction (lAIR). SIAM Journal on Scientific Computing, 40(6),
+           A4105-A4130.
+
+    .. [3] Trottenberg, U.; Oosterlee, C. W. & Schüller, A. (2001),
+           Multigrid, Vol. 33, Academic Press.
 
     See Also
     --------
-    aggregation.smoothed_aggregation_solver, multilevel_solver,
-    aggregation.rootnode_solver, ruge_stuben_solver
+    pyamg.multilevel.MultilevelSolver,
+    pyamg.aggregation.smoothed_aggregation_solver,
+    pyamg.aggregation.rootnode_solver,
+    ruge_stuben_solver
 
     """
     # preprocess A
