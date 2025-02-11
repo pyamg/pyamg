@@ -18,35 +18,38 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
     Parameters
     ----------
     A : array, matrix, sparse matrix, LinearOperator
-        n x n, linear system to solve
+        Linear system of size (n,n) to solve.
     b : array, matrix
-        right hand side, shape is (n,) or (n,1)
+        Right hand side of size (n,) or (n,1).
     x0 : array, matrix
-        initial guess, default is a vector of zeros
+        Initial guess, default is a vector of zeros.
     tol : float
-        Tolerance for stopping criteria
-    criteria : string
+        Tolerance for stopping criteria.
+    criteria : str
         Stopping criteria, let r=r_k, x=x_k
-        'rr':        ||r||       < tol ||b||
-        'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
-        'MrMr':      ||M r||     < tol ||M b||
-        'rMr':       <r, Mr>^1/2 < tol
+
+            'rr':        ||r||       < tol ||b||
+            'rr+':       ||r||       < tol (||b|| + ||A||_F ||x||)
+            'MrMr':      ||M r||     < tol ||M b||
+            'rMr':       <r, Mr>^1/2 < tol
+
         if ||b||=0, then set ||b||=1 for these tests.
     maxiter : int
-        maximum number of iterations allowed
+        Maximum number of iterations allowed.
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverse preconditioner, i.e. solve M A x = M b.
+        Inverse preconditioner of size (n,n), i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
-        callback(xk), where xk is the current solution vector
+        ``callback(xk)``, where xk is the current solution vector.
     residuals : list
-        residual history in the 2-norm, including the initial residual
+        Residual history in the 2-norm, including the initial residual.
 
     Returns
     -------
-    (xk, info)
-    xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status
+    array
+        Updated guess after k iterations to the solution of Ax = b.
+    int
+        Halting status
 
             ==  =======================================
             0   successful exit
@@ -61,6 +64,12 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
+    References
+    ----------
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
+       Second Edition", SIAM, pp. 262-67, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
+
     Examples
     --------
     >>> from pyamg.krylov import cg
@@ -72,12 +81,6 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
     >>> (x,flag) = cg(A,b, maxiter=2, tol=1e-8)
     >>> print(f'{norm(b - A@x):.6}')
     10.9371
-
-    References
-    ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
-       Second Edition", SIAM, pp. 262-67, 2003
-       http://www-users.cs.umn.edu/~saad/books.html
 
     """
     # Convert inputs to linear system, with error checking
