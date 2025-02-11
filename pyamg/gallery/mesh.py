@@ -10,16 +10,16 @@ def regular_triangle_mesh(nx, ny):
     Parameters
     ----------
     nx : int
-       Number of nodes in the x-direction
+       Number of nodes in the x-direction.
     ny : int
-       Number of nodes in the y-direction
+       Number of nodes in the y-direction.
 
     Returns
     -------
     Vert : array
-        nx*ny x 2 vertex list
+        Vertex list of size (nx*ny, 2).
     E2V : array
-        Nex x 3 element list
+        Element list of size (Nex, 3).
 
     Examples
     --------
