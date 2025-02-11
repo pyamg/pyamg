@@ -18,6 +18,10 @@ extensions = ['sphinx.ext.autodoc',
               'numpydoc'
              ]
 
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    'csr_array': 'scipy.sparse.csr_array',
+}
 numpydoc_show_inherited_class_members = False
 numpydoc_validation_checks = {'all',
                               # summary should start immediately after the opening quotes
@@ -32,10 +36,14 @@ numpydoc_validation_checks = {'all',
                               'SA01',
                               # no Examples found
                               'EX01',
+                              # missing see also description
+                              'SA04',
                              }
 numpydoc_validation_exclude = {'pyamg.util.upcast', 
                                'pyamg.util.make_system',
-                               'ode_strength_of_connection'
+                               'pyamg.strength.ode_strength_of_connection',
+                               'pyamg.multilevel.multilevel_solver',
+                               'pyamg.multilevel.GenericSolver.__repr__'
                               }
 
 autodoc_default_options = {
@@ -108,9 +116,8 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/' + python_version, None),
     'matplotlib': ('https://matplotlib.org', None),
     'numpy': ('https://numpy.org/doc/stable', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy', None),
 }
-
 
 def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
     """Set skip member."""
@@ -124,3 +131,4 @@ def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
 def setup(app):
     """Define setup."""
     app.connect('autodoc-skip-member', autodoc_skip_member)
+    #app.connect("autodoc-process-docstring", autodoc_process_docstring)
