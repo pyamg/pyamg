@@ -8,7 +8,19 @@ from . import amg_core
 
 
 def asgraph(G):
-    """Return (square) matrix as sparse."""
+    """Return (square) array as sparse.
+
+    Parameters
+    ----------
+    G : sparray
+        Sparse matrix.
+
+    Returns
+    -------
+    csr_array or csc_array
+        Converted array.
+
+    """
     if not sparse.issparse(G) or G.format not in ('csc', 'csr'):
         G = sparse.csr_array(G)
 
@@ -23,21 +35,21 @@ def maximal_independent_set(G, algo='serial', k=None):
 
     Parameters
     ----------
-    G : sparse matrix
-        Symmetric matrix, preferably in sparse CSR or CSC format
+    G : sparray
+        Symmetric matrix, preferably in sparse CSR or CSC format.
         The nonzeros of G represent the edges of an undirected graph.
     algo : {'serial', 'parallel'}
         Algorithm used to compute the MIS
             * serial   : greedy serial algorithm
             * parallel : variant of Luby's parallel MIS algorithm
     k : int
-        Minimum separation between MIS vertices
+        Minimum separation between MIS vertices.
 
     Returns
     -------
-    S : array
-        S[i] = 1 if vertex i is in the MIS
-        S[i] = 0 otherwise
+    array
+        - ``S[i] = 1`` if vertex i is in the MIS.
+        - ``S[i] = 0`` otherwise.
 
     Notes
     -----
@@ -74,10 +86,10 @@ def vertex_coloring(G, method='MIS'):
 
     Parameters
     ----------
-    G : sparse matrix
+    G : sparray
         Symmetric matrix, preferably in sparse CSR or CSC format
         The nonzeros of G represent the edges of an undirected graph.
-    method : string
+    method : str
         Algorithm used to compute the vertex coloring:
 
             * 'MIS' - Maximal Independent Set
@@ -86,8 +98,8 @@ def vertex_coloring(G, method='MIS'):
 
     Returns
     -------
-    coloring : array
-        An array of vertex colors (integers beginning at 0)
+    array
+        An array of vertex colors (integers beginning at 0).
 
     Notes
     -----
@@ -119,17 +131,21 @@ def bellman_ford(G, seeds):
 
     Parameters
     ----------
-    G : sparse matrix
+    G : sparray
         Directed graph with positive weights.
     seeds : list
-        Starting seeds
+        Starting seeds.
 
     Returns
     -------
-    distances : array
-        Distance of each point to the nearest seed
-    nearest_seed : array
-        Index of the nearest seed
+    array
+        Distance of each point to the nearest seed.
+    array
+        Index of the nearest seed.
+
+    See Also
+    --------
+    scipy.sparse.csgraph.bellman_ford
 
     Notes
     -----
@@ -137,12 +153,8 @@ def bellman_ford(G, seeds):
     scipy.sparse.csgraph. Here, bellman_ford is used to find the shortest path
     from any point *to* the seeds. In csgraph, bellman_ford is used to find
     "the shortest distance from point i to point j".  So csgraph.bellman_ford
-    could be run `for seed in seeds`.  Also note that `test_graph.py` tests
-    against `csgraph.bellman_ford(G.T)`.
-
-    See Also
-    --------
-    scipy.sparse.csgraph.bellman_ford
+    could be run `for seed in seeds`.  Also note that ``test_graph.py`` tests
+    against ``csgraph.bellman_ford(G.T)``.
 
     """
     G = asgraph(G)
@@ -173,7 +185,7 @@ def lloyd_cluster(G, seeds, maxiter=10):
     Parameters
     ----------
     G : csr_array, csc_array
-        A sparse NxN matrix where each nonzero entry G[i,j] is the distance
+        A sparse matrix of size (n,n) where each nonzero entry G[i,j] is the distance
         between nodes i and j.
     seeds : int array
         If seeds is an integer, then its value determines the number of
@@ -184,12 +196,12 @@ def lloyd_cluster(G, seeds, maxiter=10):
 
     Returns
     -------
-    distances : array
-        final distances
-    clusters : int array
-        id of each cluster of points
-    seeds : int array
-        index of each seed
+    array
+        Final distances.
+    int array
+        Id of each cluster of points.
+    int array
+        Index of each seed.
 
     Notes
     -----
@@ -245,27 +257,27 @@ def breadth_first_search(G, seed):
         A sparse NxN matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
     seed : int
-        Index of the seed location
+        Index of the seed location.
 
     Returns
     -------
     order : int array
-        Breadth first order
+        Breadth first order.
     level : int array
-        Final levels
+        Final levels.
 
     Examples
     --------
-    0---2
-    |  /
-    | /
-    1---4---7---8---9
-    |  /|  /
-    | / | /
-    3/  6/
-    |
-    |
-    5
+    >>> # 0---2
+    >>> # |  /
+    >>> # | /
+    >>> # 1---4---7---8---9
+    >>> # |  /|  /
+    >>> # | / | /
+    >>> # 3/  6/
+    >>> # |
+    >>> # |
+    >>> # 5
     >>> import numpy as np
     >>> import pyamg
     >>> import scipy.sparse as sparse
@@ -308,7 +320,7 @@ def connected_components(G):
 
     Returns
     -------
-    components : ndarray
+    ndarray
         An array of component labels for each vertex of the graph.
 
     Notes
@@ -345,17 +357,21 @@ def symmetric_rcm(A):
 
     Parameters
     ----------
-    A : sparse matrix
-        Sparse matrix
+    A : sparray
+        Sparse matrix.
 
     Returns
     -------
-    B : sparse matrix
-        Permuted matrix with reordering
+    sparray
+        Permuted matrix with reordering.
+
+    See Also
+    --------
+    pseudo_peripheral_node
 
     Notes
     -----
-    Get a pseudo-peripheral node, then call BFS
+    Get a pseudo-peripheral node, then call BFS.
 
     Examples
     --------
@@ -373,10 +389,6 @@ def symmetric_rcm(A):
     >>> # plt.subplot(122)
     >>> # plt.spy(symmetric_rcm(S),marker='.')
 
-    See Also
-    --------
-    pseudo_peripheral_node
-
     """
     _dummy_root, order, _dummy_level = pseudo_peripheral_node(A)
 
@@ -390,21 +402,21 @@ def pseudo_peripheral_node(A):
 
     Parameters
     ----------
-    A : sparse matrix
-        Sparse matrix
+    A : sparray
+        Sparse matrix.
 
     Returns
     -------
     x : int
-        Location of the node
+        Location of the node.
     order : array
-        BFS ordering
+        BFS ordering.
     level : array
-        BFS levels
+        BFS levels.
 
     Notes
     -----
-    Algorithm in Saad
+    Algorithm in Saad.
 
     """
     n = A.shape[0]
