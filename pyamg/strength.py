@@ -27,28 +27,28 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     Parameters
     ----------
     A : csr_array or bsr_array
-        Square, sparse matrix in CSR or BSR format
+        Square, sparse matrix in CSR or BSR format.
     V : array
-        Coordinates of the vertices of the graph of A
+        Coordinates of the vertices of the graph of `A`.
     theta : float
-        Drop tolerance (distance)
+        Drop tolerance (distance).
     relative_drop : bool
         If false, then a connection must be within a distance of theta
         from a point to be strongly connected.
         If true, then the closest connection is always strong, and other points
-        must be within theta times the smallest distance to be strong
+        must be within theta times the smallest distance to be strong.
 
     Returns
     -------
-    C : csr_array
-        C(i,j) = distance(point_i, point_j)
+    csr_array
+        `C(i,j) = distance(point_i, point_j)`
         Strength of connection matrix where strength values are
         distances, i.e. the smaller the value, the stronger the connection.
-        Sparsity pattern of C is copied from A.
+        Sparsity pattern of `C` is copied from `A`.
 
     Notes
     -----
-    - theta is a drop tolerance that is applied row-wise
+    - `theta` is a drop tolerance that is applied row-wise
     - If a BSR matrix given, then the return matrix is still CSR.  The strength
       is given between super nodes based on the BSR block size.
 
@@ -115,7 +115,7 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     """Classical strength of connection measure.
 
     Return a strength of connection matrix using the classical AMG measure
-    An off-diagonal entry A[i,j] is a strong connection iff::
+    An off-diagonal entry ``A[i,j]`` is a strong connection iff::
 
              |A[i,j]| >= theta * max(|A[i,k]|), where k != i     (norm='abs')
              -A[i,j]  >= theta * max(-A[i,k]),  where k != i     (norm='min')
@@ -123,12 +123,12 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
     Parameters
     ----------
     A : csr_array or bsr_array
-        Square, sparse matrix in CSR or BSR format
+        Square, sparse matrix in CSR or BSR format.
     theta : float
-        Threshold parameter in [0,1]
+        Threshold parameter in [0,1].
     block : bool, default True
-        Compute strength of connection block-wise
-    norm : 'string', default 'abs'
+        Compute strength of connection block-wise.
+    norm : str, default 'abs'
         Measure used in computing the strength::
 
             'abs' : |C[i,j]| >= theta * max(|C[i,k]|), where k != i
@@ -142,32 +142,32 @@ def classical_strength_of_connection(A, theta=0.1, block=True, norm='abs'):
 
     Returns
     -------
-    S : csr_array
-        Matrix graph defining strong connections.  S[i,j] ~ 1.0 if vertex i
-        is strongly influenced by vertex j, or block i is strongly influenced
-        by block j if block=True.
+    csr_array
+        Matrix graph defining strong connections.  `S[i,j] ~ 1.0` if vertex `i`
+        is strongly influenced by vertex `j`, or block `i` is strongly influenced
+        by block `j` if `block=True`.
 
     See Also
     --------
-    symmetric_strength_of_connection : symmetric measure used in SA
-    evolution_strength_of_connection : relaxation based strength measure
+    symmetric_strength_of_connection : Symmetric measure used in SA.
+    evolution_strength_of_connection : Relaxation based strength measure.
 
     Notes
     -----
-    - A symmetric A does not necessarily yield a symmetric strength matrix S
+    - A symmetric `A` does not necessarily yield a symmetric strength matrix `S`
     - Calls C++ function classical_strength_of_connection
     - The version as implemented is designed for M-matrices.  Trottenberg et
-      al. use max A[i,k] over all negative entries, which is the same.  A
+      al. use max `A[i,k]` over all negative entries, which is the same.  A
       positive edge weight never indicates a strong connection.
-    - See [2000BrHeMc]_ and [2001bTrOoSc]_
+    - See [0]_ and [1]_
 
     References
     ----------
-    .. [2000BrHeMc] Briggs, W. L., Henson, V. E., McCormick, S. F., "A multigrid
+    .. [0] Briggs, W. L., Henson, V. E., McCormick, S. F., "A multigrid
         tutorial", Second edition. Society for Industrial and Applied
         Mathematics (SIAM), Philadelphia, PA, 2000. xii+193 pp.
 
-    .. [2001bTrOoSc] Trottenberg, U., Oosterlee, C. W., Schuller, A., "Multigrid",
+    .. [1] Trottenberg, U., Oosterlee, C. W., Schuller, A., "Multigrid",
         Academic Press, Inc., San Diego, CA, 2001. xvi+631 pp.
 
     Examples
@@ -257,39 +257,39 @@ def symmetric_strength_of_connection(A, theta=0):
     Parameters
     ----------
     A : csr_array
-        Matrix graph defined in sparse format.  Entry A[i,j] describes the
-        strength of edge [i,j]
+        Matrix graph defined in sparse format.  Entry `A[i,j]` describes the
+        strength of edge `[i,j]`.
     theta : float
         Threshold parameter (positive).
 
     Returns
     -------
-    S : csr_array
-        Matrix graph defining strong connections.  S[i,j]=1 if vertex i
-        is strongly influenced by vertex j.
+    csr_array
+        Matrix graph defining strong connections.  `S[i,j]=1` if vertex `i`
+        is strongly influenced by vertex `j`.
 
     See Also
     --------
-    symmetric_strength_of_connection : symmetric measure used in SA
-    evolution_strength_of_connection : relaxation based strength measure
+    symmetric_strength_of_connection : Symmetric measure used in SA.
+    evolution_strength_of_connection : Relaxation based strength measure.
 
     Notes
     -----
         - For vector problems, standard strength measures may produce
           undesirable aggregates.  A "block approach" from Vanek et al. is used
           to replace vertex comparisons with block-type comparisons.  A
-          connection between nodes i and j in the block case is strong if::
+          connection between nodes `i` and `j` in the block case is strong if::
 
           ||AB[i,j]|| >= theta * sqrt( ||AB[i,i]||*||AB[j,j]|| ) where AB[k,l]
 
-          is the matrix block (degrees of freedom) associated with nodes k and
+          is the matrix block (degrees of freedom) associated with nodes `k` and
           l and ||.|| is a matrix norm, such a Frobenius.
 
-        - See [1996bVaMaBr]_ for more details.
+        - See [1]_ for more details.
 
     References
     ----------
-    .. [1996bVaMaBr] Vanek, P. and Mandel, J. and Brezina, M.,
+    .. [1] Vanek, P. and Mandel, J. and Brezina, M.,
        "Algebraic Multigrid by Smoothed Aggregation for
        Second and Fourth Order Elliptic Problems",
        Computing, vol. 56, no. 3, pp. 179--196, 1996.
@@ -363,39 +363,39 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     Parameters
     ----------
     A : sparse-matrix
-        matrix from which to generate strength of connection information
+        Matrix from which to generate strength of connection information.
     theta : float
-        Threshold parameter in [0,1]
+        Threshold parameter in [0,1].
     k : int
-        Number of relaxation steps used to generate strength information
+        Number of relaxation steps used to generate strength information.
 
     Returns
     -------
-    S : csr_array
-        Matrix graph defining strong connections.  The sparsity pattern
-        of S matches that of A.  For BSR matrices, S is a reduced strength
+    csr_array
+        Matrix graph `S` defining strong connections.  The sparsity pattern
+        of `S` matches that of A.  For BSR matrices, `S` is a reduced strength
         of connection matrix that describes connections between supernodes.
 
     Notes
     -----
     This method relaxes with weighted-Jacobi in order to approximate the
     matrix inverse.  A normalized change of energy is then used to define
-    point-wise strength of connection values.  Specifically, let v be the
-    approximation to the i-th column of the inverse, then
+    point-wise strength of connection values.  Specifically, let `v` be the
+    approximation to the `i`-th column of the inverse, then
 
     (S_ij)^2 = <v_j, v_j>_A / <v, v>_A,
 
-    where v_j = v, such that entry j in v has been zeroed out.  As is common,
+    where `v_j = v`, such that entry `j` in `v` has been zeroed out.  As is common,
     larger values imply a stronger connection.
 
     Current implementation is a very slow pure-python implementation for
     experimental purposes, only.
 
-    See [2006BrBrMaMaMc]_ for more details.
+    See [1]_ for more details.
 
     References
     ----------
-    .. [2006BrBrMaMaMc] Brannick, Brezina, MacLachlan, Manteuffel, McCormick.
+    .. [1] Brannick, Brezina, MacLachlan, Manteuffel, McCormick.
        "An Energy-Based AMG Coarsening Strategy",
        Numerical Linear Algebra with Applications,
        vol. 13, pp. 133-148, 2006.
@@ -515,39 +515,41 @@ def ode_strength_of_connection(A, B=None, epsilon=4.0, k=2, proj_type='l2',
 def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
                                      proj_type='l2', block_flag=False,
                                      symmetrize_measure=True):
-    """Evolution Strength Measure.
+    """Evolution strength measure.
 
-    Construct strength of connection matrix using an Evolution-based measure
+    Construct strength of connection matrix using an Evolution-based measure.
 
     Parameters
     ----------
     A : csr_array, bsr_array
-        Sparse NxN matrix
-    B : string, array
-        If B=None, then the near nullspace vector used is all ones.  If B is
+        Sparse NxN matrix.
+    B : str, array
+        If `B=None`, then the near nullspace vector used is all ones.  If `B` is
         an (NxK) array, then B is taken to be the near nullspace vectors.
     epsilon : scalar
-        Drop tolerance
-    k : integer
-        ODE num time steps, step size is assumed to be 1/rho(DinvA)
+        Drop tolerance.
+    k : int
+        ODE num time steps, step size is assumed to be `1/rho(DinvA)`.
     proj_type : {'l2','D_A'}
-        Define norm for constrained min prob, i.e. define projection
-    block_flag : boolean
+        Define norm for constrained min prob, i.e. define projection.
+    block_flag : bool
         If True, use a block D inverse as preconditioner for A during
-        weighted-Jacobi
-    symmetrize_measure : boolean
-        Symmetrize the strength as (A + A.T) / 2
+        weighted-Jacobi.
+    symmetrize_measure : bool
+        Symmetrize the strength as `(A + A.T) / 2`.
 
     Returns
     -------
-    Atilde : csr_array
-        Sparse matrix of strength values
+    csr_array
+        Sparse matrix of strength values.
 
-    See [2008OlScTu]_ for more details.
+    Notes
+    -----
+    See [1]_ for more details.
 
     References
     ----------
-    .. [2008OlScTu] Olson, L. N., Schroder, J., Tuminaro, R. S.,
+    .. [1] Olson, L. N., Schroder, J., Tuminaro, R. S.,
        "A New Perspective on Strength Measures in Algebraic Multigrid",
        submitted, June, 2008.
 
@@ -861,18 +863,18 @@ def relaxation_vectors(A, R, k, alpha):
     Parameters
     ----------
     A : csr_array
-        Sparse NxN matrix
+        Sparse NxN matrix.
+    R : int
+        Number of random vectors.
+    k : int
+        Number of relaxation passes.
     alpha : scalar
-        Weight for Jacobi
-    R : integer
-        Number of random vectors
-    k : integer
-        Number of relaxation passes
+        Weight for Jacobi.
 
     Returns
     -------
-    x : array
-        Dense array N x k array of relaxation vectors
+    array
+        Dense array N x k array of relaxation vectors.
 
     """
     # random n x R block in column ordering
@@ -896,25 +898,20 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
     Parameters
     ----------
     A : csr_array
-        Sparse NxN matrix
+        Sparse NxN matrix.
     alpha : scalar
-        Weight for Jacobi
-    R : integer
-        Number of random vectors
-    k : integer
-        Number of relaxation passes
+        Weight for Jacobi.
+    R : int
+        Number of random vectors.
+    k : int
+        Number of relaxation passes.
     epsilon : scalar
-        Drop tolerance
+        Drop tolerance.
 
     Returns
     -------
-    C : csr_array
-        Sparse matrix of strength values
-
-    References
-    ----------
-    .. [LiBr] Oren E. Livne and Achi Brandt, "Lean Algebraic Multigrid
-        (LAMG): Fast Graph Laplacian Linear Solver"
+    csr_array
+        Sparse matrix of strength values.
 
     Notes
     -----
@@ -922,7 +919,12 @@ def affinity_distance(A, alpha=0.5, R=5, k=20, epsilon=4.0):
 
     Does not handle BSR matrices yet.
 
-    See [LiBr]_ for more details.
+    See [1]_ for more details.
+
+    References
+    ----------
+    .. [1] Oren E. Livne and Achi Brandt, "Lean Algebraic Multigrid
+        (LAMG): Fast Graph Laplacian Linear Solver"
 
     """
     if not sparse.issparse(A) or A.format != 'csr':
@@ -954,27 +956,22 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
     Parameters
     ----------
     A : csr_array
-        Sparse NxN matrix
+        Sparse NxN matrix.
     alpha : scalar
-        Weight for Jacobi
-    R : integer
-        Number of random vectors
-    k : integer
-        Number of relaxation passes
+        Weight for Jacobi.
+    R : int
+        Number of random vectors.
+    k : int
+        Number of relaxation passes.
     epsilon : scalar
-        Drop tolerance
+        Drop tolerance.
     p : scalar or inf
-        p-norm of the measure
+        The `p`-norm of the measure.
 
     Returns
     -------
-    C : csr_array
-        Sparse matrix of strength values
-
-    References
-    ----------
-    .. [SaSaSc] Ilya Safro, Peter Sanders, and Christian Schulz,
-        "Advanced Coarsening Schemes for Graph Partitioning"
+    csr_array
+        Sparse matrix of strength values.
 
     Notes
     -----
@@ -982,7 +979,12 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
     Does not handle BSR matrices yet.
 
-    See [SaSaSc]_ for more details.
+    See [1]_ for more details.
+
+    References
+    ----------
+    .. [1] Ilya Safro, Peter Sanders, and Christian Schulz,
+        "Advanced Coarsening Schemes for Graph Partitioning"
 
     """
     if not sparse.issparse(A) or A.format != 'csr':
@@ -1015,7 +1017,29 @@ def algebraic_distance(A, alpha=0.5, R=5, k=20, epsilon=2.0, p=2):
 
 
 def distance_measure_common(A, func, alpha, R, k, epsilon):
-    """Create strength of connection matrixfrom a function applied to relaxation vectors."""
+    """Strength of connection matrix from a function applied to relaxation vectors.
+
+    Parameters
+    ----------
+    A : csr_array
+        Input matrix for strength.
+    func : callable
+        Function to apply to relaxation vectors.
+    alpha : scalar
+        Weight for Jacobi.
+    R : int
+        Number of random vectors.
+    k : int
+        Number of relaxation passes.
+    epsilon : scalar
+        Filter tolerance.
+
+    Returns
+    -------
+    array_like
+        Test vectors.
+
+    """
     # create test vectors
     x = relaxation_vectors(A, R, k, alpha)
 

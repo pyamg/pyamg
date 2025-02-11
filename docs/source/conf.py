@@ -19,7 +19,24 @@ extensions = ['sphinx.ext.autodoc',
              ]
 
 numpydoc_show_inherited_class_members = False
-numpydoc_validation_checks = {'all'}
+numpydoc_validation_checks = {'all',
+                              # summary should start immediately after the opening quotes
+                              'GL01',
+                              # closing quotes should on the line after the last
+                              'GL02',
+                              # do not leave a blank line at the end of a docstring
+                              'GL03',
+                              # no extended summary found
+                              'ES01',
+                              # no See Also found
+                              'SA01',
+                              # no Examples found
+                              'EX01',
+                             }
+numpydoc_validation_exclude = {'pyamg.util.upcast', 
+                               'pyamg.util.make_system',
+                               'ode_strength_of_connection'
+                              }
 
 autodoc_default_options = {
     'members': True,
