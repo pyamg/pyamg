@@ -216,15 +216,15 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
         "filtered matrix" obtained from A by lumping weak connections
         onto the diagonal of A.
     T : csr_array, bsr_array
-        Tentative prolongator
+        Tentative prolongator.
     omega : scalar
-        Damping parameter
+        Damping parameter.
     degree : int
-        Number of passes
+        Number of passes.
 
     Returns
     -------
-    P : csr_array, bsr_array
+    csr_array, bsr_array
         Smoothed (final) prolongator defined by P = (I - omega/rho(S) S) @ T
         where rho(S) is an approximation to the spectral radius of S.
 
@@ -234,7 +234,6 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
     reproducible due to a random initial guess used for the spectral radius
     approximation.  For precise reproducibility, set numpy.random.seed(..) to
     the same value before each test.
-
 
     Examples
     --------
