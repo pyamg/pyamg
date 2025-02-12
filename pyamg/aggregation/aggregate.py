@@ -15,15 +15,19 @@ def standard_aggregation(C):
     Parameters
     ----------
     C : csr_array
-        strength of connection matrix
+        Strength of connection matrix.
 
     Returns
     -------
-    AggOp : csr_array
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    Cpts : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
+
+    See Also
+    --------
+    amg_core.standard_aggregation
 
     Examples
     --------
@@ -50,10 +54,6 @@ def standard_aggregation(C):
     array([[0],
            [1],
            [1]], dtype=int8)
-
-    See Also
-    --------
-    amg_core.standard_aggregation
 
     """
     if not sparse.issparse(C) or C.format != 'csr':
