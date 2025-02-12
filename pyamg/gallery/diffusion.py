@@ -18,7 +18,7 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
         -div Q A Q^T grad u
         = - (C^2 + eps S^2) u_xx - 2(1 - eps) C S u_xy - (eps C^2 + S^2) u_yy
 
-        where
+        where C=cos(theta), S=sin(theta), and
 
         Q = [cos(theta) -sin(theta)]
             [sin(theta)  cos(theta)]
@@ -28,22 +28,22 @@ def diffusion_stencil_2d(epsilon=1.0, theta=0.0, type='FE'):
 
     Parameters
     ----------
-    epsilon  : float, optional
+    epsilon : float
         Anisotropic diffusion coefficient: -div A grad u,
-        where A = [1 0; 0 epsilon].  The default is isotropic, epsilon=1.0
-    theta : float, optional
+        where A = [1 0; 0 epsilon].  The default is isotropic, epsilon=1.0.
+    theta : float
         Rotation angle `theta` from the positive x-axis in radians.
         Defines -div Q A Q^T grad, where
         Q = [cos(`theta`) -sin(`theta`); sin(`theta`) cos(`theta`)].
-        The default is `theta` = 0.0
+        The default is `theta` = 0.0.
     type : {'FE','FD'}
         Specifies the discretization as Q1 finite element (FE) or 2nd order
-        finite difference (FD)
+        finite difference (FD).
 
     Returns
     -------
-    stencil : numpy array
-        A 3x3 diffusion stencil
+    array
+        Diffusion stencil of size (3,3).
 
     See Also
     --------

@@ -12,23 +12,22 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     Parameters
     ----------
     grid : tuple
-        length 2 tuple of grid sizes, e.g. (10, 10)
+        Length 2 tuple of grid sizes, e.g. (10, 10).
     spacing : tuple
-        length 2 tuple of grid spacings, e.g. (1.0, 0.1)
+        Length 2 tuple of grid spacings, e.g. (1.0, 0.1).
     E : float
-        Young's modulus
+        Young's modulus.
     nu : float
-        Poisson's ratio
-    format : string
-        Format of the returned sparse matrix (eg. 'csr', 'bsr', etc.)
+        Poisson's ratio.
+    format : str
+        Format of the returned sparse matrix (eg. 'csr', 'bsr', etc.).
 
     Returns
     -------
-    A : csr_array
-        FE Q1 stiffness matrix
-
-    B : array
-        rigid body modes
+    csr_array
+        FE Q1 stiffness matrix.
+    array
+        Rigid body modes.
 
     See Also
     --------
@@ -36,12 +35,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
 
     Notes
     -----
-        - only 2d for now
-
-    Examples
-    --------
-    >>> from pyamg.gallery import linear_elasticity
-    >>> A, B = linear_elasticity((4, 4))
+    Only 2d.
 
     References
     ----------
@@ -49,6 +43,11 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
        "Matlab implementation of the finite element method in elasticity"
        Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
        http://www.math.hu-berlin.de/~cc/
+
+    Examples
+    --------
+    >>> from pyamg.gallery import linear_elasticity
+    >>> A, B = linear_elasticity((4, 4))
 
     """
     if len(grid) == 2:
@@ -212,25 +211,32 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     Parameters
     ----------
-    vertices : array_like
-        array of vertices of a triangle or tets
-    elements : array_like
-        array of vertex indices for tri or tet elements
+    vertices : array
+        Array of vertices of a triangle or tets.
+    elements : array
+        Array of vertex indices for tri or tet elements.
     E : float
-        Young's modulus
+        Young's modulus.
     nu : float
-        Poisson's ratio
-    format : string
-        'csr', 'csc', 'coo', 'bsr'
+        Poisson's ratio.
+    format : str
+        Sparse array format: 'csr', 'csc', 'coo', 'bsr'.
 
     Returns
     -------
-    A : csr_array
-        FE Q1 stiffness matrix
+    csr_array
+        FE Q1 stiffness matrix.
 
     Notes
     -----
-        - works in both 2d and in 3d
+    Both 2d and 3d.
+
+    References
+    ----------
+    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
+       "Matlab implementation of the finite element method in elasticity"
+       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
+       http://www.math.hu-berlin.de/~cc/
 
     Examples
     --------
@@ -239,13 +245,6 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     >>> E = np.array([[0, 1, 2],[1, 3, 2]])
     >>> V = np.array([[0.0, 0.0],[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])
     >>> A, B = linear_elasticity_p1(V, E)
-
-    References
-    ----------
-    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
-       "Matlab implementation of the finite element method in elasticity"
-       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
-       http://www.math.hu-berlin.de/~cc/
 
     """
     # compute local stiffness matrix
