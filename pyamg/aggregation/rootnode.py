@@ -42,27 +42,27 @@ def rootnode_solver(A, B=None, BH=None,
     Parameters
     ----------
     A : csr_array, bsr_array
-        Sparse NxN matrix in CSR or BSR format
+        Sparse NxN matrix in CSR or BSR format.
 
-    B : None, array_like
+    B : None, array
         Right near-nullspace candidates stored in the columns of an NxK array.
-        K must be >= the blocksize of A (see reference [2011OlScTu]_). The default value
-        B=None is equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
+        K must be >= the blocksize of A (see reference [2]_). The default value
+        ``B=None`` is equivalent to choosing the constant over each block-variable,
+        ``B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))``.
 
-    BH : None, array_like
+    BH : None, array
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry='nonsymmetric'.  K must be >= the
-        blocksize of A (see reference [2011OlScTu]_). The default value B=None is
+        blocksize of A (see reference [2]_). The default value B=None is
         equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
+        ``B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))``.
 
-    symmetry : string
-        'symmetric' refers to both real and complex symmetric
-        'hermitian' refers to both complex Hermitian and real Hermitian
-        'nonsymmetric' i.e. nonsymmetric in a hermitian sense
-        Note that for the strictly real case, symmetric and hermitian are
-        the same
+    symmetry : str
+        - 'symmetric' refers to both real and complex symmetric
+        - 'hermitian' refers to both complex Hermitian and real Hermitian
+        - 'nonsymmetric' i.e. nonsymmetric in a hermitian sense
+
+        Note that for the strictly real case, symmetric and hermitian are the same.
         Note that this flag does not denote definiteness of the operator.
 
     strength : list
@@ -80,16 +80,16 @@ def rootnode_solver(A, B=None, BH=None,
         ('energy',{'krylov' : 'gmres'}).  Only 'energy' and None are valid
         prolongation smoothing options.
 
-    presmoother : tuple, string, list
+    presmoother : tuple, str, list
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
         varying this parameter on a per level basis.
 
-    postsmoother : tuple, string, list
+    postsmoother : tuple, str, list
         Same as presmoother, except defines the postsmoother.
 
-    improve_candidates : tuple, string, list
+    improve_candidates : tuple, str, list
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
@@ -98,10 +98,10 @@ def rootnode_solver(A, B=None, BH=None,
         The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
 
-    max_levels : integer
+    max_levels : int
         Maximum number of levels to be used in the multilevel solver.
 
-    max_coarse : integer
+    max_coarse : int
         Maximum number of variables permitted on the coarse grid.
 
     diagonal_dominance : bool, tuple
@@ -116,27 +116,33 @@ def rootnode_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
-    kwargs : dict
-        Extra keywords passed to the Multilevel class
-
-    Other Parameters
-    ----------------
-    cycle_type : ['V','W','F']
-        Structrure of multigrid cycle
-    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
-        Solver used at the coarsest level of the MG hierarchy.
-        Optionally, may be a tuple (fn, args), where fn is a string such as
-        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
-        arguments to be passed to fn.
 
     Returns
     -------
-    ml : MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
+
+    Other Parameters
+    ----------------
+    **kwargs : dict
+        Extra keywords passed to the Multilevel class
+
+        =============   =======================================================
+        cycle_type      ['V','W','F'], Structrure of multigrid cycle
+        coarse_solver   ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+                        Solver used at the coarsest level of the MG hierarchy.
+                        Optionally, may be a tuple (fn, args), where fn is a
+                        string such as ['splu', 'lu', ...] or a callable
+                        function, and args is a dictionary of arguments to be
+                        passed to fn.
+        =============   =======================================================
+
+        See MultiLevel class for more details.
 
     See Also
     --------
-    MultilevelSolver, aggregation.smoothed_aggregation_solver,
+    MultilevelSolver
+    aggregation.smoothed_aggregation_solver
     classical.ruge_stuben_solver
 
     Notes
@@ -148,7 +154,7 @@ def rootnode_solver(A, B=None, BH=None,
            injection corresponds to the identity block.
 
          - Only smooth={'energy', None} is supported for prolongation
-           smoothing.  See reference [2011OlScTu]_ below for more details on why the
+           smoothing.  See reference [2]_ below for more details on why the
            'energy' prolongation smoother is the natural counterpart to
            root-node style SA.
 
@@ -204,6 +210,19 @@ def rootnode_solver(A, B=None, BH=None,
            aggregation list is predefined, it must be of the form
            ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
 
+    References
+    ----------
+    .. [1996VaMa] Vanek, P. and Mandel, J. and Brezina, M.,
+       "Algebraic Multigrid by Smoothed Aggregation for
+       Second and Fourth Order Elliptic Problems",
+       Computing, vol. 56, no. 3, pp. 179--196, 1996.
+       http://citeseer.ist.psu.edu/vanek96algebraic.html
+    .. [2] Olson, L. and Schroder, J. and Tuminaro, R.,
+       "A general interpolation strategy for algebraic
+       multigrid using energy minimization", SIAM Journal
+       on Scientific Computing (SISC), vol. 33, pp.
+       966--991, 2011.
+
     Examples
     --------
     >>> from pyamg import rootnode_solver
@@ -215,19 +234,6 @@ def rootnode_solver(A, B=None, BH=None,
     >>> ml = rootnode_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
     >>> x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M)   # solve with CG
-
-    References
-    ----------
-    .. [1996VaMa] Vanek, P. and Mandel, J. and Brezina, M.,
-       "Algebraic Multigrid by Smoothed Aggregation for
-       Second and Fourth Order Elliptic Problems",
-       Computing, vol. 56, no. 3, pp. 179--196, 1996.
-       http://citeseer.ist.psu.edu/vanek96algebraic.html
-    .. [2011OlScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
-       "A general interpolation strategy for algebraic
-       multigrid using energy minimization", SIAM Journal
-       on Scientific Computing (SISC), vol. 33, pp.
-       966--991, 2011.
 
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
