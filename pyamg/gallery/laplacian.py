@@ -88,31 +88,29 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
     Parameters
     ----------
     npts : int
-        number of pts in x and y directions
-
+        Number of pts in x and y directions.
     spacing : float
-        grid spacing between points
-
+        Grid spacing between points.
     beta : float
-        temperature
-        Note that if beta=0, then we get the typical 5pt Laplacian stencil
+        Temperature.
+        If beta=0, then the result is the typical 5pt Laplacian stencil.
 
     Returns
     -------
-    A : csr matrix
-        A is Hermitian positive definite for beta > 0.0
-        A is Symmetric semi-definite for beta = 0.0
-
-    Examples
-    --------
-    >>> from pyamg.gallery import gauge_laplacian
-    >>> A = gauge_laplacian(10)
+    csr_array
+        A is Hermitian positive definite for ``beta > 0.0``.
+        A is Symmetric semi-definite for ``beta = 0.0``.
 
     References
     ----------
     .. [1] MacLachlan, S. and Oosterlee, C.,
        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
        Vol. 30, SIAM J. Sci. Comp, 2008
+
+    Examples
+    --------
+    >>> from pyamg.gallery import gauge_laplacian
+    >>> A = gauge_laplacian(10)
 
     """
     # The gauge Laplacian has the same sparsity structure as a normal
