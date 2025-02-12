@@ -204,20 +204,20 @@ void classical_strength_of_connection_min(const I n_row,
 }
 
 /*
- * Compute the maximum in magnitude row value for a CSR matrix>
+ * Compute the maximum in magnitude row value for a CSR matrix.
  *
  * Parameters
  * ----------
  * num_rows : int
- *     Number of rows in A>
+ *     Number of rows in A.
  * x : array
- *     Num_rows array>
+ *     Num_rows array.
  * Ap : array
- *     CSR row pointer>
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array>
+ *     CSR index array.
  * Ax : array
- *     CSR data array>
+ *     CSR data array.
  *
  * Returns
  * -------

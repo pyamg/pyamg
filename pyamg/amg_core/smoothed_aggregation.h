@@ -429,7 +429,6 @@ I pairwise_aggregation(const I n_row,
 }
 
 
-
 /*
  * Helper function to fit candidate vectors.
  *

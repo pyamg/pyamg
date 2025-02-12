@@ -1396,6 +1396,8 @@ void extract_subblocks(const I Ap[], const int Ap_size,
 
 
 /*
+ * Overlapping Schwarz iteration.
+ *
  * Perform one iteration of an overlapping Schwarz relaxation on
  * the linear system Ax = b, where A is stored in CSR format
  * and x and b are column vectors.
@@ -1412,9 +1414,9 @@ void extract_subblocks(const I Ap[], const int Ap_size,
  * Ax : array
  *     CSR data array, blocks assumed square.
  * x : array
- *     approximate solution.
+ *     Approximate solution.
  * b : array
- *     right hand side.
+ *     Right hand side.
  * Tx : array
  *     Inverse of each diagonal block of A, stored in row major.
  * Tp : array
@@ -1423,9 +1425,9 @@ void extract_subblocks(const I Ap[], const int Ap_size,
  *     Indices of each subdomain. Must be sorted over each subdomain.
  * Sp : array
  *     Pointer array indicating where each subdomain starts and stops.
- * nsdomains
+ * nsdomains : int
  *     Number of subdomains.
- * nrows
+ * nrows : int
  *     Number of rows.
  * row_start : int
  *     Subdomain processing start index.

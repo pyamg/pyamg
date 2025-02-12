@@ -1390,6 +1390,8 @@ None
     m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
+Overlapping Schwarz iteration.
+
 Perform one iteration of an overlapping Schwarz relaxation on
 the linear system Ax = b, where A is stored in CSR format
 and x and b are column vectors.
@@ -1406,9 +1408,9 @@ Aj : array
 Ax : array
     CSR data array, blocks assumed square.
 x : array
-    approximate solution.
+    Approximate solution.
 b : array
-    right hand side.
+    Right hand side.
 Tx : array
     Inverse of each diagonal block of A, stored in row major.
 Tp : array
@@ -1417,9 +1419,9 @@ Sj : array
     Indices of each subdomain. Must be sorted over each subdomain.
 Sp : array
     Pointer array indicating where each subdomain starts and stops.
-nsdomains
+nsdomains : int
     Number of subdomains.
-nrows
+nrows : int
     Number of rows.
 row_start : int
     Subdomain processing start index.

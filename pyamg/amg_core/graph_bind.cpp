@@ -741,8 +741,7 @@ References
     m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(
-Perform one iteration of Lloyd clustering on a distance graph using
-exact centers.
+Perform one iteration of Lloyd clustering on a distance graph using exact centers.
 
 Parameters
 ----------

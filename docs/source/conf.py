@@ -38,9 +38,9 @@ numpydoc_validation_checks = {'all',
                               'EX01',
                               # missing see also description
                               'SA04',
-                              'PR02',
                              }
-numpydoc_validation_exclude = {'pyamg.util.upcast',
+numpydoc_validation_exclude = {'pyamg.amg_core',
+                               'pyamg.util.upcast',
                                'pyamg.util.make_system',
                                'pyamg.strength.ode_strength_of_connection',
                                'pyamg.multilevel.multilevel_solver',
