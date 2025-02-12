@@ -35,7 +35,7 @@ def air_solver(A,
     Parameters
     ----------
     A : csr_array
-        Square (non)symmetric matrix in CSR format
+        Square (non)symmetric matrix in CSR format.
     strength : {'symmetric', 'classical', 'evolution', 'distance', \
                'algebraic_distance','affinity', 'energy_based', None}
         Method used to determine the strength of connection between unknowns
@@ -45,41 +45,40 @@ def air_solver(A,
     CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interpolation : {string} : default 'one_point'
+    interpolation : str
         Options include 'direct', 'classical', 'inject' and 'one-point'.
-    restrict : {string} : default distance-2 AIR, with theta = 0.05.
+    restrict : str
         Option is 'air' for local approximate ideal restriction (lAIR),
-        with inner options specifying degree, strength tolerance, etc.
-    presmoother : {string or dict} : default None
+        with inner options specifying degree, strength tolerance, etc..
+    presmoother : str
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple.
-    postsmoother : {string or dict}
+    postsmoother : str
         Postsmoothing method with the same usage as presmoother.
         postsmoother=('fc_jacobi', ... ) with 2 F-sweeps, 1 C-sweep is default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
         considered *small* if `|a_ij| < tol |a_ii|`.
-    max_levels: {integer} : default 20
+    max_levels : {integer} : default 20
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse: {integer} : default 20
+    max_coarse : {integer} : default 20
         Maximum number of variables permitted on the coarse grid.
-    keep: {bool} : default False
-        Flag to indicate keeping strength of connection matrix (C) in
-        hierarchy.
-    kwargs : dict
-        Extra keywords passed to the Multilevel class
+    keep : bool
+        Flag to indicate keeping strength of connection matrix (C) in hierarchy.
+    **kwargs : dict
+        Extra keywords passed to the Multilevel class.
 
     Returns
     -------
-    ml : multilevel_solver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
-    Examples
+    See Also
     --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg import air_solver
-    >>> A = poisson((10,),format='csr')
-    >>> ml = air_solver(A,max_coarse=3)
+    pyamg.multilevel.MultilevelSolver,
+    pyamg.aggregation.smoothed_aggregation_solver,
+    pyamg.aggregation.rootnode_solver,
+    ruge_stuben_solver
 
     Notes
     -----
@@ -105,12 +104,12 @@ def air_solver(A,
     .. [3] Trottenberg, U.; Oosterlee, C. W. & Schüller, A. (2001),
            Multigrid, Vol. 33, Academic Press.
 
-    See Also
+    Examples
     --------
-    pyamg.multilevel.MultilevelSolver,
-    pyamg.aggregation.smoothed_aggregation_solver,
-    pyamg.aggregation.rootnode_solver,
-    ruge_stuben_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg import air_solver
+    >>> A = poisson((10,),format='csr')
+    >>> ml = air_solver(A,max_coarse=3)
 
     """
     # preprocess A
