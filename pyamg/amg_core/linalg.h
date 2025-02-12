@@ -145,21 +145,22 @@ inline I col_major(const I row, const I col, const I num_rows)
  *      templated for pyamg's complex class, float and double
  *******************************************************************/
 
-/* dot(x, y, n)
+/*
+ * Dot product.
  *
  * Parameters
  * ----------
  * x : array
- *     n-vector
+ *     Vector of length n.
  * y : array
- *     n-vector
+ *     Vector of length n.
  * n : int
- *     size of x and y
+ *     Size of x and y.
  *
  * Returns
  * -------
  * float
- *     conjugate(x).T y
+ *     Dot product ``<conjugate(x).T, y>``.
  *
  */
 template<class I, class T>
@@ -172,21 +173,22 @@ inline T dot_prod(const T x[], const T y[], const I n)
 }
 
 
-/* norm(x, n)
+/*
+ * Vector norm.
  *
  * Parameters
  * ----------
  * x : array
- *     n-vector
+ *     Vector of length n.
  * n : int
- *     size of x and y
+ *     Size of x.
  * normx : float
- *     output value
+ *     Output value.
  *
  * Returns
  * -------
- * float
- *     normx = sqrt( <x, x> )
+ * None
+ *     Output in place in normx (``= sqrt(<x, x>)``).
  *
  */
 template<class I, class T, class F>
@@ -195,21 +197,22 @@ inline void norm(const T x[], const I n, F &normx)
     normx = sqrt(real(dot_prod(x,x,n)));
 }
 
-/* norm(x, n)
+/*
+ * Vector norm.
  *
  * Parameters
  * ----------
  * x : array
- *     n-vector
+ *     Vector of length n.
  * n : int
- *     size of x and y
+ *     Size of x.
  * normx : float
- *     output value
+ *     Output value.
  *
  * Returns
  * -------
  * float
- *     sqrt( <x, x> )
+ *     Norm computed by ``sqrt(<x, x>)``.
  *
  */
 template<class I, class T>
@@ -218,23 +221,23 @@ inline T norm(const T x[], const I n)
     return std::sqrt(dot_prod(x,x,n));
 }
 
-/* axpy(x, y, alpha, n)
+/* AXPY.
  *
  * Parameters
  * ----------
  * x : array
- *     n-vector
+ *     Vector of length n.
  * y : array
- *     n-vector
+ *     Vector of length n.
  * n : int
- *     size of x and y
+ *     Size of x and y.
  * alpha : float
- *     value to scale with
+ *     Value to scale with.
  *
  * Returns
  * -------
- * x : float
- *     x = x + alpha*y
+ * None
+ *     In place.  AXPY type update of ``x = x + alpha*y``.
  */
 template<class I, class T>
 inline void axpy(T x[], const T y[], const T alpha, const I n)
@@ -244,22 +247,22 @@ inline void axpy(T x[], const T y[], const T alpha, const I n)
 }
 
 
-/* Transpose Ax by overwriting Bx
+/* Transpose Ax by overwriting Bx.
  *
  * Parameters
  * ----------
  * Ax : array
- *      m x n dense array
- * Bx :array
- *      m x n dense array
+ *      Dense array of size (m,n).
+ * Bx : array
+ *      Dense array of size (m,n).
  * m : int
- *      Dimensions of Ax
+ *      Dimensions of Ax.
  * n : int
- *      Dimensions of Bx
+ *      Dimensions of Bx.
  *
  * Returns
  * -------
- * Bx is overwritten with the transpose of Ax
+ * Bx is overwritten with the transpose of Ax.
  *
  * Notes
  * -----
@@ -349,44 +352,45 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
 }
 
 
-/* Calculate Ax*Bx = S
+/* Calculate Ax*Bx = S.
  *
  * Parameters
  * ----------
  * Ax : array
- *      Stored in row major
+ *     Stored in row major.
  * Arows : int
- *      Number of rows of A
+ *     Number of rows of A.
  * Acols : int
- *      Number of columns of A
+ *     Number of columns of A.
  * Atrans : char
- *      Not Used
+ *     Not Used.
  * Bx : array
- *      Stored in col major
+ *     Stored in col major.
  * Brows : int
- *      Number of rows of B
+ *     Number of rows of B.
  * Bcols : int
- *      Number of columns of B
+ *     Number of columns of B.
  * Btrans : char
- *      Supported, essentially Btrans='F' assumes
- *      B is in column major, and Brans='T' assumes
- *      B is in row major
+ *     Supported, essentially Btrans='F' assumes.
+ *     B is in column major, and Brans='T' assumes.
+ *     B is in row major.
  * Sx : array
- *      Output array, Contents are overwritten
+ *     Output array, Contents are overwritten.
  * Srows : int
- *      Number of rows of S
+ *     Number of rows of S.
  * Scols : int
- *      Number of columns of S
+ *     Number of columns of S.
  * Strans : char
- *      'T' gives S in col major (only works with Btrans='F')
- *      'F' gives S in row major
+ *     - 'T' gives S in col major (only works with Btrans='F').
+ *     - 'F' gives S in row major.
  * overwrite : {char}
- *      'T' overwrite S
- *      'F' accumulate to S
+ *     - 'T' overwrite S.
+ *     - 'F' accumulate to S.
  *
  * Returns
  * -------
- * Modified inplace: Sx = Ax*Bx in column or row major, depending on Strans.
+ * None
+ *     Modified inplace: Sx = Ax*Bx in column or row major, depending on Strans.
  *
  * Notes
  * -----
@@ -395,7 +399,8 @@ inline void transpose(const T Ax[], T Bx[], const I m, const I n)
  * - Btrans = 'F' and Strans = 'F'
  * - Btrans = 'T' and Strans = 'F'
  *
- * All other combinations are not yet supported
+ * All other combinations are not yet supported.
+ *
  */
 template<class I, class T>
 inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
@@ -494,42 +499,32 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
 
 /*
  * Compute the SVD of a matrix, Ax, using the Jacobi method.
+ *
  * Compute Ax = U S V.H
  *
  * Parameters
  * ----------
  * Ax : array
- *     m x n dense matrix, stored in col major form
- * U : array
- *     m x n dense matrix initialized to 0.0
- *     Passed in as Tx
- * V : array
- *     n x n dense matrix initialized to 0.0
- *     Passed in as Bx
- * S : array
- *     n x 1 dense matrix initialized to 0.0
- *     Passed in as Sx
- * m,n : int
+ *     Matrix A.  Dense matrix of size (m,n), stored in col major form.
+ * Tx : array
+ *     Matrix U. Dense matrix of size (m,n) initialized to 0.0.
+ * Bx : array
+ *     Matrix V. Dense matrix initialized to 0.0.
+ * Sx : array
+ *     Vector S. Vector of length n initialized to 0.0.
+ * m, n : int
  *      Dimensions of Ax, m > n.
  *
  * Returns
  * -------
- * Returns Ax = U S V.H
- * U, V, S are modified in place
- *
- * V : array
- *      Orthogonal n x n matrix, V, stored in col major
- * U : array
- *      Orthogonal m x n matrix, U, stored in col major
- * S : array
- *      Singular values
  * int : int
  *      Function return value,
-        ==  =====================
- *      -1  error
- *       0  successful
- *       1  did not converge
-        ==  =====================
+ *
+ *          ==  =====================
+ *          -1  error
+ *           0  successful
+ *           1  did not converge
+ *          ==  =====================
  *
  * Notes
  * -----
@@ -543,9 +538,9 @@ inline void gemm(const T Ax[], const I Arows, const I Acols, const char Atrans,
  *
  * References
  * ----------
- * De Rijk, "A One-Sided Jacobi Algorithm for computing the singular value
- * decomposition on a vector computer", SIAM J Sci and Statistical Comp,
- * Vol 10, No 2, p 359-371, March 1989.
+ * .. [1] De Rijk, "A One-Sided Jacobi Algorithm for computing the singular value
+ *        decomposition on a vector computer", SIAM J Sci and Statistical Comp,
+ *        Vol 10, No 2, p 359-371, March 1989.
  *
  */
 template<class I, class T, class F>
@@ -809,33 +804,34 @@ I svd_jacobi(const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
 
 
 /*
- * Solve a system with the SVD, i.e. use a robust Moore-Penrose
- * Pseudoinverse to multiply the RHS
+ * Solve a system with the SVD.
+ *
+ * Use a robust Moore-Penrose Pseudoinverse to multiply the RHS.
  *
  * Parameters
  * ----------
  * A : array
- *     m x n dense column major array, m>n
- * m,n : int
- *     Dimensions of A, m > n
+ *     Dense column major array of size (m,n), m>n.
+ * m, n : int
+ *     Dimensions of A, m > n.
  * b : array
- *     RHS, m-vector
- * sing_vals : {float array}
- *     Holds the singular values upon return
+ *     RHS, m-vector.
+ * sing_vals : array
+ *     Holds the singular values upon return.
  * work : array
- *     worksize array for temporary space for routine
+ *     Worksize array for temporary space for routine.
  * worksize : int
- *     must be > m*n + n
+ *     Must be > m*n + n.
  *
  * Returns
  * -------
- * A^{-1} b replaces b
- * sing_vals holds the singular values
+ * None
+ *     In place. A^{-1} b replaces b. sing_vals holds the singular values.
  *
  * Notes
  * -----
- * forcing preallocation of sing_vals and work, allows for
- * efficient multiple calls to this routine
+ * Forcing preallocation of sing_vals and work, allows for
+ * efficient multiple calls to this routine.
  *
  */
 template<class I, class T, class F>
@@ -886,21 +882,22 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
 }
 
 /* Replace each block of A with a Moore-Penrose pseudoinverse of that block.
+ *
  * Routine is designed to invert many small matrices at once.
  *
  * Parameters
  * ----------
  * AA : array
- *     (m, n, n) array, assumed to be "raveled" and in row major form
+ *     Array of size (m, n, n), assumed to be "raveled" and in row major form.
  * m,n : int
- *     dimensions of AA
+ *     Dimensions of AA.
  * TransA : char
  *     'T' or 'F'.  Decides whether to transpose each nxn block
  *     of A before inverting.  If using Python array, should be 'T'.
  *
  * Returns
  * -------
- * AA : array
+ * None
  *     AA is modified in place with the pseduoinverse replacing each
  *     block of AA.  AA is returned in row-major form for Python
  *
@@ -999,7 +996,7 @@ void pinv_array(T AA[], const int AA_size,
 }
 
 /*
- * Scale the columns of a CSC matrix *in place*
+ * Scale the columns of a CSC matrix *in place*.
  *
  * ..
  *   A[:,i] *= X[i]
@@ -1025,7 +1022,7 @@ void csc_scale_columns(const I n_row,
 }
 
 /*
- * Scale the rows of a CSC matrix *in place*
+ * Scale the rows of a CSC matrix *in place*.
  *
  * ..
  *   A[i,:] *= X[i]
@@ -1051,26 +1048,29 @@ void csc_scale_rows(const I n_row,
 
 
 /*
- * Filter matrix rows by diagonal entry, that is set A_ij = 0 if::
+ * Filter matrix rows by diagonal entry.
+ *
+ * That is set A_ij = 0 if::
  *
  *    |A_ij| < theta * |A_ii|
  *
  * Parameters
  * ----------
  * num_rows : int
- *     number of rows in A
+ *     Number of rows in A.
  * theta : float
- *     strength of connection tolerance
+ *     Strength of connection tolerance.
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
+ *     CSR data array.
  *
  * Returns
  * -------
- * Nothing, Ax is modified in place
+ * None
+ *     Nothing, Ax is modified in place.
  */
 template<class I, class T, class F>
 void filter_matrix_rows(const I n_row,
@@ -1142,26 +1142,25 @@ void filter_matrix_rows(const I n_row,
     }
 }
 
-/* QR-decomposition using Householer transformations on dense
- * 2d array stored in either column- or row-major form. 
+/* QR-decomposition using Householer transformations.
+ *
+ * Executes on dense 2d array stored in either column- or row-major form. 
  * 
  * Parameters
  * ----------
  * A : double array
- *     2d matrix A stored in 1d column- or row-major.
- * m : &int
- *     Number of rows in A
- * n : &int
- *     Number of columns in A
+ *     Matrix stored in 1d column- or row-major.
+ * m : int
+ *     Number of rows in A.
+ * n : int
+ *     Number of columns in A.
  * is_col_major : bool
- *     True if A is stored in column-major, false
- *     if A is stored in row-major.
+ *     True if A is stored in column-major. False if A is stored in row-major.
  *
  * Returns
  * -------
- * Q : vector<double>
+ * array
  *     Matrix Q stored in same format as A.
- * R : in-place
  *     R is stored over A in place, in same format.
  * 
  * Notes
@@ -1263,28 +1262,30 @@ std::vector<T> QR(T A[],
     return Q;
 }
 
-/* Backward substitution solve on upper-triangular linear system,
- * Rx = rhs, where R is stored in column- or row-major form. 
+/*
+ * Backward substitution solve on upper-triangular linear system.
+ *
+ * Solve Rx = rhs, where R is stored in column- or row-major form. 
  * 
  * Parameters
  * ----------
- * R : double array, length m*n
+ * R : array
  *     Upper-triangular array stored in column- or row-major.
- * rhs : double array, length m
- *     Right hand side of linear system
- * x : double array, length n
- *     Preallocated array for solution
- * m : &int
- *     Number of rows in R
- * n : &int
- *     Number of columns in R
+ * rhs : array
+ *     Right hand side of linear system.
+ * x : array
+ *     Preallocated array for solution.
+ * m : int
+ *     Number of rows in R.
+ * n : int
+ *     Number of columns in R.
  * is_col_major : bool
- *     True if R is stored in column-major, false
- *     if R is stored in row-major.
+ *     True if R is stored in column-major. False if R is stored in row-major.
  *
  * Returns
  * -------
- * Nothing, solution is stored in x[].
+ * None
+ *     Nothing, solution is stored in x.
  *
  * Notes
  * -----
@@ -1335,28 +1336,30 @@ void upper_tri_solve(const T R[],
     }
 }
 
-/* Forward substitution solve on lower-triangular linear system,
- * Lx = rhs, where L is stored in column- or row-major form. 
+/* 
+ * Forward substitution solve on lower-triangular linear system.
+ * 
+ * Solves Lx = rhs, where L is stored in column- or row-major form. 
  * 
  * Parameters
  * ----------
- * L : double array, length m*n
+ * L : array
  *     Lower-triangular array stored in column- or row-major.
- * rhs : double array, length m
- *     Right hand side of linear system
- * x : double array, length n
- *     Preallocated array for solution
- * m : &int
- *     Number of rows in L
- * n : &int
- *     Number of columns in L
+ * rhs : array
+ *     Right hand side of linear system.
+ * x : array
+ *     Preallocated array for solution.
+ * m : int
+ *     Number of rows in L.
+ * n : int
+ *     Number of columns in L.
  * is_col_major : bool
- *     True if L is stored in column-major, false
- *     if L is stored in row-major.
+ *     True if L is stored in column-major. False if L is stored in row-major.
  *
  * Returns
  * -------
- * Nothing, solution is stored in x[].
+ * None
+ *     Nothing, solution is stored in x.
  *
  * Notes
  * -----
@@ -1364,7 +1367,6 @@ void upper_tri_solve(const T R[],
  * lower-triangular block of size min(m,n). If remaining entries
  * in solution are unused, they will be set to zero. If a zero
  * is encountered on the ith diagonal, x[i] is set to zero. 
- *
  *
  */
 template<class I, class T>
@@ -1412,24 +1414,23 @@ void lower_tri_solve(const T L[],
  *
  * Parameters
  * ----------
- * A : double array, length m*n
- *     2d array stored in column- or row-major.
- * b : double array, length m
+ * A : array
+ *     Array stored in column- or row-major.
+ * b : array
  *     Right hand side of unconstrained problem.
- * x : double array, length n
- *     Container for solution
- * m : &int
- *     Number of rows in A
- * n : &int
- *     Number of columns in A
+ * x : array
+ *     Container for solution.
+ * m : int
+ *     Number of rows in A.
+ * n : int
+ *     Number of columns in A.
  * is_col_major : bool
- *     True if A is stored in column-major, false
- *     if A is stored in row-major.
+ *     True if A is stored in column-major. False if A is stored in row-major.
  *
  * Returns
  * -------
- * x : vector<double>
- *    Solution to constrained least squares problem.
+ * None
+ *     In place solution to constrained least squares problem.
  *
  * Notes
  * -----

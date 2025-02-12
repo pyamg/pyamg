@@ -4,6 +4,8 @@
 #include "linalg.h"
 
 /*
+ * Gauss-Seidel iteration.
+ *
  * Perform one iteration of Gauss-Seidel relaxation on the linear
  * system Ax = b, where A is stored in CSR format and x and b
  * are column vectors.
@@ -11,25 +13,26 @@
  * Parameters
  * ----------
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
- * x : array, inplace
- *     approximate solution
+ *     CSR data array.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
+ *     Right hand side.
  * row_start : int
- *     beginning of the sweep
+ *     Beginning of the sweep.
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  * Notes
  * -----
@@ -37,9 +40,10 @@
  * by row_start, row_end, and row_step.  These options are used
  * to implement standard forward and backward sweeps, or sweeping
  * only a subset of the unknowns.  A forward sweep is implemented
- * with gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1) where N is the
+ * with ``gauss_seidel(Ap, Aj, Ax, x, b, 0, N, 1)`` where N is the
  * number of rows in matrix A.  Similarly, a backward sweep is
- * implemented with gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1).
+ * implemented with ``gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1)``.
+ *
  */
 template<class I, class T, class F>
 void gauss_seidel(const I Ap[], const int Ap_size,
@@ -71,6 +75,44 @@ void gauss_seidel(const I Ap[], const int Ap_size,
     }
 }
 
+/*
+ * SOR iteration.
+ *
+ * Perform one iteration of SOR relaxation on the linear
+ * system Ax = b, where A is stored in CSR format and x and b
+ * are column vectors.
+ *
+ * Parameters
+ * ----------
+ * Ap : array
+ *     CSR row pointer.
+ * Aj : array
+ *     CSR index array.
+ * Ax : array
+ *     CSR data array.
+ * x : array
+ *     Approximate solution.
+ * b : array
+ *     Right hand side.
+ * row_start : int
+ *     Beginning of the sweep.
+ * row_stop : int
+ *     End of the sweep (i.e. one past the last unknown).
+ * row_step : int
+ *     Stride used during the sweep (may be negative).
+ * omega : float
+ *     Relaxation parameter for SOR.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified inplace.
+ *
+ * Notes
+ * -----
+ * Nearly identical to ``gauss_seidel`` with a relaxation parameter ``omega``.
+ *
+ */
 template<class I, class T, class F>
 void sor_gauss_seidel(const I Ap[], const int Ap_size,
                   const I Aj[], const int Aj_size,
@@ -103,6 +145,8 @@ void sor_gauss_seidel(const I Ap[], const int Ap_size,
 }
 
 /*
+ * Gauss-Seidel iteration with BSR arrays.
+ *
  * Perform one iteration of Gauss-Seidel relaxation on the linear
  * system Ax = b, where A is stored in Block CSR format and x and b
  * are column vectors.  This method applies point-wise relaxation
@@ -114,27 +158,28 @@ void sor_gauss_seidel(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     BSR row pointer
+ *     BSR row pointer.
  * Aj : array
- *     BSR index array
+ *     BSR index array.
  * Ax : array
- *     BSR data array
- * x : array, inplace
- *     approximate solution
+ *     BSR data array.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
+ *     Right hand side.
  * row_start : int
- *     beginning of the sweep (block row index)
+ *     Beginning of the sweep (block row index).
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  * blocksize : int
- *     BSR blocksize (blocks must be square)
+ *     BSR blocksize (blocks must be square).
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  */
 template<class I, class T, class F>
@@ -222,6 +267,8 @@ void bsr_gauss_seidel(const I Ap[], const int Ap_size,
 
 
 /*
+ * Weighted Jacobi iteration.
+ *
  * Perform one iteration of Jacobi relaxation on the linear
  * system Ax = b, where A is stored in CSR format and x and b
  * are column vectors.  Damping is controlled by the omega
@@ -233,29 +280,30 @@ void bsr_gauss_seidel(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
- * x : array, inplace
- *     approximate solution
+ *     CSR data array.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
- * temp, array
- *     temporary vector the same size as x
+ *     Right hand side.
+ * temp : array
+ *     Temporary vector the same size as x.
  * row_start : int
- *     beginning of the sweep
+ *     Beginning of the sweep.
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  * omega : float
- *     damping parameter
+ *     Damping parameter.
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  */
 template<class I, class T, class F>
@@ -299,23 +347,36 @@ void jacobi(const I Ap[], const int Ap_size,
 
 
 /*
- *  Perform one iteration of Jacobi relaxation on the linear
- *  system Ax = b for a given set of row indices, where A is
- *  stored in CSR format and x and b are column vectors.
- *  Damping is controlled by the omega parameter.
+ * Indexed weighted Jacobi iteration.
  *
- *  Parameters
- *      Ap[]       - CSR row pointer
- *      Aj[]       - CSR index array
- *      Ax[]       - CSR data array
- *      x[]        - approximate solution
- *      b[]        - right hand side
- *      temp[]     - temporary vector the same size as x
- *      indices[]  - list of row indices to perform Jacobi on, e.g. F-points
- *      omega      - damping parameter
+ * Perform one iteration of Jacobi relaxation on the linear
+ * system Ax = b for a given set of row indices, where A is
+ * stored in CSR format and x and b are column vectors.
+ * Damping is controlled by the omega parameter.
  *
- *  Returns:
- *      Nothing, x will be modified in place
+ * Parameters
+ * ----------
+ * Ap : array
+ *     CSR row pointer.
+ * Aj : array
+ *     CSR index array.
+ * Ax : array
+ *     CSR data array.
+ * x : array
+ *     Approximate solution.
+ * b : array
+ *     Right hand side.
+ * temp : array
+ *     Temporary vector the same size as x.
+ * indices : array
+ *     List of row indices to perform Jacobi on, e.g. F-points.
+ * omega : array
+ *     Damping parameter.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified in place.
  *
  */
 template<class I, class T, class F>
@@ -367,6 +428,8 @@ void jacobi_indexed(const I Ap[], const int Ap_size,
 
 
 /*
+ * Weighted Jacobi iteration on BSR arrays.
+ *
  * Perform one iteration of Jacobi relaxation on the linear
  * system Ax = b, where A is stored in Block CSR format and x and b
  * are column vectors.  This method applies point-wise relaxation
@@ -378,31 +441,32 @@ void jacobi_indexed(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     BSR row pointer
+ *     BSR row pointer.
  * Aj : array
- *     BSR index array
+ *     BSR index array.
  * Ax : array
- *     BSR data array
- * x : array, inplace
- *     approximate solution
+ *     BSR data array.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
- * temp : array, inplace
- *     temporary vector the same size as x
+ *     Right hand side.
+ * temp : array
+ *     Temporary vector the same size as x.
  * row_start : int
- *     beginning of the sweep (block row index)
+ *     Beginning of the sweep (block row index).
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  * blocksize : int
- *     BSR blocksize (blocks must be square)
+ *     BSR blocksize (blocks must be square).
  * omega : float
- *     damping parameter
+ *     Damping parameter.
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  */
 template<class I, class T, class F>
@@ -500,36 +564,39 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
 
 
 /*
- *  Perform one iteration of Jacobi relaxation on the linear
- *  system Ax = b for a given set of row indices, where A is
- *  stored in Block CSR format and x and b are column vectors.
- *  This method applies point-wise relaxation to the BSR matrix
- *  for a given set of row block indices, as opposed to "block
- *  relaxation".
+ * Indexed weighted Jacobi on BSR arrays.
  *
- *  Parameters
- *  ----------
- *  Ap : array
- *      BSR row pointer
- *  Aj : array
- *      BSR index array
- *  Ax : array
- *      BSR data array
- *  x : array
- *      approximate solution
- *  b : array
- *      right hand side
- *  indices : array
- *      list of row indices to perform Jacobi on, e.g., F-points.
- *      Note, it is assumed that indices correspond to blocks in A.
- *  blocksize : int
- *      BSR blocksize (blocks must be square)
- *  omega : float
- *      damping parameter
+ * Perform one iteration of Jacobi relaxation on the linear
+ * system Ax = b for a given set of row indices, where A is
+ * stored in Block CSR format and x and b are column vectors.
+ * This method applies point-wise relaxation to the BSR matrix
+ * for a given set of row block indices, as opposed to "block
+ * relaxation".
  *
- *  Returns
- *  -------
- *      Nothing, x will be modified in place
+ * Parameters
+ * ----------
+ * Ap : array
+ *    BSR row pointer.
+ * Aj : array
+ *    BSR index array.
+ * Ax : array
+ *    BSR data array.
+ * x : array
+ *    Approximate solution.
+ * b : array
+ *    Right hand side.
+ * indices : array
+ *    List of row indices to perform Jacobi on, e.g., F-points.
+ *    Note, it is assumed that indices correspond to blocks in A.
+ * blocksize : int
+ *     BSR blocksize (blocks must be square).
+ * omega : float
+ *     Damping parameter.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified in place.
  *
  */
 template<class I, class T, class F>
@@ -621,6 +688,8 @@ void bsr_jacobi_indexed(const I Ap[], const int Ap_size,
 
 
 /*
+ * Indexed Gauss-Seidel iteration.
+ *
  * Perform one iteration of Gauss-Seidel relaxation on the linear
  * system Ax = b, where A is stored in CSR format and x and b
  * are column vectors.
@@ -628,27 +697,28 @@ void bsr_jacobi_indexed(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
- * x : array, inplace
- *     approximate solution
+ *     CSR data array.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
+ *     Right hand side.
  * Id : array
- *     index array representing the
+ *     Index array representing the.
  * row_start : int
- *     beginning of the sweep (in array Id)
+ *     Beginning of the sweep (in array Id).
  * row_stop : int
- *     end of the sweep (in array Id)
+ *     End of the sweep (in array Id).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  * Notes
  * -----
@@ -661,6 +731,7 @@ void bsr_jacobi_indexed(const I Ap[], const int Ap_size,
  *
  * In this method the slice arguments are used to define the subset
  * of the index array Id which is to be considered.
+ *
  */
 template<class I, class T, class F>
 void gauss_seidel_indexed(const I Ap[], const int Ap_size,
@@ -697,6 +768,8 @@ void gauss_seidel_indexed(const I Ap[], const int Ap_size,
 }
 
 /*
+ * Jacobi NE iteration.
+ *
  * Perform NE Jacobi on the linear system A x = b
  * This effectively carries out weighted-Jacobi on A^TA x = A^T b
  * (also known as Cimmino's relaxation)
@@ -704,37 +777,35 @@ void gauss_seidel_indexed(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     index pointer for CSR matrix A
+ *     Index pointer for CSR matrix A.
  * Aj : array
- *     column indices for CSR matrix A
+ *     Column indices for CSR matrix A.
  * Ax : array
- *     value array for CSR matrix A
- * x : array, inplace
- *     current guess to the linear system
+ *     Value array for CSR matrix A.
+ * x : array
+ *     Current guess to the linear system.
  * b : array
- *     right hand side
+ *     Right hand side.
  * Tx : array
- *     scaled residual D_A^{-1} (b - Ax)
+ *     Scaled residual D_A^{-1} (b - Ax).
  * temp : array
- *     work space
+ *     Work space.
  * row_start : int
- *     controls which rows to start on
+ *     Controls which rows to start on.
  * row_stop : int
- *     controls which rows to stop on
+ *     Controls which rows to stop on.
  * row_step : int
- *     controls which rows to iterate over
+ *     Controls which rows to iterate over.
  * omega : array
- *     size one array that contains the weighted-jacobi
+ *     Size one array that contains the weighted-jacobi
  *     parameter.  An array must be used to pass in omega to
- *     account for the case where omega may be complex
+ *     account for the case where omega may be complex.
  *
  * Returns
  * -------
- * x is modified inplace in an additive, not overwriting fashion
+ * None
+ *     x is modified inplace in an additive, not overwriting fashion.
  *
- * Notes
- * -----
- * Primary calling routine is jacobi_ne in relaxation.py
  */
 template<class I, class T, class F>
 void jacobi_ne(const I Ap[], const int Ap_size,
@@ -769,6 +840,8 @@ void jacobi_ne(const I Ap[], const int Ap_size,
 }
 
 /*
+ * Gauss-Seidel NE iteration.
+ *
  * Perform NE Gauss-Seidel on the linear system A x = b
  * This effectively carries out Gauss-Seidel on A A.H y = b,
  * where x = A.h y.
@@ -776,29 +849,27 @@ void jacobi_ne(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     index pointer for CSR matrix A
+ *     Index pointer for CSR matrix A.
  * Aj : array
- *     column indices for CSR matrix A
+ *     Column indices for CSR matrix A.
  * Ax : array
- *     value array for CSR matrix A
+ *     Value array for CSR matrix A.
  * x : array
- *     current guess to the linear system
+ *     Current guess to the linear system.
  * b : array
- *     right hand side
+ *     Right hand side.
  * Tx : array
- *     inverse(diag(A A.H))
+ *     Inverse(diag(A A.H)).
  * omega : float
- *     relaxation parameter (if not 1.0, then algorithm becomes SOR)
+ *     Relaxation parameter (if not 1.0, then algorithm becomes SOR).
  * row_start,stop,step : int
- *     controls which rows to iterate over
+ *     Controls which rows to iterate over.
  *
  * Returns
  * -------
- * x is modified inplace in an additive, not overwriting fashion
+ * None
+ *     Array x is modified inplace in an additive, not overwriting fashion.
  *
- * Notes
- * -----
- * Primary calling routine is gauss_seidel_ne in relaxation.py
  */
 template<class I, class T, class F>
 void gauss_seidel_ne(const I Ap[], const int Ap_size,
@@ -834,35 +905,35 @@ void gauss_seidel_ne(const I Ap[], const int Ap_size,
 
 
 /*
+ * Gauss-Seidel NR iteration.
+ *
  * Perform NR Gauss-Seidel on the linear system A x = b
  * This effectively carries out Gauss-Seidel on A.H A x = A.H b
  *
  * Parameters
  * ----------
  * Ap : array
- *     index pointer for CSC matrix A
+ *     Index pointer for CSC matrix A.
  * Aj : array
- *     row indices for CSC matrix A
+ *     Row indices for CSC matrix A.
  * Ax : array
- *     value array for CSC matrix A
+ *     Value array for CSC matrix A.
  * x : array
- *     current guess to the linear system
+ *     Current guess to the linear system.
  * z : array
- *     initial residual
+ *     Initial residual.
  * Tx : array
- *     inverse(diag(A.H A))
+ *     Inverse(diag(A.H A)).
  * omega : float
- *     relaxation parameter (if not 1.0, then algorithm becomes SOR)
+ *     Relaxation parameter (if not 1.0, then algorithm becomes SOR).
  * col_start,stop,step : int
- *     controls which rows to iterate over
+ *     Controls which rows to iterate over.
  *
  * Returns
  * -------
- * x is modified inplace in an additive, not overwriting fashion
+ * None
+ *     Array x is modified inplace in an additive, not overwriting fashion.
  *
- * Notes
- * -----
- * Primary calling routine is gauss_seidel_nr in relaxation.py
  */
 template<class I, class T, class F>
 void gauss_seidel_nr(const I Ap[], const int Ap_size,
@@ -904,6 +975,8 @@ void gauss_seidel_nr(const I Ap[], const int Ap_size,
 }
 
 /*
+ * Block Jacobi iteration.
+ *
  * Perform one iteration of block Jacobi relaxation on the linear
  * system Ax = b, where A is stored in BSR format and x and b
  * are column vectors.  Damping is controlled by the omega
@@ -915,30 +988,35 @@ void gauss_seidel_nr(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     BSR row pointer
+ *     BSR row pointer.
  * Aj : array
- *     BSR index array
+ *     BSR index array.
  * Ax : array
- *     BSR data array, blocks assumed square
- * x : array, inplace
- *     approximate solution
+ *     BSR data array, blocks assumed square.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
+ *     Right hand side.
  * Tx : array
  *     Inverse of each diagonal block of A stored
- *     as a (n/blocksize, blocksize, blocksize) array
+ *     as a (n/blocksize, blocksize, blocksize) array.
  * temp : array
- *     temporary vector the same size as x
+ *     Temporary vector the same size as x.
  * row_start : int
- *     beginning of the sweep
+ *     Beginning of the sweep.
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  * omega : float
- *     damping parameter
- * blocksize int
- *     dimension of square blocks in BSR matrix A
+ *     Damping parameter.
+ * blocksize : int
+ *     Dimension of square blocks in BSR matrix A.
+ *
+ * Returns
+ * -------
+ * None
+ *     Result in place.
  */
 template<class I, class T, class F>
 void block_jacobi(const I Ap[], const int Ap_size,
@@ -1013,36 +1091,39 @@ void block_jacobi(const I Ap[], const int Ap_size,
 
 
 /*
- *  Perform one iteration of block Jacobi relaxation on the linear
- *  system Ax = b for a given set of (block) row indices. A is
- *  stored in BSR format and x and b are column vectors. Damping
- *  is controlled by the parameter omega.
+ * Indexed Block Jacobi iteration.
  *
- *  Parameters
- *  ----------
- *  Ap : array
- *      BSR row pointer
- *  Aj : array
- *      BSR index array
- *  Ax : array
- *      BSR data array, blocks assumed square
- *  x : array
- *      approximate solution
- *  b : array
- *      right hand side
- *  Tx : array
- *      Inverse of each diagonal block of A stored
- *      as a (n/blocksize, blocksize, blocksize) array
- *  indices : array
- *      Indices
- *  omega : float
- *      damping parameter
- *  blocksize : int
- *      dimension of square blocks in BSR matrix A
+ * Perform one iteration of block Jacobi relaxation on the linear
+ * system Ax = b for a given set of (block) row indices. A is
+ * stored in BSR format and x and b are column vectors. Damping
+ * is controlled by the parameter omega.
  *
- *  Returns
- *  -------
- *      Nothing, x will be modified in place
+ * Parameters
+ * ----------
+ * Ap : array
+ *     BSR row pointer.
+ * Aj : array
+ *     BSR index array.
+ * Ax : array
+ *     BSR data array, blocks assumed square.
+ * x : array
+ *     Approximate solution.
+ * b : array
+ *     Right hand side.
+ * Tx : array
+ *     Inverse of each diagonal block of A stored
+ *     as a (n/blocksize, blocksize, blocksize) array.
+ * indices : array
+ *     Indices.
+ * omega : float
+ *     Damping parameter.
+ * blocksize : int
+ *     Dimension of square blocks in BSR matrix A.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified in place.
  *
  */
 template<class I, class T, class F>
@@ -1119,6 +1200,8 @@ void block_jacobi_indexed(const I Ap[], const int Ap_size,
 
 
 /*
+ * Block Gauss-Seidel iteration.
+ *
  * Perform one iteration of block Gauss-Seidel relaxation on
  * the linear system Ax = b, where A is stored in BSR format
  * and x and b are column vectors.
@@ -1129,26 +1212,32 @@ void block_jacobi_indexed(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     BSR row pointer
+ *     BSR row pointer.
  * Aj : array
- *     BSR index array
+ *     BSR index array.
  * Ax : array
- *     BSR data array, blocks assumed square
- * x : array, inplace
- *     approximate solution
+ *     BSR data array, blocks assumed square.
+ * x : array
+ *     Approximate solution.
  * b : array
- *     right hand side
+ *     Right hand side.
  * Tx : array
  *     Inverse of each diagonal block of A stored
- *     as a (n/blocksize, blocksize, blocksize) array
+ *     as a (n/blocksize, blocksize, blocksize) array.
  * row_start : int
- *     beginning of the sweep
+ *     Beginning of the sweep.
  * row_stop : int
- *     end of the sweep (i.e. one past the last unknown)
+ *     End of the sweep (i.e. one past the last unknown).
  * row_step : int
- *     stride used during the sweep (may be negative)
+ *     Stride used during the sweep (may be negative).
  * blocksize : int
- *     dimension of square blocks in BSR matrix A
+ *     Dimension of square blocks in BSR matrix A.
+ *
+ * Returns
+ * -------
+ * None
+ *     Result in place.
+ *
  */
 template<class I, class T, class F>
 void block_gauss_seidel(const I Ap[], const int Ap_size,
@@ -1210,36 +1299,35 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
 
 /*
  * Extract diagonal blocks from A and insert into a linear array.
+ *
  * This is a helper function for overlapping_schwarz_csr.
  *
  * Parameters
  * ----------
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
- *     must be sorted for each row
+ *     CSR index array. Must be sorted for each row.
  * Ax : array
- *     CSR data array, blocks assumed square
- * Tx : array, inplace
- *     Inverse of each diagonal block of A, stored in row major
+ *     CSR data array, blocks assumed square.
+ * Tx : array
+ *     Inverse of each diagonal block of A, stored in row major.
  * Tp : array
- *     Pointer array into Tx indicating where the
- *     diagonal blocks start and stop
+ *     Pointer array into Tx indicating where the diagonal blocks start and stop.
  * Sj : array
- *     Indices of each subdomain
- *     must be sorted over each subdomain
+ *     Indices of each subdomain. Must be sorted over each subdomain.
  * Sp : array
- *     Pointer array indicating where each subdomain
- *     starts and stops
+ *     Pointer array indicating where each subdomain starts and stops.
  * nsdomains : int
- *     Number of subdomains
+ *     Number of subdomains.
  * nrows : int
- *     Number of rows
+ *     Number of rows.
  *
  * Returns
  * -------
- * Nothing, Tx will be modified inplace
+ * None
+ *     Array Tx will be modified inplace.
+ *
  */
 template<class I, class T, class F>
 void extract_subblocks(const I Ap[], const int Ap_size,
@@ -1318,38 +1406,38 @@ void extract_subblocks(const I Ap[], const int Ap_size,
  * Parameters
  * ----------
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array, blocks assumed square
- * x : array, inplace
- *     approximate solution
+ *     CSR data array, blocks assumed square.
+ * x : array
+ *     approximate solution.
  * b : array
- *     right hand side
+ *     right hand side.
  * Tx : array
- *     Inverse of each diagonal block of A, stored in row major
+ *     Inverse of each diagonal block of A, stored in row major.
  * Tp : array
- *     Pointer array into Tx indicating where the diagonal blocks start and stop
+ *     Pointer array into Tx indicating where the diagonal blocks start and stop.
  * Sj : array
- *     Indices of each subdomain
- *     must be sorted over each subdomain
+ *     Indices of each subdomain. Must be sorted over each subdomain.
  * Sp : array
- *     Pointer array indicating where each subdomain starts and stops
+ *     Pointer array indicating where each subdomain starts and stops.
  * nsdomains
- *     Number of subdomains
+ *     Number of subdomains.
  * nrows
- *     Number of rows
+ *     Number of rows.
  * row_start : int
- *     The subdomains are processed in this order,
+ *     Subdomain processing start index.
  * row_stop : int
- *     for(i = row_start, i != row_stop, i+=row_step)
+ *     Subdomain processing stop index.
  * row_step : int
- *     {...computation...}
+ *     Subdomain processing step index.
  *
  * Returns
  * -------
- * Nothing, x will be modified inplace
+ * None
+ *     Array x will be modified inplace.
  *
  */
 template<class I, class T, class F>

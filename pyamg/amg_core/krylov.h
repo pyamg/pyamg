@@ -3,7 +3,7 @@
 
 #include "linalg.h"
 
-/* Apply Householder reflectors in B to z
+/* Apply Householder reflectors in B to z.
  *
  * Implements the below python
  *
@@ -15,23 +15,24 @@
  * Parameters
  * ----------
  * z : array
- *     length n vector to be operated on
+ *     Vector of length n to be operated on.
  * B : array
- *     n x m matrix of householder reflectors
- *     must be in row major form
+ *     Matrix of size (n,n) of Householder reflectors. Must be in row major form.
  * n : int
- *     dimensionality of z
+ *     Dimensionality of z.
  * start, stop, step : int
- *     control the choice of vectors in B to use
+ *     Control the choice of vectors in B to use.
  *
  * Returns
  * -------
- * z is modified in place to reflect the application of
- * the Householder reflectors, B[:,range(start,stop,step)]
+ * None
+ *     z is modified in place to reflect the application of
+ *     the Householder reflectors, ``B[:,range(start,stop,step)]``.
  *
  * Notes
  * -----
- * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
+ * Principle calling routines are gmres and fgmres.
+ *
  */
 template<class I, class T, class F>
 void apply_householders(      T z[], const int z_size,
@@ -54,7 +55,10 @@ void apply_householders(      T z[], const int z_size,
     }
 }
 
-/* For use after gmres is finished iterating and the least squares
+/* 
+ * Householder Horner Scheme.
+ *
+ * For use after gmres is finished iterating and the least squares
  * solution has been found.  This routine maps the solution back to
  * the original space via the Householder reflectors.
  *
@@ -75,33 +79,32 @@ void apply_householders(      T z[], const int z_size,
  * Parameters
  * ----------
  * z : array
- *     length n vector to be operated on
+ *     Vector of length n to be operated on.
  * B : array
- *     n x m matrix of householder reflectors
- *     must be in row major form
+ *     Matrix of size (n,m) of householder reflectors. Must be in row major form.
  * y : array
- *     solution to the reduced system at the end of GMRES
+ *     Solution to the reduced system at the end of GMRES.
  * n : int
- *     dimensionality of z
+ *     Dimensionality of z.
  * start, stop, step : int
- *     control the choice of vectors in B to use
+ *     Control the choice of vectors in B to use.
  *
  * Returns
  * -------
- * z is modified in place to reflect the application of
- * the Householder reflectors, B[:,range(start,stop,step)],
- * and the inclusion of values in y.
+ * None
+ *     z is modified in place to reflect the application of
+ *     the Householder reflectors, B[:,range(start,stop,step)],
+ *     and the inclusion of values in y.
  *
  * Notes
  * -----
- * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
+ * Principle calling routine are gmres and fgmres.
  *
- * References
- * ----------
- * See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems"
+ * See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems".
+ *
  */
 template<class I, class T, class F>
-void householder_hornerscheme(      T z[], const int z_size,
+void householder_hornerscheme(       T z[], const int z_size,
                                const T B[], const int B_size,
                                const T y[], const int y_size,
                                const I n,
@@ -126,30 +129,31 @@ void householder_hornerscheme(      T z[], const int z_size,
 }
 
 
-/* Apply the first nrot Givens rotations in B to x
+/* Apply the first nrot Givens rotations in B to x.
  *
  * Parameters
  * ----------
  * x : array
- *     n-vector to be operated on
+ *     Vector of length n to be operated on.
  * B : array
- *     Each 4 entries represent a Givens rotation
- *     length nrot*4
+ *     Each 4 entries represent a Givens rotation. Length nrot*4.
  * n : int
- *     dimensionality of x
+ *     Dimensionality of x.
  * nrot : int
- *     number of rotations in B
+ *     Number of rotations in B.
  *
  * Returns
  * -------
- * x is modified in place to reflect the application of the nrot
- * rotations in B.  It is assumed that the first rotation operates on
- * degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
- * and so on
+ * None
+ *     x is modified in place to reflect the application of the nrot
+ *     rotations in B.  It is assumed that the first rotation operates on
+ *     degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
+ *     and so on.
  *
  * Notes
  * -----
- * Principle calling routine is gmres(...) and fgmres(...) in krylov.py
+ * Principle calling routines are gmres and fgmres.
+ *
  */
 template<class I, class T, class F>
 void apply_givens(const T B[], const int B_size,
@@ -181,25 +185,25 @@ void apply_givens(const T B[], const int B_size,
 /* 
  * Parameters
  * ----------
- *        A : double array, length n*n
- *            Matrix stored in column- or row-major.
- *        b : double array, length n
- *            Right hand side of linear system
- *        x : double array, length n
- *            Preallocated array for solution
- *        n : int
- *            Number of rows and columns in A
- *        is_col_major : bool
- *            True if A is stored in column-major, false
- *            if A is stored in row-major
- *        maxiter : int, default 10
- *            Maximum GMRES iterations
- *        precondition : bool, default 1
- *            Use diagonal preconditioner
+ * A : array
+ *     Matrix stored in column- or row-major.
+ * b : array
+ *     Right hand side of linear system.
+ * x : array
+ *     Preallocated array for solution.
+ * n : int
+ *     Number of rows and columns in A.
+ * is_col_major : bool
+ *     True if A is stored in column-major. False if A is stored in row-major.
+ * maxiter : int, default 10
+ *     Maximum GMRES iterations.
+ * precondition : bool, default 1
+ *     Use diagonal preconditioner.
  *
  * Returns
  * -------
- *        Nothing, solution is stored in x[].
+ * None
+ *     Nothing, solution is stored in x.
  *
  * Notes
  * -----

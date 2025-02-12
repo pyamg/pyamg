@@ -18,27 +18,28 @@
 #define C_NODE 1
 
 
-/* Interpolate C-points by value and each F-point by value from its strongest
- * connected C-neighbor. 
+/*
+ * Interpolate C-points and each F-point from its strongest connected C-neighbor. 
  * 
  * Parameters
  * ----------
- *      Rp : const array<int> 
- *          Pre-determined row-pointer for P in CSR format
- *      Rj : array<int>
- *          Empty array for column indices for P in CSR format
- *      Cp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Cj : const array<int>
- *          Column indices for SOC matrix, C
- *      Cx : const array<float>
- *          Data array for SOC matrix, C
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
+ * Rp : array
+ *     Pre-determined row-pointer for P in CSR format.
+ * Rj : array
+ *     Empty array for column indices for P in CSR format.
+ * Cp : array
+ *     Row pointer for SOC matrix, C.
+ * Cj : array
+ *     Column indices for SOC matrix, C.
+ * Cx : array
+ *     Data array for SOC matrix, C.
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points.
  *
  * Returns
  * -------
- * Nothing, Rj[] modified in place.
+ * None
+ *     Nothing, Rj[] modified in place.
  *
  */
 template<class I, class T>
@@ -101,22 +102,23 @@ void one_point_interpolation(      I Pp[],    const int Pp_size,
  * 
  * Parameters
  * ----------
- *      Rp : array<int> 
- *          Empty row-pointer for R
- *      Cp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Cj : const array<int>
- *          Column indices for SOC matrix, C
- *      Cpts : array<int>
- *          List of global C-point indices
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      distance : int, default 2
- *          Distance of F-point neighborhood to consider, options are 1 and 2.
+ * Rp : array
+ *     Empty row-pointer for R.
+ * Cp : array
+ *     Row pointer for SOC matrix, C.
+ * Cj : array
+ *     Column indices for SOC matrix, C.
+ * Cpts : array
+ *     List of global C-point indices.
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points.
+ * distance : int, default 2
+ *     Distance of F-point neighborhood to consider, options are 1 and 2.
  *
  * Returns
  * -------
- * Nothing, Rp[] modified in place.
+ * None
+ *     Nothing, Rp[] modified in place.
  */
 template<class I>
 void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
@@ -161,49 +163,50 @@ void approx_ideal_restriction_pass1(      I Rp[], const int Rp_size,
 }
 
 
-/* Build column indices and data array for approximate ideal restriction
- * in CSR format.
+/* Build column indices and data array for approximate ideal restriction in CSR format.
  * 
  * Parameters
  * ----------
- *      Rp : const array<int> 
- *          Pre-determined row-pointer for R in CSR format
- *      Rj : array<int>
- *          Empty array for column indices for R in CSR format
- *      Rx : array<float>
- *          Empty array for data for R in CSR format
- *      Ap : const array<int>
- *          Row pointer for matrix A
- *      Aj : const array<int>
- *          Column indices for matrix A
- *      Ax : const array<float>
- *          Data array for matrix A
- *      Cp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Cj : const array<int>
- *          Column indices for SOC matrix, C
- *      Cx : const array<float>
- *          Data array for SOC matrix, C
- *      Cpts : array<int>
- *          List of global C-point indices
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      distance : int, default 2
- *          Distance of F-point neighborhood to consider, options are 1 and 2.
- *      use_gmres : bool, default 0
- *          Use GMRES for local dense solve
- *      maxiter : int, default 10
- *          Maximum GMRES iterations
- *      precondition : bool, default True
- *          Diagonally precondition GMRES
+ * Rp : array
+ *     Pre-determined row-pointer for R in CSR format.
+ * Rj : array
+ *     Empty array for column indices for R in CSR format.
+ * Rx : array
+ *     Empty array for data for R in CSR format.
+ * Ap : array
+ *     Row pointer for matrix A.
+ * Aj : array
+ *     Column indices for matrix A.
+ * Ax : array
+ *     Data array for matrix A.
+ * Cp : array
+ *     Row pointer for SOC matrix, C.
+ * Cj : array
+ *     Column indices for SOC matrix, C.
+ * Cx : array
+ *     Data array for SOC matrix, C.
+ * Cpts : array
+ *     List of global C-point indices.
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points.
+ * distance : int, default 2
+ *     Distance of F-point neighborhood to consider, options are 1 and 2.
+ * use_gmres : bool, default 0
+ *     Use GMRES for local dense solve.
+ * maxiter : int, default 10
+ *     Maximum GMRES iterations.
+ * precondition : bool, default True
+ *     Diagonally precondition GMRES.
  *
  * Returns
  * -------
- * Nothing, Rj[] and Rx[] modified in place.
+ * None
+ *     Nothing, Rj[] and Rx[] modified in place.
  *
  * Notes
  * -----
  * Rx[] must be passed in initialized to zero.
+ *
  */
 template<class I, class T>
 void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
@@ -324,51 +327,53 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 }
 
 
-/* Build column indices and data array for approximate ideal restriction
- * in BSR format.
+/*
+ * Build column indices and data array for approximate ideal restriction in BSR format.
  * 
  * Parameters
  * ----------
- *      Rp : const array<int> 
- *          Pre-determined row-pointer for R in CSR format
- *      Rj : array<int>
- *          Empty array for column indices for R in CSR format
- *      Rx : array<float>
- *          Empty array for data for R in CSR format
- *      Ap : const array<int>
- *          Row pointer for matrix A
- *      Aj : const array<int>
- *          Column indices for matrix A
- *      Ax : const array<float>
- *          Data array for matrix A
- *      Cp : const array<int>
- *          Row pointer for SOC matrix, C
- *      Cj : const array<int>
- *          Column indices for SOC matrix, C
- *      Cx : const array<float>
- *          Data array for SOC matrix, C
- *      Cpts : array<int>
- *          List of global C-point indices
- *      splitting : const array<int>
- *          Boolean array with 1 denoting C-points and 0 F-points
- *      blocksize : int
- *          Blocksize of matrix (assume square blocks)
- *      distance : int, default 2
- *          Distance of F-point neighborhood to consider, options are 1 and 2.
- *      use_gmres : bool, default 0
- *          Use GMRES for local dense solve
- *      maxiter : int, default 10
- *          Maximum GMRES iterations
- *      precondition : bool, default True
- *          Diagonally precondition GMRES
+ * Rp : array
+ *     Pre-determined row-pointer for R in CSR format.
+ * Rj : array
+ *     Empty array for column indices for R in CSR format.
+ * Rx : array
+ *     Empty array for data for R in CSR format.
+ * Ap : array
+ *     Row pointer for matrix A.
+ * Aj : array
+ *     Column indices for matrix A.
+ * Ax : array
+ *     Data array for matrix A.
+ * Cp : array
+ *     Row pointer for SOC matrix, C.
+ * Cj : array
+ *     Column indices for SOC matrix, C.
+ * Cx : array
+ *     Data array for SOC matrix, C.
+ * Cpts : array
+ *     List of global C-point indices.
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points.
+ * blocksize : int
+ *     Blocksize of matrix (assume square blocks).
+ * distance : int, default 2
+ *     Distance of F-point neighborhood to consider, options are 1 and 2.
+ * use_gmres : bool, default 0
+ *     Use GMRES for local dense solve.
+ * maxiter : int, default 10
+ *     Maximum GMRES iterations.
+ * precondition : bool, default True
+ *     Diagonally precondition GMRES.
  *
  * Returns
  * -------
- * Nothing, Rj[] and Rx[] modified in place.
+ * None
+ *     Nothing, Rj[] and Rx[] modified in place.
  *
  * Notes
  * -----
  * Rx[] must be passed in initialized to zero.
+ *
  */
 template<class I, class T>
 void block_approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
