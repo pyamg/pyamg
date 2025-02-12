@@ -39,11 +39,12 @@ numpydoc_validation_checks = {'all',
                               # missing see also description
                               'SA04',
                              }
-numpydoc_validation_exclude = {'pyamg.util.upcast', 
+numpydoc_validation_exclude = {'pyamg.util.upcast',
                                'pyamg.util.make_system',
                                'pyamg.strength.ode_strength_of_connection',
                                'pyamg.multilevel.multilevel_solver',
-                               'pyamg.multilevel.GenericSolver.__repr__'
+                               'pyamg.multilevel.GenericSolver.__repr__',
+                               'pyamg.multilevel.MultilevelSolver.__repr__',
                               }
 
 autodoc_default_options = {

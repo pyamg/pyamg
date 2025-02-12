@@ -10,23 +10,28 @@ from .stencil import stencil_grid
 def poisson(grid, dtype=float, format=None, type='FD'):
     """Return a sparse matrix for the N-dimensional Poisson problem.
 
-    The matrix represents a finite Difference approximation to the
+    The matrix represents a finite difference approximation to the
     Poisson problem on a regular n-dimensional grid with unit grid
     spacing and Dirichlet boundary conditions.
 
     The last dimension is iterated over first: z, then y, then x.
-    This should be used with np.mgrid() or np.ndenumerate.
+    This should be used with :meth:`nupy.mgrid` or :meth:`numpy.ndenumerate`.
 
     Parameters
     ----------
     grid : tuple of integers
-        Grid dimensions e.g. (100,100)
+        Grid dimensions e.g. (100,100).
     dtype : dtype
-        Target dtype
-    format : string
-        Sparse matrix format to return, e.g. "csr", "coo", etc.
-    type : string
-        Discretization type, either finite difference (FD) or finite element (FE)
+        Target dtype.
+    format : str
+        Sparse array format to return, e.g. "csr", "coo", etc.
+    type : str
+        Discretization type, either finite difference (FD) or finite element (FE).
+
+    Returns
+    -------
+    sparray
+        Sparse matrix.
 
     Notes
     -----
