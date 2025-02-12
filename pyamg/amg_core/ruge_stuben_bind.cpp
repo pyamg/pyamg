@@ -552,20 +552,20 @@ storage for S as is used by A.)pbdoc");
     m.def("maximum_row_value", &_maximum_row_value<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(),
 R"pbdoc(
-Compute the maximum in magnitude row value for a CSR matrix>
+Compute the maximum in magnitude row value for a CSR matrix.
 
 Parameters
 ----------
 num_rows : int
-    Number of rows in A>
+    Number of rows in A.
 x : array
-    Num_rows array>
+    Num_rows array.
 Ap : array
-    CSR row pointer>
+    CSR row pointer.
 Aj : array
-    CSR index array>
+    CSR index array.
 Ax : array
-    CSR data array>
+    CSR data array.
 
 Returns
 -------

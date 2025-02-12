@@ -853,8 +853,7 @@ void lloyd_cluster(const I num_nodes,
 
 
 /*
- * Perform one iteration of Lloyd clustering on a distance graph using
- * exact centers.
+ * Perform one iteration of Lloyd clustering on a distance graph using exact centers.
  *
  * Parameters
  * ----------
