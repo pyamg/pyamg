@@ -7,6 +7,8 @@ from .stencil import stencil_grid
 def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
     """Generate matrix and RHS for upwind FD discretization of 2D advection.
 
+    The 2D advection equation
+
         (cos(theta),sin(theta)) dot grad(u) = 0,
 
     with inflow boundaries on the left and bottom of the domain. Assume uniform
@@ -14,26 +16,26 @@ def advection_2d(grid, theta=np.pi/4.0, l_bdry=1.0, b_bdry=1.0):
 
     Parameters
     ----------
-    grid  : tuple
-        (ny, nx) number of points in y and x
+    grid : tuple
+        Number of points in y and x, ``(ny, nx)``, note the ordering.
     theta : float, optional
         Rotation angle `theta` in radians defines direction of advection
-        (cos(theta),sin(theta))
+        (cos(theta),sin(theta)).
     l_bdry : float, array
-        left boundary value. If float, then constant in-flow boundary value
-        applied. If array, then length of array must be equal to ny = grid[0],
+        Left boundary value. If float, then constant in-flow boundary value
+        applied. If array, then length of array must be equal to ``ny=grid[0]``,
         and this array defines non-constant boundary value on the left.
     b_bdry : float, array
-        bottom boundary value. If float, then constant in-flow boundary value
-        applied. If array, then length of array must be equal to nx = grid[1],
+        Bottom boundary value. If float, then constant in-flow boundary value
+        applied. If array, then length of array must be equal to ``nx=grid[1]``,
         and this array defines non-constant boundary value on the bottom.
 
     Returns
     -------
-    A : csr_array
-        Defines 2D FD upwind discretization, with boundary
-    rhs : array
-        Defines right-hand-side with boundary contributions
+    csr_array
+        Defines 2D FD upwind discretization, with boundary.
+    array
+        Defines right-hand-side with boundary contributions.
 
     See Also
     --------
