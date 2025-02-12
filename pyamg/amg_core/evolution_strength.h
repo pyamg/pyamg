@@ -22,27 +22,27 @@
  *
  * Parameters
  * ----------
- * n_row : {int}
- *      Dimension of matrix, S
- * epsilon : {float}
- *      Drop tolerance
- * Sp : {int array}
- *      Row pointer array for CSR matrix S
- * Sj : {int array}
- *      Col index array for CSR matrix S
- * Sx : {float|complex array}
- *      Value array for CSR matrix S
+ * n_row : int
+ *      Dimension of matrix, S.
+ * epsilon : float
+ *      Drop tolerance.
+ * Sp : array
+ *      Row pointer array for CSR matrix S.
+ * Sj : int array
+ *      Col index array for CSR matrix S.
+ * Sx : array
+ *      Value array for CSR matrix S.
  *
  * Returns
  * -------
- * Sx : {float|complex array}
- *      Modified in place such that the above dropping strategy has been applied
- *      There will be explicit zero entries for each weak connection
+ * array
+ *     Modified in place such that the above dropping strategy has been applied.
+ *     There will be explicit zero entries for each weak connection.
  *
- * Notes
- * -----
- * Principle calling routines are strength of connection routines, e.g.,
- * `distance_strength_of_connection`
+ * See Also
+ * --------
+ * distance_strength_of_connection
+ *     Principle calling routines are strength of connection routines.
  *
  * Examples
  * --------
@@ -86,34 +86,35 @@ void apply_absolute_distance_filter(const I n_row,
 
 
 /*
- * Return a filtered strength-of-connection matrix by applying a drop tolerance
- *  Strength values are assumed to be "distance"-like, i.e. the smaller the
- *  value the stronger the connection
+ * Return a filtered strength-of-connection matrix by applying a drop tolerance.
+ *
+ * Strength values are assumed to be "distance"-like, i.e. the smaller the
+ * value the stronger the connection
  *
  *    An off-diagonal entry A[i,j] is a strong connection iff
  *
  *            S[i,j] <= epsilon * min( S[i,k] )   where k != i
  *
- *   Also, set the diagonal to 1.0, as each node is perfectly close to itself
+ * Also, set the diagonal to 1.0, as each node is perfectly close to itself
  *
  * Parameters
  * ----------
- * n_row : {int}
- *      Dimension of matrix, S
- * epsilon : {float}
- *      Drop tolerance
- * Sp : {int array}
- *      Row pointer array for CSR matrix S
- * Sj : {int array}
- *      Col index array for CSR matrix S
- * Sx : {float|complex array}
- *      Value array for CSR matrix S
+ * n_row : int
+ *      Dimension of matrix, S.
+ * epsilon : float
+ *      Drop tolerance.
+ * Sp : array
+ *      Row pointer array for CSR matrix S.
+ * Sj : array
+ *      Col index array for CSR matrix S.
+ * Sx : array
+ *      Value array for CSR matrix S.
  *
  * Returns
  * -------
- * Sx : {float|complex array}
- *      Modified in place such that the above dropping strategy has been applied
- *      There will be explicit zero entries for each weak connection
+ * array
+ *     Modified in place such that the above dropping strategy has been applied.
+ *     There will be explicit zero entries for each weak connection.
  *
  * Notes
  * -----
@@ -134,6 +135,7 @@ void apply_absolute_distance_filter(const I n_row,
  * >>> print "Matrix before Applying Filter\n" + str(S.todense())
  * >>> apply_distance_filter(3, 1.9, S.indptr, S.indices, S.data)
  * >>> print "Matrix after Applying Filter\n" + str(S.todense())
+ *
  */
 template<class I, class T>
 void apply_distance_filter(const I n_row,
@@ -170,25 +172,27 @@ void apply_distance_filter(const I n_row,
 }
 
 /*
- *  Given a BSR with num_blocks stored, return a linear array of length
- *  num_blocks, which holds each block's smallest, nonzero, entry
+ * Find the size of the smallest entry in each block.
+ *
+ * Given a BSR with num_blocks stored, return a linear array of length
+ * num_blocks, which holds each block's smallest, nonzero, entry.
  *
  * Parameters
  * ----------
- * n_blocks : {int}
- *      Number of blocks in matrix
- * blocksize : {int}
- *      Size of each block
- * Sx : {float|complex array}
- *      Block data structure of BSR matrix, S
- *      Sx is (n_blocks x blocksize) in length
- * Tx : {float|complex array}
- *      modified in place for output
+ * n_blocks : int
+ *     Number of blocks in matrix.
+ * blocksize : int
+ *     Size of each block.
+ * Sx : array
+ *     Block data structure of BSR matrix, S.
+ *     Sx is (n_blocks x blocksize) in length.
+ * Tx : array
+ *     Modified in place for output.
  *
  * Returns
  * -------
- * Tx : {float|complex array}
- *      Modified in place; Tx[i] holds the minimum nonzero value of block i of S
+ * array
+ *     Modified in place; Tx[i] holds the minimum nonzero value of block i of S.
  *
  * Notes
  * -----
@@ -210,7 +214,8 @@ void apply_distance_filter(const I n_row,
  * >>> print "Matrix before\n" + str(S.todense())
  * >>> min_blocks(6, 4, ravel(S.data), T)
  * >>> S2 = csr_array((T, S.indices, S.indptr), shape=(3,3))
- * >>> print "Matrix after\n" + str(S2.todense())
+ * >>> print("Matrix after\n" + str(S2.todense()))
+ *
  */
 template<class I, class T>
 void min_blocks(const I n_blocks,
@@ -241,79 +246,85 @@ void min_blocks(const I n_blocks,
 
 
 /*
+ * Create strength-of-connection matrix based on constrained min problem.
+ *
  * Create strength-of-connection matrix based on constrained min problem of
+ *
  *    min( z - B*x ), such that
  *       (B*x)|_i = z|_i, i.e. they are equal at point i
  *        z = (I - (t/k) Dinv A)^k delta_i
  *
  * Strength is defined as the relative point-wise approximation error between
  * B*x and z.  B is the near-nullspace candidates.  The constrained min problem
- * is also restricted to consider B*x and z only at the nonzeros of column i of A
+ * is also restricted to consider B*x and z only at the nonzeros of column i of A.
  *
  * Can use either the D_A inner product, or l2 inner-prod in the minimization
  * problem. Using D_A gives scale invariance.  This choice is reflected in
- * whether the parameter DB = B or diag(A)*B
+ * whether the parameter DB = B or diag(A)*B.
  *
  * This is a quadratic minimization problem with a linear constraint, so
- * we can build a linear system and solve it to find the critical point, i.e. minimum.
+ * we can build a linear system and solve it to find the critical point, i.e. minimum..
  *
  * Parameters
  * ----------
- * Sp : {int array}
- *      Row pointer array for CSR matrix S
- * Sj : {int array}
- *      Col index array for CSR matrix S
- * Sx : {float|complex array}
- *      Value array for CSR matrix S.
- *      Upon entry to the routine, S = (I - (t/k) Dinv A)^k
- * nrows : {int}
- *      Dimension of S
- * B : {float|complex array}
- *      nrows x NullDim array of near nullspace vectors in col major form,
- *      if calling from within Python, take a transpose.
- * DB : {float|complex array}
- *      nrows x NullDim array of possibly scaled near nullspace
- *      vectors in col major form.  If calling from within Python, take a
- *      transpose.  For a scale invariant measure,
- *      DB = diag(A)*conjugate(B)), corresponding to the D_A inner-product
- *      Otherwise, DB = conjugate(B), corresponding to the l2-inner-product
- * b : {float|complex array}
- *      nrows x BDBCols array in row-major form.
- *      This  array is B-squared, i.e. it is each column of B
- *      multiplied against each other column of B.  For a Nx3 B,
- *      b[:,0] = conjugate(B[:,0])*B[:,0]
- *      b[:,1] = conjugate(B[:,0])*B[:,1]
- *      b[:,2] = conjugate(B[:,0])*B[:,2]
- *      b[:,3] = conjugate(B[:,1])*B[:,1]
- *      b[:,4] = conjugate(B[:,1])*B[:,2]
- *      b[:,5] = conjugate(B[:,2])*B[:,2]
- * BDBCols : {int}
- *      sum(range(NullDim+1)), i.e. number of columns in b
- * NullDim : {int}
- *      Number of nullspace vectors
- * tol : {float}
- *      Used to determine when values are numerically zero
+ * Sp : array
+ *     Row pointer array for CSR matrix S.
+ * Sj : array
+ *     Col index array for CSR matrix S.
+ * Sx : array
+ *     Value array for CSR matrix S.
+ *     Upon entry to the routine, ``S = (I - (t/k) Dinv A)^k``.
+ * nrows : int
+ *     Dimension of S.
+ * B : array
+ *     Array of size (nrows, NullDim) of near nullspace vectors in col major form,
+ *     if calling from within Python, take a transpose.
+ * DB : array
+ *     Array of size (nrows, NullDim) of possibly scaled near nullspace
+ *     vectors in col major form.  If calling from within Python, take a
+ *     transpose.  For a scale invariant measure,
+ *     DB = diag(A)*conjugate(B)), corresponding to the D_A inner-product.
+ *     Otherwise, DB = conjugate(B), corresponding to the l2-inner-product.
+ * b : array
+ *     Array of size (nrows, BDBCols) in row-major form.
+ *     This  array is B-squared, i.e. it is each column of B
+ *     multiplied against each other column of B.  For a Nx3 B::
+ *
+ *         b[:,0] = conjugate(B[:,0])*B[:,0]
+ *         b[:,1] = conjugate(B[:,0])*B[:,1]
+ *         b[:,2] = conjugate(B[:,0])*B[:,2]
+ *         b[:,3] = conjugate(B[:,1])*B[:,1]
+ *         b[:,4] = conjugate(B[:,1])*B[:,2]
+ *         b[:,5] = conjugate(B[:,2])*B[:,2]
+ *
+ * BDBCols : int
+ *     Sum(range(NullDim+1)), i.e. number of columns in b.
+ * NullDim : int
+ *     Number of nullspace vectors.
+ * tol : float
+ *     Used to determine when values are numerically zero.
  *
  * Returns
  * -------
- * Sx : {float|complex array}
- *      Modified inplace and holds strength values for the above minimization problem
+ * array
+ *     Modified inplace and holds strength values for the above minimization problem.
+ *
+ * See Also
+ * --------
+ * evolution_strength_of_connection
  *
  * Notes
  * -----
- * Upon entry to the routine, S = (I - (t/k) Dinv A)^k.  However,
+ * Upon entry to the routine, ``S = (I - (t/k) Dinv A)^k``.  However,
  * we only need the values of S at the sparsity pattern of A.  Hence,
  * there is no need to completely calculate all of S.
  *
- * b is used to save on the computation of each local minimization problem
+ * Vector b is used to save on the computation of each local minimization problem.
  *
  * Principle calling routine is evolution_strength_of_connection(...) in strength.py.
  * In that routine, it is used to calculate strength-of-connection for the case
  * of multiple near-nullspace modes.
  *
- * Examples
- * --------
- * See evolution_strength_of_connection(...) in strength.py
  */
 template<class I, class T, class F>
 void evolution_strength_helper(      T Sx[], const int Sx_size,
@@ -539,41 +550,37 @@ void evolution_strength_helper(      T Sx[], const int Sx_size,
 }
 
 
-
-/* For use in incomplete_mat_mult_csr(...)
- * Calculate <A_{row,:}, B_{:, col}>
+/* Inner product.
+ *
+ * Calculate ``<A_{row,:}, B_{:, col}>``.
  *
  * Parameters
  * ----------
- * Ap : {int array}
- *  row ptr array for CSR matrix A
- * Aj : {int array}
- *  col index array for CSR matrix A
- *  MUst be sorted
- * Ax : {float array}
- *  value array for CSR matrix A
- * Bp : {int array}
- *  col ptr array for CSC matrix A
- * Bj : {int array}
- *  row index array for CSC matrix A
- *  Must be sorted
- * Bx : {float array}
- *  value array for CSC matrix A
- * row, col : {int}
- *  indicate which row of A and column of B to take
- *  the inner product of
+ * Ap : array
+ *     Row ptr array for CSR matrix A.
+ * Aj : array
+ *     Col index array for CSR matrix A. Must be sorted
+ * Ax : array
+ *     Value array for CSR matrix A
+ * Bp : array
+ *     Col ptr array for CSC matrix A
+ * Bj : array
+ *     Row index array for CSC matrix A. Must be sorted.
+ * Bx : array
+ *     Value array for CSC matrix A
+ * row, col : int
+ *     Indicate which row of A and column of B to take the inner product of.
  *
  * Returns
  * -------
- * sum : float
- *       returns <A_{row,:}, B_{:, col}>
+ * float
+ *     returns ``<A_{row,:}, B_{:, col}>``.
  *
  * Notes
  * -----
- * Principle calling routine is incomplete_mat_mult_csr in this file
+ * Principle calling routine is incomplete_mat_mult_csr in this file.
  *
- * A and B are assumed to have sorted indices and be free of
- * duplicate entries
+ * A and B are assumed to have sorted indices and be free of duplicate entries.
  *
  */
 template<class I, class T>
@@ -609,40 +616,41 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
 }
 
 
-/* Calculate A*B = S, but only at the pre-existing sparsity
- * pattern of S, i.e. do an exact, but incomplete mat-mat multiply.
+/* Calculate A*B = S, but only at a pre-existing sparsity.
  *
- * A must be in CSR, B must be in CSC and S must be in CSR
- * Indices for A, B and S must be sorted
- * A, B, and S must be square
+ * Use the pattern of S, i.e. do an exact, but incomplete mat-mat multiply.
+ *
+ * A must be in CSR, B must be in CSC and S must be in CSR.
+ * Indices for A, B and S must be sorted.
+ * A, B, and S must be square.
  *
  * Parameters
  * ----------
- * Ap : {int array}
- *      Row pointer array for CSR matrix A
- * Aj : {int array}
- *      Col index array for CSR matrix A
- * Ax : {float|complex array}
- *      Value array for CSR matrix A
- * Bp : {int array}
- *      Row pointer array for CSC matrix B
- * Bj : {int array}
- *      Col index array for CSC matrix B
- * Bx : {float|complex array}
- *      Value array for CSC matrix B
- * Sp : {int array}
- *      Row pointer array for CSR matrix S
- * Sj : {int array}
- *      Col index array for CSR matrix S
- * Sx : {float|complex array}
- *      Value array for CSR matrix S
- * dimen: {int}
- *      dimensionality of A,B and S
+ * Ap : array
+ *     Row pointer array for CSR matrix A.
+ * Aj : array
+ *     Col index array for CSR matrix A.
+ * Ax : array
+ *     Value array for CSR matrix A.
+ * Bp : array
+ *     Row pointer array for CSC matrix B.
+ * Bj : array
+ *     Col index array for CSC matrix B.
+ * Bx : array
+ *     Value array for CSC matrix B.
+ * Sp : array
+ *     Row pointer array for CSR matrix S.
+ * Sj : array
+ *     Col index array for CSR matrix S.
+ * Sx : array
+ *     Value array for CSR matrix S.
+ * dimen : int
+ *     Dimensionality of A,B and S.
  *
  * Returns
  * -------
- * Sx : {float|complex array}
- *      Modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ * array
+ *     Modified inplace to reflect S(i,j) = <A_{i,:}, B_{:,j}>
  *
  * Notes
  * -----
@@ -665,7 +673,6 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  * >>> from pyamg.amg_core import incomplete_mat_mult_csr
  * >>> from numpy import arange, eye, ones
  * >>> from scipy.sparse import csr_array, csc_array
- * >>>
  * >>> A = csr_array(arange(1,10,dtype=float).reshape(3,3))
  * >>> B = csc_array(ones((3,3),dtype=float))
  * >>> AB = csr_array(eye(3,3,dtype=float))
@@ -676,6 +683,7 @@ T my_inner(const I Ap[], const I Aj[], const T Ax[],
  *                       B.data, AB.indptr, AB.indices, AB.data, 3)
  * >>> print "Incomplete Matrix-Matrix Multiplication\n" + str(AB.todense())
  * >>> print "Complete Matrix-Matrix Multiplication\n" + str((A*B).todense())
+ *
  */
 template<class I, class T, class F>
 void incomplete_mat_mult_csr(const I Ap[], const int Ap_size,

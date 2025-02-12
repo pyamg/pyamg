@@ -435,29 +435,31 @@ PYBIND11_MODULE(graph, m) {
     m.def("maximal_independent_set_serial", &_maximal_independent_set_serial<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(),
 R"pbdoc(
+Serial maximal independent set.
+
 Compute a maximal independent set for a graph stored in CSR format
 using a greedy serial algorithm
 
 Parameters
 ----------
 num_rows : int
-    Number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
-active : float-like
-    Value used for active vertices
-C : float-like
-    Value used to mark non-MIS vertices
-F : float-like
-    Value used to mark MIS vertices
-x : array, inplace output
-    State of each vertex
+    CSR index array.
+active : float
+    Value used for active vertices.
+C : float
+    Value used to mark non-MIS vertices.
+F : float
+    Value used to mark MIS vertices.
+x : array
+    State of each vertex.
 
 Returns
 -------
-N : int
+int
     The number of nodes in the MIS.
 
 Notes
@@ -470,41 +472,43 @@ MIS or not.)pbdoc");
     m.def("maximal_independent_set_parallel", &_maximal_independent_set_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
 R"pbdoc(
+Parallel maximal independent set.
+
 Compute a maximal independent set for a graph stored in CSR format
- using a variant of Luby's parallel MIS algorithm
+using a variant of Luby's parallel MIS algorithm.
 
- Parameters
- ----------
- num_rows : int
-     number of rows in A (number of vertices)
- Ap : array
-     CSR row pointer
- Aj : array
-     CSR index array
- active : float
-     value used for active vertices
- C : float
-     value used to mark non-MIS vertices
- F : float
-     value used to mark MIS vertices
- x : array, output
-     state of each vertex
- y : array
-     random values for each vertex
- max_iters : int
-     maximum number of iterations By default max_iters=-1 and no limit is imposed
+Parameters
+----------
+num_rows : int
+    Number of rows in A (number of vertices).
+Ap : array
+    CSR row pointer.
+Aj : array
+    CSR index array.
+active : float
+    Value used for active vertices.
+C : float
+    Value used to mark non-MIS vertices.
+F : float
+    Value used to mark MIS vertices.
+x : array, output
+    State of each vertex.
+y : array
+    Random values for each vertex.
+max_iters : int
+    Maximum number of iterations By default max_iters=-1 and no limit is imposed.
 
- Returns
- -------
- N : int
-     The number of nodes in the MIS.
+Returns
+-------
+int
+    The number of nodes in the MIS.
 
- Notes
- -----
- Only the vertices with values with x[i] == active are considered
- when determining the MIS.  Upon return, all active vertices will
- be assigned the value C or F depending on whether they are in the
- MIS or not.)pbdoc");
+Notes
+-----
+Only the vertices with values with x[i] == active are considered
+when determining the MIS.  Upon return, all active vertices will
+be assigned the value C or F depending on whether they are in the
+MIS or not.)pbdoc");
 
     m.def("vertex_coloring_mis", &_vertex_coloring_mis<int, int>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(),
@@ -523,24 +527,24 @@ Compute a vertex coloring for a graph stored in CSR format.
     m.def("vertex_coloring_jones_plassmann", &_vertex_coloring_jones_plassmann<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(),
 R"pbdoc(
-Compute a vertex coloring of a graph using the Jones-Plassmann algorithm
+Compute a vertex coloring of a graph using the Jones-Plassmann algorithm.
 
 Parameters
 ----------
 num_rows : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 x : array, inplace
-    color of each vertex
-y : array
-    initial random values for each vertex
+    Color of each vertex.
+z : array
+    Initial random values for each vertex.
 
 Notes
 -----
-    Arrays x and y will be overwritten
+    Arrays x and z will be overwritten.
 
 References
 ----------
@@ -552,21 +556,20 @@ References
     m.def("vertex_coloring_LDF", &_vertex_coloring_LDF<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-Compute a vertex coloring of a graph using the parallel
-Largest-Degree-First (LDF) algorithm
+Compute a vertex coloring of a graph using parallel Largest-Degree-First (LDF).
 
 Parameters
 ----------
 num_rows : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 x : array
-    color of each vertex
+    Color of each vertex.
 y : array
-    initial random values for each vertex
+    Initial random values for each vertex.
 
 References
 ----------
@@ -578,22 +581,27 @@ References
     m.def("cluster_node_incidence", &_cluster_node_incidence<int>,
         py::arg("num_nodes"), py::arg("num_clusters"), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
 R"pbdoc(
-Compute the incidence matrix for a clustering
+Compute the incidence matrix for a clustering.
 
 Parameters
 ----------
 num_nodes : int
-    number of nodes
+    Number of nodes.
 num_clusters : int
-    number of clusters
+    Number of clusters.
 cm : array, num_nodes
-    cluster index for each node
+    Cluster index for each node.
 ICp : arrayt, num_clusters+1, inplace
-    CSC column pointer array for I
+    CSC column pointer array for I.
 ICi : array, num_nodes, inplace
-    CSC column indexes for I
+    CSC column indexes for I.
 L : array, num_nodes, inplace
-    Local index mapping
+    Local index mapping.
+
+Returns
+-------
+None
+    In place.
 
 Notes
 -----
@@ -626,36 +634,38 @@ L is an additional vector (length num_rows) to store local indexes.)pbdoc");
     m.def("cluster_center", &_cluster_center<int, double>,
         py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
 R"pbdoc(
+Find cluster center.
+
 Apply Floyd–Warshall to cluster "a" and use the result to find the
 cluster center
 
 Parameters
 ----------
 a : int
-    cluster index to find the center of
+    Cluster index to find the center of.
 num_nodes : int
-    number of nodes
+    Number of nodes.
 num_clusters : int
-    number of clusters
+    Number of clusters.
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array (edge lengths)
+    CSR data array (edge lengths).
 cm : array, num_nodes
-    cluster index for each node
+    Cluster index for each node.
 ICp : array, num_clusters+1
-    CSC column pointer array for I
+    CSC column pointer array for I.
 ICi : array, num_nodes
-    CSC column indexes for I
+    CSC column indexes for I.
 L : array, num_nodes
-    Local index mapping
+    Local index mapping.
 
 Returns
 -------
-i : int
-    global node index of center of cluster a
+int
+    Global node index of center of cluster a.
 
 References
 ----------
@@ -670,23 +680,22 @@ References
     m.def("bellman_ford", &_bellman_ford<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(),
 R"pbdoc(
-Apply one iteration of Bellman-Ford iteration on a distance
-graph stored in CSR format.
+Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
 
 Parameters
 ----------
 num_nodes : int
-    number of nodes (number of rows in A)
+    Number of nodes (number of rows in A).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array (edge lengths)
+    CSR data array (edge lengths).
 d : array, inplace
-    distance to nearest center
+    Distance to nearest center.
 cm : array, inplace
-    cluster index for each node
+    Cluster index for each node.
 
 References
 ----------
@@ -699,31 +708,31 @@ References
     m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(
-Perform one iteration of Lloyd clustering on a distance graph
+Perform one iteration of Lloyd clustering on a distance graph.
 
 Parameters
 ----------
 num_nodes : int
-    number of nodes (number of rows in A)
+    Number of nodes (number of rows in A).
 Ap : array
-    CSR row pointer for adjacency matrix A
+    CSR row pointer for adjacency matrix A.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array (edge lengths)
+    CSR data array (edge lengths).
 num_clusters : int
-    number of clusters (seeds)
+    Number of clusters (seeds).
 d : array, num_nodes
-    distance to nearest seed
+    Distance to nearest seed.
 cm : array, num_nodes
-    cluster index for each node
+    Cluster index for each node.
 c : array, num_clusters
-    cluster centers
+    Cluster centers.
 
 References
 ----------
 .. [Bell2008] Nathan Bell, Algebraic Multigrid for Discrete Differential Forms
-   PhD thesis (UIUC), August 2008)pbdoc");
+   PhD thesis (UIUC), August 2008.)pbdoc");
 
     m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
@@ -733,26 +742,31 @@ References
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
 R"pbdoc(
 Perform one iteration of Lloyd clustering on a distance graph using
-exact centers
+exact centers.
 
 Parameters
 ----------
 num_nodes : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array (edge lengths)
+    CSR data array (edge lengths).
 num_clusters : int
-    number of clusters = number of seeds
+    Number of clusters = number of seeds.
 d : array, num_nodes
-    distance to nearest seed
+    Distance to nearest seed.
 cm : array, num_nodes
-    cluster index for each node
+    Cluster index for each node.
 c : array, num_clusters
-    cluster centers
+    Cluster centers.
+
+Returns
+-------
+None
+    In place.
 
 Notes
 -----
@@ -768,19 +782,24 @@ Compute MIS-k.
 Parameters
 ----------
 num_rows : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 k : int
-    minimum separation between MIS vertices
+    Minimum separation between MIS vertices.
 x : array, inplace
-    state of each vertex (1 if in the MIS, 0 otherwise)
+    State of each vertex (1 if in the MIS, 0 otherwise).
 y : array
-    random values used during parallel MIS algorithm
+    Random values used during parallel MIS algorithm.
 max_iters : int
-    maximum number of iterations to use (default, no limit)
+    Maximum number of iterations to use (default, no limit).
+
+Returns
+-------
+None
+    In place.
 
 Notes
 -----
@@ -794,25 +813,32 @@ is therefore a MIS-1.)pbdoc");
     m.def("breadth_first_search", &_breadth_first_search<int>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("seed"), py::arg("order").noconvert(), py::arg("level").noconvert(),
 R"pbdoc(
+Breadth first search.
+
 Compute a breadth first search of a graph in CSR format
 beginning at a given seed vertex.
 
 Parameters
 ----------
 num_rows : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 order : array, num_rows, inplace
-    records the order in which vertices were searched
+    Records the order in which vertices were searched.
 level : array, num_rows, inplace
-    records the level set of the searched vertices (i.e. the minimum distance to the seed)
+    Records the level set of the searched vertices (i.e. the minimum distance to the seed).
+
+Returns
+-------
+None
+    In place.
 
 Notes
 -----
-The values of the level must be initialized to -1)pbdoc");
+The values of the level must be initialized to -1.)pbdoc");
 
     m.def("connected_components", &_connected_components<int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("components").noconvert(),
@@ -822,13 +848,18 @@ Compute the connected components of a graph stored in CSR format.
 Parameters
 ----------
 num_rows : int
-    number of rows in A (number of vertices)
+    Number of rows in A (number of vertices).
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 components : array, num_rows
-    component labels
+    Component labels.
+
+Returns
+-------
+None
+    In place.
 
 Notes
 -----
