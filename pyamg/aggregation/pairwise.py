@@ -24,42 +24,60 @@ def pairwise_solver(A,
 
     Parameters
     ----------
-    A : {csr_array, bsr_array}
-        Sparse NxN matrix in CSR or BSR format
-    aggregate : {tuple, string, list}
+    A : csr_array, bsr_array
+        Sparse NxN matrix in CSR or BSR format.
+    aggregate : tuple, str, list
         Method choice must be 'pairwise'; inner pairwise options including
-        matchings, theta, and norm can be modified,
-    presmoother : {tuple, string, list}
+        matchings, theta, and norm can be modified.
+    presmoother : tuple, str, list
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
         varying this parameter on a per level basis.
-    postsmoother : {tuple, string, list}
+    postsmoother : tuple, str, list
         Same as presmoother, except defines the postsmoother.
-    max_levels : {integer}
+    max_levels : int
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse : {integer}
+    max_coarse : int
         Maximum number of variables permitted on the coarse grid.
-    kwargs : dict
-        Extra keywords passed to the Multilevel class
-
-    Other Parameters
-    ----------------
-    coarse_solver : {'splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel'}
-        Solver used at the coarsest level of the MG hierarchy.
-        Optionally, may be a tuple (fn, args), where fn is a string such as
-        'splu' or a callable function, and args is a dictionary of
-        arguments to be passed to fn.
 
     Returns
     -------
-    ml : multilevel_solver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
+
+    Other Parameters
+    ----------------
+    **kwargs : dict
+        Extra keywords passed to the Multilevel class
+
+        =============   =======================================================
+        cycle_type      ['V','W','F'], Structrure of multigrid cycle
+        coarse_solver   ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+                        Solver used at the coarsest level of the MG hierarchy.
+                        Optionally, may be a tuple (fn, args), where fn is a
+                        string such as ['splu', 'lu', ...] or a callable
+                        function, and args is a dictionary of arguments to be
+                        passed to fn.
+        =============   =======================================================
+
+        See MultiLevel class for more details.
 
     See Also
     --------
-    multilevel_solver, classical.ruge_stuben_solver,
+    multilevel_solver
+    classical.ruge_stuben_solver
     aggregation.smoothed_aggregation_solver
+
+    Notes
+    -----
+    See [1]_ for more details.
+
+    References
+    ----------
+    .. [1] Notay, Y. (2010). An aggregation-based algebraic multigrid
+           method. Electronic transactions on numerical analysis, 37(6),
+           123-146.
 
     Examples
     --------
@@ -72,12 +90,6 @@ def pairwise_solver(A,
     >>> ml = pairwise_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')          # preconditioner
     >>> x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M)   # solve with CG
-
-    References
-    ----------
-    [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
-    method. Electronic transactions on numerical analysis, 37(6),
-    123-146.
 
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
