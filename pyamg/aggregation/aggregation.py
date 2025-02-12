@@ -125,8 +125,9 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
 
     See Also
     --------
-    MultilevelSolver, classical.ruge_stuben_solver,
-    aggregation.smoothed_aggregation_solver
+    MultilevelSolver
+    classical.ruge_stuben_solver
+    aggregation.root_node_solver
 
     Notes
     -----
