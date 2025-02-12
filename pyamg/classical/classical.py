@@ -29,7 +29,7 @@ def ruge_stuben_solver(A,
     Parameters
     ----------
     A : csr_array
-        Square matrix in CSR format
+        Square matrix in CSR format.
     strength : str
         Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
         'algebraic_distance','affinity', 'energy_based', None].
@@ -38,7 +38,7 @@ def ruge_stuben_solver(A,
         using a tuple, e.g. strength=('symmetric',{'theta': 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
     CF : str or tuple, default 'RS'
-        Method used for coarse grid selection (C/F splitting)
+        Method used for coarse grid selection (C/F splitting).
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interpolation : str, default 'classical'
         Method for interpolation. Options include 'direct', 'classical'.
@@ -47,7 +47,7 @@ def ruge_stuben_solver(A,
         may be passed in using a tuple, e.g.
         presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
     postsmoother : str or dict
-        Postsmoothing method with the same usage as presmoother
+        Postsmoothing method with the same usage as presmoother.
     max_levels : int, default 30
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : int, default 20
@@ -55,20 +55,18 @@ def ruge_stuben_solver(A,
     keep : bool, default False
         Flag to indicate keeping strength of connection (C) in the
         hierarchy for diagnostics.
-    kwargs : dict
-        Extra keywords passed to Multilevel class
+    **kwargs : dict
+        Extra keywords passed to MultilevelSolver class.
 
     Returns
     -------
-    ml : MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
-    Examples
+    See Also
     --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg import ruge_stuben_solver
-    >>> A = poisson((10,),format='csr')
-    >>> ml = ruge_stuben_solver(A,max_coarse=3)
+    aggregation.smoothed_aggregation_solver, MultilevelSolver,
+    aggregation.rootnode_solver
 
     Notes
     -----
@@ -80,16 +78,17 @@ def ruge_stuben_solver(A,
     function, and args is a dictionary of arguments to be passed to fn.
     See [1]_ for additional details.
 
-
     References
     ----------
     .. [1] Trottenberg, U.; Oosterlee, C. W. & Schüller, A. (2001),
            Multigrid, Vol. 33, Academic Press.
 
-    See Also
+    Examples
     --------
-    aggregation.smoothed_aggregation_solver, MultilevelSolver,
-    aggregation.rootnode_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg import ruge_stuben_solver
+    >>> A = poisson((10,),format='csr')
+    >>> ml = ruge_stuben_solver(A,max_coarse=3)
 
     """
     levels = [MultilevelSolver.Level()]
