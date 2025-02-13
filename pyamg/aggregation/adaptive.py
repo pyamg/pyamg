@@ -31,21 +31,22 @@ def eliminate_local_candidates(x, AggOp, A, T, thresh=1.0, **kwargs):
     Parameters
     ----------
     x : array
-        n x 1 vector of new candidate
+        Vector of length n of new candidates.
     AggOp : CSR or CSC sparse matrix
-        Aggregation operator for the level that x was generated for
-    A : sparse matrix
-        Operator for the level that x was generated for
-    T : sparse matrix
-        Tentative prolongation operator for the level that x was generated for
+        Aggregation operator for the level that x was generated for.
+    A : sparray
+        Operator for the level that x was generated for.
+    T : sparray
+        Tentative prolongation operator for the level that x was generated for.
     thresh : scalar
-        Constant threshold parameter to decide when to drop candidates
+        Constant threshold parameter to decide when to drop candidates.
     kwargs : dict
         Extra keywords; currently unused.
 
     Returns
     -------
-    Nothing, x is modified in place
+    None
+        Nothing, x is modified in place.
 
     """
     if not issparse(AggOp) or AggOp.format not in ('csc', 'csr'):
@@ -128,44 +129,44 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     Parameters
     ----------
     A : csr_array, bsr_array
-        Square matrix in CSR or BSR format
-    initial_candidates : None, n x m dense matrix
+        Square matrix in CSR or BSR format.
+    initial_candidates : None, array
         If a matrix, then this forms the basis for the first m candidates.
         Also in this case, the initial setup stage is skipped, because this
         provides the first candidate(s).  If None, then a random initial guess
         and relaxation are used to inform the initial candidate.
-    symmetry : string
+    symmetry : str
         'symmetric' refers to both real and complex symmetric
         'hermitian' refers to both complex Hermitian and real Hermitian
-        Note that for the strictly real case, these two options are the same
-        Note that this flag does not denote definiteness of the operator
+        Note that for the strictly real case, these two options are the same.
+        Note that this flag does not denote definiteness of the operator.
     pdef : bool
         True or False, whether A is known to be positive definite.
-    num_candidates : integer
-        Number of near-nullspace candidates to generate
-    candidate_iters : integer
+    num_candidates : int
+        Number of near-nullspace candidates to generate.
+    candidate_iters : int
         Number of smoothing passes/multigrid cycles used at each level of
-        the adaptive setup phase
-    improvement_iters : integer
-        Number of times each candidate is improved
+        the adaptive setup phase.
+    improvement_iters : int
+        Number of times each candidate is improved.
     epsilon : float
-        Target convergence factor
-    max_levels : integer
+        Target convergence factor.
+    max_levels : int
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse : integer
+    max_coarse : int
         Maximum number of variables permitted on the coarse grid.
-    prepostsmoother : string or dict
-        Pre- and post-smoother used in the adaptive method
+    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_array})]
+        Method used to aggregate nodes.  See ``smoothed_aggregation_solver``
+        documentation.
+    prepostsmoother : str, dict
+        Pre- and post-smoother used in the adaptive method.
+    smooth : ['jacobi', 'richardson', 'energy', None]
+        Method used used to smooth the tentative prolongator.  See
+        ``smoothed_aggregation_solver`` documentation.
     strength : ['symmetric', 'classical', 'evolution', None]
         Method used to determine the strength of connection between unknowns of
         the linear system.  See smoothed_aggregation_solver(...) documentation.
         Predefined strength may be used with ('predefined', {'C': csr_array}).
-    aggregate : ['standard', 'lloyd', 'naive', ('predefined', {'AggOp': csr_array})]
-        Method used to aggregate nodes.  See smoothed_aggregation_solver(...)
-        documentation.
-    smooth : ['jacobi', 'richardson', 'energy', None]
-        Method used used to smooth the tentative prolongator.  See
-        smoothed_aggregation_solver(...) documentation
     coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
         Solver used at the coarsest level of the MG hierarchy.
         Optionally, may be a tuple (fn, args), where fn is a string such as
@@ -181,13 +182,13 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
-    kwargs : dict
-        Extra keywords passed to Mulilevel class
+    **kwargs : dict
+        Extra keywords passed to Mulilevel class.
 
     Returns
     -------
-    MultilevelSolver : MultilevelSolver
-        Smoothed aggregation solver with adaptively generated candidates
+    MultilevelSolver
+        Smoothed aggregation solver with adaptively generated candidates.
 
     Notes
     -----
@@ -202,6 +203,12 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
       approach is useful when no candidates are known or the candidates have
       been invalidated due to changes to matrix A.
 
+    References
+    ----------
+    .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
+       "Adaptive Smoothed Aggregation (alpha SA) Multigrid"
+       SIAM Review Volume 47,  Issue 2  (2005)
+
     Examples
     --------
     >>> from pyamg.gallery import stencil_grid
@@ -211,12 +218,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
     >>> [asa,work] = adaptive_sa_solver(A,num_candidates=1)
     >>> res=[]
     >>> x=asa.solve(b=np.ones((A.shape[0],)), x0=np.ones((A.shape[0],)), residuals=res)
-
-    References
-    ----------
-    .. [1] Brezina, Falgout, MacLachlan, Manteuffel, McCormick, and Ruge
-       "Adaptive Smoothed Aggregation (alpha SA) Multigrid"
-       SIAM Review Volume 47,  Issue 2  (2005)
 
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
