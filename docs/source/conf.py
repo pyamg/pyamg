@@ -121,6 +121,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy', None),
 }
 
+
 def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
     """Set skip member."""
     exclusions = ('__weakref__',  # special-members
@@ -133,4 +134,3 @@ def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
 def setup(app):
     """Define setup."""
     app.connect('autodoc-skip-member', autodoc_skip_member)
-    #app.connect("autodoc-process-docstring", autodoc_process_docstring)

@@ -40,14 +40,6 @@ def pairwise_solver(A,
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : int
         Maximum number of variables permitted on the coarse grid.
-
-    Returns
-    -------
-    MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators.
-
-    Other Parameters
-    ----------------
     **kwargs : dict
         Extra keywords passed to the Multilevel class
 
@@ -62,6 +54,11 @@ def pairwise_solver(A,
         =============   =======================================================
 
         See MultiLevel class for more details.
+
+    Returns
+    -------
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
     See Also
     --------
