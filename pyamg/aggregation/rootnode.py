@@ -116,14 +116,6 @@ def rootnode_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
-
-    Returns
-    -------
-    MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators.
-
-    Other Parameters
-    ----------------
     **kwargs : dict
         Extra keywords passed to the Multilevel class
 
@@ -138,6 +130,11 @@ def rootnode_solver(A, B=None, BH=None,
         =============   =======================================================
 
         See MultiLevel class for more details.
+
+    Returns
+    -------
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
     See Also
     --------

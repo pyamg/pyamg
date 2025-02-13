@@ -100,14 +100,6 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C),
         tentative prolongation (T), and aggregation (AggOp) are kept.
-
-    Returns
-    -------
-    MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators.
-
-    Other Parameters
-    ----------------
     **kwargs : dict
         Extra keywords passed to the Multilevel class
 
@@ -122,6 +114,11 @@ def smoothed_aggregation_solver(A, B=None, BH=None,
         =============   =======================================================
 
         See MultiLevel class for more details.
+
+    Returns
+    -------
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
     See Also
     --------
