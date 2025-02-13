@@ -118,9 +118,9 @@ class MultilevelSolver:
     Operator Complexity:   1.891
     Grid Complexity:       1.500
     Coarse Solver:        'splu'
-        level   unknowns     nonzeros
-            0       10000        49600 [52.88%]
-            1        5000        44202 [47.12%]
+      level   unknowns     nonzeros
+         0       10000        49600 [52.88%]
+         1        5000        44202 [47.12%]
     <BLANKLINE>
 
     """
