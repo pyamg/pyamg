@@ -101,15 +101,26 @@ def naive_aggregation(C):
     Parameters
     ----------
     C : csr_array
-        strength of connection matrix
+        Strength of connection matrix.
 
     Returns
     -------
-    AggOp : csr_array
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    Cpts : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
+
+    See Also
+    --------
+    amg_core.naive_aggregation
+
+    Notes
+    -----
+    Differs from standard aggregation.  Each dof is considered.  If it has been
+    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
+    in an aggregate.  Results in possibly much higher complexities than
+    standard aggregation.
 
     Examples
     --------
@@ -136,17 +147,6 @@ def naive_aggregation(C):
     array([[1, 0],
            [0, 1],
            [0, 1]], dtype=int8)
-
-    See Also
-    --------
-    amg_core.naive_aggregation
-
-    Notes
-    -----
-    Differs from standard aggregation.  Each dof is considered.  If it has been
-    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
-    in an aggregate.  Results in possibly much higher complexities than
-    standard aggregation.
 
     """
     if not sparse.issparse(C) or C.format != 'csr':
@@ -316,32 +316,32 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     Parameters
     ----------
     C : csr_array
-        strength of connection matrix
+        Strength of connection matrix.
     ratio : scalar
         Fraction of the nodes which will be seeds.
     distance : ['unit','abs','inv',None]
-        Distance assigned to each edge of the graph G used in Lloyd clustering
+        Distance assigned to each edge of the graph G used in Lloyd clustering.
 
-        For each nonzero value C[i,j]:
+        For each nonzero value C[i,j]::
 
-        =======  ===========================
-        'unit'   G[i,j] = 1
-        'abs'    G[i,j] = abs(C[i,j])
-        'inv'    G[i,j] = 1.0/abs(C[i,j])
-        'same'   G[i,j] = C[i,j]
-        'sub'    G[i,j] = C[i,j] - min(C)
-        =======  ===========================
+            =======  ===========================
+            'unit'   G[i,j] = 1
+            'abs'    G[i,j] = abs(C[i,j])
+            'inv'    G[i,j] = 1.0/abs(C[i,j])
+            'same'   G[i,j] = C[i,j]
+            'sub'    G[i,j] = C[i,j] - min(C)
+            =======  ===========================
 
     maxiter : int
-        Maximum number of iterations to perform
+        Maximum number of iterations to perform.
 
     Returns
     -------
-    AggOp : csr_array
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    seeds : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
 
     See Also
     --------
