@@ -411,17 +411,17 @@ def balanced_lloyd_aggregation(C, num_clusters=None):
     Parameters
     ----------
     C : csr_array
-        strength of connection matrix with positive weights
+        Strength of connection matrix with positive weights.
     num_clusters : int
-        Number of seeds or clusters expected (default: C.shape[0] / 10)
+        Number of seeds or clusters expected (default: C.shape[0] / 10).
 
     Returns
     -------
-    AggOp : csr_array
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    seeds : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
 
     See Also
     --------

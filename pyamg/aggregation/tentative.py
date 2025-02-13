@@ -13,10 +13,10 @@ def fit_candidates(AggOp, B, tol=1e-10):
     ----------
     AggOp : csr_array
         Describes the sparsity pattern of the tentative prolongator.
-        Has dimension (#blocks, #aggregates)
+        Has dimension (#blocks, #aggregates).
     B : array
         The near-nullspace candidates stored in column-wise fashion.
-        Has dimension (#blocks * blocksize, #candidates)
+        Has dimension (#blocks * blocksize, #candidates).
     tol : scalar
         Threshold for eliminating local basis functions.
         If after orthogonalization a local basis function Q[:, j] is small,
@@ -24,7 +24,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     Returns
     -------
-    (Q, R) : (bsr_array, array)
+    (bsr_array, array)
         The tentative prolongator Q is a sparse block matrix with dimensions
         (#blocks * blocksize, #aggregates * #candidates) formed by dense blocks
         of size (blocksize, #candidates).  The coarse level candidates are
