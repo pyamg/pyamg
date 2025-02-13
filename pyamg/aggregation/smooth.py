@@ -67,30 +67,30 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     S : csr_array, bsr_array
         Sparse NxN matrix used for smoothing.  Typically, A.
     T : csr_array, bsr_array
-        Tentative prolongator
+        Tentative prolongator.
     C : csr_array, bsr_array
-        Strength-of-connection matrix
+        Strength-of-connection matrix.
     B : array
         Near nullspace modes for the coarse grid such that T@B
-        exactly reproduces the fine grid near nullspace modes
+        exactly reproduces the fine grid near nullspace modes.
     omega : scalar
-        Damping parameter
+        Damping parameter.
     degree : int
-        Number of passes
-    filter_entries : boolean
+        Number of passes.
+    filter_entries : bool
         If true, filter S before smoothing T.  This option can greatly control
         complexity.
-    weighting : string
+    weighting : str
         'block', 'diagonal' or 'local' weighting for constructing the Jacobi D
         'local' Uses a local row-wise weight based on the Gershgorin estimate.
         Avoids any potential under-damping due to inaccurate spectral radius
         estimates.
         'block' uses a block diagonal inverse of A if A is BSR
-        'diagonal' uses classic Jacobi with D = diagonal(A)
+        'diagonal' uses classic Jacobi with D = diagonal(A).
 
     Returns
     -------
-    P : csr_array, bsr_array
+    csr_array, bsr_array
         Smoothed (final) prolongator defined by P = (I - omega/rho(K) K) @ T
         where K = diag(S)^-1 @ S and rho(K) is an approximation to the
         spectral radius of K.
@@ -884,11 +884,11 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     Parameters
     ----------
     A : csr_array, bsr_array
-        Sparse NxN matrix
+        Sparse NxN matrix.
     T : bsr_array
-        Tentative prolongator, a NxM sparse matrix (M < N)
+        Tentative prolongator, a NxM sparse matrix (M < N).
     Atilde : csr_array
-        Strength of connection matrix
+        Strength of connection matrix.
     B : array
         Near-nullspace modes for coarse grid.  Has shape (M,k) where
         k is the number of coarse candidate vectors.
@@ -903,26 +903,26 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         injection matrix for the Cpts, (2) I_F is an identity matrix for only the
         F-points (i.e. I, but with zero rows and columns for C-points) and I_C is
         the C-point analogue to I_F.  See Notes below for more information.
-    krylov : string
+    krylov : str
         'cg' for SPD systems.  Solve A T = 0 in a constraint space with CG
         'cgnr' for nonsymmetric and/or indefinite systems.
         Solve A T = 0 in a constraint space with CGNR
         'gmres' for nonsymmetric and/or indefinite systems.
-        Solve A T = 0 in a constraint space with GMRES
-    maxiter : integer
-        Number of energy minimization steps to apply to the prolongator
+        Solve A T = 0 in a constraint space with GMRES.
+    maxiter : int
+        Number of energy minimization steps to apply to the prolongator.
     tol : scalar
-        Minimization tolerance
+        Minimization tolerance.
     degree : int
-        Generate sparsity pattern for P based on (Atilde^degree T)
-    weighting : string
+        Generate sparsity pattern for P based on (Atilde^degree T).
+    weighting : str
         'block', 'diagonal' or 'local' construction of the diagonal preconditioning
         'local' Uses a local row-wise weight based on the Gershgorin estimate.
         Avoids any potential under-damping due to inaccurate spectral
         radius estimates.
         'block' Uses a block diagonal inverse of A if A is BSR.
-        'diagonal' Uses the inverse of the diagonal of A
-    prefilter : dictionary
+        'diagonal' Uses the inverse of the diagonal of A.
+    prefilter : dict
         Filter elements by row in sparsity pattern for P to reduce operator and
         setup complexity. If None or an empty dictionary, then no dropping in P
         is done.  If postfilter has key 'k', then the largest 'k' entries  are
@@ -930,20 +930,20 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
         :math:`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
-    postfilter : dictionary
+    postfilter : dict
         Filters elements by row in smoothed P to reduce operator complexity.
         Only supported if using the rootnode_solver. If None or an empty
         dictionary, no dropping in P is done. If postfilter has key 'k',
         then the largest 'k' entries  are kept in each row.  If postfilter
         has key 'theta', all entries such that
-        :math::`P[i,j] < kwargs['theta']*max(abs(P[i,:]))`
+        ``P[i,j] < kwargs['theta']*max(abs(P[i,:]))``
         are dropped.  If postfilter['k'] and postfiler['theta'] are present,
         then they are used with the union of their patterns.
 
     Returns
     -------
-    T : bsr_array
-        Smoothed prolongator
+    bsr_array
+        Smoothed prolongator.
 
     Notes
     -----
@@ -953,13 +953,26 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
     When Cpt_params[0] == True, root-node style prolongation smoothing is used
     to minimize the energy of columns of T.  Essentially, an identity block is
     maintained in T, corresponding to injection from the coarse-grid to the
-    fine-grid root-nodes.  See [2011OlScTu]_ for more details, and see
+    fine-grid root-nodes.  See [2]_ for more details, and see
     util.utils.get_Cpt_params for the helper function to generate Cpt_params.
 
     If Cpt_params[0] == False, the energy of columns of T are still
     minimized, but without maintaining the identity block.
 
-    See [1999cMaBrVa]_ for more details on smoothed aggregation.
+    See [1]_ for more details on smoothed aggregation.
+
+    References
+    ----------
+    .. [1] Jan Mandel, Marian Brezina, and Petr Vanek
+       "Energy Optimization of Algebraic Multigrid Bases"
+       Computing 62, 205-228, 1999
+       http://dx.doi.org/10.1007/s006070050022
+
+    .. [2] Olson, L. and Schroder, J. and Tuminaro, R.,
+       "A general interpolation strategy for algebraic
+       multigrid using energy minimization", SIAM Journal
+       on Scientific Computing (SISC), vol. 33, pp.
+       966--991, 2011.
 
     Examples
     --------
@@ -988,19 +1001,6 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
      [0.33333333 0.66666667]
      [0.         1.        ]
      [0.         1.        ]]
-
-    References
-    ----------
-    .. [1999cMaBrVa] Jan Mandel, Marian Brezina, and Petr Vanek
-       "Energy Optimization of Algebraic Multigrid Bases"
-       Computing 62, 205-228, 1999
-       http://dx.doi.org/10.1007/s006070050022
-
-    .. [2011OlScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
-       "A general interpolation strategy for algebraic
-       multigrid using energy minimization", SIAM Journal
-       on Scientific Computing (SISC), vol. 33, pp.
-       966--991, 2011.
 
     """
     # Test Inputs
