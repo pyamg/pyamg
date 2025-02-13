@@ -688,7 +688,7 @@ None
     In place.
 
 Notes
-----------
+-----
 See page 479 of Multigrid.)pbdoc");
 
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, float>,

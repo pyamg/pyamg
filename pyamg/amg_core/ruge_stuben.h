@@ -769,7 +769,7 @@ void cljp_naive_splitting(const I n,
  *     In place.
  *
  * Notes
- * ----------
+ * -----
  * See page 479 of Multigrid.
  *
  */
