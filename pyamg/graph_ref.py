@@ -54,10 +54,10 @@ def bellman_ford_balanced_reference(A, c):
     """Calculate reference implementation of balanced Bellman-Ford.
 
     Parameters
-    ---------
-    A : coo sparse matrix
+    ----------
+    A : coo_array
         n x n directed graph with positive weights
-    c : array_like
+    c : array
         list of cluster centers
 
     Return

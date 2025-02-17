@@ -10,14 +10,14 @@ import pyamg
 from pyamg import amg_core
 
 
-@pytest.fixture()
+@pytest.fixture
 def construct_1dfd_graph():
     u = np.ones(9, dtype=np.float64)
     G = np.diag(2 * u, k=0) + np.diag(u[1:], k=1) + np.diag(u[1:], k=-1)
     return G
 
 
-@pytest.fixture()
+@pytest.fixture
 def construct_graph_laplacian():
     G = np.diag([2, 3, 3, 2, 2, 3, 3, 2], k=0)
     G += np.diag([-1, -1, -1, 0, -1, -1, -1], k=1)
@@ -61,7 +61,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     n = G.shape[0]
     num_clusters = len(centers)
 
-    maxsize = int(4*np.ceil((n / num_clusters)))
+    maxsize = int(4*np.ceil(n / num_clusters))
     Cptr = np.empty(num_clusters, dtype=np.int32)
     D = np.empty((maxsize, maxsize), dtype=G.dtype)
     P = np.empty((maxsize, maxsize), dtype=np.int32)
@@ -168,7 +168,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     n = G.shape[0]
     num_clusters = len(centers)
 
-    maxsize = int(4*np.ceil((n / num_clusters)))
+    maxsize = int(4*np.ceil(n / num_clusters))
     Cptr = np.empty(num_clusters, dtype=np.int32)
     D = np.empty((maxsize, maxsize), dtype=G.dtype)
     P = np.empty((maxsize, maxsize), dtype=np.int32)

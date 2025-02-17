@@ -422,7 +422,6 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     return AggOp, centers
 
 
-
 def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
                                rebalance_iters=5, pad=None, A=None):
     """Aggregate nodes using Balanced Lloyd Clustering.

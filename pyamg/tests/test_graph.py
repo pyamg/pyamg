@@ -144,10 +144,10 @@ class TestGraph(TestCase):
                                           [np.inf, 2.,     5., 1.,     0.]])
 
         for center in range(5):
-            distance, nearest, predecessor = bellman_ford_reference(G, [center])
+            distance, _nearest, _predecessor = bellman_ford_reference(G, [center])
             assert_equal(distance, distances_FROM_center[center])
 
-            distance, nearest, predecessor = bellman_ford(G, [center])
+            distance, _nearest, _predecessor = bellman_ford(G, [center])
             assert_equal(distance, distances_FROM_center[center])
 
     def test_lloyd_cluster(self):
@@ -160,7 +160,7 @@ class TestGraph(TestCase):
                 if n_clusters > G.shape[0]:
                     continue
 
-                clusters, centers = lloyd_cluster(G, n_clusters)
+                _clusters, _centers = lloyd_cluster(G, n_clusters)
 
 
 class TestComplexGraph(TestCase):
@@ -201,7 +201,7 @@ class TestComplexGraph(TestCase):
                 if n_clusters > G.shape[0]:
                     continue
 
-                clusters, centers = lloyd_cluster(G, n_clusters)
+                _clusters, _centers = lloyd_cluster(G, n_clusters)
 
 
 class TestVertexColorings(TestCase):

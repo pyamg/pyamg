@@ -323,6 +323,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
       in different centers.  This is due to the tie-breaker based on aggregate
       size in bellman_ford_balanced().  Alternatively, the graph can be seeded
       with a small random number to make the edge lengths (and distances) unique.
+
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -425,12 +426,12 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         dist_all.fill(np.inf)
         for a in range(num_clusters):
             N = s[a]  # cluster size
-            _N = Cptr[a]+N
-            if _N >= G.shape[0]:
-                _N = None
+            Nloc = Cptr[a]+N
+            if Nloc >= G.shape[0]:
+                Nloc = None
             P.fill(-1)
             amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
-                                    dist_all[a, :].ravel(), P, CC[Cptr[a]:_N], L,
+                                    dist_all[a, :].ravel(), P, CC[Cptr[a]:Nloc], L,
                                     m, a, N)
         # rebalance
         centers, rebalance_change = _rebalance(G, centers, m, d, dist_all, num_clusters)
@@ -447,25 +448,26 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
 
     Parameters
     ----------
-    G : sparse matrix
-        Sparse graph
+    G : sparray
+        Sparse graph.
     c : array
-        List of centers
+        List of centers.
     m : array
-        Cluster membership
+        Cluster membership.
     d : array
-        Distance to cluster center
+        Distance to cluster center.
     dist_all : array
-        Node-to-node distance for every node in each cluster
+        Node-to-node distance for every node in each cluster.
     num_clusters : int
-        Number of clusters (= number centers)
+        Number of clusters (= number centers).
 
     Return
     ------
-    centers : array
-        List of new centers
-    rebalance_change : bool
-        Indicate whether centers has changed
+    array
+        List of new centers.
+    bool
+        Indicate whether centers has changed.
+
     """
     newc = c.copy()
 
@@ -532,8 +534,7 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
                 for k in Acol.getcol(j).indices:
                     if m[k] != m[j]:
                         jiloc = jloc * N + iloc
-                        if (d[k] + A[k, j] + dist_all[a, jiloc]) < dmin:
-                            dmin = d[k] + A[k, j] + dist_all[a, jiloc]
+                        dmin = min(d[k] + A[k, j] + dist_all[a, jiloc], dmin)
             E[a] += dmin**2
         E[a] -= np.sum(d[Va]**2)
     return E
@@ -576,16 +577,17 @@ def _choice(p):
     Parameters
     ----------
     p : array
-        probabilities [0,1], with sum(p) == 1
+        Probabilities [0,1], with sum(p) == 1.
 
     Return
     ------
-    i : int
-        index to a selected integer based on the distribution of p
+    int
+        Index to a selected integer based on the distribution of p.
 
     Notes
     -----
     For efficiency, there are no checks.
+
     """
     a = p / np.max(p)
     i = -1
@@ -601,22 +603,23 @@ def kmeanspp_seed(G, nseeds):
 
     Parameters
     ----------
-    G : sparse matrix
-        sparse graph on which to seed
+    G : sparray
+        Sparse graph on which to seed.
 
     nseeds : int
-        number of seeds
+        Number of seeds.
 
     Return
     ------
-    C : array
-        list of seeds
+    array
+        List of seeds.
 
     Notes
     -----
-    This is a reference algorithms, at O(n^3)
+    This is a reference algorithms, at O(n^3).
 
     TODO - needs testing
+
     """
     warn('kmeanspp_seed is O(n^3) -- use only for testing')
 
@@ -837,7 +840,7 @@ def metis_partition(G, nparts=5, seed=None):
 
     Parameters
     ----------
-    G : csr_matrix
+    G : sparray
         A sparse n x n matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.  G[i,j] is required to be integer.
     nparts : int
@@ -847,8 +850,9 @@ def metis_partition(G, nparts=5, seed=None):
 
     Returns
     -------
-    parts : int array
+    array
         Array of n x 1 indices from 0 ... nparts-1.
+
     """
     G = sparse.csr_matrix(G)
 
@@ -863,7 +867,7 @@ def metis_partition(G, nparts=5, seed=None):
         raise ValueError('nparts should be a positive integer')
 
     try:
-        import pymetis  # pylint: disable=import-outside-toplevel
+        import pymetis  # noqa: PLC0415
     except ImportError as expt:
         raise ImportError('pymetis required for METIS partitioning') from expt
 

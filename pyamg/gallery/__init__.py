@@ -28,10 +28,10 @@ from .demo import demo
 __all__ = [
     'advection_2d',
     'demo',
-    'fem',
     'diffusion',
     'diffusion_stencil_2d',
     'elasticity',
+    'fem',
     'gauge_laplacian',
     'laplacian',
     'linear_elasticity',

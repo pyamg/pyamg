@@ -873,19 +873,22 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
     Parameters
     ----------
     A : sparse matrix
-        Fully assembled sparse matrix
+        Fully assembled sparse matrix.
     b : ndarray
-        Fully assembled right-hand side
+        Fully assembled right-hand side.
     mesh : Mesh
-        Mesh object
+        Mesh object.
     bc : list
-       list of boundary conditions
-       bc = [bc1, bc2, ..., bck]
-       where bck = {'id': id,    a list of vertices for boundary "k"
-                     'g': g,     g = g(x,y) is a function for the vertices on boundary "k"
-                   'var': var    the variable, given as a start in the dof list
-                'degree': degree degree of the variable, either 1 or 2
-                   }
+       List of boundary conditions: bc = [bc1, bc2, ..., bck],
+       where
+
+           bck = {'id': id,    # a list of vertices for boundary "k"
+                   'g': g,     # g = g(x,y) is a function for the vertices on boundary "k"
+                 'var': var    # the variable, given as a start in the dof list
+              'degree': degree # degree of the variable, either 1 or 2
+                 }
+    remove_dirichlet : bool
+        Flag to remove Dirichlet boundary nodes from the matrix (size).
 
     Returns
     -------

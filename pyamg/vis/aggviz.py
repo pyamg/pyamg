@@ -2,47 +2,53 @@
 
 import numpy as np
 
-
-def plotaggs(AggOp, V, G, ax,
-             aggvals=None, vmin=None, vmax=None, cmapname='cool',
-             buffer=None,
-             **kwargs):
-    """
-    Parameters
-    ----------
-    AggOp : CSR sparse matrix
-        n x nagg encoding of the aggregates AggOp[i,j] == 1 means node i is in aggregate j
-    V : ndarray
-        n x 2 coordinate array of the mesh
-    G : CSR sparse matrix
-        n x n connectivity matrix for the vertices
-    ax : axis
-        matplotlib axis
-    aggval : ndarray
-        values to use for plotting on the aggregates
-    vmax : float
-    vmin : float
-        min and max values to for cmapname
-    cmapname : string
-        matplotlib cmap name
-    buffer : tuple, list
-        buffer[0] is the expansion buffer, to smooth
-        buffer[1] is the contraction buffer, to make the aggregates smaller
-    kwargs : dictionary
-        keyword arguments sent to plt.fill
-
-    Returns
-    -------
-    mappable : mappable
-        Mappable object for use with colorbar: plt.colorbar(mappable, ax=ax).
-        None if aggval is None
-    """
+try:
     import matplotlib
     import matplotlib.pyplot as plt
 
     import shapely.geometry as sg
     from shapely.ops import unary_union
+except ImportError as error:
+    print(f'Packages matplotlib and shapely are required for aggviz.py: {error}')
 
+
+def plotaggs(AggOp, V, G, ax,
+             aggvals=None, vmin=None, vmax=None, cmapname='cool',
+             buffer=None,
+             **kwargs):
+    """Plot aggregates.
+
+    Parameters
+    ----------
+    AggOp : sparray
+        Encoding, (n, nagg), of the aggregates ``AggOp[i,j] == 1``
+        means node i is in aggregate j.
+    V : ndarray
+        Coordinate array of the mesh, (n, 2).
+    G : sparray
+        Connectivity matrix for the vertices, (n, n).
+    ax : axis
+        Matplotlib axis.
+    aggvals : ndarray
+        Values to use for plotting on the aggregates.
+    vmin, vmax : float
+        Min and max values to for ``cmapname``.
+    cmapname : string
+        Matplotlib cmap name.
+    buffer : tuple, list
+        - ``buffer[0]`` is the expansion buffer, to smooth.
+        - ``buffer[1]`` is the contraction buffer, to make the aggregates smaller.
+    **kwargs : dict
+        Keyword arguments sent to ``matplotlib.pyplot.fill``.
+
+    Returns
+    -------
+    mappable
+        Mappable object for use with colorbar:
+        ``matplotlib.pyplot.colorbar(mappable, ax=ax)``.
+        None if aggval is None.
+
+    """
     cmap = plt.get_cmap(cmapname)
     if aggvals is not None:
         if vmax is None or vmin is None:
@@ -96,7 +102,7 @@ def plotaggs(AggOp, V, G, ax,
         try:
             # pylint: disable=no-member
             for poly in todraw.geoms:
-                xs, ys = poly.exterior.xy                    # get all of the exterior points
+                xs, ys = poly.exterior.xy                    # get all exterior points
                 if aggvals is not None:
                     kwargs['color'] = aggcolor[aggnum]
                 ax.fill(xs, ys,
