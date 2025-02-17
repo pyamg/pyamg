@@ -126,7 +126,7 @@ def vertex_coloring(G, method='MIS'):
     return coloring
 
 
-def bellman_ford(G, centers, method='standard'):
+def bellman_ford(G, centers, method='standard', tiebreaking=False):
     """Bellman-Ford iteration.
 
     Parameters
@@ -138,6 +138,8 @@ def bellman_ford(G, centers, method='standard'):
     method : string
         - 'standard': base implementation of Bellman-Ford.
         - 'balanced': a balanced version of Bellman-Ford.
+    tiebreaking : bool
+        Tie break flag if ``method='balanced'``.
 
     Returns
     -------
@@ -192,7 +194,8 @@ def bellman_ford(G, centers, method='standard'):
     elif method == 'balanced':
         amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
                                        distances, nearest, predecessors,         # OUT
-                                       predecessors_count, cluster_size)         # OUT
+                                       predecessors_count, cluster_size,         # OUT
+                                       tiebreaking)
     else:
         raise ValueError(f'Method {method} is not supported in Bellman-Ford')
 
