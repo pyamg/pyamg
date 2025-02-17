@@ -290,7 +290,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
 
     Parameters
     ----------
-    G : csr_matrix, csc_matrix
+    G : csr_array, csc_array
         A sparse nxn matrix where each nonzero entry G[i,j] is the distance
         between nodes i and j.
     centers : int array
@@ -472,7 +472,7 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
     newc = c.copy()
 
     # aggregate-to-aggregate neighbors
-    AggOp = sparse.coo_matrix((np.ones(len(m)), (np.arange(len(m)), m))).tocsr()
+    AggOp = sparse.coo_array((np.ones(len(m)), (np.arange(len(m)), m))).tocsr()
     Agg2Agg = AggOp.T @ G @ AggOp
     Agg2Agg = Agg2Agg.tocsr()
 
@@ -854,7 +854,7 @@ def metis_partition(G, nparts=5, seed=None):
         Array of n x 1 indices from 0 ... nparts-1.
 
     """
-    G = sparse.csr_matrix(G)
+    G = sparse.csr_array(G)
 
     if G.dtype.kind != 'i':
         raise ValueError('METIS partitioning requires integer weights')

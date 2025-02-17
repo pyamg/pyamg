@@ -16,7 +16,7 @@ class TestAllPairs(TestCase):
         A[2, 3] = 1
         A[1, 2] = 3
         A[0, 1] = 5
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
         inf = np.inf
         D_ref = np.array([[0,  5.,  8.,  9.],
@@ -36,7 +36,7 @@ class TestAllPairs(TestCase):
         A[2, 1] = 4
         A[3, [0, 2]] = [2, -5]
         A[4, 3] = 6
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
         D_ref = np.array([[0.,  1., -3.,  2., -4.],
                           [3.,  0., -4.,  1., -1.],
@@ -57,7 +57,7 @@ class TestAllPairs(TestCase):
         A[3, 1] = -1
         A[1, 0] = 4
         A[1, 2] = 3
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
         D_ref = np.array([[0., -1, -2, 0],
                           [4,  0,  2, 4],

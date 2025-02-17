@@ -478,7 +478,7 @@ def test_metis():
                       [3, 5],
                       [4, 5]])
     w = np.ones(Edges.shape[0], dtype=int)
-    G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])), shape=(6, 6))
+    G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])), shape=(6, 6))
     G = G + G.T  # undirected
     G = G.tocoo()
 
@@ -519,7 +519,7 @@ def test_metis():
            np.array_equal(np.sort([3, 4]), np.sort(e)) or \
            np.array_equal(np.sort([6, 7]), np.sort(e)):
             w[i] = 1
-    G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])), shape=(9, 9))
+    G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])), shape=(9, 9))
     G = G.tocsr()
 
     parts = metis_partition(G, nparts=2)

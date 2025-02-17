@@ -113,7 +113,7 @@ class TestClustering(TestCase):
         G[10, [4, 9, 11]] = 1
         G[11, [9, 10]] = 1
         G[np.arange(12), np.arange(12)] = [2, 3, 4, 2, 2, 4, 4, 2, 2, 4, 3, 2]
-        G = sparse.csr_matrix(G)
+        G = sparse.csr_array(G)
 
         case = {}
         case['id'] = 1
@@ -208,7 +208,7 @@ class TestClustering(TestCase):
                           [2, 1],
                           [1, 0]])
         w = np.array([1, 1, 1, 1, 1, 1], dtype=float)
-        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
         c = np.array([1, 3], dtype=np.int32)
 
@@ -231,7 +231,7 @@ class TestClustering(TestCase):
                           [1, 2],
                           [4, 3]])
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
-        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
         c = np.array([0, 1, 2], dtype=np.int32)
 

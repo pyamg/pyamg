@@ -54,7 +54,7 @@ def test_balanced_lloyd_1d(construct_1dfd_graph):
 
 def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     G = construct_1dfd_graph
-    G = sparse.csr_matrix(G)
+    G = sparse.csr_array(G)
     centers = np.array([1, 7, 8], dtype=np.int32)
 
     # Balanced Initialization
@@ -161,7 +161,7 @@ def test_balanced_lloyd_laplacian(construct_graph_laplacian):
 
 def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     G = construct_graph_laplacian
-    G = sparse.csr_matrix(G)
+    G = sparse.csrarray(G)
     centers = np.array([1, 5], dtype=np.int32)
 
     # Balanced Initialization

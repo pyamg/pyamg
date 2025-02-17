@@ -454,7 +454,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
         Number of rebalance iterations to perform in balanced Lloyd clustering.
     pad : float
         A pad for the measure with the sparsity of A.
-    A : csr_matrix
+    A : csr_array
         Sparse matrix to pad with.
 
     Returns
@@ -507,7 +507,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
         if A is None:
             raise ValueError('Matrix A is required if pad is used')
 
-        A = sparse.csr_matrix(A)
+        A = sparse.csr_array(A)
 
         Epad = A.copy()
         Epad.data[:] = pad
@@ -548,7 +548,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     row = (clusters >= 0).nonzero()[0]
     col = clusters[row]
     data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
+    AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
 
     return AggOp, centers
 
@@ -558,7 +558,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
 
     Parameters
     ----------
-    C : csr_matrix
+    C : csr_array
         strength of connection matrix
     ratio : scalar
         Fraction of nodes to be aggregate (centers).  ratio=0.1 is
@@ -579,7 +579,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
 
     Returns
     -------
-    AggOp : csr_matrix
+    AggOp : csr_array
         aggregation operator which determines the sparsity pattern
         of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
 
@@ -588,7 +588,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     amg_core.standard_aggregation
 
     """
-    C = sparse.csr_matrix(C)
+    C = sparse.csr_array(C)
 
     if C.shape[0] != C.shape[1]:
         raise ValueError('graph should be a square matrix.')
@@ -625,6 +625,6 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     row = (parts >= 0).nonzero()[0]
     col = parts[row]
     data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
+    AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
 
     return AggOp
