@@ -126,7 +126,7 @@ def vertex_coloring(G, method='MIS'):
     return coloring
 
 
-def bellman_ford(G, centers, method='standard', tiebreaking=False):
+def bellman_ford(G, centers, method='standard', tiebreaking=True):
     """Bellman-Ford iteration.
 
     Parameters

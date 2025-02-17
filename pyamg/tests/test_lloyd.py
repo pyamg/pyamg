@@ -90,9 +90,10 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
     Aj = G.indices
     Ax = G.data
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
-                                             d,  m, p, pc, s)
+                                             d,  m, p, pc, s, True)
 
     # >>Check Pass 0 bellman_ford_balanced
+    print(m)
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1, 2])
     assert_array_equal(d, [1, 0, 1, 2, 3, 2, 1, 0, 0])
     assert_array_equal(p, [1, 1, 1, 2, 5, 6, 7, 7, 8])
@@ -119,7 +120,7 @@ def test_balanced_lloyd_1d_bystep(construct_1dfd_graph):
 
     # Pass 1 bellman_ford_balanced
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
-                                             d,  m, p, pc, s)
+                                             d,  m, p, pc, s, True)
 
     # >>Check Pass 1 bellman_ford_balanced
     assert_array_equal(centers, [1, 5, 8])
@@ -161,7 +162,7 @@ def test_balanced_lloyd_laplacian(construct_graph_laplacian):
 
 def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     G = construct_graph_laplacian
-    G = sparse.csrarray(G)
+    G = sparse.csr_array(G)
     centers = np.array([1, 5], dtype=np.int32)
 
     # Balanced Initialization
@@ -197,7 +198,7 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     Aj = G.indices
     Ax = G.data
     changed = amg_core.bellman_ford_balanced(n, Ap, Aj, Ax, centers,
-                                             d,  m, p, pc, s)
+                                             d,  m, p, pc, s, True)
 
     # >>Check Pass 0 bellman_ford_balanced
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1])
